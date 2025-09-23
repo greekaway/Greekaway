@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Greekaway – Welcome</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#1e2b3a;
+  color:#ecf0f1;
+  transition: background 0.5s, color 0.5s;
+  text-align:center;
+  padding-bottom:70px; /* χώρος για footer */
+}
+
+/* Logo κεντρικά */
+.welcome-logo {
+  margin-top:100px;
+  max-width:80%;
+  height:auto;
+}
+@media(min-width:600px){
+  .welcome-logo { max-width:300px; }
+}
+@media(min-width:1024px){
+  .welcome-logo { max-width:400px; }
+}
+
+.welcome-title {
+  margin-top:20px;
+  font-size:1.6rem;
+  font-weight:bold;
+}
+.welcome-subtitle {
+  margin-top:10px;
+  font-size:1rem;
+  opacity:0.9;
+}
+
+/* Footer */
+footer {
+  position:fixed;
+  bottom:0; left:0; right:0;
+  background:#1e2b3a;
+  color:#ecf0f1;
+  display:flex;
+  justify-content:space-around;
+  padding:0.6rem 0;
+  border-radius:20px 20px 0 0;
+  z-index:1000;
+}
+footer a {
+  color:#ecf0f1;
+  text-decoration:none;
+  font-size:0.9rem;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+footer a i {
+  font-size:1.4rem;
+  margin-bottom:3px;
+}
+
+/* Overlay */
+.overlay {
+  position:fixed; top:0; left:0; right:0; bottom:70px; /* αφήνουμε χώρο για footer */
+  background:rgba(0,0,0,0.95);
+  display:none;
+  color:#fff;
+  overflow:auto;
+  padding:2rem 1rem;
+  z-index:900;
+}
+.overlay.active { display:block; }
+.overlay h2 { margin-top:0; }
+.overlay .close-btn {
+  position:sticky; top:0;
+  margin:-1rem -0.5rem 1rem 0;
+  align-self:flex-end;
+  background:#2c3e50;
+  color:#ecf0f1;
+  border:none;
+  padding:8px 12px;
+  border-radius:12px;
+}
+
+/* Cards για εκδρομές */
+.trip-card {
+  background:#2c3e50;
+  border-radius:15px;
+  padding:1rem;
+  margin:1rem 0;
+  text-align:left;
+}
+.trip-card h3 { margin:0; font-size:1.2rem; color:#90caf9; }
+.trip-card p { margin:0.5rem 0; font-size:0.9rem; }
+.trip-card a {
+  display:inline-block;
+  margin-top:0.5rem;
+  padding:8px 14px;
+  background:#2E8B57;
+  color:#fff;
+  text-decoration:none;
+  border-radius:8px;
+  font-size:0.9rem;
+}
+.trip-card a:hover { background:#256d47; }
+</style>
+</head>
+<body>
+
+<!-- Welcome Content -->
+<img src="logo.jpg" alt="Greekaway" class="welcome-logo">
+<div class="welcome-title">Καλώς ήρθατε στο Greekaway</div>
+<div class="welcome-subtitle">Ανακαλύψτε τις καλύτερες εκδρομές στην Ελλάδα</div>
+<!-- Overlays -->
+<div class="overlay" id="tripsOverlay">
+  <button class="close-btn" onclick="closeOverlay('tripsOverlay')">✕ Κλείσιμο</button>
+  <h2>Εκδρομές</h2>
+
+  <div class="trip-card">
+    <h3>Διήμερη Απόδραση στη Λευκάδα</h3>
+    <p>Παραλία Κάθισμα, κρουαζιέρα, ξενοδοχείο Semiramis και ηλιοβασίλεμα στη Ράχη.</p>
+    <a href="lefkas.html">Δείτε περισσότερα</a>
+  </div>
+
+  <div class="trip-card">
+    <h3>Διήμερη Απόδραση στους Δελφούς & Αράχωβα</h3>
+    <p>Αρχαιολογικός χώρος Δελφών, διαμονή στην Αράχωβα και ολοήμερη εμπειρία στον Παρνασσό.</p>
+    <a href="delphi.html">Δείτε περισσότερα</a>
+  </div>
+</div>
+
+<div class="overlay" id="aboutOverlay">
+  <button class="close-btn" onclick="closeOverlay('aboutOverlay')">✕ Κλείσιμο</button>
+  <h2>About Us</h2>
+  <p>Το Greekaway οργανώνει μοναδικές αποδράσεις σε όλη την Ελλάδα, συνδυάζοντας 
+  διαμονή, δραστηριότητες και πολιτιστικές εμπειρίες.</p>
+</div>
+
+<div class="overlay" id="contactOverlay">
+  <button class="close-btn" onclick="closeOverlay('contactOverlay')">✕ Κλείσιμο</button>
+  <h2>Contact</h2>
+  <form>
+    <input type="text" placeholder="Όνομα" required>
+    <input type="email" placeholder="Email" required>
+    <textarea placeholder="Μήνυμα"></textarea>
+    <button type="submit">Αποστολή</button>
+  </form>
+</div>
+<!-- Footer: Welcome Page -->
+<footer>
+  <a href="index.html"><i class="fas fa-home"></i>Home</a>
+  <a href="javascript:void(0)" onclick="openOverlay('tripsOverlay')"><i class="fas fa-suitcase-rolling"></i>Εκδρομές</a>
+  <a href="javascript:void(0)" onclick="openOverlay('aboutOverlay')"><i class="fas fa-info-circle"></i>About Us</a>
+  <a href="javascript:void(0)" onclick="openOverlay('contactOverlay')"><i class="fas fa-envelope"></i>Contact</a>
+</footer>
+
+<script>
+function openOverlay(id){
+  document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) el.classList.add('active');
+}
+function closeOverlay(id){
+  const el = document.getElementById(id);
+  if(el) el.classList.remove('active');
+}
+</script>
+
+</body>
+</html>
