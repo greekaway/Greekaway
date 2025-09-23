@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Διήμερη Απόδραση στη Λευκάδα</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* ---------------- Βασικό στυλ (Mobile First) ---------------- */
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#1e2b3a;
+  color:#ecf0f1;
+  transition: background 0.5s, color 0.5s;
+  font-size:1rem;
+}
+
+/* Header */
+header {
+  position:fixed; top:0; left:0; right:0;
+  background:#1e2b3a; color:#ecf0f1;
+  height:76px; display:flex; justify-content:space-between; align-items:center;
+  padding:0 12px; z-index:1000;
+}
+header .brand-logo { height:48px; width:auto; border-radius:8px; object-fit:contain; }
+header .title { position:absolute; left:50%; transform:translateX(-50%); width:70%; font-size:0.95rem; font-weight:bold; text-align:center; pointer-events:none; line-height:1.2rem; }
+header .title .price-top { display:block; color:red; font-size:1.1rem; font-weight:bold; margin-top:2px; }
+
+/* Hamburger */
+.hamburger { font-size:1.6rem; cursor:pointer; color:#ecf0f1; background:#2c3e50; padding:6px 10px; border-radius:20px; }
+.hamburger:active { transform:scale(0.95); }
+
+/* Dropdown menu */
+nav.menu-drop {
+  position:absolute; top:100%; right:10px;
+  background:#2c3e50; display:none; flex-direction:column;
+  box-shadow:0 4px 8px rgba(0,0,0,0.2);
+  z-index:1000; border-radius:12px; overflow:hidden;
+}
+nav.menu-drop a { padding:10px; text-decoration:none; color:#ecf0f1; border-bottom:1px solid #333; }
+nav.menu-drop a:hover { background:#1e2b3a; }
+
+/* Περιεχόμενο */
+main { padding: calc(76px + 16px) 1rem 6rem 1rem; }
+
+/* Cards */
+.card { margin-bottom:2rem; border:1px solid #ddd; border-radius:20px; padding:1rem; background:#2c3e50; }
+.card h2 { margin:0 0 0.5rem 0; color:#ecf0f1; font-size:1.1rem; }
+.card h2 .price { color:red; font-size:1.2rem; font-weight:bold; margin-left:5px; }
+
+/* Video */
+.video-wrap { position:relative; padding-bottom:56.25%; height:0; overflow:hidden; margin-bottom:1rem; border-radius:20px; }
+.video-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:0; border-radius:20px; }
+
+/* Map (30% πιο κοντός) */
+#map { 
+  width:100%; 
+  height:28vh;
+  min-height:200px; 
+  margin-bottom:1.5rem; 
+  border-radius:20px; 
+  overflow:hidden; 
+  position:relative; 
+}
+/* Fullscreen */
+#map:fullscreen, #map:-webkit-full-screen, #map:-moz-full-screen, #map:-ms-fullscreen { width:100vw; height:100vh; }
+body.fs-active header, body.fs-active footer, body.fs-active .overlay { display:none !important; }
+body.fs-active #map { position:fixed !important; inset:0 !important; width:100vw !important; height:100vh !important; border-radius:0 !important; z-index:10000 !important; }
+
+/* Custom map control buttons */
+.gm-custom-btn{
+  background:#1e2b3a; color:#ecf0f1; border:1px solid #2c3e50;
+  border-radius:50%; padding:10px 12px; margin:10px 10px 0 0;
+  font-size:18px; line-height:18px; cursor:pointer; user-select:none; text-align:center;
+  box-shadow:0 2px 6px rgba(0,0,0,0.3);
+}
+.gm-custom-btn:hover{ background:#2c3e50; }
+
+/* --- Google default controls --- */
+.gm-style .gm-control-active {
+  border-radius:20px !important;
+  background:#1e2b3a !important;
+  color:#ecf0f1 !important;
+  box-shadow:0 2px 6px rgba(0,0,0,0.4) !important;
+  border:none !important;
+}
+.gm-style .gm-control-active:hover { background:#2c3e50 !important; }
+
+/* ---- MapTypeControl (Χάρτης / Δορυφόρος) ---- */
+.gm-style-mtc { background:transparent !important; box-shadow:none !important; border:none !important; padding:0 !important; }
+.gm-style-mtc > div { display:inline-flex !important; gap:8px !important; background:transparent !important; }
+.gm-style-mtc button {
+  border-radius:20px !important;
+  background:#1e2b3a !important;
+  color:#ecf0f1 !important;
+  border:none !important;
+  padding:6px 14px !important;
+  font-size:0.9rem !important;
+  margin:0 !important;
+  box-shadow:0 2px 6px rgba(0,0,0,0.3) !important;
+}
+.gm-style-mtc button:hover { background:#2c3e50 !important; }
+
+/* ---- Street View Pegman ---- */
+.gm-style .gm-svpc {
+  border-radius:50% !important;
+  background:#1e2b3a !important;
+  box-shadow:0 2px 6px rgba(0,0,0,0.4) !important;
+  padding:6px !important;
+}
+.gm-style .gm-svpc img { filter:none !important; }
+.gm-style .gm-svpc:hover { background:#2c3e50 !important; }
+
+/* Footer */
+footer { position:fixed; bottom:0; left:0; right:0; background:#1e2b3a; color:#ecf0f1; display:flex; justify-content:space-around; padding:0.5rem 0; z-index:1000; border-radius:20px 20px 0 0; }
+footer a { color:#ecf0f1; text-decoration:none; font-size:0.9rem; text-align:center; display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+footer a i { font-size:1.5rem; margin-bottom:2px; color:#ecf0f1; }
+
+/* Overlay */
+.overlay { position:fixed; top:80px; bottom:60px; left:0; right:0; background:rgba(0,0,0,0.95); color:#ecf0f1; display:none; overflow:auto; z-index:999; padding:2rem 1rem; border-radius:20px; }
+.overlay.active { display:block; }
+.overlay .close-btn{ position:sticky; top:0; margin:-1rem -0.5rem 1rem 0; align-self:flex-end; background:#2c3e50; color:#ecf0f1; border:none; padding:8px 12px; border-radius:12px; }
+
+/* Forms */
+form { margin:1rem 0 0; display:flex; flex-direction:column; max-width:420px; }
+form input, form select, form textarea, form button { margin-bottom:1rem; padding:10px; font-size:1rem; border-radius:20px; border:1px solid #ccc; }
+form button { background:#2E8B57; color:#ecf0f1; border:none; cursor:pointer; font-weight:bold; }
+form button:hover { background:#256d47; }
+
+/* Dark Theme */
+body.dark-mode { background:#121212; color:#f1f1f1; }
+body.dark-mode header, body.dark-mode footer, body.dark-mode .menu-drop { background:#222; color:#ecf0f1; }
+body.dark-mode .card { background:#1e1e1e; border:1px solid #444; }
+body.dark-mode nav.menu-drop a:hover { background:#333; }
+body.dark-mode .card h2 { color:#90caf9; }
+body.dark-mode .card h2 .price { color:#ff6f61; }
+
+/* ---------------- Responsive ---------------- */
+/* Tablet */
+@media (min-width:600px) and (max-width:1024px){
+  body { font-size:1.1rem; }
+  header { height:80px; padding:0 20px; }
+  header .brand-logo { height:56px; }
+  header .title { font-size:1.2rem; line-height:1.4rem; }
+  .card h2 { font-size:1.3rem; }
+  main { padding: calc(80px + 10px) 1.5rem 6rem 1.5rem; }
+  .card { margin-bottom:1.5rem; }
+  .video-wrap { margin-bottom:0.5rem; }
+  #map { height:32vh; min-height:220px; }
+}
+
+/* Desktop */
+@media (min-width:1025px){
+  body { font-size:1.15rem; }
+  header { height:90px; padding:0 30px; }
+  header .brand-logo { height:64px; }
+  header .title { font-size:1.4rem; line-height:1.6rem; }
+  .card h2 { font-size:1.5rem; }
+  main { padding: calc(90px + 30px) 3rem 8rem 3rem; max-width:1200px; margin:auto; }
+  #map { height:35vh; min-height:240px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <img src="logo.jpg" alt="Greekaway" class="brand-logo">
+  <div class="title">
+    Διήμερη Απόδραση στη Λευκάδα
+    <span class="price-top">330 € μόνο!</span>
+  </div>
+  <div class="hamburger" onclick="toggleMenu()" aria-label="Μενού">☰</div>
+  <nav class="menu-drop" id="menuDrop">
+    <a href="#hotel" onclick="navigateTo('hotel')">Semiramis</a>
+    <a href="#beach" onclick="navigateTo('beach')">Kathisma</a>
+    <a href="#restaurant" onclick="navigateTo('restaurant')">Rachi</a>
+    <a href="#cruise" onclick="navigateTo('cruise')">Κρουαζιέρα</a>
+    <a href="#nidri-cafe" onclick="navigateTo('nidri-cafe')">Νυδρί</a>
+    <a href="#trip-description" onclick="navigateTo('trip-description')">Περιγραφή εκδρομής</a>
+  </nav>
+</header>
+
+<main>
+  <div id="map"></div>
+
+  <!-- Cards -->
+  <article class="card" id="hotel">
+    <h2>Διήμερη απόδραση στη Λευκάδα με διανυκτέρευση και κρουαζιέρα <span class="price">330 € μόνο!</span></h2>
+    <p>Διαμονή στο ξενοδοχείο Semiramis στη Λευκάδα.</p>
+    <div class="video-wrap">
+      <iframe src="https://www.youtube-nocookie.com/embed/RXSymowNTz4?rel=0&modestbranding=1" title="Semiramis Hotel Lefkada" allowfullscreen></iframe>
+    </div>
+  </article>
+
+  <article class="card" id="beach">
+    <h2>Παραλία Kathisma</h2>
+    <p>Απολαύστε μπάνιο στα γαλαζοπράσινα νερά της παραλίας Kathisma.</p>
+    <div class="video-wrap">
+      <iframe src="https://www.youtube-nocookie.com/embed/HLVY4mVRk3o?rel=0&modestbranding=1" title="Kathisma Beach Lefkada" allowfullscreen></iframe>
+    </div>
+  </article>
+
+  <article class="card" id="restaurant">
+    <h2>Εστιατόριο Rachi</h2>
+    <p>Ηλιοβασίλεμα και φαγητό στο εστιατόριο Rachi.</p>
+    <div class="video-wrap">
+      <iframe src="https://www.youtube-nocookie.com/embed/8RlEPko1oU4?rel=0&modestbranding=1" title="Rachi Restaurant Lefkada" allowfullscreen></iframe>
+    </div>
+  </article>
+  <article class="card" id="cruise">
+    <h2>Κρουαζιέρα Νυδρί</h2>
+    <p>Ολοήμερη κρουαζιέρα με Seven Islands.</p>
+    <div class="video-wrap">
+      <iframe src="https://www.youtube-nocookie.com/embed/oq4KHE-6lmM?rel=0&modestbranding=1" title="Nidri Cruise Lefkada" allowfullscreen></iframe>
+    </div>
+  </article>
+
+  <article class="card" id="nidri-cafe">
+    <h2>Καφές & Παγωτό Νυδρί</h2>
+    <p>Απολαύστε καφέ και παγωτό στην πόλη του Νυδρί.</p>
+    <div class="video-wrap">
+      <iframe src="https://www.youtube-nocookie.com/embed/Z9Uyks-r1J8?rel=0&modestbranding=1" title="Cafe & Ice Cream Nidri Lefkada" allowfullscreen></iframe>
+    </div>
+  </article>
+
+  <!-- Trip Description -->
+  <article class="card" id="trip-description">
+    <h2>Διήμερη Εκδρομή στη Λευκάδα – Ζήστε την εμπειρία</h2>
+    <ul>
+      <li><strong>Αφετηρία στην Αθήνα:</strong> Η περιπέτεια ξεκινά...</li>
+      <li><strong>Στάση στο ξενοδοχείο:</strong> Χρόνος για αλλαγή ρούχων...</li>
+      <li><strong>Παραλία Κάθισμα:</strong> Μπάνιο στα γαλαζοπράσινα νερά...</li>
+      <li><strong>Δείπνο με θέα:</strong> Στο εστιατόριο Ράχη...</li>
+      <li><strong>Βραδινή βόλτα:</strong> Στην πόλη της Λευκάδας.</li>
+      <li><strong>Κρουαζιέρα:</strong> Αναχώρηση για ολοήμερη εμπειρία.</li>
+      <li><strong>Ελεύθερος χρόνος στο Νυδρί:</strong> 1,5 ώρα χαλάρωσης.</li>
+      <li><strong>Επιστροφή:</strong> Μεταφορά στην Αθήνα.</li>
+    </ul>
+  </article>
+</main>
+
+<!-- Overlays -->
+<div class="overlay" id="bookingOverlay">
+  <button class="close-btn" onclick="closeOverlay('bookingOverlay')">✕ Κλείσιμο</button>
+  <h2>Online Κράτηση</h2>
+  <form>
+    <input type="text" placeholder="Όνομα" required>
+    <input type="email" placeholder="Email" required>
+    <input type="date" required>
+    <input type="number" placeholder="Αριθμός Ατόμων" min="1" required>
+    <textarea placeholder="Σχόλια"></textarea>
+    <button type="submit">Κράτηση</button>
+  </form>
+</div>
+
+<div class="overlay" id="paymentOverlay">
+  <button class="close-btn" onclick="closeOverlay('paymentOverlay')">✕ Κλείσιμο</button>
+  <h2>Πληρωμή</h2>
+  <form>
+    <input type="text" placeholder="Όνομα" required>
+    <input type="email" placeholder="Email" required>
+    <input type="number" placeholder="Ποσό (€)" required>
+    <select required>
+      <option value="">Επιλογή Μεθόδου Πληρωμής</option>
+      <option value="card">Κάρτα</option>
+      <option value="paypal">PayPal</option>
+    </select>
+    <button type="submit">Πληρωμή</button>
+  </form>
+</div>
+
+<div class="overlay" id="contactOverlay">
+  <button class="close-btn" onclick="closeOverlay('contactOverlay')">✕ Κλείσιμο</button>
+  <h2>Contact</h2>
+  <form>
+    <input type="text" placeholder="Όνομα" required>
+    <input type="email" placeholder="Email" required>
+    <textarea placeholder="Μήνυμα"></textarea>
+    <button type="submit">Αποστολή</button>
+  </form>
+</div>
+
+<!-- Footer (επιστροφή στο welcome page με το Home) -->
+<footer>
+  <a href="index.html"><i class="fas fa-home"></i>Home</a>
+  <a href="javascript:void(0)" onclick="openOverlay('bookingOverlay')"><i class="fas fa-calendar-alt"></i>Online Κράτηση</a>
+  <a href="javascript:void(0)" onclick="openOverlay('paymentOverlay')"><i class="fas fa-credit-card"></i>Πληρωμή</a>
+  <a href="javascript:void(0)" onclick="openOverlay('contactOverlay')"><i class="fas fa-envelope"></i>Contact</a>
+</footer>
+
+<script>
+function toggleMenu(){
+  const menu = document.getElementById('menuDrop');
+  menu.style.display = (menu.style.display==='flex') ? 'none' : 'flex';
+}
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('menuDrop');
+  const hamburger = document.querySelector('.hamburger');
+  if (menu && menu.style.display === 'flex' && !menu.contains(e.target) && !hamburger.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
+function openOverlay(id){
+  document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+function closeOverlay(id){
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('active');
+}
+function goHome(){
+  document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function navigateTo(sectionId){
+  document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+  const menu = document.getElementById('menuDrop');
+  if (menu) menu.style.display = 'none';
+  const section = document.getElementById(sectionId);
+  if(section){
+    section.scrollIntoView({behavior:'smooth'});
+  } else {
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+}
+function applyThemeByTime() {
+  const hour = new Date().getHours();
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if(prefersDark || hour >= 20 || hour < 6){
+    document.body.classList.add('dark-mode');
+  } else {
+    document.body.classList.remove('dark-mode');
+  }
+}
+window.addEventListener('load', applyThemeByTime);
+
+/* Fullscreen helpers */
+function enterNativeFullscreen(el){
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+  if (!req) return Promise.reject(new Error('No native fullscreen API'));
+  return req.call(el);
+}
+function exitNativeFullscreen(){
+  const doc = document;
+  const exit = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+  return exit ? exit.call(doc) : Promise.resolve();
+}
+function isNativeFullscreen(){
+  const doc = document;
+  return !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
+}
+function enableCssImmersive(on){
+  document.body.classList.toggle('fs-active', !!on);
+}
+
+/* Google Map + Route */
+let routeBounds = null;
+let directionsRenderer = null;
+let map = null;
+
+function initMap() {
+  map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 8,
+    center: {lat:38.7, lng:20.65},
+    mapTypeId: 'satellite',
+    fullscreenControl: true,
+    mapTypeControl: true,
+    streetViewControl: true,
+    rotateControl: true
+  });
+
+  const directionsService = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer({map: map});
+
+  const waypts = [
+    {location:'Kathisma Beach Lefkada', stopover:true},
+    {location:'Rachi Exanthia Lefkada', stopover:true},
+    {location:'Nidri Lefkada', stopover:true}
+  ];
+
+  directionsService.route({
+    origin:'Athens, Greece',
+    destination:'Athens, Greece',
+    waypoints: waypts,
+    travelMode:'DRIVING'
+  }, function(result, status){
+    if(status==='OK'){
+      directionsRenderer.setDirections(result);
+      if (result && result.routes && result.routes[0] && result.routes[0].bounds) {
+        routeBounds = result.routes[0].bounds;
+        map.fitBounds(routeBounds);
+      }
+    } else {
+      alert('Directions request failed: ' + status);
+    }
+  });
+
+  /* --- Custom Controls: Fullscreen & Reset View --- */
+  const fsBtn = document.createElement('div');
+  fsBtn.className = 'gm-custom-btn';
+  fsBtn.title = 'Πλήρης οθόνη';
+  fsBtn.textContent = '⤢';
+  fsBtn.addEventListener('click', async () => {
+    const mapEl = map.getDiv();
+    try {
+      if (isNativeFullscreen()) {
+        await exitNativeFullscreen();
+        enableCssImmersive(false);
+        fsBtn.textContent = '⤢';
+      } else {
+        await enterNativeFullscreen(mapEl);
+        fsBtn.textContent = '✕';
+      }
+    } catch (e) {
+      const on = !document.body.classList.contains('fs-active');
+      enableCssImmersive(on);
+      fsBtn.textContent = on ? '✕' : '⤢';
+    }
+  });
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fsBtn);
+
+  const resetBtn = document.createElement('div');
+  resetBtn.className = 'gm-custom-btn';
+  resetBtn.title = 'Επανέφερε τη διαδρομή';
+  resetBtn.textContent = '↺';
+  resetBtn.addEventListener('click', () => {
+    if (routeBounds) {
+      map.fitBounds(routeBounds);
+    }
+    if (directionsRenderer) {
+      const dir = directionsRenderer.getDirections();
+      if (dir) directionsRenderer.setDirections(dir);
+    }
+  });
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(resetBtn);
+
+  ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange']
+    .forEach(evt => document.addEventListener(evt, () => {
+      const active = isNativeFullscreen();
+      if (!active) enableCssImmersive(false);
+      fsBtn.textContent = active || document.body.classList.contains('fs-active') ? '✕' : '⤢';
+    }));
+}
+</script>
+
+<!-- Google Maps API -->
+<script async defer
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBTmIn4C3VGyoPagMsBbupeZ6-AdHds9rI&callback=initMap">
+</script>
+</body>
+</html>
