@@ -379,6 +379,51 @@ function initMap() {
       alert('Directions request failed: ' + status);
     }
   });
+
+  /* --- Custom Controls: Fullscreen & Reset View --- */
+  const fsBtn = document.createElement('div');
+  fsBtn.className = 'gm-custom-btn';
+  fsBtn.title = 'Πλήρης οθόνη';
+  fsBtn.textContent = '⤢';
+  fsBtn.addEventListener('click', async () => {
+    const mapEl = map.getDiv();
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        fsBtn.textContent = '⤢';
+      } else {
+        await mapEl.requestFullscreen();
+        fsBtn.textContent = '✕';
+      }
+    } catch (e) {
+      const on = !document.body.classList.contains('fs-active');
+      document.body.classList.toggle('fs-active', on);
+      fsBtn.textContent = on ? '✕' : '⤢';
+    }
+  });
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fsBtn);
+
+  const resetBtn = document.createElement('div');
+  resetBtn.className = 'gm-custom-btn';
+  resetBtn.title = 'Επανέφερε τη διαδρομή';
+  resetBtn.textContent = '↺';
+  resetBtn.addEventListener('click', () => {
+    if (routeBounds) {
+      map.fitBounds(routeBounds);
+    }
+    if (directionsRenderer) {
+      const dir = directionsRenderer.getDirections();
+      if (dir) directionsRenderer.setDirections(dir);
+    }
+  });
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(resetBtn);
+
+  ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange']
+    .forEach(evt => document.addEventListener(evt, () => {
+      const active = !!document.fullscreenElement || document.body.classList.contains('fs-active');
+      fsBtn.textContent = active ? '✕' : '⤢';
+      if (!active) document.body.classList.remove('fs-active');
+    }));
 }
 </script>
 
