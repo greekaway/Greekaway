@@ -134,6 +134,33 @@ footer a:hover i {
   transition:background 0.3s;
 }
 .trip-card a:hover { background:#256d47; }
+.trip-icons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1.5rem;
+}
+.trip-icon {
+  background:#2c3e50;
+  padding:20px;
+  border-radius:20px;
+  text-align:center;
+  width:90px;
+  cursor:pointer;
+  transition:transform 0.3s, background 0.3s;
+}
+.trip-icon i {
+  font-size:2rem;
+  margin-bottom:10px;
+  display:block;
+}
+.trip-icon:hover {
+  background:#004080;
+  transform:scale(1.1);
+}
+.trip-icon span {
+  font-size:0.9rem;
+}
+
 </style>
 </head>
 <body>
@@ -182,6 +209,10 @@ footer a:hover i {
 <!-- Footer: Welcome Page -->
 <footer>
   <a href="index.html"><i class="fas fa-home"></i>Home</a>
+  <a href="javascript:void(0)" onclick="openOverlay('tripsOverlay')">
+  <i class="fas fa-map-marked-alt"></i> Εκδρομές
+</a>
+
   <a href="javascript:void(0)" onclick="openOverlay('tripsOverlay')"><i class="fas fa-suitcase-rolling"></i>Εκδρομές</a>
   <a href="javascript:void(0)" onclick="openOverlay('aboutOverlay')"><i class="fas fa-info-circle"></i>About Us</a>
   <a href="javascript:void(0)" onclick="openOverlay('contactOverlay')"><i class="fas fa-envelope"></i>Contact</a>
@@ -198,6 +229,54 @@ function closeOverlay(id){
   if(el) el.classList.remove('active');
 }
 </script>
+<!-- Overlay για Κατηγορίες Εκδρομών -->
+<div class="overlay" id="tripsOverlay">
+  <button class="close-btn" onclick="closeOverlay('tripsOverlay')">✕ Κλείσιμο</button>
+  <h2>Κατηγορίες Εκδρομών</h2>
+  <div class="trip-icons">
+    <div class="trip-icon" onclick="openOverlay('mountainTrips')">
+      <i class="fas fa-mountain"></i>
+      <span>Βουνό</span>
+    </div>
+    <div class="trip-icon" onclick="openOverlay('seaTrips')">
+      <i class="fas fa-ship"></i>
+      <span>Θάλασσα</span>
+    </div>
+    <div class="trip-icon" onclick="openOverlay('cityTrips')">
+      <i class="fas fa-city"></i>
+      <span>Πόλη</span>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay: Εκδρομές στο Βουνό -->
+<div class="overlay" id="mountainTrips">
+  <button class="close-btn" onclick="closeOverlay('mountainTrips')">✕ Κλείσιμο</button>
+  <h2>Εκδρομές στο Βουνό</h2>
+  <div class="trip-card">
+    <h3>Δελφοί & Αράχωβα</h3>
+    <p>Διήμερη απόδραση στους Δελφούς & την Αράχωβα.</p>
+    <a href="delphi.html">Δείτε λεπτομέρειες</a>
+  </div>
+</div>
+
+<!-- Overlay: Εκδρομές στη Θάλασσα -->
+<div class="overlay" id="seaTrips">
+  <button class="close-btn" onclick="closeOverlay('seaTrips')">✕ Κλείσιμο</button>
+  <h2>Εκδρομές στη Θάλασσα</h2>
+  <div class="trip-card">
+    <h3>Λευκάδα</h3>
+    <p>Διήμερη εκδρομή στη Λευκάδα με κρουαζιέρα.</p>
+    <a href="lefkas.html">Δείτε λεπτομέρειες</a>
+  </div>
+</div>
+
+<!-- Overlay: Εκδρομές στην Πόλη (προς το παρόν κενό) -->
+<div class="overlay" id="cityTrips">
+  <button class="close-btn" onclick="closeOverlay('cityTrips')">✕ Κλείσιμο</button>
+  <h2>Εκδρομές στην Πόλη</h2>
+  <p>Δεν υπάρχουν ακόμα εκδρομές σε αυτή την κατηγορία.</p>
+</div>
 
 </body>
 </html>
