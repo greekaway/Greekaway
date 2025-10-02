@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="el">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Greekaway – Welcome</title>
+<title>Greekaway – Demo</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 body {
@@ -12,164 +11,164 @@ body {
   font-family: Arial, sans-serif;
   background:#1e2b3a;
   color:#ecf0f1;
-  transition: background 0.5s, color 0.5s;
   text-align:center;
-  padding-bottom:70px;
 }
-.welcome-logo {
-  margin-top:80px;
-  max-width:90%;
-  height:auto;
-  border-radius:30px;
-  box-shadow:0 6px 16px rgba(0,0,0,0.5);
+
+/* Footer */
+footer {
+  position:fixed;
+  bottom:0; left:0; right:0;
+  background:#000;
+  color:#ecf0f1;
+  display:flex;
+  justify-content:space-around;
+  padding:0.6rem 0;
+  border-radius:20px 20px 0 0;
+  z-index:1000;
 }
-@media(min-width:600px){
-  .welcome-logo { max-width:600px; }
+footer a {
+  color:#ecf0f1;
+  text-decoration:none;
+  font-size:0.9rem;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
 }
-@media(min-width:1024px){
-  .welcome-logo { max-width:800px; }
+footer a i { font-size:1.4rem; margin-bottom:3px; }
+
+/* Overlay */
+.overlay {
+  position:fixed; 
+  top:0; left:0; right:0; bottom:70px;
+  background:#162636;
+  display:none;
+  color:#fff;
+  overflow:auto;
+  padding:2rem 1rem;
+  z-index:900;
 }
-.welcome-title {
+.overlay.active { display:block; }
+.overlay h2 { margin-top:0; }
+.overlay .close-btn {
+  position:sticky; top:0;
+  margin:-1rem -0.5rem 1rem 0;
+  background:#2c3e50;
+  color:#ecf0f1;
+  border:none;
+  padding:8px 12px;
+  border-radius:12px;
+  cursor:pointer;
+}
+
+/* Grid για εικονίδια κατηγοριών */
+.category-grid {
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:20px;
   margin-top:20px;
-  font-size:1.6rem;
-  font-weight:bold;
 }
-.welcome-subtitle {
-  margin-top:10px;
-  font-size:1rem;
-  opacity:0.9;
+.category {
+  background:#2c3e50;
+  border-radius:20px;
+  padding:20px;
+  text-align:center;
+  cursor:pointer;
+  transition:background 0.3s;
 }
+.category:hover { background:#3e5770; }
+.category i {
+  font-size:2rem;
+  margin-bottom:10px;
+  color:#00aaff;
+}
+
+/* Cards για εκδρομές */
 .trip-card {
   background:#3b566e;
   border-radius:15px;
   padding:1rem;
-  margin:1rem;
+  margin:1rem 0;
   text-align:left;
-  box-shadow:0 6px 12px rgba(0,0,0,0.5);
 }
-.trip-card h3 { margin:0; font-size:1.3rem; color:#00aaff; }
-.trip-card p { margin:0.5rem 0; font-size:0.95rem; color:#fff; }
-.trip-card a {
-  display:inline-block;
-  margin-top:0.5rem;
-  padding:8px 14px;
-  background:#2E8B57;
-  color:#fff;
-  text-decoration:none;
-  border-radius:8px;
-}
-.trip-card a:hover { background:#256d47; }
-.trip-section { display:none; }
+.trip-card h3 { margin:0; color:#00aaff; }
+.trip-card p { margin:0.5rem 0; }
 </style>
 </head>
 <body>
 
-<!-- Logo & τίτλοι -->
-<img src="logo.png" alt="Greekaway Logo" class="welcome-logo">
-<div class="welcome-title">Καλώς ήρθατε στο Greekaway</div>
-<div class="welcome-subtitle">Ανακαλύψτε μοναδικές εκδρομές στην Ελλάδα</div>
+<h1>Greekaway Demo</h1>
+<p>Παράδειγμα με κατηγορίες & εκδρομές</p>
 
-<!-- Κάρτες εκδρομών -->
-<div class="trip-card">
-  <h3>Δελφοί & Αράχωβα</h3>
-  <p>Διήμερη απόδραση στον ομφαλό της γης και στη γραφική Αράχωβα.</p>
-  <a href="#" onclick="showTrip('delphi')">Δείτε περισσότερα</a>
+<!-- Overlay Κατηγοριών -->
+<div class="overlay" id="categoriesOverlay">
+  <button class="close-btn" onclick="closeOverlay('categoriesOverlay')">✕ Κλείσιμο</button>
+  <h2>Κατηγορίες Εκδρομών</h2>
+  <div class="category-grid">
+    <div class="category" onclick="openOverlay('beachOverlay')">
+      <i class="fas fa-umbrella-beach"></i>
+      Παραλία
+    </div>
+    <div class="category" onclick="openOverlay('mountainOverlay')">
+      <i class="fas fa-mountain"></i>
+      Βουνό
+    </div>
+    <div class="category" onclick="openOverlay('cityOverlay')">
+      <i class="fas fa-city"></i>
+      Πόλη
+    </div>
+    <div class="category" onclick="openOverlay('islandOverlay')">
+      <i class="fas fa-ship"></i>
+      Νησί
+    </div>
+  </div>
 </div>
 
-<div class="trip-card">
-  <h3>Λευκάδα</h3>
-  <p>Εξερευνήστε το νησί με τις ωραιότερες παραλίες του Ιονίου.</p>
-  <a href="#" onclick="showTrip('lefkas')">Δείτε περισσότερα</a>
+<!-- Overlay Παραλία -->
+<div class="overlay" id="beachOverlay">
+  <button class="close-btn" onclick="closeOverlay('beachOverlay')">✕ Κλείσιμο</button>
+  <h2>Εκδρομές σε Παραλίες</h2>
+  <div class="trip-card">
+    <h3>Λευκάδα</h3>
+    <p>Εξερεύνηση στις καλύτερες παραλίες του Ιονίου.</p>
+  </div>
+  <div class="trip-card">
+    <h3>Μύκονος</h3>
+    <p>Νυχτερινή ζωή και χρυσαφένιες παραλίες.</p>
+  </div>
 </div>
-<!-- ================= Δελφοί & Αράχωβα ================= -->
-<section id="trip-delphi" class="trip-section">
 
-  <h2>Διήμερη Απόδραση στους Δελφούς & Αράχωβα</h2>
-  <p><strong>Τιμή:</strong> 330 € / άτομο</p>
+<!-- Overlay Βουνό -->
+<div class="overlay" id="mountainOverlay">
+  <button class="close-btn" onclick="closeOverlay('mountainOverlay')">✕ Κλείσιμο</button>
+  <h2>Εκδρομές σε Βουνά</h2>
+  <div class="trip-card">
+    <h3>Πήλιο</h3>
+    <p>Μαγευτικά χωριά και μονοπάτια.</p>
+  </div>
+  <div class="trip-card">
+    <h3>Παρνασσός</h3>
+    <p>Σκι και περιπέτεια στα χιόνια.</p>
+  </div>
+</div>
 
-  <div id="map"></div>
-
-  <article class="card">
-    <h2>Επίσκεψη στους Δελφούς</h2>
-    <p>Ξεκινάμε από την Αθήνα και πρώτη στάση είναι ο αρχαιολογικός χώρος των Δελφών.</p>
-    <div class="video-wrap">
-      <iframe src="https://www.youtube-nocookie.com/embed/ogyJXgHobvg?rel=0&modestbranding=1" allowfullscreen></iframe>
-    </div>
-  </article>
-
-  <article class="card">
-    <h2>Διαμονή στην Αράχωβα</h2>
-    <p>Άφιξη και τακτοποίηση σε ξενοδοχείο της Αράχωβας.</p>
-    <div class="video-wrap">
-      <iframe src="https://www.youtube-nocookie.com/embed/WA44NW9zgRs?rel=0&modestbranding=1" allowfullscreen></iframe>
-    </div>
-  </article>
-
-  <article class="card">
-    <h2>Βόλτα στην Αράχωβα</h2>
-    <p>Το απόγευμα περιπλανιόμαστε στα γραφικά σοκάκια της Αράχωβας.</p>
-    <div class="video-wrap">
-      <iframe src="https://www.youtube-nocookie.com/embed/h0twbbYFfO8?rel=0&modestbranding=1" allowfullscreen></iframe>
-    </div>
-  </article>
-
-  <article class="card">
-    <h2>Χιονοδρομικό Παρνασσού</h2>
-    <p>Τη δεύτερη μέρα η εκδρομή περιλαμβάνει ολοήμερη επίσκεψη στο χιονοδρομικό κέντρο Παρνασσού.</p>
-    <div class="video-wrap">
-      <iframe src="https://www.youtube-nocookie.com/embed/dD4Ez7NOMV8?rel=0&modestbranding=1" allowfullscreen></iframe>
-    </div>
-  </article>
-
-  <article class="card">
-    <h2>Καφές στην Αράχωβα</h2>
-    <p>Πριν την επιστροφή μας στην Αθήνα, απολαμβάνουμε έναν καφέ στην Αράχωβα.</p>
-    <div class="video-wrap">
-      <iframe src="https://www.youtube-nocookie.com/embed/5RV1cIB2lDU?rel=0&modestbranding=1" allowfullscreen></iframe>
-    </div>
-  </article>
-
-  <article class="card">
-    <h2>Περιγραφή Εκδρομής</h2>
-    <ul>
-      <li><strong>Αφετηρία:</strong> Αθήνα</li>
-      <li><strong>Δελφοί:</strong> Επίσκεψη στον αρχαιολογικό χώρο & μουσείο</li>
-      <li><strong>Άφιξη:</strong> Ξενοδοχείο στην Αράχωβα</li>
-      <li><strong>Βόλτα:</strong> Απογευματινό φαγητό & ποτό στην πλατεία</li>
-      <li><strong>Παρνασσός:</strong> Χιονοδρομικό κέντρο</li>
-      <li><strong>Καφές:</strong> Στάση στην Αράχωβα</li>
-      <li><strong>Επιστροφή:</strong> Αθήνα</li>
-    </ul>
-  </article>
-
-</section>
 <!-- Footer -->
 <footer>
-  <a href="#" onclick="goHome()"><i class="fa fa-home"></i> Αρχική</a>
-  <a href="#"><i class="fa fa-phone"></i> Επικοινωνία</a>
-  <a href="#"><i class="fa fa-info-circle"></i> Σχετικά</a>
+  <a href="javascript:void(0)" onclick="openOverlay('categoriesOverlay')">
+    <i class="fas fa-list"></i> Εκδρομές
+  </a>
 </footer>
 
-<!-- Script -->
 <script>
-  function showTrip(tripId) {
-    // κρύψε όλα τα sections
-    document.querySelectorAll('.trip-section').forEach(sec => sec.style.display = "none");
-
-    // εμφάνισε το συγκεκριμένο
-    const section = document.getElementById("trip-" + tripId);
-    if(section) section.style.display = "block";
-
-    // πήγαινε στην κορυφή
-    window.scrollTo({top: 0, behavior: 'smooth'});
-  }
-
-  function goHome() {
-    // κρύψε όλα τα sections και δείξε μόνο τις κάρτες
-    document.querySelectorAll('.trip-section').forEach(sec => sec.style.display = "none");
-    window.scrollTo({top: 0, behavior:'smooth'});
-  }
+function openOverlay(id){
+  document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function closeOverlay(id){
+  document.getElementById(id).classList.remove('active');
+}
 </script>
 
 </body>
 </html>
+
