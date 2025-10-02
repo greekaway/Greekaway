@@ -38,29 +38,23 @@
   <div class="overlay" id="mountainTrips">
     <button class="close-btn" onclick="closeOverlay('mountainTrips')">✕ Κλείσιμο</button>
     <h2>Εκδρομές στο Βουνό</h2>
-    <div class="trip-card">
-      <h3>Δελφοί & Αράχωβα</h3>
-      <p>Διήμερη απόδραση στους Δελφούς & την Αράχωβα.</p>
-      <a href="delphi.html">Δείτε λεπτομέρειες</a>
-    </div>
+    <div id="mountainTripsContainer"></div>
   </div>
 
   <!-- Overlay: Εκδρομές στη Θάλασσα -->
   <div class="overlay" id="seaTrips">
     <button class="close-btn" onclick="closeOverlay('seaTrips')">✕ Κλείσιμο</button>
     <h2>Εκδρομές στη Θάλασσα</h2>
-    <div class="trip-card">
-      <h3>Λευκάδα</h3>
-      <p>Διήμερη εκδρομή στη Λευκάδα με κρουαζιέρα.</p>
-      <a href="lefkas.html">Δείτε λεπτομέρειες</a>
-    </div>
+    <div id="seaTripsContainer"></div>
   </div>
 
   <!-- Overlay: Εκδρομές στην Πόλη -->
   <div class="overlay" id="cityTrips">
     <button class="close-btn" onclick="closeOverlay('cityTrips')">✕ Κλείσιμο</button>
     <h2>Εκδρομές στην Πόλη</h2>
-    <p>Δεν υπάρχουν ακόμα εκδρομές σε αυτή την κατηγορία.</p>
+    <div id="cityTripsContainer">
+      <p>Δεν υπάρχουν ακόμα εκδρομές σε αυτή την κατηγορία.</p>
+    </div>
   </div>
 
   <!-- Footer -->
@@ -80,3 +74,4 @@
   <script src="js/main.js"></script>
 </body>
 </html>
+
