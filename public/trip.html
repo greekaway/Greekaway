@@ -3,30 +3,133 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Εκδρομή – Greekaway</title>
+  <title>Όλες οι Εκδρομές – Greekaway</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      margin:0;
+      font-family: Arial, sans-serif;
+      background:#1e2b3a;
+      color:#ecf0f1;
+      padding-bottom:70px;
+    }
+    header {
+      background:#000;
+      color:#fff;
+      padding:1rem;
+      text-align:center;
+      font-size:1.3rem;
+      font-weight:bold;
+    }
+    .trips-container {
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      padding:1rem;
+      gap:1rem;
+    }
+    .trip-card {
+      background:#2c3e50;
+      border-radius:15px;
+      padding:1rem;
+      width:300px;
+      box-shadow:0 6px 12px rgba(0,0,0,0.5);
+      transition: transform 0.3s ease;
+    }
+    .trip-card:hover {
+      transform:translateY(-6px);
+    }
+    .trip-card img {
+      width:100%;
+      height:180px;
+      object-fit:cover;
+      border-radius:12px;
+      margin-bottom:0.8rem;
+    }
+    .trip-card h3 {
+      margin:0;
+      font-size:1.2rem;
+      color:#00aaff;
+    }
+    .trip-card p {
+      font-size:0.9rem;
+      margin:0.5rem 0;
+    }
+    .trip-card a {
+      display:inline-block;
+      margin-top:0.5rem;
+      padding:8px 14px;
+      background:#2E8B57;
+      color:#fff;
+      text-decoration:none;
+      border-radius:8px;
+      font-size:0.9rem;
+    }
+    .trip-card a:hover {
+      background:#256d47;
+    }
+    footer {
+      position:fixed;
+      bottom:0; left:0; right:0;
+      background:#000;
+      color:#ecf0f1;
+      display:flex;
+      justify-content:space-around;
+      padding:0.6rem 0;
+      border-radius:20px 20px 0 0;
+    }
+    footer a {
+      color:#ecf0f1;
+      text-decoration:none;
+      font-size:0.9rem;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+    footer a i {
+      font-size:1.4rem;
+      margin-bottom:3px;
+    }
+  </style>
 </head>
 <body>
-  <!-- Header -->
-  <header>
-    <img src="logo.png" alt="Greekaway" class="brand-logo">
-    <div class="title" id="trip-title"></div>
-  </header>
-
-  <main>
-    <!-- Map -->
-    <div id="map"></div>
-    <!-- Trip content -->
-    <div id="trip-content"></div>
-  </main>
+  <header>Όλες οι Εκδρομές</header>
+  <div class="trips-container" id="tripsContainer">
+    <!-- Οι εκδρομές θα φορτωθούν εδώ -->
+  </div>
 
   <!-- Footer -->
   <footer>
-    <a href="index.html"><i class="fas fa-home"></i> Αρχική</a>
+    <a href="index.html"><i class="fas fa-home"></i>Home</a>
+    <a href="trips.html"><i class="fas fa-map-marked-alt"></i>Εκδρομές</a>
+    <a href="#"><i class="fas fa-info-circle"></i>About Us</a>
+    <a href="#"><i class="fas fa-envelope"></i>Contact</a>
   </footer>
 
-  <script src="js/main.js"></script>
+  <script>
+    // Φόρτωμα trips.json και εμφάνιση εκδρομών
+    fetch('trips.json')
+      .then(response => response.json())
+      .then(trips => {
+        const container = document.getElementById('tripsContainer');
+        trips.forEach(trip => {
+          const card = document.createElement('div');
+          card.className = 'trip-card';
+          card.innerHTML = `
+            <img src="${trip.image}" alt="${trip.title}">
+            <h3>${trip.title}</h3>
+            <p>${trip.description}</p>
+            <a href="trip.html?id=${trip.id}">Δείτε λεπτομέρειες</a>
+          `;
+          container.appendChild(card);
+        });
+      })
+      .catch(err => {
+        document.getElementById('tripsContainer').innerHTML = '<p>Αποτυχία φόρτωσης εκδρομών.</p>';
+      });
+  </script>
 </body>
 </html>
+
 
