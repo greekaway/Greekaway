@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Όλες οι Εκδρομές – Greekaway</title>
+  <title>Λεπτομέρειες Εκδρομής – Greekaway</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css">
   <style>
     body {
       margin:0;
@@ -22,52 +21,38 @@
       font-size:1.3rem;
       font-weight:bold;
     }
-    .trips-container {
-      display:flex;
-      flex-wrap:wrap;
-      justify-content:center;
+    main {
       padding:1rem;
-      gap:1rem;
+      max-width:900px;
+      margin:auto;
     }
-    .trip-card {
-      background:#2c3e50;
-      border-radius:15px;
-      padding:1rem;
-      width:300px;
-      box-shadow:0 6px 12px rgba(0,0,0,0.5);
-      transition: transform 0.3s ease;
-    }
-    .trip-card:hover {
-      transform:translateY(-6px);
-    }
-    .trip-card img {
+    .trip-img {
       width:100%;
-      height:180px;
+      max-height:400px;
       object-fit:cover;
-      border-radius:12px;
-      margin-bottom:0.8rem;
+      border-radius:15px;
+      margin-bottom:1rem;
     }
-    .trip-card h3 {
-      margin:0;
-      font-size:1.2rem;
-      color:#00aaff;
+    .video-wrap {
+      position:relative;
+      padding-bottom:56.25%;
+      height:0;
+      overflow:hidden;
+      margin:1rem 0;
+      border-radius:15px;
     }
-    .trip-card p {
-      font-size:0.9rem;
-      margin:0.5rem 0;
+    .video-wrap iframe {
+      position:absolute;
+      top:0; left:0;
+      width:100%; height:100%;
+      border:0;
+      border-radius:15px;
     }
-    .trip-card a {
-      display:inline-block;
-      margin-top:0.5rem;
-      padding:8px 14px;
-      background:#2E8B57;
-      color:#fff;
-      text-decoration:none;
-      border-radius:8px;
-      font-size:0.9rem;
-    }
-    .trip-card a:hover {
-      background:#256d47;
+    #map {
+      width:100%;
+      height:300px;
+      border-radius:15px;
+      margin-top:1rem;
     }
     footer {
       position:fixed;
@@ -94,10 +79,13 @@
   </style>
 </head>
 <body>
-  <header>Όλες οι Εκδρομές</header>
-  <div class="trips-container" id="tripsContainer">
-    <!-- Οι εκδρομές θα φορτωθούν εδώ -->
-  </div>
+  <header id="tripTitle">Λεπτομέρειες Εκδρομής</header>
+  <main>
+    <img id="tripImage" class="trip-img" src="" alt="">
+    <p id="tripDescription"></p>
+    <div id="extraContent"></div>
+    <div id="map"></div>
+  </main>
 
   <!-- Footer -->
   <footer>
@@ -108,27 +96,62 @@
   </footer>
 
   <script>
-    // Φόρτωμα trips.json και εμφάνιση εκδρομών
-    fetch('trips.json')
-      .then(response => response.json())
+    // Πάρε το id από το URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const tripId = parseInt(urlParams.get("id"));
+
+    // Φόρτωσε trips.json
+    fetch("trips.json")
+      .then(res => res.json())
       .then(trips => {
-        const container = document.getElementById('tripsContainer');
-        trips.forEach(trip => {
-          const card = document.createElement('div');
-          card.className = 'trip-card';
-          card.innerHTML = `
-            <img src="${trip.image}" alt="${trip.title}">
-            <h3>${trip.title}</h3>
-            <p>${trip.description}</p>
-            <a href="trip.html?id=${trip.id}">Δείτε λεπτομέρειες</a>
+        const trip = trips.find(t => t.id === tripId);
+        if (!trip) {
+          document.getElementById("tripTitle").innerText = "Δεν βρέθηκε η εκδρομή";
+          return;
+        }
+        // Γέμισε τα βασικά στοιχεία
+        document.getElementById("tripTitle").innerText = trip.title;
+        document.getElementById("tripImage").src = trip.image;
+        document.getElementById("tripDescription").innerText = trip.details;
+
+        // Ανάλογα με το id εμφάνισε custom περιεχόμενο
+        const extra = document.getElementById("extraContent");
+        if (tripId === 1) { // Λευκάδα
+          extra.innerHTML = `
+            <div class="video-wrap">
+              <iframe src="https://www.youtube-nocookie.com/embed/RXSymowNTz4?rel=0&modestbranding=1" allowfullscreen></iframe>
+            </div>
+            <div class="video-wrap">
+              <iframe src="https://www.youtube-nocookie.com/embed/HLVY4mVRk3o?rel=0&modestbranding=1" allowfullscreen></iframe>
+            </div>
           `;
-          container.appendChild(card);
-        });
-      })
-      .catch(err => {
-        document.getElementById('tripsContainer').innerHTML = '<p>Αποτυχία φόρτωσης εκδρομών.</p>';
+          initMap(38.7, 20.65); // Lefkada
+        } else if (tripId === 2) { // Δελφοί
+          extra.innerHTML = `
+            <div class="video-wrap">
+              <iframe src="https://www.youtube-nocookie.com/embed/ogyJXgHobvg?rel=0&modestbranding=1" allowfullscreen></iframe>
+            </div>
+            <div class="video-wrap">
+              <iframe src="https://www.youtube-nocookie.com/embed/h0twbbYFfO8?rel=0&modestbranding=1" allowfullscreen></iframe>
+            </div>
+          `;
+          initMap(38.5, 22.5); // Delphi
+        }
       });
+
+    // Google Map init
+    function initMap(lat, lng) {
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: {lat: lat, lng: lng},
+        zoom: 8,
+        mapTypeId: "satellite"
+      });
+      new google.maps.Marker({position: {lat: lat, lng: lng}, map: map});
+    }
   </script>
+
+  <!-- Google Maps API -->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBTmIn4C3VGyoPagMsBbupeZ6-AdHds9rI"></script>
 </body>
 </html>
 
