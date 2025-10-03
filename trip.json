@@ -4,15 +4,39 @@
     "title": "Διήμερη Απόδραση στη Λευκάδα",
     "category": "Θάλασσα",
     "description": "Παραλία Κάθισμα, κρουαζιέρα, ξενοδοχείο Semiramis και ηλιοβασίλεμα στη Ράχη.",
-    "details": "Η εκδρομή περιλαμβάνει διαμονή σε ξενοδοχείο, οργανωμένη κρουαζιέρα στα νησιά του Ιονίου, στάση στο Κάθισμα και γεύμα στο χωριό Ράχη με θέα το ηλιοβασίλεμα.",
-    "image": "lefkas.jpg"
+    "details": "Η εκδρομή περιλαμβάνει διαμονή στο Semiramis, στάση στην παραλία Κάθισμα, γεύμα στο Rachi, ολοήμερη κρουαζιέρα και βόλτα στο Νυδρί.",
+    "videos": [
+      { "title": "Semiramis Hotel", "url": "https://www.youtube-nocookie.com/embed/RXSymowNTz4" },
+      { "title": "Kathisma Beach", "url": "https://www.youtube-nocookie.com/embed/HLVY4mVRk3o" },
+      { "title": "Rachi Restaurant", "url": "https://www.youtube-nocookie.com/embed/8RlEPko1oU4" },
+      { "title": "Cruise Nidri", "url": "https://www.youtube-nocookie.com/embed/oq4KHE-6lmM" },
+      { "title": "Cafe Nidri", "url": "https://www.youtube-nocookie.com/embed/Z9Uyks-r1J8" }
+    ],
+    "mapCenter": { "lat": 38.7, "lng": 20.65 },
+    "waypoints": [
+      "Kathisma Beach Lefkada",
+      "Rachi Exanthia Lefkada",
+      "Nidri Lefkada"
+    ]
   },
   {
     "id": 2,
     "title": "Διήμερη Απόδραση στους Δελφούς & Αράχωβα",
     "category": "Βουνό",
     "description": "Αρχαιολογικός χώρος Δελφών, διαμονή στην Αράχωβα και ολοήμερη εμπειρία στον Παρνασσό.",
-    "details": "Η εκδρομή περιλαμβάνει ξενάγηση στον αρχαιολογικό χώρο των Δελφών, διαμονή σε παραδοσιακό ξενώνα στην Αράχωβα και περιπάτους στον Παρνασσό.",
-    "image": "delphi.jpg"
+    "details": "Η εκδρομή περιλαμβάνει ξενάγηση στους Δελφούς, διαμονή σε ξενώνα στην Αράχωβα, περιπάτους και καφέ με θέα Παρνασσό.",
+    "videos": [
+      { "title": "Delphi Site", "url": "https://www.youtube-nocookie.com/embed/ogyJXgHobvg" },
+      { "title": "Hotel Arachova", "url": "https://www.youtube-nocookie.com/embed/WA44NW9zgRs" },
+      { "title": "Village Walk", "url": "https://www.youtube-nocookie.com/embed/h0twbbYFfO8" },
+      { "title": "Parnassos Ski", "url": "https://www.youtube-nocookie.com/embed/dD4Ez7NOMV8" },
+      { "title": "Coffee Arachova", "url": "https://www.youtube-nocookie.com/embed/5RV1cIB2lDU" }
+    ],
+    "mapCenter": { "lat": 38.5, "lng": 22.5 },
+    "waypoints": [
+      "Delphi, Greece",
+      "Arachova, Greece",
+      "Parnassos Ski Resort, Greece"
+    ]
   }
 ]
