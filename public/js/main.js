@@ -1,67 +1,104 @@
-// === main.js ===
-
-// Όταν φορτώνει η σελίδα
-window.addEventListener("load", loadTrip);
-
-async function loadTrip() {
-  const params = new URLSearchParams(window.location.search);
-  const id = parseInt(params.get("id"));
-
-  // Φόρτωση του JSON με όλες τις εκδρομές
-  const res = await fetch("trip.json");
-  const trips = await res.json();
-
-  // Αν υπάρχει id -> εμφάνισε ΜΙΑ εκδρομή
-  if (id) {
-    const trip = trips.find(t => t.id === id);
-    if (!trip) return;
-
-    document.getElementById("trip-title").textContent = trip.title;
-
-    const content = document.getElementById("trip-content");
-    content.innerHTML = `
-      <img src="${trip.image}" alt="${trip.title}">
-      <p><strong>Κατηγορία:</strong> ${trip.category}</p>
-      <p>${trip.details}</p>
-    `;
-
-    initMap(trip.title); // Χάρτης
+/* ---------- Κοινές UI συναρτήσεις ---------- */
+function toggleMenu(){
+  const menu = document.getElementById('menuDrop');
+  if(!menu) return;
+  menu.style.display = (menu.style.display==='flex') ? 'none' : 'flex';
+}
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('menuDrop');
+  const hamburger = document.querySelector('.hamburger');
+  if (menu && menu.style.display === 'flex' && !menu.contains(e.target) && !hamburger.contains(e.target)) {
+    menu.style.display = 'none';
   }
-
-  // Αν ΔΕΝ υπάρχει id -> εμφάνισε όλες τις εκδρομές σε λίστα
-  else {
-    const content = document.getElementById("trip-content");
-    content.innerHTML = "<h2>Όλες οι Εκδρομές</h2>" +
-      trips.map(t => `
-        <div class="card">
-          <img src="${t.image}" alt="${t.title}">
-          <h3>${t.title}</h3>
-          <p>${t.description}</p>
-          <a href="trip.html?id=${t.id}" class="btn">Δες περισσότερα</a>
-        </div>
-      `).join("");
-  }
+});
+function navigateTo(id){
+  document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+  const menu = document.getElementById('menuDrop');
+  if (menu) menu.style.display = 'none';
+  const target = document.getElementById(id);
+  if(target){ target.scrollIntoView({behavior:'smooth'}); }
+}
+function openOverlay(id){
+  document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+function closeOverlay(id){
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('active');
 }
 
-// === Google Map ===
-function initMap(destination) {
-  const map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 6,
-    center: { lat: 38.5, lng: 23.5 },
-    mapTypeId: "roadmap"
+/* ---------- Google Map (με ίδια κουμπάκια όπως παλιά) ---------- */
+let map, routeBounds, directionsRenderer;
+
+function initMap(){
+  const mapEl = document.getElementById('map');
+  if(!mapEl) return; // welcome page δεν έχει χάρτη
+
+  const center = (window.TRIP_CENTER) ? window.TRIP_CENTER : {lat:38.5, lng:22.0};
+  map = new google.maps.Map(mapEl, {
+    center, zoom: 8, mapTypeId: 'roadmap',
+    zoomControl: true,           // αφήνουμε τα default +/- της Google
+    mapTypeControl: true,
+    streetViewControl: true,
+    fullscreenControl: false     // δικό μας ⤢
   });
 
-  const service = new google.maps.places.PlacesService(map);
-  const request = { query: destination, fields: ["geometry", "name"] };
+  const service = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer({ map });
 
-  service.findPlaceFromQuery(request, (results, status) => {
-    if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
-      map.setCenter(results[0].geometry.location);
-      new google.maps.Marker({
-        map,
-        position: results[0].geometry.location,
-        title: results[0].name
-      });
+  const waypoints = (window.TRIP_WAYPOINTS || []).map(loc => ({location: loc, stopover: true}));
+
+  service.route({
+    origin: "Athens, Greece",
+    destination: "Athens, Greece",
+    waypoints,
+    travelMode: "DRIVING"
+  }, (result, status) => {
+    if (status === "OK") {
+      directionsRenderer.setDirections(result);
+      if (result.routes && result.routes[0] && result.routes[0].bounds){
+        routeBounds = result.routes[0].bounds;
+        map.fitBounds(routeBounds);
+      }
+    } else {
+      console.warn('Directions request failed:', status);
     }
   });
+
+  // --- Custom Controls: ⤢ Fullscreen, ↺ Reset ---
+  const fsBtn = document.createElement('div');
+  fsBtn.className = 'gm-custom-btn';
+  fsBtn.title = 'Πλήρης οθόνη';
+  fsBtn.textContent = '⤢';
+  fsBtn.onclick = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        fsBtn.textContent = '⤢';
+      } else {
+        await mapEl.requestFullscreen();
+        fsBtn.textContent = '✕';
+      }
+    } catch (e) {
+      // Fallback χωρίς native fullscreen
+      fsBtn.textContent = (fsBtn.textContent==='⤢') ? '✕' : '⤢';
+      mapEl.classList.toggle('fake-fullscreen');
+    }
+  };
+
+  const resetBtn = document.createElement('div');
+  resetBtn.className = 'gm-custom-btn';
+  resetBtn.title = 'Επανέφερε διαδρομή';
+  resetBtn.textContent = '↺';
+  resetBtn.onclick = () => { if(routeBounds) map.fitBounds(routeBounds); };
+
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fsBtn);
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(resetBtn);
+
+  // Συγχρονισμός εικονιδίου όταν βγαίνουμε από fullscreen
+  ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange']
+    .forEach(evt => document.addEventListener(evt, () => {
+      fsBtn.textContent = document.fullscreenElement ? '✕' : '⤢';
+    }));
 }
