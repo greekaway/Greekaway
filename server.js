@@ -5,13 +5,14 @@ const fs = require("fs");
 const app = express();
 const PORT = 3000;
 
-// Σερβίρουμε τα στατικά αρχεία από το φάκελο public
+// 1️⃣ Σερβίρουμε στατικά αρχεία από το /public
 app.use(express.static(path.join(__dirname, "public")));
 
-// Endpoint για να επιστρέφει όλες τις εκδρομές
+// 2️⃣ Επιστρέφει όλες τις εκδρομές από trip.json
 app.get("/api/trips", (req, res) => {
-  fs.readFile(path.join(__dirname, "trips.json"), "utf8", (err, data) => {
+  fs.readFile(path.join(__dirname, "trip.json"), "utf8", (err, data) => {
     if (err) {
+      console.error("Σφάλμα ανάγνωσης trip.json:", err);
       res.status(500).json({ error: "Δεν μπορέσαμε να διαβάσουμε τα δεδομένα." });
     } else {
       res.json(JSON.parse(data));
@@ -19,7 +20,12 @@ app.get("/api/trips", (req, res) => {
   });
 });
 
-// Εκκίνηση server
+// 3️⃣ Όταν ο χρήστης πάει στο "/", να του δείχνει το index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// 4️⃣ Εκκίνηση server
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
