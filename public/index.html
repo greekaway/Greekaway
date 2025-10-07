@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -7,6 +6,33 @@
   <title>Greekaway – Welcome</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* --- Εφέ εισόδου για το λογότυπο --- */
+    @keyframes logoFadeZoom {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .welcome-logo {
+      animation: logoFadeZoom 1s ease forwards;
+    }
+
+    /* --- Εφέ εμφάνισης (fade-in + scale up) για τα παράθυρα --- */
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .trip-card {
+      opacity: 0;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    /* Καθυστέρηση εμφάνισης για “σειρά” */
+    .trip-card:nth-child(1) { animation-delay: 0.1s; }
+    .trip-card:nth-child(2) { animation-delay: 0.25s; }
+    .trip-card:nth-child(3) { animation-delay: 0.4s; }
+    .trip-card:nth-child(4) { animation-delay: 0.55s; }
+  </style>
 </head>
 <body>
   <!-- Καλωσόρισμα -->
@@ -45,7 +71,17 @@
   <script>
     function showTrips() {
       document.getElementById("welcome-section").style.display = "none";
-      document.getElementById("trips-section").style.display = "block";
+      const trips = document.getElementById("trips-section");
+      trips.style.display = "grid";
+
+      // Επαναφορά animation κάθε φορά που πατάς "Εκδρομές"
+      trips.querySelectorAll('.trip-card').forEach(card => {
+        card.style.opacity = "0";
+        card.style.animation = "none";
+        void card.offsetWidth; // επανεκκίνηση animation
+        card.style.animation = "";
+        card.style.animation = "fadeInUp 0.6s ease forwards";
+      });
     }
 
     function showHome() {
