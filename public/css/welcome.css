@@ -1,0 +1,90 @@
+:root{
+  --bg1:#1e2b3a; --bg2:#162636; --text:#ecf0f1; --accent:#00aaff;
+  --glass:rgba(0,0,0,0.9); --line:rgba(255,255,255,0.1);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:Arial, sans-serif;
+  background:linear-gradient(180deg,var(--bg1),var(--bg2));
+  color:var(--text);
+  text-align:center;
+  padding-bottom:78px; /* χώρος για footer */
+  transition:background .3s,color .3s;
+}
+
+/* Logo (όπως το ήθελες: μικρό & κομψό) */
+.welcome-logo{
+  margin-top:60px;
+  width:auto; max-width:80%; max-height:160px; /* κλειδώσαμε ύψος */
+  border-radius:25px;
+  box-shadow:0 6px 16px rgba(0,0,0,.5);
+  transition:transform .4s ease;
+}
+.welcome-logo:hover{transform:scale(1.03)}
+
+.welcome-title{margin-top:16px; font-size:1.6rem; font-weight:700}
+.welcome-subtitle{margin-top:8px; opacity:.9}
+
+/* App tiles (iPhone style) */
+.app-grid{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:14px;
+  padding:10px; max-width:700px; margin:22px auto 0;
+}
+.app-tile{
+  position:relative; border-radius:24px; overflow:hidden;
+  min-height:140px; background:#223246;
+  box-shadow:0 8px 18px rgba(0,0,0,.45);
+  transform:translateZ(0);
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.app-tile:active{transform:scale(.97)}
+.app-tile .thumb{position:absolute; inset:0; background-size:cover; background-position:center; filter:brightness(.9)}
+.app-tile .scrim{position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%)}
+.app-tile .label{position:absolute; left:12px; bottom:10px; font-weight:700; letter-spacing:.3px}
+
+/* εμφάνιση με μικρό animation */
+@keyframes fadeInUp{0%{opacity:0; transform:translateY(20px) scale(.98)} 100%{opacity:1; transform:translateY(0) scale(1)}}
+.app-tile{opacity:0; animation:fadeInUp .6s ease forwards}
+.app-tile:nth-child(1){animation-delay:.06s}
+.app-tile:nth-child(2){animation-delay:.12s}
+
+/* Overlays (ίδια αισθητική με trips) */
+.overlay{
+  position:fixed; top:40px; bottom:78px; left:0; right:0; display:none;
+  background:rgba(0,0,0,.92); color:var(--text); overflow:auto; padding:2rem 1rem; z-index:999; border-radius:20px;
+}
+.overlay.active{display:block}
+.close-btn{
+  position:sticky; top:0; margin:-1rem -0.5rem 1rem 0; align-self:flex-end;
+  background:#2c3e50; color:var(--text); border:none; padding:8px 12px; border-radius:12px; cursor:pointer;
+}
+form{margin:1rem 0 0; display:flex; flex-direction:column; max-width:420px; margin-inline:auto}
+form input,form select,form textarea,form button{margin-bottom:1rem; padding:10px; font-size:1rem; border-radius:20px; border:1px solid #ccc}
+form button{background:#2E8B57; color:#fff; border:none; font-weight:700; border-radius:12px; transition:background .3s, transform .2s}
+form button:hover{background:#256d47; transform:scale(1.05)}
+
+/* Footer (5 κουμπιά + εφέ) */
+footer{
+  position:fixed; left:0; right:0; bottom:0; z-index:1000;
+  background:var(--glass); color:var(--text);
+  display:flex; justify-content:space-around; align-items:center;
+  padding:.6rem 0; border-top:1px solid var(--line); border-radius:20px 20px 0 0;
+  backdrop-filter:blur(6px);
+}
+footer a{
+  color:var(--text); text-decoration:none; font-size:.85rem;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  transition:transform .2s ease, color .3s ease;
+}
+footer a i{
+  font-size:1.5rem; padding:8px 10px; border-radius:10px;
+  transition:transform .2s, color .3s, background .3s;
+}
+footer a:hover{color:var(--accent); transform:translateY(-3px)}
+footer a:hover i{color:#fff; background:#004080; transform:scale(1.15)}
+
+@media(min-width:1025px){
+  .welcome-logo{max-height:180px}
+  .app-tile{min-height:200px}
+}
