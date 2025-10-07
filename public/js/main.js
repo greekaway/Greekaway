@@ -1,5 +1,5 @@
 // ==============================
-// main.js – Greekaway (Λευκάδα: όπως στους Δελφούς)
+// main.js – Greekaway (Λευκάδα: zoom διορθωμένο)
 // ==============================
 
 // ----------------------
@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!container) return;
 
   fetch("../data/trip.json")
-    .then(r => r.ok ? r.json() : Promise.reject("Αποτυχία φόρτωσης trip.json"))
+    .then(r => (r.ok ? r.json() : Promise.reject("Αποτυχία φόρτωσης trip.json")))
     .then(trips => {
       container.innerHTML = "";
       trips.forEach(trip => {
@@ -85,7 +85,11 @@ function initMap() {
 
         // ✅ Zoom μόνο πάνω στη διαδρομή
         map.fitBounds(routeBounds);
-        setTimeout(() => map.setZoom(map.getZoom() + 0.8), 500);
+
+        // ✅ Περιορισμός: να μην πάει υπερβολικά μακριά
+        google.maps.event.addListenerOnce(map, "bounds_changed", () => {
+          if (map.getZoom() > 10) map.setZoom(10); // 9–10 ιδανικό για Αθήνα→Λευκάδα
+        });
       } else {
         console.warn("Αποτυχία διαδρομής:", status);
       }
