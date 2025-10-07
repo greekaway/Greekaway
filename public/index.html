@@ -12,18 +12,24 @@
       0% { opacity: 0; transform: scale(0.8); }
       100% { opacity: 1; transform: scale(1); }
     }
-    .welcome-logo { animation: logoFadeZoom 1s ease forwards; }
+    .welcome-logo {
+      animation: logoFadeZoom 1s ease forwards;
+    }
 
     /* --- Εφέ εμφάνισης (fade-in + scale up) για τα παράθυρα --- */
     @keyframes fadeInUp {
       0% { opacity: 0; transform: translateY(20px) scale(0.98); }
       100% { opacity: 1; transform: translateY(0) scale(1); }
     }
-    .trip-card { opacity: 0; animation: fadeInUp 0.6s ease forwards; }
+
+    .trip-card {
+      opacity: 0;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    /* Καθυστέρηση εμφάνισης για “σειρά” */
     .trip-card:nth-child(1) { animation-delay: 0.1s; }
     .trip-card:nth-child(2) { animation-delay: 0.25s; }
-    .trip-card:nth-child(3) { animation-delay: 0.4s; }
-    .trip-card:nth-child(4) { animation-delay: 0.55s; }
   </style>
 </head>
 <body>
@@ -36,15 +42,15 @@
 
   <!-- Εκδρομές -->
   <main id="trips-section" style="display:none;">
-    <section class="trip-card">
+    <!-- Λευκάδα -->
+    <section class="trip-card" style="background-image:url('images/sea.jpg')">
       <h2>Διήμερη Απόδραση στη Λευκάδα</h2>
-      <p>Παραλία Κάθισμα, κρουαζιέρα, ξενοδοχείο Semiramis και ηλιοβασίλεμα στη Ράχη.</p>
       <a href="trips/sea/lefkas/lefkas.html" class="trip-link">Δες περισσότερα</a>
     </section>
 
-    <section class="trip-card">
+    <!-- Δελφοί & Αράχωβα -->
+    <section class="trip-card" style="background-image:url('images/culture.jpg')">
       <h2>Διήμερη Απόδραση στους Δελφούς & Αράχωβα</h2>
-      <p>Αρχαιολογικός χώρος Δελφών, διαμονή στην Αράχωβα και ολοήμερη εμπειρία στον Παρνασσό.</p>
       <a href="trips/culture/delphi/delphi.html" class="trip-link">Δες περισσότερα</a>
     </section>
   </main>
@@ -65,10 +71,13 @@
       document.getElementById("welcome-section").style.display = "none";
       const trips = document.getElementById("trips-section");
       trips.style.display = "grid";
+
+      // Επαναφορά animation κάθε φορά που πατάς "Εκδρομές"
       trips.querySelectorAll('.trip-card').forEach(card => {
         card.style.opacity = "0";
         card.style.animation = "none";
-        void card.offsetWidth;
+        void card.offsetWidth; // επανεκκίνηση animation
+        card.style.animation = "";
         card.style.animation = "fadeInUp 0.6s ease forwards";
       });
     }
