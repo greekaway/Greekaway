@@ -1,5 +1,5 @@
 // ==============================
-// main.js – Greekaway (Λευκάδα: zoom διορθωμένο)
+// main.js – Greekaway (Λευκάδα: Αθήνα → Λευκάδα με σωστό zoom)
 // ==============================
 
 // ----------------------
@@ -47,7 +47,7 @@ let map = null;
 
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 8,
+    zoom: 7,
     center: { lat: 38.5, lng: 22.5 },
     mapTypeId: "satellite",
     fullscreenControl: false,
@@ -83,12 +83,14 @@ function initMap() {
         directionsRenderer.setDirections(result);
         routeBounds = result.routes[0].bounds;
 
-        // ✅ Zoom μόνο πάνω στη διαδρομή
+        // ✅ Zoom πάνω στη διαδρομή
         map.fitBounds(routeBounds);
 
-        // ✅ Περιορισμός: να μην πάει υπερβολικά μακριά
+        // ✅ "Έξυπνο" zoom fix – ώστε να μη δείχνει όλη τη Μεσόγειο
         google.maps.event.addListenerOnce(map, "bounds_changed", () => {
-          if (map.getZoom() > 10) map.setZoom(10); // 9–10 ιδανικό για Αθήνα→Λευκάδα
+          const currentZoom = map.getZoom();
+          if (currentZoom < 7.5) map.setZoom(7.5);
+          if (currentZoom > 9) map.setZoom(9);
         });
       } else {
         console.warn("Αποτυχία διαδρομής:", status);
@@ -118,7 +120,14 @@ function initMap() {
   resetBtn.title = "Επανέφερε τη διαδρομή";
   resetBtn.textContent = "↺";
   resetBtn.addEventListener("click", () => {
-    if (routeBounds) map.fitBounds(routeBounds);
+    if (routeBounds) {
+      map.fitBounds(routeBounds);
+      google.maps.event.addListenerOnce(map, "bounds_changed", () => {
+        const currentZoom = map.getZoom();
+        if (currentZoom < 7.5) map.setZoom(7.5);
+        if (currentZoom > 9) map.setZoom(9);
+      });
+    }
   });
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(resetBtn);
 
