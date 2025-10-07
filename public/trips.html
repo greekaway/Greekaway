@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Κατηγορίες Εκδρομών – Greekaway</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #1e2b3a;
+      color: #ecf0f1;
+      text-align: center;
+      padding-bottom: 80px;
+    }
+
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: #1e2b3a;
+      color: #ecf0f1;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+      z-index: 1000;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    main {
+      padding: 90px 1rem 2rem 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1.5rem;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .category-card {
+      background: #162536;
+      border-radius: 18px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      padding: 2rem 1rem;
+      text-align: center;
+      transition: transform 0.25s ease, background 0.3s ease;
+      cursor: pointer;
+    }
+
+    .category-card:hover {
+      background: #0f395e;
+      transform: scale(1.07);
+    }
+
+    .category-card i {
+      font-size: 2.6rem;
+      color: #f9d65c;
+      margin-bottom: 0.5rem;
+      transition: transform 0.2s ease;
+    }
+
+    .category-card:hover i {
+      transform: scale(1.15);
+    }
+
+    .category-card h3 {
+      color: #ecf0f1;
+      margin-top: 0.7rem;
+      font-size: 1.2rem;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #1e2b3a;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-radius: 20px 20px 0 0;
+      z-index: 1000;
+    }
+
+    footer a {
+      color: #ecf0f1;
+      text-decoration: none;
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    footer a:hover {
+      color: #4da3ff;
+      transform: scale(1.1);
+    }
+
+    footer a i {
+      font-size: 1.5rem;
+      margin-bottom: 2px;
+    }
+
+    footer a.active i {
+      color: #4da3ff;
+    }
+
+    .central-btn {
+      transform: scale(1.15);
+      background: #2c3e50;
+      padding: 0.4rem 0.8rem;
+      border-radius: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>Επιλέξτε Κατηγορία Εκδρομής</header>
+
+  <main>
+    <div class="category-card" onclick="location.href='trips/sea/lefkas.html'">
+      <i class="fas fa-umbrella-beach"></i>
+      <h3>Θάλασσα</h3>
+    </div>
+
+    <div class="category-card" onclick="location.href='trips/culture/delphi.html'">
+      <i class="fas fa-landmark"></i>
+      <h3>Πολιτισμός</h3>
+    </div>
+
+    <div class="category-card">
+      <i class="fas fa-mountain"></i>
+      <h3>Βουνό</h3>
+    </div>
+
+    <div class="category-card">
+      <i class="fas fa-city"></i>
+      <h3>Πόλη</h3>
+    </div>
+  </main>
+
+  <footer>
+    <a href="index.html"><i class="fas fa-home"></i>Home</a>
+    <a href="trips.html" class="central-btn active"><i class="fas fa-map-marked-alt"></i>Δες Εκδρομές</a>
+    <a href="#"><i class="fas fa-calendar-alt"></i>Κράτηση</a>
+    <a href="#"><i class="fas fa-comments"></i>AI Assistant</a>
+    <a href="#"><i class="fas fa-user"></i>Προφίλ</a>
+  </footer>
+</body>
+</html>
