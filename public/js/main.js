@@ -53,44 +53,68 @@ function initMap() {
   // Αρχικοποίηση χάρτη Greekaway
   const map = new google.maps.Map(mapElement, {
     zoom: 7,
-    center: window.TRIP_CENTER || { lat: 38.7, lng: 20.65 },
+    center: { lat: 38.3, lng: 22.4 },
     mapTypeId: "satellite",
-    disableDefaultUI: true, // ❌ απενεργοποιεί zoom/fullscreen controls
-    streetViewControl: true, // κρατάμε το ανθρωπάκι αλλά θα το στυλάρουμε
-    mapTypeControl: false,
-    fullscreenControl: false,
+    disableDefaultUI: true, // αφαιρεί τα default κουμπιά
+    zoomControl: false,
+    streetViewControl: true,
   });
+
+  // Εμφάνιση του κουμπιού Street View στα δικά μας χρώματα
+  const observer = new MutationObserver(() => {
+    const pegman = document.querySelector("button[aria-label='Ενεργοποίηση Street View']") ||
+                   document.querySelector("button[aria-label='Activate Street View']");
+    if (pegman) {
+      pegman.style.background = "#0d1a26";
+      pegman.style.borderRadius = "10px";
+      pegman.style.boxShadow = "0 2px 6px rgba(0,0,0,0.5)";
+      pegman.style.transition = "background 0.3s";
+      pegman.onmouseenter = () => (pegman.style.background = "#004080");
+      pegman.onmouseleave = () => (pegman.style.background = "#0d1a26");
+    }
+  });
+  observer.observe(mapElement, { childList: true, subtree: true });
 
   // Προσθήκη custom κουμπιών
   addMapControls(map);
 
-  // Προσθήκη Polyline (Αθήνα → Λευκάδα)
-  const routeCoordinates = [
-    { lat: 37.9838, lng: 23.7275 }, // Αθήνα
-    { lat: 38.7, lng: 20.65 }       // Λευκάδα
-  ];
-
-  const routeLine = new google.maps.Polyline({
-    path: routeCoordinates,
-    geodesic: true,
-    strokeColor: "#f9d65c", // χρυσό Greekaway
-    strokeOpacity: 0.9,
-    strokeWeight: 4,
+  // --- Οδική Διαδρομή (Αθήνα → Λευκάδα) ---
+  const directionsService = new google.maps.DirectionsService();
+  const directionsRenderer = new google.maps.DirectionsRenderer({
+    map: map,
+    suppressMarkers: true,
+    polylineOptions: {
+      strokeColor: "#f9d65c", // χρυσό
+      strokeWeight: 4,
+      strokeOpacity: 0.9,
+    },
   });
 
-  routeLine.setMap(map);
+  const request = {
+    origin: { lat: 37.9838, lng: 23.7275 }, // Αθήνα
+    destination: { lat: 38.7, lng: 20.65 }, // Λευκάδα
+    travelMode: google.maps.TravelMode.DRIVING,
+  };
+
+  directionsService.route(request, (result, status) => {
+    if (status === "OK") {
+      directionsRenderer.setDirections(result);
+    } else {
+      console.warn("Αποτυχία διαδρομής:", status);
+    }
+  });
 
   // Προσθήκη markers
-  const markers = [
-    { position: { lat: 37.9838, lng: 23.7275 }, title: "Αθήνα" },
-    { position: { lat: 38.7, lng: 20.65 }, title: "Λευκάδα" }
-  ];
-
-  markers.forEach(m => new google.maps.Marker({
-    position: m.position,
+  new google.maps.Marker({
+    position: { lat: 37.9838, lng: 23.7275 },
     map,
-    title: m.title,
-  }));
+    title: "Αθήνα",
+  });
+  new google.maps.Marker({
+    position: { lat: 38.7, lng: 20.65 },
+    map,
+    title: "Λευκάδα",
+  });
 }
 
 // ==============================
@@ -105,7 +129,7 @@ function addMapControls(map) {
   controlDiv.style.flexDirection = "column";
   controlDiv.style.gap = "8px";
 
-  // -------- Πλήρης οθόνη --------
+  // Πλήρης οθόνη
   const fullscreenBtn = document.createElement("button");
   fullscreenBtn.innerHTML = "⛶";
   styleMapButton(fullscreenBtn, "Πλήρης οθόνη");
@@ -117,16 +141,16 @@ function addMapControls(map) {
     }
   };
 
-  // -------- Επαναφορά θέσης --------
+  // Επαναφορά θέσης
   const resetBtn = document.createElement("button");
   resetBtn.innerHTML = "↺";
   styleMapButton(resetBtn, "Επαναφορά");
   resetBtn.onclick = () => {
     map.setZoom(7);
-    map.setCenter(window.TRIP_CENTER || { lat: 38.7, lng: 20.65 });
+    map.setCenter({ lat: 38.3, lng: 22.4 });
   };
 
-  // -------- Εναλλαγή τύπου χάρτη --------
+  // Εναλλαγή τύπου χάρτη
   const toggleBtn = document.createElement("button");
   toggleBtn.innerHTML = "🗺️";
   styleMapButton(toggleBtn, "Αλλαγή προβολής");
@@ -135,7 +159,6 @@ function addMapControls(map) {
     map.setMapTypeId(currentType === "satellite" ? "roadmap" : "satellite");
   };
 
-  // Προσθήκη στο container
   controlDiv.appendChild(fullscreenBtn);
   controlDiv.appendChild(resetBtn);
   controlDiv.appendChild(toggleBtn);
@@ -148,8 +171,8 @@ function addMapControls(map) {
 // ----------------------
 function styleMapButton(button, title) {
   button.title = title;
-  button.style.background = "#0d1a26"; // σκούρο μπλε
-  button.style.color = "#f9d65c";      // χρυσό
+  button.style.background = "#0d1a26";
+  button.style.color = "#f9d65c";
   button.style.border = "none";
   button.style.padding = "8px 10px";
   button.style.fontSize = "1.1rem";
