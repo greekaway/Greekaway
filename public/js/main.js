@@ -185,37 +185,115 @@ window.initMap = initMap;
 `;
   document.head.appendChild(style);
 })();
-// ==============================
-// Extra style για Google default controls (Map/Satellite)
-// ==============================
-(function styleGoogleControls(){
-  const style = document.createElement("style");
-  style.id = "ga-maptype-style";
+/* ==============================
+   Custom Controls + Map Type Style
+   ============================== */
+
+// --- Κουμπί Πλήρους Οθόνης ---
+const fsBtn = document.createElement('div');
+fsBtn.className = 'gm-custom-btn';
+fsBtn.title = 'Πλήρης οθόνη';
+fsBtn.textContent = '⤢';
+fsBtn.addEventListener('click', async () => {
+  const mapEl = map.getDiv();
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      fsBtn.textContent = '⤢';
+    } else {
+      await mapEl.requestFullscreen();
+      fsBtn.textContent = '✕';
+    }
+  } catch (e) {
+    const on = !document.body.classList.contains('fs-active');
+    document.body.classList.toggle('fs-active', on);
+    fsBtn.textContent = on ? '✕' : '⤢';
+  }
+});
+map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fsBtn);
+
+// --- Κουμπί Reset Διαδρομής ---
+const resetBtn = document.createElement('div');
+resetBtn.className = 'gm-custom-btn';
+resetBtn.title = 'Επανέφερε τη διαδρομή';
+resetBtn.textContent = '↺';
+resetBtn.addEventListener('click', () => {
+  if (routeBounds) map.fitBounds(routeBounds);
+  if (directionsRenderer) {
+    const dir = directionsRenderer.getDirections();
+    if (dir) directionsRenderer.setDirections(dir);
+  }
+});
+map.controls[google.maps.ControlPosition.TOP_RIGHT].push(resetBtn);
+
+// --- Συγχρονισμός εικονιδίου fullscreen ---
+['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange']
+  .forEach(evt => document.addEventListener(evt, () => {
+    const active = !!document.fullscreenElement || document.body.classList.contains('fs-active');
+    fsBtn.textContent = active ? '✕' : '⤢';
+    if (!active) document.body.classList.remove('fs-active');
+  }));
+
+/* ==============================
+   Στυλ για όλα τα κουμπιά
+   ============================== */
+(function injectAllMapStyles(){
+  const style = document.createElement('style');
   style.textContent = `
-  /* Κουμπιά "Χάρτης / Δορυφόρος" */
-  .gm-style-mtc div:nth-child(1) > button,
-  .gm-style-mtc div:nth-child(2) > button {
-    background:#0d1a26 !important;      /* σκούρο μπλε */
-    color:#f9d65c !important;            /* χρυσά γράμματα */
+
+  /* Δικά μας custom κουμπιά (⤢, ↺) */
+  .gm-custom-btn {
+    background:#0d1a26;
+    color:#f9d65c;
+    border:none;
+    border-radius:50%;
+    padding:10px 12px;
+    margin:10px;
+    font-size:18px;
+    line-height:18px;
+    cursor:pointer;
+    box-shadow:0 2px 6px rgba(0,0,0,0.4);
+    transition:background 0.25s, transform 0.1s;
+    user-select:none;
+  }
+  .gm-custom-btn:hover { background:#004080; }
+  .gm-custom-btn:active { transform:scale(0.97); }
+
+  /* Κουμπιά "Χάρτης / Δορυφόρος" της Google */
+  .gm-style-mtc div > button {
+    background:#0d1a26 !important;
+    color:#f9d65c !important;
     border:none !important;
-    border-radius:20px !important;       /* πιο στρογγυλεμένα */
+    border-radius:20px !important;
     padding:6px 14px !important;
     margin:2px !important;
     font-weight:bold !important;
     box-shadow:0 2px 6px rgba(0,0,0,0.4) !important;
+    transition:background 0.25s ease, color 0.25s ease;
   }
-
-  /* όταν είναι ενεργό */
-  .gm-style-mtc div > button[aria-pressed="true"] {
-    background:#004080 !important;       /* πιο φωτεινό μπλε */
-    color:#fff !important;
-  }
-
-  /* hover εφέ */
   .gm-style-mtc div > button:hover {
     background:#002c59 !important;
     color:#fff !important;
   }
+  .gm-style-mtc div > button[aria-pressed="true"] {
+    background:#004080 !important;
+    color:#fff !important;
+  }
   `;
   document.head.appendChild(style);
+})();
+
+/* ==============================
+   Εφαρμογή style αφού φορτωθούν τα Google controls
+   ============================== */
+(function styleGoogleControls(){
+  const apply = () => {
+    const el = document.querySelector('.gm-style-mtc');
+    if (el && !document.getElementById('ga-maptype-style')) {
+      // Το style έχει ήδη προστεθεί από πάνω, δεν χρειάζεται ξανά
+      clearInterval(check);
+    }
+  };
+  const check = setInterval(apply, 400);
+  setTimeout(() => clearInterval(check), 4000);
 })();
