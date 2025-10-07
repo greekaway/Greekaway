@@ -1,10 +1,11 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #1e2b3a;
+  background: linear-gradient(180deg, #1e2b3a 0%, #162636 100%);
   color: #ecf0f1;
   text-align: center;
   padding-bottom: 70px; /* χώρος για footer */
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Logo */
@@ -14,6 +15,10 @@ body {
   height: auto;
   border-radius: 25px;
   box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+  transition: transform 0.4s ease;
+}
+.welcome-logo:hover {
+  transform: scale(1.03);
 }
 @media (min-width:600px){ .welcome-logo { max-width:500px; } }
 @media (min-width:1024px){ .welcome-logo { max-width:650px; } }
@@ -37,18 +42,20 @@ main {
 }
 
 .trip-card {
-  background: #3b566e;
-  border-radius: 15px;
+  background: rgba(59, 86, 110, 0.95);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
   padding: 1rem;
   margin: 1.5rem 0;
   text-align: center;
   box-shadow: 0 6px 12px rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
   transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 .trip-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 10px 18px rgba(0,0,0,0.6);
-  background: #466580;
+  background: rgba(70, 101, 128, 0.98);
 }
 .trip-card h2 {
   margin: 0;
@@ -67,19 +74,27 @@ main {
   background: #2E8B57;
   color: #fff;
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: 10px;
+  font-weight: bold;
   font-size: 0.9rem;
-  transition: background 0.3s;
+  letter-spacing: 0.4px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  transition: background 0.3s, transform 0.15s;
 }
 .trip-card a.trip-link:hover {
   background: #256d47;
+}
+.trip-card a.trip-link:active {
+  transform: scale(0.95);
 }
 
 /* Footer */
 footer {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  background: #000;
+  background: rgba(0,0,0,0.9);
+  backdrop-filter: blur(6px);
+  border-top: 1px solid rgba(255,255,255,0.1);
   color: #ecf0f1;
   display: flex;
   justify-content: space-around;
@@ -97,18 +112,28 @@ footer a {
   transition: transform 0.2s ease, color 0.3s ease;
 }
 footer a i {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   margin-bottom: 3px;
   transition: transform 0.2s ease, color 0.3s ease, background 0.3s ease;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 footer a:hover {
-  color: #004080;
+  color: #00aaff;
   transform: translateY(-3px);
 }
 footer a:hover i {
   color: #fff;
   background: #004080;
-  transform: scale(1.2);
+  transform: scale(1.15);
+}
+
+/* Ενεργό κουμπί στο footer */
+footer a.active i {
+  color: #00aaff;
+}
+
+/* Mobile προσαρμογή */
+@media (max-width:600px){
+  .trip-card { margin: 1rem 0.5rem; }
 }
