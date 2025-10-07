@@ -282,18 +282,41 @@ map.controls[google.maps.ControlPosition.TOP_RIGHT].push(resetBtn);
   `;
   document.head.appendChild(style);
 })();
+// ==============================
+// Διορθωμένο style για Google κουμπιά "Χάρτης / Δορυφόρος"
+// ==============================
+(function styleGoogleMapTypeButtons(){
+  function applyStyle() {
+    const buttons = document.querySelectorAll('.gm-style button[role="menuitem"]');
+    if (!buttons.length) return;
 
-/* ==============================
-   Εφαρμογή style αφού φορτωθούν τα Google controls
-   ============================== */
-(function styleGoogleControls(){
-  const apply = () => {
-    const el = document.querySelector('.gm-style-mtc');
-    if (el && !document.getElementById('ga-maptype-style')) {
-      // Το style έχει ήδη προστεθεί από πάνω, δεν χρειάζεται ξανά
-      clearInterval(check);
+    buttons.forEach(btn => {
+      btn.style.background = '#0d1a26';
+      btn.style.color = '#f9d65c';
+      btn.style.border = 'none';
+      btn.style.borderRadius = '20px';
+      btn.style.padding = '6px 14px';
+      btn.style.margin = '2px';
+      btn.style.fontWeight = 'bold';
+      btn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.4)';
+      btn.style.transition = 'background 0.25s ease, color 0.25s ease';
+    });
+
+    const pressed = document.querySelector('.gm-style button[aria-pressed="true"]');
+    if (pressed) {
+      pressed.style.background = '#004080';
+      pressed.style.color = '#fff';
     }
-  };
-  const check = setInterval(apply, 400);
-  setTimeout(() => clearInterval(check), 4000);
+  }
+
+  // Επαναλαμβάνει μέχρι να εμφανιστούν τα κουμπιά
+  const interval = setInterval(() => {
+    applyStyle();
+    if (document.querySelectorAll('.gm-style button[role="menuitem"]').length) {
+      clearInterval(interval);
+    }
+  }, 300);
+
+  // Κι άλλη μία φορά στα 3s για σιγουριά
+  setTimeout(applyStyle, 3000);
 })();
