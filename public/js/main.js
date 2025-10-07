@@ -1,5 +1,5 @@
 // ==============================
-// main.js – Greekaway
+// main.js – Greekaway (τελική έκδοση)
 // ==============================
 
 // ----------------------
@@ -10,7 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!container) return;
 
   fetch("../data/trip.json")
-    .then(r => { if (!r.ok) throw new Error("Αποτυχία φόρτωσης trip.json"); return r.json(); })
+    .then(response => {
+      if (!response.ok) throw new Error("Αποτυχία φόρτωσης trip.json");
+      return response.json();
+    })
     .then(trips => {
       container.innerHTML = "";
       trips.forEach(trip => {
@@ -32,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// Δημιουργεί σωστό URL για κάθε εκδρομή
 function getTripUrl(trip) {
   const title = trip.title.toLowerCase();
   if (title.includes("λευκάδ")) return "./sea/lefkas/lefkas.html";
@@ -40,121 +44,145 @@ function getTripUrl(trip) {
 }
 
 // ==============================
-// Google Map – τρέχει μόνο στη Λευκάδα
+// Google Map για τις σελίδες εκδρομών
 // ==============================
-let routeBounds = null;
-
 function initMap() {
-  const isLefkas = (document.body.dataset.trip === "lefkas");
-  const mapEl = document.getElementById("map");
-  if (!isLefkas || !mapEl) return;
+  const mapElement = document.getElementById("map");
+  if (!mapElement) return;
 
-  // Χάρτης: δορυφόρος, χωρίς default UI, δικά μας controls
-  const map = new google.maps.Map(mapEl, {
-    center: { lat: 38.5, lng: 22.2 },   // Ελλάδα
+  // Αρχικοποίηση χάρτη Greekaway
+  const map = new google.maps.Map(mapElement, {
     zoom: 7,
+    center: { lat: 38.5, lng: 22.2 }, // πιο κοντά στην Ελλάδα
     mapTypeId: "satellite",
-    disableDefaultUI: true,             // κρύβει τα άσπρα default κουμπιά
-    mapTypeControl: true,               // θα στιλιστούν από CSS
-    streetViewControl: true
+    disableDefaultUI: true,
+    streetViewControl: true,
   });
 
-  // Styling pegman (άμεσο & όταν φορτώσει δυναμικά)
-  const pegObs = new MutationObserver(()=>{
-    const peg = document.querySelector(".gm-svpc");
-    if (peg) {
-      peg.style.background = "#1e2b3a";
-      peg.style.borderRadius = "50%";
-      peg.style.boxShadow = "0 2px 6px rgba(0,0,0,.4)";
+  // Στυλ Street View κουμπιού (Pegman)
+  const observer = new MutationObserver(() => {
+    const pegman = document.querySelector("button[aria-label='Ενεργοποίηση Street View']") ||
+                   document.querySelector("button[aria-label='Activate Street View']");
+    if (pegman) {
+      pegman.style.background = "#0d1a26";
+      pegman.style.border = "2px solid #f9d65c";
+      pegman.style.borderRadius = "10px";
+      pegman.style.boxShadow = "0 2px 6px rgba(0,0,0,0.5)";
+      pegman.style.transition = "background 0.3s, transform 0.3s";
+      pegman.onmouseenter = () => (pegman.style.background = "#004080");
+      pegman.onmouseleave = () => (pegman.style.background = "#0d1a26");
     }
   });
-  pegObs.observe(mapEl, {childList:true, subtree:true});
+  observer.observe(mapElement, { childList: true, subtree: true });
 
-  // Custom controls: Fullscreen, Reset, Toggle MapType
+  // Προσθήκη custom κουμπιών
   addMapControls(map);
 
-  // Διαδρομή: Αθήνα -> (Kathisma, Rachi, Nidri) -> Λευκάδα
+  // --- Οδική Διαδρομή (Αθήνα → Λευκάδα) ---
   const directionsService = new google.maps.DirectionsService();
   const directionsRenderer = new google.maps.DirectionsRenderer({
-    map,
+    map: map,
     suppressMarkers: true,
-    polylineOptions: { strokeColor: "#f9d65c", strokeWeight: 4, strokeOpacity: 0.95 }
+    polylineOptions: {
+      strokeColor: "#f9d65c",
+      strokeWeight: 4,
+      strokeOpacity: 0.9,
+    },
   });
 
-  const req = {
-    origin: "Athens, Greece",
-    destination: "Lefkada, Greece",
-    waypoints: [
-      { location: "Kathisma Beach Lefkada", stopover: true },
-      { location: "Rachi Exanthia Lefkada", stopover: true },
-      { location: "Nidri Lefkada", stopover: true }
-    ],
-    travelMode: google.maps.TravelMode.DRIVING
+  const request = {
+    origin: { lat: 37.9838, lng: 23.7275 }, // Αθήνα
+    destination: { lat: 38.7, lng: 20.65 }, // Λευκάδα
+    travelMode: google.maps.TravelMode.DRIVING,
   };
 
-  directionsService.route(req, (result, status) => {
+  directionsService.route(request, (result, status) => {
     if (status === "OK") {
       directionsRenderer.setDirections(result);
-      routeBounds = result.routes[0].bounds;
-      map.fitBounds(routeBounds);
+      // Αυτόματο zoom ώστε να χωράει όλη η Ελλάδα
+      const bounds = result.routes[0].bounds;
+      map.fitBounds(bounds);
     } else {
-      console.warn("Directions failed:", status);
+      console.warn("Αποτυχία διαδρομής:", status);
     }
   });
 
-  // Markers (Αθήνα & Λευκάδα)
-  new google.maps.Marker({ position:{ lat:37.9838, lng:23.7275 }, map, title:"Αθήνα" });
-  new google.maps.Marker({ position:{ lat:38.7, lng:20.65 }, map, title:"Λευκάδα" });
+  // Προσθήκη markers
+  new google.maps.Marker({
+    position: { lat: 37.9838, lng: 23.7275 },
+    map,
+    title: "Αθήνα",
+  });
+  new google.maps.Marker({
+    position: { lat: 38.7, lng: 20.65 },
+    map,
+    title: "Λευκάδα",
+  });
 }
 
-// ---------- custom controls ----------
-function addMapControls(map){
-  const wrap = document.createElement("div");
-  wrap.style.display = "flex";
-  wrap.style.flexDirection = "column";
-  wrap.style.gap = "8px";
-  wrap.style.marginTop = "10px";
-  wrap.style.marginRight = "10px";
+// ==============================
+// Custom κουμπιά Greekaway
+// ==============================
+function addMapControls(map) {
+  const controlDiv = document.createElement("div");
+  controlDiv.style.position = "absolute";
+  controlDiv.style.top = "10px";
+  controlDiv.style.right = "10px";
+  controlDiv.style.display = "flex";
+  controlDiv.style.flexDirection = "column";
+  controlDiv.style.gap = "8px";
 
-  const fsBtn = makeBtn("⤢","Πλήρης οθόνη");
-  fsBtn.onclick = async ()=>{
-    const el = map.getDiv();
-    try{
-      if (document.fullscreenElement){ await document.exitFullscreen(); fsBtn.textContent = "⤢"; }
-      else { await el.requestFullscreen(); fsBtn.textContent = "✕"; }
-    }catch(_){
-      const on = !document.body.classList.contains("fs-active");
-      document.body.classList.toggle("fs-active", on);
-      fsBtn.textContent = on ? "✕" : "⤢";
+  // Πλήρης οθόνη
+  const fullscreenBtn = document.createElement("button");
+  fullscreenBtn.innerHTML = "⛶";
+  styleMapButton(fullscreenBtn, "Πλήρης οθόνη");
+  fullscreenBtn.onclick = () => {
+    if (!document.fullscreenElement) {
+      map.getDiv().requestFullscreen();
+    } else {
+      document.exitFullscreen();
     }
   };
 
-  const resetBtn = makeBtn("↺","Επαναφορά");
-  resetBtn.onclick = ()=>{ if (window.routeBounds) map.fitBounds(window.routeBounds); };
-
-  const typeBtn = makeBtn("🗺️","Αλλαγή προβολής");
-  typeBtn.onclick = ()=>{
-    map.setMapTypeId(map.getMapTypeId()==="satellite" ? "roadmap" : "satellite");
+  // Επαναφορά θέσης
+  const resetBtn = document.createElement("button");
+  resetBtn.innerHTML = "↺";
+  styleMapButton(resetBtn, "Επαναφορά");
+  resetBtn.onclick = () => {
+    map.setZoom(7);
+    map.setCenter({ lat: 38.5, lng: 22.2 });
   };
 
-  wrap.appendChild(resetBtn);
-  wrap.appendChild(typeBtn);
-  wrap.appendChild(fsBtn);
-  map.controls[google.maps.ControlPosition.RIGHT_TOP].push(wrap);
+  // Εναλλαγή τύπου χάρτη
+  const toggleBtn = document.createElement("button");
+  toggleBtn.innerHTML = "🗺️";
+  styleMapButton(toggleBtn, "Αλλαγή προβολής");
+  toggleBtn.onclick = () => {
+    const currentType = map.getMapTypeId();
+    map.setMapTypeId(currentType === "satellite" ? "roadmap" : "satellite");
+  };
 
-  // Συγχρονισμός εικονιδίου fullscreen
-  ["fullscreenchange","webkitfullscreenchange","mozfullscreenchange","MSFullscreenChange"]
-    .forEach(evt => document.addEventListener(evt, ()=>{
-      const active = !!document.fullscreenElement || document.body.classList.contains("fs-active");
-      fsBtn.textContent = active ? "✕" : "⤢";
-      if (!active) document.body.classList.remove("fs-active");
-    }));
+  controlDiv.appendChild(fullscreenBtn);
+  controlDiv.appendChild(resetBtn);
+  controlDiv.appendChild(toggleBtn);
+
+  map.controls[google.maps.ControlPosition.RIGHT_TOP].push(controlDiv);
 }
 
-function makeBtn(txt, title){
-  const b = document.createElement("button");
-  b.className = "gm-custom-btn";
-  b.title = title;
-  b.textContent = txt;
-  return b;
+// ----------------------
+// Στυλ για custom κουμπιά
+// ----------------------
+function styleMapButton(button, title) {
+  button.title = title;
+  button.style.background = "#0d1a26";
+  button.style.color = "#f9d65c";
+  button.style.border = "none";
+  button.style.padding = "8px 10px";
+  button.style.fontSize = "1.1rem";
+  button.style.borderRadius = "8px";
+  button.style.cursor = "pointer";
+  button.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
+  button.style.transition = "transform 0.2s, background 0.3s";
+  button.onmouseenter = () => (button.style.background = "#004080");
+  button.onmouseleave = () => (button.style.background = "#0d1a26");
 }
