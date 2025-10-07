@@ -107,7 +107,10 @@ footer a.central-btn:hover i {
 }
 
 /* -------- Overlays (Παράθυρα) -------- */
+
+/* Κρυφά εξ αρχής */
 .overlay {
+  display: none;
   position: fixed;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
@@ -119,6 +122,11 @@ footer a.central-btn:hover i {
   color: #ecf0f1;
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   z-index: 2000;
+}
+
+/* Εμφανίζονται μόνο όταν είναι ενεργά */
+.overlay.active {
+  display: block;
 }
 
 .overlay h2 {
