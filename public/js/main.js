@@ -50,41 +50,53 @@ function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) return;
 
+  // Αρχικοποίηση χάρτη Greekaway
   const map = new google.maps.Map(mapElement, {
-    zoom: 11,
+    zoom: 7,
     center: window.TRIP_CENTER || { lat: 38.7, lng: 20.65 },
-    mapTypeId: "satellite", // δορυφορική εκκίνηση
-    disableDefaultUI: false,
+    mapTypeId: "satellite",
+    disableDefaultUI: true, // ❌ απενεργοποιεί zoom/fullscreen controls
+    streetViewControl: true, // κρατάμε το ανθρωπάκι αλλά θα το στυλάρουμε
+    mapTypeControl: false,
+    fullscreenControl: false,
   });
 
-  // ---- Προσθήκη κουμπιών χάρτη ----
+  // Προσθήκη custom κουμπιών
   addMapControls(map);
 
-  // ---- Προσθήκη σημείων ενδιαφέροντος ----
-  if (window.TRIP_WAYPOINTS && window.TRIP_WAYPOINTS.length > 0) {
-    const geocoder = new google.maps.Geocoder();
+  // Προσθήκη Polyline (Αθήνα → Λευκάδα)
+  const routeCoordinates = [
+    { lat: 37.9838, lng: 23.7275 }, // Αθήνα
+    { lat: 38.7, lng: 20.65 }       // Λευκάδα
+  ];
 
-    window.TRIP_WAYPOINTS.forEach((place) => {
-      geocoder.geocode({ address: place }, (results, status) => {
-        if (status === "OK" && results[0]) {
-          new google.maps.Marker({
-            map,
-            position: results[0].geometry.location,
-            title: place,
-          });
-        } else {
-          console.warn("Αποτυχία geocoding για:", place, status);
-        }
-      });
-    });
-  }
+  const routeLine = new google.maps.Polyline({
+    path: routeCoordinates,
+    geodesic: true,
+    strokeColor: "#f9d65c", // χρυσό Greekaway
+    strokeOpacity: 0.9,
+    strokeWeight: 4,
+  });
+
+  routeLine.setMap(map);
+
+  // Προσθήκη markers
+  const markers = [
+    { position: { lat: 37.9838, lng: 23.7275 }, title: "Αθήνα" },
+    { position: { lat: 38.7, lng: 20.65 }, title: "Λευκάδα" }
+  ];
+
+  markers.forEach(m => new google.maps.Marker({
+    position: m.position,
+    map,
+    title: m.title,
+  }));
 }
 
 // ==============================
 // Custom κουμπιά Greekaway
 // ==============================
 function addMapControls(map) {
-  // Δημιουργία container για τα κουμπιά
   const controlDiv = document.createElement("div");
   controlDiv.style.position = "absolute";
   controlDiv.style.top = "10px";
@@ -110,7 +122,7 @@ function addMapControls(map) {
   resetBtn.innerHTML = "↺";
   styleMapButton(resetBtn, "Επαναφορά");
   resetBtn.onclick = () => {
-    map.setZoom(11);
+    map.setZoom(7);
     map.setCenter(window.TRIP_CENTER || { lat: 38.7, lng: 20.65 });
   };
 
@@ -128,7 +140,6 @@ function addMapControls(map) {
   controlDiv.appendChild(resetBtn);
   controlDiv.appendChild(toggleBtn);
 
-  // Τοποθέτηση πάνω στο χάρτη
   map.controls[google.maps.ControlPosition.RIGHT_TOP].push(controlDiv);
 }
 
@@ -137,8 +148,8 @@ function addMapControls(map) {
 // ----------------------
 function styleMapButton(button, title) {
   button.title = title;
-  button.style.background = "#0d1a26";
-  button.style.color = "#f9d65c";
+  button.style.background = "#0d1a26"; // σκούρο μπλε
+  button.style.color = "#f9d65c";      // χρυσό
   button.style.border = "none";
   button.style.padding = "8px 10px";
   button.style.fontSize = "1.1rem";
