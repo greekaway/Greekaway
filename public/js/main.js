@@ -1,5 +1,5 @@
 // ==============================
-// main.js – Greekaway (τελική έκδοση)
+// main.js – Greekaway (διορθωμένη έκδοση)
 // ==============================
 
 // ----------------------
@@ -50,16 +50,16 @@ function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) return;
 
-  // Αρχικοποίηση χάρτη Greekaway
+  // Αρχικοποίηση χάρτη
   const map = new google.maps.Map(mapElement, {
     zoom: 7,
-    center: { lat: 38.5, lng: 22.2 }, // πιο κοντά στην Ελλάδα
+    center: { lat: 38.5, lng: 22.2 },
     mapTypeId: "satellite",
     disableDefaultUI: true,
     streetViewControl: true,
   });
 
-  // Στυλ Street View κουμπιού (Pegman)
+  // Στυλ Street View (Pegman)
   const observer = new MutationObserver(() => {
     const pegman = document.querySelector("button[aria-label='Ενεργοποίηση Street View']") ||
                    document.querySelector("button[aria-label='Activate Street View']");
@@ -68,7 +68,6 @@ function initMap() {
       pegman.style.border = "2px solid #f9d65c";
       pegman.style.borderRadius = "10px";
       pegman.style.boxShadow = "0 2px 6px rgba(0,0,0,0.5)";
-      pegman.style.transition = "background 0.3s, transform 0.3s";
       pegman.onmouseenter = () => (pegman.style.background = "#004080");
       pegman.onmouseleave = () => (pegman.style.background = "#0d1a26");
     }
@@ -78,63 +77,50 @@ function initMap() {
   // Προσθήκη custom κουμπιών
   addMapControls(map);
 
-  // --- Οδική Διαδρομή (Αθήνα → Λευκάδα) ---
+  // --- Οδική Διαδρομή (Αθήνα → Λευκάδα, με στάσεις) ---
+  const directionsService = new google.maps.DirectionsService();
   const directionsRenderer = new google.maps.DirectionsRenderer({
-  map: map,
-  suppressMarkers: false, // δείχνει τα pins αυτόματα
-  preserveViewport: true, // κρατάει το zoom μετά το fitBounds
-  polylineOptions: {
-    strokeColor: "#f9d65c",
-    strokeWeight: 4,
-    strokeOpacity: 0.9,
-  },
-});
-
-  const request = {
-    origin: { lat: 37.9838, lng: 23.7275 }, // Αθήνα
-    destination: { lat: 38.7, lng: 20.65 }, // Λευκάδα
-    travelMode: google.maps.TravelMode.DRIVING,
-  };
-
- 
-  // Προσθήκη markers
-  new google.maps.Marker({
-    position: { lat: 37.9838, lng: 23.7275 },
     map,
-    title: "Αθήνα",
-  });
-  new google.maps.Marker({
-    position: { lat: 38.7, lng: 20.65 },
-    map,
-    title: "Λευκάδα",
-  });
-}
-directionsService.route(
-  {
-    origin: "Athens, Greece",
-    destination: "Lefkada, Greece",
-    waypoints: [
-      { location: "Kathisma Beach, Lefkada, Greece", stopover: true },
-      { location: "Rachi Exanthia, Lefkada, Greece", stopover: true },
-      { location: "Nidri, Lefkada, Greece", stopover: true }
-    ],
-    travelMode: google.maps.TravelMode.DRIVING
-  },
-  (result, status) => {
-    if (status === "OK") {
-      directionsRenderer.setDirections(result);
-
-      // ✅ Αυτό εστιάζει ΜΟΝΟ στη διαδρομή
-      const bounds = result.routes[0].bounds;
-      map.fitBounds(bounds);
-
-      // μικρή καθυστέρηση για πιο φυσικό zoom
-      setTimeout(() => map.setZoom(map.getZoom() - 0.2), 400);
-    } else {
-      console.warn("Αποτυχία διαδρομής:", status);
+    suppressMarkers: true,  // θα βάλουμε δικά μας pins
+    preserveViewport: true,
+    polylineOptions: {
+      strokeColor: "#f9d65c",
+      strokeWeight: 5,
+      strokeOpacity: 0.95
     }
-  }
-);
+  });
+
+  const ATHENS   = { lat: 37.9838, lng: 23.7275 };
+  const LEFKADA  = { lat: 38.7069, lng: 20.6400 };
+  const WAYPOINTS = [
+    { location: { lat: 38.7449, lng: 20.6009 }, stopover: true }, // Kathisma Beach
+    { location: { lat: 38.7169, lng: 20.6416 }, stopover: true }, // Rachi
+    { location: { lat: 38.7084, lng: 20.7111 }, stopover: true }  // Nidri
+  ];
+
+  directionsService.route(
+    {
+      origin: ATHENS,
+      destination: LEFKADA,
+      waypoints: WAYPOINTS,
+      travelMode: google.maps.TravelMode.DRIVING
+    },
+    (result, status) => {
+      if (status === "OK" && result.routes.length) {
+        directionsRenderer.setDirections(result);
+        const bounds = result.routes[0].bounds;
+        map.fitBounds(bounds);
+      } else {
+        console.warn("Αποτυχία διαδρομής:", status);
+      }
+    }
+  );
+
+  // Προσθήκη pins
+  new google.maps.Marker({ position: ATHENS, map, title: "Αθήνα" });
+  new google.maps.Marker({ position: LEFKADA, map, title: "Λευκάδα" });
+}
+
 // ==============================
 // Custom κουμπιά Greekaway
 // ==============================
@@ -152,14 +138,11 @@ function addMapControls(map) {
   fullscreenBtn.innerHTML = "⛶";
   styleMapButton(fullscreenBtn, "Πλήρης οθόνη");
   fullscreenBtn.onclick = () => {
-    if (!document.fullscreenElement) {
-      map.getDiv().requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
+    if (!document.fullscreenElement) map.getDiv().requestFullscreen();
+    else document.exitFullscreen();
   };
 
-  // Επαναφορά θέσης
+  // Επαναφορά
   const resetBtn = document.createElement("button");
   resetBtn.innerHTML = "↺";
   styleMapButton(resetBtn, "Επαναφορά");
@@ -168,25 +151,20 @@ function addMapControls(map) {
     map.setCenter({ lat: 38.5, lng: 22.2 });
   };
 
-  // Εναλλαγή τύπου χάρτη
+  // Εναλλαγή προβολής
   const toggleBtn = document.createElement("button");
   toggleBtn.innerHTML = "🗺️";
   styleMapButton(toggleBtn, "Αλλαγή προβολής");
   toggleBtn.onclick = () => {
-    const currentType = map.getMapTypeId();
-    map.setMapTypeId(currentType === "satellite" ? "roadmap" : "satellite");
+    const current = map.getMapTypeId();
+    map.setMapTypeId(current === "satellite" ? "roadmap" : "satellite");
   };
 
-  controlDiv.appendChild(fullscreenBtn);
-  controlDiv.appendChild(resetBtn);
-  controlDiv.appendChild(toggleBtn);
-
+  controlDiv.append(fullscreenBtn, resetBtn, toggleBtn);
   map.controls[google.maps.ControlPosition.RIGHT_TOP].push(controlDiv);
 }
 
-// ----------------------
-// Στυλ για custom κουμπιά
-// ----------------------
+// Στυλ custom κουμπιών
 function styleMapButton(button, title) {
   button.title = title;
   button.style.background = "#0d1a26";
@@ -197,7 +175,6 @@ function styleMapButton(button, title) {
   button.style.borderRadius = "8px";
   button.style.cursor = "pointer";
   button.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
-  button.style.transition = "transform 0.2s, background 0.3s";
   button.onmouseenter = () => (button.style.background = "#004080");
   button.onmouseleave = () => (button.style.background = "#0d1a26");
 }
