@@ -8,20 +8,31 @@ body {
   padding-bottom: 70px; /* χώρος για footer */
 }
 
-/* ----------- Εφέ λογοτύπου (logo) ----------- */
+/* -------- Logo: σωστές διαστάσεις + animation -------- */
 .welcome-logo {
-  margin-top: 80px;
-  max-width: 160%;
+  display: block;
+  margin: clamp(40px, 8vh, 90px) auto 0;
+  width: clamp(260px, 82vw, 600px);
+  max-height: 50vh;
   height: auto;
   border-radius: 30px;
   box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+  object-fit: contain;
   animation: growLogo 1.3s ease-out forwards;
   opacity: 0;
 }
 @keyframes growLogo {
-  0% { transform: scale(0.7); opacity: 0; }
-  60% { transform: scale(1.08); opacity: 1; }
+  0%   { transform: scale(0.7); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+/* πολύ μικρές συσκευές */
+@media (max-width: 360px) {
+  .welcome-logo {
+    width: 88vw;
+    max-height: 52vh;
+  }
 }
 
 /* ----------- Τίτλοι ----------- */
