@@ -79,16 +79,16 @@ function initMap() {
   addMapControls(map);
 
   // --- Οδική Διαδρομή (Αθήνα → Λευκάδα) ---
-  const directionsService = new google.maps.DirectionsService();
   const directionsRenderer = new google.maps.DirectionsRenderer({
-    map: map,
-    suppressMarkers: true,
-    polylineOptions: {
-      strokeColor: "#f9d65c",
-      strokeWeight: 4,
-      strokeOpacity: 0.9,
-    },
-  });
+  map: map,
+  suppressMarkers: false, // δείχνει τα pins αυτόματα
+  preserveViewport: true, // κρατάει το zoom μετά το fitBounds
+  polylineOptions: {
+    strokeColor: "#f9d65c",
+    strokeWeight: 4,
+    strokeOpacity: 0.9,
+  },
+});
 
   const request = {
     origin: { lat: 37.9838, lng: 23.7275 }, // Αθήνα
