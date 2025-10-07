@@ -1,19 +1,16 @@
 // ==============================
-// main.js – Greekaway (τελική έκδοση)
+// main.js – Greekaway (Λευκάδα με σωστό zoom & κουμπιά)
 // ==============================
 
 // ----------------------
-// Φόρτωση εκδρομών (trip cards)
+// Φόρτωση εκδρομών
 // ----------------------
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("trips-container");
   if (!container) return;
 
   fetch("../data/trip.json")
-    .then(response => {
-      if (!response.ok) throw new Error("Αποτυχία φόρτωσης trip.json");
-      return response.json();
-    })
+    .then(r => r.ok ? r.json() : Promise.reject("Αποτυχία φόρτωσης trip.json"))
     .then(trips => {
       container.innerHTML = "";
       trips.forEach(trip => {
@@ -24,8 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <h2>${trip.title}</h2>
           <p><strong>Κατηγορία:</strong> ${trip.category}</p>
           <p>${trip.description}</p>
-          <a href="${getTripUrl(trip)}" class="trip-btn">Περισσότερα</a>
-        `;
+          <a href="${getTripUrl(trip)}" class="trip-btn">Περισσότερα</a>`;
         container.appendChild(card);
       });
     })
@@ -35,7 +31,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Δημιουργεί σωστό URL για κάθε εκδρομή
 function getTripUrl(trip) {
   const title = trip.title.toLowerCase();
   if (title.includes("λευκάδ")) return "./sea/lefkas/lefkas.html";
@@ -55,24 +50,19 @@ function initMap() {
     zoom: 8,
     center: { lat: 38.5, lng: 22.5 },
     mapTypeId: "satellite",
-    fullscreenControl: true,
-    mapTypeControl: true,
+    fullscreenControl: false,
+    mapTypeControl: false,
     streetViewControl: true,
-    rotateControl: true
+    rotateControl: false
   });
 
   const directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
-    map: map,
+    map,
     suppressMarkers: true,
-    polylineOptions: {
-      strokeColor: "#f9d65c",
-      strokeWeight: 5,
-      strokeOpacity: 0.95
-    }
+    polylineOptions: { strokeColor: "#f9d65c", strokeWeight: 5, strokeOpacity: 0.95 }
   });
 
-  // --- Διαδρομή με ενδιάμεσες στάσεις ---
   const waypts = [
     { location: "Rachi Exanthia, Lefkada, Greece", stopover: true },
     { location: "Kathisma Beach, Lefkada, Greece", stopover: true },
@@ -87,137 +77,88 @@ function initMap() {
       travelMode: google.maps.TravelMode.DRIVING
     },
     (result, status) => {
-      if (status === "OK" && result.routes.length) {
+      if (status === "OK") {
         directionsRenderer.setDirections(result);
         routeBounds = result.routes[0].bounds;
+
+        // ✅ κάνει zoom ακριβώς πάνω στη διαδρομή, όπως στους Δελφούς
+        map.fitBounds(routeBounds);
         setTimeout(() => {
-          map.fitBounds(routeBounds);
-          setTimeout(() => map.setZoom(map.getZoom() - 0.3), 400);
-        }, 300);
+          const currentZoom = map.getZoom();
+          map.setZoom(currentZoom + 0.8); // μικρό zoom-in
+        }, 600);
       } else {
-        console.warn("Αποτυχία φόρτωσης διαδρομής:", status);
+        console.warn("Αποτυχία διαδρομής:", status);
       }
     }
   );
 
-  // Προσθήκη markers
+  // ---- Προσθήκη markers ----
   new google.maps.Marker({
     position: { lat: 37.9838, lng: 23.7275 },
     map,
-    title: "Αθήνα"
+    title: "Αθήνα",
+    icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: "#f9d65c", fillOpacity: 1, strokeColor: "#0d1a26", strokeWeight: 2 }
   });
   new google.maps.Marker({
     position: { lat: 38.7, lng: 20.65 },
     map,
-    title: "Λευκάδα"
+    title: "Λευκάδα",
+    icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: "#f9d65c", fillOpacity: 1, strokeColor: "#0d1a26", strokeWeight: 2 }
   });
 
-  /* --- Custom Controls --- */
+  // ---- Custom κουμπιά (ίδια με Δελφούς) ----
   const fsBtn = document.createElement("div");
   fsBtn.className = "gm-custom-btn";
   fsBtn.title = "Πλήρης οθόνη";
   fsBtn.textContent = "⤢";
   fsBtn.addEventListener("click", async () => {
     const mapEl = map.getDiv();
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-        fsBtn.textContent = "⤢";
-      } else {
-        await mapEl.requestFullscreen();
-        fsBtn.textContent = "✕";
-      }
-    } catch (e) {
-      const on = !document.body.classList.contains("fs-active");
-      document.body.classList.toggle("fs-active", on);
-      fsBtn.textContent = on ? "✕" : "⤢";
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      fsBtn.textContent = "⤢";
+    } else {
+      await mapEl.requestFullscreen();
+      fsBtn.textContent = "✕";
     }
   });
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fsBtn);
-    const resetBtn = document.createElement("div");
+
+  const resetBtn = document.createElement("div");
   resetBtn.className = "gm-custom-btn";
   resetBtn.title = "Επανέφερε τη διαδρομή";
   resetBtn.textContent = "↺";
   resetBtn.addEventListener("click", () => {
     if (routeBounds) map.fitBounds(routeBounds);
-    if (directionsRenderer) {
-      const dir = directionsRenderer.getDirections();
-      if (dir) directionsRenderer.setDirections(dir);
-    }
   });
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(resetBtn);
 
-  // --- Ενημέρωση κουμπιών fullscreen ---
-  ["fullscreenchange", "webkitfullscreenchange", "mozfullscreenchange", "MSFullscreenChange"]
+  // ενημέρωση fullscreen συμβόλου
+  ["fullscreenchange","webkitfullscreenchange","mozfullscreenchange","MSFullscreenChange"]
     .forEach(evt => document.addEventListener(evt, () => {
-      const active = !!document.fullscreenElement || document.body.classList.contains("fs-active");
-      fsBtn.textContent = active ? "✕" : "⤢";
-      if (!active) document.body.classList.remove("fs-active");
+      fsBtn.textContent = document.fullscreenElement ? "✕" : "⤢";
     }));
 }
 
 // ==============================
-// Custom κουμπιά Greekaway
+// Στυλ για κουμπιά
 // ==============================
-function addMapControls(map) {
-  const controlDiv = document.createElement("div");
-  controlDiv.style.position = "absolute";
-  controlDiv.style.top = "10px";
-  controlDiv.style.right = "10px";
-  controlDiv.style.display = "flex";
-  controlDiv.style.flexDirection = "column";
-  controlDiv.style.gap = "8px";
-
-  // Πλήρης οθόνη
-  const fullscreenBtn = document.createElement("button");
-  fullscreenBtn.innerHTML = "⛶";
-  styleMapButton(fullscreenBtn, "Πλήρης οθόνη");
-  fullscreenBtn.onclick = () => {
-    if (!document.fullscreenElement) {
-      map.getDiv().requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
-  };
-
-  // Επαναφορά θέσης
-  const resetBtn = document.createElement("button");
-  resetBtn.innerHTML = "↺";
-  styleMapButton(resetBtn, "Επαναφορά");
-  resetBtn.onclick = () => {
-    if (routeBounds) map.fitBounds(routeBounds);
-  };
-
-  // Εναλλαγή τύπου χάρτη
-  const toggleBtn = document.createElement("button");
-  toggleBtn.innerHTML = "🗺️";
-  styleMapButton(toggleBtn, "Αλλαγή προβολής");
-  toggleBtn.onclick = () => {
-    const currentType = map.getMapTypeId();
-    map.setMapTypeId(currentType === "satellite" ? "roadmap" : "satellite");
-  };
-
-  controlDiv.appendChild(fullscreenBtn);
-  controlDiv.appendChild(resetBtn);
-  controlDiv.appendChild(toggleBtn);
-
-  map.controls[google.maps.ControlPosition.RIGHT_TOP].push(controlDiv);
+const style = document.createElement("style");
+style.textContent = `
+.gm-custom-btn {
+  background:#0d1a26;
+  color:#f9d65c;
+  border:none;
+  border-radius:50%;
+  padding:10px 12px;
+  margin:10px;
+  font-size:18px;
+  line-height:18px;
+  cursor:pointer;
+  box-shadow:0 2px 6px rgba(0,0,0,0.4);
+  transition:background 0.3s;
 }
-
-// ----------------------
-// Στυλ για custom κουμπιά
-// ----------------------
-function styleMapButton(button, title) {
-  button.title = title;
-  button.style.background = "#0d1a26";
-  button.style.color = "#f9d65c";
-  button.style.border = "none";
-  button.style.padding = "8px 10px";
-  button.style.fontSize = "1.1rem";
-  button.style.borderRadius = "8px";
-  button.style.cursor = "pointer";
-  button.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
-  button.style.transition = "transform 0.2s, background 0.3s";
-  button.onmouseenter = () => (button.style.background = "#004080");
-  button.onmouseleave = () => (button.style.background = "#0d1a26");
-}
+.gm-custom-btn:hover {
+  background:#004080;
+}`;
+document.head.appendChild(style);
