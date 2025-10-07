@@ -1,5 +1,5 @@
 // ==============================
-// main.js – Greekaway
+// main.js – Greekaway (τελική έκδοση)
 // ==============================
 
 // ----------------------
@@ -53,22 +53,22 @@ function initMap() {
   // Αρχικοποίηση χάρτη Greekaway
   const map = new google.maps.Map(mapElement, {
     zoom: 7,
-    center: { lat: 38.3, lng: 22.4 },
+    center: { lat: 38.5, lng: 22.2 }, // πιο κοντά στην Ελλάδα
     mapTypeId: "satellite",
-    disableDefaultUI: true, // αφαιρεί τα default κουμπιά
-    zoomControl: false,
+    disableDefaultUI: true,
     streetViewControl: true,
   });
 
-  // Εμφάνιση του κουμπιού Street View στα δικά μας χρώματα
+  // Στυλ Street View κουμπιού (Pegman)
   const observer = new MutationObserver(() => {
     const pegman = document.querySelector("button[aria-label='Ενεργοποίηση Street View']") ||
                    document.querySelector("button[aria-label='Activate Street View']");
     if (pegman) {
       pegman.style.background = "#0d1a26";
+      pegman.style.border = "2px solid #f9d65c";
       pegman.style.borderRadius = "10px";
       pegman.style.boxShadow = "0 2px 6px rgba(0,0,0,0.5)";
-      pegman.style.transition = "background 0.3s";
+      pegman.style.transition = "background 0.3s, transform 0.3s";
       pegman.onmouseenter = () => (pegman.style.background = "#004080");
       pegman.onmouseleave = () => (pegman.style.background = "#0d1a26");
     }
@@ -84,7 +84,7 @@ function initMap() {
     map: map,
     suppressMarkers: true,
     polylineOptions: {
-      strokeColor: "#f9d65c", // χρυσό
+      strokeColor: "#f9d65c",
       strokeWeight: 4,
       strokeOpacity: 0.9,
     },
@@ -99,6 +99,9 @@ function initMap() {
   directionsService.route(request, (result, status) => {
     if (status === "OK") {
       directionsRenderer.setDirections(result);
+      // Αυτόματο zoom ώστε να χωράει όλη η Ελλάδα
+      const bounds = result.routes[0].bounds;
+      map.fitBounds(bounds);
     } else {
       console.warn("Αποτυχία διαδρομής:", status);
     }
@@ -147,7 +150,7 @@ function addMapControls(map) {
   styleMapButton(resetBtn, "Επαναφορά");
   resetBtn.onclick = () => {
     map.setZoom(7);
-    map.setCenter({ lat: 38.3, lng: 22.4 });
+    map.setCenter({ lat: 38.5, lng: 22.2 });
   };
 
   // Εναλλαγή τύπου χάρτη
