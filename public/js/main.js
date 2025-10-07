@@ -1,5 +1,5 @@
 // ==============================
-// main.js – Greekaway (διορθωμένη έκδοση)
+// main.js – Greekaway (τελική, διορθωμένη έκδοση)
 // ==============================
 
 // ----------------------
@@ -50,7 +50,7 @@ function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) return;
 
-  // Αρχικοποίηση χάρτη
+  // Αρχικοποίηση χάρτη Greekaway
   const map = new google.maps.Map(mapElement, {
     zoom: 7,
     center: { lat: 38.5, lng: 22.2 },
@@ -59,7 +59,7 @@ function initMap() {
     streetViewControl: true,
   });
 
-  // Στυλ Street View (Pegman)
+  // Στυλ Pegman (Street View)
   const observer = new MutationObserver(() => {
     const pegman = document.querySelector("button[aria-label='Ενεργοποίηση Street View']") ||
                    document.querySelector("button[aria-label='Activate Street View']");
@@ -81,7 +81,7 @@ function initMap() {
   const directionsService = new google.maps.DirectionsService();
   const directionsRenderer = new google.maps.DirectionsRenderer({
     map,
-    suppressMarkers: true,  // θα βάλουμε δικά μας pins
+    suppressMarkers: true, // δικά μας pins
     preserveViewport: true,
     polylineOptions: {
       strokeColor: "#f9d65c",
@@ -93,7 +93,7 @@ function initMap() {
   const ATHENS   = { lat: 37.9838, lng: 23.7275 };
   const LEFKADA  = { lat: 38.7069, lng: 20.6400 };
   const WAYPOINTS = [
-    { location: { lat: 38.7449, lng: 20.6009 }, stopover: true }, // Kathisma Beach
+    { location: { lat: 38.7449, lng: 20.6009 }, stopover: true }, // Kathisma
     { location: { lat: 38.7169, lng: 20.6416 }, stopover: true }, // Rachi
     { location: { lat: 38.7084, lng: 20.7111 }, stopover: true }  // Nidri
   ];
@@ -108,8 +108,14 @@ function initMap() {
     (result, status) => {
       if (status === "OK" && result.routes.length) {
         directionsRenderer.setDirections(result);
-        const bounds = result.routes[0].bounds;
-        map.fitBounds(bounds);
+
+        // ✅ Μικρή καθυστέρηση για να γίνει φυσικό zoom πάνω στη διαδρομή
+        setTimeout(() => {
+          const bounds = result.routes[0].bounds;
+          map.fitBounds(bounds);
+          // Ελαφρύ zoom-in για πιο ωραία προσαρμογή
+          setTimeout(() => map.setZoom(map.getZoom() - 0.3), 400);
+        }, 400);
       } else {
         console.warn("Αποτυχία διαδρομής:", status);
       }
@@ -151,7 +157,7 @@ function addMapControls(map) {
     map.setCenter({ lat: 38.5, lng: 22.2 });
   };
 
-  // Εναλλαγή προβολής
+  // Εναλλαγή τύπου χάρτη
   const toggleBtn = document.createElement("button");
   toggleBtn.innerHTML = "🗺️";
   styleMapButton(toggleBtn, "Αλλαγή προβολής");
