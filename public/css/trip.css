@@ -1,0 +1,184 @@
+/* =====================
+   GREEKAWAY TRIP PAGES
+   ===================== */
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #1e2b3a;
+  color: #ecf0f1;
+}
+
+/* Header */
+header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 80px;
+  background: #1e2b3a;
+  color: #ecf0f1;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+.brand-logo {
+  height: 50px;
+  border-radius: 10px;
+}
+
+.title {
+  text-align: center;
+  flex: 1;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.price-top {
+  display: block;
+  color: #f9d65c;
+  font-size: 1.1rem;
+}
+
+.hamburger {
+  cursor: pointer;
+  font-size: 1.6rem;
+  background: #2c3e50;
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+
+.menu-drop {
+  position: absolute;
+  top: 80px; right: 10px;
+  display: none;
+  flex-direction: column;
+  background: #203346;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.menu-drop a {
+  color: #ecf0f1;
+  text-decoration: none;
+  padding: 10px;
+  border-bottom: 1px solid #2c3e50;
+}
+
+.menu-drop a:hover {
+  background: #2c3e50;
+}
+
+/* Περιεχόμενο */
+main {
+  padding: 100px 1rem 100px 1rem;
+}
+
+/* Κάρτες */
+.card {
+  background: #203346;
+  border-radius: 20px;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.card h2 {
+  color: #f9d65c;
+  margin-bottom: 0.5rem;
+}
+
+.video-wrap {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.video-wrap iframe {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Χάρτης */
+#map {
+  width: 100%;
+  height: 30vh;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+}
+
+/* Footer */
+footer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #0d1a26;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.4);
+  z-index: 1000;
+}
+
+footer a {
+  color: #ecf0f1;
+  text-decoration: none;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+footer a i {
+  font-size: 1.4rem;
+  margin-bottom: 3px;
+}
+
+/* Overlays */
+.overlay {
+  display: none;
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(30,43,58,0.98);
+  padding: 2rem;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  color: #ecf0f1;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  z-index: 2000;
+}
+
+.overlay.active {
+  display: block;
+}
+
+.overlay button,
+.overlay form button {
+  background: #004080;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.overlay button:hover,
+.overlay form button:hover {
+  background: #0066cc;
+}
+
+.overlay input,
+.overlay select,
+.overlay textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 0.4rem 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
