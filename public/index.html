@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -6,45 +7,17 @@
   <title>Greekaway – Welcome</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
-  <style>
-    html {
-      scroll-behavior: smooth;
-    }
-    .trip-card {
-      margin: 20px auto;
-      max-width: 600px;
-      background: #2c3e50;
-      border-radius: 20px;
-      padding: 1rem;
-      text-align: center;
-      color: #ecf0f1;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-    }
-    .trip-card h2 {
-      margin-bottom: 10px;
-      color: #90caf9;
-    }
-    .trip-card a.trip-link {
-      display: inline-block;
-      margin-top: 10px;
-      background: #2E8B57;
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      text-decoration: none;
-      transition: background 0.3s;
-    }
-    .trip-card a.trip-link:hover {
-      background: #256d47;
-    }
-  </style>
 </head>
 <body>
-  <img src="logo.png" alt="Greekaway" class="welcome-logo">
-  <div class="welcome-title">Καλώς ήρθατε στο Greekaway</div>
-  <div class="welcome-subtitle">Ανακαλύψτε τις καλύτερες εκδρομές στην Ελλάδα</div>
+  <!-- Καλωσόρισμα -->
+  <section id="welcome-section">
+    <img src="logo.png" alt="Greekaway" class="welcome-logo">
+    <div class="welcome-title">Καλώς ήρθατε στο Greekaway</div>
+    <div class="welcome-subtitle">Ανακαλύψτε τις καλύτερες εκδρομές στην Ελλάδα</div>
+  </section>
 
-  <main id="trips" style="margin-top: 40px;">
+  <!-- Εκδρομές (αρχικά κρυφές) -->
+  <main id="trips-section" style="display:none;">
     <section class="trip-card">
       <h2>Διήμερη Απόδραση στη Λευκάδα</h2>
       <p>Παραλία Κάθισμα, κρουαζιέρα, ξενοδοχείο Semiramis και ηλιοβασίλεμα στη Ράχη.</p>
@@ -60,8 +33,8 @@
 
   <!-- Footer -->
   <footer>
-    <a href="index.html"><i class="fas fa-home"></i>Home</a>
-    <a href="#trips"><i class="fas fa-map-marked-alt"></i>Εκδρομές</a>
+    <a href="javascript:void(0)" onclick="showHome()"><i class="fas fa-home"></i>Home</a>
+    <a href="javascript:void(0)" onclick="showTrips()"><i class="fas fa-map-marked-alt"></i>Εκδρομές</a>
     <a href="javascript:void(0)" onclick="openOverlay('aboutOverlay')">
       <i class="fas fa-info-circle"></i>About Us
     </a>
@@ -69,6 +42,16 @@
       <i class="fas fa-envelope"></i>Contact</a>
   </footer>
 
-  <script src="js/main.js"></script>
+  <script>
+    function showTrips() {
+      document.getElementById("welcome-section").style.display = "none";
+      document.getElementById("trips-section").style.display = "block";
+    }
+
+    function showHome() {
+      document.getElementById("welcome-section").style.display = "block";
+      document.getElementById("trips-section").style.display = "none";
+    }
+  </script>
 </body>
 </html>
