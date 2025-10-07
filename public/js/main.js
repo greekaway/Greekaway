@@ -1,5 +1,5 @@
 // ==============================
-// main.js – Greekaway (Λευκάδα: Αθήνα → Λευκάδα με σωστό zoom)
+// main.js – Greekaway (Αθήνα → Λευκάδα με σωστό zoom & custom controls)
 // ==============================
 
 // ----------------------
@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function getTripUrl(trip) {
-  const title = trip.title.toLowerCase();
+  const title = (trip.title || "").toLowerCase();
   if (title.includes("λευκάδ")) return "./sea/lefkas/lefkas.html";
   if (title.includes("δελφ")) return "./culture/delphi/delphi.html";
   return "#";
@@ -50,20 +50,21 @@ function initMap() {
     zoom: 7,
     center: { lat: 38.5, lng: 22.5 },
     mapTypeId: "satellite",
-    fullscreenControl: false,
+    fullscreenControl: false,    // έχουμε δικό μας κουμπί
     mapTypeControl: true,
-    streetViewControl: true,
+    streetViewControl: true,     // "ανθρωπάκι"
     rotateControl: false
   });
 
   const directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
     map,
-    suppressMarkers: false, // ✅ δείχνει A-B-C-D pins
+    suppressMarkers: false, // δείχνει A-B-C-D pins
     preserveViewport: false,
     polylineOptions: { strokeColor: "#f9d65c", strokeWeight: 5, strokeOpacity: 0.95 }
   });
 
+  // --- Waypoints στη Λευκάδα (μπορείς να προσθέσεις/αλλάξεις ελεύθερα)
   const waypts = [
     { location: "Rachi Exanthia, Lefkada, Greece", stopover: true },
     { location: "Kathisma Beach, Lefkada, Greece", stopover: true },
@@ -79,18 +80,25 @@ function initMap() {
       travelMode: google.maps.TravelMode.DRIVING
     },
     (result, status) => {
-      if (status === "OK") {
+      if (status === "OK" && result && result.routes && result.routes[0]) {
         directionsRenderer.setDirections(result);
         routeBounds = result.routes[0].bounds;
 
-        // ✅ Zoom πάνω στη διαδρομή
-        map.fitBounds(routeBounds);
+        // Zoom πάνω στη διαδρομή με μικρό padding για να "αναπνέει"
+        if (routeBounds) {
+          // το δεύτερο όρισμα είναι padding σε px
+          if (typeof map.fitBounds === "function") {
+            map.fitBounds(routeBounds, 60);
+          } else {
+            map.fitBounds(routeBounds);
+          }
+        }
 
-        // ✅ "Έξυπνο" zoom fix – ώστε να μη δείχνει όλη τη Μεσόγειο
+        // "Έξυπνο" clamp στο zoom για να μη δείχνει υπερβολικά μακριά ή κοντά
         google.maps.event.addListenerOnce(map, "bounds_changed", () => {
-          const currentZoom = map.getZoom();
-          if (currentZoom < 7.5) map.setZoom(7.5);
-          if (currentZoom > 9) map.setZoom(9);
+          const z = map.getZoom();
+          if (z < 7.5) map.setZoom(7.5);
+          if (z > 9) map.setZoom(9);
         });
       } else {
         console.warn("Αποτυχία διαδρομής:", status);
@@ -98,47 +106,81 @@ function initMap() {
     }
   );
 
-  // ---- Custom κουμπιά (⤢ και ↺) ----
+  // ---- Custom κουμπί Fullscreen (⤢ / ✕) ----
   const fsBtn = document.createElement("div");
   fsBtn.className = "gm-custom-btn";
   fsBtn.title = "Πλήρης οθόνη";
   fsBtn.textContent = "⤢";
   fsBtn.addEventListener("click", async () => {
     const mapEl = map.getDiv();
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-      fsBtn.textContent = "⤢";
-    } else {
-      await mapEl.requestFullscreen();
-      fsBtn.textContent = "✕";
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        fsBtn.textContent = "⤢";
+      } else {
+        await mapEl.requestFullscreen();
+        fsBtn.textContent = "✕";
+      }
+    } catch (e) {
+      // Fallback για browsers που δεν υποστηρίζουν καλά Fullscreen API
+      const on = !document.body.classList.contains("fs-active");
+      document.body.classList.toggle("fs-active", on);
+      fsBtn.textContent = on ? "✕" : "⤢";
     }
   });
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fsBtn);
 
+  // ---- Custom κουμπί Reset (↺) → επαναφέρει το αρχικό view της διαδρομής ----
   const resetBtn = document.createElement("div");
   resetBtn.className = "gm-custom-btn";
   resetBtn.title = "Επανέφερε τη διαδρομή";
   resetBtn.textContent = "↺";
   resetBtn.addEventListener("click", () => {
     if (routeBounds) {
-      map.fitBounds(routeBounds);
+      if (typeof map.fitBounds === "function") {
+        map.fitBounds(routeBounds, 60);
+      } else {
+        map.fitBounds(routeBounds);
+      }
       google.maps.event.addListenerOnce(map, "bounds_changed", () => {
-        const currentZoom = map.getZoom();
-        if (currentZoom < 7.5) map.setZoom(7.5);
-        if (currentZoom > 9) map.setZoom(9);
+        const z = map.getZoom();
+        if (z < 7.5) map.setZoom(7.5);
+        if (z > 9) map.setZoom(9);
       });
+    }
+    // ξαναζωγράφισε τη διαδρομή όπως φορτώθηκε
+    if (directionsRenderer) {
+      const dir = directionsRenderer.getDirections();
+      if (dir) directionsRenderer.setDirections(dir);
     }
   });
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(resetBtn);
 
+  // Συγχρονισμός εικονιδίου fullscreen όταν αλλάζει η κατάσταση
   ["fullscreenchange", "webkitfullscreenchange", "mozfullscreenchange", "MSFullscreenChange"]
     .forEach(evt => document.addEventListener(evt, () => {
-      fsBtn.textContent = document.fullscreenElement ? "✕" : "⤢";
+      const active = !!document.fullscreenElement || document.body.classList.contains("fs-active");
+      fsBtn.textContent = active ? "✕" : "⤢";
+      if (!active) document.body.classList.remove("fs-active");
     }));
+
+  // Διατήρηση σωστού framing σε αλλαγή μεγέθους/προσανατολισμού
+  window.addEventListener("resize", () => {
+    if (routeBounds) {
+      if (typeof map.fitBounds === "function") {
+        map.fitBounds(routeBounds, 60);
+      } else {
+        map.fitBounds(routeBounds);
+      }
+    }
+  });
 }
 
+// Κάνε την initMap διαθέσιμη για το callback του Google Maps script
+window.initMap = initMap;
+
 // ==============================
-// Στυλ για κουμπιά
+// Στυλ για τα custom κουμπιά
 // ==============================
 const style = document.createElement("style");
 style.textContent = `
@@ -153,9 +195,10 @@ style.textContent = `
   line-height:18px;
   cursor:pointer;
   box-shadow:0 2px 6px rgba(0,0,0,0.4);
-  transition:background 0.3s;
+  transition:background 0.25s, transform 0.1s;
+  user-select:none;
 }
-.gm-custom-btn:hover {
-  background:#004080;
-}`;
+.gm-custom-btn:hover { background:#004080; }
+.gm-custom-btn:active { transform: scale(0.97); }
+`;
 document.head.appendChild(style);
