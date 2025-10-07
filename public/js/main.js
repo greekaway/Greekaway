@@ -133,15 +133,14 @@ function initMap() {
     if (!routeBounds) return;
     // fit με padding ώστε να “αναπνέει”
     if (typeof map.fitBounds === "function") {
-      map.fitBounds(routeBounds, 70);
+      map.fitBounds(routeBounds, 30);
     } else {
       map.fitBounds(routeBounds);
     }
     // clamp για να μη φύγει υπερβολικά μακριά/κοντά
     google.maps.event.addListenerOnce(map, "idle", () => {
       const z = map.getZoom();
-      if (z < 7.5) map.setZoom(7.5);
-      if (z > 10)  map.setZoom(10);
+      if (z < 8) map.setZoom(8);
     });
   }
 
