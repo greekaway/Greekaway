@@ -4,7 +4,7 @@ async function loadTrip() {
   const id = parseInt(params.get("id"));
   if (!id) return;
 
-  const res = await fetch("trips.json");
+  const res = await fetch("trip.json");
   const trips = await res.json();
   const trip = trips.find(t => t.id === id);
   if (!trip) return;
