@@ -1,5 +1,5 @@
 // ==============================
-// main.js – Greekaway (Λευκάδα με σωστό zoom & κουμπιά)
+// main.js – Greekaway (Λευκάδα: όπως στους Δελφούς)
 // ==============================
 
 // ----------------------
@@ -51,7 +51,7 @@ function initMap() {
     center: { lat: 38.5, lng: 22.5 },
     mapTypeId: "satellite",
     fullscreenControl: false,
-    mapTypeControl: false,
+    mapTypeControl: true,
     streetViewControl: true,
     rotateControl: false
   });
@@ -59,7 +59,8 @@ function initMap() {
   const directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
     map,
-    suppressMarkers: true,
+    suppressMarkers: false, // ✅ δείχνει A-B-C-D pins
+    preserveViewport: false,
     polylineOptions: { strokeColor: "#f9d65c", strokeWeight: 5, strokeOpacity: 0.95 }
   });
 
@@ -74,6 +75,7 @@ function initMap() {
       origin: "Athens, Greece",
       destination: "Lefkada, Greece",
       waypoints: waypts,
+      optimizeWaypoints: true,
       travelMode: google.maps.TravelMode.DRIVING
     },
     (result, status) => {
@@ -81,33 +83,16 @@ function initMap() {
         directionsRenderer.setDirections(result);
         routeBounds = result.routes[0].bounds;
 
-        // ✅ κάνει zoom ακριβώς πάνω στη διαδρομή, όπως στους Δελφούς
+        // ✅ Zoom μόνο πάνω στη διαδρομή
         map.fitBounds(routeBounds);
-        setTimeout(() => {
-          const currentZoom = map.getZoom();
-          map.setZoom(currentZoom + 0.8); // μικρό zoom-in
-        }, 600);
+        setTimeout(() => map.setZoom(map.getZoom() + 0.8), 500);
       } else {
         console.warn("Αποτυχία διαδρομής:", status);
       }
     }
   );
 
-  // ---- Προσθήκη markers ----
-  new google.maps.Marker({
-    position: { lat: 37.9838, lng: 23.7275 },
-    map,
-    title: "Αθήνα",
-    icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: "#f9d65c", fillOpacity: 1, strokeColor: "#0d1a26", strokeWeight: 2 }
-  });
-  new google.maps.Marker({
-    position: { lat: 38.7, lng: 20.65 },
-    map,
-    title: "Λευκάδα",
-    icon: { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: "#f9d65c", fillOpacity: 1, strokeColor: "#0d1a26", strokeWeight: 2 }
-  });
-
-  // ---- Custom κουμπιά (ίδια με Δελφούς) ----
+  // ---- Custom κουμπιά (⤢ και ↺) ----
   const fsBtn = document.createElement("div");
   fsBtn.className = "gm-custom-btn";
   fsBtn.title = "Πλήρης οθόνη";
@@ -133,8 +118,7 @@ function initMap() {
   });
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(resetBtn);
 
-  // ενημέρωση fullscreen συμβόλου
-  ["fullscreenchange","webkitfullscreenchange","mozfullscreenchange","MSFullscreenChange"]
+  ["fullscreenchange", "webkitfullscreenchange", "mozfullscreenchange", "MSFullscreenChange"]
     .forEach(evt => document.addEventListener(evt, () => {
       fsBtn.textContent = document.fullscreenElement ? "✕" : "⤢";
     }));
