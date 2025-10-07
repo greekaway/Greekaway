@@ -185,3 +185,37 @@ window.initMap = initMap;
 `;
   document.head.appendChild(style);
 })();
+// ==============================
+// Extra style για Google default controls (Map/Satellite)
+// ==============================
+(function styleGoogleControls(){
+  const style = document.createElement("style");
+  style.id = "ga-maptype-style";
+  style.textContent = `
+  /* Κουμπιά "Χάρτης / Δορυφόρος" */
+  .gm-style-mtc div:nth-child(1) > button,
+  .gm-style-mtc div:nth-child(2) > button {
+    background:#0d1a26 !important;      /* σκούρο μπλε */
+    color:#f9d65c !important;            /* χρυσά γράμματα */
+    border:none !important;
+    border-radius:20px !important;       /* πιο στρογγυλεμένα */
+    padding:6px 14px !important;
+    margin:2px !important;
+    font-weight:bold !important;
+    box-shadow:0 2px 6px rgba(0,0,0,0.4) !important;
+  }
+
+  /* όταν είναι ενεργό */
+  .gm-style-mtc div > button[aria-pressed="true"] {
+    background:#004080 !important;       /* πιο φωτεινό μπλε */
+    color:#fff !important;
+  }
+
+  /* hover εφέ */
+  .gm-style-mtc div > button:hover {
+    background:#002c59 !important;
+    color:#fff !important;
+  }
+  `;
+  document.head.appendChild(style);
+})();
