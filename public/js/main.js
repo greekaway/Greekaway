@@ -1,53 +1,67 @@
-// Διαβάζει το trips.json και φορτώνει το trip.html
+// === main.js ===
+
+// Όταν φορτώνει η σελίδα
+window.addEventListener("load", loadTrip);
+
 async function loadTrip() {
   const params = new URLSearchParams(window.location.search);
   const id = parseInt(params.get("id"));
-  if (!id) return;
 
+  // Φόρτωση του JSON με όλες τις εκδρομές
   const res = await fetch("trip.json");
   const trips = await res.json();
-  const trip = trips.find(t => t.id === id);
-  if (!trip) return;
 
-  // Τίτλος
-  document.getElementById("trip-title").textContent = trip.title;
+  // Αν υπάρχει id -> εμφάνισε ΜΙΑ εκδρομή
+  if (id) {
+    const trip = trips.find(t => t.id === id);
+    if (!trip) return;
 
-  // Περιεχόμενο
-  const content = document.getElementById("trip-content");
-  content.innerHTML = `
-    <p>${trip.details}</p>
-    ${trip.videos.map(v => `
-      <div class="video-wrap">
-        <iframe src="${v.url}?rel=0&modestbranding=1" title="${v.title}" allowfullscreen></iframe>
-      </div>
-    `).join("")}
-  `;
+    document.getElementById("trip-title").textContent = trip.title;
 
-  // Χάρτης
-  initMap(trip.mapCenter, trip.waypoints);
+    const content = document.getElementById("trip-content");
+    content.innerHTML = `
+      <img src="${trip.image}" alt="${trip.title}">
+      <p><strong>Κατηγορία:</strong> ${trip.category}</p>
+      <p>${trip.details}</p>
+    `;
+
+    initMap(trip.title); // Χάρτης
+  }
+
+  // Αν ΔΕΝ υπάρχει id -> εμφάνισε όλες τις εκδρομές σε λίστα
+  else {
+    const content = document.getElementById("trip-content");
+    content.innerHTML = "<h2>Όλες οι Εκδρομές</h2>" +
+      trips.map(t => `
+        <div class="card">
+          <img src="${t.image}" alt="${t.title}">
+          <h3>${t.title}</h3>
+          <p>${t.description}</p>
+          <a href="trip.html?id=${t.id}" class="btn">Δες περισσότερα</a>
+        </div>
+      `).join("");
+  }
 }
 
-// Google Map
-function initMap(center, waypoints) {
-  const map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 8,
-    center: center,
-    mapTypeId: 'satellite'
+// === Google Map ===
+function initMap(destination) {
+  const map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 6,
+    center: { lat: 38.5, lng: 23.5 },
+    mapTypeId: "roadmap"
   });
 
-  const directionsService = new google.maps.DirectionsService();
-  const directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
+  const service = new google.maps.places.PlacesService(map);
+  const request = { query: destination, fields: ["geometry", "name"] };
 
-  directionsService.route({
-    origin: "Athens, Greece",
-    destination: "Athens, Greece",
-    waypoints: waypoints.map(loc => ({ location: loc, stopover: true })),
-    travelMode: "DRIVING"
-  }, (result, status) => {
-    if (status === "OK") {
-      directionsRenderer.setDirections(result);
+  service.findPlaceFromQuery(request, (results, status) => {
+    if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
+      map.setCenter(results[0].geometry.location);
+      new google.maps.Marker({
+        map,
+        position: results[0].geometry.location,
+        title: results[0].name
+      });
     }
   });
 }
-
-window.addEventListener("load", loadTrip);
