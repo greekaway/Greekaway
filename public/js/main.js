@@ -96,17 +96,7 @@ function initMap() {
     travelMode: google.maps.TravelMode.DRIVING,
   };
 
-  directionsService.route(request, (result, status) => {
-    if (status === "OK") {
-      directionsRenderer.setDirections(result);
-      // Αυτόματο zoom ώστε να χωράει όλη η Ελλάδα
-      const bounds = result.routes[0].bounds;
-      map.fitBounds(bounds);
-    } else {
-      console.warn("Αποτυχία διαδρομής:", status);
-    }
-  });
-
+ 
   // Προσθήκη markers
   new google.maps.Marker({
     position: { lat: 37.9838, lng: 23.7275 },
@@ -119,7 +109,32 @@ function initMap() {
     title: "Λευκάδα",
   });
 }
+directionsService.route(
+  {
+    origin: "Athens, Greece",
+    destination: "Lefkada, Greece",
+    waypoints: [
+      { location: "Kathisma Beach, Lefkada, Greece", stopover: true },
+      { location: "Rachi Exanthia, Lefkada, Greece", stopover: true },
+      { location: "Nidri, Lefkada, Greece", stopover: true }
+    ],
+    travelMode: google.maps.TravelMode.DRIVING
+  },
+  (result, status) => {
+    if (status === "OK") {
+      directionsRenderer.setDirections(result);
 
+      // ✅ Αυτό εστιάζει ΜΟΝΟ στη διαδρομή
+      const bounds = result.routes[0].bounds;
+      map.fitBounds(bounds);
+
+      // μικρή καθυστέρηση για πιο φυσικό zoom
+      setTimeout(() => map.setZoom(map.getZoom() - 0.2), 400);
+    } else {
+      console.warn("Αποτυχία διαδρομής:", status);
+    }
+  }
+);
 // ==============================
 // Custom κουμπιά Greekaway
 // ==============================
