@@ -3,18 +3,18 @@
     "id": "sea",
     "title": "Θάλασσα",
     "image": "https://cdn-icons-png.flaticon.com/512/990/990596.png",
-    "description": "Αποδράσεις σε νησιά και παραθαλάσσιες διαδρομές."
+    "description": "Αποδράσεις σε παραθαλάσσιες διαδρομές."
   },
   {
     "id": "mountain",
     "title": "Βουνό",
     "image": "https://cdn-icons-png.flaticon.com/512/616/616408.png",
-    "description": "Φύση, καθαρός αέρας και ορεινές περιπέτειες."
+    "description": "Φύση περιπέτειες."
   },
   {
     "id": "culture",
     "title": "Πολιτισμός",
     "image": "https://cdn-icons-png.flaticon.com/512/3448/3448624.png",
-    "description": "Αρχαιολογικοί χώροι και ελληνική κληρονομιά."
+    "description": " Ελληνική κληρονομιά."
   }
 ]
