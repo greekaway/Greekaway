@@ -2,19 +2,19 @@
   {
     "id": "sea",
     "title": "Θάλασσα",
-    "image": "https://cdn-icons-png.flaticon.com/512/3075/3075977.png",
+    "image": "/images/sea.png",
     "description": "Παραθαλάσσιες διαδρομές."
   },
   {
     "id": "mountain",
     "title": "Βουνό",
-    "image": "https://cdn-icons-png.flaticon.com/512/616/616430.png",
-    "description": "Φύση ορεινές περιπέτειες."
+    "image": "/images/mountain.png",
+    "description": "Φύση και ορεινές περιπέτειες."
   },
   {
     "id": "culture",
     "title": "Πολιτισμός",
-    "image": "https://cdn-icons-png.flaticon.com/512/3448/3448743.png",
+    "image": "/images/culture.png",
     "description": "Ελληνική κληρονομιά."
   }
 ]
