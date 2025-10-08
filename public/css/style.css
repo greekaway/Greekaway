@@ -107,8 +107,6 @@ footer a.central-btn:hover i {
 }
 
 /* -------- Overlays (Παράθυρα) -------- */
-
-/* Κρυφά εξ αρχής */
 .overlay {
   display: none;
   position: fixed;
@@ -124,7 +122,6 @@ footer a.central-btn:hover i {
   z-index: 2000;
 }
 
-/* Εμφανίζονται μόνο όταν είναι ενεργά */
 .overlay.active {
   display: block;
 }
@@ -172,4 +169,59 @@ footer a.central-btn:hover i {
 @media (min-width: 1024px) {
   body { font-size: 1.05rem; }
   footer a i { font-size: 1.6rem; }
+}
+
+/* ===============================
+   ΚΑΤΗΓΟΡΙΕΣ (TRIPS.HTML)
+   =============================== */
+#categories-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 25px;
+  padding: 40px 20px;
+  animation: appearZoom 1.2s ease;
+}
+
+.category-btn {
+  width: 150px;
+  height: 150px;
+  background: #ffffff18;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35),
+              inset 0 0 12px rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  color: #ecf0f1;
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.category-btn img {
+  width: 68px;
+  height: 68px;
+  margin-bottom: 10px;
+  transition: transform 0.25s ease;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.2));
+}
+
+.category-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.5),
+              0 0 15px rgba(255,255,255,0.15);
+}
+
+.category-btn:hover img {
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.4));
+}
+
+@keyframes appearZoom {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
 }
