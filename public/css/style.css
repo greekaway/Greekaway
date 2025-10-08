@@ -1,6 +1,180 @@
+/* ===========================
+   GREEKAWAY – STYLE SHEET
+   =========================== */
+
+/* -------- Βασικά -------- */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #1e2b3a;
+  color: #ecf0f1;
+  text-align: center;
+  padding-bottom: 80px; /* χώρος για footer */
+  transition: background 0.4s, color 0.4s;
+}
+
+/* -------- Καλωσόρισμα -------- */
+#welcome-section {
+  margin-top: 70px;
+}
+
+.welcome-title {
+  font-size: 1.6rem;
+  color: #f9d65c;
+  margin-top: 1.2rem;
+}
+
+.welcome-subtitle {
+  font-size: 1rem;
+  color: #ecf0f1;
+  margin-bottom: 1.5rem;
+}
+
+/* -------- Animation για Logo -------- */
+.welcome-logo {
+  width: 160px;
+  height: auto;
+  border-radius: 25px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  opacity: 0;
+  transform: scale(0.85);
+  animation: logoFadeIn 1.5s ease forwards;
+  animation-delay: 0.3s;
+}
+
+@keyframes logoFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* -------- Footer (Πόδια) -------- */
+footer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #0d1a26;
+  color: #ecf0f1;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-radius: 20px 20px 0 0;
+  z-index: 1000;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.4);
+}
+
+footer a {
+  color: #ecf0f1;
+  text-decoration: none;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.25s ease, color 0.3s ease;
+}
+
+footer a i {
+  font-size: 1.5rem;
+  margin-bottom: 3px;
+  transition: transform 0.25s ease, background 0.3s ease, color 0.3s ease;
+  padding: 8px 10px;
+  border-radius: 12px;
+}
+
+footer a:hover {
+  color: #00aaff;
+  transform: translateY(-3px);
+}
+
+footer a:hover i {
+  background: #004080;
+  color: #fff;
+  transform: scale(1.1);
+}
+
+/* Κεντρικό κουμπί (Δες Εκδρομές / Κράτηση) */
+footer a.central-btn i {
+  background: #004080;
+  color: #fff;
+}
+footer a.central-btn:hover i {
+  background: #0066cc;
+}
+
+/* -------- Overlays (Παράθυρα) -------- */
+.overlay {
+  display: none;
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(30,43,58,0.98);
+  padding: 2rem;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  color: #ecf0f1;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  z-index: 2000;
+}
+
+.overlay.active {
+  display: block;
+}
+
+.overlay h2 {
+  color: #f9d65c;
+  margin-bottom: 1rem;
+}
+
+.overlay button,
+.overlay form button {
+  margin-top: 1rem;
+  background: #004080;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.overlay button:hover,
+.overlay form button:hover {
+  background: #0066cc;
+}
+
+.overlay input,
+.overlay textarea,
+.overlay select {
+  width: 100%;
+  padding: 10px;
+  margin: 0.4rem 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+}
+
+/* -------- Responsive -------- */
+@media (min-width: 600px) {
+  .welcome-title { font-size: 2rem; }
+  footer { padding: 0.8rem 0; }
+}
+
+@media (min-width: 1024px) {
+  body { font-size: 1.05rem; }
+  footer a i { font-size: 1.6rem; }
+}
+
 /* ===============================
    ΚΑΤΗΓΟΡΙΕΣ (TRIPS.HTML)
    =============================== */
+
 #categories-container {
   display: flex;
   flex-wrap: wrap;
@@ -10,6 +184,7 @@
   animation: appearZoom 1.2s ease;
 }
 
+/* Κουμπί Κατηγορίας */
 .category-btn {
   position: relative;
   width: 170px;
@@ -38,7 +213,7 @@
   filter: brightness(1.15);
 }
 
-/* Εφέ φωτισμού */
+/* Εφέ φωτισμού πάνω από την εικόνα */
 .category-btn::after {
   content: "";
   position: absolute;
@@ -53,7 +228,7 @@
   opacity: 0.5;
 }
 
-/* Animation εμφάνισης */
+/* Εμφάνιση με zoom */
 @keyframes appearZoom {
   0% { opacity: 0; transform: scale(0.8); }
   100% { opacity: 1; transform: scale(1); }
