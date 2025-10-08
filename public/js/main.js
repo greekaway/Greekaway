@@ -21,7 +21,6 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.innerHTML = `
           <img src="${cat.image}" alt="${cat.title}">
           <span>${cat.title}</span>
-          <p>${cat.description}</p>
         `;
         btn.addEventListener("click", () => {
           // Πάμε στη σελίδα κατηγορίας
