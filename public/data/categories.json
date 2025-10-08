@@ -2,19 +2,19 @@
   {
     "id": "sea",
     "title": "Θάλασσα",
-    "image": "https://cdn-icons-png.flaticon.com/512/2907/2907253.png",
-    "description": "Νησιωτικές αποδράσεις και παραθαλάσσια τοπία γεμάτα φως."
+    "image": "https://cdn-icons-png.flaticon.com/512/4144/4144845.png",
+    "description": "Αποδράσεις σε νησιά και παραθαλάσσιες διαδρομές."
   },
   {
     "id": "mountain",
     "title": "Βουνό",
-    "image": "https://cdn-icons-png.flaticon.com/512/201/201623.png",
-    "description": "Ανεβείτε σε ορεινούς προορισμούς και αναπνεύστε καθαρό αέρα."
+    "image": "https://cdn-icons-png.flaticon.com/512/3103/3103446.png",
+    "description": "Φύση, καθαρός αέρας και ορεινές περιπέτειες."
   },
   {
     "id": "culture",
     "title": "Πολιτισμός",
-    "image": "https://cdn-icons-png.flaticon.com/512/3557/3557735.png",
-    "description": "Εξερευνήστε τον ελληνικό πολιτισμό μέσα από ιστορία και τέχνη."
+    "image": "https://cdn-icons-png.flaticon.com/512/808/808439.png",
+    "description": "Αρχαιολογικοί χώροι και ελληνική κληρονομιά."
   }
 ]
