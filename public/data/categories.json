@@ -1,5 +1,5 @@
 [
-  { "id": "sea", "title": "Θάλασσα", "image": "images/sea.png" },
-  { "id": "mountain", "title": "Βουνό", "image": "images/mountain.png" },
-  { "id": "culture", "title": "Πολιτισμός", "image": "images/culture.png" }
+  { "id": "sea", "title": "Θάλασσα", "image": "/images/sea.png" },
+  { "id": "mountain", "title": "Βουνό", "image": "/images/mountain.png" },
+  { "id": "culture", "title": "Πολιτισμός", "image": "/images/culture.png" }
 ]
