@@ -7,25 +7,24 @@
 
   <!-- Icons + βασικό style όπως στο welcome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="../css/style.css">
-  <!-- Προαιρετικά extra styling για τη σελίδα εκδρομής (θα το στείλω επόμενο) -->
-  <link rel="stylesheet" href="../css/trip.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/trip.css">
+
+  <!-- Κύριος κώδικας -->
+  <script src="/js/main.js" defer></script>
 </head>
 
 <body>
-  <!-- Περιεχόμενο εκδρομής: Τίτλος, περιγραφή, Χάρτης πάνω, στάσεις κάτω -->
+  <!-- Περιεχόμενο εκδρομής -->
   <section id="trip-section" class="trip-section">
     <h2 id="trip-title"></h2>
     <p id="trip-description"></p>
 
-    <!-- ΧΑΡΤΗΣ (route + στάσεις) -->
     <div id="map"></div>
-
-    <!-- ΣΤΑΣΕΙΣ (κάθε στάση: βίντεο + περιγραφή) -->
     <div id="stops"></div>
   </section>
 
-  <!-- Overlays (ίδια λογική με welcome) -->
+  <!-- Overlays -->
   <div id="aiOverlay" class="overlay" style="display:none;">
     <h2>AI Assistant</h2>
     <p>Ρωτήστε μας ό,τι θέλετε για την εκδρομή σας!</p>
@@ -44,9 +43,9 @@
     <button onclick="closeOverlay('paymentOverlay')">Κλείσιμο</button>
   </div>
 
-  <!-- ===== FOOTER: TRIP PAGE (ίδιο στυλ/θέσεις, με αλλαγμένα κεντρικά) ===== -->
+  <!-- ===== FOOTER ===== -->
   <footer>
-    <a href="../index.html">
+    <a href="/index.html">
       <i class="fas fa-home"></i>
       <span>Home</span>
     </a>
@@ -72,16 +71,12 @@
     </a>
   </footer>
 
-  <!-- Λειτουργίες overlay -->
   <script>
     function openOverlay(id){ document.getElementById(id).style.display='block'; }
     function closeOverlay(id){ document.getElementById(id).style.display='none'; }
   </script>
 
-  <!-- Κύριος κώδικας (θα γεμίσει τίτλο/περιγραφή/βίντεο/χάρτη από το JSON) -->
-  <script src="../js/main.js" defer></script>
-
-  <!-- Google Maps JS API (βάλε το δικό σου key) -->
+  <!-- Google Maps -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
 </body>
 </html>
