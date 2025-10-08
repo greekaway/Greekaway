@@ -2,16 +2,16 @@
   {
     "id": "sea",
     "title": "Θάλασσα",
-    "image": "images/category-sea.png"
+    "image": "images/sea.png"
   },
   {
     "id": "mountain",
     "title": "Βουνό",
-    "image": "images/category-mountain.png"
+    "image": "images/mountain.png"
   },
   {
     "id": "culture",
     "title": "Πολιτισμός",
-    "image": "images/category-culture.png"
+    "image": "images/culture.png"
   }
 ]
