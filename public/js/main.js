@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  fetch(`/data/trips/${tripId}.json`)
+  fetch(`../data/trips/${tripId}.json`)
     .then(r => {
       if (!r.ok) throw new Error("Αποτυχία φόρτωσης δεδομένων εκδρομής");
       return r.json();
