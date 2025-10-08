@@ -1,5 +1,5 @@
 // ==============================
-// main.js — Greekaway (ενιαίο)
+// main.js — Greekaway (ενιαίο, διορθωμένο)
 // ==============================
 
 // ---------- [A] Λίστα Κατηγοριών (trips.html) ----------
@@ -8,13 +8,21 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!categoriesContainer) return; // αν δεν είμαστε σε trips.html συνέχισε στα επόμενα μπλοκ
 
   fetch("/data/categories.json")
-    .then(r => r.json())
+    .then(r => {
+      if (!r.ok) throw new Error("Αποτυχία φόρτωσης categories.json");
+      return r.json();
+    })
     .then(cats => {
       categoriesContainer.innerHTML = "";
       cats.forEach(cat => {
         const btn = document.createElement("button");
         btn.className = "category-btn";
-        btn.textContent = cat.title || cat.id;
+        // προσθήκη εικόνας + τίτλου + περιγραφής
+        btn.innerHTML = `
+          <img src="${cat.image}" alt="${cat.title}">
+          <span>${cat.title}</span>
+          <p>${cat.description}</p>
+        `;
         btn.addEventListener("click", () => {
           // Πάμε στη σελίδα κατηγορίας
           window.location.href = `/categories/${cat.id}.html`;
@@ -22,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
         categoriesContainer.appendChild(btn);
       });
     })
-    .catch(err => console.error("Σφάλμα categories:", err));
+    .catch(err => console.error("Σφάλμα φόρτωσης κατηγοριών:", err));
 });
 
 // ---------- [B] Σελίδα Κατηγορίας (π.χ. /categories/culture.html) ----------
