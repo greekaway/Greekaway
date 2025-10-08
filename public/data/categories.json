@@ -2,19 +2,16 @@
   {
     "id": "sea",
     "title": "Θάλασσα",
-    "image": "/images/sea.png",
-    "description": "Παραθαλάσσιες διαδρομές."
+    "image": "images/category-sea.png"
   },
   {
     "id": "mountain",
     "title": "Βουνό",
-    "image": "/images/mountain.png",
-    "description": "Φύση και ορεινές περιπέτειες."
+    "image": "images/category-mountain.png"
   },
   {
     "id": "culture",
     "title": "Πολιτισμός",
-    "image": "/images/culture.png",
-    "description": "Ελληνική κληρονομιά."
+    "image": "images/category-culture.png"
   }
 ]
