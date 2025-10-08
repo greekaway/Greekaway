@@ -1,0 +1,20 @@
+[
+  {
+    "id": "sea",
+    "title": "Θάλασσα",
+    "image": "https://cdn.pixabay.com/photo/2017/01/31/17/44/sea-2025469_1280.png",
+    "description": "Αποδράσεις σε νησιά και παραθαλάσσιες διαδρομές, με χρώμα και ελευθερία."
+  },
+  {
+    "id": "mountain",
+    "title": "Βουνό",
+    "image": "https://cdn.pixabay.com/photo/2014/04/03/10/32/mountains-310275_1280.png",
+    "description": "Ορεινά μονοπάτια, φύση, καθαρός αέρας και στιγμές ηρεμίας."
+  },
+  {
+    "id": "culture",
+    "title": "Πολιτισμός",
+    "image": "https://cdn.pixabay.com/photo/2013/07/13/10/22/greek-column-156422_1280.png",
+    "description": "Ανακαλύψτε την αρχαία Ελλάδα μέσα από τέχνη, μνημεία και ιστορία."
+  }
+]
