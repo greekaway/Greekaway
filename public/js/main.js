@@ -1,93 +1,100 @@
 // ==============================
-// main.js – Google Map + Route (ενιαίο καθαρό)
+// main.js – Greekaway (Αρχαία Ολυμπία)
 // ==============================
-let map, directionsRenderer, routeBounds;
 
-function initMap() {
+document.addEventListener("DOMContentLoaded", () => {
+  // Αν δεν υπάρχει container εκδρομής, δεν κάνουμε τίποτα
+  const tripSection = document.getElementById("trip-section");
+  if (!tripSection) return;
+
+  // Παίρνουμε το id της εκδρομής από το URL (π.χ. ?id=olympia)
+  const params = new URLSearchParams(window.location.search);
+  const tripId = params.get("id") || "olympia"; // προεπιλογή για δοκιμή
+
+  // Φόρτωση δεδομένων από το JSON
+  fetch(`../data/trips/${tripId}.json`)
+    .then(r => {
+      if (!r.ok) throw new Error("Αποτυχία φόρτωσης δεδομένων");
+      return r.json();
+    })
+    .then(trip => {
+      // ====== Τίτλος & περιγραφή ======
+      document.getElementById("trip-title").textContent = trip.title;
+      document.getElementById("trip-description").textContent = trip.description;
+
+      // ====== Βίντεο ανά στάση ======
+      const stopsDiv = document.getElementById("stops");
+      stopsDiv.innerHTML = ""; // καθαρισμός
+
+      trip.stops.forEach((stop, index) => {
+        const stopEl = document.createElement("div");
+        stopEl.className = "trip-stop";
+
+        stopEl.innerHTML = `
+          <h3>Στάση ${index + 1}: ${stop.name}</h3>
+          <div class="video-box">
+            <iframe 
+              src="${stop.video}" 
+              title="${stop.name}" 
+              frameborder="0" 
+              allowfullscreen
+              width="100%"
+              height="315">
+            </iframe>
+          </div>
+          <p class="stop-description">${stop.description}</p>
+        `;
+
+        stopsDiv.appendChild(stopEl);
+      });
+
+      // ====== Χάρτης με διαδρομή & στάσεις ======
+      initMap(trip.map.waypoints, trip.map.center, trip.map.zoom);
+    })
+    .catch(err => {
+      console.error("Σφάλμα:", err);
+      document.getElementById("trip-section").innerHTML = "<p>Σφάλμα φόρτωσης δεδομένων εκδρομής.</p>";
+    });
+});
+
+
+// ==============================
+// Google Maps Route
+// ==============================
+let map, directionsService, directionsRenderer;
+
+function initMap(waypoints, center, zoom) {
   const mapEl = document.getElementById("map");
-  if (!mapEl) return console.warn("❗ Δεν βρέθηκε #map στο DOM");
-
-  const waypoints = window.TRIP_WAYPOINTS?.map(loc => ({ location: loc, stopover: true })) || [];
+  if (!mapEl) return;
 
   map = new google.maps.Map(mapEl, {
-    zoom: 8,
-    center: window.TRIP_CENTER || { lat: 38.5, lng: 22.5 },
-    mapTypeId: "roadmap",
-    gestureHandling: "greedy",
-    fullscreenControl: false,
-    mapTypeControl: true,
-    streetViewControl: true
+    center,
+    zoom,
+    mapTypeId: "roadmap"
   });
 
-  if (waypoints.length) {
-    const service = new google.maps.DirectionsService();
-    directionsRenderer = new google.maps.DirectionsRenderer({
-      map,
-      polylineOptions: { strokeColor: "#f9d65c", strokeWeight: 5, strokeOpacity: 0.95 }
-    });
+  directionsService = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer({ map });
 
-    service.route({
-      origin: "Athens, Greece",
-      destination: waypoints[waypoints.length - 1].location || "Lefkada, Greece",
-      waypoints,
-      travelMode: google.maps.TravelMode.DRIVING
-    }, (result, status) => {
-      if (status === "OK") {
-        directionsRenderer.setDirections(result);
-        routeBounds = result.routes[0].bounds;
-        fitRoute();
-      } else {
-        console.warn("Αποτυχία διαδρομής:", status);
-      }
-    });
-  }
+  const origin = waypoints[0];
+  const destination = waypoints[waypoints.length - 1];
+  const stops = waypoints.slice(1, waypoints.length - 1).map(loc => ({
+    location: loc,
+    stopover: true
+  }));
 
-  // --- Custom Fullscreen ---
-  const fsBtn = createBtn("⤢", "Πλήρης οθόνη", async () => {
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-        fsBtn.textContent = "⤢";
-      } else {
-        await mapEl.requestFullscreen();
-        fsBtn.textContent = "✕";
-      }
-    } catch {
-      document.body.classList.toggle("fs-active");
-      fsBtn.textContent = document.body.classList.contains("fs-active") ? "✕" : "⤢";
+  const routeRequest = {
+    origin,
+    destination,
+    waypoints: stops,
+    travelMode: google.maps.TravelMode.DRIVING
+  };
+
+  directionsService.route(routeRequest, (result, status) => {
+    if (status === "OK") {
+      directionsRenderer.setDirections(result);
+    } else {
+      console.error("Σφάλμα διαδρομής:", status);
     }
-    setTimeout(fitRoute, 200);
   });
-  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fsBtn);
-
-  // --- Reset Route ---
-  const resetBtn = createBtn("↺", "Επανέφερε διαδρομή", () => fitRoute());
-  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(resetBtn);
-
-  // Συγχρονισμός fullscreen
-  ["fullscreenchange","webkitfullscreenchange"].forEach(evt =>
-    document.addEventListener(evt, () => {
-      const active = !!document.fullscreenElement || document.body.classList.contains("fs-active");
-      fsBtn.textContent = active ? "✕" : "⤢";
-      if (!active) document.body.classList.remove("fs-active");
-      setTimeout(fitRoute, 150);
-    })
-  );
-
-  // Fit route helper
-  function fitRoute() {
-    if (routeBounds && map.fitBounds) map.fitBounds(routeBounds);
-  }
-
-  function createBtn(symbol, title, onClick) {
-    const btn = document.createElement("div");
-    btn.className = "gm-custom-btn";
-    btn.textContent = symbol;
-    btn.title = title;
-    btn.onclick = onClick;
-    return btn;
-  }
 }
-
-// διαθέσιμο για callback
-window.initMap = initMap;
