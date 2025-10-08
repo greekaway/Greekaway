@@ -184,6 +184,7 @@ footer a.central-btn:hover i {
 }
 
 .category-btn {
+  position: relative;
   width: 170px;
   height: 170px;
   background: #ffffff18;
@@ -202,8 +203,35 @@ footer a.central-btn:hover i {
   transition: all 0.25s ease;
   padding: 15px;
   text-align: center;
+  overflow: hidden;
 }
 
+/* --- Εφέ λάμψης / Shine --- */
+.category-btn::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -70%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: rotate(25deg);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.category-btn:hover::before {
+  animation: shineMove 1s forwards;
+  opacity: 1;
+}
+
+@keyframes shineMove {
+  0% { left: -70%; opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { left: 130%; opacity: 0; }
+}
+
+/* --- Περιεχόμενο --- */
 .category-btn img {
   width: 65px;
   height: 65px;
@@ -213,16 +241,19 @@ footer a.central-btn:hover i {
 }
 
 .category-btn span {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: bold;
   margin-bottom: 4px;
+  color: #f9d65c;
+  letter-spacing: 0.3px;
 }
 
 .category-btn p {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   color: #cfd8e2;
   margin: 0;
   line-height: 1.3;
+  opacity: 0.9;
 }
 
 .category-btn:hover {
@@ -232,7 +263,7 @@ footer a.central-btn:hover i {
 }
 
 .category-btn:hover img {
-  transform: scale(1.12);
+  transform: scale(1.15);
   filter: drop-shadow(0 0 12px rgba(255,255,255,0.45));
 }
 
