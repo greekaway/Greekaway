@@ -1,5 +1,5 @@
 // ==============================
-// main.js — Greekaway (ενιαίο, διορθωμένο)
+// main.js — Greekaway (ενιαίο, τελικό διορθωμένο)
 // ==============================
 
 // ---------- [A] Λίστα Κατηγοριών (trips.html) ----------
@@ -17,15 +17,15 @@ document.addEventListener("DOMContentLoaded", () => {
       cats.forEach(cat => {
         const btn = document.createElement("button");
         btn.className = "category-btn";
-        // προσθήκη εικόνας + τίτλου + περιγραφής
-        btn.innerHTML = `
-          <img src="${cat.image}" alt="${cat.title}">
-          <span>${cat.title}</span>
-        `;
+
+        // ΜΟΝΟ η εικόνα (ο τίτλος υπάρχει ήδη πάνω στην ίδια την εικόνα)
+        btn.innerHTML = `<img src="${cat.image}" alt="${cat.title}">`;
+
         btn.addEventListener("click", () => {
-          // Πάμε στη σελίδα κατηγορίας
+          // Μετάβαση στη σελίδα της κατηγορίας
           window.location.href = `/categories/${cat.id}.html`;
         });
+
         categoriesContainer.appendChild(btn);
       });
     })
@@ -58,7 +58,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
       if (!tripsContainer.children.length) {
-        tripsContainer.innerHTML = "<p>Δεν βρέθηκαν εκδρομές σε αυτή την κατηγορία.</p>";
+        tripsContainer.innerHTML =
+          "<p>Δεν βρέθηκαν εκδρομές σε αυτή την κατηγορία.</p>";
       }
     })
     .catch(err => console.error("Σφάλμα tripindex:", err));
@@ -77,20 +78,17 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // Διαβάζουμε ΠΑΝΤΑ με απόλυτο path για να μην υπάρχει μπέρδεμα με ../
   fetch(`/data/trips/${tripId}.json`)
     .then(r => {
       if (!r.ok) throw new Error("Αποτυχία φόρτωσης δεδομένων εκδρομής");
       return r.json();
     })
     .then(trip => {
-      // Τίτλος & περιγραφή
       const titleEl = document.getElementById("trip-title");
-      const descEl  = document.getElementById("trip-description");
+      const descEl = document.getElementById("trip-description");
       if (titleEl) titleEl.textContent = trip.title || "";
-      if (descEl)  descEl.textContent  = trip.description || "";
+      if (descEl) descEl.textContent = trip.description || "";
 
-      // Στάσεις: βίντεο + περιγραφές
       const stopsWrap = document.getElementById("stops");
       stopsWrap.innerHTML = "";
       (trip.stops || []).forEach((stop, i) => {
@@ -114,7 +112,6 @@ document.addEventListener("DOMContentLoaded", () => {
         stopsWrap.appendChild(stopEl);
       });
 
-      // Χάρτης με διαδρομή & ενδιάμεσες στάσεις
       if (trip.map && trip.map.waypoints && trip.map.waypoints.length >= 2) {
         ensureGoogleMaps(() => renderRoute(trip.map));
       }
@@ -150,23 +147,25 @@ function renderRoute(mapData) {
 
   map = new google.maps.Map(mapEl, {
     center: mapData.center || { lat: 38.0, lng: 23.7 },
-    zoom:   mapData.zoom   || 7,
-    mapTypeId: "roadmap"
+    zoom: mapData.zoom || 7,
+    mapTypeId: "roadmap",
   });
 
-  directionsService  = new google.maps.DirectionsService();
+  directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({ map });
 
   const wps = mapData.waypoints;
-  const origin      = wps[0];
+  const origin = wps[0];
   const destination = wps[wps.length - 1];
-  const midStops = wps.slice(1, wps.length - 1).map(loc => ({ location: loc, stopover: true }));
+  const midStops = wps
+    .slice(1, wps.length - 1)
+    .map((loc) => ({ location: loc, stopover: true }));
 
   const req = {
     origin,
     destination,
     waypoints: midStops,
-    travelMode: google.maps.TravelMode.DRIVING
+    travelMode: google.maps.TravelMode.DRIVING,
   };
 
   directionsService.route(req, (res, status) => {
