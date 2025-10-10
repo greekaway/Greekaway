@@ -67,6 +67,14 @@ html, body { min-height: 100%; }
   }
 }
 
+/* Apply the same logo fade/zoom to specific tiles (e.g. Olympia) */
+.logo-pop {
+  opacity: 0;
+  transform: scale(0.85);
+  animation: logoFadeIn 1.5s ease forwards;
+  animation-delay: 0.3s;
+}
+
 /* -------- Footer (Πόδια) -------- */
 footer {
   position: fixed;
@@ -596,6 +604,57 @@ html[data-category="culture"], body[data-category="culture"] {
   background-image: linear-gradient(180deg, rgba(var(--culture-1), 0.06), rgba(var(--culture-2), 0.02)) !important;
   background-blend-mode: overlay !important;
 }
+
+/* Micro-zoom for culture tiles: small, subtle lift and scale then revert */
+/* Culture tile: force dark navy background and smooth transitions */
+#trips-container .trip-card.cat-culture {
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+  background-color: #071827 !important; /* very dark navy for the tile itself */
+  color: #f9d65c; /* ensure gold text stays visible */
+}
+
+#trips-container .trip-card.cat-culture:hover {
+  transform: translateY(-6px) scale(1.06) !important;
+  /* stronger white glow + warm accent + darker outline */
+  box-shadow:
+    0 26px 56px rgba(0,0,0,0.6),
+    0 0 32px rgba(255,255,255,0.28),
+    0 8px 20px rgba(243,156,18,0.14);
+  filter: saturate(1.02);
+}
+
+/* Ensure any element using logo-pop still responds to hover with a small zoom */
+.logo-pop:hover {
+  transform: scale(1.06) !important;
+}
+
+#trips-container .trip-card.cat-culture:active {
+  transform: translateY(-2px) scale(0.995);
+}
+
+#trips-container .trip-card.cat-culture h3 { z-index: 3; position: relative; }
+
+/* Pop-in animation when entering a category: small grow then settle */
+@keyframes popIn {
+  0% { transform: scale(0.92); opacity: 0.88; }
+  75% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+body[data-view="category"] #trips-container .trip-card:not(.logo-pop) {
+  /* slower, more pronounced pop-in so tiles appear to 'walk' into place */
+  animation: popIn 800ms cubic-bezier(.2,.9,.3,1) both;
+}
+
+/* small stagger so tiles pop sequentially */
+body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(1) { animation-delay: 90ms; }
+body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(2) { animation-delay: 180ms; }
+body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(3) { animation-delay: 270ms; }
+body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(4) { animation-delay: 360ms; }
+body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(5) { animation-delay: 450ms; }
+body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(6) { animation-delay: 540ms; }
+
+
 
 /* Ensure category overlays are above images and visible */
 .category-btn::before {
