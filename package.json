@@ -18,8 +18,9 @@
   },
   "homepage": "https://github.com/greekaway/Greekaway#readme",
   "dependencies": {
+    "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "puppeteer": "^24.23.0",
-    "stripe": "^12.11.0"
+    "stripe": "^12.18.0"
   }
 }

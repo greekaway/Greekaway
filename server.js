@@ -84,40 +84,12 @@ app.post('/create-payment-intent', express.json(), async (req, res) => {
   }
 });
 
-// Webhook endpoint for Stripe events
-// If STRIPE_WEBHOOK_SECRET is set in .env we'll verify signature, otherwise we accept raw events (dev only)
-app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || null;
-
-  let event = null;
-  try {
-    if (webhookSecret && stripe) {
-      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    } else {
-      // parse body as JSON in dev mode
-      event = JSON.parse(req.body.toString('utf8'));
-    }
-  } catch (err) {
-    console.error('Webhook signature verification failed.', err && err.message ? err.message : err);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Handle the event types you care about
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-      console.log('Webhook: payment_intent.succeeded', event.data.object.id);
-      // TODO: Mark booking as paid in DB
-      break;
-    case 'payment_intent.payment_failed':
-      console.log('Webhook: payment_intent.payment_failed', event.data.object.id);
-      break;
-    default:
-      console.log(`Webhook received event: ${event.type}`);
-  }
-
-  res.json({ received: true });
-});
+// Attach webhook handler from module
+try {
+  require('./webhook')(app, stripe);
+} catch (err) {
+  console.warn('Could not attach webhook module:', err && err.message ? err.message : err);
+}
 
 // Global error handlers to prevent process exit on unexpected errors
 process.on('uncaughtException', (err) => {
