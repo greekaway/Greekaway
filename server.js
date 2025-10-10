@@ -2,11 +2,18 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 
+// Load local .env (if present). Safe to leave out in production where env vars are set
+try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installed */ }
+
 const app = express();
 const PORT = 3000;
 
 // Read Maps API key from environment. If not provided, the placeholder remains.
-const MAP_KEY = process.env.GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY';
+// Trim and strip surrounding quotes if the value was pasted with quotes.
+let MAP_KEY = process.env.GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY';
+if (typeof MAP_KEY === 'string') {
+  MAP_KEY = MAP_KEY.trim().replace(/^['"]|['"]$/g, '');
+}
 // Stripe secret key from environment (do not commit real keys)
 const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY || null;
 let stripe = null;
@@ -75,6 +82,41 @@ app.post('/create-payment-intent', express.json(), async (req, res) => {
     console.error('Stripe create payment intent error:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Failed to create payment intent' });
   }
+});
+
+// Webhook endpoint for Stripe events
+// If STRIPE_WEBHOOK_SECRET is set in .env we'll verify signature, otherwise we accept raw events (dev only)
+app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || null;
+
+  let event = null;
+  try {
+    if (webhookSecret && stripe) {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } else {
+      // parse body as JSON in dev mode
+      event = JSON.parse(req.body.toString('utf8'));
+    }
+  } catch (err) {
+    console.error('Webhook signature verification failed.', err && err.message ? err.message : err);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event types you care about
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      console.log('Webhook: payment_intent.succeeded', event.data.object.id);
+      // TODO: Mark booking as paid in DB
+      break;
+    case 'payment_intent.payment_failed':
+      console.log('Webhook: payment_intent.payment_failed', event.data.object.id);
+      break;
+    default:
+      console.log(`Webhook received event: ${event.type}`);
+  }
+
+  res.json({ received: true });
 });
 
 // Global error handlers to prevent process exit on unexpected errors
