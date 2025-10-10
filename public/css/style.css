@@ -243,8 +243,8 @@ footer a.central-btn:hover i {
 }
 
 /* ===== Category page panel (as in screenshot) ===== */
-body[data-category] {
-  /* slightly darker backdrop for the category listing pages */
+/* only apply the navy panel when we're on the category listing (not the trip page) */
+body[data-category][data-view="category"] {
   background-color: #162630; /* deep navy */
   color: #f1f5f8;
 }

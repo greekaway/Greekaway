@@ -6,6 +6,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const categoriesContainer = document.getElementById("categories-container");
   if (!categoriesContainer) return; // αν δεν είμαστε σε trips.html συνέχισε στα επόμενα μπλοκ
+  // indicate this is the category-listing view
+  document.body.dataset.view = 'category';
 
   fetch("/data/categories.json")
     .then(r => {
@@ -42,6 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!tripsContainer) return; // αν δεν είμαστε σε σελίδα κατηγορίας, πήγαινε στο [C]
 
   const category = document.body.dataset.category; // π.χ. "culture"
+  // ensure view flag for listing pages
+  document.body.dataset.view = 'category';
   if (!category) return;
 
   fetch("/data/tripindex.json")
@@ -106,6 +110,8 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .catch(() => {});
         }
+        // indicate this is an individual trip view so CSS can target it
+        document.body.dataset.view = 'trip';
       if (titleEl) titleEl.textContent = trip.title || "";
       if (descEl) descEl.textContent = trip.description || "";
 
