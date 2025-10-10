@@ -202,18 +202,22 @@ function renderRoute(mapData) {
 
   directionsService.route(req, (res, status) => {
     if (status === "OK") {
+      console.log('[GREEKAWAY] DirectionsService returned OK');
       // set directions on the map and then apply a gentle auto-zoom which
       // focuses on the route but prevents showing an overly-wide area (like
       // the whole country). We keep default markers visible.
       directionsRenderer.setDirections(res);
       try {
         const route = res.routes && res.routes[0];
+        console.log('[GREEKAWAY] route object present?', !!route);
         let bounds = null;
         if (route && route.bounds) {
           bounds = route.bounds;
+          console.log('[GREEKAWAY] route.bounds provided by API');
         } else if (route && route.overview_path) {
           bounds = new google.maps.LatLngBounds();
           route.overview_path.forEach(p => bounds.extend(p));
+          console.log('[GREEKAWAY] computed bounds from overview_path, points:', route.overview_path.length);
         }
         if (bounds) {
           // Fit bounds with a small visual padding
@@ -222,9 +226,13 @@ function renderRoute(mapData) {
           const minFriendlyZoom = 8; // adjust this value as needed
           // map.getZoom() is available after fitBounds; if it's smaller than desired, boost it
           const z = map.getZoom();
+          console.log('[GREEKAWAY] map.getZoom() after fitBounds ->', z);
           if (typeof z === 'number' && z < minFriendlyZoom) {
             map.setZoom(minFriendlyZoom);
+            console.log('[GREEKAWAY] map zoom clamped to', minFriendlyZoom);
           }
+        } else {
+          console.log('[GREEKAWAY] no bounds available for route');
         }
       } catch (e) {
         console.warn('Could not apply gentle auto-zoom:', e);
