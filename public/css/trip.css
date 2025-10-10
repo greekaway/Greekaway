@@ -5,8 +5,11 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #1e2b3a;
+  /* let the global styles (body[data-category]) control the page background
+     so per-category gradients can show; avoid overriding here */
+  background: transparent;
   color: #ecf0f1;
+  min-height: 100vh;
 }
 
 /* Header */

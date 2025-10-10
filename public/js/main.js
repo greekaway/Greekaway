@@ -18,8 +18,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const btn = document.createElement("button");
         btn.className = "category-btn";
 
-        // ΜΟΝΟ η εικόνα (ο τίτλος υπάρχει ήδη πάνω στην ίδια την εικόνα)
-        btn.innerHTML = `<img src="${cat.image}" alt="${cat.title}">`;
+  // ΜΟΝΟ η εικόνα (ο τίτλος υπάρχει ήδη πάνω στην ίδια την εικόνα)
+  btn.innerHTML = `<img src="${cat.image}" alt="${cat.title}">`;
+  // expose category id for styling and accessibility
+  btn.dataset.cat = cat.id;
+  btn.classList.add(`cat-${cat.id}`);
+  btn.title = cat.title;
 
         btn.addEventListener("click", () => {
           // Μετάβαση στη σελίδα της κατηγορίας
@@ -49,6 +53,9 @@ document.addEventListener("DOMContentLoaded", () => {
         .forEach(trip => {
           const card = document.createElement("div");
           card.className = "trip-card";
+          // add category metadata so we can style per-category
+          card.dataset.cat = trip.category || category;
+          card.classList.add(`cat-${trip.category || category}`);
           card.innerHTML = `<h3>${trip.title}</h3>`;
           card.addEventListener("click", () => {
             // ΜΟΝΟ ΕΝΑ trip.html — δίνουμε id με query
@@ -86,6 +93,19 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(trip => {
       const titleEl = document.getElementById("trip-title");
       const descEl = document.getElementById("trip-description");
+      // set page category so background and styles match
+        if (trip.category) {
+          document.body.dataset.category = trip.category;
+        } else {
+          // fallback: find category from tripindex.json
+          fetch('/data/tripindex.json')
+            .then(r => r.json())
+            .then(all => {
+              const meta = (all || []).find(t => t.id === tripId);
+              if (meta && meta.category) document.body.dataset.category = meta.category;
+            })
+            .catch(() => {});
+        }
       if (titleEl) titleEl.textContent = trip.title || "";
       if (descEl) descEl.textContent = trip.description || "";
 

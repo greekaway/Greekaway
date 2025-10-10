@@ -13,10 +13,16 @@ body {
   transition: background 0.4s, color 0.4s;
 }
 
+html, body { min-height: 100%; }
+
 :root {
-  --accent-1: #00aaff; /* sea blue */
-  --accent-2: #f39c12; /* warm orange */
-  --accent-3: #7cc04f; /* green */
+  /* RGB component variables for per-category colors (use with rgba(var(--sea-1), alpha)) */
+  --sea-1: 0,170,255;    /* sea primary */
+  --sea-2: 102,204,255;  /* sea secondary */
+  --mountain-1: 124,192,79; /* mountain primary */
+  --mountain-2: 34,153,84;  /* mountain secondary */
+  --culture-1: 243,156,18;  /* culture primary */
+  --culture-2: 255,200,121; /* culture secondary */
   --tile-overlay-opacity: 0.14;
 }
 
@@ -311,7 +317,7 @@ footer a.central-btn:hover i {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(135deg, rgba(0,170,255,0.95), rgba(243,156,18,0.85));
+  background: linear-gradient(135deg, rgba(var(--sea-1), 0.95), rgba(var(--culture-1), 0.85));
   mix-blend-mode: multiply;
   opacity: var(--tile-overlay-opacity);
   transition: opacity 240ms ease, transform 240ms ease;
@@ -324,14 +330,30 @@ footer a.central-btn:hover i {
 }
 
 .category-btn:hover {
-  transform: scale(1.03);
-  box-shadow: 0 16px 40px rgba(0,0,0,0.45), 0 6px 24px rgba(0,170,255,0.08);
+  transform: translateY(-8px) scale(1.07);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.58), 0 10px 30px rgba(0,170,255,0.12);
 }
 
 /* subtle border to separate from background */
 .category-btn {
   border: 1px solid rgba(255,255,255,0.04);
 }
+
+/* Per-category color themes */
+.category-btn.cat-sea::before {
+  background: linear-gradient(135deg, rgba(var(--sea-1), 0.95), rgba(var(--sea-2), 0.6));
+}
+.category-btn.cat-mountain::before {
+  background: linear-gradient(135deg, rgba(var(--mountain-1), 0.95), rgba(var(--mountain-2), 0.6));
+}
+.category-btn.cat-culture::before {
+  background: linear-gradient(135deg, rgba(var(--culture-1), 0.95), rgba(var(--culture-2), 0.6));
+}
+
+/* Slightly stronger hover accent per category */
+.category-btn.cat-sea:hover { box-shadow: 0 18px 44px rgba(0,160,255,0.28); }
+.category-btn.cat-mountain:hover { box-shadow: 0 18px 44px rgba(34,153,84,0.22); }
+.category-btn.cat-culture:hover { box-shadow: 0 18px 44px rgba(243,156,18,0.22); }
 
 /* Η εικόνα γεμίζει όλο το τετράγωνο */
 .category-btn img {
@@ -340,6 +362,8 @@ footer a.central-btn:hover i {
   object-fit: cover;
   border-radius: inherit;
   transition: transform 0.35s ease, filter 0.3s ease;
+  position: relative;
+  z-index: 0;
 }
 
 /* colored accent + shadow for trip cards (matching tiles) */
@@ -353,9 +377,24 @@ footer a.central-btn:hover i {
 }
 
 #trips-container .trip-card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 14px 36px rgba(0,0,0,0.45), 0 6px 18px rgba(243,156,18,0.06);
+  transform: translateY(-8px) scale(1.04);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.55), 0 8px 22px rgba(243,156,18,0.10);
 }
+
+/* Trip card category accents */
+#trips-container .trip-card.cat-sea::before {
+  background: linear-gradient(180deg, rgba(var(--sea-1), 0.10), rgba(var(--sea-2), 0.06));
+}
+#trips-container .trip-card.cat-mountain::before {
+  background: linear-gradient(180deg, rgba(var(--mountain-1), 0.10), rgba(var(--mountain-2), 0.06));
+}
+#trips-container .trip-card.cat-culture::before {
+  background: linear-gradient(180deg, rgba(var(--culture-1), 0.10), rgba(var(--culture-2), 0.06));
+}
+
+#trips-container .trip-card.cat-sea:hover { box-shadow: 0 16px 36px rgba(0,160,255,0.22); transform: translateY(-3px) scale(1.02);} 
+#trips-container .trip-card.cat-mountain:hover { box-shadow: 0 16px 36px rgba(34,153,84,0.18); transform: translateY(-3px) scale(1.02);} 
+#trips-container .trip-card.cat-culture:hover { box-shadow: 0 16px 36px rgba(243,156,18,0.18); transform: translateY(-3px) scale(1.02);} 
 
 /* Breakpoints: give app-like fixed sizes per device class */
 /* Fixed app-like sizes per breakpoint */
@@ -382,6 +421,28 @@ footer a.central-btn:hover i {
   #categories-container { grid-template-columns: repeat(auto-fit, 160px); gap: 24px; }
   .category-btn { width: 160px; height: 160px; border-radius: 22px; }
 }
+
+/* Per-page background based on category */
+body[data-category="sea"] {
+  background-color: rgba(var(--sea-1), 0.06);
+  background-image: linear-gradient(180deg, rgba(var(--sea-1), 0.06), rgba(var(--sea-2), 0.02));
+  background-blend-mode: overlay;
+}
+body[data-category="mountain"] {
+  background-color: rgba(var(--mountain-1), 0.06);
+  background-image: linear-gradient(180deg, rgba(var(--mountain-1), 0.06), rgba(var(--mountain-2), 0.02));
+  background-blend-mode: overlay;
+}
+body[data-category="culture"] {
+  background-color: rgba(var(--culture-1), 0.06);
+  background-image: linear-gradient(180deg, rgba(var(--culture-1), 0.06), rgba(var(--culture-2), 0.02));
+  background-blend-mode: overlay;
+}
+
+/* ensure html also inherits background (some browsers) */
+html[data-category="sea"], body[data-category="sea"] { background-attachment: fixed; }
+html[data-category="mountain"], body[data-category="mountain"] { background-attachment: fixed; }
+html[data-category="culture"], body[data-category="culture"] { background-attachment: fixed; }
 
 /* Zoom εφέ */
 .category-btn:hover img {
