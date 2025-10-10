@@ -5,6 +5,22 @@ const fs = require("fs");
 const app = express();
 const PORT = 3000;
 
+// Read Maps API key from environment. If not provided, the placeholder remains.
+const MAP_KEY = process.env.GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY';
+
+// Serve /trips/trip.html with the API key injected from environment.
+// This route is placed before the static middleware so it takes precedence
+// over the on-disk file and avoids writing the key into committed files.
+app.get('/trips/trip.html', (req, res) => {
+  const filePath = path.join(__dirname, 'public', 'trips', 'trip.html');
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) return res.status(500).send('Error reading trip.html');
+    // Replace the placeholder key in the Google Maps script URL.
+    const replaced = data.replace('key=YOUR_GOOGLE_MAPS_API_KEY', `key=${encodeURIComponent(MAP_KEY)}`);
+    res.send(replaced);
+  });
+});
+
 // 1️⃣ Σερβίρουμε στατικά αρχεία από το /public
 app.use(express.static(path.join(__dirname, "public")));
 
