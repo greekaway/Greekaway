@@ -112,6 +112,198 @@ app.get("/api/trips", (req, res) => {
   });
 });
 
+// Admin payments endpoint (protected by basic auth)
+// Normalize admin creds: trim and strip surrounding quotes to avoid dotenv/quoting pitfalls
+let ADMIN_USER = process.env.ADMIN_USER || null;
+let ADMIN_PASS = process.env.ADMIN_PASS || null;
+if (typeof ADMIN_USER === 'string') ADMIN_USER = ADMIN_USER.trim().replace(/^['"]|['"]$/g, '');
+if (typeof ADMIN_PASS === 'string') ADMIN_PASS = ADMIN_PASS.trim().replace(/^['"]|['"]$/g, '');
+function checkAdminAuth(req) {
+  if (!ADMIN_USER || !ADMIN_PASS) return false;
+  const auth = req.headers.authorization || '';
+  if (!auth.startsWith('Basic ')) return false;
+  const creds = Buffer.from(auth.split(' ')[1] || '', 'base64').toString('utf8');
+  const [user, pass] = creds.split(':');
+  return user === ADMIN_USER && pass === ADMIN_PASS;
+}
+
+app.get('/admin/payments', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    res.set('WWW-Authenticate', 'Basic realm="Admin"');
+    return res.status(401).send('Unauthorized');
+  }
+  // Try Postgres/SQLite/JSON via the same logic as webhook.js
+  try {
+    // support pagination via query params
+    const limit = Math.min(10000, Math.abs(parseInt(req.query.limit || '200', 10) || 200));
+    const offset = Math.max(0, Math.abs(parseInt(req.query.offset || '0', 10) || 0));
+    // prefer Postgres if configured
+    const DATABASE_URL = process.env.DATABASE_URL || null;
+    if (DATABASE_URL) {
+      const { Client } = require('pg');
+      const client = new Client({ connectionString: DATABASE_URL });
+      await client.connect();
+      const { rows } = await client.query('SELECT id,status,event_id AS "eventId",amount,currency,timestamp FROM payments ORDER BY timestamp DESC LIMIT $1 OFFSET $2', [limit, offset]);
+      await client.end();
+      return res.json(rows);
+    }
+
+    // Check SQLite
+    try {
+      const Database = require('better-sqlite3');
+      const db = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
+      const rows = db.prepare('SELECT id,status,event_id AS eventId,amount,currency,timestamp FROM payments ORDER BY timestamp DESC LIMIT ? OFFSET ?').all(limit, offset);
+      return res.json(rows);
+    } catch (e) {
+      // fallthrough to JSON
+    }
+
+    // JSON fallback
+    const paymentsPath = path.join(__dirname, 'payments.json');
+    if (!fs.existsSync(paymentsPath)) return res.json([]);
+    const raw = fs.readFileSync(paymentsPath, 'utf8');
+    const all = raw ? JSON.parse(raw) : {};
+    // return as array sorted by timestamp desc and apply pagination
+    const arr = Object.keys(all).map(k => ({ id: k, ...all[k] }));
+    arr.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+    return res.json(arr.slice(offset, offset + limit));
+  } catch (err) {
+    console.error('Admin payments error:', err && err.stack ? err.stack : err);
+    return res.status(500).send('Server error');
+  }
+});
+
+// Admin backup status endpoint
+app.get('/admin/backup-status', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    res.set('WWW-Authenticate', 'Basic realm="Admin"');
+    return res.status(401).send('Unauthorized');
+  }
+  try {
+    const backupDir = process.env.BACKUP_DIR || path.join(require('os').homedir(), 'greekaway_backups');
+    if (!fs.existsSync(backupDir)) return res.json({ backupsDir: backupDir, count: 0, latestDb: null, latestLog: null });
+    const files = fs.readdirSync(backupDir).map(f => ({ name: f, path: path.join(backupDir, f) }));
+    const dbFiles = files.filter(f => f.name.startsWith('db.sqlite3') && f.name.endsWith('.gz'));
+    const logFiles = files.filter(f => f.name.startsWith('webhook.log') && f.name.endsWith('.gz'));
+    const stat = (f) => {
+      try { const s = fs.statSync(f.path); return { file: f.name, size: s.size, mtime: s.mtime }; } catch (e) { return null; }
+    };
+    const latest = (arr) => {
+      const stats = arr.map(stat).filter(Boolean);
+      stats.sort((a,b) => new Date(b.mtime) - new Date(a.mtime));
+      return stats[0] || null;
+    };
+    const latestDb = latest(dbFiles);
+    const latestLog = latest(logFiles);
+    return res.json({ backupsDir: backupDir, count: files.length, latestDb, latestLog });
+  } catch (err) {
+    console.error('Admin backup-status error', err && err.stack ? err.stack : err);
+    return res.status(500).send('Server error');
+  }
+});
+
+// Serve the Admin single-page at /admin (so users can visit /admin)
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Server-side CSV export of payments with optional filters via query params.
+app.get('/admin/payments.csv', async (req, res) => {
+  if (!checkAdminAuth(req)) {
+    res.set('WWW-Authenticate', 'Basic realm="Admin"');
+    return res.status(401).send('Unauthorized');
+  }
+  try {
+    const { status, from, to, min, max, limit } = req.query || {};
+
+    // Gather rows (Postgres -> SQLite -> JSON fallback)
+    let rows = [];
+    const DATABASE_URL = process.env.DATABASE_URL || null;
+    if (DATABASE_URL) {
+      try {
+        const { Client } = require('pg');
+        const client = new Client({ connectionString: DATABASE_URL });
+        await client.connect();
+        // Fetch with a reasonable limit to avoid accidental huge downloads
+        const lim = parseInt(limit, 10) || 10000;
+        const { rows: pgrows } = await client.query('SELECT id,status,event_id AS "eventId",amount,currency,timestamp,metadata FROM payments ORDER BY timestamp DESC LIMIT $1', [lim]);
+        rows = pgrows;
+        await client.end();
+      } catch (e) {
+        console.warn('Postgres read failed, falling back:', e && e.message ? e.message : e);
+      }
+    }
+
+    if (rows.length === 0) {
+      try {
+        const Database = require('better-sqlite3');
+        const db = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
+        rows = db.prepare('SELECT id,status,event_id AS eventId,amount,currency,timestamp,metadata FROM payments ORDER BY timestamp DESC').all();
+      } catch (e) {
+        // ignore and fallthrough to JSON
+      }
+    }
+
+    if (rows.length === 0) {
+      const paymentsPath = path.join(__dirname, 'payments.json');
+      if (fs.existsSync(paymentsPath)) {
+        const raw = fs.readFileSync(paymentsPath, 'utf8');
+        const all = raw ? JSON.parse(raw) : {};
+        rows = Object.keys(all).map(k => ({ id: k, ...all[k] }));
+      }
+    }
+
+    // Apply filters server-side (same logic as client)
+    const filtered = (rows || []).filter(p => {
+      try {
+        if (status && String(p.status) !== status) return false;
+        if (min) {
+          const m = parseInt(min,10);
+          if (Number(p.amount) < m) return false;
+        }
+        if (max) {
+          const M = parseInt(max,10);
+          if (Number(p.amount) > M) return false;
+        }
+        if (from) {
+          const fromTs = new Date(from + 'T00:00:00Z').getTime();
+          const pt = p.timestamp ? new Date(p.timestamp).getTime() : NaN;
+          if (isFinite(pt) && pt < fromTs) return false;
+        }
+        if (to) {
+          const toTs = new Date(to + 'T23:59:59Z').getTime();
+          const pt = p.timestamp ? new Date(p.timestamp).getTime() : NaN;
+          if (isFinite(pt) && pt > toTs) return false;
+        }
+        return true;
+      } catch (e) { return false; }
+    });
+
+    // Build CSV headers as union of keys
+    const keys = Array.from(new Set(filtered.flatMap(obj => Object.keys(obj || {}))));
+    const escape = (val) => {
+      if (val === null || val === undefined) return '';
+      if (typeof val === 'object') val = JSON.stringify(val);
+      return '"' + String(val).replace(/"/g, '""') + '"';
+    };
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    const ts = new Date().toISOString().replace(/[:.]/g,'').replace(/T/,'_').replace(/Z/,'');
+    res.setHeader('Content-Disposition', `attachment; filename="payments_${ts}.csv"`);
+
+    // Stream CSV
+    res.write(keys.join(',') + '\n');
+    for (const row of filtered) {
+      const vals = keys.map(k => escape(row[k]));
+      res.write(vals.join(',') + '\n');
+    }
+    res.end();
+  } catch (err) {
+    console.error('CSV export error', err && err.stack ? err.stack : err);
+    return res.status(500).send('Server error');
+  }
+});
+
 // 3️⃣ Όταν ο χρήστης πάει στο "/", να του δείχνει το index.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));

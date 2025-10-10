@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: greekaway
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./data/db_pg:/var/lib/postgresql/data

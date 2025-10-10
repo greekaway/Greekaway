@@ -1,0 +1,9 @@
+{
+  "pi_local_1": {
+    "status": "succeeded",
+    "eventId": "evt_local_1",
+    "amount": 1234,
+    "currency": "eur",
+    "timestamp": "2025-10-10T16:21:15.294Z"
+  }
+}

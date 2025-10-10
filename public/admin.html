@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Greekaway</title>
+  <style>
+  body {font-family: Arial, Helvetica, sans-serif; margin:20px; background-color: #eef7ff; }
+    label{display:block;margin-top:8px}
+    input[type=text], input[type=password]{width:300px;padding:6px}
+    input[type=date], input[type=number]{padding:6px}
+    .btn{margin-top:8px}
+    .col{display:inline-block;vertical-align:top;width:48%;margin-right:2%}
+  /* Excel-like table styling */
+    #paymentsTable thead th{background:#f3f6fb;border:1px solid #cfd8e3}
+    #paymentsTable tbody td{border:1px solid #e6edf5;padding:6px}
+    #paymentsTable tbody tr:nth-child(even){background:#fbfcfe}
+    #paymentsTable tbody tr:hover{background:#eef6ff}
+  #paymentsTable td{text-align:left;font-family: Arial, Helvetica, sans-serif}
+  /* Ensure panels remain white for contrast on the blue background */
+  #main, .col, #paymentsContainer, #backup {background: #ffffff; padding: 10px; border-radius:6px}
+    #paymentsTable td.amount{text-align:right;font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif}
+    .status-badge{display:inline-block;padding:4px 8px;border-radius:12px;color:white;font-weight:600;font-size:12px}
+    .status-succeeded{background:#28a745}
+    .status-failed{background:#dc3545}
+    .status-processing{background:#17a2b8}
+    .status-requires_payment_method{background:#ffc107;color:#212529}
+    .status-canceled{background:#6c757d}
+  </style>
+</head>
+<body>
+  <h2>Greekaway Admin</h2>
+  <p>Βάλε τα διαπιστευτήρια διαχειριστή για να δεις τις πληρωμές και την κατάσταση αντιγράφων ασφαλείας.</p>
+  <form id="auth">
+    <label>User <input id="user" type="text" value="admin" /></label>
+    <label>Pass <input id="pass" type="password" /></label>
+    <button id="login">Login</button>
+  </form>
+
+  <div id="main" style="display:none">
+    <div class="col">
+  <h3>Κατάσταση αντιγράφων</h3>
+  <button id="refreshBackup">Ανανέωση</button>
+  <div id="backup" style="margin-top:8px;color:#333;line-height:1.4"></div>
+    </div>
+    <div class="col">
+  <h3>Πληρωμές (τελευταίες)</h3>
+        <div id="filters" style="margin-bottom:8px">
+          <label style="display:inline-block;margin-right:8px">Κατάσταση:
+            <select id="filterStatus">
+              <option value="">(any)</option>
+              <option value="succeeded">succeeded</option>
+              <option value="requires_payment_method">requires_payment_method</option>
+              <option value="failed">failed</option>
+              <option value="processing">processing</option>
+              <option value="canceled">canceled</option>
+            </select>
+          </label>
+          <label style="display:inline-block;margin-right:8px">Από:
+            <input id="filterFrom" type="date" />
+          </label>
+          <label style="display:inline-block;margin-right:8px">Έως:
+            <input id="filterTo" type="date" />
+          </label>
+          <label style="display:inline-block;margin-right:8px">Ελάχιστο (€):
+            <input id="filterMin" type="number" step="0.01" placeholder="0.00" />
+          </label>
+          <label style="display:inline-block;margin-right:8px">Μέγιστο (€):
+            <input id="filterMax" type="number" step="0.01" placeholder="" />
+          </label>
+          <button id="applyFilters">Εφαρμογή</button>
+          <button id="clearFilters">Επαναφορά</button>
+        </div>
+        <div style="margin-bottom:8px">
+          <button id="refreshPayments">Ανανέωση</button>
+          <button id="exportPayments">Εξαγωγή σε CSV</button>
+          <button id="copyExcel">Αντιγραφή στο Excel</button>
+          <label style="margin-left:12px">Page size:
+            <select id="pageSize"><option>50</option><option>100</option><option>200</option></select>
+          </label>
+          <button id="prevPage">Prev</button>
+          <button id="nextPage">Next</button>
+          <label style="margin-left:8px">Ταξινόμηση:
+            <select id="sortField">
+              <option value="">(none)</option>
+              <option value="timestamp">timestamp</option>
+              <option value="amount">amount</option>
+              <option value="status">status</option>
+            </select>
+            <button id="sortDir" title="Toggle asc/desc">▲</button>
+          </label>
+          <span id="pageInfo" style="margin-left:8px">Σελίδα: 1</span>
+        </div>
+        <div id="paymentsContainer">
+          <table id="paymentsTable" style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr>
+                <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κωδικός</th>
+                <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κατάσταση</th>
+                <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Γεγονός</th>
+                <th style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Ποσό (€)</th>
+                <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Νόμισμα</th>
+                <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Ημερομηνία</th>
+                <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Μεταδεδομένα</th>
+              </tr>
+            </thead>
+            <tbody style="font-family:monospace;background:#fff"></tbody>
+          </table>
+          <div id="paymentsMessage" style="margin-top:8px;color:#666"></div>
+        </div>
+    </div>
+  </div>
+
+  <script>
+    const authForm = document.getElementById('auth');
+    const main = document.getElementById('main');
+    const userInput = document.getElementById('user');
+    const passInput = document.getElementById('pass');
+  const backupPre = document.getElementById('backup');
+  const backupDiv = document.getElementById('backup');
+  const paymentsTbody = document.getElementById('paymentsTable').querySelector('tbody');
+  const paymentsMessage = document.getElementById('paymentsMessage');
+
+  let basicAuth = null;
+  let lastPayments = null; // cached array from server
+  let lastFiltered = null; // cached filtered view
+  let currentOffset = 0;
+  let currentLimit = 50;
+  let currentSortField = '';
+  let currentSortDir = 'desc'; // or 'asc'
+
+    authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const u = userInput.value || '';
+      const p = passInput.value || '';
+      basicAuth = 'Basic ' + btoa(u + ':' + p);
+      main.style.display = 'block';
+      authForm.style.display = 'none';
+      fetchBackup();
+      fetchPayments();
+    });
+
+    document.getElementById('refreshBackup').addEventListener('click', fetchBackup);
+  document.getElementById('refreshPayments').addEventListener('click', fetchPayments);
+  document.getElementById('exportPayments').addEventListener('click', exportPayments);
+  document.getElementById('applyFilters').addEventListener('click', applyFilters);
+  document.getElementById('clearFilters').addEventListener('click', clearFilters);
+    document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
+    document.getElementById('nextPage').addEventListener('click', () => changePage(1));
+    document.getElementById('pageSize').addEventListener('change', (e) => { currentLimit = parseInt(e.target.value,10) || 50; currentOffset = 0; fetchPayments(); });
+    document.getElementById('sortField').addEventListener('change', (e) => { currentSortField = e.target.value || ''; applyFilters(); });
+    document.getElementById('sortDir').addEventListener('click', (e) => { currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc'; e.target.textContent = currentSortDir === 'asc' ? '▼' : '▲'; applyFilters(); });
+
+    function fetchBackup(){
+      if(!basicAuth) return;
+      backupPre.textContent = 'Loading...';
+      fetch('/admin/backup-status', { headers: { Authorization: basicAuth } })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => backupPre.textContent = JSON.stringify(j, null, 2))
+        .catch(err => backupPre.textContent = 'Error: '+err);
+    }
+
+    function pageInfo(){
+      const page = Math.floor(currentOffset / currentLimit) + 1;
+      document.getElementById('pageInfo').textContent = `Page: ${page}`;
+    }
+
+    function changePage(dir){
+      currentOffset = Math.max(0, currentOffset + dir * currentLimit);
+      fetchPayments();
+    }
+
+    function fetchPayments(){
+      if(!basicAuth) return;
+  paymentsTbody.innerHTML = '';
+  paymentsMessage.textContent = 'Φόρτωση...';
+      const qs = `?limit=${encodeURIComponent(currentLimit)}&offset=${encodeURIComponent(currentOffset)}`;
+      fetch('/admin/payments' + qs, { headers: { Authorization: basicAuth } })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => {
+          lastPayments = Array.isArray(j) ? j : [];
+          // apply current filters automatically
+          applyFilters();
+          pageInfo();
+        })
+        .catch(err => { paymentsTbody.innerHTML = ''; paymentsMessage.textContent = 'Error: '+err; });
+    }
+
+    function renderPayments(arr){
+      lastFiltered = Array.isArray(arr) ? arr : [];
+      // apply client-side sorting if requested
+      let out = lastFiltered.slice();
+      if (currentSortField) {
+        out.sort((a,b) => {
+          const fa = a && a[currentSortField];
+          const fb = b && b[currentSortField];
+          // handle timestamps
+          if (currentSortField === 'timestamp') {
+            const ta = fa ? new Date(fa).getTime() : 0;
+            const tb = fb ? new Date(fb).getTime() : 0;
+            return (ta - tb) * (currentSortDir === 'asc' ? 1 : -1);
+          }
+          // handle amount as number
+          if (currentSortField === 'amount') {
+            const na = Number(fa) || 0;
+            const nb = Number(fb) || 0;
+            return (na - nb) * (currentSortDir === 'asc' ? 1 : -1);
+          }
+          // fallback: string compare
+          const sa = fa ? String(fa) : '';
+          const sb = fb ? String(fb) : '';
+          return sa.localeCompare(sb) * (currentSortDir === 'asc' ? 1 : -1);
+        });
+      }
+      // render rows into table body
+      paymentsTbody.innerHTML = '';
+      if (!out || out.length === 0) {
+        paymentsMessage.textContent = 'Δεν βρέθηκαν εγγραφές για αυτή τη σελίδα/φίλτρα.';
+        return;
+      }
+      paymentsMessage.textContent = '';
+      for (const row of out) {
+        const tr = document.createElement('tr');
+        const statusKey = (row.status || '').toString();
+        const statusLabel = greekStatus(statusKey);
+        const statusClass = statusClassFor(statusKey);
+        const amountVal = formatAmount(row.amount, row.currency);
+        tr.innerHTML = `
+          <td>${escapeHtml(row.id||'')}</td>
+          <td><span class="status-badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+          <td>${escapeHtml(row.eventId||row.event_id||'')}</td>
+          <td class="amount">${escapeHtml(amountVal)}</td>
+          <td>${escapeHtml(row.currency||'')}</td>
+          <td>${escapeHtml(row.timestamp||'')}</td>
+          <td>${escapeHtml(formatMeta(row.metadata||row.meta||''))}</td>
+        `;
+        paymentsTbody.appendChild(tr);
+      }
+    }
+
+    function greekStatus(s){
+      if (!s) return '';
+      const map = {
+        'succeeded': 'Επιτυχής',
+        'failed': 'Αποτυχημένη',
+        'processing': 'Σε επεξεργασία',
+        'requires_payment_method': 'Χρειάζεται μέθοδο',
+        'canceled': 'Ακυρώθηκε'
+      };
+      return map[s] || s;
+    }
+
+    function statusClassFor(s){
+      if (!s) return '';
+      const map = {
+        'succeeded': 'status-succeeded',
+        'failed': 'status-failed',
+        'processing': 'status-processing',
+        'requires_payment_method': 'status-requires_payment_method',
+        'canceled': 'status-canceled'
+      };
+      return map[s] || '';
+    }
+
+    function formatAmount(amount, currency){
+      if (amount == null || amount === '') return '';
+      // if amount looks like cents (integer and currency present), format as euros
+      let num = Number(amount);
+      if (!isFinite(num)) return String(amount);
+      // Heuristic: if amount >= 1000 assume cents
+      if (num > 1000) num = num / 100;
+      return num.toFixed(2) + ' €';
+    }
+
+    function escapeHtml(s){
+      if (s === null || s === undefined) return '';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function formatMeta(m){
+      if (!m) return '';
+      try { return typeof m === 'string' ? m : JSON.stringify(m); } catch(e) { return String(m); }
+    }
+
+    // Copy current visible table to clipboard as TSV (easily pasteable into Excel)
+    document.getElementById('copyExcel').addEventListener('click', async () => {
+      const rows = [];
+      // headers in Greek
+      rows.push(['Κωδικός', 'Κατάσταση', 'Γεγονός', 'Ποσό (€)', 'Νόμισμα', 'Ημερομηνία', 'Μεταδεδομένα']);
+      const trs = paymentsTbody.querySelectorAll('tr');
+      trs.forEach(tr => {
+        const cols = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
+        rows.push(cols);
+      });
+      const tsv = rows.map(r => r.join('\t')).join('\n');
+      try {
+        await navigator.clipboard.writeText(tsv);
+        alert('Αντιγράφηκε στο clipboard. Επικόλλησε σε Excel (Ctrl+V).');
+      } catch (e) {
+        // fallback: create a hidden textarea
+        const ta = document.createElement('textarea');
+        ta.value = tsv;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        alert('Αντιγράφηκε στο clipboard (fallback). Επικόλλησε σε Excel.');
+      }
+    });
+
+    // Modify exportPayments to request CSV with Greek headers from server if possible,
+    // otherwise build client-side CSV with Greek headers.
+    async function exportPayments(){
+      if(!basicAuth) return;
+      const btn = document.getElementById('exportPayments');
+      btn.disabled = true;
+      btn.textContent = 'Ετοιμάζεται...';
+      try {
+        // build query params from filters
+        const params = new URLSearchParams();
+        const status = document.getElementById('filterStatus').value;
+        const from = document.getElementById('filterFrom').value;
+        const to = document.getElementById('filterTo').value;
+        const min = document.getElementById('filterMin').value;
+        const max = document.getElementById('filterMax').value;
+        if (status) params.set('status', status);
+        if (from) params.set('from', from);
+        if (to) params.set('to', to);
+        if (min) params.set('min', Math.round(Number(min)*100));
+        if (max) params.set('max', Math.round(Number(max)*100));
+
+        const url = '/admin/payments.csv?' + params.toString();
+        const res = await fetch(url, { headers: { Authorization: basicAuth } });
+        if (res.ok) {
+          // download server CSV directly
+          const blob = await res.blob();
+          const a = document.createElement('a');
+          const downloadUrl = URL.createObjectURL(blob);
+          const cd = res.headers.get('Content-Disposition') || '';
+          let filename = 'payments.csv';
+          const m = cd.match(/filename="?([^";]+)"?/);
+          if (m && m[1]) filename = m[1];
+          a.href = downloadUrl; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(downloadUrl);
+        } else {
+          // fallback: build client-side CSV with Greek headers
+          const rows = [];
+          rows.push(['Κωδικός','Κατάσταση','Γεγονός','Ποσό (€)','Νόμισμα','Ημερομηνία','Μεταδεδομένα']);
+          const trs = paymentsTbody.querySelectorAll('tr');
+          trs.forEach(tr => {
+            const cols = Array.from(tr.querySelectorAll('td')).map(td => '"'+td.textContent.replace(/"/g,'""')+'"');
+            rows.push(cols);
+          });
+          const csv = rows.map(r => r.join(',')).join('\n');
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+          const url2 = URL.createObjectURL(blob);
+          const a2 = document.createElement('a'); a2.href = url2; a2.download = 'payments.csv'; document.body.appendChild(a2); a2.click(); a2.remove(); URL.revokeObjectURL(url2);
+        }
+      } catch (err) {
+        alert('Εξαγωγή απέτυχε: '+err);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Εξαγωγή σε CSV';
+      }
+    }
+
+    function applyFilters(){
+      if(!lastPayments) return fetchPayments();
+      const status = document.getElementById('filterStatus').value;
+      const from = document.getElementById('filterFrom').value;
+      const to = document.getElementById('filterTo').value;
+      const min = document.getElementById('filterMin').value;
+      const max = document.getElementById('filterMax').value;
+
+      const filtered = lastPayments.filter(p => {
+        try {
+          if (status && String(p.status) !== status) return false;
+          if (min) {
+            const m = parseInt(min,10);
+            if (Number(p.amount) < m) return false;
+          }
+          if (max) {
+            const M = parseInt(max,10);
+            if (Number(p.amount) > M) return false;
+          }
+          if (from) {
+            const fromTs = new Date(from + 'T00:00:00Z').getTime();
+            const pt = p.timestamp ? new Date(p.timestamp).getTime() : NaN;
+            if (isFinite(pt) && pt < fromTs) return false;
+          }
+          if (to) {
+            // include the day
+            const toTs = new Date(to + 'T23:59:59Z').getTime();
+            const pt = p.timestamp ? new Date(p.timestamp).getTime() : NaN;
+            if (isFinite(pt) && pt > toTs) return false;
+          }
+          return true;
+        } catch (e) { return false; }
+      });
+      renderPayments(filtered);
+    }
+
+    function clearFilters(){
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterFrom').value = '';
+      document.getElementById('filterTo').value = '';
+      document.getElementById('filterMin').value = '';
+      document.getElementById('filterMax').value = '';
+      if (lastPayments) renderPayments(lastPayments);
+    }
+
+    // Export payments to CSV and trigger download
+    async function exportPayments(){
+      if(!basicAuth) return;
+      const btn = document.getElementById('exportPayments');
+      btn.disabled = true;
+      btn.textContent = 'Preparing...';
+      try {
+        // build query params from filters
+        const params = new URLSearchParams();
+        const status = document.getElementById('filterStatus').value;
+        const from = document.getElementById('filterFrom').value;
+        const to = document.getElementById('filterTo').value;
+        const min = document.getElementById('filterMin').value;
+        const max = document.getElementById('filterMax').value;
+        if (status) params.set('status', status);
+        if (from) params.set('from', from);
+        if (to) params.set('to', to);
+        if (min) params.set('min', min);
+        if (max) params.set('max', max);
+
+        const url = '/admin/payments.csv?' + params.toString();
+        const res = await fetch(url, { headers: { Authorization: basicAuth } });
+        if (!res.ok) throw new Error('Server returned ' + res.status);
+        const blob = await res.blob();
+        const a = document.createElement('a');
+        const downloadUrl = URL.createObjectURL(blob);
+        // try to get filename from Content-Disposition
+        const cd = res.headers.get('Content-Disposition') || '';
+        let filename = 'payments.csv';
+        const m = cd.match(/filename="?([^";]+)"?/);
+        if (m && m[1]) filename = m[1];
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(downloadUrl);
+      } catch (err) {
+        alert('Export failed: '+err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Export CSV';
+      }
+    }
+  </script>
+</body>
+</html>
