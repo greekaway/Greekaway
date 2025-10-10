@@ -2,6 +2,14 @@
 // main.js — Greekaway (ενιαίο, τελικό διορθωμένο)
 // ==============================
 
+// Lightweight logger: set debug = true to enable console output during development.
+const G = {
+  debug: false,
+  log: (...a) => { if (G.debug) console.log(...a); },
+  warn: (...a) => { if (G.debug) console.warn(...a); },
+  error: (...a) => { if (G.debug) console.error(...a); }
+};
+
 // ---------- [A] Λίστα Κατηγοριών (trips.html) ----------
 document.addEventListener("DOMContentLoaded", () => {
   const categoriesContainer = document.getElementById("categories-container");
@@ -35,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
         categoriesContainer.appendChild(btn);
       });
     })
-    .catch(err => console.error("Σφάλμα φόρτωσης κατηγοριών:", err));
+  .catch(err => G.error("Σφάλμα φόρτωσης κατηγοριών:", err));
 });
 
 // ---------- [B] Σελίδα Κατηγορίας (π.χ. /categories/culture.html) ----------
@@ -57,13 +65,15 @@ document.addEventListener("DOMContentLoaded", () => {
         .forEach(trip => {
           const card = document.createElement("div");
           card.className = "trip-card";
-          // If this is the olympia trip, add the logo-pop animation class
-          if (trip.id === 'olympia') card.classList.add('logo-pop');
+          // If this is the olympia, lefkas, or parnassos trip, add the logo-pop animation class
+          if (trip.id === 'olympia' || trip.id === 'lefkas' || trip.id === 'parnassos') card.classList.add('logo-pop');
           // add category metadata so we can style per-category
           card.dataset.cat = trip.category || category;
           card.classList.add(`cat-${trip.category || category}`);
           card.innerHTML = `<h3>${trip.title}</h3>`;
           card.addEventListener("click", () => {
+            // Mark this trip so the destination page can show a persistent highlight
+            try { sessionStorage.setItem('highlightTrip', trip.id); } catch(e) {}
             // ΜΟΝΟ ΕΝΑ trip.html — δίνουμε id με query
             window.location.href = `/trips/trip.html?id=${trip.id}`;
           });
@@ -75,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "<p>Δεν βρέθηκαν εκδρομές σε αυτή την κατηγορία.</p>";
       }
     })
-    .catch(err => console.error("Σφάλμα tripindex:", err));
+  .catch(err => G.error("Σφάλμα tripindex:", err));
 });
 
 // ---------- [C] Σελίδα Εκδρομής (/trips/trip.html?id=olympia) ----------
@@ -91,12 +101,30 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // Try to set category early from tripindex so per-category background
+  // appears as soon as possible (before the full trip JSON finishes loading).
+  fetch('/data/tripindex.json')
+    .then(r => r.json())
+    .then(all => {
+      const meta = (all || []).find(t => t.id === tripId);
+      if (meta && meta.category) document.body.dataset.category = meta.category;
+    })
+    .catch(() => {});
+
   fetch(`/data/trips/${tripId}.json`)
     .then(r => {
       if (!r.ok) throw new Error("Αποτυχία φόρτωσης δεδομένων εκδρομής");
       return r.json();
     })
     .then(trip => {
+  // If this is olympia or parnassos, give the trip page a navy background override
+  if (trip.id === 'olympia' || trip.id === 'parnassos') document.body.classList.add('navy-bg');
+      // If user clicked a trip card, keep a persistent highlight on arrival
+      try {
+        const h = sessionStorage.getItem('highlightTrip');
+        if (h === tripId) document.body.classList.add('highlight-trip');
+      } catch (e) {}
+
       const titleEl = document.getElementById("trip-title");
       const descEl = document.getElementById("trip-description");
       // set page category so background and styles match
@@ -140,12 +168,33 @@ document.addEventListener("DOMContentLoaded", () => {
         stopsWrap.appendChild(stopEl);
       });
 
+      // Render experience description below the last video on mobile
+      if (trip.experience) {
+        const expEl = document.createElement('div');
+        expEl.className = 'trip-experience card';
+        expEl.innerHTML = `<h3>Εμπειρία</h3><p>${trip.experience}</p>`;
+        // Append to stops column (on mobile it will appear after videos). On desktop layout it's fine
+        stopsWrap.appendChild(expEl);
+      }
+
       if (trip.map && trip.map.waypoints && trip.map.waypoints.length >= 2) {
         ensureGoogleMaps(() => renderRoute(trip.map));
       }
+
+      // Show back-to-categories button when on a trip page
+      const backBtn = document.getElementById('backToCatsBtn');
+      if (backBtn) {
+        backBtn.style.display = 'flex';
+        backBtn.addEventListener('click', () => {
+          // If we know the category, go to that category page; otherwise go to trips listing
+          const cat = document.body.dataset.category;
+          if (cat) window.location.href = `/categories/${cat}.html`;
+          else window.location.href = '/trips.html';
+        });
+      }
     })
     .catch(err => {
-      console.error("Σφάλμα εκδρομής:", err);
+      G.error("Σφάλμα εκδρομής:", err);
       document.getElementById("trip-section").innerHTML =
         "<p>Σφάλμα φόρτωσης δεδομένων εκδρομής.</p>";
     });
@@ -162,7 +211,7 @@ function ensureGoogleMaps(cb) {
       cb();
     } else if (Date.now() - t0 > maxWaitMs) {
       clearInterval(timer);
-      console.error("Google Maps δεν φορτώθηκε εγκαίρως.");
+  G.error("Google Maps δεν φορτώθηκε εγκαίρως.");
     }
   }, 120);
 }
@@ -202,43 +251,10 @@ function renderRoute(mapData) {
 
   directionsService.route(req, (res, status) => {
     if (status === "OK") {
-      console.log('[GREEKAWAY] DirectionsService returned OK');
-      // set directions on the map and then apply a gentle auto-zoom which
-      // focuses on the route but prevents showing an overly-wide area (like
-      // the whole country). We keep default markers visible.
+      // simply render the directions on the map; do not auto-fit or force zoom.
       directionsRenderer.setDirections(res);
-      try {
-        const route = res.routes && res.routes[0];
-        console.log('[GREEKAWAY] route object present?', !!route);
-        let bounds = null;
-        if (route && route.bounds) {
-          bounds = route.bounds;
-          console.log('[GREEKAWAY] route.bounds provided by API');
-        } else if (route && route.overview_path) {
-          bounds = new google.maps.LatLngBounds();
-          route.overview_path.forEach(p => bounds.extend(p));
-          console.log('[GREEKAWAY] computed bounds from overview_path, points:', route.overview_path.length);
-        }
-        if (bounds) {
-          // Fit bounds with a small visual padding
-          map.fitBounds(bounds);
-          // Clamp zoom so we don't show the entire country when route is very long
-          const minFriendlyZoom = 8; // adjust this value as needed
-          // map.getZoom() is available after fitBounds; if it's smaller than desired, boost it
-          const z = map.getZoom();
-          console.log('[GREEKAWAY] map.getZoom() after fitBounds ->', z);
-          if (typeof z === 'number' && z < minFriendlyZoom) {
-            map.setZoom(minFriendlyZoom);
-            console.log('[GREEKAWAY] map zoom clamped to', minFriendlyZoom);
-          }
-        } else {
-          console.log('[GREEKAWAY] no bounds available for route');
-        }
-      } catch (e) {
-        console.warn('Could not apply gentle auto-zoom:', e);
-      }
     } else {
-      console.error("Σφάλμα διαδρομής:", status);
+      G.error("Σφάλμα διαδρομής:", status);
     }
   });
 }

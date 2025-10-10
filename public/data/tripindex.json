@@ -4,4 +4,16 @@
     "title": "Αρχαία Ολυμπία",
     "category": "culture"
   }
+  ,
+  {
+    "id": "lefkas",
+    "title": "Λευκάδα",
+    "category": "sea"
+  }
+  ,
+  {
+    "id": "parnassos",
+    "title": "Πάρνασος & Δελφοί",
+    "category": "mountain"
+  }
 ]

@@ -15,6 +15,10 @@
 </head>
 
 <body>
+  <!-- Back to categories button (appears on trip view) -->
+  <button id="backToCatsBtn" class="back-btn" aria-label="Πίσω στις κατηγορίες" style="display:none;">
+    <i class="fas fa-arrow-left"></i>
+  </button>
   <!-- Περιεχόμενο εκδρομής -->
   <section id="trip-section" class="trip-section">
     <h2 id="trip-title"></h2>
@@ -25,22 +29,28 @@
   </section>
 
   <!-- Overlays -->
-  <div id="aiOverlay" class="overlay" style="display:none;">
-    <h2>AI Assistant</h2>
-    <p>Ρωτήστε μας ό,τι θέλετε για την εκδρομή σας!</p>
-    <button onclick="closeOverlay('aiOverlay')">Κλείσιμο</button>
+  <div id="aiOverlay" class="overlay" role="dialog" aria-modal="true">
+    <button class="close-overlay" onclick="closeOverlay('aiOverlay')" aria-label="Κλείσιμο">×</button>
+    <div class="overlay-inner">
+      <h2>AI Assistant</h2>
+      <p>Ρωτήστε μας ό,τι θέλετε για την εκδρομή σας!</p>
+    </div>
   </div>
 
-  <div id="profileOverlay" class="overlay" style="display:none;">
-    <h2>Το Προφίλ μου</h2>
-    <p>Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας.</p>
-    <button onclick="closeOverlay('profileOverlay')">Κλείσιμο</button>
+  <div id="profileOverlay" class="overlay" role="dialog" aria-modal="true">
+    <button class="close-overlay" onclick="closeOverlay('profileOverlay')" aria-label="Κλείσιμο">×</button>
+    <div class="overlay-inner">
+      <h2>Το Προφίλ μου</h2>
+      <p>Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας.</p>
+    </div>
   </div>
 
-  <div id="paymentOverlay" class="overlay" style="display:none;">
-    <h2>Πληρωμή</h2>
-    <p>Η φόρμα πληρωμής θα εμφανίζεται εδώ.</p>
-    <button onclick="closeOverlay('paymentOverlay')">Κλείσιμο</button>
+  <div id="paymentOverlay" class="overlay" role="dialog" aria-modal="true">
+    <button class="close-overlay" onclick="closeOverlay('paymentOverlay')" aria-label="Κλείσιμο">×</button>
+    <div class="overlay-inner">
+      <h2>Πληρωμή</h2>
+      <p>Η φόρμα πληρωμής θα εμφανίζεται εδώ.</p>
+    </div>
   </div>
 
   <!-- ===== FOOTER ===== -->
@@ -72,8 +82,37 @@
   </footer>
 
   <script>
-    function openOverlay(id){ document.getElementById(id).style.display='block'; }
-    function closeOverlay(id){ document.getElementById(id).style.display='none'; }
+    // same overlay manager as on index.html — only one overlay active at a time
+    (function(){
+      var overlays = Array.from(document.querySelectorAll('.overlay'));
+
+      function openOverlay(id){
+        overlays.forEach(function(o){ if(o.id !== id) o.classList.remove('active'); });
+        var el = document.getElementById(id);
+        if(!el) return;
+        el.classList.add('active');
+        var focusable = el.querySelector('button, a, input, textarea, select');
+        if(focusable) focusable.focus();
+      }
+
+      function closeOverlay(id){
+        if(id){
+          var el = document.getElementById(id);
+          if(el) el.classList.remove('active');
+        } else {
+          overlays.forEach(function(o){ o.classList.remove('active'); });
+        }
+      }
+
+      overlays.forEach(function(o){
+        o.addEventListener('click', function(e){ if(e.target === o) closeOverlay(o.id); });
+      });
+
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeOverlay(); });
+
+      window.openOverlay = openOverlay;
+      window.closeOverlay = closeOverlay;
+    })();
   </script>
 
   <!-- Google Maps -->

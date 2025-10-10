@@ -151,25 +151,34 @@ footer a i {
 }
 
 /* Overlays */
+
 .overlay {
-  display: none;
   position: fixed;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-    /* slightly translucent to let the page background bleed through a bit */
-    background: rgba(30,43,58,0.86);
-  padding: 2rem;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 400px;
+  top: 0; left: 0; right: 0;
+  bottom: 80px; /* leave room for footer */
+  background: #07121a; /* fully opaque dark background */
   color: #ecf0f1;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  z-index: 2000;
+  z-index: 900;
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 220ms ease, visibility 220ms ease;
 }
 
-.overlay.active {
-  display: block;
+.overlay.active { opacity:1; visibility:visible; pointer-events:auto; }
+
+.overlay .overlay-inner {
+  max-width: 860px;
+  margin: 4vh auto;
+  background: rgba(12,22,30,1);
+  padding: 1rem;
+  border-radius: 14px;
+  transform: translateY(-6px);
+  transition: transform 220ms ease;
 }
+
+.overlay.active .overlay-inner { transform: translateY(0); }
 
 .overlay button,
 .overlay form button {
@@ -182,19 +191,16 @@ footer a i {
 }
 
 .overlay button:hover,
-.overlay form button:hover {
-  background: #0066cc;
-}
+.overlay form button:hover { background:#0066cc; }
 
 .overlay input,
 .overlay select,
-.overlay textarea {
-  width: 100%;
-  padding: 10px;
-  margin: 0.4rem 0;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
+.overlay textarea { width:100%; padding:10px; margin:0.4rem 0; border-radius:8px; border:1px solid #ccc; }
+
+.overlay .close-overlay { position:absolute; top:12px; right:12px; background:transparent; color:#fff; border:none; font-size:1.6rem; padding:8px; border-radius:8px; cursor:pointer; z-index:2050; }
+.overlay .close-overlay:hover { background: rgba(255,255,255,0.04); }
+
+@media (max-width:599px) { .overlay .overlay-inner { margin:0; border-radius:0; min-height:calc(100vh - 80px); } }
 /* -------- Google Map -------- */
 #map {
   width: 100%;

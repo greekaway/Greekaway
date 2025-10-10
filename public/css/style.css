@@ -24,6 +24,7 @@ html, body { min-height: 100%; }
   --culture-1: 243,156,18;  /* culture primary */
   --culture-2: 255,200,121; /* culture secondary */
   --tile-overlay-opacity: 0.14;
+  --footer-offset: 80px; /* space reserved for fixed footer so overlays don't cover it */
 }
 
 /* -------- Καλωσόρισμα -------- */
@@ -129,28 +130,47 @@ footer a.central-btn:hover i {
 }
 
 /* -------- Overlays (Παράθυρα) -------- */
+
 .overlay {
-  display: none;
+  /* kept in the layout so we can animate opacity/visibility */
   position: fixed;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(30,43,58,0.98);
-  padding: 2rem;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 400px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--footer-offset, 80px); /* don't cover footer */
+  background: #07121a; /* fully opaque dark background */
   color: #ecf0f1;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  z-index: 2000;
+  z-index: 900; /* keep footer (z-index:1000) above overlays */
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 220ms ease, visibility 220ms ease;
 }
 
 .overlay.active {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
+
+.overlay .overlay-inner {
+  /* center content but allow full-height scrolling on small screens */
+  max-width: 880px;
+  margin: 4vh auto;
+  background: linear-gradient(180deg, rgba(24,38,52,1), rgba(14,22,30,1)); /* fully opaque */
+  padding: 1.2rem 1rem;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  transform: translateY(-6px);
+  transition: transform 220ms ease;
+}
+
+.overlay.active .overlay-inner { transform: translateY(0); }
 
 .overlay h2 {
   color: #f9d65c;
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
 }
 
 .overlay button,
@@ -180,6 +200,30 @@ footer a.central-btn:hover i {
   border-radius: 8px;
   border: 1px solid #ccc;
   font-size: 0.9rem;
+}
+
+/* Close button (top-right) */
+.overlay .close-overlay {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 2050;
+}
+
+.overlay .close-overlay:hover { background: rgba(255,255,255,0.04); }
+
+/* Make the overlay-inner take most of the screen on mobile */
+@media (max-width: 599px) {
+  .overlay .overlay-inner { margin: 0; border-radius: 0; padding: 1rem; min-height: calc(100vh - var(--footer-offset, 80px)); }
+  .overlay .close-overlay { top: 10px; right: 10px; }
 }
 
 /* -------- Responsive -------- */
@@ -228,6 +272,30 @@ footer a.central-btn:hover i {
 
   /* slightly larger footer icons on mobile for tap targets */
   footer a i { font-size: 1.8rem; padding: 10px 12px; }
+}
+
+/* Back button for trip pages */
+.back-btn {
+  position: fixed;
+  top: 14px;
+  left: 12px;
+  background: rgba(13,26,38,0.85);
+  color: #fff;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  z-index: 1500;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.back-btn i { font-size: 1.1rem; }
+.back-btn:hover { transform: translateY(-2px); background: rgba(0,64,128,0.9); }
+
+@media (min-width: 1024px) {
+  .back-btn { top: 20px; left: 20px; }
 }
 
 /* ===============================
@@ -294,6 +362,22 @@ html[data-category="culture"][data-view="trip"],
 body[data-category="culture"][data-view="trip"] {
   background-color: #162630;
   color: #f1f5f8;
+}
+
+/* For sea trips, use a nautical navy background on the trip page so the
+   layout reads as part of the 'sea' theme (darker than the listing gradient). */
+html[data-category="sea"][data-view="trip"],
+body[data-category="sea"][data-view="trip"] {
+  background-color: #08324a; /* nautical navy */
+  background-image: linear-gradient(180deg, rgba(8,50,74,0.98), rgba(8,50,74,0.98));
+  color: #f1f5f8; /* light text for contrast */
+}
+
+/* Explicit navy override class for special trips (e.g. olympia) */
+body.navy-bg, html.navy-bg {
+  background-color: #08324a !important;
+  background-image: linear-gradient(180deg, rgba(8,50,74,0.98), rgba(8,50,74,0.98)) !important;
+  color: #f1f5f8 !important;
 }
 
 /* Page title */
@@ -506,6 +590,10 @@ body[data-category] h2 {
 #trips-container .trip-card.cat-mountain::before {
   background: linear-gradient(180deg, rgba(var(--mountain-1), 0.10), rgba(var(--mountain-2), 0.06));
 }
+#trips-container .trip-card.cat-mountain.logo-pop::before {
+  /* stronger dark navy for mountain logo-pop cards (parnassos) */
+  background: linear-gradient(180deg, rgba(2,20,30,0.98), rgba(2,20,30,0.95));
+}
 #trips-container .trip-card.cat-culture::before {
   background: linear-gradient(180deg, rgba(var(--culture-1), 0.10), rgba(var(--culture-2), 0.06));
 }
@@ -647,6 +735,34 @@ html[data-category="culture"], body[data-category="culture"] {
   transform: scale(1.06);
 }
 
+/* special visual for logo-pop trip-cards (e.g. olympia, lefkas) */
+#trips-container .trip-card.logo-pop {
+  transition: transform 240ms ease, box-shadow 240ms ease;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.28), 0 4px 12px rgba(0,0,0,0.18);
+}
+#trips-container .trip-card.logo-pop:hover {
+  transform: translateY(-8px) scale(1.04);
+  box-shadow: 0 36px 80px rgba(0,0,0,0.42), 0 8px 28px rgba(0,0,0,0.22);
+}
+
+/* white glow on hover for travel buttons (logo-pop) */
+#trips-container .trip-card.logo-pop:hover::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 14px;
+  /* toned-down white glow: smaller spread and lower alpha */
+  box-shadow: 0 0 18px 3px rgba(255,255,255,0.28);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* persistent subtle highlight on the trip page when navigated from a logo-pop button */
+body.highlight-trip {
+  /* very subtle inset highlight so background gradient remains visible */
+  box-shadow: inset 0 0 60px rgba(255,255,255,0.02);
+}
+
 /* ensure hover transform for any tile even if animation applied earlier */
 #trips-container .trip-card.cat-culture:hover { transform: translateY(-6px) scale(1.06); }
 
@@ -704,6 +820,11 @@ body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(
   padding: 0 12px 48px;
 }
 
+/* Ensure trip content doesn't paint a solid background that hides body background */
+.trip-section, .trip-section .card, #stops, #stops .trip-stop {
+  background: transparent !important;
+}
+
 .video-box iframe,
 .video-box video {
   width: 100%;
@@ -713,6 +834,23 @@ body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(
   display: block;
   border-radius: 12px;
   overflow: hidden;
+}
+
+/* Experience panel shown after stops (appears under last video on mobile,
+   and stays within the stops column on desktop where videos are left). */
+.trip-experience {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(12,22,30,0.65);
+  border-radius: 12px;
+  color: #f1f5f8;
+  text-align: left;
+}
+
+@media (min-width: 1024px) {
+  /* On desktop, ensure experience panel remains in the stops column (right side
+     already contains the map). We keep it visually grouped with stops. */
+  .trip-experience { margin-top: 0.8rem; }
 }
 
 /* tablet and up: center content in a box */
@@ -726,24 +864,34 @@ body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(
 
 /* desktop: two-column layout with sticky map */
 @media (min-width: 1024px) {
+  /* Desktop: use the same single-column flow as mobile but constrain width so
+     content doesn't stretch edge-to-edge. This keeps videos above/beside
+     descriptions and the map below (mobile-like) while centering the page. */
+
   .trip-section {
-    display: grid;
-    grid-template-columns: 1fr 420px;
-    gap: 28px;
-    max-width: 1200px;
+    display: block;
+    max-width: 1100px; /* slightly wider on desktop */
     margin: 36px auto;
     padding: 0 20px 64px;
-    align-items: start;
+    box-sizing: border-box;
   }
 
   #map {
-    height: 320px;
-    position: sticky;
-    top: 24px;
+    height: 340px; /* larger map on desktop */
+    position: relative;
+    top: auto;
     border-radius: 12px;
     overflow: hidden;
+    margin-bottom: 1.25rem;
   }
 
   /* ensure stops column doesn't exceed available width */
-  #stops { max-width: 820px; }
+  #stops { max-width: 820px; margin: 0 auto; }
+
+  /* Match video height to the map height on desktop for consistent visuals */
+  .video-box { height: 340px; }
+  .video-box iframe, .video-box video { height: 340px; width: 100%; object-fit: cover; }
 }
+
+/* Floating focus route button */
+/* focus-route-btn removed per user request */
