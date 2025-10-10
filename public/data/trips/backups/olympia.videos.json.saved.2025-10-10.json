@@ -1,0 +1,18 @@
+{
+  "source": "public/data/trips/olympia.videos.json",
+  "archivedAt": "2025-10-10T00:00:00Z",
+  "content": {
+    "id": "olympia.videos",
+    "extractedDate": "2025-10-10",
+    "stops": [
+      { "name": "Αρχαία Κόρινθος", "current_video": "https://www.youtube.com/embed/uGHGkqogFlI", "backup_video": "https://www.youtube.com/embed/abcd1234" },
+      { "name": "Καλαμάτα", "current_video": "https://www.youtube.com/embed/PK93H44gFj8", "backup_video": "https://www.youtube.com/embed/wxyz5678" },
+      { "name": "Αρχαία Ολυμπία", "current_video": "https://www.youtube.com/embed/8VGroEdeZzo", "backup_video": "https://www.youtube.com/embed/qwerty90" }
+    ],
+    "merged": [
+      { "name": "Αρχαία Κόρινθος", "video": "https://www.youtube.com/embed/uGHGkqogFlI" },
+      { "name": "Καλαμάτα", "video": "https://www.youtube.com/embed/PK93H44gFj8" },
+      { "name": "Αρχαία Ολυμπία", "video": "https://www.youtube.com/embed/8VGroEdeZzo" }
+    ]
+  }
+}

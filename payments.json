@@ -5,5 +5,12 @@
     "amount": 1234,
     "currency": "eur",
     "timestamp": "2025-10-10T16:21:15.294Z"
+  },
+  "pi_test_1": {
+    "status": "succeeded",
+    "eventId": "evt_test_1",
+    "amount": 1500,
+    "currency": "eur",
+    "timestamp": "2025-10-10T18:19:49.037Z"
   }
 }
