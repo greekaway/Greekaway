@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Checkout — Greekaway (Mock)</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    main { padding: 100px 16px 120px; max-width:720px; margin:0 auto; }
+    .form-row { margin-bottom: 1rem; }
+    label { display:block; margin-bottom:0.25rem; }
+    input[type=text], input[type=email] { width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; }
+    .btn { background:#004080; color:#fff; padding:10px 14px; border-radius:8px; border:none; cursor:pointer; }
+    .result { margin-top:1rem; padding:12px; border-radius:8px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Mock Checkout</h1>
+    <p>Αυτό είναι ένα δοκιμαστικό checkout. Δεν θα γίνει πραγματική χρέωση.</p>
+
+    <form id="checkoutForm">
+      <div class="form-row">
+        <label>Όνομα</label>
+        <input name="name" type="text" required>
+      </div>
+      <div class="form-row">
+        <label>Email</label>
+        <input name="email" type="email" required>
+      </div>
+      <div class="form-row">
+        <label>Κάρτα (mock)</label>
+        <input name="card" type="text" placeholder="4242 4242 4242 4242">
+      </div>
+      <button class="btn" type="submit">Πλήρωσε (mock)</button>
+    </form>
+
+    <div id="result" class="result" aria-live="polite" style="display:none;"></div>
+  </main>
+
+  <script>
+    document.getElementById('checkoutForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      fetch('/mock-checkout', { method:'POST', body: new URLSearchParams(fd) })
+        .then(r => r.json())
+        .then(j => {
+          var el = document.getElementById('result');
+          el.style.display = 'block';
+          el.textContent = j.message || 'Ολοκληρώθηκε (mock)';
+          if(j.success) el.style.background='#e6ffe6'; else el.style.background='#ffe6e6';
+        }).catch(err => {
+          var el = document.getElementById('result'); el.style.display='block'; el.style.background='#ffe6e6'; el.textContent='Σφάλμα δικτύου';
+        });
+    });
+  </script>
+</body>
+</html>

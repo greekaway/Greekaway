@@ -60,7 +60,7 @@
       <span>Home</span>
     </a>
 
-    <a href="javascript:void(0)" onclick="openOverlay('paymentOverlay')">
+    <a href="/checkout.html">
       <i class="fas fa-credit-card"></i>
       <span>Πληρωμή</span>
     </a>
@@ -81,39 +81,7 @@
     </a>
   </footer>
 
-  <script>
-    // same overlay manager as on index.html — only one overlay active at a time
-    (function(){
-      var overlays = Array.from(document.querySelectorAll('.overlay'));
-
-      function openOverlay(id){
-        overlays.forEach(function(o){ if(o.id !== id) o.classList.remove('active'); });
-        var el = document.getElementById(id);
-        if(!el) return;
-        el.classList.add('active');
-        var focusable = el.querySelector('button, a, input, textarea, select');
-        if(focusable) focusable.focus();
-      }
-
-      function closeOverlay(id){
-        if(id){
-          var el = document.getElementById(id);
-          if(el) el.classList.remove('active');
-        } else {
-          overlays.forEach(function(o){ o.classList.remove('active'); });
-        }
-      }
-
-      overlays.forEach(function(o){
-        o.addEventListener('click', function(e){ if(e.target === o) closeOverlay(o.id); });
-      });
-
-      document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeOverlay(); });
-
-      window.openOverlay = openOverlay;
-      window.closeOverlay = closeOverlay;
-    })();
-  </script>
+  <script src="/js/overlay-manager.js" defer></script>
 
   <!-- Google Maps -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>

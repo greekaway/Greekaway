@@ -24,6 +24,16 @@ app.get('/trips/trip.html', (req, res) => {
 // 1️⃣ Σερβίρουμε στατικά αρχεία από το /public
 app.use(express.static(path.join(__dirname, "public")));
 
+// Mock checkout endpoint (POST) — simulates a payment processor response
+app.post('/mock-checkout', express.urlencoded({ extended: true }), (req, res) => {
+  const { name, email, card } = req.body || {};
+  // Simple mock: if card contains '4242' succeed, otherwise fail
+  if (card && card.indexOf('4242') !== -1) {
+    return res.json({ success: true, message: `Mock payment successful for ${name || 'customer'}` });
+  }
+  return res.json({ success: false, message: 'Mock payment failed — invalid card.' });
+});
+
 // 2️⃣ Επιστρέφει όλες τις εκδρομές από trip.json
 app.get("/api/trips", (req, res) => {
   fs.readFile(path.join(__dirname, "trip.json"), "utf8", (err, data) => {

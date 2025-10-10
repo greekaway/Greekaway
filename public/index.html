@@ -91,45 +91,6 @@
     </a>
   </footer>
 
-  <script>
-    // Overlay manager: only one overlay active at a time.
-    (function(){
-      var overlays = Array.from(document.querySelectorAll('.overlay'));
-
-      function openOverlay(id){
-        // close others
-        overlays.forEach(function(o){ if(o.id !== id) o.classList.remove('active'); });
-        var el = document.getElementById(id);
-        if(!el) return;
-        el.classList.add('active');
-        // set focus to first focusable element if present
-        var focusable = el.querySelector('button, a, input, textarea, select');
-        if(focusable) focusable.focus();
-      }
-
-      function closeOverlay(id){
-        if(id){
-          var el = document.getElementById(id);
-          if(el) el.classList.remove('active');
-        } else {
-          overlays.forEach(function(o){ o.classList.remove('active'); });
-        }
-      }
-
-      // click outside content closes overlay
-      overlays.forEach(function(o){
-        o.addEventListener('click', function(e){
-          if(e.target === o) closeOverlay(o.id);
-        });
-      });
-
-      // ESC closes any overlay
-      document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeOverlay(); });
-
-      // expose to global for inline handlers
-      window.openOverlay = openOverlay;
-      window.closeOverlay = closeOverlay;
-    })();
-  </script>
+  <script src="/js/overlay-manager.js" defer></script>
 </body>
 </html>
