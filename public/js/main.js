@@ -180,71 +180,12 @@ function renderRoute(mapData) {
     mapTypeId: "roadmap",
   });
 
-  // Initial styled (dark/grayscale) look for first impression
-  // We'll register this styled map type and set it as the initial view.
-  const initialStyle = [
-    { elementType: 'geometry', stylers: [{ color: '#1f2c3a' }] },
-    { elementType: 'labels.text.fill', stylers: [{ color: '#9ea7ae' }] },
-    { elementType: 'labels.text.stroke', stylers: [{ color: '#172026' }] },
-    {
-      featureType: 'administrative.locality',
-      elementType: 'labels.text.fill',
-      stylers: [{ color: '#cfcfcf' }]
-    },
-    {
-      featureType: 'poi',
-      elementType: 'labels.text.fill',
-      stylers: [{ color: '#bdbdbd' }]
-    },
-    {
-      featureType: 'poi.business',
-      stylers: [{ visibility: 'off' }]
-    },
-    {
-      featureType: 'road',
-      elementType: 'geometry',
-      stylers: [{ color: '#2b3945' }]
-    },
-    {
-      featureType: 'road',
-      elementType: 'labels.text.fill',
-      stylers: [{ color: '#8aa0b0' }]
-    },
-    {
-      featureType: 'transit',
-      stylers: [{ visibility: 'simplified' }]
-    },
-    {
-      featureType: 'water',
-      elementType: 'geometry',
-      stylers: [{ color: '#183241' }]
-    }
-  ];
-
-  try {
-    const styledMapType = new google.maps.StyledMapType(initialStyle, { name: 'Initial' });
-    map.mapTypes.set('styled_map', styledMapType);
-    // show the styled map first for a distinct initial look
-    map.setMapTypeId('styled_map');
-
-    // revert to normal roadmap after a short delay, or on user interaction
-    const revert = () => {
-      if (map && map.getMapTypeId && map.getMapTypeId() === 'styled_map') {
-        map.setMapTypeId('roadmap');
-      }
-    };
-
-    const timeoutId = setTimeout(revert, 3000);
-    // if user interacts (mousedown/touchstart) revert immediately
-    map.addListener('mousedown', () => { clearTimeout(timeoutId); revert(); });
-    map.addListener('touchstart', () => { clearTimeout(timeoutId); revert(); });
-  } catch (e) {
-    // If maps API isn't fully available for styled types, silently continue
-    console.warn('Styled map not applied:', e);
-  }
+  // default map appearance (no initial styled dark theme)
 
   directionsService = new google.maps.DirectionsService();
-  directionsRenderer = new google.maps.DirectionsRenderer({ map });
+  // suppressMarkers: true prevents the default origin/destination markers
+  // so we don't show extraneous points across the country
+  directionsRenderer = new google.maps.DirectionsRenderer({ map, suppressMarkers: true });
 
   const wps = mapData.waypoints;
   const origin = wps[0];
@@ -263,6 +204,19 @@ function renderRoute(mapData) {
   directionsService.route(req, (res, status) => {
     if (status === "OK") {
       directionsRenderer.setDirections(res);
+      try {
+        // Fit the map to the route bounds so we zoom directly to the path
+        const route = res.routes && res.routes[0];
+        if (route && route.bounds) {
+          map.fitBounds(route.bounds);
+        } else if (route && route.overview_path) {
+          const bounds = new google.maps.LatLngBounds();
+          route.overview_path.forEach(p => bounds.extend(p));
+          map.fitBounds(bounds);
+        }
+      } catch (e) {
+        console.warn('Could not fit bounds to route:', e);
+      }
     } else {
       console.error("Σφάλμα διαδρομής:", status);
     }
