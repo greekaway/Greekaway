@@ -173,6 +173,33 @@ footer a.central-btn:hover i {
   .welcome-logo { width: 48%; max-width: 720px; }
 }
 
+/* -------- Mobile gutters & content max-widths -------- */
+/* Avoid edge-to-edge content on small screens */
+@media (max-width: 599px) {
+  /* give main content a small horizontal padding */
+  #categories-container, #trips-container, main, #trip-section {
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
+  }
+
+  /* make trip cards respect the container padding */
+  .trip-card {
+    width: calc(100% - 24px);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* media elements (map, videos) shouldn't touch edges */
+  #map, .video-wrap {
+    width: calc(100% - 24px);
+    margin: 0 auto 1rem auto;
+    box-sizing: border-box;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+}
+
 /* ===============================
    ΚΑΤΗΓΟΡΙΕΣ (TRIPS.HTML)
    =============================== */
