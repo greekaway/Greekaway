@@ -13,6 +13,13 @@ body {
   transition: background 0.4s, color 0.4s;
 }
 
+:root {
+  --accent-1: #00aaff; /* sea blue */
+  --accent-2: #f39c12; /* warm orange */
+  --accent-3: #7cc04f; /* green */
+  --tile-overlay-opacity: 0.14;
+}
+
 /* -------- Καλωσόρισμα -------- */
 #welcome-section {
   margin-top: 70px;
@@ -214,12 +221,14 @@ footer a.central-btn:hover i {
    =============================== */
 
 /* Categories container: use responsive grid so items flow into columns */
+/* Categories shown as app-like square icons */
 #categories-container {
   display: grid;
-  /* default: app-like tiles — reduced ~25% */
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 21px;
-  padding: 50px 20px 100px;
+  /* small app-icons by default (mobile) */
+  grid-template-columns: repeat(auto-fit, 80px);
+  gap: 14px;
+  padding: 36px 12px 100px;
+  justify-content: center;
   justify-items: center;
   align-items: start;
   max-width: 1200px;
@@ -240,13 +249,53 @@ footer a.central-btn:hover i {
 
 .trip-card h3 { margin: 0; color: #f9d65c; }
 
+/* Make trip cards inside the category list behave like app-icon tiles */
+#trips-container .trip-card {
+  /* default mobile-size to match category icons */
+  width: 80px;
+  height: 80px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 20px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+}
+
+#trips-container .trip-card h3 {
+  font-size: 0.85rem;
+  padding: 6px;
+  line-height: 1.1;
+}
+
+@media (max-width: 399px) {
+  #trips-container .trip-card { width: 64px; height: 64px; border-radius: 16px; }
+  #trips-container .trip-card h3 { font-size: 0.7rem; }
+}
+
+@media (min-width: 400px) and (max-width: 767px) {
+  #trips-container .trip-card { width: 96px; height: 96px; border-radius: 18px; }
+  #trips-container .trip-card h3 { font-size: 0.8rem; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  #trips-container .trip-card { width: 128px; height: 128px; border-radius: 20px; }
+  #trips-container .trip-card h3 { font-size: 0.9rem; }
+}
+
+@media (min-width: 1024px) {
+  #trips-container .trip-card { width: 160px; height: 160px; border-radius: 22px; }
+  #trips-container .trip-card h3 { font-size: 1rem; }
+}
+
 /* Κουμπί Κατηγορίας */
 .category-btn {
   position: relative;
-  width: 100%;
-  max-width: 240px; /* base app-tile max (reduced ~25%) */
+  width: 80px;
+  height: 80px;
   aspect-ratio: 1 / 1;
-  border-radius: 26px;
+  border-radius: 20px;
   overflow: hidden;
   border: none;
   background: #0d1a26;
@@ -254,6 +303,34 @@ footer a.central-btn:hover i {
   cursor: pointer;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   display: block;
+}
+
+/* colorful overlay + hover glow for category tiles */
+.category-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(0,170,255,0.95), rgba(243,156,18,0.85));
+  mix-blend-mode: multiply;
+  opacity: var(--tile-overlay-opacity);
+  transition: opacity 240ms ease, transform 240ms ease;
+  pointer-events: none;
+}
+
+.category-btn:hover::before {
+  opacity: 0.26;
+  transform: scale(1.02);
+}
+
+.category-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.45), 0 6px 24px rgba(0,170,255,0.08);
+}
+
+/* subtle border to separate from background */
+.category-btn {
+  border: 1px solid rgba(255,255,255,0.04);
 }
 
 /* Η εικόνα γεμίζει όλο το τετράγωνο */
@@ -265,29 +342,45 @@ footer a.central-btn:hover i {
   transition: transform 0.35s ease, filter 0.3s ease;
 }
 
+/* colored accent + shadow for trip cards (matching tiles) */
+#trips-container .trip-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(0,170,255,0.06), rgba(124,192,79,0.04));
+  pointer-events: none;
+}
+
+#trips-container .trip-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.45), 0 6px 18px rgba(243,156,18,0.06);
+}
+
 /* Breakpoints: give app-like fixed sizes per device class */
+/* Fixed app-like sizes per breakpoint */
 @media (max-width: 399px) {
-  /* small phones: smaller app icon feel */
-  #categories-container { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; }
-  .category-btn { max-width: 160px; border-radius: 18px; }
+  /* very small phones */
+  #categories-container { grid-template-columns: repeat(auto-fit, 64px); gap: 10px; }
+  .category-btn { width: 64px; height: 64px; border-radius: 16px; }
 }
 
 @media (min-width: 400px) and (max-width: 767px) {
-  /* large phones / small tablets */
-  #categories-container { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 22px; }
-  .category-btn { max-width: 200px; border-radius: 20px; }
+  /* large phones */
+  #categories-container { grid-template-columns: repeat(auto-fit, 96px); gap: 12px; }
+  .category-btn { width: 96px; height: 96px; border-radius: 18px; }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
   /* tablets */
-  #categories-container { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 28px; }
-  .category-btn { max-width: 260px; }
+  #categories-container { grid-template-columns: repeat(auto-fit, 128px); gap: 18px; }
+  .category-btn { width: 128px; height: 128px; border-radius: 20px; }
 }
 
 @media (min-width: 1024px) {
   /* desktop */
-  #categories-container { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 36px; }
-  .category-btn { max-width: 420px; }
+  #categories-container { grid-template-columns: repeat(auto-fit, 160px); gap: 24px; }
+  .category-btn { width: 160px; height: 160px; border-radius: 22px; }
 }
 
 /* Zoom εφέ */
