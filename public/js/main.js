@@ -173,11 +173,75 @@ function renderRoute(mapData) {
   const mapEl = document.getElementById("map");
   if (!mapEl) return;
 
+  // Create the map centered on the provided coordinates
   map = new google.maps.Map(mapEl, {
     center: mapData.center || { lat: 38.0, lng: 23.7 },
     zoom: mapData.zoom || 7,
     mapTypeId: "roadmap",
   });
+
+  // Initial styled (dark/grayscale) look for first impression
+  // We'll register this styled map type and set it as the initial view.
+  const initialStyle = [
+    { elementType: 'geometry', stylers: [{ color: '#1f2c3a' }] },
+    { elementType: 'labels.text.fill', stylers: [{ color: '#9ea7ae' }] },
+    { elementType: 'labels.text.stroke', stylers: [{ color: '#172026' }] },
+    {
+      featureType: 'administrative.locality',
+      elementType: 'labels.text.fill',
+      stylers: [{ color: '#cfcfcf' }]
+    },
+    {
+      featureType: 'poi',
+      elementType: 'labels.text.fill',
+      stylers: [{ color: '#bdbdbd' }]
+    },
+    {
+      featureType: 'poi.business',
+      stylers: [{ visibility: 'off' }]
+    },
+    {
+      featureType: 'road',
+      elementType: 'geometry',
+      stylers: [{ color: '#2b3945' }]
+    },
+    {
+      featureType: 'road',
+      elementType: 'labels.text.fill',
+      stylers: [{ color: '#8aa0b0' }]
+    },
+    {
+      featureType: 'transit',
+      stylers: [{ visibility: 'simplified' }]
+    },
+    {
+      featureType: 'water',
+      elementType: 'geometry',
+      stylers: [{ color: '#183241' }]
+    }
+  ];
+
+  try {
+    const styledMapType = new google.maps.StyledMapType(initialStyle, { name: 'Initial' });
+    map.mapTypes.set('styled_map', styledMapType);
+    // show the styled map first for a distinct initial look
+    map.setMapTypeId('styled_map');
+
+    // revert to normal roadmap after a short delay, or on user interaction
+    const revert = () => {
+      if (map && map.getMapTypeId && map.getMapTypeId() === 'styled_map') {
+        map.setMapTypeId('roadmap');
+      }
+    };
+
+    const timeoutId = setTimeout(revert, 3000);
+    // if user interacts (mousedown/touchstart) revert immediately
+    map.addListener('mousedown', () => { clearTimeout(timeoutId); revert(); });
+    map.addListener('touchstart', () => { clearTimeout(timeoutId); revert(); });
+  } catch (e) {
+    // If maps API isn't fully available for styled types, silently continue
+    console.warn('Styled map not applied:', e);
+  }
 
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({ map });

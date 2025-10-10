@@ -737,7 +737,7 @@ body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(
   }
 
   #map {
-    height: 420px;
+    height: 320px;
     position: sticky;
     top: 24px;
     border-radius: 12px;
