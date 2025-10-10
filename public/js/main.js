@@ -57,6 +57,8 @@ document.addEventListener("DOMContentLoaded", () => {
         .forEach(trip => {
           const card = document.createElement("div");
           card.className = "trip-card";
+          // If this is the olympia trip, add the logo-pop animation class
+          if (trip.id === 'olympia') card.classList.add('logo-pop');
           // add category metadata so we can style per-category
           card.dataset.cat = trip.category || category;
           card.classList.add(`cat-${trip.category || category}`);
