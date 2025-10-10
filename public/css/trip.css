@@ -78,8 +78,8 @@ main {
 
 /* Κάρτες */
 .card {
-  /* glass-like semi-transparent card so background gradient can show through */
-  background: rgba(255,255,255,0.85);
+  /* dark translucent card so the navy background shows through and card isn't bright white */
+  background: rgba(12,22,30,0.7);
   border-radius: 20px;
   margin-bottom: 1.5rem;
   padding: 1rem;
