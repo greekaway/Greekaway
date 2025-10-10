@@ -920,3 +920,18 @@ body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(
 
 /* Floating focus route button */
 /* focus-route-btn removed per user request */
+
+/* Stripe Elements: make card inputs visible and high-contrast */
+.StripeElement,
+.StripeElement iframe {
+  background: #ffffff !important;
+  color: #111 !important;
+  padding: 10px !important;
+  border-radius: 8px !important;
+  border: 1px solid #cfcfcf !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  min-height: 44px !important;
+}
+.StripeElement--focus { box-shadow: 0 0 0 4px rgba(0,102,204,0.12) !important; }
+.StripeElement--invalid { border-color: #ff6b6b !important; }
