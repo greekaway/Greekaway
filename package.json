@@ -19,6 +19,7 @@
   "homepage": "https://github.com/greekaway/Greekaway#readme",
   "dependencies": {
     "express": "^5.1.0",
-    "puppeteer": "^24.23.0"
+    "puppeteer": "^24.23.0",
+    "stripe": "^12.11.0"
   }
 }
