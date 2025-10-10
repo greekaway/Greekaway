@@ -943,3 +943,6 @@ body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(
 .stripe-mount { margin-bottom:10px; }
 .card-number-mount { min-height:48px; }
 .card-expiry-mount, .card-cvc-mount { min-height:44px; }
+
+/* Make the result box text dark so it contrasts with light success/error backgrounds */
+#result, .result { color: #111 !important; font-weight: 600; }
