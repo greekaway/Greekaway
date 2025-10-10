@@ -613,6 +613,12 @@ html[data-category="culture"], body[data-category="culture"] {
   color: #f9d65c; /* ensure gold text stays visible */
 }
 
+/* Remove any light overlay that makes the tile appear grey */
+#trips-container .trip-card.cat-culture::before {
+  background: transparent !important;
+  background-image: none !important;
+}
+
 #trips-container .trip-card.cat-culture:hover {
   transform: translateY(-6px) scale(1.06) !important;
   /* stronger white glow + warm accent + darker outline */
@@ -627,6 +633,9 @@ html[data-category="culture"], body[data-category="culture"] {
 .logo-pop:hover {
   transform: scale(1.06) !important;
 }
+
+/* ensure hover transform for any tile even if animation applied earlier */
+#trips-container .trip-card.cat-culture:hover { transform: translateY(-6px) scale(1.06) !important; }
 
 #trips-container .trip-card.cat-culture:active {
   transform: translateY(-2px) scale(0.995);
