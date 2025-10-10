@@ -202,8 +202,33 @@ function renderRoute(mapData) {
 
   directionsService.route(req, (res, status) => {
     if (status === "OK") {
-      // set directions on the map and keep default map zoom/markers
+      // set directions on the map and then apply a gentle auto-zoom which
+      // focuses on the route but prevents showing an overly-wide area (like
+      // the whole country). We keep default markers visible.
       directionsRenderer.setDirections(res);
+      try {
+        const route = res.routes && res.routes[0];
+        let bounds = null;
+        if (route && route.bounds) {
+          bounds = route.bounds;
+        } else if (route && route.overview_path) {
+          bounds = new google.maps.LatLngBounds();
+          route.overview_path.forEach(p => bounds.extend(p));
+        }
+        if (bounds) {
+          // Fit bounds with a small visual padding
+          map.fitBounds(bounds);
+          // Clamp zoom so we don't show the entire country when route is very long
+          const minFriendlyZoom = 8; // adjust this value as needed
+          // map.getZoom() is available after fitBounds; if it's smaller than desired, boost it
+          const z = map.getZoom();
+          if (typeof z === 'number' && z < minFriendlyZoom) {
+            map.setZoom(minFriendlyZoom);
+          }
+        }
+      } catch (e) {
+        console.warn('Could not apply gentle auto-zoom:', e);
+      }
     } else {
       console.error("Σφάλμα διαδρομής:", status);
     }
