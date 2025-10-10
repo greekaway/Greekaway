@@ -16,7 +16,13 @@
 </head>
 <body>
   <main>
-    <h1>Mock Checkout</h1>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <button type="button" class="back-btn" onclick="history.back()" aria-label="Πίσω">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h1 style="margin:0">Mock Checkout</h1>
+      <a href="/" class="btn" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.06);padding:6px 10px;border-radius:8px;">Αρχική</a>
+    </div>
     <p>Αυτό είναι ένα δοκιμαστικό checkout. Δεν θα γίνει πραγματική χρέωση.</p>
 
     <form id="checkoutForm">
