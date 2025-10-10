@@ -72,11 +72,11 @@
 
   // Number
   const numberLabel = document.createElement('label');
-  numberLabel.textContent = '';
-  numberLabel.style.display = 'block';
-  numberLabel.style.marginBottom = '6px';
+  numberLabel.textContent = 'Αριθμός κάρτας';
+  numberLabel.className = 'card-field-label';
   const cardNumberMount = document.createElement('div');
-  cardNumberMount.className = 'card-number-mount';
+  cardNumberMount.className = 'card-number-mount stripe-mount';
+  cardWrapper.appendChild(numberLabel);
   cardWrapper.appendChild(cardNumberMount);
 
   // Expiry + CVC row
@@ -84,13 +84,32 @@
   smallRow.style.display = 'flex';
   smallRow.style.gap = '12px';
 
+  const expiryLabel = document.createElement('label');
+  expiryLabel.textContent = 'MM / EE';
+  expiryLabel.className = 'card-field-label';
+  const cvcLabel = document.createElement('label');
+  cvcLabel.textContent = 'CVC';
+  cvcLabel.className = 'card-field-label small';
+
   const cardExpiryMount = document.createElement('div');
+  cardExpiryMount.className = 'card-expiry-mount stripe-mount';
   cardExpiryMount.style.flex = '1';
   const cardCvcMount = document.createElement('div');
+  cardCvcMount.className = 'card-cvc-mount stripe-mount';
   cardCvcMount.style.width = '120px';
 
-  smallRow.appendChild(cardExpiryMount);
-  smallRow.appendChild(cardCvcMount);
+  const expiryWrapper = document.createElement('div');
+  expiryWrapper.style.flex = '1';
+  expiryWrapper.appendChild(expiryLabel);
+  expiryWrapper.appendChild(cardExpiryMount);
+
+  const cvcWrapper = document.createElement('div');
+  cvcWrapper.style.width = '120px';
+  cvcWrapper.appendChild(cvcLabel);
+  cvcWrapper.appendChild(cardCvcMount);
+
+  smallRow.appendChild(expiryWrapper);
+  smallRow.appendChild(cvcWrapper);
   cardWrapper.appendChild(smallRow);
 
   const formParent = cardInput ? cardInput.parentNode : form;

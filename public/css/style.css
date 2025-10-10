@@ -935,3 +935,11 @@ body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(
 }
 .StripeElement--focus { box-shadow: 0 0 0 4px rgba(0,102,204,0.12) !important; }
 .StripeElement--invalid { border-color: #ff6b6b !important; }
+
+/* Card elements layout for checkout */
+.card-elements-wrapper { display:block; margin-bottom:1.25rem; }
+.card-field-label { display:block; color: #dfe9f2; font-size:0.85rem; margin-bottom:6px; text-align:left; }
+.card-field-label.small { font-size:0.8rem; }
+.stripe-mount { margin-bottom:10px; }
+.card-number-mount { min-height:48px; }
+.card-expiry-mount, .card-cvc-mount { min-height:44px; }
