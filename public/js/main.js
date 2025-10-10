@@ -183,9 +183,8 @@ function renderRoute(mapData) {
   // default map appearance (no initial styled dark theme)
 
   directionsService = new google.maps.DirectionsService();
-  // suppressMarkers: true prevents the default origin/destination markers
-  // so we don't show extraneous points across the country
-  directionsRenderer = new google.maps.DirectionsRenderer({ map, suppressMarkers: true });
+  // Use default markers so origin/destination pins are visible to the user
+  directionsRenderer = new google.maps.DirectionsRenderer({ map });
 
   const wps = mapData.waypoints;
   const origin = wps[0];
@@ -203,20 +202,8 @@ function renderRoute(mapData) {
 
   directionsService.route(req, (res, status) => {
     if (status === "OK") {
+      // set directions on the map and keep default map zoom/markers
       directionsRenderer.setDirections(res);
-      try {
-        // Fit the map to the route bounds so we zoom directly to the path
-        const route = res.routes && res.routes[0];
-        if (route && route.bounds) {
-          map.fitBounds(route.bounds);
-        } else if (route && route.overview_path) {
-          const bounds = new google.maps.LatLngBounds();
-          route.overview_path.forEach(p => bounds.extend(p));
-          map.fitBounds(bounds);
-        }
-      } catch (e) {
-        console.warn('Could not fit bounds to route:', e);
-      }
     } else {
       console.error("Σφάλμα διαδρομής:", status);
     }
