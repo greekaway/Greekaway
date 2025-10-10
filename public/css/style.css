@@ -946,3 +946,23 @@ body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(
 
 /* Make the result box text dark so it contrasts with light success/error backgrounds */
 #result, .result { color: #111 !important; font-weight: 600; }
+
+/* Reduce width of name/email inputs on checkout so they are not full-bleed */
+#checkoutForm input[type="text"],
+#checkoutForm input[type="email"] {
+  width: 70%;            /* relative to form container */
+  max-width: 560px;      /* cap at a comfortable reading width */
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+/* On small screens keep them full width for usability */
+@media (max-width: 599px) {
+  #checkoutForm input[type="text"],
+  #checkoutForm input[type="email"] {
+    width: 100%;
+    max-width: none;
+  }
+}
