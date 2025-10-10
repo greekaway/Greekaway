@@ -39,23 +39,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const category = document.body.dataset.category; // π.χ. "culture"
   if (!category) return;
+  console.debug("[main.js] category page detected:", category);
 
   fetch("/data/tripindex.json")
     .then(r => r.json())
     .then(allTrips => {
+      console.debug("[main.js] fetched tripindex.json:", allTrips);
       tripsContainer.innerHTML = "";
-      allTrips
-        .filter(t => t.category === category)
-        .forEach(trip => {
-          const card = document.createElement("div");
-          card.className = "trip-card";
-          card.innerHTML = `<h3>${trip.title}</h3>`;
-          card.addEventListener("click", () => {
-            // ΜΟΝΟ ΕΝΑ trip.html — δίνουμε id με query
-            window.location.href = `/trips/trip.html?id=${trip.id}`;
-          });
-          tripsContainer.appendChild(card);
+      const filtered = allTrips.filter(t => t.category === category);
+      console.debug("[main.js] filtered trips for category", category, "count=", filtered.length, "ids=", filtered.map(t=>t.id));
+      filtered.forEach(trip => {
+        const card = document.createElement("div");
+        card.className = "trip-card";
+        card.innerHTML = `<h3>${trip.title}</h3>`;
+        card.addEventListener("click", () => {
+          // ΜΟΝΟ ΕΝΑ trip.html — δίνουμε id με query
+          window.location.href = `/trips/trip.html?id=${trip.id}`;
         });
+        tripsContainer.appendChild(card);
+      });
 
       if (!tripsContainer.children.length) {
         tripsContainer.innerHTML =

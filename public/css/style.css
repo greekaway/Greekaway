@@ -32,7 +32,8 @@ body {
 
 /* -------- Animation για Logo -------- */
 .welcome-logo {
-  width: 160px;
+  width: 60%;
+  max-width: 420px;
   height: auto;
   border-radius: 25px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.4);
@@ -169,6 +170,7 @@ footer a.central-btn:hover i {
 @media (min-width: 1024px) {
   body { font-size: 1.05rem; }
   footer a i { font-size: 1.6rem; }
+  .welcome-logo { width: 48%; max-width: 720px; }
 }
 
 /* ===============================
@@ -183,6 +185,19 @@ footer a.central-btn:hover i {
   padding: 50px 20px 100px;
   animation: appearZoom 1.2s ease;
 }
+
+/* Trip card visible styling for category pages */
+.trip-card {
+  background: #203346;
+  border-radius: 14px;
+  padding: 14px;
+  margin: 10px auto;
+  max-width: 760px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+  text-align: left;
+}
+
+.trip-card h3 { margin: 0; color: #f9d65c; }
 
 /* Κουμπί Κατηγορίας */
 .category-btn {

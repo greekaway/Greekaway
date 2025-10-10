@@ -13,15 +13,18 @@
       100% { opacity: 1; transform: scale(1); }
     }
     .welcome-logo {
-      margin-top: 60px;
-      max-width: 80%;
+      margin-top: 40px;
+      width: 70%;
+      max-width: 420px; /* default max for small devices */
       height: auto;
       border-radius: 25px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.5);
       animation: logoFadeZoom 1.2s ease forwards;
     }
-    @media (min-width:600px){ .welcome-logo { max-width:500px; } }
-    @media (min-width:1024px){ .welcome-logo { max-width:650px; } }
+    /* Larger on tablets */
+    @media (min-width:600px){ .welcome-logo { width: 55%; max-width: 560px; } }
+    /* Larger on desktops */
+    @media (min-width:1024px){ .welcome-logo { width: 48%; max-width: 720px; } }
   </style>
 </head>
 
@@ -66,7 +69,7 @@
       <span>About Us</span>
     </a>
 
-    <a href="/trips/trip.html" class="central-btn">
+      <a href="trips.html" class="central-btn">
       <i class="fas fa-map-marked-alt"></i>
       <span>Δες Εκδρομές</span>
     </a>
