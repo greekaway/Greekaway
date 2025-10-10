@@ -37,3 +37,22 @@ This checklist helps you migrate from the local dev setup (SQLite + local server
 - Replace BasicAuth admin with stronger auth (OAuth or internal dashboard)
 - Add migrations and CI/CD
 
+Quick local setup
+-----------------
+For quick local testing with Postgres and the app:
+
+1. Copy `.env.example` to `.env` and fill values (do NOT commit `.env`).
+2. Start services:
+
+  docker-compose -f docker-compose.app.yml up --build -d
+
+3. Run migration from SQLite (if needed):
+
+  export DATABASE_URL=postgres://postgres:secret@localhost:5432/greekaway
+  node tools/migrate_sqlite_to_postgres.js
+
+4. Test webhook locally with Stripe CLI:
+
+  stripe listen --forward-to localhost:3000/webhook
+
+
