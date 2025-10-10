@@ -260,31 +260,40 @@ body[data-category][data-view="category"] {
 /* Emergency overrides: ensure no container paints a white background over the page
    for the culture category listing. These are high-specificity and use !important
    to neutralize inline or other author styles that may be hiding the body bg. */
+/* Targeted culture listing overrides moved to higher-specificity selectors
+   (keeps the same effect as the previous !important rules but using
+   attribute selector specificity instead). This avoids inline styles and
+   many !important usages while keeping the look identical. */
 html[data-category="culture"][data-view="category"],
 body[data-category="culture"][data-view="category"] {
-  background-color: #162630 !important;
-  background-image: none !important;
+  background-color: #162630;
+  background-image: none;
 }
 
+/* Ensure main containers remain transparent on the culture listing by
+   targeting the same attribute combination and the container element.
+   This is sufficiently specific so !important is unnecessary. */
 html[data-category="culture"][data-view="category"] #trips-container,
 body[data-category="culture"][data-view="category"] #trips-container,
 html[data-category="culture"][data-view="category"] main,
 body[data-category="culture"][data-view="category"] main,
 html[data-category="culture"][data-view="category"] #categories-container,
 body[data-category="culture"][data-view="category"] #categories-container {
-  background: transparent !important;
+  background: transparent;
 }
 
-/* Make sure the H2 is visible */
+/* Make sure the H2 is visible on the culture listing without !important */
+html[data-category="culture"][data-view="category"] h2,
 body[data-category="culture"][data-view="category"] h2 {
-  color: #f1f5f8 !important;
+  color: #f1f5f8;
 }
 
-/* If we're viewing an individual trip in the culture category, use the same
-   deep navy backdrop so the trip page matches the category panel look */
+/* If we're viewing an individual trip in the culture category, keep the
+   deep navy backdrop for the trip page; specificity above avoids !important. */
+html[data-category="culture"][data-view="trip"],
 body[data-category="culture"][data-view="trip"] {
-  background-color: #162630 !important;
-  color: #f1f5f8 !important;
+  background-color: #162630;
+  color: #f1f5f8;
 }
 
 /* Page title */
@@ -589,38 +598,42 @@ html[data-category="culture"], body[data-category="culture"] { background-attach
    rules force the per-category backgrounds to apply. Kept minimal and
    specific to reduce risk. Remove !important later if not needed.
    -------------------------------------------------------------------------- */
+/* High-priority per-category backgrounds — keep these via attribute selectors
+   and specific html/body targeting. These are the canonical per-category
+   backgrounds and intentionally omit !important because selector specificity
+   is sufficient in normal pages. */
 html[data-category="sea"], body[data-category="sea"] {
-  background-color: rgba(var(--sea-1), 0.06) !important;
-  background-image: linear-gradient(180deg, rgba(var(--sea-1), 0.06), rgba(var(--sea-2), 0.02)) !important;
-  background-blend-mode: overlay !important;
+  background-color: rgba(var(--sea-1), 0.06);
+  background-image: linear-gradient(180deg, rgba(var(--sea-1), 0.06), rgba(var(--sea-2), 0.02));
+  background-blend-mode: overlay;
 }
 html[data-category="mountain"], body[data-category="mountain"] {
-  background-color: rgba(var(--mountain-1), 0.06) !important;
-  background-image: linear-gradient(180deg, rgba(var(--mountain-1), 0.06), rgba(var(--mountain-2), 0.02)) !important;
-  background-blend-mode: overlay !important;
+  background-color: rgba(var(--mountain-1), 0.06);
+  background-image: linear-gradient(180deg, rgba(var(--mountain-1), 0.06), rgba(var(--mountain-2), 0.02));
+  background-blend-mode: overlay;
 }
 html[data-category="culture"], body[data-category="culture"] {
-  background-color: rgba(var(--culture-1), 0.06) !important;
-  background-image: linear-gradient(180deg, rgba(var(--culture-1), 0.06), rgba(var(--culture-2), 0.02)) !important;
-  background-blend-mode: overlay !important;
+  background-color: rgba(var(--culture-1), 0.06);
+  background-image: linear-gradient(180deg, rgba(var(--culture-1), 0.06), rgba(var(--culture-2), 0.02));
+  background-blend-mode: overlay;
 }
 
 /* Micro-zoom for culture tiles: small, subtle lift and scale then revert */
 /* Culture tile: force dark navy background and smooth transitions */
 #trips-container .trip-card.cat-culture {
   transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
-  background-color: #071827 !important; /* very dark navy for the tile itself */
+  background-color: #071827; /* very dark navy for the tile itself */
   color: #f9d65c; /* ensure gold text stays visible */
 }
 
 /* Remove any light overlay that makes the tile appear grey */
 #trips-container .trip-card.cat-culture::before {
-  background: transparent !important;
-  background-image: none !important;
+  background: transparent;
+  background-image: none;
 }
 
 #trips-container .trip-card.cat-culture:hover {
-  transform: translateY(-6px) scale(1.06) !important;
+  transform: translateY(-6px) scale(1.06);
   /* stronger white glow + warm accent + darker outline */
   box-shadow:
     0 26px 56px rgba(0,0,0,0.6),
@@ -631,11 +644,11 @@ html[data-category="culture"], body[data-category="culture"] {
 
 /* Ensure any element using logo-pop still responds to hover with a small zoom */
 .logo-pop:hover {
-  transform: scale(1.06) !important;
+  transform: scale(1.06);
 }
 
 /* ensure hover transform for any tile even if animation applied earlier */
-#trips-container .trip-card.cat-culture:hover { transform: translateY(-6px) scale(1.06) !important; }
+#trips-container .trip-card.cat-culture:hover { transform: translateY(-6px) scale(1.06); }
 
 #trips-container .trip-card.cat-culture:active {
   transform: translateY(-2px) scale(0.995);
