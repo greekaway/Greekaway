@@ -294,6 +294,31 @@ footer a.central-btn:hover i {
 .back-btn i { font-size: 1.1rem; }
 .back-btn:hover { transform: translateY(-2px); background: rgba(0,64,128,0.9); }
 
+/* 3D variant for a more tactile back button (use .back-btn.three-d) */
+.back-btn.three-d {
+  position: relative;
+  padding: 10px 14px 10px 12px;
+  background: linear-gradient(180deg,#0b2a3a 0%, #02324a 40%, #012231 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 18px rgba(2,14,20,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.03);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.back-btn.three-d i { margin-right: 6px; }
+.back-btn.three-d::after{
+  /* subtle bottom lip to enhance 3D */
+  content: '';
+  position: absolute;
+  left: 6px; right: 6px; bottom: -6px; height: 6px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.28));
+  border-radius: 6px;
+  filter: blur(2px);
+  z-index: -1;
+}
+.back-btn.three-d:hover{ transform: translateY(-3px); box-shadow: 0 12px 24px rgba(2,14,20,0.65); }
+.back-btn.three-d:active{ transform: translateY(1px); box-shadow: 0 6px 12px rgba(2,14,20,0.5); }
+
+
 @media (min-width: 1024px) {
   .back-btn { top: 20px; left: 20px; }
 }
