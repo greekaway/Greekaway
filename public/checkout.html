@@ -29,6 +29,8 @@
     <p>Αυτό είναι ένα δοκιμαστικό checkout. Δεν θα γίνει πραγματική χρέωση.</p>
 
     <form id="checkoutForm">
+      <!-- Payment Request Button (Apple Pay / Google Pay) will mount here when available -->
+      <div id="payment-request-container" style="display:none;margin-bottom:1rem;"></div>
       <div class="form-row">
         <label>Όνομα</label>
         <input name="name" type="text" required>
@@ -57,19 +59,106 @@
     function showResult(msg, success){ resultEl.style.display='block'; resultEl.textContent=msg; resultEl.style.background = success ? '#e6ffe6' : '#ffe6e6'; }
 
     if (STRIPE_PUBLISHABLE && !STRIPE_PUBLISHABLE.includes('STRIPE')) {
-      // Initialize Stripe Elements
+      // Initialize Stripe + Elements + Payment Request (Apple Pay / Google Pay)
       const stripe = Stripe(STRIPE_PUBLISHABLE);
       const elements = stripe.elements();
-      const cardElement = elements.create('card');
-      const cardWrapper = document.createElement('div');
-      cardWrapper.style.marginBottom = '1rem';
-      cardWrapper.appendChild(cardElement.mount ? cardElement : document.createElement('div'));
-      // put third-party elements inside the existing input? Simpler: hide the mock card input
-      const cardInput = document.querySelector('input[name="card"]');
-      if(cardInput) cardInput.style.display = 'none';
-      const formParent = cardInput ? cardInput.parentNode : form;
-      formParent.insertBefore(cardWrapper, formParent.querySelector('.btn'));
 
+  // Create and mount separate card Elements (number, expiry, cvc) for clearer layout
+  const cardInput = document.querySelector('input[name="card"]');
+  if (cardInput) cardInput.style.display = 'none';
+  const cardWrapper = document.createElement('div');
+  cardWrapper.style.marginBottom = '1rem';
+  cardWrapper.className = 'card-elements-wrapper';
+
+  // Number
+  const numberLabel = document.createElement('label');
+  numberLabel.textContent = '';
+  numberLabel.style.display = 'block';
+  numberLabel.style.marginBottom = '6px';
+  const cardNumberMount = document.createElement('div');
+  cardNumberMount.className = 'card-number-mount';
+  cardWrapper.appendChild(cardNumberMount);
+
+  // Expiry + CVC row
+  const smallRow = document.createElement('div');
+  smallRow.style.display = 'flex';
+  smallRow.style.gap = '12px';
+
+  const cardExpiryMount = document.createElement('div');
+  cardExpiryMount.style.flex = '1';
+  const cardCvcMount = document.createElement('div');
+  cardCvcMount.style.width = '120px';
+
+  smallRow.appendChild(cardExpiryMount);
+  smallRow.appendChild(cardCvcMount);
+  cardWrapper.appendChild(smallRow);
+
+  const formParent = cardInput ? cardInput.parentNode : form;
+  formParent.insertBefore(cardWrapper, formParent.querySelector('.btn'));
+
+  const cardNumber = elements.create('cardNumber', { showIcon: true });
+  const cardExpiry = elements.create('cardExpiry');
+  const cardCvc = elements.create('cardCvc');
+
+  cardNumber.mount(cardNumberMount);
+  cardExpiry.mount(cardExpiryMount);
+  cardCvc.mount(cardCvcMount);
+
+      // Payment Request (Apple Pay / Google Pay) setup
+      const paymentRequest = stripe.paymentRequest({
+        country: 'GR',
+        currency: 'eur',
+        total: { label: 'Greekaway — Προκαταβολή', amount: 1000 }, // amount in cents
+        requestPayerName: true,
+        requestPayerEmail: true,
+      });
+
+      paymentRequest.canMakePayment().then(function(result) {
+        if (result) {
+          // Show the payment request button
+          document.getElementById('payment-request-container').style.display = 'block';
+          const prButton = elements.create('paymentRequestButton', { paymentRequest });
+          prButton.mount('#payment-request-container');
+        }
+      }).catch(err => console.warn('paymentRequest.canMakePayment error', err));
+
+      // Handle the paymentrequest flow
+      paymentRequest.on('paymentmethod', async (ev) => {
+        try {
+          // Create PaymentIntent on the server for the requested amount
+          const resp = await fetch('/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount: 1000, currency: 'eur' }) });
+          const data = await resp.json();
+          if (!data.clientSecret) {
+            ev.complete('fail');
+            return showResult('Πρόβλημα με πληρωμή', false);
+          }
+
+          // Confirm the payment using the payment method returned by the browser
+          const confirm = await stripe.confirmCardPayment(data.clientSecret, { payment_method: ev.paymentMethod.id }, { handleActions: false });
+          if (confirm.error) {
+            ev.complete('fail');
+            return showResult(confirm.error.message || 'Payment failed', false);
+          }
+
+          if (confirm.paymentIntent && confirm.paymentIntent.status === 'requires_action') {
+            // Handle next actions (3DS) if required
+            const res2 = await stripe.confirmCardPayment(data.clientSecret);
+            if (res2.error) {
+              ev.complete('fail');
+              return showResult(res2.error.message || 'Payment failed', false);
+            }
+          }
+
+          ev.complete('success');
+          showResult('Payment successful (test)', true);
+        } catch (err) {
+          console.error('paymentRequest handler error', err);
+          ev.complete('fail');
+          showResult('Σφάλμα πληρωμής', false);
+        }
+      });
+
+      // Classic card form fallback
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = form.name.value;
@@ -78,7 +167,7 @@
         const resp = await fetch('/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount: 1000, currency: 'eur' }) });
         const data = await resp.json();
         if(!data.clientSecret) return showResult('Πρόβλημα με πληρωμή', false);
-        const { error, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardElement, billing_details: { name, email } } });
+  const { error } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardNumber, billing_details: { name, email } } });
         if(error) showResult(error.message || 'Payment failed', false);
         else showResult('Payment successful (test)', true);
       });
