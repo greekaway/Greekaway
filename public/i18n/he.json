@@ -1,7 +1,8 @@
 {
   "siteTitle": "Greekaway",
-  "nav": {"home":"בית","trips":"טיולים","checkout":"תשלום","admin":"מנהל"},
-  "admin": {"help":"הכנס אישורי מנהל כדי לצפות בתשלומים ובמצב הגיבוי.", "loading":"טוען...", "error":"שגיאה:"},
-  "checkout": {"pay":"שלם","cardPlaceholder":"מספר כרטיס (4242... לניסיונות)"}
+  "nav": {"home":"בית","trips":"טיולים","checkout":"תשלום","admin":"מנהל","about":"אודות","ai":"עוזר AI","profile":"פרופיל","book":"הזמנה"},
+  "admin": {"help":"הכנס אישורי מנהל כדי לצפות בתשלומים ובמצב הגיבוי.", "loading":"טוען...", "error":"שגיאה:", "refresh":"רענן"},
+  "checkout": {"pay":"שלם","cardPlaceholder":"מספר כרטיס (4242... לניסיונות)", "title":"תשלום ניסיוני","name":"שם","email":"דוא\"ל","cardLabel":"כרטיס (בדיקה)"},
+  "welcome": {"title":"ברוכים הבאים ל-Greekaway","subtitle":"גלה את הטיולים הטובים ביותר ביוון"}
 }
 
