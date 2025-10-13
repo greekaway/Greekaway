@@ -137,59 +137,34 @@
   cardExpiry.mount(cardExpiryMount);
   cardCvc.mount(cardCvcMount);
 
-      // Payment Request (Apple Pay / Google Pay) setup
-      const paymentRequest = stripe.paymentRequest({
-        country: 'GR',
-        currency: 'eur',
-        total: { label: 'Greekaway — Προκαταβολή', amount: 1000 }, // amount in cents
-        requestPayerName: true,
-        requestPayerEmail: true,
-      });
+      // Payment Request (Apple Pay / Google Pay) setup via helper
+      try {
+        if (window.GWPaymentRequest && window.GWPaymentRequest.init) {
+          const pr = await window.GWPaymentRequest.init('%STRIPE_PUBLISHABLE%', { total: { label: 'Greekaway — Προκαταβολή', amount: 1000 } });
+          if (pr && pr.prButton) {
+            document.getElementById('payment-request-container').style.display = 'block';
+            pr.prButton.mount('#payment-request-container');
 
-      paymentRequest.canMakePayment().then(function(result) {
-        if (result) {
-          // Show the payment request button
-          document.getElementById('payment-request-container').style.display = 'block';
-          const prButton = elements.create('paymentRequestButton', { paymentRequest });
-          prButton.mount('#payment-request-container');
+            pr.paymentRequest.on('paymentmethod', async (ev) => {
+              try {
+                const resp = await fetch('/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount: 1000, currency: 'eur' }) });
+                const data = await resp.json();
+                if (!data.clientSecret) { ev.complete('fail'); return showResult('i18n:checkout.payment_error', false); }
+
+                const confirm = await pr.stripe.confirmCardPayment(data.clientSecret, { payment_method: ev.paymentMethod.id }, { handleActions: false });
+                if (confirm.error) { ev.complete('fail'); return showResult(confirm.error.message || 'i18n:checkout.payment_failed', false); }
+                if (confirm.paymentIntent && confirm.paymentIntent.status === 'requires_action') {
+                  const res2 = await pr.stripe.confirmCardPayment(data.clientSecret);
+                  if (res2.error) { ev.complete('fail'); return showResult(res2.error.message || 'i18n:checkout.payment_failed', false); }
+                }
+
+                ev.complete('success');
+                showResult('i18n:checkout.payment_success_test', true);
+              } catch (err) { console.error('paymentRequest handler error', err); ev.complete('fail'); showResult('i18n:checkout.payment_error', false); }
+            });
+          }
         }
-      }).catch(err => console.warn('paymentRequest.canMakePayment error', err));
-
-      // Handle the paymentrequest flow
-      paymentRequest.on('paymentmethod', async (ev) => {
-        try {
-          // Create PaymentIntent on the server for the requested amount
-          const resp = await fetch('/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount: 1000, currency: 'eur' }) });
-          const data = await resp.json();
-          if (!data.clientSecret) {
-            ev.complete('fail');
-            return showResult('i18n:checkout.payment_error', false);
-          }
-
-          // Confirm the payment using the payment method returned by the browser
-          const confirm = await stripe.confirmCardPayment(data.clientSecret, { payment_method: ev.paymentMethod.id }, { handleActions: false });
-          if (confirm.error) {
-            ev.complete('fail');
-            return showResult(confirm.error.message || 'i18n:checkout.payment_failed', false);
-          }
-
-          if (confirm.paymentIntent && confirm.paymentIntent.status === 'requires_action') {
-            // Handle next actions (3DS) if required
-            const res2 = await stripe.confirmCardPayment(data.clientSecret);
-            if (res2.error) {
-              ev.complete('fail');
-              return showResult(res2.error.message || 'i18n:checkout.payment_failed', false);
-            }
-          }
-
-          ev.complete('success');
-          showResult('i18n:checkout.payment_success_test', true);
-        } catch (err) {
-          console.error('paymentRequest handler error', err);
-          ev.complete('fail');
-          showResult('i18n:checkout.payment_error', false);
-        }
-      });
+      } catch (e) { console.warn('Payment Request init failed', e); }
 
       // Classic card form fallback
       form.addEventListener('submit', async (e) => {

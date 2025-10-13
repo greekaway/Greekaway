@@ -1,0 +1,13 @@
+REPLACE_THIS_FILE_WITH_THE_APPLE_DEVELOPER_MERCHANTID_DOMAIN_ASSOCIATION_FILE_PROVIDED_BY_STRIPE
+
+# How to get the correct file:
+# 1. In the Stripe Dashboard go to Settings -> Payment methods -> Apple Pay (or search "Apple Pay").
+# 2. Add/verify a new domain and Stripe will offer a downloadable file named
+#    "apple-developer-merchantid-domain-association" with the exact bytes required.
+# 3. Replace the contents of this file with the downloaded file's raw contents.
+# 4. Deploy to Render so the file is available at:
+#    https://<your-domain>/.well-known/apple-developer-merchantid-domain-association
+# 5. Back in Stripe click "Verify" for the domain. If successful, Apple Pay is enabled for that domain.
+
+# Important: the association file must match exactly (no extra newlines or comments).
+# Do NOT keep this placeholder in production; use the exact file from Stripe.
