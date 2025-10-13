@@ -253,6 +253,98 @@ app.get('/admin/payments', async (req, res) => {
   }
 });
 
+// Admin bookings list (JSON) - protected by same basic auth
+app.get('/admin/bookings', (req, res) => {
+  if (!checkAdminAuth(req)) {
+    res.set('WWW-Authenticate', 'Basic realm="Admin"');
+    return res.status(401).send('Unauthorized');
+  }
+  try {
+    const limit = Math.min(10000, Math.abs(parseInt(req.query.limit || '200', 10) || 200));
+    const offset = Math.max(0, Math.abs(parseInt(req.query.offset || '0', 10) || 0));
+    let rows = [];
+    if (bookingsDb) {
+      rows = bookingsDb.prepare('SELECT * FROM bookings ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
+    } else {
+      // try opening the sqlite file directly
+      try {
+        const Database = require('better-sqlite3');
+        const db = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
+        rows = db.prepare('SELECT * FROM bookings ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
+        db.close();
+      } catch (e) {
+        return res.status(500).json({ error: 'Bookings DB not available' });
+      }
+    }
+    // parse metadata JSON where present
+    rows = (rows || []).map(r => {
+      if (r && r.metadata && typeof r.metadata === 'string') {
+        try { r.metadata = JSON.parse(r.metadata); } catch (e) { /* leave as string */ }
+      }
+      return r;
+    });
+    return res.json(rows);
+  } catch (err) {
+    console.error('Admin bookings error:', err && err.stack ? err.stack : err);
+    return res.status(500).send('Server error');
+  }
+});
+
+// Admin bookings CSV export
+app.get('/admin/bookings.csv', (req, res) => {
+  if (!checkAdminAuth(req)) {
+    res.set('WWW-Authenticate', 'Basic realm="Admin"');
+    return res.status(401).send('Unauthorized');
+  }
+  try {
+    const limit = Math.min(100000, Math.abs(parseInt(req.query.limit || '10000', 10) || 10000));
+    const offset = Math.max(0, Math.abs(parseInt(req.query.offset || '0', 10) || 0));
+    let rows = [];
+    if (bookingsDb) {
+      rows = bookingsDb.prepare('SELECT * FROM bookings ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
+    } else {
+      try {
+        const Database = require('better-sqlite3');
+        const db = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
+        rows = db.prepare('SELECT * FROM bookings ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
+        db.close();
+      } catch (e) {
+        return res.status(500).json({ error: 'Bookings DB not available' });
+      }
+    }
+    // normalize metadata
+    rows = (rows || []).map(r => {
+      if (r && r.metadata && typeof r.metadata === 'string') {
+        try { r.metadata = JSON.parse(r.metadata); } catch (e) { /* leave as string */ }
+      }
+      return r;
+    });
+
+    // Build CSV headers as union of keys
+    const keys = Array.from(new Set(rows.flatMap(obj => Object.keys(obj || {}))));
+    const escape = (val) => {
+      if (val === null || val === undefined) return '';
+      if (typeof val === 'object') val = JSON.stringify(val);
+      return '"' + String(val).replace(/"/g, '""') + '"';
+    };
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  const ts = new Date().toISOString().replace(/[:.]/g,'').replace(/T/,'_').replace(/Z/,'');
+  res.setHeader('Content-Disposition', `attachment; filename="bookings_${ts}.csv"`);
+
+    // write CSV
+    res.write(keys.join(',') + '\n');
+    for (const row of rows) {
+      const vals = keys.map(k => escape(row[k]));
+      res.write(vals.join(',') + '\n');
+    }
+    res.end();
+  } catch (err) {
+    console.error('Admin bookings CSV error:', err && err.stack ? err.stack : err);
+    return res.status(500).send('Server error');
+  }
+});
+
 // Admin backup status endpoint
 app.get('/admin/backup-status', async (req, res) => {
   if (!checkAdminAuth(req)) {

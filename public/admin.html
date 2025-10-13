@@ -113,6 +113,35 @@
         </div>
     </div>
   </div>
+  <hr style="margin-top:16px" />
+  <div id="bookingsPanel" style="display:none;margin-top:12px">
+    <h3>Κρατήσεις</h3>
+    <div style="margin-bottom:8px">
+      <button id="refreshBookings">Ανανέωση Κρατήσεων</button>
+      <button id="exportBookings">Εξαγωγή Κρατήσεων (CSV)</button>
+    </div>
+    <div id="bookingsContainer">
+      <table id="bookingsTable" style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">ID</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κατάσταση</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">PaymentIntent</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Γεγονός</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Όνομα</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Email</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Trip</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Seats</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Price</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Created</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Metadata</th>
+          </tr>
+        </thead>
+        <tbody style="font-family:monospace;background:#fff"></tbody>
+      </table>
+      <div id="bookingsMessage" style="margin-top:8px;color:#666"></div>
+    </div>
+  </div>
 
   <script>
     const authForm = document.getElementById('auth');
@@ -141,6 +170,9 @@
       authForm.style.display = 'none';
       fetchBackup();
       fetchPayments();
+      // show bookings panel and load bookings
+      document.getElementById('bookingsPanel').style.display = 'block';
+      fetchBookings();
     });
 
     document.getElementById('refreshBackup').addEventListener('click', fetchBackup);
@@ -240,6 +272,69 @@
         paymentsTbody.appendChild(tr);
       }
     }
+
+    // Bookings UI logic
+    const bookingsPanel = document.getElementById('bookingsPanel');
+    const bookingsTbody = document.getElementById('bookingsTable').querySelector('tbody');
+    const bookingsMessage = document.getElementById('bookingsMessage');
+
+    document.getElementById('refreshBookings').addEventListener('click', fetchBookings);
+    document.getElementById('exportBookings').addEventListener('click', exportBookings);
+
+    async function fetchBookings(){
+      if (!basicAuth) return;
+      bookingsTbody.innerHTML = '';
+      bookingsMessage.textContent = 'Φόρτωση...';
+      try {
+        const qs = `?limit=1000&offset=0`;
+        const res = await fetch('/admin/bookings' + qs, { headers: { Authorization: basicAuth } });
+        if (!res.ok) throw new Error(res.status);
+        const arr = await res.json();
+        renderBookings(arr || []);
+      } catch (e) { bookingsTbody.innerHTML = ''; bookingsMessage.textContent = 'Error: ' + e; }
+    }
+
+    function renderBookings(arr){
+      bookingsTbody.innerHTML = '';
+      if (!arr || arr.length === 0) { bookingsMessage.textContent = 'No bookings found.'; return; }
+      bookingsMessage.textContent = '';
+      for (const b of arr) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(b.id||'')}</td>
+          <td>${escapeHtml(b.status||'')}</td>
+          <td>${escapeHtml(b.payment_intent_id||'')}</td>
+          <td>${escapeHtml(b.event_id||'')}</td>
+          <td>${escapeHtml(b.user_name||'')}</td>
+          <td>${escapeHtml(b.user_email||'')}</td>
+          <td>${escapeHtml(b.trip_id||'')}</td>
+          <td style="text-align:right">${escapeHtml(String(b.seats||''))}</td>
+          <td style="text-align:right">${escapeHtml(String(b.price_cents || ''))}</td>
+          <td>${escapeHtml(b.created_at||'')}</td>
+          <td>${escapeHtml(typeof b.metadata === 'object' ? JSON.stringify(b.metadata) : (b.metadata||''))}</td>
+        `;
+        bookingsTbody.appendChild(tr);
+      }
+    }
+
+    async function exportBookings(){
+      if (!basicAuth) return;
+      const btn = document.getElementById('exportBookings'); btn.disabled = true; btn.textContent = 'Ετοιμάζεται...';
+      try {
+        const res = await fetch('/admin/bookings.csv', { headers: { Authorization: basicAuth } });
+        if (!res.ok) throw new Error('Export failed: ' + res.status);
+        const blob = await res.blob();
+        const a = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        const cd = res.headers.get('Content-Disposition') || '';
+        let filename = 'bookings.csv';
+        const m = cd.match(/filename="?([^";]+)"?/);
+        if (m && m[1]) filename = m[1];
+        a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      } catch (e) { alert('Export failed: ' + e); }
+      finally { btn.disabled = false; btn.textContent = 'Εξαγωγή Κρατήσεων (CSV)'; }
+    }
+
 
     function greekStatus(s){
       if (!s) return '';

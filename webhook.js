@@ -136,10 +136,82 @@ async function savePayments(payments) {
 }
 
 module.exports = function attachWebhook(app, stripe) {
+  // Shared handler for recording a payment event (succeeded/failed) and
+  // optionally confirming a booking if metadata.booking_id is present.
+  async function processPaymentEvent(event, status) {
+    const pi = event.data && event.data.object ? event.data.object : null;
+    const pid = pi && pi.id ? pi.id : 'unknown';
+    try {
+      if (usePostgres && pgClient) {
+        const exists = await pgClient.query('SELECT id FROM payments WHERE event_id = $1 LIMIT 1', [event.id]);
+        if (exists && exists.rows && exists.rows.length) {
+          safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`);
+          return { recorded: false, reason: 'duplicate' };
+        }
+        const upsertQuery = `INSERT INTO payments (id,status,event_id,amount,currency,timestamp) VALUES ($1,$2,$3,$4,$5)`;
+        await pgClient.query(upsertQuery, [pid, status, event.id || null, pi && pi.amount ? pi.amount : null, pi && pi.currency ? pi.currency : null].slice(0,5));
+        safeAppendLog(`${new Date().toISOString()} payment.${status === 'succeeded' ? 'recorded' : status === 'failed' ? 'failed' : 'recorded'} id=${pid}`);
+      } else if (useSqlite && db) {
+        const seen = db.prepare('SELECT id FROM payments WHERE event_id = ? LIMIT 1').get(event.id);
+        if (seen) { safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`); return { recorded: false, reason: 'duplicate' }; }
+        const insert = db.prepare('INSERT OR REPLACE INTO payments (id,status,event_id,amount,currency,timestamp) VALUES (@id,@status,@eventId,@amount,@currency,@timestamp)');
+        const tx = db.transaction((p) => { insert.run(p); });
+        tx({ id: pid, status: status, eventId: event.id || null, amount: pi && pi.amount ? pi.amount : null, currency: pi && pi.currency ? pi.currency : null, timestamp: new Date().toISOString() });
+        safeAppendLog(`${new Date().toISOString()} payment.${status === 'succeeded' ? 'recorded' : status === 'failed' ? 'failed' : 'recorded'} id=${pid}`);
+
+        // If payment succeeded, attempt to mark a related booking as confirmed.
+        if (status === 'succeeded') {
+          try {
+            const bookingId = pi && pi.metadata && pi.metadata.booking_id ? pi.metadata.booking_id : null;
+            if (bookingId) {
+              try {
+                const path = require('path');
+                const Database = require('better-sqlite3');
+                const bookingsDb = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
+                const now = new Date().toISOString();
+                const stmt = bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?');
+                stmt.run('confirmed', event.id || null, now, bookingId);
+                safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${bookingId} for_pi=${pid}`);
+                bookingsDb.close();
+              } catch (e) { /* non-fatal */ }
+            } else {
+              try {
+                const path = require('path');
+                const Database = require('better-sqlite3');
+                const bookingsDb = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
+                const b = bookingsDb.prepare('SELECT id FROM bookings WHERE payment_intent_id = ? LIMIT 1').get(pid);
+                if (b && b.id) {
+                  const now = new Date().toISOString();
+                  bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?').run('confirmed', event.id || null, now, b.id);
+                  safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${b.id} for_pi=${pid}`);
+                }
+                bookingsDb.close();
+              } catch (e) { /* non-fatal */ }
+            }
+          } catch (e) { /* ignore booking update errors */ }
+        }
+      } else {
+        const payments = await loadPayments();
+        const dup = Object.keys(payments).some(k => payments[k] && payments[k].eventId === event.id);
+        if (dup) { safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`); return { recorded: false, reason: 'duplicate' }; }
+        payments[pid] = { status: status, eventId: event.id || null, amount: pi && pi.amount ? pi.amount : null, currency: pi && pi.currency ? pi.currency : null, timestamp: new Date().toISOString() };
+        await savePayments(payments);
+        safeAppendLog(`${new Date().toISOString()} payment.${status === 'succeeded' ? 'recorded' : status === 'failed' ? 'failed' : 'recorded'} id=${pid}`);
+      }
+    } catch (e) {
+      console.error('Error processing payment event:', e && e.stack ? e.stack : e);
+      return { recorded: false, reason: 'error' };
+    }
+    return { recorded: true };
+  }
+
   // Test-only endpoint to post raw events without Stripe signature verification.
   // Enabled only when ALLOW_TEST_WEBHOOK=true in the environment.
   app.post('/webhook/test', express.json(), async (req, res) => {
-    if (!process.env.ALLOW_TEST_WEBHOOK || process.env.ALLOW_TEST_WEBHOOK !== 'true') {
+    const allowTest = String(process.env.ALLOW_TEST_WEBHOOK || '').trim().toLowerCase();
+    safeAppendLog(`${new Date().toISOString()} debug.allow_test_env=${String(process.env.ALLOW_TEST_WEBHOOK)}`);
+    if (allowTest !== 'true') {
+      safeAppendLog(`${new Date().toISOString()} webhook.test-rejected allowTest=${allowTest}`);
       return res.status(403).send('Test webhook disabled');
     }
     const event = req.body;
@@ -148,62 +220,13 @@ module.exports = function attachWebhook(app, stripe) {
       if (!event || !event.type) return res.status(400).send('Invalid event');
       // minimal logging
       safeAppendLog(`${new Date().toISOString()} event.test-received id=${event.id} type=${event.type}`);
-      // handle known events (payment_intent.succeeded / payment_intent.payment_failed)
+      // handle known events via shared processor
       if (event.type === 'payment_intent.succeeded') {
-        const pi = event.data && event.data.object ? event.data.object : null;
-        const pid = pi && pi.id ? pi.id : 'unknown';
-        if (usePostgres && pgClient) {
-          const exists = await pgClient.query('SELECT id FROM payments WHERE event_id = $1 LIMIT 1', [event.id]);
-          if (exists && exists.rows && exists.rows.length) { safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`); return res.json({ received: true }); }
-          const upsertQuery = `INSERT INTO payments (id,status,event_id,amount,currency,timestamp) VALUES ($1,$2,$3,$4,$5)`;
-          await pgClient.query(upsertQuery, [pid, 'succeeded', event.id || null, pi && pi.amount ? pi.amount : null, pi && pi.currency ? pi.currency : null, new Date().toISOString()].slice(0,5));
-          safeAppendLog(`${new Date().toISOString()} payment.recorded id=${pid}`);
-          return res.json({ received: true });
-        }
-        if (useSqlite && db) {
-          const seen = db.prepare('SELECT id FROM payments WHERE event_id = ? LIMIT 1').get(event.id);
-          if (seen) { safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`); return res.json({ received: true }); }
-          const insert = db.prepare('INSERT OR REPLACE INTO payments (id,status,event_id,amount,currency,timestamp) VALUES (@id,@status,@eventId,@amount,@currency,@timestamp)');
-          const tx = db.transaction((p) => { insert.run(p); });
-          tx({ id: pid, status: 'succeeded', eventId: event.id || null, amount: pi && pi.amount ? pi.amount : null, currency: pi && pi.currency ? pi.currency : null, timestamp: new Date().toISOString() });
-          safeAppendLog(`${new Date().toISOString()} payment.recorded id=${pid}`);
-          return res.json({ received: true });
-        }
-        const payments = await loadPayments();
-        const dup = Object.keys(payments).some(k => payments[k] && payments[k].eventId === event.id);
-        if (dup) { safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`); return res.json({ received: true }); }
-        payments[pid] = { status: 'succeeded', eventId: event.id || null, amount: pi && pi.amount ? pi.amount : null, currency: pi && pi.currency ? pi.currency : null, timestamp: new Date().toISOString() };
-        await savePayments(payments);
-        safeAppendLog(`${new Date().toISOString()} payment.recorded id=${pid}`);
+        await processPaymentEvent(event, 'succeeded');
         return res.json({ received: true });
       }
       if (event.type === 'payment_intent.payment_failed') {
-        const pi = event.data && event.data.object ? event.data.object : null;
-        const pid = pi && pi.id ? pi.id : 'unknown';
-        if (usePostgres && pgClient) {
-          const exists = await pgClient.query('SELECT id FROM payments WHERE event_id = $1 LIMIT 1', [event.id]);
-          if (exists && exists.rows && exists.rows.length) { safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`); return res.json({ received: true }); }
-          const upsert = `INSERT INTO payments (id,status,event_id,amount,currency,timestamp) VALUES ($1,$2,$3,$4,$5)`;
-          await pgClient.query(upsert, [pid, 'failed', event.id || null, pi && pi.amount ? pi.amount : null, pi && pi.currency ? pi.currency : null].slice(0,5));
-          safeAppendLog(`${new Date().toISOString()} payment.failed id=${pid}`);
-          return res.json({ received: true });
-        }
-        if (useSqlite && db) {
-          const seen = db.prepare('SELECT id FROM payments WHERE event_id = ? LIMIT 1').get(event.id);
-          if (seen) { safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`); return res.json({ received: true }); }
-          const insert = db.prepare('INSERT OR REPLACE INTO payments (id,status,event_id,amount,currency,timestamp) VALUES (@id,@status,@eventId,@amount,@currency,@timestamp)');
-          const tx = db.transaction((p) => { insert.run(p); });
-          tx({ id: pid, status: 'failed', eventId: event.id || null, amount: pi && pi.amount ? pi.amount : null, currency: pi && pi.currency ? pi.currency : null, timestamp: new Date().toISOString() });
-          safeAppendLog(`${new Date().toISOString()} payment.failed id=${pid}`);
-          return res.json({ received: true });
-        }
-        const payments = await loadPayments();
-        payments[pid] = payments[pid] || {};
-        payments[pid].status = 'failed';
-        payments[pid].timestamp = new Date().toISOString();
-        payments[pid].eventId = payments[pid].eventId || event.id || null;
-        await savePayments(payments);
-        safeAppendLog(`${new Date().toISOString()} payment.failed id=${pid}`);
+        await processPaymentEvent(event, 'failed');
         return res.json({ received: true });
       }
       return res.json({ received: false, message: 'event type not handled' });
@@ -242,132 +265,11 @@ module.exports = function attachWebhook(app, stripe) {
 
     // Handle the event types you care about
     switch (event.type) {
-      case 'payment_intent.succeeded': {
-        try {
-          const pi = event.data && event.data.object ? event.data.object : null;
-          const pid = pi && pi.id ? pi.id : 'unknown';
-          console.log('Webhook: payment_intent.succeeded', pid);
-
-          // Check whether this exact Stripe event was already processed (by event.id)
-          if (usePostgres && pgClient) {
-            try {
-              const exists = await pgClient.query('SELECT id FROM payments WHERE event_id = $1 LIMIT 1', [event.id]);
-              if (exists && exists.rows && exists.rows.length) {
-                safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`);
-                break;
-              }
-              const upsertQuery = `INSERT INTO payments (id,status,event_id,amount,currency,timestamp) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status, event_id = EXCLUDED.event_id, amount = EXCLUDED.amount, currency = EXCLUDED.currency, timestamp = EXCLUDED.timestamp`;
-              await pgClient.query(upsertQuery, [pid, 'succeeded', event.id || null, pi && pi.amount ? pi.amount : null, pi && pi.currency ? pi.currency : null, new Date().toISOString()]);
-              safeAppendLog(`${new Date().toISOString()} payment.recorded id=${pid}`);
-            } catch (e) {
-              console.error('Postgres webhook upsert error:', e && e.stack ? e.stack : e);
-            }
-          } else if (useSqlite && db) {
-            try {
-              // if this event.id already exists in payments, skip processing
-              const seen = db.prepare('SELECT id FROM payments WHERE event_id = ? LIMIT 1').get(event.id);
-              if (seen) {
-                safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`);
-                break;
-              }
-              const insert = db.prepare('INSERT OR REPLACE INTO payments (id,status,event_id,amount,currency,timestamp) VALUES (@id,@status,@eventId,@amount,@currency,@timestamp)');
-              const tx = db.transaction((p) => { insert.run(p); });
-              tx({ id: pid, status: 'succeeded', eventId: event.id || null, amount: pi && pi.amount ? pi.amount : null, currency: pi && pi.currency ? pi.currency : null, timestamp: new Date().toISOString() });
-              safeAppendLog(`${new Date().toISOString()} payment.recorded id=${pid}`);
-              // Try to mark related booking as confirmed if we find a booking id in metadata
-              try {
-                const bookingId = pi && pi.metadata && pi.metadata.booking_id ? pi.metadata.booking_id : null;
-                if (bookingId) {
-                  // bookings table lives in server.js as a separate DB; try to update if available
-                  try {
-                    const path = require('path');
-                    const Database = require('better-sqlite3');
-                    const bookingsDb = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
-                    const now = new Date().toISOString();
-                    const stmt = bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?');
-                    stmt.run('confirmed', event.id || null, now, bookingId);
-                    safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${bookingId} for_pi=${pid}`);
-                    bookingsDb.close();
-                  } catch (e) { /* non-fatal */ }
-                } else {
-                  // fallback: try matching bookings by payment_intent_id
-                  try {
-                    const path = require('path');
-                    const Database = require('better-sqlite3');
-                    const bookingsDb = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
-                    const b = bookingsDb.prepare('SELECT id FROM bookings WHERE payment_intent_id = ? LIMIT 1').get(pid);
-                    if (b && b.id) {
-                      const now = new Date().toISOString();
-                      bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?').run('confirmed', event.id || null, now, b.id);
-                      safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${b.id} for_pi=${pid}`);
-                    }
-                    bookingsDb.close();
-                  } catch (e) { /* non-fatal */ }
-                }
-              } catch (e) { /* ignore booking update errors */ }
-            } catch (e) {
-              console.error('SQLite webhook upsert error:', e && e.stack ? e.stack : e);
-            }
-          } else {
-            // JSON fallback: ensure same event isn't recorded twice by scanning stored values for eventId
-            const payments = await loadPayments();
-            const dup = Object.keys(payments).some(k => payments[k] && payments[k].eventId === event.id);
-            if (dup) {
-              safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`);
-            } else {
-              payments[pid] = {
-                status: 'succeeded',
-                eventId: event.id || null,
-                amount: pi && pi.amount ? pi.amount : null,
-                currency: pi && pi.currency ? pi.currency : null,
-                timestamp: new Date().toISOString()
-              };
-              await savePayments(payments);
-              safeAppendLog(`${new Date().toISOString()} payment.recorded id=${pid}`);
-            }
-          }
-        } catch (e) {
-          console.error('Error handling payment_intent.succeeded:', e && e.stack ? e.stack : e);
-        }
+      case 'payment_intent.succeeded':
+        await processPaymentEvent(event, 'succeeded');
         break;
-      }
       case 'payment_intent.payment_failed':
-        try {
-          const pi = event.data && event.data.object ? event.data.object : null;
-          const pid = pi && pi.id ? pi.id : 'unknown';
-          console.log('Webhook: payment_intent.payment_failed', pid);
-          if (usePostgres && pgClient) {
-            try {
-              const exists = await pgClient.query('SELECT id FROM payments WHERE event_id = $1 LIMIT 1', [event.id]);
-              if (exists && exists.rows && exists.rows.length) {
-                safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`);
-                break;
-              }
-              const upsert = `INSERT INTO payments (id,status,event_id,amount,currency,timestamp) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status, event_id = EXCLUDED.event_id, amount = EXCLUDED.amount, currency = EXCLUDED.currency, timestamp = EXCLUDED.timestamp`;
-              await pgClient.query(upsert, [pid, 'failed', event.id || null, pi && pi.amount ? pi.amount : null, pi && pi.currency ? pi.currency : null, new Date().toISOString()]);
-              safeAppendLog(`${new Date().toISOString()} payment.failed id=${pid}`);
-            } catch (e) { console.error('Postgres webhook upsert error:', e && e.stack ? e.stack : e); }
-          } else if (useSqlite && db) {
-            try {
-              const seen = db.prepare('SELECT id FROM payments WHERE event_id = ? LIMIT 1').get(event.id);
-              if (seen) { safeAppendLog(`${new Date().toISOString()} event.ignored id=${event.id} reason=duplicate_event`); break; }
-              const insert = db.prepare('INSERT OR REPLACE INTO payments (id,status,event_id,amount,currency,timestamp) VALUES (@id,@status,@eventId,@amount,@currency,@timestamp)');
-              const tx = db.transaction((p) => { insert.run(p); });
-              tx({ id: pid, status: 'failed', eventId: event.id || null, amount: pi && pi.amount ? pi.amount : null, currency: pi && pi.currency ? pi.currency : null, timestamp: new Date().toISOString() });
-              safeAppendLog(`${new Date().toISOString()} payment.failed id=${pid}`);
-            } catch (e) { console.error('SQLite webhook upsert error:', e && e.stack ? e.stack : e); }
-          } else {
-            const payments = await loadPayments();
-            payments[pid] = payments[pid] || {};
-            payments[pid].status = 'failed';
-            payments[pid].timestamp = new Date().toISOString();
-            payments[pid].eventId = payments[pid].eventId || event.id || null;
-            await savePayments(payments);
-            safeAppendLog(`${new Date().toISOString()} payment.failed id=${pid}`);
-          }
-        } catch (e) {
-          console.error('Error handling payment_intent.payment_failed:', e && e.stack ? e.stack : e);
-        }
+        await processPaymentEvent(event, 'failed');
         break;
       default:
         console.log(`Webhook received event: ${event.type}`);
