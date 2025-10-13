@@ -73,6 +73,7 @@
       resultEl.style.display='block'; resultEl.textContent=text; resultEl.style.background = success ? '#e6ffe6' : '#ffe6e6';
     }
 
+    (async function(){
     if (STRIPE_PUBLISHABLE && !STRIPE_PUBLISHABLE.includes('STRIPE')) {
       // Initialize Stripe + Elements + Payment Request (Apple Pay / Google Pay)
       const stripe = Stripe(STRIPE_PUBLISHABLE);
@@ -191,6 +192,7 @@
             .catch(err => showResult('i18n:checkout.network_error', false));
       });
     }
+    })();
   </script>
 </body>
 </html>
