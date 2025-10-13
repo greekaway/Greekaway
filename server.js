@@ -73,12 +73,15 @@ app.post('/create-payment-intent', express.json(), async (req, res) => {
     const amt = parseInt(amount, 10) || 0;
     if (amt <= 0) return res.status(400).json({ error: 'Invalid amount' });
 
+    // Support idempotency: prefer client-provided Idempotency-Key header, else generate one
+    const idempotencyKey = (req.headers['idempotency-key'] || req.headers['Idempotency-Key'] || req.headers['Idempotency-key']) || `gw_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
+    const opts = { idempotencyKey };
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amt,
       currency: currency || 'eur',
       automatic_payment_methods: { enabled: true },
-    });
-    res.json({ clientSecret: paymentIntent.client_secret });
+    }, opts);
+    res.json({ clientSecret: paymentIntent.client_secret, idempotencyKey });
   } catch (err) {
     console.error('Stripe create payment intent error:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Failed to create payment intent' });

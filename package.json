@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/greekaway/Greekaway#readme",
   "dependencies": {
+    "better-sqlite3": "^8.4.0",
     "@aws-sdk/client-s3": "^3.352.0",
     "cookie": "^1.0.2",
     "dotenv": "^16.6.1",
