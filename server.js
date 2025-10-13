@@ -262,19 +262,40 @@ app.get('/admin/bookings', (req, res) => {
   try {
     const limit = Math.min(10000, Math.abs(parseInt(req.query.limit || '200', 10) || 200));
     const offset = Math.max(0, Math.abs(parseInt(req.query.offset || '0', 10) || 0));
+    const status = req.query.status || null;
+    const user_email = req.query.user_email || null;
+    const trip_id = req.query.trip_id || null;
+    const payment_intent_id = req.query.payment_intent_id || null;
+    const date_from = req.query.date_from || null;
+    const date_to = req.query.date_to || null;
+    const min_amount = req.query.min_amount ? parseInt(req.query.min_amount, 10) : null;
+    const max_amount = req.query.max_amount ? parseInt(req.query.max_amount, 10) : null;
+    const sort = req.query.sort || 'created_at';
+    const dir = (req.query.dir || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+
     let rows = [];
-    if (bookingsDb) {
-      rows = bookingsDb.prepare('SELECT * FROM bookings ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
-    } else {
-      // try opening the sqlite file directly
-      try {
-        const Database = require('better-sqlite3');
-        const db = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
-        rows = db.prepare('SELECT * FROM bookings ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
-        db.close();
-      } catch (e) {
-        return res.status(500).json({ error: 'Bookings DB not available' });
-      }
+    try {
+      const Database = require('better-sqlite3');
+      const db = bookingsDb || new Database(path.join(__dirname, 'data', 'db.sqlite3'));
+      const where = [];
+      const params = [];
+      if (status) { where.push('status = ?'); params.push(status); }
+      if (user_email) { where.push('user_email = ?'); params.push(user_email); }
+      if (trip_id) { where.push('trip_id = ?'); params.push(trip_id); }
+      if (payment_intent_id) { where.push('payment_intent_id = ?'); params.push(payment_intent_id); }
+      if (date_from) { where.push('created_at >= ?'); params.push(date_from); }
+      if (date_to) { where.push('created_at <= ?'); params.push(date_to + ' 23:59:59'); }
+      if (min_amount !== null && !isNaN(min_amount)) { where.push('price_cents >= ?'); params.push(min_amount); }
+      if (max_amount !== null && !isNaN(max_amount)) { where.push('price_cents <= ?'); params.push(max_amount); }
+      const whereSql = where.length ? ('WHERE ' + where.join(' AND ')) : '';
+      // sanitize sort field - allow only specific columns
+      const allowedSort = ['created_at','price_cents','status','user_name'];
+      const sortField = allowedSort.includes(sort) ? sort : 'created_at';
+      const stmt = db.prepare(`SELECT * FROM bookings ${whereSql} ORDER BY ${sortField} ${dir} LIMIT ? OFFSET ?`);
+      rows = stmt.all(...params, limit, offset);
+      if (!bookingsDb) db.close();
+    } catch (e) {
+      return res.status(500).json({ error: 'Bookings DB not available' });
     }
     // parse metadata JSON where present
     rows = (rows || []).map(r => {
@@ -299,18 +320,39 @@ app.get('/admin/bookings.csv', (req, res) => {
   try {
     const limit = Math.min(100000, Math.abs(parseInt(req.query.limit || '10000', 10) || 10000));
     const offset = Math.max(0, Math.abs(parseInt(req.query.offset || '0', 10) || 0));
+    const status = req.query.status || null;
+    const user_email = req.query.user_email || null;
+    const trip_id = req.query.trip_id || null;
+    const payment_intent_id = req.query.payment_intent_id || null;
+    const date_from = req.query.date_from || null;
+    const date_to = req.query.date_to || null;
+    const min_amount = req.query.min_amount ? parseInt(req.query.min_amount, 10) : null;
+    const max_amount = req.query.max_amount ? parseInt(req.query.max_amount, 10) : null;
+    const sort = req.query.sort || 'created_at';
+    const dir = (req.query.dir || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+
     let rows = [];
-    if (bookingsDb) {
-      rows = bookingsDb.prepare('SELECT * FROM bookings ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
-    } else {
-      try {
-        const Database = require('better-sqlite3');
-        const db = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
-        rows = db.prepare('SELECT * FROM bookings ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
-        db.close();
-      } catch (e) {
-        return res.status(500).json({ error: 'Bookings DB not available' });
-      }
+    try {
+      const Database = require('better-sqlite3');
+      const db = bookingsDb || new Database(path.join(__dirname, 'data', 'db.sqlite3'));
+      const where = [];
+      const params = [];
+      if (status) { where.push('status = ?'); params.push(status); }
+      if (user_email) { where.push('user_email = ?'); params.push(user_email); }
+      if (trip_id) { where.push('trip_id = ?'); params.push(trip_id); }
+      if (payment_intent_id) { where.push('payment_intent_id = ?'); params.push(payment_intent_id); }
+      if (date_from) { where.push('created_at >= ?'); params.push(date_from); }
+      if (date_to) { where.push('created_at <= ?'); params.push(date_to + ' 23:59:59'); }
+      if (min_amount !== null && !isNaN(min_amount)) { where.push('price_cents >= ?'); params.push(min_amount); }
+      if (max_amount !== null && !isNaN(max_amount)) { where.push('price_cents <= ?'); params.push(max_amount); }
+      const whereSql = where.length ? ('WHERE ' + where.join(' AND ')) : '';
+      const allowedSort = ['created_at','price_cents','status','user_name'];
+      const sortField = allowedSort.includes(sort) ? sort : 'created_at';
+      const stmt = db.prepare(`SELECT * FROM bookings ${whereSql} ORDER BY ${sortField} ${dir} LIMIT ? OFFSET ?`);
+      rows = stmt.all(...params, limit, offset);
+      if (!bookingsDb) db.close();
+    } catch (e) {
+      return res.status(500).json({ error: 'Bookings DB not available' });
     }
     // normalize metadata
     rows = (rows || []).map(r => {
@@ -372,6 +414,46 @@ app.get('/admin/backup-status', async (req, res) => {
     console.error('Admin backup-status error', err && err.stack ? err.stack : err);
     return res.status(500).send('Server error');
   }
+});
+
+// Admin action: cancel booking (sets status to 'canceled')
+app.post('/admin/bookings/:id/cancel', express.json(), (req, res) => {
+  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  try {
+    const id = req.params.id;
+    if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
+    const now = new Date().toISOString();
+    const stmt = bookingsDb.prepare('UPDATE bookings SET status = ?, updated_at = ? WHERE id = ?');
+    stmt.run('canceled', now, id);
+    return res.json({ ok: true });
+  } catch (e) { console.error('Cancel booking error', e); return res.status(500).json({ error: 'Server error' }); }
+});
+
+// Admin action: refund booking (attempt Stripe refund then mark refunded)
+app.post('/admin/bookings/:id/refund', express.json(), async (req, res) => {
+  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  try {
+    const id = req.params.id;
+    if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
+    const row = bookingsDb.prepare('SELECT * FROM bookings WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    const pi = row.payment_intent_id;
+    if (pi && stripe) {
+      try {
+        // fetch PaymentIntent to find latest charge
+        const paymentIntent = await stripe.paymentIntents.retrieve(pi);
+        const latestCharge = paymentIntent && paymentIntent.latest_charge ? paymentIntent.latest_charge : (paymentIntent.charges && paymentIntent.charges.data && paymentIntent.charges.data[0] && paymentIntent.charges.data[0].id);
+        if (latestCharge) {
+          await stripe.refunds.create({ charge: latestCharge });
+        }
+      } catch (e) {
+        console.warn('Stripe refund failed (continuing):', e && e.message ? e.message : e);
+      }
+    }
+    const now = new Date().toISOString();
+    bookingsDb.prepare('UPDATE bookings SET status = ?, updated_at = ? WHERE id = ?').run('refunded', now, id);
+    return res.json({ ok: true });
+  } catch (e) { console.error('Refund booking error', e); return res.status(500).json({ error: 'Server error' }); }
 });
 
 // Serve the Admin single-page at /admin (so users can visit /admin)

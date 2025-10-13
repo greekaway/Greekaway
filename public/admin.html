@@ -26,6 +26,15 @@
     .status-processing{background:#17a2b8}
     .status-requires_payment_method{background:#ffc107;color:#212529}
     .status-canceled{background:#6c757d}
+    .status-icon { margin-right:6px; }
+
+    /* Modal for booking metadata */
+    .modal-backdrop{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:1000}
+    .modal {background:#fff;border-radius:8px;padding:16px;max-width:800px;max-height:80vh;overflow:auto;box-shadow:0 6px 24px rgba(0,0,0,0.2)}
+    .modal pre{white-space:pre-wrap;background:#f7f9fc;padding:8px;border-radius:6px}
+    .sortable { cursor: pointer; text-decoration: underline dotted; }
+    /* zebra for bookings too */
+    #bookingsTable tbody tr:nth-child(even){background:#fbfcfe}
   </style>
 </head>
 <body>
@@ -48,7 +57,7 @@
     </div>
     <div class="col">
   <h3>Πληρωμές (τελευταίες)</h3>
-        <div id="filters" style="margin-bottom:8px">
+      <div id="filters" style="margin:12px auto 8px;max-width:1100px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;border-radius:6px;padding:8px">
           <label style="display:inline-block;margin-right:8px">Κατάσταση:
             <select id="filterStatus">
               <option value="">(any)</option>
@@ -59,20 +68,12 @@
               <option value="canceled">canceled</option>
             </select>
           </label>
-          <label style="display:inline-block;margin-right:8px">Από:
-            <input id="filterFrom" type="date" />
-          </label>
-          <label style="display:inline-block;margin-right:8px">Έως:
-            <input id="filterTo" type="date" />
-          </label>
-          <label style="display:inline-block;margin-right:8px">Ελάχιστο (€):
-            <input id="filterMin" type="number" step="0.01" placeholder="0.00" />
-          </label>
-          <label style="display:inline-block;margin-right:8px">Μέγιστο (€):
-            <input id="filterMax" type="number" step="0.01" placeholder="" />
-          </label>
-          <button id="applyFilters">Εφαρμογή</button>
-          <button id="clearFilters">Επαναφορά</button>
+          <label>Από: <input id="filterFrom" type="date" /></label>
+          <label>Έως: <input id="filterTo" type="date" /></label>
+          <label>Ελάχιστο (€): <input id="filterMin" type="number" step="0.01" placeholder="0.00" /></label>
+          <label>Μέγιστο (€): <input id="filterMax" type="number" step="0.01" placeholder="" /></label>
+          <button id="applyFilters" class="btn">Εφαρμογή</button>
+          <button id="clearFilters" class="btn">Επαναφορά</button>
         </div>
         <div style="margin-bottom:8px">
           <button id="refreshPayments">Ανανέωση</button>
@@ -95,15 +96,15 @@
           <span id="pageInfo" style="margin-left:8px">Σελίδα: 1</span>
         </div>
         <div id="paymentsContainer">
-          <table id="paymentsTable" style="width:100%;border-collapse:collapse">
+      <table id="paymentsTable" style="width:100%;border-collapse:collapse">
             <thead>
               <tr>
                 <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κωδικός</th>
                 <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κατάσταση</th>
                 <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Γεγονός</th>
-                <th style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Ποσό (€)</th>
-                <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Νόμισμα</th>
-                <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Ημερομηνία</th>
+                <th class="sortable" data-sort="amount" style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Ποσό (€)</th>
+              <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Νόμισμα</th>
+            <th class="sortable" data-sort="timestamp" style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Ημερομηνία</th>
                 <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Μεταδεδομένα</th>
               </tr>
             </thead>
@@ -121,7 +122,7 @@
       <button id="exportBookings">Εξαγωγή Κρατήσεων (CSV)</button>
     </div>
     <div id="bookingsContainer">
-      <table id="bookingsTable" style="width:100%;border-collapse:collapse">
+  <table id="bookingsTable" style="width:100%;border-collapse:collapse">
         <thead>
           <tr>
             <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">ID</th>
@@ -132,8 +133,8 @@
             <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Email</th>
             <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Trip</th>
             <th style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Seats</th>
-            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Price</th>
-            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Created</th>
+            <th class="sortable" data-sort="price_cents" style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Τιμή</th>
+            <th class="sortable" data-sort="created_at" style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Δημιουργήθηκε</th>
             <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Metadata</th>
           </tr>
         </thead>
@@ -160,6 +161,9 @@
   let currentLimit = 50;
   let currentSortField = '';
   let currentSortDir = 'desc'; // or 'asc'
+  // separate bookings sort state so bookings and payments sorting don't interfere
+  let bookingsSortField = '';
+  let bookingsSortDir = 'desc';
 
     authForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -174,6 +178,16 @@
       document.getElementById('bookingsPanel').style.display = 'block';
       fetchBookings();
     });
+
+    // Load filters from URL on page load
+    (function loadFiltersFromUrl(){
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('status')) document.getElementById('filterStatus').value = params.get('status');
+      if (params.has('date_from')) document.getElementById('filterFrom').value = params.get('date_from');
+      if (params.has('date_to')) document.getElementById('filterTo').value = params.get('date_to');
+      if (params.has('min_amount')) document.getElementById('filterMin').value = (Number(params.get('min_amount'))/100).toFixed(2);
+      if (params.has('max_amount')) document.getElementById('filterMax').value = (Number(params.get('max_amount'))/100).toFixed(2);
+    })();
 
     document.getElementById('refreshBackup').addEventListener('click', fetchBackup);
   document.getElementById('refreshPayments').addEventListener('click', fetchPayments);
@@ -207,10 +221,26 @@
 
     function fetchPayments(){
       if(!basicAuth) return;
-  paymentsTbody.innerHTML = '';
+      paymentsTbody.innerHTML = '';
   paymentsMessage.textContent = 'Φόρτωση...';
       const qs = `?limit=${encodeURIComponent(currentLimit)}&offset=${encodeURIComponent(currentOffset)}`;
-      fetch('/admin/payments' + qs, { headers: { Authorization: basicAuth } })
+  // append filters for payments as URL params and persist to location
+  const params = new URLSearchParams();
+  const status = document.getElementById('filterStatus').value;
+  const from = document.getElementById('filterFrom').value;
+  const to = document.getElementById('filterTo').value;
+  const min = document.getElementById('filterMin').value;
+  const max = document.getElementById('filterMax').value;
+  if (status) params.set('status', status);
+  if (from) params.set('date_from', from);
+  if (to) params.set('date_to', to);
+  if (min) params.set('min_amount', Math.round(Number(min)*100));
+  if (max) params.set('max_amount', Math.round(Number(max)*100));
+  // persist filters to URL
+  const newUrl = window.location.pathname + '?' + params.toString();
+  window.history.replaceState({}, '', newUrl);
+  const url = '/admin/payments' + qs + (params.toString() ? '&' + params.toString() : '');
+  fetch(url, { headers: { Authorization: basicAuth } })
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
         .then(j => {
           lastPayments = Array.isArray(j) ? j : [];
@@ -227,13 +257,18 @@
       let out = lastFiltered.slice();
       if (currentSortField) {
         out.sort((a,b) => {
-          const fa = a && a[currentSortField];
-          const fb = b && b[currentSortField];
+          const fa = a && (currentSortField === 'amount' ? a.amount : a[currentSortField]);
+          const fb = b && (currentSortField === 'amount' ? b.amount : b[currentSortField]);
           // handle timestamps
           if (currentSortField === 'timestamp') {
             const ta = fa ? new Date(fa).getTime() : 0;
             const tb = fb ? new Date(fb).getTime() : 0;
             return (ta - tb) * (currentSortDir === 'asc' ? 1 : -1);
+          }
+          if (currentSortField === 'amount') {
+            const na = Number(fa) || 0;
+            const nb = Number(fb) || 0;
+            return (na - nb) * (currentSortDir === 'asc' ? 1 : -1);
           }
           // handle amount as number
           if (currentSortField === 'amount') {
@@ -260,18 +295,30 @@
         const statusLabel = greekStatus(statusKey);
         const statusClass = statusClassFor(statusKey);
         const amountVal = formatAmount(row.amount, row.currency);
+        const when = formatDate(row.timestamp);
+        const statusIcon = statusIconFor(statusKey);
         tr.innerHTML = `
           <td>${escapeHtml(row.id||'')}</td>
-          <td><span class="status-badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+          <td><span class="status-badge ${statusClass}"><span class="status-icon">${statusIcon}</span>${escapeHtml(statusLabel)}</span></td>
           <td>${escapeHtml(row.eventId||row.event_id||'')}</td>
-          <td class="amount">${escapeHtml(amountVal)}</td>
+          <td class="amount" style="text-align:right">${escapeHtml(amountVal)}</td>
           <td>${escapeHtml(row.currency||'')}</td>
-          <td>${escapeHtml(row.timestamp||'')}</td>
-          <td>${escapeHtml(formatMeta(row.metadata||row.meta||''))}</td>
+          <td>${escapeHtml(when)}</td>
+          <td>${escapeHtml(formatMeta(row.metadata||row.meta||''))} ${renderMetaButton(row.metadata||row.meta||'')}</td>
         `;
         paymentsTbody.appendChild(tr);
       }
     }
+
+    // Add click handlers for sortable payment headers
+    document.querySelectorAll('#paymentsTable thead th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const field = th.getAttribute('data-sort');
+        if (currentSortField === field) currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+        else currentSortField = field;
+        applyFilters();
+      });
+    });
 
     // Bookings UI logic
     const bookingsPanel = document.getElementById('bookingsPanel');
@@ -286,7 +333,12 @@
       bookingsTbody.innerHTML = '';
       bookingsMessage.textContent = 'Φόρτωση...';
       try {
-        const qs = `?limit=1000&offset=0`;
+        const params = new URLSearchParams();
+        params.set('limit', '1000');
+        params.set('offset', '0');
+        if (bookingsSortField) params.set('sort', bookingsSortField);
+        if (bookingsSortDir) params.set('dir', bookingsSortDir);
+        const qs = '?' + params.toString();
         const res = await fetch('/admin/bookings' + qs, { headers: { Authorization: basicAuth } });
         if (!res.ok) throw new Error(res.status);
         const arr = await res.json();
@@ -300,6 +352,8 @@
       bookingsMessage.textContent = '';
       for (const b of arr) {
         const tr = document.createElement('tr');
+        const when = formatDate(b.created_at);
+        const price = formatAmount(b.price_cents || 0, 'eur');
         tr.innerHTML = `
           <td>${escapeHtml(b.id||'')}</td>
           <td>${escapeHtml(b.status||'')}</td>
@@ -309,13 +363,23 @@
           <td>${escapeHtml(b.user_email||'')}</td>
           <td>${escapeHtml(b.trip_id||'')}</td>
           <td style="text-align:right">${escapeHtml(String(b.seats||''))}</td>
-          <td style="text-align:right">${escapeHtml(String(b.price_cents || ''))}</td>
-          <td>${escapeHtml(b.created_at||'')}</td>
-          <td>${escapeHtml(typeof b.metadata === 'object' ? JSON.stringify(b.metadata) : (b.metadata||''))}</td>
+          <td style="text-align:right">${escapeHtml(price)}</td>
+          <td>${escapeHtml(when)}</td>
+          <td>${escapeHtml(typeof b.metadata === 'object' ? JSON.stringify(b.metadata) : (b.metadata||''))} ${renderBookingMetaButton(b.metadata||b.metadata||'', b.id, b.payment_intent_id)}</td>
         `;
         bookingsTbody.appendChild(tr);
       }
     }
+
+    // Make bookings table headers sortable
+    document.querySelectorAll('#bookingsTable thead th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const field = th.getAttribute('data-sort');
+        if (bookingsSortField === field) bookingsSortDir = bookingsSortDir === 'asc' ? 'desc' : 'asc';
+        else bookingsSortField = field;
+        fetchBookings();
+      });
+    });
 
     async function exportBookings(){
       if (!basicAuth) return;
@@ -365,9 +429,147 @@
       // if amount looks like cents (integer and currency present), format as euros
       let num = Number(amount);
       if (!isFinite(num)) return String(amount);
-      // Heuristic: if amount >= 1000 assume cents
-      if (num > 1000) num = num / 100;
-      return num.toFixed(2) + ' €';
+      // Treat large integers as cents
+      if (Math.abs(num) > 1000) num = num / 100;
+      // Use toLocaleString to format with space thousands and comma decimals (fr-FR)
+      return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+    }
+
+    function formatDate(iso){
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      // DD/MM/YYYY HH:mm
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2,'0');
+      const min = String(d.getMinutes()).padStart(2,'0');
+      return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+    }
+
+    function statusIconFor(s){
+      const map = {
+        'succeeded': '✔️',
+        'failed': '❌',
+        'processing': '⏳',
+        'requires_payment_method': '⚠️',
+        'canceled': '⛔'
+      };
+      return map[s] || '';
+    }
+
+    function renderMetaButton(meta){
+      try {
+        const j = typeof meta === 'string' && meta ? meta : (meta && typeof meta === 'object' ? JSON.stringify(meta) : '');
+        if (!j) return '';
+        return `<button class="view-meta" data-meta='${escapeHtml(j)}'>View</button>`;
+      } catch (e) { return ''; }
+    }
+
+    // Render a View button for bookings that carries booking id and payment_intent
+    function renderBookingMetaButton(meta, bookingId, paymentIntentId){
+      try {
+        const j = typeof meta === 'string' && meta ? meta : (meta && typeof meta === 'object' ? JSON.stringify(meta) : '');
+        // always show a view button for bookings even if no metadata, so admin can act on the booking
+        const dataMeta = escapeHtml(j);
+        const dataB = escapeHtml(String(bookingId || ''));
+        const dataPi = escapeHtml(String(paymentIntentId || ''));
+        return `<button class="view-booking" data-meta='${dataMeta}' data-booking='${dataB}' data-pi='${dataPi}'>View</button>`;
+      } catch (e) { return ''; }
+    }
+
+    // show modal when clicking view buttons (payments) or view-booking (bookings)
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.classList) {
+        if (e.target.classList.contains('view-meta')) {
+          const m = e.target.getAttribute('data-meta') || '';
+          showMetadataModal(m);
+        } else if (e.target.classList.contains('view-booking')) {
+          const m = e.target.getAttribute('data-meta') || '';
+          const bid = e.target.getAttribute('data-booking') || '';
+          const pi = e.target.getAttribute('data-pi') || '';
+          showMetadataModal(m, bid, pi);
+        }
+      }
+    });
+
+    // Modal implementation (includes action buttons for bookings)
+    const modalBackdrop = document.createElement('div'); modalBackdrop.className = 'modal-backdrop';
+    modalBackdrop.innerHTML = `
+      <div class="modal">
+        <button id="closeModal" style="float:right">Close</button>
+        <h3>Metadata</h3>
+        <pre id="modalPre"></pre>
+        <div style="margin-top:12px">
+          <button id="refundBtn" style="background:#dc3545;color:#fff;margin-right:8px">Refund</button>
+          <button id="cancelBtn" style="background:#6c757d;color:#fff">Cancel</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modalBackdrop);
+    document.getElementById('closeModal').addEventListener('click', () => { modalBackdrop.style.display = 'none'; clearModalState(); });
+    function showMetadataModal(text, bookingId, paymentIntentId){
+      const pre = document.getElementById('modalPre');
+      try { pre.textContent = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { pre.textContent = text; }
+      // stash booking context on the backdrop for handlers
+      modalBackdrop.dataset.booking = bookingId || '';
+      modalBackdrop.dataset.pi = paymentIntentId || '';
+      // enable/disable buttons depending on presence of bookingId
+      document.getElementById('refundBtn').disabled = !bookingId;
+      document.getElementById('cancelBtn').disabled = !bookingId;
+      modalBackdrop.style.display = 'flex';
+    }
+
+    function clearModalState(){
+      delete modalBackdrop.dataset.booking;
+      delete modalBackdrop.dataset.pi;
+      document.getElementById('refundBtn').disabled = true;
+      document.getElementById('cancelBtn').disabled = true;
+    }
+
+    // Refund and Cancel handlers
+    document.getElementById('refundBtn').addEventListener('click', async () => {
+      const bookingId = modalBackdrop.dataset.booking;
+      if (!bookingId) return alert('No booking id');
+      if (!confirm('Really refund booking ' + bookingId + '?')) return;
+      try {
+        const res = await fetch(`/admin/bookings/${encodeURIComponent(bookingId)}/refund`, { method: 'POST', headers: { Authorization: basicAuth } });
+        if (!res.ok) throw new Error('Refund failed: ' + res.status);
+        // optimistic update in the bookings table
+        updateBookingRowStatus(bookingId, 'refunded');
+        alert('Refund request accepted');
+        modalBackdrop.style.display = 'none'; clearModalState();
+      } catch (e) { alert('Refund failed: ' + e); }
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', async () => {
+      const bookingId = modalBackdrop.dataset.booking;
+      if (!bookingId) return alert('No booking id');
+      if (!confirm('Really cancel booking ' + bookingId + '?')) return;
+      try {
+        const res = await fetch(`/admin/bookings/${encodeURIComponent(bookingId)}/cancel`, { method: 'POST', headers: { Authorization: basicAuth } });
+        if (!res.ok) throw new Error('Cancel failed: ' + res.status);
+        updateBookingRowStatus(bookingId, 'canceled');
+        alert('Booking canceled');
+        modalBackdrop.style.display = 'none'; clearModalState();
+      } catch (e) { alert('Cancel failed: ' + e); }
+    });
+
+    function updateBookingRowStatus(bookingId, newStatus){
+      // find row in bookingsTbody by first cell (id)
+      const trs = bookingsTbody.querySelectorAll('tr');
+      for (const tr of trs) {
+        const td = tr.querySelector('td');
+        if (!td) continue;
+        if (td.textContent.trim() === bookingId) {
+          // second cell holds status
+          const statusCell = tr.querySelectorAll('td')[1];
+          if (statusCell) {
+            statusCell.textContent = newStatus;
+          }
+          return;
+        }
+      }
     }
 
     function escapeHtml(s){
