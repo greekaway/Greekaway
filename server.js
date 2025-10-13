@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
+const crypto = require('crypto');
 
 // Load local .env (if present). Safe to leave out in production where env vars are set
 try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installed */ }
@@ -20,6 +21,34 @@ const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY || null;
 let stripe = null;
 if (STRIPE_SECRET) {
   try { stripe = require('stripe')(STRIPE_SECRET); } catch(e) { console.warn('Stripe not initialized (install package?)'); }
+}
+
+// Initialize a simple SQLite bookings table so server endpoints can create bookings
+let bookingsDb = null;
+try {
+  const Database = require('better-sqlite3');
+  const DB_PATH = path.join(__dirname, 'data', 'db.sqlite3');
+  try { fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true }); } catch (e) {}
+  bookingsDb = new Database(DB_PATH);
+  bookingsDb.exec(`CREATE TABLE IF NOT EXISTS bookings (
+    id TEXT PRIMARY KEY,
+    status TEXT,
+    payment_intent_id TEXT UNIQUE,
+    event_id TEXT,
+    user_name TEXT,
+    user_email TEXT,
+    trip_id TEXT,
+    seats INTEGER,
+    price_cents INTEGER,
+    currency TEXT,
+    metadata TEXT,
+    created_at TEXT,
+    updated_at TEXT
+  )`);
+  console.log('server: bookings table ready');
+} catch (e) {
+  console.warn('server: bookings DB not available', e && e.message ? e.message : e);
+  bookingsDb = null;
 }
 
 // Serve /trips/trip.html with the API key injected from environment.
@@ -69,6 +98,7 @@ app.post('/create-payment-intent', express.json(), async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server.' });
   try {
     const { amount, currency } = req.body;
+    const { booking_id } = req.body || {};
     // basic validation
     const amt = parseInt(amount, 10) || 0;
     if (amt <= 0) return res.status(400).json({ error: 'Invalid amount' });
@@ -76,16 +106,62 @@ app.post('/create-payment-intent', express.json(), async (req, res) => {
     // Support idempotency: prefer client-provided Idempotency-Key header, else generate one
     const idempotencyKey = (req.headers['idempotency-key'] || req.headers['Idempotency-Key'] || req.headers['Idempotency-key']) || `gw_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
     const opts = { idempotencyKey };
-    const paymentIntent = await stripe.paymentIntents.create({
+    // attach booking metadata if present
+    const piParams = {
       amount: amt,
       currency: currency || 'eur',
       automatic_payment_methods: { enabled: true },
-    }, opts);
-    res.json({ clientSecret: paymentIntent.client_secret, idempotencyKey });
+    };
+    if (booking_id) piParams.metadata = { booking_id };
+    const paymentIntent = await stripe.paymentIntents.create(piParams, opts);
+
+    // If booking exists in SQLite, save the payment_intent id for later matching in webhook
+    try {
+      if (booking_id && bookingsDb) {
+        const now = new Date().toISOString();
+        const stmt = bookingsDb.prepare('UPDATE bookings SET payment_intent_id = ?, updated_at = ? WHERE id = ?');
+        stmt.run(paymentIntent.id, now, booking_id);
+      }
+    } catch (e) { console.warn('Failed to update booking with payment_intent_id', e && e.message ? e.message : e); }
+
+    res.json({ clientSecret: paymentIntent.client_secret, idempotencyKey, paymentIntentId: paymentIntent.id, bookingId: booking_id || null });
   } catch (err) {
     console.error('Stripe create payment intent error:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Failed to create payment intent' });
   }
+});
+
+// Bookings API: create and read bookings
+app.post('/api/bookings', express.json(), (req, res) => {
+  try {
+    const { user_name, user_email, trip_id, seats, price_cents, currency, metadata } = req.body || {};
+    if (!user_name || !user_email || !trip_id) return res.status(400).json({ error: 'Missing required fields' });
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    if (bookingsDb) {
+      const insert = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
+      insert.run(id, 'pending', null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now);
+      return res.json({ bookingId: id, status: 'pending' });
+    }
+    return res.status(500).json({ error: 'Bookings DB not available' });
+  } catch (e) {
+    console.error('Create booking error', e && e.stack ? e.stack : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/bookings/:id', (req, res) => {
+  try {
+    const id = req.params.id;
+    if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
+    const row = bookingsDb.prepare('SELECT * FROM bookings WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    // parse metadata
+    if (row.metadata) {
+      try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
+    }
+    return res.json(row);
+  } catch (e) { console.error('Get booking error', e && e.stack ? e.stack : e); return res.status(500).json({ error: 'Server error' }); }
 });
 
 // Attach webhook handler from module
