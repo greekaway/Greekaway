@@ -247,6 +247,15 @@ document.addEventListener("DOMContentLoaded", () => {
           else window.location.href = '/trips.html';
         });
       }
+      // Ensure the footer central booking button opens checkout for this trip
+      try {
+        const central = document.querySelector('footer a.central-btn');
+        if (central && window.__loadedTrip && window.__loadedTrip.id) {
+          central.setAttribute('href', `/checkout.html?trip=${encodeURIComponent(window.__loadedTrip.id)}`);
+          // ensure click opens in same tab (in case it was javascript:void(0))
+          central.removeAttribute('onclick');
+        }
+      } catch (e) { G.warn('Failed to wire central booking button', e); }
     })
     .catch(err => {
       G.error("Σφάλμα εκδρομής:", err);
