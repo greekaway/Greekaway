@@ -27,11 +27,11 @@
     "pg": "^8.16.3",
     "stripe": "^12.18.0"
   }
+  ,"engines": {
+    "node": "18.x"
+  }
   ,"devDependencies": {
     "puppeteer": "^24.23.0",
     "jest": "^29.6.1"
-  }
-  ,"scripts": {
-    "test": "jest --runInBand"
   }
 }

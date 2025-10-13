@@ -102,7 +102,7 @@
                 <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κωδικός</th>
                 <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κατάσταση</th>
                 <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Γεγονός</th>
-                <th class="sortable" data-sort="amount" style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Ποσό (€)</th>
+                <th class="sortable" data-sort="amount" style="border-bottom:1px solid #ddd;padding:6px;text-align:right;width:140px">Ποσό (€)</th>
               <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Νόμισμα</th>
             <th class="sortable" data-sort="timestamp" style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Ημερομηνία</th>
                 <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Μεταδεδομένα</th>
@@ -508,9 +508,38 @@
       </div>`;
     document.body.appendChild(modalBackdrop);
     document.getElementById('closeModal').addEventListener('click', () => { modalBackdrop.style.display = 'none'; clearModalState(); });
-    function showMetadataModal(text, bookingId, paymentIntentId){
+    async function showMetadataModal(text, bookingId, paymentIntentId){
       const pre = document.getElementById('modalPre');
-      try { pre.textContent = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { pre.textContent = text; }
+      // If a booking id is provided, fetch the structured booking and render fields
+      if (bookingId) {
+        try {
+          const res = await fetch('/api/bookings/' + encodeURIComponent(bookingId));
+          if (res.ok) {
+            const b = await res.json();
+            // build a structured display
+            const parts = [];
+            parts.push('ID: ' + (b.id || ''));
+            parts.push('Status: ' + (b.status || ''));
+            parts.push('PaymentIntent: ' + (b.payment_intent_id || ''));
+            parts.push('Event: ' + (b.event_id || ''));
+            parts.push('Name: ' + (b.user_name || ''));
+            parts.push('Email: ' + (b.user_email || ''));
+            parts.push('Trip: ' + (b.trip_id || ''));
+            parts.push('Seats: ' + (b.seats || ''));
+            parts.push('Price: ' + (formatAmount(b.price_cents || 0, b.currency || 'eur')));
+            parts.push('Created: ' + (formatDate(b.created_at || '') || ''));
+            parts.push('\nMetadata:\n' + (typeof b.metadata === 'object' ? JSON.stringify(b.metadata, null, 2) : (b.metadata || '')));
+            pre.textContent = parts.join('\n');
+          } else {
+            // fallback to raw text
+            try { pre.textContent = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { pre.textContent = text; }
+          }
+        } catch (e) {
+          try { pre.textContent = JSON.stringify(JSON.parse(text), null, 2); } catch (err) { pre.textContent = text; }
+        }
+      } else {
+        try { pre.textContent = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { pre.textContent = text; }
+      }
       // stash booking context on the backdrop for handlers
       modalBackdrop.dataset.booking = bookingId || '';
       modalBackdrop.dataset.pi = paymentIntentId || '';
@@ -534,11 +563,13 @@
       if (!confirm('Really refund booking ' + bookingId + '?')) return;
       try {
         const res = await fetch(`/admin/bookings/${encodeURIComponent(bookingId)}/refund`, { method: 'POST', headers: { Authorization: basicAuth } });
-        if (!res.ok) throw new Error('Refund failed: ' + res.status);
-        // optimistic update in the bookings table
-        updateBookingRowStatus(bookingId, 'refunded');
-        alert('Refund request accepted');
-        modalBackdrop.style.display = 'none'; clearModalState();
+  if (!res.ok) throw new Error('Refund failed: ' + res.status);
+  // optimistic update in the bookings table
+  updateBookingRowStatus(bookingId, 'refunded');
+  alert('Refund request accepted');
+  modalBackdrop.style.display = 'none'; clearModalState();
+  // refresh the bookings list to reflect server state
+  fetchBookings();
       } catch (e) { alert('Refund failed: ' + e); }
     });
 
@@ -548,10 +579,12 @@
       if (!confirm('Really cancel booking ' + bookingId + '?')) return;
       try {
         const res = await fetch(`/admin/bookings/${encodeURIComponent(bookingId)}/cancel`, { method: 'POST', headers: { Authorization: basicAuth } });
-        if (!res.ok) throw new Error('Cancel failed: ' + res.status);
-        updateBookingRowStatus(bookingId, 'canceled');
-        alert('Booking canceled');
-        modalBackdrop.style.display = 'none'; clearModalState();
+  if (!res.ok) throw new Error('Cancel failed: ' + res.status);
+  updateBookingRowStatus(bookingId, 'canceled');
+  alert('Booking canceled');
+  modalBackdrop.style.display = 'none'; clearModalState();
+  // refresh bookings list
+  fetchBookings();
       } catch (e) { alert('Cancel failed: ' + e); }
     });
 
