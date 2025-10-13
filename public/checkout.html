@@ -74,7 +74,12 @@
     }
 
     (async function(){
+    console.debug('[checkout] STRIPE_PUBLISHABLE present?', !!STRIPE_PUBLISHABLE);
     if (STRIPE_PUBLISHABLE && !STRIPE_PUBLISHABLE.includes('STRIPE')) {
+      console.debug('[checkout] Stripe lib loaded?', typeof Stripe !== 'undefined');
+      console.debug('[checkout] GWPaymentRequest available?', !!window.GWPaymentRequest && !!window.GWPaymentRequest.init);
+      try { console.debug('[checkout] Stripe publishable (masked):', STRIPE_PUBLISHABLE && STRIPE_PUBLISHABLE.slice(0,8) + '...'); } catch(e){}
+      
       // Initialize Stripe + Elements + Payment Request (Apple Pay / Google Pay)
       const stripe = Stripe(STRIPE_PUBLISHABLE);
       const elements = stripe.elements();
@@ -142,10 +147,12 @@
       // Payment Request (Apple Pay / Google Pay) setup via helper
       try {
         if (window.GWPaymentRequest && window.GWPaymentRequest.init) {
+          console.debug('[checkout] calling GWPaymentRequest.init...');
           const pr = await window.GWPaymentRequest.init(STRIPE_PUBLISHABLE, { total: { label: 'Greekaway — Προκαταβολή', amount: 1000 } });
+          console.debug('[checkout] GWPaymentRequest.init returned', pr);
           if (pr && pr.prButton) {
             document.getElementById('payment-request-container').style.display = 'block';
-            pr.prButton.mount('#payment-request-container');
+            try { pr.prButton.mount('#payment-request-container'); } catch (err) { console.error('[checkout] mount prButton failed', err); }
 
             pr.paymentRequest.on('paymentmethod', async (ev) => {
               try {
