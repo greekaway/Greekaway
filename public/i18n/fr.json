@@ -1,4 +1,7 @@
 {
   "siteTitle": "Greekaway",
-  "nav": {"home":"Accueil","trips":"Excursions","checkout":"Paiement","admin":"Admin"}
+  "nav": {"home":"Accueil","trips":"Excursions","checkout":"Paiement","admin":"Admin","about":"A propos","ai":"Assistant AI","profile":"Profil","book":"Réserver"},
+  "admin": {"help":"Entrez les identifiants admin pour voir les paiements et l'état des sauvegardes.", "loading":"Chargement...", "error":"Erreur:", "backups":"Sauvegardes", "refresh":"Rafraîchir"},
+  "checkout": {"pay":"Payer","cardPlaceholder":"Numéro de carte (4242... pour tests)","title":"Paiement de test","name":"Nom","email":"Email","cardLabel":"Carte (test)"},
+  "welcome": {"title":"Bienvenue sur Greekaway","subtitle":"Découvrez les meilleures excursions en Grèce"}
 }

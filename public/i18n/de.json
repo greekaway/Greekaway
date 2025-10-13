@@ -1,4 +1,7 @@
 {
   "siteTitle": "Greekaway",
-  "nav": {"home":"Startseite","trips":"Touren","checkout":"Bezahlen","admin":"Admin"}
+  "nav": {"home":"Startseite","trips":"Touren","checkout":"Bezahlen","admin":"Admin","about":"Über","ai":"AI Assistent","profile":"Profil","book":"Buchen"},
+  "admin": {"help":"Geben Sie Admin-Zugangsdaten ein, um Zahlungen und Backup-Status zu sehen.", "loading":"Lädt...", "error":"Fehler:", "backups":"Backups", "refresh":"Aktualisieren"},
+  "checkout": {"pay":"Bezahlen","cardPlaceholder":"Kartennummer (4242... für Tests)","title":"Testzahlung","name":"Name","email":"E-Mail","cardLabel":"Karte (Test)"},
+  "welcome": {"title":"Willkommen bei Greekaway","subtitle":"Entdecken Sie die besten Tagesausflüge in Griechenland"}
 }

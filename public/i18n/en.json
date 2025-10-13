@@ -4,6 +4,7 @@
   "admin": {
     "title":"Admin Payments",
     "downloadCsv":"Download CSV",
+    "backups":"Backups",
     "filter":"Filter",
     "status":"Status",
     "amount":"Amount",
