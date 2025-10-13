@@ -142,8 +142,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         // indicate this is an individual trip view so CSS can target it
         document.body.dataset.view = 'trip';
-      if (titleEl) titleEl.textContent = trip.title || "";
-      if (descEl) descEl.textContent = trip.description || "";
+      // Determine current language (from i18n module or localStorage fallback)
+      const currentLang = (window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el';
+
+      function getLocalized(field){
+        if(!field) return '';
+        if(typeof field === 'string') return field; // legacy single-language
+        if(typeof field === 'object') return field[currentLang] || field['el'] || Object.values(field)[0] || '';
+        return '';
+      }
+
+      if (titleEl) titleEl.textContent = getLocalized(trip.title) || "";
+      if (descEl) descEl.textContent = getLocalized(trip.description) || "";
 
       const stopsWrap = document.getElementById("stops");
       stopsWrap.innerHTML = "";
@@ -151,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const stopEl = document.createElement("div");
         stopEl.className = "trip-stop";
         stopEl.innerHTML = `
-          <h3>Στάση ${i + 1}: ${stop.name || ""}</h3>
+          <h3>Στάση ${i + 1}: ${getLocalized(stop.name) || ""}</h3>
           <div class="video-box">
             <iframe
               src="${stop.video}"
@@ -163,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
               height="315">
             </iframe>
           </div>
-          <p class="stop-description">${stop.description || ""}</p>
+          <p class="stop-description">${getLocalized(stop.description) || ""}</p>
         `;
         stopsWrap.appendChild(stopEl);
       });
@@ -172,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (trip.experience) {
         const expEl = document.createElement('div');
         expEl.className = 'trip-experience card';
-        expEl.innerHTML = `<h3>Εμπειρία</h3><p>${trip.experience}</p>`;
+        expEl.innerHTML = `<h3>Εμπειρία</h3><p>${getLocalized(trip.experience)}</p>`;
         // Append to stops column (on mobile it will appear after videos). On desktop layout it's fine
         stopsWrap.appendChild(expEl);
       }

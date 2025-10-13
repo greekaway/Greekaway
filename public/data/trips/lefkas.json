@@ -1,31 +1,31 @@
 {
   "id": "lefkas",
-  "title": "Λευκάδα",
+  "title": { "el": "Λευκάδα", "en": "Lefkada", "he": "לֶפְקָדָה" },
   "category": "sea",
-  "description": "Δύο μέρες στη Λευκάδα: αναχώρηση από Αθήνα, διανυκτέρευση, βόλτες και ολοήμερη κρουαζιέρα στο Νυδρί.",
+  "description": { "el": "Δύο μέρες στη Λευκάδα: αναχώρηση από Αθήνα, διανυκτέρευση, βόλτες και ολοήμερη κρουαζιέρα στο Νυδρί.", "en": "Two days in Lefkada: depart from Athens, overnight stay, walks and a full-day cruise from Nidri.", "he": "יומיים בלֶפְקָדָה: יציאה מאתונה, לינה, טיולים ושייט יומי מלא מנידרי." },
   "stops": [
     {
-      "name": "Ξενοδοχείο Leykada (Άφιξη)",
-      "description": "Άφιξη στο ξενοδοχείο και check-in — ξεκούραση και σύντομη γνωριμία με την περιοχή.",
+      "name": { "el": "Ξενοδοχείο Leykada (Άφιξη)", "en": "Leykada Hotel (Arrival)", "he": "מלון לֶפְקָדָה (הגעה)" },
+      "description": { "el": "Άφιξη στο ξενοδοχείο και check-in — ξεκούραση και σύντομη γνωριμία με την περιοχή.", "en": "Arrival at the hotel and check-in — rest and a quick introduction to the area.", "he": "הגעה למלון וצ'ק-אין — מנוחה והיכרות קצרה עם האזור." },
       "video": "https://www.youtube.com/embed/chMPZd-NznM"
     },
     {
-      "name": "Ξενοδοχείο Καθίσμα (relax)",
-      "description": "Εξερεύνηση της περιοχής, παραλία και χαλάρωση στο καθίσμα/ξενοδοχείο.",
+      "name": { "el": "Ξενοδοχείο Καθίσμα (relax)", "en": "Katisma Hotel (relax)", "he": "מלון קאתיסמה (רגיעה)" },
+      "description": { "el": "Εξερεύνηση της περιοχής, παραλία και χαλάρωση στο καθίσμα/ξενοδοχείο.", "en": "Explore the area, beach time and relaxation at the hotel.", "he": "חקירת האזור, חוף ורגיעה במלון." },
       "video": "https://www.youtube.com/embed/2_Cx-D_ozSs"
     },
     {
-      "name": "Λευκάδα by night",
-      "description": "Βραδινή βόλτα στην πόλη της Λευκάδας — φαγητό και τοπική ατμόσφαιρα.",
+      "name": { "el": "Λευκάδα by night", "en": "Lefkada by night", "he": "לֶפְקָדָה בלילה" },
+      "description": { "el": "Βραδινή βόλτα στην πόλη της Λευκάδας — φαγητό και τοπική ατμόσφαιρα.", "en": "Evening stroll in Lefkada town — dinner and local vibe.", "he": "טיול ערב בעיר לֶפְקָדָה — אוכל ואווירה מקומית." },
       "video": "https://www.youtube.com/embed/cTsy0sOQpvs"
     },
     {
-      "name": "Νυδρί — Ολοήμερη κρουαζιέρα",
-      "description": "Ημέρα κρουαζιέρας από το Νυδρί με στάσεις σε κοντινά νησάκια και κολύμπι.",
+      "name": { "el": "Νυδρί — Ολοήμερη κρουαζιέρα", "en": "Nidri — Full-day cruise", "he": "נידרי — שייט יומי מלא" },
+      "description": { "el": "Ημέρα κρουαζιέρας από το Νυδρί με στάσεις σε κοντινά νησάκια και κολύμπι.", "en": "A cruise day from Nidri with stops at nearby islets and swimming.", "he": "שייט יומי מנידרי עם עצירות באיים קרובים ושחייה." },
       "video": "https://www.youtube.com/embed/QjWwZ_NHxDk"
     }
   ],
-  "experience": "Εμπειρία θάλασσας: δύο μέρες χαλάρωσης στη Λευκάδα, παραλίες, γεύσεις της ακτής και ολοήμερη κρουαζιέρα από το Νυδρί. Ιδανική για ζευγάρια και μικρές παρέες.",
+  "experience": { "el": "Εμπειρία θάλασσας: δύο μέρες χαλάρωσης στη Λευκάδα, παραλίες, γεύσεις της ακτής και ολοήμερη κρουαζιέρα από το Νυδρί. Ιδανική για ζευγάρια και μικρές παρέες.", "en": "Sea experience: two days relaxing in Lefkada, beaches, coastal flavors and a full-day cruise from Nidri. Ideal for couples and small groups.", "he": "חוויה ימית: יומיים של רגיעה בלֶפְקָדָה, חופים, טעמים מקומיים ושייט יומי מנידרי. אידיאלי לזוגות וקבוצות קטנות." },
   "map": {
     "center": { "lat": 38.8340, "lng": 20.7050 },
     "zoom": 8,

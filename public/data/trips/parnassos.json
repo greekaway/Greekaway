@@ -2,25 +2,25 @@
   "id": "parnassos",
   "title": "Πάρνασος & Δελφοί",
   "category": "mountain",
-  "description": "Δύο ημέρες στο βουνό: επίσκεψη στους Δελφούς, βόλτα στην Αράχωβα, πεζοπορία στον Πάρνασσο και επιστροφή στην Αθήνα.",
+    "description": { "el": "Μια ορεινή εκδρομή στους Δελφούς και τον Παρνασσό, ιδανική για πεζοπορία και ιστορία.", "en": "A mountain trip to Delphi and Parnassos, ideal for hiking and history.", "he": "טיול הררי לדלפי ופארנאסוס, אידיאלי לטיולי הליכה והיסטρία." },
   "stops": [
     {
-      "name": "Αρχαιολογικός Χώρος Δελφών",
+        "name": { "el": "Αρχαιολογικός Χώρος Δελφών", "en": "Archaeological Site of Delphi", "he": "אתר הארכאולוגי של דלפי" },
       "description": "Ξενάγηση στους Δελφούς, το μνημείο του μαντείου και το μουσείο.",
       "video": "https://www.youtube.com/embed/xG6B_drQoe8"
     },
     {
-      "name": "Αράχωβα",
+        "name": { "el": "Αράχωβα", "en": "Arachova", "he": "אראחובה" },
       "description": "Παραδοσιακή ατμόσφαιρα, στενά σοκάκια και τοπικά προϊόντα.",
       "video": "https://www.youtube.com/embed/NXFnVqeuKZI"
     },
     {
-      "name": "Πάρνασος (πεζοπορία)",
+        "name": { "el": "Πάρνασος (πεζοπορία)", "en": "Parnassos (hiking)", "he": "פארנאסוס (טיול רגלי)" },
       "description": "Ελαφριά πεζοπορία σε μονοπάτια του Πάρνασσου και θέα στη γύρω περιοχή.",
       "video": "https://www.youtube.com/embed/5tXy2BL5qFA"
     },
     {
-      "name": "Επιστροφή στην Αθήνα",
+        "name": { "el": "Επιστροφή στην Αθήνα", "en": "Return to Athens", "he": "חזרה לאתונה" },
       "description": "Τέλος διαδρομής με άφιξη στην πόλη, χρόνος για καφέ και συζήτηση των εμπειριών.",
       "video": "https://www.youtube.com/embed/es5fAbjZUiY"
     }
