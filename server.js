@@ -6,7 +6,8 @@ const fs = require("fs");
 try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installed */ }
 
 const app = express();
-const PORT = 3000;
+// Use the port provided by the hosting environment (Render, Heroku, etc.)
+const PORT = process.env.PORT || 3000;
 
 // Read Maps API key from environment. If not provided, the placeholder remains.
 // Trim and strip surrounding quotes if the value was pasted with quotes.
