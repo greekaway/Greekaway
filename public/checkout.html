@@ -141,7 +141,7 @@
       // Payment Request (Apple Pay / Google Pay) setup via helper
       try {
         if (window.GWPaymentRequest && window.GWPaymentRequest.init) {
-          const pr = await window.GWPaymentRequest.init('%STRIPE_PUBLISHABLE%', { total: { label: 'Greekaway — Προκαταβολή', amount: 1000 } });
+          const pr = await window.GWPaymentRequest.init(STRIPE_PUBLISHABLE, { total: { label: 'Greekaway — Προκαταβολή', amount: 1000 } });
           if (pr && pr.prButton) {
             document.getElementById('payment-request-container').style.display = 'block';
             pr.prButton.mount('#payment-request-container');
