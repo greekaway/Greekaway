@@ -328,6 +328,7 @@ footer a.central-btn:hover i {
    =============================== */
 
 /* Categories container: use responsive grid so items flow into columns */
+#categories-container {
   margin: 0;
   font-family: Arial, sans-serif;
   display: grid;
@@ -337,6 +338,7 @@ footer a.central-btn:hover i {
   padding: 36px 12px 100px;
   justify-content: center;
   justify-items: center;
+}
 /* RTL support when Hebrew or other RTL language is selected */
 .rtl {
   direction: rtl !important;
@@ -345,11 +347,14 @@ footer a.central-btn:hover i {
 /* language selector styling: flags + text appear in the option text (emoji) */
 #langSelect { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 8px; height: 34px; }
 #langSelect option { padding: 2px 6px; color: #000; }
-  align-items: start;
-  max-width: 1200px;
-  margin: 0 auto;
-  animation: appearZoom 1.2s ease;
+/* Prevent the footer items from reversing order when document dir is rtl.
+   Keep text alignment and reading order inside footer left-to-right while
+   the rest of the page can be RTL. This preserves the footer layout for
+   icons and consistent UX. */
+body.rtl footer {
+  direction: ltr; /* keep layout left-to-right */
 }
+
 
 /* ===== Category page panel (as in screenshot) ===== */
 /* only apply the navy panel when we're on the category listing (not the trip page) */

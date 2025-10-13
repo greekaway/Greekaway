@@ -1,6 +1,6 @@
 {
   "siteTitle": "Greekaway",
-  "nav": {"home":"Home","trips":"Trips","checkout":"Checkout","admin":"Admin"},
+  "nav": {"home":"Home","trips":"Trips","checkout":"Checkout","admin":"Admin","about":"About","ai":"AI Assistant","profile":"Profile","book":"Book"},
   "admin": {
     "title":"Admin Payments",
     "downloadCsv":"Download CSV",

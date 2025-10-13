@@ -57,31 +57,32 @@
   <footer>
     <a href="/index.html">
       <i class="fas fa-home"></i>
-      <span>Home</span>
+      <span data-i18n="nav.home">Home</span>
     </a>
 
     <a href="/checkout.html">
       <i class="fas fa-credit-card"></i>
-      <span>Πληρωμή</span>
+      <span data-i18n="nav.checkout">Πληρωμή</span>
     </a>
 
     <a href="javascript:void(0)" class="central-btn">
       <i class="fas fa-bell"></i>
-      <span>Online Κράτηση</span>
+      <span data-i18n="nav.book">Online Κράτηση</span>
     </a>
 
     <a href="javascript:void(0)" onclick="openOverlay('aiOverlay')">
       <i class="fas fa-comments"></i>
-      <span>AI Assistant</span>
+      <span data-i18n="nav.ai">AI Assistant</span>
     </a>
 
     <a href="javascript:void(0)" onclick="openOverlay('profileOverlay')">
       <i class="fas fa-user"></i>
-      <span>Προφίλ</span>
+      <span data-i18n="nav.profile">Προφίλ</span>
     </a>
   </footer>
 
   <script src="/js/overlay-manager.js" defer></script>
+  <script src="/js/i18n.js" defer></script>
 
   <!-- Google Maps -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
