@@ -1,0 +1,20 @@
+{
+  "siteTitle": "Greekaway",
+  "nav": {
+    "home": "Αρχική",
+    "trips": "Εκδρομές",
+    "checkout": "Ταμείο",
+    "admin": "Διαχείριση"
+  },
+  "admin": {
+    "title": "Διαχείριση Πληρωμών",
+    "downloadCsv": "Κατέβασμα CSV",
+    "filter": "Φίλτρο",
+    "status": "Κατάσταση",
+    "amount": "Ποσό"
+  },
+  "checkout": {
+    "pay": "Πληρωμή",
+    "cardPlaceholder": "Αριθμός κάρτας (4242... για τεστ)"
+  }
+}

@@ -310,6 +310,20 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Health/readiness endpoint for uptime checks
+app.get('/health', (req, res) => {
+  try {
+    const info = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      env: process.env.NODE_ENV || 'development'
+    };
+    res.json(info);
+  } catch (e) {
+    res.status(500).json({ status: 'error' });
+  }
+});
+
 // 4️⃣ Εκκίνηση server
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
