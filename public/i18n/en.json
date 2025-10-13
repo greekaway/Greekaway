@@ -26,6 +26,9 @@
     "payment_success_test": "Payment successful (test)",
     "mock_complete": "Completed (mock)",
     "network_error": "Network error"
+  },
+  "welcome":{
+    "title":"Welcome to Greekaway",
+    "subtitle":"Discover the best day trips across Greece"
   }
-
 }
