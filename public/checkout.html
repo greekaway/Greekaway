@@ -59,7 +59,17 @@
     const form = document.getElementById('checkoutForm');
     const resultEl = document.getElementById('result');
 
-    function showResult(msg, success){ resultEl.style.display='block'; resultEl.textContent=msg; resultEl.style.background = success ? '#e6ffe6' : '#ffe6e6'; }
+    function resolveI18n(m){
+      if (typeof m === 'string' && m.indexOf('i18n:') === 0) {
+        const key = m.slice(5);
+        try { return window.t ? window.t(key) : key; } catch(e) { return key; }
+      }
+      return m;
+    }
+    function showResult(msg, success){
+      const text = resolveI18n(msg);
+      resultEl.style.display='block'; resultEl.textContent=text; resultEl.style.background = success ? '#e6ffe6' : '#ffe6e6';
+    }
 
     if (STRIPE_PUBLISHABLE && !STRIPE_PUBLISHABLE.includes('STRIPE')) {
       // Initialize Stripe + Elements + Payment Request (Apple Pay / Google Pay)
@@ -152,14 +162,14 @@
           const data = await resp.json();
           if (!data.clientSecret) {
             ev.complete('fail');
-            return showResult('Πρόβλημα με πληρωμή', false);
+            return showResult('i18n:checkout.payment_error', false);
           }
 
           // Confirm the payment using the payment method returned by the browser
           const confirm = await stripe.confirmCardPayment(data.clientSecret, { payment_method: ev.paymentMethod.id }, { handleActions: false });
           if (confirm.error) {
             ev.complete('fail');
-            return showResult(confirm.error.message || 'Payment failed', false);
+            return showResult(confirm.error.message || 'i18n:checkout.payment_failed', false);
           }
 
           if (confirm.paymentIntent && confirm.paymentIntent.status === 'requires_action') {
@@ -167,16 +177,16 @@
             const res2 = await stripe.confirmCardPayment(data.clientSecret);
             if (res2.error) {
               ev.complete('fail');
-              return showResult(res2.error.message || 'Payment failed', false);
+              return showResult(res2.error.message || 'i18n:checkout.payment_failed', false);
             }
           }
 
           ev.complete('success');
-          showResult('Payment successful (test)', true);
+          showResult('i18n:checkout.payment_success_test', true);
         } catch (err) {
           console.error('paymentRequest handler error', err);
           ev.complete('fail');
-          showResult('Σφάλμα πληρωμής', false);
+          showResult('i18n:checkout.payment_error', false);
         }
       });
 
@@ -188,10 +198,10 @@
         // create payment intent on server (amount in cents) — example 10 EUR
         const resp = await fetch('/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount: 1000, currency: 'eur' }) });
         const data = await resp.json();
-        if(!data.clientSecret) return showResult('Πρόβλημα με πληρωμή', false);
+    if(!data.clientSecret) return showResult('i18n:checkout.payment_error', false);
   const { error } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardNumber, billing_details: { name, email } } });
-        if(error) showResult(error.message || 'Payment failed', false);
-        else showResult('Payment successful (test)', true);
+    if(error) showResult(error.message || 'i18n:checkout.payment_failed', false);
+    else showResult('i18n:checkout.payment_success_test', true);
       });
     } else {
       // Fallback: use mock endpoint
@@ -200,8 +210,8 @@
         var fd = new FormData(e.target);
         fetch('/mock-checkout', { method:'POST', body: new URLSearchParams(fd) })
           .then(r => r.json())
-          .then(j => showResult(j.message || 'Ολοκληρώθηκε (mock)', j.success))
-          .catch(err => showResult('Σφάλμα δικτύου', false));
+          .then(j => showResult(j.message || 'i18n:checkout.mock_complete', j.success))
+            .catch(err => showResult('i18n:checkout.network_error', false));
       });
     }
   </script>

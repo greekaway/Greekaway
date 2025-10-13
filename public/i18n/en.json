@@ -1,6 +1,31 @@
 {
   "siteTitle": "Greekaway",
   "nav": {"home":"Home","trips":"Trips","checkout":"Checkout","admin":"Admin"},
-  "admin": {"title":"Admin Payments","downloadCsv":"Download CSV","filter":"Filter","status":"Status","amount":"Amount"},
-  "checkout": {"pay":"Pay","cardPlaceholder":"Card number (4242... for tests)"}
+  "admin": {
+    "title":"Admin Payments",
+    "downloadCsv":"Download CSV",
+    "filter":"Filter",
+    "status":"Status",
+    "amount":"Amount",
+    "help": "Enter admin credentials to view payments and backup status.",
+    "loading": "Loading...",
+    "error": "Error:",
+    "page": "Page",
+    "no_records": "No records found for this page/filters.",
+    "refresh": "Refresh"
+  },
+  "checkout": {
+    "pay":"Pay",
+    "cardPlaceholder":"Card number (4242... for tests)",
+    "title": "Mock Checkout",
+    "name": "Name",
+    "email": "Email",
+    "cardLabel": "Card (test)",
+    "payment_error": "Payment error",
+    "payment_failed": "Payment failed",
+    "payment_success_test": "Payment successful (test)",
+    "mock_complete": "Completed (mock)",
+    "network_error": "Network error"
+  }
+
 }

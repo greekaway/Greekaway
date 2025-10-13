@@ -156,16 +156,16 @@
 
     function fetchBackup(){
       if(!basicAuth) return;
-      backupPre.textContent = 'Loading...';
+  backupPre.textContent = window.t ? window.t('admin.loading') : 'Loading...';
       fetch('/admin/backup-status', { headers: { Authorization: basicAuth } })
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
         .then(j => backupPre.textContent = JSON.stringify(j, null, 2))
-        .catch(err => backupPre.textContent = 'Error: '+err);
+  .catch(err => backupPre.textContent = (window.t ? window.t('admin.error') : 'Error: ') + String(err));
     }
 
     function pageInfo(){
       const page = Math.floor(currentOffset / currentLimit) + 1;
-      document.getElementById('pageInfo').textContent = `Page: ${page}`;
+  document.getElementById('pageInfo').textContent = (window.t ? window.t('admin.page') : 'Page: ') + ' ' + page;
     }
 
     function changePage(dir){
@@ -186,7 +186,7 @@
           applyFilters();
           pageInfo();
         })
-        .catch(err => { paymentsTbody.innerHTML = ''; paymentsMessage.textContent = 'Error: '+err; });
+  .catch(err => { paymentsTbody.innerHTML = ''; paymentsMessage.textContent = (window.t ? window.t('admin.error') : 'Error: ') + String(err); });
     }
 
     function renderPayments(arr){
