@@ -1,31 +1,31 @@
 {
   "id": "parnassos",
-  "title": "Πάρνασος & Δελφοί",
+  "title": { "el": "Πάρνασος & Δελφοί", "en": "Parnassos & Delphi", "he": "פארנאסוס ודלפי", "fr": "Parnasse & Delphes", "de": "Parnassos und Delphi" },
   "category": "mountain",
-    "description": { "el": "Μια ορεινή εκδρομή στους Δελφούς και τον Παρνασσό, ιδανική για πεζοπορία και ιστορία.", "en": "A mountain trip to Delphi and Parnassos, ideal for hiking and history.", "he": "טיול הררי לדלפי ופארנאסוס, אידיאלי לטיולי הליכה והיסטρία." },
+    "description": { "el": "Μια ορεινή εκδρομή στους Δελφούς και τον Παρνασσό, ιδανική για πεζοπορία και ιστορία.", "en": "A mountain trip to Delphi and Parnassos, ideal for hiking and history.", "he": "טיול הררי לדלפי ופארנאסוס, אידיאלי לטיולי הליכה והיסטρία.", "fr": "Excursion en montagne à Delphes et au Parnasse, idéale pour la randonnée et l'histoire.", "de": "Bergtour nach Delphi und Parnassos, ideal zum Wandern und für Geschichtsliebhaber." },
   "stops": [
     {
-        "name": { "el": "Αρχαιολογικός Χώρος Δελφών", "en": "Archaeological Site of Delphi", "he": "אתר הארכאולוגי של דלפי" },
-      "description": "Ξενάγηση στους Δελφούς, το μνημείο του μαντείου και το μουσείο.",
+  "name": { "el": "Αρχαιολογικός Χώρος Δελφών", "en": "Archaeological Site of Delphi", "he": "אתר הארכאולוגי של דלפי", "fr": "Site archéologique de Delphes", "de": "Archäologische Stätte von Delphi" },
+  "description": { "el": "Ξενάγηση στους Δελφούς, το μνημείο του μαντείου και το μουσείο.", "en": "Guided tour of Delphi, the oracle monument and the museum.", "he": "סיור בדלפי, האנדרטה של האורקל והמוזיאון.", "fr": "Visite guidée de Delphes, du monument de l'oracle et du musée.", "de": "Geführte Tour durch Delphi, das Orakel-Denkmal und das Museum." },
       "video": "https://www.youtube.com/embed/xG6B_drQoe8"
     },
     {
-        "name": { "el": "Αράχωβα", "en": "Arachova", "he": "אראחובה" },
-      "description": "Παραδοσιακή ατμόσφαιρα, στενά σοκάκια και τοπικά προϊόντα.",
+  "name": { "el": "Αράχωβα", "en": "Arachova", "he": "אראחובה", "fr": "Arachova", "de": "Arachova" },
+  "description": { "el": "Παραδοσιακή ατμόσφαιρα, στενά σοκάκια και τοπικά προϊόντα.", "en": "Traditional atmosphere, narrow alleys and local products.", "he": "אווירה מסורתית, סמטאות צרות ומוצרים מקומיים.", "fr": "Atmosphère traditionnelle, ruelles étroites et produits locaux.", "de": "Traditionelle Atmosphäre, enge Gassen und lokale Produkte." },
       "video": "https://www.youtube.com/embed/NXFnVqeuKZI"
     },
     {
-        "name": { "el": "Πάρνασος (πεζοπορία)", "en": "Parnassos (hiking)", "he": "פארנאסוס (טיול רגלי)" },
-      "description": "Ελαφριά πεζοπορία σε μονοπάτια του Πάρνασσου και θέα στη γύρω περιοχή.",
+  "name": { "el": "Πάρνασος (πεζοπορία)", "en": "Parnassos (hiking)", "he": "פארנאסוס (טיול רגלי)", "fr": "Parnasse (randonnée)", "de": "Parnassos (Wandern)" },
+  "description": { "el": "Ελαφριά πεζοπορία σε μονοπάτια του Πάρνασσου και θέα στη γύρω περιοχή.", "en": "Light hiking on Parnassos trails with views over the area.", "he": "טיול רגלי קל בשבילים של פארנאסוס עם נופים של האזור.", "fr": "Randonnée légère sur les sentiers du Parnasse avec vue sur la région.", "de": "Leichte Wanderung auf Parnassos-Wegen mit Aussicht über die Gegend." },
       "video": "https://www.youtube.com/embed/5tXy2BL5qFA"
     },
     {
-        "name": { "el": "Επιστροφή στην Αθήνα", "en": "Return to Athens", "he": "חזרה לאתונה" },
-      "description": "Τέλος διαδρομής με άφιξη στην πόλη, χρόνος για καφέ και συζήτηση των εμπειριών.",
+  "name": { "el": "Επιστροφή στην Αθήνα", "en": "Return to Athens", "he": "חזרה לאתונה", "fr": "Retour à Athènes", "de": "Rückkehr nach Athen" },
+  "description": { "el": "Τέλος διαδρομής με άφιξη στην πόλη, χρόνος για καφέ και συζήτηση των εμπειριών.", "en": "End of route with arrival in town, time for coffee and debrief.", "he": "סיום המסלול עם הגעה לעיר, זמן לקפה ולשיחה על החוויות.", "fr": "Fin du parcours avec arrivée en ville, temps pour un café et un debrief.", "de": "Ende der Tour mit Ankunft in der Stadt, Zeit für Kaffee und Reflexion." },
       "video": "https://www.youtube.com/embed/es5fAbjZUiY"
     }
   ],
-  "experience": "Δύο μέρες γεμάτες ιστορία και βουνίσια ατμόσφαιρα: ιδανική για όσους αγαπούν τη φύση και τον πολιτισμό.",
+  "experience": { "el": "Δύο μέρες γεμάτες ιστορία και βουνίσια ατμόσφαιρα: ιδανική για όσους αγαπούν τη φύση και τον πολιτισμό.", "en": "Two days full of history and mountain atmosphere: ideal for nature and culture lovers.", "he": "יומיים מלאים בהיסטוריה ואווירת הרים: אידיאלי לחובבי טבע ותרבות.", "fr": "Deux jours riches en histoire et ambiance montagnarde : idéal pour les amoureux de la nature et de la culture.", "de": "Zwei Tage voller Geschichte und Bergatmosphäre: ideal für Natur- und Kulturliebhaber." },
   "map": {
     "center": { "lat": 38.48, "lng": 22.50 },
     "zoom": 9,

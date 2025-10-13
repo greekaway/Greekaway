@@ -4,4 +4,12 @@
   "admin": {"help":"Geben Sie Admin-Zugangsdaten ein, um Zahlungen und Backup-Status zu sehen.", "loading":"Lädt...", "error":"Fehler:", "backups":"Backups", "refresh":"Aktualisieren"},
   "checkout": {"pay":"Bezahlen","cardPlaceholder":"Kartennummer (4242... für Tests)","title":"Testzahlung","name":"Name","email":"E-Mail","cardLabel":"Karte (Test)"},
   "welcome": {"title":"Willkommen bei Greekaway","subtitle":"Entdecken Sie die besten Tagesausflüge in Griechenland"}
+
+,  "categories": { "mountain": { "title": "Bergtouren" }, "sea": { "title": "Meeresausflüge" }, "culture": { "title": "Kulturelle Ausflüge" } },
+  "stop": { "label": "Stopp {n}" },
+  "trip": { "experienceTitle": "Experience" },
+  "trips": { "selectCategory": "Kategorie wählen", "noneFound": "Keine Ausflüge in dieser Kategorie gefunden." }
+  ,
+  "ui": { "close": "Schließen" },
+  "trips_ui": { "backToCategories": "Zurück zu den Kategorien" }
 }

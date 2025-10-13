@@ -1,31 +1,31 @@
 {
   "id": "lefkas",
-  "title": { "el": "Λευκάδα", "en": "Lefkada", "he": "לֶפְקָדָה" },
+  "title": { "el": "Λευκάδα", "en": "Lefkada", "he": "לֶפְקָדָה", "fr": "Lefkada", "de": "Lefkada" },
   "category": "sea",
-  "description": { "el": "Δύο μέρες στη Λευκάδα: αναχώρηση από Αθήνα, διανυκτέρευση, βόλτες και ολοήμερη κρουαζιέρα στο Νυδρί.", "en": "Two days in Lefkada: depart from Athens, overnight stay, walks and a full-day cruise from Nidri.", "he": "יומיים בלֶפְקָדָה: יציאה מאתונה, לינה, טיולים ושייט יומי מלא מנידרי." },
+  "description": { "el": "Δύο μέρες στη Λευκάδα: αναχώρηση από Αθήνα, διανυκτέρευση, βόλτες και ολοήμερη κρουαζιέρα στο Νυδρί.", "en": "Two days in Lefkada: depart from Athens, overnight stay, walks and a full-day cruise from Nidri.", "he": "יומיים בלֶפְקָדָה: יציאה מאתונה, לינה, טיולים ושייט יומי מלא מנידרי.", "fr": "Deux jours à Lefkada : départ d'Athènes, nuitée, balades et croisière d'une journée depuis Nidri.", "de": "Zwei Tage auf Lefkada: Abfahrt von Athen, Übernachtung, Spaziergänge und eine Ganztagskreuzfahrt ab Nidri." },
   "stops": [
     {
-      "name": { "el": "Ξενοδοχείο Leykada (Άφιξη)", "en": "Leykada Hotel (Arrival)", "he": "מלון לֶפְקָדָה (הגעה)" },
-      "description": { "el": "Άφιξη στο ξενοδοχείο και check-in — ξεκούραση και σύντομη γνωριμία με την περιοχή.", "en": "Arrival at the hotel and check-in — rest and a quick introduction to the area.", "he": "הגעה למלון וצ'ק-אין — מנוחה והיכרות קצרה עם האזור." },
+  "name": { "el": "Ξενοδοχείο Leykada (Άφιξη)", "en": "Leykada Hotel (Arrival)", "he": "מלון לֶפְקָדָה (הגעה)", "fr": "Hôtel Leykada (Arrivée)", "de": "Leykada Hotel (Ankunft)" },
+  "description": { "el": "Άφιξη στο ξενοδοχείο και check-in — ξεκούραση και σύντομη γνωριμία με την περιοχή.", "en": "Arrival at the hotel and check-in — rest and a quick introduction to the area.", "he": "הגעה למלון וצ'ק-אין — מנוחה והיכרות קצרה עם האזור.", "fr": "Arrivée à l'hôtel et enregistrement — repos et brève présentation de la région.", "de": "Ankunft im Hotel und Check-in — Ruhe und kurze Einführung in die Gegend." },
       "video": "https://www.youtube.com/embed/chMPZd-NznM"
     },
     {
-      "name": { "el": "Ξενοδοχείο Καθίσμα (relax)", "en": "Katisma Hotel (relax)", "he": "מלון קאתיסמה (רגיעה)" },
-      "description": { "el": "Εξερεύνηση της περιοχής, παραλία και χαλάρωση στο καθίσμα/ξενοδοχείο.", "en": "Explore the area, beach time and relaxation at the hotel.", "he": "חקירת האזור, חוף ורגיעה במלון." },
+  "name": { "el": "Ξενοδοχείο Καθίσμα (relax)", "en": "Katisma Hotel (relax)", "he": "מלון קאתיסמה (רגיעה)", "fr": "Hôtel Katisma (détente)", "de": "Katisma Hotel (Entspannung)" },
+  "description": { "el": "Εξερεύνηση της περιοχής, παραλία και χαλάρωση στο καθίσμα/ξενοδοχείο.", "en": "Explore the area, beach time and relaxation at the hotel.", "he": "חקירת האזור, חוף ורגיעה במלון.", "fr": "Explorez la région, plage et détente à l'hôtel.", "de": "Erkunden Sie die Gegend, Strandzeit und Entspannung im Hotel." },
       "video": "https://www.youtube.com/embed/2_Cx-D_ozSs"
     },
     {
-      "name": { "el": "Λευκάδα by night", "en": "Lefkada by night", "he": "לֶפְקָדָה בלילה" },
-      "description": { "el": "Βραδινή βόλτα στην πόλη της Λευκάδας — φαγητό και τοπική ατμόσφαιρα.", "en": "Evening stroll in Lefkada town — dinner and local vibe.", "he": "טיול ערב בעיר לֶפְקָדָה — אוכל ואווירה מקומית." },
+  "name": { "el": "Λευκάδα by night", "en": "Lefkada by night", "he": "לֶפְקָדָה בלילה", "fr": "Lefkada by night", "de": "Lefkada by night" },
+  "description": { "el": "Βραδινή βόλτα στην πόλη της Λευκάδας — φαγητό και τοπική ατμόσφαιρα.", "en": "Evening stroll in Lefkada town — dinner and local vibe.", "he": "טיול ערב בעיר לֶפְקָדָה — אוכל ואווירה מקומית.", "fr": "Promenade du soir en ville — dîner et ambiance locale.", "de": "Abendlicher Spaziergang in Lefkada Stadt — Abendessen und lokales Flair." },
       "video": "https://www.youtube.com/embed/cTsy0sOQpvs"
     },
     {
-      "name": { "el": "Νυδρί — Ολοήμερη κρουαζιέρα", "en": "Nidri — Full-day cruise", "he": "נידרי — שייט יומי מלא" },
-      "description": { "el": "Ημέρα κρουαζιέρας από το Νυδρί με στάσεις σε κοντινά νησάκια και κολύμπι.", "en": "A cruise day from Nidri with stops at nearby islets and swimming.", "he": "שייט יומי מנידרי עם עצירות באיים קרובים ושחייה." },
+  "name": { "el": "Νυδρί — Ολοήμερη κρουαζιέρα", "en": "Nidri — Full-day cruise", "he": "נידרי — שייט יומי מלא", "fr": "Nidri — Croisière d'une journée", "de": "Nidri — Ganztägige Kreuzfahrt" },
+  "description": { "el": "Ημέρα κρουαζιέρας από το Νυδρί με στάσεις σε κοντινά νησάκια και κολύμπι.", "en": "A cruise day from Nidri with stops at nearby islets and swimming.", "he": "שייט יומי מנידרי עם עצירות באיים קרובים ושחייה.", "fr": "Journée de croisière depuis Nidri avec arrêts sur des îlots et baignade.", "de": "Kreuzfahrt-Tag ab Nidri mit Stopps an nahegelegenen Inselchen und Baden." },
       "video": "https://www.youtube.com/embed/QjWwZ_NHxDk"
     }
   ],
-  "experience": { "el": "Εμπειρία θάλασσας: δύο μέρες χαλάρωσης στη Λευκάδα, παραλίες, γεύσεις της ακτής και ολοήμερη κρουαζιέρα από το Νυδρί. Ιδανική για ζευγάρια και μικρές παρέες.", "en": "Sea experience: two days relaxing in Lefkada, beaches, coastal flavors and a full-day cruise from Nidri. Ideal for couples and small groups.", "he": "חוויה ימית: יומיים של רגיעה בלֶפְקָדָה, חופים, טעמים מקומיים ושייט יומי מנידרי. אידיאלי לזוגות וקבוצות קטנות." },
+  "experience": { "el": "Εμπειρία θάλασσας: δύο μέρες χαλάρωσης στη Λευκάδα, παραλίες, γεύσεις της ακτής και ολοήμερη κρουαζιέρα από το Νυδρί. Ιδανική για ζευγάρια και μικρές παρέες.", "en": "Sea experience: two days relaxing in Lefkada, beaches, coastal flavors and a full-day cruise from Nidri. Ideal for couples and small groups.", "he": "חוויה ימית: יומיים של רגיעה בלֶפְקָדָה, חופים, טעמים מקומיים ושייט יומי מנידרי. אידיאלי לזוגות וקבוצות קטנות.", "fr": "Expérience marine : deux jours de détente à Lefkada, plages et croisière d'une journée depuis Nidri. Idéal pour les couples et petits groupes.", "de": "Meer-Erlebnis: zwei Tage Entspannung auf Lefkada, Strände, Küstenküche und Ganztagskreuzfahrt ab Nidri. Ideal für Paare und kleine Gruppen." },
   "map": {
     "center": { "lat": 38.8340, "lng": 20.7050 },
     "zoom": 8,

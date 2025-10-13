@@ -10,6 +10,19 @@ const G = {
   error: (...a) => { if (G.debug) console.error(...a); }
 };
 
+// Global i18n helpers used by multiple blocks
+function getCurrentLang() {
+  return (window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el';
+}
+
+function getLocalized(field) {
+  const currentLang = getCurrentLang();
+  if (!field) return '';
+  if (typeof field === 'string') return field; // legacy single-language
+  if (typeof field === 'object') return field[currentLang] || field['el'] || Object.values(field)[0] || '';
+  return '';
+}
+
 // ---------- [A] Λίστα Κατηγοριών (trips.html) ----------
 document.addEventListener("DOMContentLoaded", () => {
   const categoriesContainer = document.getElementById("categories-container");
@@ -29,18 +42,25 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.className = "category-btn";
 
   // ΜΟΝΟ η εικόνα (ο τίτλος υπάρχει ήδη πάνω στην ίδια την εικόνα)
-  btn.innerHTML = `<img src="${cat.image}" alt="${cat.title}">`;
+  const catTitle = getLocalized(cat.title) || '';
+  btn.innerHTML = `<img src="${cat.image}" alt="${catTitle}"><span class="cat-label">${catTitle}</span>`;
   // expose category id for styling and accessibility
   btn.dataset.cat = cat.id;
   btn.classList.add(`cat-${cat.id}`);
-  btn.title = cat.title;
+  btn.title = catTitle;
 
         btn.addEventListener("click", () => {
           // Μετάβαση στη σελίδα της κατηγορίας
           window.location.href = `/categories/${cat.id}.html`;
         });
 
+        // Apply cinematic entrance for the three main categories (sea, mountain, culture)
         categoriesContainer.appendChild(btn);
+        if (['sea','mountain','culture'].includes(cat.id)) {
+          // tiny stagger so entrance feels natural
+          const delay = (['sea','mountain','culture'].indexOf(cat.id) * 100) + 90;
+          setTimeout(() => btn.classList.add('cinematic'), delay);
+        }
       });
     })
   .catch(err => G.error("Σφάλμα φόρτωσης κατηγοριών:", err));
@@ -65,12 +85,27 @@ document.addEventListener("DOMContentLoaded", () => {
         .forEach(trip => {
           const card = document.createElement("div");
           card.className = "trip-card";
+          // expose trip id so we can target specific cards (e.g. lefkas) with CSS
+          card.dataset.tripId = trip.id;
+          // If this is the Lefkada card, force the dark navy inline to avoid stylesheet overrides
+          if (trip.id === 'lefkas') {
+            // use setProperty with priority 'important' so it's inline-important
+            card.style.setProperty('background-color', '#0E1520', 'important');
+            card.style.setProperty('background-image', 'none', 'important');
+            // inset 1px mask plus slightly stronger outer depth shadow to balance perceived tone
+            card.style.setProperty('box-shadow', 'inset 0 0 0 1px #0E1520, 0 6px 18px rgba(0,0,0,0.48)', 'important');
+            card.style.setProperty('filter', 'none', 'important');
+            card.style.setProperty('backdrop-filter', 'none', 'important');
+            card.style.setProperty('border', 'none', 'important');
+            // (already applied above) subtle outer shadow + inset mask applied to blend perfectly
+            card.style.setProperty('outline', 'none', 'important');
+          }
           // If this is the olympia, lefkas, or parnassos trip, add the logo-pop animation class
           if (trip.id === 'olympia' || trip.id === 'lefkas' || trip.id === 'parnassos') card.classList.add('logo-pop');
           // add category metadata so we can style per-category
           card.dataset.cat = trip.category || category;
           card.classList.add(`cat-${trip.category || category}`);
-          card.innerHTML = `<h3>${trip.title}</h3>`;
+          card.innerHTML = `<h3>${getLocalized(trip.title)}</h3>`;
           card.addEventListener("click", () => {
             // Mark this trip so the destination page can show a persistent highlight
             try { sessionStorage.setItem('highlightTrip', trip.id); } catch(e) {}
@@ -81,8 +116,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
       if (!tripsContainer.children.length) {
-        tripsContainer.innerHTML =
-          "<p>Δεν βρέθηκαν εκδρομές σε αυτή την κατηγορία.</p>";
+        const noTrips = (window.t && typeof window.t === 'function') ? window.t('trips.noneFound') : 'No trips found in this category.';
+        tripsContainer.innerHTML = `<p>${noTrips}</p>`;
       }
     })
   .catch(err => G.error("Σφάλμα tripindex:", err));
@@ -142,50 +177,60 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         // indicate this is an individual trip view so CSS can target it
         document.body.dataset.view = 'trip';
-      // Determine current language (from i18n module or localStorage fallback)
-      const currentLang = (window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el';
 
-      function getLocalized(field){
-        if(!field) return '';
-        if(typeof field === 'string') return field; // legacy single-language
-        if(typeof field === 'object') return field[currentLang] || field['el'] || Object.values(field)[0] || '';
-        return '';
+      // store loaded trip and render localized fields via a function so we can re-render on language change
+      window.__loadedTrip = trip;
+
+      function renderTripLocalized() {
+        const t = window.__loadedTrip || trip;
+        if (!t) return;
+        if (titleEl) titleEl.textContent = getLocalized(t.title) || "";
+        if (descEl) descEl.textContent = getLocalized(t.description) || "";
+
+        const stopsWrap = document.getElementById("stops");
+        if (!stopsWrap) return;
+        stopsWrap.innerHTML = "";
+        (t.stops || []).forEach((stop, i) => {
+          const stopEl = document.createElement("div");
+          // use video-card so CSS applies rounded card, padding and shadow
+          stopEl.className = "trip-stop video-card";
+          const stopLabelTemplate = (window.t && typeof window.t === 'function') ? window.t('stop.label') : 'Stop {n}';
+          const stopLabel = stopLabelTemplate.replace('{n}', String(i + 1));
+          stopEl.innerHTML = `
+            <h3 class="stop-title">${stopLabel}: ${getLocalized(stop.name) || ""}</h3>
+            <div class="video-wrap">
+              <iframe
+                src="${stop.video}"
+                title="${getLocalized(stop.name) || "video"}"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+                width="100%"
+                height="315">
+              </iframe>
+            </div>
+            <p class="stop-description">${getLocalized(stop.description) || ""}</p>
+          `;
+          stopsWrap.appendChild(stopEl);
+        });
+
+        // Render experience description below the last video on mobile
+        if (t.experience) {
+          const expEl = document.createElement('div');
+          expEl.className = 'trip-experience card video-card';
+          const expTitle = (window.t && typeof window.t === 'function') ? window.t('trip.experienceTitle') : 'Experience';
+          expEl.innerHTML = `<h3 class="stop-title">${expTitle}</h3><p>${getLocalized(t.experience)}</p>`;
+          stopsWrap.appendChild(expEl);
+        }
       }
 
-      if (titleEl) titleEl.textContent = getLocalized(trip.title) || "";
-      if (descEl) descEl.textContent = getLocalized(trip.description) || "";
+      // initial render
+      renderTripLocalized();
 
-      const stopsWrap = document.getElementById("stops");
-      stopsWrap.innerHTML = "";
-      (trip.stops || []).forEach((stop, i) => {
-        const stopEl = document.createElement("div");
-        stopEl.className = "trip-stop";
-        stopEl.innerHTML = `
-          <h3>Στάση ${i + 1}: ${getLocalized(stop.name) || ""}</h3>
-          <div class="video-box">
-            <iframe
-              src="${stop.video}"
-              title="${stop.name || "video"}"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-              width="100%"
-              height="315">
-            </iframe>
-          </div>
-          <p class="stop-description">${getLocalized(stop.description) || ""}</p>
-        `;
-        stopsWrap.appendChild(stopEl);
+      // listen for language changes and re-render localized content
+      window.addEventListener('i18n:changed', () => {
+        try{ renderTripLocalized(); } catch(e){ G.error('i18n render failed', e); }
       });
-
-      // Render experience description below the last video on mobile
-      if (trip.experience) {
-        const expEl = document.createElement('div');
-        expEl.className = 'trip-experience card';
-        expEl.innerHTML = `<h3>Εμπειρία</h3><p>${getLocalized(trip.experience)}</p>`;
-        // Append to stops column (on mobile it will appear after videos). On desktop layout it's fine
-        stopsWrap.appendChild(expEl);
-      }
 
       if (trip.map && trip.map.waypoints && trip.map.waypoints.length >= 2) {
         ensureGoogleMaps(() => renderRoute(trip.map));

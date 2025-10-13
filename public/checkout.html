@@ -21,7 +21,7 @@
   </div>
   <main>
     <div style="display:flex;align-items:center;justify-content:flex-start;gap:12px;margin-bottom:1rem;">
-      <button type="button" class="back-btn three-d" onclick="history.back()" aria-label="Πίσω" style="position:relative;left:0;">
+      <button type="button" class="back-btn three-d" onclick="history.back()" data-i18n-aria="ui.close" style="position:relative;left:0;">
         <i class="fas fa-arrow-left"></i>
       </button>
       <div style="display:flex;flex-direction:column;">
@@ -29,7 +29,7 @@
   <h1 style="margin:0;font-size:1.25rem" data-i18n="checkout.title">Δοκιμαστικό Ταμείο</h1>
       </div>
     </div>
-  <p>Αυτό είναι ένα δοκιμαστικό ταμείο. Δεν θα γίνει πραγματική χρέωση.</p>
+  <p data-i18n="checkout.notice">Αυτό είναι ένα δοκιμαστικό ταμείο. Δεν θα γίνει πραγματική χρέωση.</p>
 
     <form id="checkoutForm">
       <!-- Payment Request Button (Apple Pay / Google Pay) will mount here when available -->
@@ -46,7 +46,7 @@
   <label data-i18n="checkout.cardLabel">Κάρτα (δοκιμή)</label>
   <input name="card" type="text" data-i18n-placeholder="checkout.cardPlaceholder" placeholder="4242 4242 4242 4242">
       </div>
-  <button class="btn" type="submit">Πλήρωσε (δοκιμή)</button>
+  <button class="btn" type="submit" data-i18n-value="checkout.pay">Πλήρωσε (δοκιμή)</button>
     </form>
 
     <div id="result" class="result" aria-live="polite" style="display:none;"></div>

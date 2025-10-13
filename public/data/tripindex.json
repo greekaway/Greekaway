@@ -1,19 +1,19 @@
 [
   {
     "id": "olympia",
-    "title": { "el": "Αρχαία Ολυμπία", "en": "Ancient Olympia", "he": "אולימפיה העתיקה" },
+    "title": { "el": "Αρχαία Ολυμπία", "en": "Ancient Olympia", "he": "אולימפיה העתיקה", "fr": "Olympie ancienne", "de": "Antikes Olympia" },
     "category": "culture"
   }
   ,
   {
     "id": "lefkas",
-    "title": { "el": "Λευκάδα", "en": "Lefkada", "he": "לֶפְקָדָה" },
+    "title": { "el": "Λευκάδα", "en": "Lefkada", "he": "לֶפְקָדָה", "fr": "Lefkada", "de": "Lefkada" },
     "category": "sea"
   }
   ,
   {
     "id": "parnassos",
-    "title": { "el": "Πάρνασος & Δελφοί", "en": "Parnassos & Delphi", "he": "פארנאסוס ודלפי" },
+    "title": { "el": "Πάρνασος & Δελφοί", "en": "Parnassos & Delphi", "he": "פארנאסוס ודלפי", "fr": "Parnasse & Delphes", "de": "Parnassos und Delphi" },
     "category": "mountain"
   }
 ]

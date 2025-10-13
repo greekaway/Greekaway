@@ -6,7 +6,7 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #1e2b3a;
+  background: var(--site-gradient);
   color: #ecf0f1;
   text-align: center;
   padding-bottom: 80px; /* χώρος για footer */
@@ -25,6 +25,9 @@ html, body { min-height: 100%; }
   --culture-2: 255,200,121; /* culture secondary */
   --tile-overlay-opacity: 0.14;
   --footer-offset: 80px; /* space reserved for fixed footer so overlays don't cover it */
+  /* unified site gradient colors (home / all pages) */
+  --site-gradient: linear-gradient(180deg, #1B2A3A 0%, #223345 100%);
+  --site-bg-color: #1B2A3A;
 }
 
 /* -------- Καλωσόρισμα -------- */
@@ -359,8 +362,9 @@ body.rtl footer {
 /* ===== Category page panel (as in screenshot) ===== */
 /* only apply the navy panel when we're on the category listing (not the trip page) */
 body[data-category][data-view="category"] {
-  background-color: #162630; /* deep navy */
-  color: #f1f5f8;
+  background-image: var(--site-gradient);
+  background-color: var(--site-bg-color);
+  color: #ecf0f1;
 }
 
 /* Emergency overrides: ensure no container paints a white background over the page
@@ -372,8 +376,8 @@ body[data-category][data-view="category"] {
    many !important usages while keeping the look identical. */
 html[data-category="culture"][data-view="category"],
 body[data-category="culture"][data-view="category"] {
-  background-color: #162630;
-  background-image: none;
+  background-image: var(--site-gradient);
+  background-color: var(--site-bg-color);
 }
 
 /* Ensure main containers remain transparent on the culture listing by
@@ -398,24 +402,27 @@ body[data-category="culture"][data-view="category"] h2 {
    deep navy backdrop for the trip page; specificity above avoids !important. */
 html[data-category="culture"][data-view="trip"],
 body[data-category="culture"][data-view="trip"] {
-  background-color: #162630;
-  color: #f1f5f8;
+  background-image: var(--site-gradient);
+  background-color: var(--site-bg-color);
+  color: #ecf0f1;
 }
 
 /* For sea trips, use a nautical navy background on the trip page so the
    layout reads as part of the 'sea' theme (darker than the listing gradient). */
 html[data-category="sea"][data-view="trip"],
 body[data-category="sea"][data-view="trip"] {
-  background-color: #08324a; /* nautical navy */
-  background-image: linear-gradient(180deg, rgba(8,50,74,0.98), rgba(8,50,74,0.98));
-  color: #f1f5f8; /* light text for contrast */
+  /* use the exact site gradient used on the home page */
+  background-image: var(--site-gradient);
+  background-color: var(--site-bg-color);
+  color: #ecf0f1;
 }
 
 /* Explicit navy override class for special trips (e.g. olympia) */
 body.navy-bg, html.navy-bg {
-  background-color: #08324a !important;
-  background-image: linear-gradient(180deg, rgba(8,50,74,0.98), rgba(8,50,74,0.98)) !important;
-  color: #f1f5f8 !important;
+  /* Explicit navy override but use unified site gradient for consistency */
+  background-color: var(--site-bg-color) !important;
+  background-image: var(--site-gradient) !important;
+  color: #ecf0f1 !important;
 }
 
 /* Page title */
@@ -551,6 +558,42 @@ body[data-category] h2 {
   display: block;
 }
 
+/* Cinematic entrance for main category tiles (zoom + fade + deblur) */
+@keyframes cinematicEntrance {
+  0% {
+    transform: scale(0.92);
+    opacity: 0;
+    filter: blur(6px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(2px);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.category-btn.cinematic {
+  will-change: transform, opacity, filter;
+  transform: scale(0.92);
+  opacity: 0;
+  filter: blur(6px);
+  animation: cinematicEntrance 820ms cubic-bezier(.22,.9,.32,1) both;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .category-btn.cinematic {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+}
+
 /* colorful overlay + hover glow for category tiles */
 .category-btn::before {
   content: "";
@@ -668,22 +711,19 @@ body[data-category] h2 {
 
 /* Per-page background based on category */
 body[data-category="sea"] {
-  background-color: rgba(var(--sea-1), 0.06);
-  background-image: linear-gradient(180deg, rgba(var(--sea-1), 0.06), rgba(var(--sea-2), 0.02));
-  background-blend-mode: overlay;
-  color: #222; /* darker text on light-ish category backgrounds */
+  background-image: var(--site-gradient);
+  background-color: var(--site-bg-color);
+  color: #ecf0f1;
 }
 body[data-category="mountain"] {
-  background-color: rgba(var(--mountain-1), 0.06);
-  background-image: linear-gradient(180deg, rgba(var(--mountain-1), 0.06), rgba(var(--mountain-2), 0.02));
-  background-blend-mode: overlay;
-  color: #222;
+  background-image: var(--site-gradient);
+  background-color: var(--site-bg-color);
+  color: #ecf0f1;
 }
 body[data-category="culture"] {
-  background-color: rgba(var(--culture-1), 0.06);
-  background-image: linear-gradient(180deg, rgba(var(--culture-1), 0.06), rgba(var(--culture-2), 0.02));
-  background-blend-mode: overlay;
-  color: #222;
+  background-image: var(--site-gradient);
+  background-color: var(--site-bg-color);
+  color: #ecf0f1;
 }
 
 /* ensure html also inherits background (some browsers) */
@@ -729,19 +769,16 @@ html[data-category="culture"], body[data-category="culture"] { background-attach
    backgrounds and intentionally omit !important because selector specificity
    is sufficient in normal pages. */
 html[data-category="sea"], body[data-category="sea"] {
-  background-color: rgba(var(--sea-1), 0.06);
-  background-image: linear-gradient(180deg, rgba(var(--sea-1), 0.06), rgba(var(--sea-2), 0.02));
-  background-blend-mode: overlay;
+  background-image: var(--site-gradient);
+  background-color: var(--site-bg-color);
 }
 html[data-category="mountain"], body[data-category="mountain"] {
-  background-color: rgba(var(--mountain-1), 0.06);
-  background-image: linear-gradient(180deg, rgba(var(--mountain-1), 0.06), rgba(var(--mountain-2), 0.02));
-  background-blend-mode: overlay;
+  background-image: var(--site-gradient);
+  background-color: var(--site-bg-color);
 }
 html[data-category="culture"], body[data-category="culture"] {
-  background-color: rgba(var(--culture-1), 0.06);
-  background-image: linear-gradient(180deg, rgba(var(--culture-1), 0.06), rgba(var(--culture-2), 0.02));
-  background-blend-mode: overlay;
+  background-image: var(--site-gradient);
+  background-color: var(--site-bg-color);
 }
 
 /* Micro-zoom for culture tiles: small, subtle lift and scale then revert */

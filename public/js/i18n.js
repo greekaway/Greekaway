@@ -56,6 +56,12 @@
       const text = lookup(msgs, key);
       if(text) el.setAttribute('title', text);
     });
+    // aria-label attributes
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+      const key = el.getAttribute('data-i18n-aria');
+      const text = lookup(msgs, key);
+      if(text) el.setAttribute('aria-label', text);
+    });
     // value for buttons/inputs
     document.querySelectorAll('[data-i18n-value]').forEach(el => {
       const key = el.getAttribute('data-i18n-value');
@@ -76,6 +82,9 @@
     const isRtl = RTL_LANGS.includes(lang);
     try{ document.documentElement.dir = isRtl ? 'rtl' : 'ltr'; document.body.classList.toggle('rtl', isRtl); } catch(e){}
     window.currentI18n = { lang, msgs };
+    try{
+      window.dispatchEvent(new CustomEvent('i18n:changed', { detail: { lang, msgs } }));
+    }catch(e){}
   }
 
   // init on DOM ready (run immediately if DOM already loaded)
@@ -105,6 +114,9 @@
     window.currentI18n = { lang, msgs };
     // expose setter
     window.setLanguage = setLanguage;
+    try{
+      window.dispatchEvent(new CustomEvent('i18n:changed', { detail: { lang, msgs } }));
+    }catch(e){}
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initI18n);

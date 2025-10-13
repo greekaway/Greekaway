@@ -1,7 +1,7 @@
 {
   "id": "olympia",
-  "title": { "el": "Αρχαία Ολυμπία", "en": "Ancient Olympia", "he": "אולימפיה העתיקה" },
-  "description": { "el": "Ανακαλύψτε τη γενέτειρα των Ολυμπιακών Αγώνων, έναν από τους πιο σημαντικούς αρχαιολογικούς χώρους της Ελλάδας.", "en": "Discover the birthplace of the Olympic Games, one of Greece's most important archaeological sites.", "he": "גלה את מקום הולדת המשחקים האולימפיים, אחד האתרים הארכאולוגיים החשובים ביוון." },
+  "title": { "el": "Αρχαία Ολυμπία", "en": "Ancient Olympia", "he": "אולימפיה העתיקה", "fr": "Olympie ancienne", "de": "Antikes Olympia" },
+  "description": { "el": "Ανακαλύψτε τη γενέτειρα των Ολυμπιακών Αγώνων, έναν από τους πιο σημαντικούς αρχαιολογικούς χώρους της Ελλάδας.", "en": "Discover the birthplace of the Olympic Games, one of Greece's most important archaeological sites.", "he": "גלה את מקום הולדת המשחקים האולימפיים, אחד האתרים הארכאולוגיים החשובים ביוון.", "fr": "Découvrez le berceau des Jeux olympiques, l'un des sites archéologiques les plus importants de Grèce.", "de": "Entdecken Sie die Geburtsstätte der Olympischen Spiele, eine der wichtigsten archäologischen Stätten Griechenlands." },
   "map": {
     "center": { "lat": 37.64, "lng": 21.63 },
     "zoom": 7,
@@ -14,21 +14,21 @@
   },
   "stops": [
     {
-      "name": { "el": "Αρχαία Κόρινθος", "en": "Ancient Corinth", "he": "קורינתוס העתיקה" },
+  "name": { "el": "Αρχαία Κόρινθος", "en": "Ancient Corinth", "he": "קורינתוס העתיקה", "fr": "Corinthe ancienne", "de": "Antikes Korinth" },
       "video": "https://www.youtube.com/embed/uGHGkqogFlI",
-      "description": { "el": "Η πρώτη στάση της διαδρομής, όπου θα γνωρίσετε τον αρχαιολογικό χώρο και το Ακροκόρινθο.", "en": "The first stop where you'll explore the archaeological site of Ancient Corinth.", "he": "התחנה הראשונה שבה תכירו את האתר הארכאולוגי של קורינתוס העתיקה." }
+  "description": { "el": "Η πρώτη στάση της διαδρομής, όπου θα γνωρίσετε τον αρχαιολογικό χώρο και το Ακροκόρινθο.", "en": "The first stop where you'll explore the archaeological site of Ancient Corinth.", "he": "התחנה הראשונה שבה תכירו את האתר הארכאולוגי של קורינתוס העתיקה.", "fr": "Première étape : exploration du site archéologique de la Corinthe antique.", "de": "Erster Halt: Erkundung der archäologischen Stätte des antiken Korinth." }
     },
     {
-      "name": { "el": "Καλαμάτα", "en": "Kalamata", "he": "קלמאטה" },
+  "name": { "el": "Καλαμάτα", "en": "Kalamata", "he": "קלמאטה", "fr": "Kalamata", "de": "Kalamata" },
       "video": "https://www.youtube.com/embed/PK93H44gFj8",
-      "description": { "el": "Η δεύτερη στάση περιλαμβάνει περιήγηση στο ιστορικό κέντρο και γεύμα με θέα στη Μεσσηνιακή θάλασσα.", "en": "The second stop includes a tour of the historic center and a meal overlooking the Messenian Gulf.", "he": "התחנה השנייה כוללת סיור במרכז ההיסטורי וארוחה המשקיפה על המפרץ המסיני." }
+  "description": { "el": "Η δεύτερη στάση περιλαμβάνει περιήγηση στο ιστορικό κέντρο και γεύμα με θέα στη Μεσσηνιακή θάλασσα.", "en": "The second stop includes a tour of the historic center and a meal overlooking the Messenian Gulf.", "he": "התחנה השנייה כוללת סיור במרכז ההיסטורי וארוחה המשקיפה על המפרץ המסיני.", "fr": "Deuxième étape : visite du centre historique et déjeuner avec vue sur le golfe Messénien.", "de": "Zweiter Halt: Führung durch das historische Zentrum und Mittagessen mit Blick auf den Messenischen Golf." }
     },
     {
-      "name": { "el": "Αρχαία Ολυμπία", "en": "Ancient Olympia", "he": "אולימפיה העתיקה" },
+  "name": { "el": "Αρχαία Ολυμπία", "en": "Ancient Olympia", "he": "אולימפיה העתיקה", "fr": "Olympie ancienne", "de": "Antikes Olympia" },
       "video": "https://www.youtube.com/embed/8VGroEdeZzo",
-      "description": { "el": "Η τελική στάση στον ιερό χώρο των Ολυμπιακών Αγώνων, με επίσκεψη στο μουσείο και στο στάδιο.", "en": "The final stop at the sacred site of the Olympic Games, including the museum and the stadium.", "he": "התחנה הסופית באתר הקדוש של המשחקים האולימפיים, כולל המוזיאון והאצטדיון." }
+  "description": { "el": "Η τελική στάση στον ιερό χώρο των Ολυμπιακών Αγώνων, με επίσκεψη στο μουσείο και στο στάδιο.", "en": "The final stop at the sacred site of the Olympic Games, including the museum and the stadium.", "he": "התחנה הסופית באתר הקדוש של המשחקים האולימפיים, כולל המוזיאון והאצטדיון.", "fr": "Dernière étape : site sacré des Jeux, visite du musée et du stade.", "de": "Letzter Halt: heiliger Ort der Olympischen Spiele, einschließlich Museum und Stadion." }
     }
   ]
   ,
-  "experience": { "el": "Μοναδική εμπειρία: ξεκινάμε από Αθήνα, βιώνουμε την ιστορία της Αρχαίας Ελλάδας, γευόμαστε τοπική κουζίνα και περπατάμε σε ιστορικά μνημεία. Ιδανική εκδρομή 2 ημερών με πολιτιστικό ενδιαφέρον.", "en": "A unique experience: start from Athens, explore Ancient Greece's history, taste local cuisine and walk through historic monuments. Ideal 2-day cultural trip.", "he": "חוויה ייחודית: מתחילים מאתונה, חווים את היסטוריית יוון העתיקה, טועמים מאכלים מקומיים ומשוטטים באתרים היסטוריים. טיול אידיאלי של יומיים עם עניין תרבותי." }
+  "experience": { "el": "Μοναδική εμπειρία: ξεκινάμε από Αθήνα, βιώνουμε την ιστορία της Αρχαίας Ελλάδας, γευόμαστε τοπική κουζίνα και περπατάμε σε ιστορικά μνημεία. Ιδανική εκδρομή 2 ημερών με πολιτιστικό ενδιαφέρον.", "en": "A unique experience: start from Athens, explore Ancient Greece's history, taste local cuisine and walk through historic monuments. Ideal 2-day cultural trip.", "he": "חוויה ייחודית: מתחילים מאתונה, חווים את היסטוריית יוון העתיקה, טועמים מאכלים מקומיים ומשוטטים באתרים היסטוריים. טיול אידיאלי של יומיים עם עניין תרבותי.", "fr": "Une expérience unique : départ d'Athènes, exploration de l'histoire de la Grèce antique, dégustation de la cuisine locale et promenade dans des monuments historiques. Idéal pour un séjour culturel de 2 jours.", "de": "Ein einzigartiges Erlebnis: Start in Athen, Erkundung der Geschichte des antiken Griechenlands, Verkostung lokaler Küche und Spaziergänge durch historische Denkmäler. Ideal für eine zweitägige Kulturtour." }
 }

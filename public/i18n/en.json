@@ -26,10 +26,23 @@
     "payment_failed": "Payment failed",
     "payment_success_test": "Payment successful (test)",
     "mock_complete": "Completed (mock)",
-    "network_error": "Network error"
+    "network_error": "Network error",
+    "info": "The payment form will appear here."
   },
   "welcome":{
     "title":"Welcome to Greekaway",
-    "subtitle":"Discover the best day trips across Greece"
+    "subtitle":"Discover the best day trips across Greece",
+    "ask": "Ask us anything about your trip!"
   }
+  ,
+  "categories": { "mountain": { "title": "Mountain Trips" }, "sea": { "title": "Sea Trips" }, "culture": { "title": "Culture Trips" } },
+  "stop": { "label": "Stop {n}" }
+  ,
+  "trip": { "experienceTitle": "Experience" }
+  ,
+  "trips": { "selectCategory": "Select Category", "noneFound": "No trips found in this category." }
+  ,
+  "ui": { "close": "Close" },
+  "trips_ui": { "backToCategories": "Back to categories" },
+  "profile": { "info": "Here you'll see your past trips and bookings." }
 }

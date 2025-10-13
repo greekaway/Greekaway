@@ -16,7 +16,7 @@
 
 <body>
   <!-- Back to categories button (appears on trip view) -->
-  <button id="backToCatsBtn" class="back-btn" aria-label="Πίσω στις κατηγορίες" style="display:none;">
+  <button id="backToCatsBtn" class="back-btn" data-i18n-aria="trips_ui.backToCategories" style="display:none;">
     <i class="fas fa-arrow-left"></i>
   </button>
   <!-- Περιεχόμενο εκδρομής -->
@@ -32,24 +32,24 @@
   <div id="aiOverlay" class="overlay" role="dialog" aria-modal="true">
     <button class="close-overlay" onclick="closeOverlay('aiOverlay')" aria-label="Κλείσιμο">×</button>
     <div class="overlay-inner">
-      <h2>AI Assistant</h2>
-      <p>Ρωτήστε μας ό,τι θέλετε για την εκδρομή σας!</p>
+      <h2 data-i18n="nav.ai">AI Assistant</h2>
+        <p data-i18n="welcome.ask">Ρωτήστε μας ό,τι θέλετε για την εκδρομή σας!</p>
     </div>
   </div>
 
   <div id="profileOverlay" class="overlay" role="dialog" aria-modal="true">
     <button class="close-overlay" onclick="closeOverlay('profileOverlay')" aria-label="Κλείσιμο">×</button>
     <div class="overlay-inner">
-      <h2>Το Προφίλ μου</h2>
-      <p>Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας.</p>
+      <h2 data-i18n="nav.profile">Το Προφίλ μου</h2>
+        <p data-i18n="profile.info">Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας.</p>
     </div>
   </div>
 
   <div id="paymentOverlay" class="overlay" role="dialog" aria-modal="true">
     <button class="close-overlay" onclick="closeOverlay('paymentOverlay')" aria-label="Κλείσιμο">×</button>
     <div class="overlay-inner">
-      <h2>Πληρωμή</h2>
-      <p>Η φόρμα πληρωμής θα εμφανίζεται εδώ.</p>
+      <h2 data-i18n="nav.checkout">Πληρωμή</h2>
+        <p data-i18n="checkout.info">Η φόρμα πληρωμής θα εμφανίζεται εδώ.</p>
     </div>
   </div>
 
