@@ -78,8 +78,8 @@
     window.currentI18n = { lang, msgs };
   }
 
-  // init on DOM ready
-  document.addEventListener('DOMContentLoaded', async () => {
+  // init on DOM ready (run immediately if DOM already loaded)
+  async function initI18n(){
     const lang = detectLang();
     // populate selector if present (with flags)
     const sel = document.getElementById('langSelect');
@@ -96,15 +96,19 @@
         }
       }
       sel.value = lang;
-      sel.addEventListener('change', (e) => setLanguage(e.target.value));
-      sel.style.fontSize = '14px'; sel.style.padding = '4px 8px'; sel.style.height = '32px';
+      // attach the change listener explicitly after the element exists
+      document.getElementById('langSelect').addEventListener('change', e => setLanguage(e.target.value));
+      sel.style.fontSize = '14px'; sel.style.padding = '4px 8px'; sel.style.height = '34px';
     }
     const msgs = await loadMessages(lang);
     applyTranslations(msgs);
     window.currentI18n = { lang, msgs };
     // expose setter
     window.setLanguage = setLanguage;
-  });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initI18n);
+  else initI18n();
 
   // helper to translate programmatically
   window.t = function(key){
