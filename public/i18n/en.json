@@ -1,0 +1,6 @@
+{
+  "siteTitle": "Greekaway",
+  "nav": {"home":"Home","trips":"Trips","checkout":"Checkout","admin":"Admin"},
+  "admin": {"title":"Admin Payments","downloadCsv":"Download CSV","filter":"Filter","status":"Status","amount":"Amount"},
+  "checkout": {"pay":"Pay","cardPlaceholder":"Card number (4242... for tests)"}
+}

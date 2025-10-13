@@ -29,8 +29,11 @@
   </style>
 </head>
 <body>
+  <div style="position:fixed;top:8px;right:12px;z-index:999">
+    <select id="langSelect" aria-label="Language"></select>
+  </div>
   <h2>Διαχείριση Greekaway</h2>
-  <p>Βάλε τα διαπιστευτήρια διαχειριστή για να δεις τις πληρωμές και την κατάσταση αντιγράφων ασφαλείας.</p>
+  <p data-i18n="admin.help">Βάλε τα διαπιστευτήρια διαχειριστή για να δεις τις πληρωμές και την κατάσταση αντιγράφων ασφαλείας.</p>
   <form id="auth">
     <label>User <input id="user" type="text" value="admin" /></label>
     <label>Pass <input id="pass" type="password" /></label>
@@ -39,8 +42,8 @@
 
   <div id="main" style="display:none">
     <div class="col">
-  <h3>Κατάσταση αντιγράφων</h3>
-  <button id="refreshBackup">Ανανέωση</button>
+  <h3 data-i18n="admin.backups">Κατάσταση αντιγράφων</h3>
+  <button id="refreshBackup" data-i18n-value="admin.refresh">Ανανέωση</button>
   <div id="backup" style="margin-top:8px;color:#333;line-height:1.4"></div>
     </div>
     <div class="col">

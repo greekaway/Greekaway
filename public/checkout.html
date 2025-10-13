@@ -16,14 +16,17 @@
   </style>
 </head>
 <body>
+  <div style="position:fixed;top:8px;right:12px;z-index:999">
+    <select id="langSelect" aria-label="Language"></select>
+  </div>
   <main>
     <div style="display:flex;align-items:center;justify-content:flex-start;gap:12px;margin-bottom:1rem;">
       <button type="button" class="back-btn three-d" onclick="history.back()" aria-label="Πίσω" style="position:relative;left:0;">
         <i class="fas fa-arrow-left"></i>
       </button>
       <div style="display:flex;flex-direction:column;">
-  <small style="color:rgba(255,255,255,0.6);font-size:0.8rem;">Επιστροφή</small>
-  <h1 style="margin:0;font-size:1.25rem">Δοκιμαστικό Ταμείο</h1>
+  <small style="color:rgba(255,255,255,0.6);font-size:0.8rem;" data-i18n="nav.home">Επιστροφή</small>
+  <h1 style="margin:0;font-size:1.25rem" data-i18n="checkout.title">Δοκιμαστικό Ταμείο</h1>
       </div>
     </div>
   <p>Αυτό είναι ένα δοκιμαστικό ταμείο. Δεν θα γίνει πραγματική χρέωση.</p>
@@ -32,16 +35,16 @@
       <!-- Payment Request Button (Apple Pay / Google Pay) will mount here when available -->
       <div id="payment-request-container" style="display:none;margin-bottom:1rem;"></div>
       <div class="form-row">
-        <label>Όνομα</label>
+  <label data-i18n="checkout.name">Όνομα</label>
         <input name="name" type="text" required>
       </div>
       <div class="form-row">
-        <label>Email</label>
+  <label data-i18n="checkout.email">Email</label>
         <input name="email" type="email" required>
       </div>
       <div class="form-row">
-  <label>Κάρτα (δοκιμή)</label>
-  <input name="card" type="text" placeholder="4242 4242 4242 4242">
+  <label data-i18n="checkout.cardLabel">Κάρτα (δοκιμή)</label>
+  <input name="card" type="text" data-i18n-placeholder="checkout.cardPlaceholder" placeholder="4242 4242 4242 4242">
       </div>
   <button class="btn" type="submit">Πλήρωσε (δοκιμή)</button>
     </form>
