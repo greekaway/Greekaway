@@ -328,8 +328,8 @@ footer a.central-btn:hover i {
    =============================== */
 
 /* Categories container: use responsive grid so items flow into columns */
-/* Categories shown as app-like square icons */
-#categories-container {
+  margin: 0;
+  font-family: Arial, sans-serif;
   display: grid;
   /* small app-icons by default (mobile) */
   grid-template-columns: repeat(auto-fit, 80px);
@@ -337,6 +337,14 @@ footer a.central-btn:hover i {
   padding: 36px 12px 100px;
   justify-content: center;
   justify-items: center;
+/* RTL support when Hebrew or other RTL language is selected */
+.rtl {
+  direction: rtl !important;
+}
+
+/* language selector styling: flags + text appear in the option text (emoji) */
+#langSelect { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+#langSelect option { padding: 2px 6px; }
   align-items: start;
   max-width: 1200px;
   margin: 0 auto;

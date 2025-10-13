@@ -1,0 +1,6 @@
+{
+  "siteTitle": "Greekaway",
+  "nav": {"home":"בית","trips":"טיולים","checkout":"תשלום","admin":"מנהל"},
+  "admin": {"help":"הכנס אישורי מנהל כדי לצפות בתשלומים ובמצב הגיבוי.", "loading":"טוען...", "error":"שגיאה:"},
+  "checkout": {"pay":"שלם","cardPlaceholder":"מספר כרטיס (4242... לניסיונות)"}
+}

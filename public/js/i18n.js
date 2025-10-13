@@ -3,7 +3,9 @@
   'use strict';
 
   const DEFAULT = 'el';
-  const SUPPORTED = ['el','en','fr','de'];
+  const SUPPORTED = ['el','en','fr','de','he'];
+  const FLAGS = { el: '🇬🇷', en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', he: '🇮🇱' };
+  const RTL_LANGS = ['he', 'ar', 'fa', 'ur'];
 
   function detectLang(){
     const stored = localStorage.getItem('gw_lang');
@@ -70,24 +72,32 @@
     // update selector if exists
     const sel = document.getElementById('langSelect');
     if(sel) sel.value = lang;
+    // set document direction for rtl languages
+    const isRtl = RTL_LANGS.includes(lang);
+    try{ document.documentElement.dir = isRtl ? 'rtl' : 'ltr'; document.body.classList.toggle('rtl', isRtl); } catch(e){}
     window.currentI18n = { lang, msgs };
   }
 
   // init on DOM ready
   document.addEventListener('DOMContentLoaded', async () => {
     const lang = detectLang();
-    // populate selector if present
+    // populate selector if present (with flags)
     const sel = document.getElementById('langSelect');
     if(sel){
       // if no options, add defaults
       if(sel.children.length === 0){
-        const map = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch' };
+        const map = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', he:'עברית' };
         for(const code of SUPPORTED){
-          const opt = document.createElement('option'); opt.value = code; opt.textContent = map[code]||code; sel.appendChild(opt);
+          const opt = document.createElement('option');
+          opt.value = code;
+          const flag = FLAGS[code] ? FLAGS[code] + ' ' : '';
+          opt.textContent = flag + (map[code]||code);
+          sel.appendChild(opt);
         }
       }
       sel.value = lang;
       sel.addEventListener('change', (e) => setLanguage(e.target.value));
+      sel.style.fontSize = '14px'; sel.style.padding = '4px 8px'; sel.style.height = '32px';
     }
     const msgs = await loadMessages(lang);
     applyTranslations(msgs);
