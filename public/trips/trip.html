@@ -11,6 +11,10 @@
   <link rel="stylesheet" href="/css/trip.css">
 
   <!-- Κύριος κώδικας -->
+  <!-- Flatpickr (dark theme) for cinematic date picker -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="/js/main.js" defer></script>
 </head>
 
@@ -50,6 +54,97 @@
     <div class="overlay-inner">
       <h2 data-i18n="nav.checkout">Πληρωμή</h2>
         <p data-i18n="checkout.info">Η φόρμα πληρωμής θα εμφανίζεται εδώ.</p>
+    </div>
+  </div>
+
+  <div id="bookingOverlay" class="overlay" role="dialog" aria-modal="true">
+    <button class="close-overlay" onclick="closeOverlay('bookingOverlay')" aria-label="Κλείσιμο">×</button>
+    <div class="overlay-inner">
+      <h2 id="bookingOverlayTitle">Κράτηση</h2>
+      <form id="bookingForm" class="booking-form">
+        <input type="hidden" name="trip_id" id="bookingTripId">
+
+        <div class="row">
+          <label for="bookingDate">Ημερομηνία</label>
+          <input id="bookingDate" name="date" type="date" required />
+        </div>
+
+        <div class="row two-col">
+          <div>
+            <label for="bookingSeats">Θέσεις</label>
+            <div class="seat-control">
+              <button type="button" class="seat-dec" aria-label="Μείωση">−</button>
+              <input id="bookingSeats" name="seats" type="number" value="1" min="1" max="10" required />
+              <button type="button" class="seat-inc" aria-label="Αύξηση">+</button>
+            </div>
+          </div>
+
+          <div>
+            <label for="bookingPrice">Σύνολο</label>
+            <div id="bookingPrice" class="price-tag">—</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <label for="bookingName">Όνομα</label>
+          <input id="bookingName" name="user_name" type="text" placeholder="Όνομα και επώνυμο" required />
+        </div>
+
+        <div class="row">
+          <label for="bookingEmail">Email</label>
+          <input id="bookingEmail" name="user_email" type="email" placeholder="name@example.com" required />
+        </div>
+
+        <div class="row section-title"><h3>Προφίλ Ταξιδιώτη</h3></div>
+        <div class="row two-col">
+          <div>
+            <label for="travelerProfile">Traveler Type</label>
+            <select id="travelerProfile" name="travelerProfile">
+              <option value="explorer">🌍 Explorers</option>
+              <option value="relaxed">😌 Relaxed Travelers</option>
+              <option value="family">👨‍👩‍👧 Family Style</option>
+              <option value="solo">🚶 Solo Adventurers</option>
+            </select>
+          </div>
+          <div>
+            <label for="travelStyle">Travel Style</label>
+            <select id="travelStyle" name="travelStyle">
+              <option value="sociable">👥 Sociable</option>
+              <option value="quiet">🤫 Quiet</option>
+              <option value="cultural">🏛️ Cultural</option>
+              <option value="nature">🌲 Nature-oriented</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row two-col">
+          <div>
+            <label for="preferredLanguage">Προτιμώμενη Γλώσσα</label>
+            <select id="preferredLanguage" name="preferredLanguage">
+              <option value="en">🇬🇧 English</option>
+              <option value="fr">🇫🇷 Français</option>
+              <option value="de">🇩🇪 Deutsch</option>
+              <option value="el">🇬🇷 Ελληνικά</option>
+            </select>
+          </div>
+          <div>
+            <label for="travelTempo">Στυλ Ώρας / Ημέρας</label>
+            <select id="travelTempo" name="travelTempo">
+              <option value="early">🌅 Early riser</option>
+              <option value="night">🌙 Night type</option>
+              <option value="talkative">💬 Talkative</option>
+              <option value="reserved">🙊 Reserved</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row actions">
+          <button class="btn" type="submit">Δημιούργησε κράτηση</button>
+          <button type="button" class="btn ghost" onclick="closeOverlay('bookingOverlay')">Άκυρο</button>
+        </div>
+      </form>
+
+      <div id="bookingResult" class="booking-result" style="display:none"></div>
     </div>
   </div>
 

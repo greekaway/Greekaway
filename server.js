@@ -33,6 +33,7 @@ try {
   bookingsDb.exec(`CREATE TABLE IF NOT EXISTS bookings (
     id TEXT PRIMARY KEY,
     status TEXT,
+    date TEXT,
     payment_intent_id TEXT UNIQUE,
     event_id TEXT,
     user_name TEXT,
@@ -44,6 +45,23 @@ try {
     metadata TEXT,
     created_at TEXT,
     updated_at TEXT
+  )`);
+  // Ensure legacy databases get a date column if missing
+  try {
+    const info = bookingsDb.prepare("PRAGMA table_info('bookings')").all();
+    const hasDate = info && info.some(i => i.name === 'date');
+    if (!hasDate) {
+      bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN date TEXT').run();
+      console.log('server: added date column to bookings table');
+    }
+  } catch (e) { /* ignore migration errors */ }
+
+  // capacities table to track per-trip per-date seat limits (optional admin seed)
+  bookingsDb.exec(`CREATE TABLE IF NOT EXISTS capacities (
+    trip_id TEXT,
+    date TEXT,
+    capacity INTEGER,
+    PRIMARY KEY(trip_id, date)
   )`);
   console.log('server: bookings table ready');
 } catch (e) {
@@ -136,11 +154,27 @@ app.post('/api/bookings', express.json(), (req, res) => {
   try {
     const { user_name, user_email, trip_id, seats, price_cents, currency, metadata } = req.body || {};
     if (!user_name || !user_email || !trip_id) return res.status(400).json({ error: 'Missing required fields' });
+    // date support
+    let date = req.body.date || null;
+    if (!date) {
+      date = new Date().toISOString().slice(0,10);
+    }
+    // capacity check (if capacities table has an entry for trip/date)
+    try {
+      if (bookingsDb) {
+        const capRow = bookingsDb.prepare('SELECT capacity FROM capacities WHERE trip_id = ? AND date = ?').get(trip_id, date);
+        if (capRow && typeof capRow.capacity === 'number') {
+          const capacity = capRow.capacity || 0;
+          const taken = bookingsDb.prepare('SELECT COALESCE(SUM(seats),0) as s FROM bookings WHERE trip_id = ? AND date = ? AND status != ?').get(trip_id, date, 'canceled').s || 0;
+          if ((taken + (seats || 1)) > capacity) return res.status(409).json({ error: 'No availability for selected date' });
+        }
+      }
+    } catch (e) { console.warn('Capacity check failed', e && e.message ? e.message : e); }
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     if (bookingsDb) {
-      const insert = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
-      insert.run(id, 'pending', null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now);
+      const insert = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+      insert.run(id, 'pending', date, null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now);
       return res.json({ bookingId: id, status: 'pending' });
     }
     return res.status(500).json({ error: 'Bookings DB not available' });
@@ -148,6 +182,20 @@ app.post('/api/bookings', express.json(), (req, res) => {
     console.error('Create booking error', e && e.stack ? e.stack : e);
     return res.status(500).json({ error: 'Server error' });
   }
+});
+
+// Availability endpoint: returns capacity and taken seats for a trip/date
+app.get('/api/availability', (req, res) => {
+  try {
+    const trip_id = req.query.trip_id;
+    const date = req.query.date || new Date().toISOString().slice(0,10);
+    if (!trip_id) return res.status(400).json({ error: 'Missing trip_id' });
+    if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
+    const capRow = bookingsDb.prepare('SELECT capacity FROM capacities WHERE trip_id = ? AND date = ?').get(trip_id, date) || {};
+    const capacity = capRow.capacity || null;
+    const takenRow = bookingsDb.prepare('SELECT COALESCE(SUM(seats),0) as s FROM bookings WHERE trip_id = ? AND date = ? AND status != ?').get(trip_id, date, 'canceled') || { s: 0 };
+    return res.json({ trip_id, date, capacity, taken: takenRow.s || 0 });
+  } catch (e) { console.error('Availability error', e); return res.status(500).json({ error: 'Server error' }); }
 });
 
 app.get('/api/bookings/:id', (req, res) => {

@@ -31,4 +31,6 @@
   ]
   ,
   "experience": { "el": "Μοναδική εμπειρία: ξεκινάμε από Αθήνα, βιώνουμε την ιστορία της Αρχαίας Ελλάδας, γευόμαστε τοπική κουζίνα και περπατάμε σε ιστορικά μνημεία. Ιδανική εκδρομή 2 ημερών με πολιτιστικό ενδιαφέρον.", "en": "A unique experience: start from Athens, explore Ancient Greece's history, taste local cuisine and walk through historic monuments. Ideal 2-day cultural trip.", "he": "חוויה ייחודית: מתחילים מאתונה, חווים את היסטוריית יוון העתיקה, טועמים מאכלים מקומיים ומשוטטים באתרים היסטוריים. טיול אידיאלי של יומיים עם עניין תרבותי.", "fr": "Une expérience unique : départ d'Athènes, exploration de l'histoire de la Grèce antique, dégustation de la cuisine locale et promenade dans des monuments historiques. Idéal pour un séjour culturel de 2 jours.", "de": "Ein einzigartiges Erlebnis: Start in Athen, Erkundung der Geschichte des antiken Griechenlands, Verkostung lokaler Küche und Spaziergänge durch historische Denkmäler. Ideal für eine zweitägige Kulturtour." }
+  ,"price_cents": 6000,
+  "unavailable_dates": ["2025-10-20","2025-10-21"]
 }

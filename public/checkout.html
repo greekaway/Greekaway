@@ -74,6 +74,19 @@
     }
 
     (async function(){
+    // If landed with a bookingId, fetch booking and prefill name/email
+    try {
+      const qs = new URLSearchParams(window.location.search);
+      const bid = qs.get('bookingId');
+      if (bid) {
+        const bk = await fetch('/api/bookings/' + encodeURIComponent(bid));
+        if (bk && bk.ok) {
+          const jb = await bk.json();
+          try { if (jb.user_name) form.name.value = jb.user_name; } catch(e){}
+          try { if (jb.user_email) form.email.value = jb.user_email; } catch(e){}
+        }
+      }
+    } catch(e) { /* ignore prefill errors */ }
     console.debug('[checkout] STRIPE_PUBLISHABLE present?', !!STRIPE_PUBLISHABLE);
     if (STRIPE_PUBLISHABLE && !STRIPE_PUBLISHABLE.includes('STRIPE')) {
       console.debug('[checkout] Stripe lib loaded?', typeof Stripe !== 'undefined');
