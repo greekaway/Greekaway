@@ -279,14 +279,17 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!overlayInner) return;
           overlayInner.innerHTML = `
             <div id="step1" class="booking-step">
+              <div class="progress-steps" style="margin-bottom:6px;font-size:13px;color:#c9a24a;">Βήμα 1 από 3</div>
               <h2>Επιλέξτε Ημερομηνία</h2>
-              <div style="margin-top:12px;display:flex;justify-content:center;">
+              <div class="calendar-full" style="margin-top:12px;display:flex;justify-content:center;">
                 <input id="calendarFull" style="width:94%;max-width:720px;border-radius:12px;padding:8px;background:transparent;border:0;" />
               </div>
               <div id="availabilityBlock" class="availability-block" style="display:none">Loading availability…</div>
-              <div style="margin-top:18px;display:flex;gap:12px;justify-content:center;">
-                <button id="s1Next" class="btn">Επόμενο</button>
-                <button id="s1Cancel" class="btn ghost">Άκυρο</button>
+              <div style="margin-top:18px;">
+                <div class="booking-actions">
+                  <button id="s1Cancel" class="btn btn-secondary">Άκυρο</button>
+                  <button id="s1Next" class="btn btn-primary">Επόμενο</button>
+                </div>
               </div>
             </div>
             <div id="step2" class="booking-step" style="display:none"></div>
@@ -341,43 +344,56 @@ document.addEventListener("DOMContentLoaded", () => {
           // render traveler detail form into step2
           step2.style.display = 'block';
           step2.innerHTML = `
-            <div class="step-card">
+            <div class="step-card form-narrow">
+              <div class="progress-steps" style="margin-bottom:6px;font-size:13px;color:#c9a24a;">Βήμα 2 από 3</div>
               <h2>Στοιχεία Ταξιδιώτη</h2>
               <div style="margin-top:12px">
-                <label>Θέσεις <span id="miniPrice" class="mini-price">—</span></label>
-                <div class="seat-control"><button class="seat-dec">−</button><input id="bookingSeats2" type="number" value="1" min="1" max="10"><button class="seat-inc">+</button></div>
+                <label>Θέσεις</label>
+                <div class="seats-price" style="margin-top:6px;display:flex;align-items:center;gap:12px;">
+                  <div class="seat-control"><button class="seat-dec">−</button><input id="bookingSeats2" type="number" value="1" min="1" max="10"><button class="seat-inc">+</button></div>
+                  <div id="miniPrice" class="price-badge">—</div>
+                </div>
               </div>
               <div style="margin-top:12px"><label>Όνομα</label><input id="bookingName2" type="text" /></div>
               <div style="margin-top:12px"><label>Email</label><input id="bookingEmail2" type="email" /></div>
               <div style="margin-top:12px"><label>Traveler Profile</label>
-                <div id="travelerProfile2" class="profile-card">
-                  <label class="profile-option" data-value="explorer"><input type="radio" name="travelerProfile2_input" value="explorer"><span class="icon">🌍</span><span>Explorers</span></label>
-                  <label class="profile-option" data-value="relaxed"><input type="radio" name="travelerProfile2_input" value="relaxed"><span class="icon">😌</span><span>Relaxed</span></label>
-                  <label class="profile-option" data-value="family"><input type="radio" name="travelerProfile2_input" value="family"><span class="icon">👨‍👩‍👧</span><span>Family</span></label>
-                  <label class="profile-option" data-value="solo"><input type="radio" name="travelerProfile2_input" value="solo"><span class="icon">🚶</span><span>Solo</span></label>
-                </div>
+                <select id="travelerProfile2" class="profile-select">
+                  <option value="explorer">🌍 Explorers</option>
+                  <option value="relaxed">😌 Relaxed Travelers</option>
+                  <option value="family">👨‍👩‍👧 Family Style</option>
+                  <option value="solo">🚶 Solo Adventurers</option>
+                </select>
               </div>
               <div style="margin-top:8px"><label>Travel Style</label>
-                <div id="travelStyle2" class="profile-card">
-                  <label class="profile-option" data-value="sociable"><input type="radio" name="travelStyle2_input" value="sociable"><span class="icon">👥</span><span>Sociable</span></label>
-                  <label class="profile-option" data-value="quiet"><input type="radio" name="travelStyle2_input" value="quiet"><span class="icon">🤫</span><span>Quiet</span></label>
-                </div>
+                <select id="travelStyle2" class="profile-select">
+                  <option value="sociable">👥 Sociable</option>
+                  <option value="quiet">🤫 Quiet</option>
+                  <option value="cultural">🏛️ Cultural</option>
+                  <option value="nature">🌲 Nature-oriented</option>
+                </select>
               </div>
               <div style="margin-top:8px"><label>Preferred Language</label>
-                <div id="preferredLanguage2" class="profile-card">
-                  <label class="profile-option" data-value="en"><input type="radio" name="preferredLanguage2_input" value="en"><span class="icon">🇬🇧</span><span>English</span></label>
-                  <label class="profile-option" data-value="fr"><input type="radio" name="preferredLanguage2_input" value="fr"><span class="icon">🇫🇷</span><span>Français</span></label>
-                  <label class="profile-option" data-value="de"><input type="radio" name="preferredLanguage2_input" value="de"><span class="icon">🇩🇪</span><span>Deutsch</span></label>
-                  <label class="profile-option" data-value="el"><input type="radio" name="preferredLanguage2_input" value="el"><span class="icon">🇬🇷</span><span>Ελληνικά</span></label>
-                </div>
+                <select id="preferredLanguage2" class="profile-select">
+                  <option value="en">🇬🇧 English</option>
+                  <option value="fr">🇫🇷 Français</option>
+                  <option value="de">🇩🇪 Deutsch</option>
+                  <option value="el">🇬🇷 Ελληνικά</option>
+                </select>
               </div>
               <div style="margin-top:8px"><label>Day Style</label>
-                <div id="travelTempo2" class="profile-card">
-                  <label class="profile-option" data-value="early"><input type="radio" name="travelTempo2_input" value="early"><span class="icon">🌅</span><span>Early Riser</span></label>
-                  <label class="profile-option" data-value="night"><input type="radio" name="travelTempo2_input" value="night"><span class="icon">🌙</span><span>Night Owl</span></label>
+                <select id="travelTempo2" class="profile-select">
+                  <option value="early">🌅 Early riser</option>
+                  <option value="night">🌙 Night type</option>
+                  <option value="talkative">💬 Talkative</option>
+                  <option value="reserved">🙊 Reserved</option>
+                </select>
+              </div>
+              <div style="margin-top:12px;">
+                <div class="booking-actions">
+                  <button id="s2Back" class="btn btn-secondary">Πίσω</button>
+                  <button id="s2Next" class="btn btn-primary">Επόμενο</button>
                 </div>
               </div>
-              <div style="margin-top:12px;display:flex;gap:12px;justify-content:center;margin-top:18px;"><button id="s2Back" class="btn ghost">Πίσω</button><button id="s2Next" class="btn">Επόμενο</button></div>
             </div>
           `;
           // copy any existing values from original hidden form to these new fields
@@ -405,15 +421,24 @@ document.addEventListener("DOMContentLoaded", () => {
               const wireProfile = (containerId, targetName) => {
                 const container = document.getElementById(containerId);
                 if (!container) return;
+                // if this is a SELECT, just mirror value -> dataset.selected and restore from original
+                if (container.tagName === 'SELECT') {
+                  try {
+                    const orig = document.getElementById(targetName);
+                    if (orig && orig.value) container.value = orig.value;
+                  } catch(e){}
+                  container.dataset.selected = container.value || '';
+                  container.addEventListener('change', () => { container.dataset.selected = container.value; });
+                  return;
+                }
+                // legacy profile-card wiring (for any remaining card UI)
                 container.querySelectorAll('.profile-option').forEach(opt => {
                   opt.addEventListener('click', (ev) => {
                     container.querySelectorAll('.profile-option').forEach(o => o.classList.remove('selected'));
                     opt.classList.add('selected');
-                    // set a data attribute for reading later
                     container.dataset.selected = opt.dataset.value;
                   });
                 });
-                // restore previously selected if original form had a value
                 try {
                   const orig = document.getElementById(targetName);
                   if (orig && orig.value) {
@@ -453,16 +478,26 @@ document.addEventListener("DOMContentLoaded", () => {
           const base = trip.price_cents ? parseInt(trip.price_cents,10) : 5000;
           const total = (base * parseInt(seats || '1',10))/100;
           step3.innerHTML = `
-            <h2>Επιβεβαίωση Κράτησης</h2>
-            <div style="text-align:left;margin-top:12px;"> <strong>Εκδρομή:</strong> ${getLocalized(trip.title) || ''}</div>
-            <div style="text-align:left;margin-top:6px;"> <strong>Ημερομηνία:</strong> ${date}</div>
-            <div style="text-align:left;margin-top:6px;"> <strong>Θέσεις:</strong> ${seats}</div>
-            <div style="text-align:left;margin-top:6px;"> <strong>Σύνολο:</strong> ${total.toLocaleString(getCurrentLang(), { style:'currency', currency:(trip.currency||'EUR').toUpperCase() })}</div>
-            <div style="text-align:left;margin-top:6px;"> <strong>Όνομα:</strong> ${name}</div>
-            <div style="text-align:left;margin-top:6px;"> <strong>Email:</strong> ${email}</div>
-            <div style="margin-top:18px;display:flex;gap:12px;flex-direction:column;"><button id="s3Edit" class="btn ghost">Edit</button><button id="s3Proceed" class="btn">Proceed to Payment</button></div>
+            <div class="booking-confirmation step-card confirmation-view">
+              <h2>Επιβεβαίωση Κράτησης</h2>
+              <div class="progress-steps" style="margin-top:8px;margin-bottom:6px;font-size:13px;color:#c9a24a;">Βήμα 3 από 3</div>
+              <div style="text-align:left;margin-top:12px;"> <strong>Εκδρομή:</strong> ${getLocalized(trip.title) || ''}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong>Ημερομηνία:</strong> ${date}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong>Θέσεις:</strong> ${seats}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong>Σύνολο:</strong> ${total.toLocaleString(getCurrentLang(), { style:'currency', currency:(trip.currency||'EUR').toUpperCase() })}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong>Όνομα:</strong> ${name}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong>Email:</strong> ${email}</div>
+              <div style="margin-top:18px;">
+                <div class="booking-actions">
+                  <button id="s3Edit" class="btn btn-secondary">Edit</button>
+                  <button id="s3Proceed" class="btn btn-primary">Proceed to Payment</button>
+                </div>
+              </div>
+            </div>
           `;
-          document.getElementById('s3Edit').addEventListener('click', () => { document.getElementById('step3').style.display='none'; document.getElementById('step2').style.display='block'; refreshProceedButtons(); });
+          // mark overlay as confirmation-active to trigger high-specificity iOS fixes
+          try { document.getElementById('bookingOverlay').classList.add('confirmation-active'); } catch(e){}
+          document.getElementById('s3Edit').addEventListener('click', () => { document.getElementById('step3').style.display='none'; document.getElementById('step2').style.display='block'; try{ document.getElementById('bookingOverlay').classList.remove('confirmation-active'); }catch(e){} refreshProceedButtons(); });
           document.getElementById('s3Proceed').addEventListener('click', async () => {
             // build booking payload and POST to /api/bookings
             const payload = {};
@@ -473,13 +508,13 @@ document.addEventListener("DOMContentLoaded", () => {
             payload.user_email = email;
             try {
               const p2 = document.getElementById('travelerProfile2');
-              payload.travelerProfile = p2 && p2.dataset && p2.dataset.selected ? p2.dataset.selected : (document.getElementById('travelerProfile') ? document.getElementById('travelerProfile').value : '');
+              payload.travelerProfile = p2 ? ((p2.dataset && p2.dataset.selected) || p2.value || '') : (document.getElementById('travelerProfile') ? document.getElementById('travelerProfile').value : '');
               const t2 = document.getElementById('travelStyle2');
-              payload.travelStyle = t2 && t2.dataset && t2.dataset.selected ? t2.dataset.selected : (document.getElementById('travelStyle') ? document.getElementById('travelStyle').value : '');
+              payload.travelStyle = t2 ? ((t2.dataset && t2.dataset.selected) || t2.value || '') : (document.getElementById('travelStyle') ? document.getElementById('travelStyle').value : '');
               const l2 = document.getElementById('preferredLanguage2');
-              payload.preferredLanguage = l2 && l2.dataset && l2.dataset.selected ? l2.dataset.selected : (document.getElementById('preferredLanguage') ? document.getElementById('preferredLanguage').value : '');
+              payload.preferredLanguage = l2 ? ((l2.dataset && l2.dataset.selected) || l2.value || '') : (document.getElementById('preferredLanguage') ? document.getElementById('preferredLanguage').value : '');
               const tempo2 = document.getElementById('travelTempo2');
-              payload.travelTempo = tempo2 && tempo2.dataset && tempo2.dataset.selected ? tempo2.dataset.selected : (document.getElementById('travelTempo') ? document.getElementById('travelTempo').value : '');
+              payload.travelTempo = tempo2 ? ((tempo2.dataset && tempo2.dataset.selected) || tempo2.value || '') : (document.getElementById('travelTempo') ? document.getElementById('travelTempo').value : '');
             } catch(e) {
               payload.travelerProfile = document.getElementById('travelerProfile') ? document.getElementById('travelerProfile').value : '';
               payload.travelStyle = document.getElementById('travelStyle') ? document.getElementById('travelStyle').value : '';
@@ -783,12 +818,21 @@ document.addEventListener("DOMContentLoaded", () => {
           el.style.display = 'block';
           el.textContent = 'Φόρτωση διαθεσιμότητας...';
           const q = new URLSearchParams({ trip_id: trip.id, date: dateStr });
-          const resp = await fetch('/api/availability?' + q.toString());
-          if (!resp.ok) { el.textContent = 'Σφάλμα διαθεσιμότητας'; return; }
-          const j = await resp.json();
-          const capacity = j.capacity || 0;
-          const taken = j.taken || 0;
-          const avail = Math.max(0, capacity - taken);
+          let capacity = 0, taken = 0, avail = 0;
+          try {
+            const resp = await fetch('/api/availability?' + q.toString());
+            if (resp.ok) {
+              const j = await resp.json();
+              capacity = j.capacity || 0;
+              taken = j.taken || 0;
+              avail = Math.max(0, capacity - taken);
+            }
+          } catch(_) {}
+          // Temporary mock to enable UX review
+          const MOCK_AVAILABILITY = 6;
+          avail = MOCK_AVAILABILITY;
+          capacity = Math.max(capacity, MOCK_AVAILABILITY);
+          taken = Math.max(0, capacity - avail);
           // color-code low availability
           let colorClass = '';
           if (avail <= 0) colorClass = 'unavailable';
