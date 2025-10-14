@@ -415,12 +415,13 @@ footer a i {
 
 .overlay {
   position: fixed;
-  top: 0; left: 0; right: 0;
-  bottom: 80px; /* leave room for footer */
+  top: 0; left: 0; right: 0; bottom: 0; /* cover footer fully */
   background: #07121a; /* fully opaque dark background */
   color: #ecf0f1;
-  z-index: 900;
+  z-index: 10000; /* above footer/nav */
   overflow-y: auto;
+  overflow-x: hidden; /* prevent right gutter / horizontal scroll */
+  -webkit-overflow-scrolling: touch;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -430,8 +431,10 @@ footer a i {
 .overlay.active { opacity:1; visibility:visible; pointer-events:auto; }
 
 .overlay .overlay-inner {
-  max-width: 860px;
+  width: 100%;
+  max-width: 920px;
   margin: 4vh auto;
+  box-sizing: border-box;
   background: rgba(12,22,30,1);
   padding: 1rem;
   border-radius: 14px;
@@ -461,7 +464,16 @@ footer a i {
 .overlay .close-overlay { position:absolute; top:12px; right:12px; background:transparent; color:#fff; border:none; font-size:1.6rem; padding:8px; border-radius:8px; cursor:pointer; z-index:2050; }
 .overlay .close-overlay:hover { background: rgba(255,255,255,0.04); }
 
-@media (max-width:599px) { .overlay .overlay-inner { margin:0; border-radius:0; min-height:calc(100vh - 80px); } }
+@media (max-width:599px) {
+  .overlay .overlay-inner {
+    margin: 0;
+    border-radius: 0;
+    padding: 16px;
+    min-height: 100vh;
+    /* reserve space for any bottom action bar and safe-area */
+    padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
+  }
+}
 /* -------- Google Map -------- */
 #map {
   width: 100%;

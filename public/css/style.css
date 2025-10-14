@@ -2,6 +2,19 @@
    GREEKAWAY – STYLE SHEET
    =========================== */
 
+/* Root theme variables (site-wide colors) */
+:root {
+  --site-gradient: linear-gradient(180deg, #1B2A3A 0%, #223345 100%);
+  --site-bg-color: #1B2A3A;
+  /* category accent RGB tuples for overlays */
+  --sea-1: 0,170,255;
+  --sea-2: 0,102,204;
+  --mountain-1: 34,153,84;
+  --mountain-2: 20,83,45;
+  --culture-1: 243,156,18;
+  --culture-2: 214,160,52;
+}
+
 /* -------- Βασικά -------- */
 body {
   margin: 0;
@@ -15,24 +28,12 @@ body {
 
 html, body { min-height: 100%; }
 
-:root {
-  /* RGB component variables for per-category colors (use with rgba(var(--sea-1), alpha)) */
-  --sea-1: 0,170,255;    /* sea primary */
-  --sea-2: 102,204,255;  /* sea secondary */
-  --mountain-1: 124,192,79; /* mountain primary */
-  --mountain-2: 34,153,84;  /* mountain secondary */
-  --culture-1: 243,156,18;  /* culture primary */
-  --culture-2: 255,200,121; /* culture secondary */
-  --tile-overlay-opacity: 0.14;
-  --footer-offset: 80px; /* space reserved for fixed footer so overlays don't cover it */
-  /* unified site gradient colors (home / all pages) */
-  --site-gradient: linear-gradient(180deg, #1B2A3A 0%, #223345 100%);
-  --site-bg-color: #1B2A3A;
-}
-
 /* -------- Καλωσόρισμα -------- */
 #welcome-section {
   margin-top: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .welcome-title {
@@ -93,7 +94,6 @@ footer {
   z-index: 1000;
   box-shadow: 0 -2px 12px rgba(0,0,0,0.4);
 }
-
 footer a {
   color: #ecf0f1;
   text-decoration: none;
@@ -103,7 +103,6 @@ footer a {
   align-items: center;
   transition: transform 0.25s ease, color 0.3s ease;
 }
-
 footer a i {
   font-size: 1.5rem;
   margin-bottom: 3px;
@@ -135,16 +134,21 @@ footer a.central-btn:hover i {
 /* -------- Overlays (Παράθυρα) -------- */
 
 .overlay {
-  /* kept in the layout so we can animate opacity/visibility */
+  /* Full-viewport overlay; used for Booking, Help, Profile, etc. */
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  bottom: var(--footer-offset, 80px); /* don't cover footer */
+  bottom: 0; /* cover footer */
   background: #07121a; /* fully opaque dark background */
   color: #ecf0f1;
-  z-index: 2000; /* ensure overlay can appear above footer when needed */
+  z-index: 10000; /* above footer/nav */
   overflow-y: auto;
+  overflow-x: clip; /* prevent tiny horizontal scroll/gutter without creating scrollbars */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center; /* center inner panel horizontally */
+  -webkit-overflow-scrolling: touch;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -158,10 +162,12 @@ footer a.central-btn:hover i {
 }
 
 .overlay .overlay-inner {
-  /* center content but allow full-height scrolling on small screens */
-  max-width: 880px;
+  /* Centered panel with no horizontal overflow and safe padding */
+  width: 100%;
+  max-width: 920px;
   margin: 4vh auto;
-  background: linear-gradient(180deg, rgba(24,38,52,1), rgba(14,22,30,1)); /* fully opaque */
+  box-sizing: border-box;
+  background: linear-gradient(180deg, rgba(24,38,52,1), rgba(14,22,30,1));
   padding: 1.2rem 1rem;
   border-radius: 14px;
   box-shadow: 0 8px 30px rgba(0,0,0,0.6);
@@ -174,6 +180,13 @@ footer a.central-btn:hover i {
 .overlay h2 {
   color: #f9d65c;
   margin-bottom: 0.6rem;
+}
+
+/* Prevent 1–2px right-side seam on iOS Safari by avoiding fractional widths */
+.overlay, .overlay .overlay-inner { max-width: 100vw; }
+.overlay .overlay-inner { width: 100%; }
+@media (min-width: 600px) {
+  .overlay .overlay-inner { width: auto; max-width: 920px; }
 }
 
 .overlay button,
@@ -225,11 +238,24 @@ footer a.central-btn:hover i {
 
 /* Make the overlay-inner take most of the screen on mobile */
 @media (max-width: 599px) {
-  .overlay .overlay-inner { margin: 0; border-radius: 0; padding: 1rem; min-height: calc(100vh - var(--footer-offset, 80px)); }
+  .overlay .overlay-inner {
+    margin: 0;
+    border-radius: 0;
+    padding: 16px;
+    min-height: 100vh;
+    /* Reserve space so any bottom action bar is always reachable */
+    padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
+  }
+  /* Avoid tiny right gutter by matching overlay padding to panel */
+  .overlay { padding-left: 16px; padding-right: 16px; }
   .overlay .close-overlay { top: 10px; right: 10px; }
   /* ensure selects are inset from the screen edges on mobile for breathing room */
   .overlay select, .profile-select { width: 90vw; max-width: calc(100% - 40px); margin-left: auto; margin-right: auto; }
 }
+
+/* Lock background scroll when any overlay is open (applies globally) */
+body.overlay-open { overflow: hidden; touch-action: none; }
+html.overlay-open { overflow: hidden; }
 
 /* -------- Responsive -------- */
 @media (min-width: 600px) {
@@ -400,141 +426,7 @@ body[data-category="culture"][data-view="category"] h2 {
   color: #f1f5f8;
 }
 
-/* ==============================
-   Booking UI / UX Enhancements
-   ==============================
-   Fullscreen calendar on mobile, entrance animation (fade + slide-up),
-   unified button styles, dropdown styling, price-seat alignment,
-   progress indicator, and footer nav active/hover polish.
-*/
-
-/* Fade + slide-up animation for cinematic entrance */
-@keyframes fadeSlideUp {
-  0% { opacity: 0; transform: translateY(10px); }
-  60% { opacity: 1; transform: translateY(-6px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-.overlay.active .overlay-inner {
-  animation: fadeSlideUp 360ms cubic-bezier(.2,.9,.2,1) both;
-}
-
-/* Calendar: make fullscreen on small screens (mobile) */
-.calendar-full, .flatpickr-calendar, .booking-calendar {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box;
-}
-
-@media (max-width: 599px) {
-  /* overlay-inner already becomes full-screen; ensure calendar fills it */
-  .overlay .overlay-inner { padding: 12px; min-height: 100vh; }
-  .calendar-full { height: calc(100vh - 170px); overflow: auto; }
-  /* Keep Next (right) and Cancel (left) buttons fixed at bottom of overlay */
-  .overlay .booking-actions {
-    position: sticky; bottom: 0; left: 0; right: 0;
-    display: flex; justify-content: space-between; gap: 12px;
-    background: linear-gradient(180deg, rgba(7,18,26,0.0), rgba(7,18,26,0.65));
-    padding: 12px; padding-bottom: calc(env(safe-area-inset-bottom) + 16px); backdrop-filter: blur(6px);
-    box-shadow: 0 -8px 18px rgba(0,0,0,0.4);
-    z-index: 2100;
-  }
-  .overlay .booking-actions .btn-primary { order: 2; }
-  .overlay .booking-actions .btn-secondary { order: 1; }
-}
-
-/* Ensure consistent button sizing and visual language */
-.overlay .booking-actions {
-  position: -webkit-sticky; /* Safari */
-  position: sticky;
-  bottom: 0; left: 0; right: 0;
-  display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  width: 100%;
-  background: linear-gradient(180deg, rgba(7,18,26,0.0), rgba(7,18,26,0.65));
-  padding: 12px; padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 -8px 18px rgba(0,0,0,0.4);
-  z-index: 2100;
-}
-.btn-primary, .btn-secondary, .overlay button, button.book-action {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 140px; padding: 0 18px; min-height: 48px; height: 48px; border-radius: 8px; font-weight: 500; font-size: 16px;
-  border: none; cursor: pointer; transition: transform 160ms ease, box-shadow 200ms ease;
-  will-change: transform, box-shadow;
-}
-.btn-primary { background: linear-gradient(180deg,#b8862a,#f9d65c); color: #07222a; box-shadow: 0 6px 18px rgba(185,140,40,0.18); }
-.btn-secondary { background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.06); }
-.btn-primary:hover, .btn-secondary:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 10px 30px rgba(185,140,40,0.22); transition: transform 250ms ease-out, box-shadow 250ms ease-out; }
-.btn-primary:active, .btn-secondary:active { transform: translateY(1px) scale(0.995); }
-
-/* Slight gold glow focus for accessibility */
-.btn-primary:focus { outline: none; box-shadow: 0 0 0 4px rgba(249,214,92,0.14); }
-
-/* Dropdowns: dark theme + gold highlight */
-.overlay select, select.profile-select, .profile-dropdown {
-  background: linear-gradient(180deg, rgba(10,18,26,0.95), rgba(8,14,20,0.95));
-  color: #f1f0e8; border: 1px solid rgba(249,214,92,0.09); padding: 10px; border-radius: 8px;
-  -webkit-appearance: none; appearance: none; background-image: linear-gradient(45deg, transparent 50%, #f9d65c 50%), linear-gradient(135deg, #f9d65c 50%, transparent 50%);
-  background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px); background-size: 6px 6px, 6px 6px; background-repeat: no-repeat;
-  max-width: 720px;
-}
-.overlay select:focus, .profile-select:focus { box-shadow: 0 0 0 4px rgba(249,214,92,0.08); outline: none; }
-
-/* Titles & Headings: slightly lighter weight and center on mobile */
-.overlay h2, .overlay h3 { font-weight: 500; }
-@media (max-width: 599px) { .overlay h2, .overlay h3 { text-align: center; } }
-
-/* Price + Seats layout */
-.seats-price { display: flex; gap: 10px; align-items: center; justify-content: space-between; width: 100%; }
-.seats-price .seats-field { flex: 1; }
-.seats-price .seat-control { display:inline-flex; align-items:center; gap:12px; }
-.seats-price .price-badge {
-  background: linear-gradient(180deg,#b8862a,#f9d65c);
-  color: #07222a; padding: 8px 12px; border-radius: 10px; font-weight: 600; margin-left: 6px;
-  box-shadow: 0 6px 16px rgba(185,140,40,0.16);
-  min-width: 72px; text-align:center;
-}
-
-/* Traveler summary confirmation page */
-.booking-confirmation .progress-steps { display:flex; align-items:center; gap:8px; justify-content:center; margin-bottom:8px; color:#f9d65c; }
-.booking-confirmation .progress-steps .step { font-weight:600; background: rgba(249,214,92,0.08); padding:6px 10px; border-radius:999px; }
-.booking-confirmation .confirmation-icon { font-size:1.8rem; color:#f9d65c; display:block; margin: 0.4rem auto; }
-.booking-confirmation .confirm-subtitle { color:#dfe8e8; margin-bottom: 12px; }
-
-/* Footer nav: consistent gold accent on active, smoother hover and scale */
-footer a.active, footer a[aria-current="page"] { color: #f9d65c; }
-footer a.active i, footer a[aria-current="page"] i { transform: scale(1.06); color: #f9d65c; background: rgba(249,214,92,0.06); }
-footer a { transition: transform 220ms cubic-bezier(.2,.9,.2,1), color 220ms ease; }
-footer a:hover { transform: translateY(-4px) scale(1.02); }
-
-/* Small utility: ensure booking action buttons share width on desktop */
-.booking-actions .btn-primary, .booking-actions .btn-secondary { width: 48%; height: 48px; min-height: 48px; padding: 0 18px; font-size: 16px; }
-
-/* Remove thin right-side line by ensuring confirmation card has no border on the right and normal box-shadow */
-.booking-confirmation { border: none !important; border-right: none !important; box-shadow: none !important; background-clip: padding-box !important; outline: none !important; }
-
-/* Minor accessibility and spacing niceties */
-.overlay .form-row { display:flex; gap:12px; align-items:center; }
-@media (max-width:599px) { .overlay .form-row { flex-direction: column; } }
-
-/* Step 2: centered, narrow form container to reduce visual weight on mobile */
-.form-narrow { width: 100%; max-width: clamp(320px, 90vw, 420px); margin: 0 auto; padding-inline: 16px; }
-.form-narrow > div { margin-top: 12px; }
-.form-narrow label { display: block; text-align: left; margin-bottom: 6px; }
-.form-narrow input, .form-narrow select { width: 100%; }
-
-/* Confirmation-specific iOS Safari right-edge seam elimination */
-.overlay.confirmation-active .overlay-inner,
-.overlay .overlay-inner.confirmation-view,
-.overlay.confirmation-active .booking-confirmation.step-card {
-  border: none !important;
-  border-right: none !important;
-  box-shadow: none !important;
-  outline: none !important;
-  background-clip: padding-box !important;
-}
-.overlay.confirmation-active .overlay-inner::before,
-.overlay.confirmation-active .overlay-inner::after { content: none !important; display: none !important; }
+/* (booking-specific enhancements moved to booking.css) */
 
 
 /* If we're viewing an individual trip in the culture category, keep the
@@ -741,9 +633,10 @@ body[data-category] h2 {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(135deg, rgba(var(--sea-1), 0.95), rgba(var(--culture-1), 0.85));
+  /* Consistent gold overlay for all category icons */
+  background: linear-gradient(135deg, rgba(212,175,55,0.95), rgba(184,134,11,0.85));
   mix-blend-mode: multiply;
-  opacity: var(--tile-overlay-opacity);
+  opacity: var(--tile-overlay-opacity, 0.22);
   transition: opacity 240ms ease, transform 240ms ease;
   pointer-events: none;
 }
@@ -764,14 +657,11 @@ body[data-category] h2 {
 }
 
 /* Per-category color themes */
-.category-btn.cat-sea::before {
-  background: linear-gradient(135deg, rgba(var(--sea-1), 0.95), rgba(var(--sea-2), 0.6));
-}
-.category-btn.cat-mountain::before {
-  background: linear-gradient(135deg, rgba(var(--mountain-1), 0.95), rgba(var(--mountain-2), 0.6));
-}
+/* Force gold overlay for each category variant as well (no per-category tint) */
+.category-btn.cat-sea::before,
+.category-btn.cat-mountain::before,
 .category-btn.cat-culture::before {
-  background: linear-gradient(135deg, rgba(var(--culture-1), 0.95), rgba(var(--culture-2), 0.6));
+  background: linear-gradient(135deg, rgba(212,175,55,0.95), rgba(184,134,11,0.85));
 }
 
 /* Slightly stronger hover accent per category */
@@ -789,6 +679,27 @@ body[data-category] h2 {
   position: relative;
   z-index: 0;
 }
+
+/* Category card title (Sea, Mountain, Culture) — gold by default and above overlay */
+.category-btn .cat-label {
+  color: #D4AF37 !important;
+  position: relative; /* keep in flow but enable z-index */
+  z-index: 3;        /* above ::before overlay (z-index:2) */
+  mix-blend-mode: normal;
+  /* Balance cross-language visual weight */
+  font-weight: 600; /* default weight for Latin */
+  -webkit-font-smoothing: antialiased; /* lighter on macOS */
+  text-rendering: optimizeLegibility;
+}
+/* Extra specificity per category to defeat any inherited accent colors */
+.category-btn.cat-sea .cat-label,
+.category-btn.cat-mountain .cat-label,
+.category-btn.cat-culture .cat-label { color: #D4AF37 !important; }
+
+/* Slightly lighten Greek to offset heavier glyph rendering */
+html[lang="el"] .category-btn .cat-label { font-weight: 500; }
+/* Keep a subtle brightness lift on hover to match previous perceived glow */
+.category-btn:hover .cat-label { filter: brightness(1.08); }
 
 /* colored accent + shadow for trip cards (matching tiles) */
 #trips-container .trip-card::before {
@@ -1070,22 +981,12 @@ body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(
 }
 
 /* tablet and up: center content in a box */
-@media (min-width: 768px) {
-  .trip-section {
-    max-width: 960px;
-    margin: 28px auto;
-    padding: 0 18px 64px;
-  }
+@media (max-width: 599px) {
+  /* keep overlay content comfortable on small screens */
+  .overlay .overlay-inner { padding: 12px; min-height: calc(100vh - var(--footer-offset, 80px)); }
 }
-
-/* desktop: two-column layout with sticky map */
 @media (min-width: 1024px) {
-  /* Desktop: use the same single-column flow as mobile but constrain width so
-     content doesn't stretch edge-to-edge. This keeps videos above/beside
-     descriptions and the map below (mobile-like) while centering the page. */
-
   .trip-section {
-    display: block;
     max-width: 1100px; /* slightly wider on desktop */
     margin: 36px auto;
     padding: 0 20px 64px;

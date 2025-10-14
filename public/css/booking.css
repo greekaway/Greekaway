@@ -1,0 +1,128 @@
+/* Booking-specific styles isolated from global theme */
+
+/* Cinematic entrance for overlay content */
+@keyframes bookingFadeSlideUp {
+  0% { opacity: 0; transform: translateY(10px); }
+  60% { opacity: 1; transform: translateY(-6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Scope everything under #bookingOverlay to avoid touching other overlays */
+#bookingOverlay.overlay.active .overlay-inner { animation: bookingFadeSlideUp 360ms cubic-bezier(.2,.9,.2,1) both; }
+
+/* Fullscreen calendar container helper */
+#bookingOverlay .calendar-full,
+#bookingOverlay .flatpickr-calendar,
+#bookingOverlay .booking-calendar {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* Fixed bottom action bar with safe-area support; ensure it's above site footer */
+#bookingOverlay .booking-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: #1B2A3A;
+  padding: 16px;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+  z-index: 10000; /* on top of footer */
+}
+
+#bookingOverlay .booking-actions .btn-primary,
+#bookingOverlay .booking-actions .btn-secondary,
+#bookingOverlay .btn-primary,
+#bookingOverlay .btn-secondary,
+#bookingOverlay button,
+#bookingOverlay button.book-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
+  padding: 0 18px;
+  min-height: 48px;
+  height: 48px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 200ms ease;
+  will-change: transform, box-shadow;
+}
+
+#bookingOverlay .btn-primary { background: linear-gradient(180deg,#b8862a,#f9d65c); color: #07222a; box-shadow: 0 6px 18px rgba(185,140,40,0.18); }
+#bookingOverlay .btn-secondary { background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.06); }
+#bookingOverlay .btn-primary:hover, #bookingOverlay .btn-secondary:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 10px 30px rgba(185,140,40,0.22); transition: transform 250ms ease-out, box-shadow 250ms ease-out; }
+#bookingOverlay .btn-primary:active, #bookingOverlay .btn-secondary:active { transform: translateY(1px) scale(0.995); }
+#bookingOverlay .btn-primary:focus { outline: none; box-shadow: 0 0 0 4px rgba(249,214,92,0.14); }
+
+/* Dropdown styling within booking overlay only */
+#bookingOverlay select,
+#bookingOverlay .profile-select,
+#bookingOverlay .profile-dropdown {
+  background: linear-gradient(180deg, rgba(10,18,26,0.95), rgba(8,14,20,0.95));
+  color: #f1f0e8;
+  border: 1px solid rgba(249,214,92,0.09);
+  padding: 10px;
+  border-radius: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #f9d65c 50%), linear-gradient(135deg, #f9d65c 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  max-width: 720px;
+}
+#bookingOverlay select:focus, #bookingOverlay .profile-select:focus { box-shadow: 0 0 0 4px rgba(249,214,92,0.08); outline: none; }
+
+/* Titles & Headings inside booking overlay */
+#bookingOverlay h2, #bookingOverlay h3 { font-weight: 500; }
+
+/* Price + Seats layout */
+#bookingOverlay .seats-price { display: flex; gap: 10px; align-items: center; justify-content: space-between; width: 100%; }
+#bookingOverlay .seats-price .seats-field { flex: 1; }
+#bookingOverlay .seats-price .seat-control { display:inline-flex; align-items:center; gap:12px; }
+#bookingOverlay .seats-price .price-badge {
+  background: linear-gradient(180deg,#b8862a,#f9d65c);
+  color: #07222a; padding: 8px 12px; border-radius: 10px; font-weight: 600; margin-left: 6px;
+  box-shadow: 0 6px 16px rgba(185,140,40,0.16);
+  min-width: 72px; text-align:center;
+}
+
+/* Confirmation view seam fix (iOS Safari artifact) */
+#bookingOverlay.confirmation-active .overlay-inner,
+#bookingOverlay .overlay-inner.confirmation-view,
+#bookingOverlay.confirmation-active .booking-confirmation.step-card {
+  border: none !important;
+  border-right: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-clip: padding-box !important;
+}
+#bookingOverlay.confirmation-active .overlay-inner::before,
+#bookingOverlay.confirmation-active .overlay-inner::after { content: none !important; display: none !important; }
+
+/* Mobile layout tweaks */
+@media (max-width: 599px) {
+  #bookingOverlay .overlay-inner { padding: 12px; min-height: 100vh; }
+  #bookingOverlay .calendar-full { height: calc(100vh - 170px); overflow: auto; }
+  #bookingOverlay .booking-actions .btn-primary { order: 2; }
+  #bookingOverlay .booking-actions .btn-secondary { order: 1; }
+  /* reserve space at the bottom so content isn't hidden behind fixed action bar */
+  #bookingOverlay .overlay-inner { padding-bottom: calc(env(safe-area-inset-bottom) + 96px); }
+}
+
+/* Tablet adjustments also reserve bottom space */
+@media (min-width: 600px) and (max-width: 1024px) {
+  #bookingOverlay .overlay-inner { padding-bottom: calc(env(safe-area-inset-bottom) + 96px); }
+}
+
+/* Utility: shared width for primary/secondary in action bar on wide screens */
+#bookingOverlay .booking-actions .btn-primary, #bookingOverlay .booking-actions .btn-secondary { width: 48%; }

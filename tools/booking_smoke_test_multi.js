@@ -56,7 +56,16 @@ function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
         await page.waitForSelector('#step3', { timeout: 10000 });
         await sleep(300);
         await page.screenshot({ path: `${d.name}_step3_summary.png` });
-        await page.close();
+  // Also test Help and Profile overlays from trip page footer
+  await page.click('footer a:nth-child(4)');
+  await page.waitForSelector('#aiOverlay .overlay-inner', { timeout: 8000 });
+  await page.screenshot({ path: `${d.name}_help_overlay.png` });
+  await page.evaluate(() => { if (window.closeOverlay) window.closeOverlay('aiOverlay'); });
+  await page.click('footer a:nth-child(5)');
+  await page.waitForSelector('#profileOverlay .overlay-inner', { timeout: 8000 });
+  await page.screenshot({ path: `${d.name}_profile_overlay.png` });
+  await page.evaluate(() => { if (window.closeOverlay) window.closeOverlay('profileOverlay'); });
+  await page.close();
       } catch (e) {
         console.error(`[${d.name}] failed`, e.message);
         try { await page.close(); } catch (_) {}

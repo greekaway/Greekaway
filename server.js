@@ -7,8 +7,9 @@ const crypto = require('crypto');
 try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installed */ }
 
 const app = express();
-// Use the port provided by the hosting environment (Render, Heroku, etc.)
-const PORT = process.env.PORT || 3000;
+// Bind explicitly to 0.0.0.0:3000 for LAN access
+const HOST = '0.0.0.0';
+const PORT = 3000;
 
 // Read Maps API key from environment. If not provided, the placeholder remains.
 // Trim and strip surrounding quotes if the value was pasted with quotes.
@@ -626,6 +627,6 @@ app.get('/health', (req, res) => {
 });
 
 // 4️⃣ Εκκίνηση server
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Server running at http://${HOST}:${PORT}`);
 });

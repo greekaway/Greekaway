@@ -11,6 +11,34 @@
 				"$eslint-stylish"
 			],
 			"group": "build"
+		},
+		{
+			"label": "Open local server for visual check",
+			"type": "shell",
+			"command": "node -e \"console.log('no-op')\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run booking smoke test (mobile screenshots)",
+			"type": "shell",
+			"command": "node tools/booking_smoke_test.js",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run booking multi-viewport screenshots (overlays)",
+			"type": "shell",
+			"command": "node tools/booking_smoke_test_multi.js",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run multi-viewport overlay test",
+			"type": "shell",
+			"command": "node tools/booking_smoke_test_multi.js",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }
