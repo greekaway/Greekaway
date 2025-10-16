@@ -751,6 +751,21 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
   #bookingOverlay .flatpickr-calendar { --cal-gap: 7px; --cal-pad-x: 20px; }
 }
 
+/* Desktop only (mouse/hover devices): keep availability above the trip title, centered */
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  #bookingOverlay #availabilityBlock {
+    position: absolute !important;
+    /* Place just above the title which sits at: calc(var(--calendar-top) - 46px) */
+    top: calc(var(--calendar-top, 25vh) - 84px) !important; /* 3 clicks (~6px) higher */
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: clamp(420px, 48vw, 640px) !important;
+    margin: 0 !important;
+    z-index: 7001 !important;
+    pointer-events: none !important; /* avoid blocking interactions */
+  }
+}
+
 /* =============================================
    Final enforcement: Bold year across devices
    ============================================= */
@@ -760,4 +775,53 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
 #bookingOverlay .flatpickr-months .flatpickr-month .cur-year {
   font-weight: 800 !important;
   font-variation-settings: 'wght' 800 !important;
+}
+
+/* =============================================
+   Global: remove any grey "windows" (backgrounds)
+   from month header and weekday labels (all devices)
+   ============================================= */
+#bookingOverlay .flatpickr-months,
+#bookingOverlay .flatpickr-months .flatpickr-month,
+#bookingOverlay .flatpickr-current-month,
+#bookingOverlay .flatpickr-current-month .cur-month,
+#bookingOverlay .flatpickr-current-month .numInputWrapper,
+#bookingOverlay .flatpickr-current-month input,
+#bookingOverlay .flatpickr-weekdays,
+#bookingOverlay .flatpickr-weekdaycontainer,
+#bookingOverlay .flatpickr-weekday {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+#bookingOverlay .flatpickr-current-month::before,
+#bookingOverlay .flatpickr-current-month::after,
+#bookingOverlay .flatpickr-months .flatpickr-month::before,
+#bookingOverlay .flatpickr-months .flatpickr-month::after,
+#bookingOverlay .flatpickr-current-month .cur-month::before,
+#bookingOverlay .flatpickr-current-month .cur-month::after {
+  content: none !important;
+  display: none !important;
+}
+#bookingOverlay .flatpickr-current-month .cur-month,
+#bookingOverlay .flatpickr-current-month input,
+#bookingOverlay .flatpickr-current-month .numInputWrapper {
+  border-radius: 0 !important;
+  outline: none !important;
+}
+
+/* =============================================
+   Global contrast bump: brighter white labels
+   ============================================= */
+#bookingOverlay .flatpickr-current-month,
+#bookingOverlay .flatpickr-current-month .cur-month,
+#bookingOverlay .flatpickr-current-month .cur-year,
+#bookingOverlay .flatpickr-current-month input.cur-year {
+  color: #ffffff !important;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.18) !important;
+}
+#bookingOverlay .flatpickr-weekday {
+  color: #ffffff !important;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.18) !important;
 }
