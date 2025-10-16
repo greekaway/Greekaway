@@ -627,27 +627,30 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
 /* Tablet/iPad fixes: prevent calendar clipping on Step 1 (iPad & iPad mini) */
 @media (min-width: 600px) and (max-width: 1023px) {
   /* Make step1 a flex column so we can order blocks without touching DOM */
-  #bookingOverlay #step1 { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 6px !important; padding-top: 16px !important; padding-bottom: calc(140px + env(safe-area-inset-bottom)) !important; }
+  #bookingOverlay #step1 { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 6px !important; padding-top: 16px !important; padding-bottom: calc(140px + env(safe-area-inset-bottom)) !important; position: relative !important; }
   /* Reorder: availability (1), title (2), calendar (3) */
   #bookingOverlay #availabilityBlock { order: 1 !important; }
   #bookingOverlay #step1 .trip-hero-title { order: 2 !important; }
   #bookingOverlay #step1 .calendar-card { order: 3; }
 
   /* Slightly adjust occupancy pill so it sits comfortably above the buttons */
-  #bookingOverlay #step1 .occupancy-indicator { bottom: calc(64px + env(safe-area-inset-bottom) + 118px) !important; }
+  #bookingOverlay #step1 .occupancy-indicator { bottom: calc(64px + env(safe-area-inset-bottom) + 102px) !important; }
   /* Title should sit above the calendar in normal flow (no overlap) */
   #bookingOverlay #step1 .trip-hero-title {
     position: static !important;
-    margin: 24px auto 14px !important; /* +2 clicks lower */
+    margin: 42px auto 14px !important; /* +2 clicks +3 more clicks lower */
     text-align: center !important;
     z-index: 6 !important; /* above card shadow if needed */
   }
   /* Availability presentation: keep it compact and visible above title */
   #bookingOverlay #availabilityBlock {
     width: min(760px, calc(100vw - 56px));
-    margin: 24px auto 6px !important; /* sit closer to top, before title */
-    position: relative !important;
+    position: absolute !important; /* remove from flow so calendar doesn't shift */
+    top: -6px !important; /* raise ~2 clicks above the title */
+    left: 50% !important; transform: translateX(-50%) !important;
+    margin: 0 !important;
     z-index: 7001 !important; /* above footer and shadows */
+    pointer-events: none !important; /* avoid blocking taps */
   }
   /* Let the calendar sit in normal flow so it can't be clipped by viewport */
   #bookingOverlay .calendar-full {
@@ -656,14 +659,17 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
     left: auto !important;
     right: auto !important;
     transform: none !important;
-    width: min(740px, calc(100vw - 56px)) !important; /* slim a bit on tablets */
+    width: min(700px, calc(100vw - 56px)) !important; /* slimmer on tablets */
     height: auto !important;
     margin: 0 auto 32vh !important; /* extra bottom breathing room so it never rides over buttons */
     overflow: visible !important;
   }
   /* Slim down gaps/padding inside the calendar for tablets */
-  #bookingOverlay .flatpickr-calendar { --cal-gap: 4px !important; --cal-pad-x: 16px !important; }
+  #bookingOverlay .flatpickr-calendar { --cal-gap: 3px !important; --cal-pad-x: 14px !important; }
   #bookingOverlay .flatpickr-weekdays { padding: 8px var(--cal-pad-x) !important; }
+  /* Slightly smaller typography to reinforce the smaller calendar */
+  #bookingOverlay #step1 .flatpickr-day { font-size: 0.94rem !important; }
+  #bookingOverlay #step1 .flatpickr-weekday { font-size: 0.92rem !important; }
   /* Keep the action buttons above any content */
   #bookingOverlay #step1 .booking-actions { z-index: 9001 !important; }
   /* Mirror desktop behavior so absolute fill doesn’t require fixed height */
@@ -674,35 +680,40 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
 
 /* iPad landscape (touch devices around 1024px): apply same tablet-safe layout without touching desktops */
 @media (min-width: 1024px) and (max-width: 1180px) and (hover: none) and (pointer: coarse) {
-  #bookingOverlay #step1 { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 6px !important; padding-top: 16px !important; padding-bottom: calc(140px + env(safe-area-inset-bottom)) !important; }
+  #bookingOverlay #step1 { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 6px !important; padding-top: 16px !important; padding-bottom: calc(140px + env(safe-area-inset-bottom)) !important; position: relative !important; }
   /* Reorder: availability (1), title (2), calendar (3) */
   #bookingOverlay #availabilityBlock { order: 1 !important; }
   #bookingOverlay #step1 .trip-hero-title { order: 2 !important; }
   #bookingOverlay #step1 .calendar-card { order: 3; }
-  #bookingOverlay #step1 .occupancy-indicator { bottom: calc(64px + env(safe-area-inset-bottom) + 118px) !important; }
+  #bookingOverlay #step1 .occupancy-indicator { bottom: calc(64px + env(safe-area-inset-bottom) + 102px) !important; }
   #bookingOverlay #step1 .trip-hero-title {
     position: static !important;
-    margin: 24px auto 14px !important; /* +2 clicks lower */
+    margin: 42px auto 14px !important; /* +2 clicks +3 more clicks lower */
     text-align: center !important;
     z-index: 6 !important;
   }
   #bookingOverlay #availabilityBlock {
     width: min(780px, calc(100vw - 64px));
-    margin: 24px auto 6px !important; /* sit closer to top, before title */
-    position: relative !important;
+    position: absolute !important; /* remove from flow so calendar doesn't shift */
+    top: -4px !important; /* raise ~2 clicks above the title */
+    left: 50% !important; transform: translateX(-50%) !important;
+    margin: 0 !important;
     z-index: 7001 !important;
+    pointer-events: none !important; /* avoid blocking taps */
   }
   #bookingOverlay .calendar-full {
     position: static !important;
     top: auto !important; left: auto !important; right: auto !important;
     transform: none !important;
-    width: min(760px, calc(100vw - 64px)) !important; /* slim a bit on iPad landscape */
+    width: min(720px, calc(100vw - 64px)) !important; /* slimmer on iPad landscape */
     height: auto !important;
     margin: 0 auto 32vh !important; /* extra bottom breathing room */
     overflow: visible !important;
   }
-  #bookingOverlay .flatpickr-calendar { --cal-gap: 4px !important; --cal-pad-x: 16px !important; }
+  #bookingOverlay .flatpickr-calendar { --cal-gap: 3px !important; --cal-pad-x: 14px !important; }
   #bookingOverlay .flatpickr-weekdays { padding: 8px var(--cal-pad-x) !important; }
+  #bookingOverlay #step1 .flatpickr-day { font-size: 0.94rem !important; }
+  #bookingOverlay #step1 .flatpickr-weekday { font-size: 0.92rem !important; }
   #bookingOverlay #step1 .booking-actions { z-index: 9001 !important; }
   #bookingOverlay .flatpickr-calendar { position: static !important; inset: auto !important; padding-bottom: 26px !important; overflow: visible !important; }
   #bookingOverlay .flatpickr-days { overflow: visible !important; padding-bottom: 38px !important; }
