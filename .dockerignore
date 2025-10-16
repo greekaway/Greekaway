@@ -1,0 +1,43 @@
+# Exclude dev and heavy artifacts from Docker build context
+node_modules
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Large archives/backups
+public.zip
+
+# Local logs
+*.log
+server.log
+server.out
+webhook.log
+
+# Not needed in runtime image
+.tests
+/tests/
+/docs/
+/tools/
+/scripts/
+
+# VCS/editor files
+.git
+.gitignore
+.vscode
+.DS_Store
+
+# Root screenshots and smoke images (not served by express)
+booking_step*.png
+debug_calendar.png
+smoke_*.png
+iphone-*.png
+ipad-*.png
+ipad-mini*.png
+pixel-*.png
+tablet*.png
+tablet_*.png
+
+# SQLite temp files
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm

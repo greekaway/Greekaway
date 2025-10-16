@@ -9,7 +9,7 @@ try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installe
 const app = express();
 // Bind explicitly to 0.0.0.0:3000 for LAN access
 const HOST = '0.0.0.0';
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // Read Maps API key from environment. If not provided, the placeholder remains.
 // Trim and strip surrounding quotes if the value was pasted with quotes.
