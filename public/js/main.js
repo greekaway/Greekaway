@@ -285,6 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
       function startBookingFlow() {
         try {
           openOverlay('bookingOverlay');
+          try { document.getElementById('bookingOverlay').classList.add('step1-active'); } catch(e){}
           // transform overlay-inner into step container
           const overlayInner = document.querySelector('#bookingOverlay .overlay-inner');
           if (!overlayInner) return;
@@ -380,6 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // wire buttons
           document.getElementById('s1Next').addEventListener('click', () => {
+            try { document.getElementById('bookingOverlay').classList.remove('step1-active'); } catch(e){}
             // Navigate in the SAME tab to avoid any browser opening extra Google/new-tab pages
             // Persist trip info for Step 2 header
             try {
@@ -389,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const absUrl = new URL('/step2.html', window.location.origin).href;
             window.location.href = absUrl;
           });
-          document.getElementById('s1Cancel').addEventListener('click', () => { closeOverlay('bookingOverlay'); renderOriginalOverlayInner(); });
+          document.getElementById('s1Cancel').addEventListener('click', () => { try { document.getElementById('bookingOverlay').classList.remove('step1-active'); } catch(e){} closeOverlay('bookingOverlay'); renderOriginalOverlayInner(); });
         } catch (e) { G.warn('startBookingFlow failed', e); }
       }
 
@@ -403,6 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       function showStep2() {
         try {
+          try { document.getElementById('bookingOverlay').classList.remove('step1-active'); } catch(e){}
           const step2 = document.getElementById('step2');
           const step1 = document.getElementById('step1');
           if (!step2 || !step1) return;
@@ -523,13 +526,14 @@ document.addEventListener("DOMContentLoaded", () => {
             try { updateMiniPrice(); } catch(e){}
           } catch(e){}
           // wire step2 buttons
-          document.getElementById('s2Back').addEventListener('click', () => { document.getElementById('step2').style.display='none'; document.getElementById('step1').style.display='block'; });
+          document.getElementById('s2Back').addEventListener('click', () => { document.getElementById('step2').style.display='none'; document.getElementById('step1').style.display='block'; try { document.getElementById('bookingOverlay').classList.add('step1-active'); } catch(e){} });
           document.getElementById('s2Next').addEventListener('click', () => { showStep3(); });
         } catch (e) { G.warn('showStep2 failed', e); }
       }
 
       function showStep3() {
         try {
+          try { document.getElementById('bookingOverlay').classList.remove('step1-active'); } catch(e){}
           const step2 = document.getElementById('step2');
           const step3 = document.getElementById('step3');
           if (!step3 || !step2) return;
