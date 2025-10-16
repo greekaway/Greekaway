@@ -136,6 +136,49 @@ async function savePayments(payments) {
 }
 
 module.exports = function attachWebhook(app, stripe) {
+  function upsertTravelerFromMetadata(meta) {
+    try {
+      if (!meta) return;
+      const email = (meta.user_email || meta.email || '').trim();
+      if (!email || !useSqlite || !db) return;
+      const now = new Date().toISOString();
+      const childrenAges = Array.isArray(meta.children_ages) ? JSON.stringify(meta.children_ages) : (typeof meta.children_ages === 'string' ? meta.children_ages : null);
+      const stmt = db.prepare(`INSERT INTO travelers (email,name,language,age_group,traveler_type,interest,sociality,children_ages,updated_at)
+        VALUES (@email,@name,@language,@age_group,@traveler_type,@interest,@sociality,@children_ages,@updated_at)
+        ON CONFLICT(email) DO UPDATE SET name=excluded.name, language=excluded.language, age_group=excluded.age_group, traveler_type=excluded.traveler_type, interest=excluded.interest, sociality=excluded.sociality, children_ages=excluded.children_ages, updated_at=excluded.updated_at`);
+      stmt.run({
+        email,
+        name: meta.user_name || meta.name || null,
+        language: meta.language || null,
+        age_group: meta.age_group || null,
+        traveler_type: meta.traveler_type || null,
+        interest: meta.interest || null,
+        sociality: meta.sociality || null,
+        children_ages: childrenAges,
+        updated_at: now
+      });
+    } catch (e) {
+      // non-fatal
+    }
+  }
+
+  function updateCoTravel(emails, tripId, date) {
+    try {
+      if (!useSqlite || !db) return;
+      const pairs = [];
+      // create ordered unique pairs (a<b to avoid duplicates)
+      for (let i = 0; i < emails.length; i++) {
+        for (let j = i + 1; j < emails.length; j++) {
+          const a = String(emails[i] || '').trim().toLowerCase();
+          const b = String(emails[j] || '').trim().toLowerCase();
+          if (a && b && a !== b) pairs.push([a, b]);
+        }
+      }
+      const sel = db.prepare('SELECT times FROM co_travel WHERE email_a = ? AND email_b = ? AND trip_id = ? AND date = ?');
+      const up = db.prepare('INSERT INTO co_travel (email_a,email_b,trip_id,date,times) VALUES (?,?,?,?,1) ON CONFLICT(email_a,email_b,trip_id,date) DO UPDATE SET times = times + 1');
+      for (const [a,b] of pairs) { up.run(a,b,tripId||null,date||null); }
+    } catch (e) { /* non-fatal */ }
+  }
   // Shared handler for recording a payment event (succeeded/failed) and
   // optionally confirming a booking if metadata.booking_id is present.
   async function processPaymentEvent(event, status) {
@@ -162,6 +205,11 @@ module.exports = function attachWebhook(app, stripe) {
         // If payment succeeded, attempt to mark a related booking as confirmed.
         if (status === 'succeeded') {
           try {
+            // Upsert traveler from PI metadata even if no booking linkage exists
+            try {
+              const meta = (pi && pi.metadata) ? pi.metadata : null;
+              if (meta) upsertTravelerFromMetadata(meta);
+            } catch (e) { /* ignore */ }
             const bookingId = pi && pi.metadata && pi.metadata.booking_id ? pi.metadata.booking_id : null;
             if (bookingId) {
               try {
@@ -172,6 +220,21 @@ module.exports = function attachWebhook(app, stripe) {
                 const stmt = bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?');
                 stmt.run('confirmed', event.id || null, now, bookingId);
                 safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${bookingId} for_pi=${pid}`);
+                // read booking to capture metadata for traveler upsert and co-travel stats
+                try {
+                  const row = bookingsDb.prepare('SELECT * FROM bookings WHERE id = ?').get(bookingId);
+                  if (row) {
+                    const meta = row.metadata ? (typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata) : {};
+                    // Ensure email/name present
+                    meta.user_email = meta.user_email || row.user_email;
+                    meta.user_name = meta.user_name || row.user_name;
+                    upsertTravelerFromMetadata(meta);
+                    // Update co-travel: pair this email with all other confirmed bookings for same trip/date
+                    const others = bookingsDb.prepare('SELECT user_email FROM bookings WHERE status = ? AND trip_id = ? AND date = ?').all('confirmed', row.trip_id, row.date).map(r => (r.user_email||'').trim()).filter(Boolean);
+                    const all = Array.from(new Set([row.user_email, ...others].map(e => (e||'').trim()).filter(Boolean)));
+                    updateCoTravel(all, row.trip_id, row.date);
+                  }
+                } catch (e) { /* ignore */ }
                 bookingsDb.close();
               } catch (e) { /* non-fatal */ }
             } else {
@@ -179,11 +242,21 @@ module.exports = function attachWebhook(app, stripe) {
                 const path = require('path');
                 const Database = require('better-sqlite3');
                 const bookingsDb = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
-                const b = bookingsDb.prepare('SELECT id FROM bookings WHERE payment_intent_id = ? LIMIT 1').get(pid);
+                const b = bookingsDb.prepare('SELECT * FROM bookings WHERE payment_intent_id = ? LIMIT 1').get(pid);
                 if (b && b.id) {
                   const now = new Date().toISOString();
                   bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?').run('confirmed', event.id || null, now, b.id);
                   safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${b.id} for_pi=${pid}`);
+                  // upsert traveler from booking metadata as well
+                  try {
+                    const meta = b.metadata ? (typeof b.metadata === 'string' ? JSON.parse(b.metadata) : b.metadata) : {};
+                    meta.user_email = meta.user_email || b.user_email;
+                    meta.user_name = meta.user_name || b.user_name;
+                    upsertTravelerFromMetadata(meta);
+                    const others = bookingsDb.prepare('SELECT user_email FROM bookings WHERE status = ? AND trip_id = ? AND date = ?').all('confirmed', b.trip_id, b.date).map(r => (r.user_email||'').trim()).filter(Boolean);
+                    const all = Array.from(new Set([b.user_email, ...others].map(e => (e||'').trim()).filter(Boolean)));
+                    updateCoTravel(all, b.trip_id, b.date);
+                  } catch (e) { /* ignore */ }
                 }
                 bookingsDb.close();
               } catch (e) { /* non-fatal */ }

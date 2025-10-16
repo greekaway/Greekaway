@@ -54,6 +54,7 @@
 
   <script src="https://js.stripe.com/v3/"></script>
   <script src="/js/payment-request.js"></script>
+  <script src="/js/feedback.js" defer></script>
     <script src="/js/i18n.js" defer></script>
   <script>
     // Client-side Stripe integration (scaffold). Requires STRIPE_PUBLISHABLE_KEY set on server
@@ -193,13 +194,48 @@
         e.preventDefault();
         const name = form.name.value;
         const email = form.email.value;
-        // create payment intent on server (amount in cents) — example 10 EUR
-        const resp = await fetch('/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount: 1000, currency: 'eur' }) });
+        // Derive booking id or create a booking first (to persist traveler profile)
+        const qs = new URLSearchParams(window.location.search);
+        let bookingId = qs.get('bookingId');
+        const tripId = qs.get('trip');
+        try {
+          if (!bookingId && tripId) {
+            // collect profile from sessionStorage (Step 2)
+            const ss = (k,d='')=>{ try{ const v=sessionStorage.getItem(k); return v==null?d:v; }catch(_){ return d; } };
+            const adults = parseInt(ss('gw_adults','2'),10) || 2;
+            let childrenAges = [];
+            try { childrenAges = JSON.parse(ss('gw_children_ages','[]')) || []; } catch(_){ childrenAges = []; }
+            const seats = Math.max(1, adults + (childrenAges.length||0));
+            const payload = {
+              trip_id: tripId,
+              date: null,
+              seats,
+              user_name: name,
+              user_email: email,
+              price_cents: 1000,
+              currency: 'eur',
+              language: ss('gw_lang','el') || null,
+              age_group: ss('gw_age_group','') || null,
+              traveler_type: ss('gw_traveler_type','') || null,
+              interest: ss('gw_interest','') || null,
+              sociality: ss('gw_sociality','') || null,
+              children_ages: childrenAges
+            };
+            const r = await fetch('/api/bookings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+            const j = await r.json();
+            if (r.ok && j.bookingId) bookingId = j.bookingId;
+          }
+        } catch (err) { console.warn('[checkout] create booking failed (continuing)', err); }
+
+        // create payment intent on server (amount in cents) — example 10 EUR, include booking_id for linkage
+        const body = { amount: 1000, currency: 'eur' };
+        if (bookingId) body.booking_id = bookingId;
+        const resp = await fetch('/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
         const data = await resp.json();
-    if(!data.clientSecret) return showResult('i18n:checkout.payment_error', false);
-  const { error } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardNumber, billing_details: { name, email } } });
-    if(error) showResult(error.message || 'i18n:checkout.payment_failed', false);
-    else showResult('i18n:checkout.payment_success_test', true);
+        if(!data.clientSecret) return showResult('i18n:checkout.payment_error', false);
+        const { error } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardNumber, billing_details: { name, email } } });
+        if(error) showResult(error.message || 'i18n:checkout.payment_failed', false);
+        else showResult('i18n:checkout.payment_success_test', true);
       });
     } else {
       // Fallback: use mock endpoint
@@ -213,6 +249,7 @@
       });
     }
     })();
+    try { window.GWFeedbackPrompt && window.GWFeedbackPrompt.init && window.GWFeedbackPrompt.init(); } catch(e){}
   </script>
 </body>
 </html>

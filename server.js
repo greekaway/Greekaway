@@ -64,6 +64,67 @@ try {
     capacity INTEGER,
     PRIMARY KEY(trip_id, date)
   )`);
+
+  // Travelers table to persist last-known profile per email (for stats/matching)
+  bookingsDb.exec(`CREATE TABLE IF NOT EXISTS travelers (
+    email TEXT PRIMARY KEY,
+    name TEXT,
+    language TEXT,
+    age_group TEXT,
+    traveler_type TEXT,
+    interest TEXT,
+    sociality TEXT,
+    children_ages TEXT,
+    updated_at TEXT
+  )`);
+  // Add average_rating column if missing
+  try {
+    const info = bookingsDb.prepare("PRAGMA table_info('travelers')").all();
+    const hasAvg = info && info.some(i => i.name === 'average_rating');
+    if (!hasAvg) {
+      bookingsDb.prepare('ALTER TABLE travelers ADD COLUMN average_rating REAL').run();
+      console.log('server: added average_rating to travelers');
+    }
+  } catch (e) { /* ignore migration errors */ }
+
+  // Co-travel stats: how often two emails have been grouped/traveled together (per trip/date)
+  bookingsDb.exec(`CREATE TABLE IF NOT EXISTS co_travel (
+    email_a TEXT,
+    email_b TEXT,
+    trip_id TEXT,
+    date TEXT,
+    times INTEGER,
+    PRIMARY KEY(email_a, email_b, trip_id, date)
+  )`);
+
+  // Feedback table: post-trip ratings
+  bookingsDb.exec(`CREATE TABLE IF NOT EXISTS feedback (
+    id TEXT PRIMARY KEY,
+    trip_id TEXT,
+    traveler_email TEXT,
+    rating INTEGER,
+    comment TEXT,
+    created_at TEXT
+  )`);
+
+  // Groups table (store each group as a row with JSON array of travelers)
+  bookingsDb.exec(`CREATE TABLE IF NOT EXISTS groups (
+    id TEXT PRIMARY KEY,
+    trip_id TEXT,
+    date TEXT,
+    travelers TEXT,
+    locked INTEGER DEFAULT 0,
+    created_at TEXT
+  )`);
+  // Add bookings.grouped flag to avoid duplicate grouping (optional)
+  try {
+    const infoB = bookingsDb.prepare("PRAGMA table_info('bookings')").all();
+    const hasGrouped = infoB && infoB.some(i => i.name === 'grouped');
+    if (!hasGrouped) {
+      bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN grouped INTEGER DEFAULT 0').run();
+      console.log('server: added grouped to bookings');
+    }
+  } catch (e) { /* ignore migration errors */ }
   console.log('server: bookings table ready');
 } catch (e) {
   console.warn('server: bookings DB not available', e && e.message ? e.message : e);
@@ -118,6 +179,7 @@ app.post('/create-payment-intent', express.json(), async (req, res) => {
   try {
     const { amount, currency } = req.body;
     const { booking_id } = req.body || {};
+    const clientMeta = req.body && req.body.metadata ? req.body.metadata : null;
     // basic validation
     const amt = parseInt(amount, 10) || 0;
     if (amt <= 0) return res.status(400).json({ error: 'Invalid amount' });
@@ -132,6 +194,9 @@ app.post('/create-payment-intent', express.json(), async (req, res) => {
       automatic_payment_methods: { enabled: true },
     };
     if (booking_id) piParams.metadata = { booking_id };
+    if (clientMeta) {
+      piParams.metadata = Object.assign({}, piParams.metadata || {}, clientMeta);
+    }
     const paymentIntent = await stripe.paymentIntents.create(piParams, opts);
 
     // If booking exists in SQLite, save the payment_intent id for later matching in webhook
@@ -153,7 +218,37 @@ app.post('/create-payment-intent', express.json(), async (req, res) => {
 // Bookings API: create and read bookings
 app.post('/api/bookings', express.json(), (req, res) => {
   try {
-    const { user_name, user_email, trip_id, seats, price_cents, currency, metadata } = req.body || {};
+    const { user_name, user_email, trip_id, seats, price_cents, currency } = req.body || {};
+    // Traveler profile fields from step2 (optional)
+    // Normalize alternative field names coming from overlay booking form
+    const mapTravelerType = (v) => {
+      if (!v) return null;
+      const x = String(v).toLowerCase();
+      if (x === 'explorer') return 'explore';
+      if (x === 'relaxed') return 'relax';
+      return x; // family, solo -> same
+    };
+    const mapInterest = (v) => {
+      if (!v) return null;
+      const x = String(v).toLowerCase();
+      if (x === 'cultural') return 'culture';
+      if (x === 'nature') return 'nature';
+      return x;
+    };
+    const mapSocial = (style, tempo) => {
+      const s = style ? String(style).toLowerCase() : '';
+      const t = tempo ? String(tempo).toLowerCase() : '';
+      if (s === 'sociable' || t === 'talkative') return 'social';
+      if (s === 'quiet' || t === 'reserved') return 'quiet';
+      return null;
+    };
+    const language = req.body.language || req.body.preferredLanguage || null;
+    const traveler_type = req.body.traveler_type || mapTravelerType(req.body.travelerProfile) || null;
+    const interest = req.body.interest || mapInterest(req.body.travelStyle) || null;
+    const sociality = req.body.sociality || mapSocial(req.body.travelStyle, req.body.travelTempo) || null;
+    const childrenAges = Array.isArray(req.body.children_ages) ? req.body.children_ages : (typeof req.body.children_ages === 'string' ? req.body.children_ages : null);
+    const profile = { language, age_group: req.body.age_group || null, traveler_type, interest, sociality, children_ages: childrenAges, user_email, user_name };
+    const metadata = req.body.metadata || profile;
     if (!user_name || !user_email || !trip_id) return res.status(400).json({ error: 'Missing required fields' });
     // date support
     let date = req.body.date || null;
@@ -360,6 +455,163 @@ app.get('/admin/bookings', (req, res) => {
     console.error('Admin bookings error:', err && err.stack ? err.stack : err);
     return res.status(500).send('Server error');
   }
+});
+
+// Admin: list travelers (for stats/exports)
+app.get('/admin/travelers', (req, res) => {
+  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  try {
+    if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
+    const rows = bookingsDb.prepare('SELECT email,name,language,age_group,traveler_type,interest,sociality,children_ages,average_rating,updated_at FROM travelers ORDER BY updated_at DESC').all();
+    // parse children_ages JSON if stored as JSON text
+    rows.forEach(r => { try { if (r.children_ages && typeof r.children_ages === 'string' && r.children_ages.trim().startsWith('[')) r.children_ages = JSON.parse(r.children_ages); } catch (e) {} });
+    return res.json(rows);
+  } catch (e) { return res.status(500).json({ error: 'Server error' }); }
+});
+
+// Suggest pairs for a trip/date using simple similarity + co_travel boost
+app.get('/admin/suggest-pairs', (req, res) => {
+  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  try {
+    if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
+    const trip_id = req.query.trip_id || null;
+    const date = req.query.date || null;
+    // Load confirmed bookings for that trip/date
+    const bookings = bookingsDb.prepare('SELECT user_email, metadata FROM bookings WHERE status = ? AND (? IS NULL OR trip_id = ?) AND (? IS NULL OR date = ?)').all('confirmed', trip_id, trip_id, date, date);
+    const emails = Array.from(new Set(bookings.map(b => (b.user_email || '').toLowerCase()).filter(Boolean)));
+    if (emails.length < 2) return res.json([]);
+    // Load traveler profiles
+    const profByEmail = {};
+    const profs = bookingsDb.prepare('SELECT * FROM travelers WHERE email IN (' + emails.map(()=>'?').join(',') + ')').all(...emails);
+    profs.forEach(p => { profByEmail[(p.email||'').toLowerCase()] = p; });
+    // Simple score: +1 same language, +1 same age_group bucket (exact), +1 same traveler_type, +1 same interest, +0.5 same sociality, +min(2, co_travel times)
+    const pairs = [];
+    for (let i=0;i<emails.length;i++){
+      for(let j=i+1;j<emails.length;j++){
+        const a = emails[i], b = emails[j];
+        const pa = profByEmail[a]||{}, pb = profByEmail[b]||{};
+        let score = 0;
+        if (pa.language && pb.language && pa.language === pb.language) score += 1;
+        if (pa.age_group && pb.age_group && pa.age_group === pb.age_group) score += 1;
+        if (pa.traveler_type && pb.traveler_type && pa.traveler_type === pb.traveler_type) score += 1;
+        if (pa.interest && pb.interest && pa.interest === pb.interest) score += 1;
+        if (pa.sociality && pb.sociality && pa.sociality === pb.sociality) score += 0.5;
+        const row = bookingsDb.prepare('SELECT times FROM co_travel WHERE email_a = ? AND email_b = ? AND (? IS NULL OR trip_id = ?) AND (? IS NULL OR date = ?)').get(a,b,trip_id,trip_id,date,date) || { times: 0 };
+        score += Math.min(2, row.times || 0);
+        // Ratings influence: encourage pairs where αμφότεροι έχουν καλή μέση βαθμολογία
+        const ra = typeof pa.average_rating === 'number' ? pa.average_rating : null;
+        const rb = typeof pb.average_rating === 'number' ? pb.average_rating : null;
+        if (ra != null && rb != null) {
+          const avg = (ra + rb) / 2;
+          // scale: >4.5 +0.8, >4 +0.5, 3-4 +0.2, <2.5 -0.5, <2 -1
+          if (avg >= 4.5) score += 0.8; else if (avg >= 4.0) score += 0.5; else if (avg >= 3.0) score += 0.2; else if (avg < 2.0) score -= 1; else if (avg < 2.5) score -= 0.5;
+        }
+        pairs.push({ a, b, score });
+      }
+    }
+    pairs.sort((x,y)=>y.score - x.score);
+    res.json(pairs);
+  } catch (e) { return res.status(500).json({ error: 'Server error' }); }
+});
+
+// Submit feedback (post-trip)
+app.post('/api/feedback', express.json(), (req, res) => {
+  try {
+    if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
+    const { trip_id, traveler_email, rating, comment } = req.body || {};
+    if (!trip_id || !traveler_email) return res.status(400).json({ error: 'Missing trip_id or traveler_email' });
+    // rating can be 1..5 or strings: positive/neutral/negative
+    let r = rating;
+    if (typeof r === 'string') {
+      const x = r.toLowerCase();
+      if (x === 'positive') r = 5; else if (x === 'neutral') r = 3; else if (x === 'negative') r = 1;
+    }
+    r = parseInt(r,10);
+    if (!isFinite(r) || r < 1 || r > 5) r = 3; // default neutral
+    const id = require('crypto').randomUUID();
+    const now = new Date().toISOString();
+    bookingsDb.prepare('INSERT INTO feedback (id,trip_id,traveler_email,rating,comment,created_at) VALUES (?,?,?,?,?,?)').run(id, trip_id, traveler_email, r, comment || null, now);
+    // update traveler average_rating
+    try {
+      const agg = bookingsDb.prepare('SELECT AVG(rating) as avg FROM feedback WHERE traveler_email = ?').get(traveler_email);
+      const avg = agg && typeof agg.avg === 'number' ? agg.avg : null;
+      if (avg != null) {
+        bookingsDb.prepare('UPDATE travelers SET average_rating = ? WHERE email = ?').run(avg, traveler_email);
+      }
+    } catch (e) { /* ignore */ }
+    return res.json({ ok: true, id });
+  } catch (e) { return res.status(500).json({ error: 'Server error' }); }
+});
+
+// Admin: list feedback
+app.get('/admin/feedback', (req, res) => {
+  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  try {
+    if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
+    const rows = bookingsDb.prepare('SELECT id,trip_id,traveler_email,rating,comment,created_at FROM feedback ORDER BY created_at DESC').all();
+    return res.json(rows);
+  } catch (e) { return res.status(500).json({ error: 'Server error' }); }
+});
+
+// Admin: groups page data
+app.get('/admin/groups', (req, res) => {
+  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  try {
+    if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
+    const trip_id = req.query.trip_id || null;
+    const date = req.query.date || null;
+    if (req.headers.accept && req.headers.accept.includes('text/html')) {
+      // serve static admin/groups HTML (built client-side)
+      return res.sendFile(path.join(__dirname, 'public', 'admin-groups.html'));
+    }
+    // JSON response: groups + confirmed travelers for given trip/date
+    const groups = bookingsDb.prepare('SELECT id,trip_id,date,travelers,locked,created_at FROM groups WHERE (? IS NULL OR trip_id = ?) AND (? IS NULL OR date = ?) ORDER BY created_at DESC').all(trip_id, trip_id, date, date).map(g => ({...g, travelers: (()=>{ try { return JSON.parse(g.travelers||'[]'); } catch(_){ return []; } })()}));
+    let travelers = [];
+    if (trip_id && date) {
+      const rows = bookingsDb.prepare('SELECT user_name AS name, user_email AS email FROM bookings WHERE status = ? AND trip_id = ? AND date = ? AND grouped = 0').all('confirmed', trip_id, date);
+      // join traveler profiles for enriched view
+      travelers = rows.map(r => {
+        const p = bookingsDb.prepare('SELECT language, traveler_type, sociality, average_rating FROM travelers WHERE email = ?').get(r.email) || {};
+        return { name: r.name || r.email, email: r.email, ...p };
+      });
+    }
+    return res.json({ groups, travelers });
+  } catch (e) { return res.status(500).json({ error: 'Server error' }); }
+});
+
+// Admin: create/update groups
+app.post('/admin/groups', express.json(), (req, res) => {
+  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  try {
+    if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
+    const { op, id, trip_id, date, travelers, lock } = req.body || {};
+    if (!trip_id || !date) return res.status(400).json({ error: 'Missing trip_id/date' });
+    const now = new Date().toISOString();
+    if (op === 'create') {
+      const gid = crypto.randomUUID();
+      const arr = Array.isArray(travelers) ? travelers : [];
+      bookingsDb.prepare('INSERT INTO groups (id,trip_id,date,travelers,locked,created_at) VALUES (?,?,?,?,?,?)').run(gid, trip_id, date, JSON.stringify(arr), 0, now);
+      return res.json({ ok: true, id: gid });
+    }
+    if (op === 'update' && id) {
+      const arr = Array.isArray(travelers) ? travelers : null;
+      if (arr) bookingsDb.prepare('UPDATE groups SET travelers = ? WHERE id = ?').run(JSON.stringify(arr), id);
+      if (lock === true) {
+        bookingsDb.prepare('UPDATE groups SET locked = 1 WHERE id = ?').run(id);
+        // mark bookings grouped to avoid duplicates
+        try {
+          const g = bookingsDb.prepare('SELECT travelers FROM groups WHERE id = ?').get(id);
+          const emails = g && g.travelers ? JSON.parse(g.travelers) : [];
+          if (Array.isArray(emails) && emails.length) {
+            const mark = bookingsDb.prepare('UPDATE bookings SET grouped = 1 WHERE user_email = ? AND trip_id = ? AND date = ?');
+            emails.forEach(em => { try { mark.run(em, trip_id, date); } catch(_){ } });
+          }
+        } catch (e) { /* non-fatal */ }
+      }
+      return res.json({ ok: true });
+    }
+    return res.status(400).json({ error: 'Invalid op' });
+  } catch (e) { return res.status(500).json({ error: 'Server error' }); }
 });
 
 // Admin bookings CSV export

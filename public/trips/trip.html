@@ -52,6 +52,14 @@
     </div>
   </div>
 
+  <div id="aboutOverlay" class="overlay" role="dialog" aria-modal="true">
+    <button class="close-overlay" onclick="closeOverlay('aboutOverlay')" aria-label="Κλείσιμο">×</button>
+    <div class="overlay-inner">
+      <h2 data-i18n="about.title">Σχετικά με εμάς</h2>
+      <p data-i18n="about.text">Το Greekaway δημιουργήθηκε για να σας προσφέρει επιλεγμένες εκδρομές στην Ελλάδα με άνεση, τεχνολογία και στυλ.</p>
+    </div>
+  </div>
+
   <div id="paymentOverlay" class="overlay" role="dialog" aria-modal="true">
     <button class="close-overlay" onclick="closeOverlay('paymentOverlay')" aria-label="Κλείσιμο">×</button>
     <div class="overlay-inner">
@@ -166,9 +174,9 @@
       <span data-i18n="nav.home">Home</span>
     </a>
 
-    <a href="/checkout.html">
-      <i class="fas fa-credit-card"></i>
-      <span data-i18n="nav.checkout">Πληρωμή</span>
+    <a href="javascript:void(0)" onclick="openOverlay('aboutOverlay')">
+      <i class="fas fa-info-circle"></i>
+      <span data-i18n="nav.about">About Us</span>
     </a>
 
     <a href="javascript:void(0)" class="central-btn">

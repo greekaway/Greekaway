@@ -89,13 +89,41 @@
     <button id="s3Finish" class="btn">Ολοκλήρωση</button>
   </div>
 
+  <!-- Overlays: About, AI, Profile for consistent footer actions -->
+  <div id="aboutOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
+    <button class="close-overlay" onclick="closeOverlay('aboutOverlay')" aria-label="Κλείσιμο">×</button>
+    <div class="overlay-inner">
+      <h2 data-i18n="about.title">Σχετικά με εμάς</h2>
+      <p data-i18n="about.text">Το Greekaway δημιουργήθηκε για να σας προσφέρει επιλεγμένες εκδρομές στην Ελλάδα με άνεση, τεχνολογία και στυλ.</p>
+    </div>
+  </div>
+
+  <div id="aiOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
+    <button class="close-overlay" onclick="closeOverlay('aiOverlay')" aria-label="Κλείσιμο">×</button>
+    <div class="overlay-inner">
+      <h2 data-i18n="nav.ai">Βοηθός AI</h2>
+      <p data-i18n="welcome.ask">Ρωτήστε μας ό,τι θέλετε για την εκδρομή σας!</p>
+    </div>
+  </div>
+
+  <div id="profileOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
+    <button class="close-overlay" onclick="closeOverlay('profileOverlay')" aria-label="Κλείσιμο">×</button>
+    <div class="overlay-inner">
+      <h2 data-i18n="nav.profile">Το Προφίλ μου</h2>
+      <p data-i18n="profile.info">Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας.</p>
+    </div>
+  </div>
+
   <footer>
-    <a href="/index.html"><i class="fas fa-home"></i><span>Home</span></a>
-    <a href="/checkout.html"><i class="fas fa-credit-card"></i><span>Πληρωμή</span></a>
-    <a href="javascript:void(0)" class="central-btn"><i class="fas fa-bell"></i><span>Κράτηση</span></a>
-    <a href="javascript:void(0)"><i class="fas fa-comments"></i><span>AI Assistant</span></a>
-    <a href="javascript:void(0)"><i class="fas fa-user"></i><span>Προφίλ</span></a>
+    <a href="/index.html"><i class="fas fa-home"></i><span data-i18n="nav.home">Home</span></a>
+    <a href="javascript:void(0)" onclick="openOverlay('aboutOverlay')"><i class="fas fa-info-circle"></i><span data-i18n="nav.about">About Us</span></a>
+    <a href="javascript:void(0)" class="central-btn"><i class="fas fa-bell"></i><span data-i18n="nav.book">Κράτηση</span></a>
+    <a href="javascript:void(0)" onclick="openOverlay('aiOverlay')"><i class="fas fa-comments"></i><span data-i18n="nav.ai">AI Assistant</span></a>
+    <a href="javascript:void(0)" onclick="openOverlay('profileOverlay')"><i class="fas fa-user"></i><span data-i18n="nav.profile">Προφίλ</span></a>
   </footer>
+
+  <script src="/js/overlay-manager.js" defer></script>
+  <script src="/js/i18n.js" defer></script>
 
   <script>
     (function(){
@@ -140,5 +168,7 @@
       });
     })();
   </script>
+  <script src="/js/feedback.js" defer></script>
+  <script>try{ window.GWFeedbackPrompt && window.GWFeedbackPrompt.init && window.GWFeedbackPrompt.init(); }catch(e){}</script>
 </body>
 </html>
