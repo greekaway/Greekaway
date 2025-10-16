@@ -190,6 +190,19 @@ footer a.central-btn:hover i {
   margin-bottom: 0.6rem;
 }
 
+/* About overlay: ensure vertical flow and readable typography */
+#aboutOverlay .overlay-inner { display: block; }
+#aboutOverlay h2 {
+  margin-bottom: 0.8rem;
+  line-height: 1.15;
+  /* a bit smaller on mobile to avoid wrapping awkwardly */
+  font-size: clamp(1.2rem, 2.6vw + 0.9rem, 1.8rem);
+}
+#aboutOverlay p {
+  max-width: 46ch;
+  line-height: 1.5;
+}
+
 /* Light-blue variant for the Step 2 overlay */
 #step2Overlay.overlay { background: rgba(10, 24, 40, 0.66); }
 #step2Overlay .overlay-inner {
@@ -260,11 +273,14 @@ footer a.central-btn:hover i {
   .overlay .overlay-inner {
     margin: 0;
     border-radius: 0;
-    padding: 16px;
+    padding: 18px 16px 16px;
     min-height: 100vh;
     /* Reserve space so any bottom action bar is always reachable */
     padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
   }
+  /* Make About overlay text layout friendly on mobile */
+  #aboutOverlay .overlay-inner { text-align: left; }
+  #aboutOverlay p { margin-top: 0.2rem; }
   /* Avoid tiny right gutter by matching overlay padding to panel */
   .overlay { padding-left: 16px; padding-right: 16px; }
   .overlay .close-overlay { top: 10px; right: 10px; }
