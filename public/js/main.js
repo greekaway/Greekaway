@@ -311,6 +311,8 @@ document.addEventListener("DOMContentLoaded", () => {
           const trip = window.__loadedTrip || {};
           const disabledDates = trip.unavailable_dates || [];
           if (!GW_DISABLE_BOOKING_CALENDAR && window.flatpickr && calEl) {
+            // Use Greek locale (gr) for month/day names and Monday-first week
+            try { if (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.gr) { /* locale loaded */ } } catch(_){}
             window.flatpickr(calEl, {
               inline: true,
               altInput: false,
@@ -318,6 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
               defaultDate: (new Date()).toISOString().slice(0,10),
               minDate: (new Date()).toISOString().slice(0,10),
               disable: disabledDates,
+              locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.gr) ? window.flatpickr.l10ns.gr : 'gr',
                 onChange: (selectedDates, dateStr) => {
                   try { document.getElementById('bookingDate').value = dateStr; } catch(e){}
                   try { showAvailability(dateStr); } catch(e){}
@@ -700,6 +703,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     dateFormat: 'Y-m-d',
                     defaultDate: iso,
                     minDate: iso,
+                    locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.gr) ? window.flatpickr.l10ns.gr : 'gr',
                     theme: 'dark',
                     animate: true,
                     onOpen: function() { dateEl.classList.add('fp-open'); },

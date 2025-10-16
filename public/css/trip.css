@@ -433,6 +433,9 @@ footer a i {
 
 .overlay.active .overlay-inner { transform: translateY(0); }
 
+/* When the booking overlay is active, remove transforms and width constraints to avoid distorting the middle-band calendar */
+#bookingOverlay .overlay-inner { transform: none !important; transition: none !important; max-width: none !important; margin: 0 !important; padding: 0 !important; border-radius: 0 !important; background: transparent !important; }
+
 .overlay button,
 .overlay form button {
   background: #004080;
