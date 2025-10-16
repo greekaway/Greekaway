@@ -626,6 +626,10 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
 
 /* Tablet/iPad fixes: prevent calendar clipping on Step 1 (iPad & iPad mini) */
 @media (min-width: 600px) and (max-width: 1023px) {
+  /* Lock overlay to viewport to prevent vertical scrolling while Step 1 is open */
+  #bookingOverlay { position: fixed !important; inset: 0 !important; overflow: hidden !important; overscroll-behavior: none !important; }
+  #bookingOverlay .overlay-inner { height: 100vh !important; overflow: hidden !important; touch-action: pan-x !important; }
+
   /* Make step1 a flex column so we can order blocks without touching DOM */
   #bookingOverlay #step1 { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 6px !important; padding-top: 16px !important; padding-bottom: calc(140px + env(safe-area-inset-bottom)) !important; position: relative !important; }
   /* Reorder: availability (1), title (2), calendar (3) */
@@ -646,7 +650,7 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
   #bookingOverlay #availabilityBlock {
     width: min(760px, calc(100vw - 56px));
     position: absolute !important; /* remove from flow so calendar doesn't shift */
-    top: -6px !important; /* raise ~2 clicks above the title */
+    top: 2px !important; /* one click lower than before */
     left: 50% !important; transform: translateX(-50%) !important;
     margin: 0 !important;
     z-index: 7001 !important; /* above footer and shadows */
@@ -680,6 +684,10 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
 
 /* iPad landscape (touch devices around 1024px): apply same tablet-safe layout without touching desktops */
 @media (min-width: 1024px) and (max-width: 1180px) and (hover: none) and (pointer: coarse) {
+  /* Lock overlay to viewport to prevent vertical scrolling on iPad touch */
+  #bookingOverlay { position: fixed !important; inset: 0 !important; overflow: hidden !important; overscroll-behavior: none !important; }
+  #bookingOverlay .overlay-inner { height: 100vh !important; overflow: hidden !important; touch-action: pan-x !important; }
+
   #bookingOverlay #step1 { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 6px !important; padding-top: 16px !important; padding-bottom: calc(140px + env(safe-area-inset-bottom)) !important; position: relative !important; }
   /* Reorder: availability (1), title (2), calendar (3) */
   #bookingOverlay #availabilityBlock { order: 1 !important; }
@@ -695,7 +703,7 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
   #bookingOverlay #availabilityBlock {
     width: min(780px, calc(100vw - 64px));
     position: absolute !important; /* remove from flow so calendar doesn't shift */
-    top: -4px !important; /* raise ~2 clicks above the title */
+    top: 4px !important; /* one click lower than before */
     left: 50% !important; transform: translateX(-50%) !important;
     margin: 0 !important;
     z-index: 7001 !important;
