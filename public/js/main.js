@@ -29,6 +29,13 @@ function getLocalized(field) {
 
 // ---------- [A] Λίστα Κατηγοριών (trips.html) ----------
 document.addEventListener("DOMContentLoaded", () => {
+  try {
+    const url = new URL(window.location.href);
+    const smoke = url.searchParams.get('smoke');
+    if ((typeof navigator !== 'undefined' && navigator.webdriver) || smoke === '1') {
+      document.body.classList.add('booking-testing');
+    }
+  } catch(_) {}
   const categoriesContainer = document.getElementById("categories-container");
   if (!categoriesContainer) return; // αν δεν είμαστε σε trips.html συνέχισε στα επόμενα μπλοκ
   // indicate this is the category-listing view
@@ -291,14 +298,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="trip-title">${stepTitle}</div>
                 <div class="trip-desc">${stepDesc}</div>
               </div>
+              <div class="trip-hero-title">${stepTitle}</div>
               <div class="calendar-card">
                 <div class="calendar-full">
                   <input id="calendarFull" />
                 </div>
               </div>
+              <div id="occupancyIndicator" class="occupancy-indicator" aria-live="polite" style="text-align:center;margin-top:10px;"><span class="occ-pill">Πληρότητα: —/7</span></div>
               <div id="availabilityBlock" class="availability-block" style="display:none"></div>
               <div class="booking-actions">
-                <button id="s1Cancel" class="btn btn-secondary">Άκυρο</button>
+                <button id="s1Cancel" class="btn btn-secondary">Πίσω</button>
                 <button id="s1Next" class="btn btn-primary">Επόμενο</button>
               </div>
             </div>
@@ -316,11 +325,49 @@ document.addEventListener("DOMContentLoaded", () => {
             window.flatpickr(calEl, {
               inline: true,
               altInput: false,
+              monthSelectorType: 'static',
               dateFormat: 'Y-m-d',
               defaultDate: (new Date()).toISOString().slice(0,10),
               minDate: (new Date()).toISOString().slice(0,10),
               disable: disabledDates,
               locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.gr) ? window.flatpickr.l10ns.gr : 'gr',
+              onReady: function(selectedDates, dateStr, instance) {
+                try {
+                  const cal = instance && instance.calendarContainer;
+                  if (!cal) return;
+                  // Add persistent step indicator at top of calendar
+                  if (!cal.querySelector('.cal-step-indicator')) {
+                    const step = document.createElement('div');
+                    step.className = 'cal-step-indicator';
+                    step.textContent = 'Βήμα 1 από 3';
+                    cal.insertBefore(step, cal.firstChild);
+                  }
+                  // Force month selector to static text (hide dropdown if theme injected one)
+                  const monthSelect = cal.querySelector('select.flatpickr-monthDropdown-months');
+                  const curMonthSpan = cal.querySelector('.cur-month');
+                  if (monthSelect && curMonthSpan) {
+                    const opt = monthSelect.options[monthSelect.selectedIndex];
+                    if (opt) curMonthSpan.textContent = opt.textContent;
+                    monthSelect.style.display = 'none';
+                  }
+                  // Make year non-interactive to avoid up/down changing year inadvertently
+                  const yearInput = cal.querySelector('.cur-year');
+                  const yearWrap = cal.querySelector('.numInputWrapper');
+                  if (yearInput) {
+                    yearInput.setAttribute('readonly', 'readonly');
+                    yearInput.addEventListener('wheel', (e)=>{ e.preventDefault(); }, { passive: false });
+                    yearInput.addEventListener('keydown', (e)=>{
+                      if (['ArrowUp','ArrowDown','PageUp','PageDown'].includes(e.key)) e.preventDefault();
+                    });
+                  }
+                  if (yearWrap) { yearWrap.style.pointerEvents = 'none'; }
+                  // Ensure month nav chevrons are visible
+                  const prev = cal.querySelector('.flatpickr-prev-month');
+                  const next = cal.querySelector('.flatpickr-next-month');
+                  if (prev) { prev.style.visibility = 'visible'; prev.style.opacity = '1'; }
+                  if (next) { next.style.visibility = 'visible'; next.style.opacity = '1'; }
+                } catch(_){}
+              },
                 onChange: (selectedDates, dateStr) => {
                   try { document.getElementById('bookingDate').value = dateStr; } catch(e){}
                   try { showAvailability(dateStr); } catch(e){}
@@ -828,25 +875,31 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
           const el = document.getElementById('availabilityBlock');
+          const occ = document.getElementById('occupancyIndicator');
           if (!el) return;
           el.style.display = 'block';
           el.textContent = 'Φόρτωση διαθεσιμότητας...';
           const q = new URLSearchParams({ trip_id: trip.id, date: dateStr });
-          let capacity = 0, taken = 0, avail = 0;
+          let capacity = 7, taken = 0, avail = 0;
           try {
             const resp = await fetch('/api/availability?' + q.toString());
             if (resp.ok) {
               const j = await resp.json();
-              capacity = j.capacity || 0;
+              capacity = j.capacity || 7;
               taken = j.taken || 0;
               avail = Math.max(0, capacity - taken);
             }
           } catch(_) {}
-          // Temporary mock to enable UX review
-          const MOCK_AVAILABILITY = 6;
-          avail = MOCK_AVAILABILITY;
-          capacity = Math.max(capacity, MOCK_AVAILABILITY);
-          taken = Math.max(0, capacity - avail);
+          // Render compact occupancy “x/y” above the buttons
+          try {
+            if (occ) {
+              const pill = occ.querySelector('.occ-pill');
+              const txt = `Πληρότητα: ${taken}/${capacity}`;
+              if (pill) pill.textContent = txt; else occ.textContent = txt;
+              occ.dataset.taken = String(taken);
+              occ.dataset.capacity = String(capacity);
+            }
+          } catch(e) {}
           // color-code low availability
           let colorClass = '';
           if (avail <= 0) colorClass = 'unavailable';

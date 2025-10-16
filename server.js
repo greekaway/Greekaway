@@ -193,8 +193,10 @@ app.get('/api/availability', (req, res) => {
     if (!trip_id) return res.status(400).json({ error: 'Missing trip_id' });
     if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
     const capRow = bookingsDb.prepare('SELECT capacity FROM capacities WHERE trip_id = ? AND date = ?').get(trip_id, date) || {};
-    const capacity = capRow.capacity || null;
-    const takenRow = bookingsDb.prepare('SELECT COALESCE(SUM(seats),0) as s FROM bookings WHERE trip_id = ? AND date = ? AND status != ?').get(trip_id, date, 'canceled') || { s: 0 };
+    // Default van capacity to 7 when not explicitly set per date
+    const capacity = (typeof capRow.capacity === 'number' && capRow.capacity > 0) ? capRow.capacity : 7;
+    // Count only confirmed bookings toward occupancy
+    const takenRow = bookingsDb.prepare('SELECT COALESCE(SUM(seats),0) as s FROM bookings WHERE trip_id = ? AND date = ? AND status = ?').get(trip_id, date, 'confirmed') || { s: 0 };
     return res.json({ trip_id, date, capacity, taken: takenRow.s || 0 });
   } catch (e) { console.error('Availability error', e); return res.status(500).json({ error: 'Server error' }); }
 });

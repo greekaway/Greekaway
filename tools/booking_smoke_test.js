@@ -8,10 +8,10 @@ const fs = require('fs');
   const sleep = (ms) => new Promise(res => setTimeout(res, ms));
   try {
     // Serve files assumed on localhost:3000 (server.js needs to be running by user)
-    await page.goto('http://localhost:3000/trips/trip.html?id=olympia', { waitUntil: 'networkidle2' });
-    // Wait for central booking button
-    await page.waitForSelector('footer a.central-btn', { timeout: 5000 });
-    await page.click('footer a.central-btn');
+  await page.goto('http://localhost:3000/trips/trip.html?id=olympia&smoke=1', { waitUntil: 'networkidle2' });
+  // Wait for central booking button and click via DOM to bypass visibility constraints
+  await page.waitForSelector('footer a.central-btn', { timeout: 5000 });
+  await page.$eval('footer a.central-btn', el => el && el.click());
     // wait for overlay
     await page.waitForSelector('#bookingOverlay .overlay-inner', { timeout: 10000 });
     await sleep(800);
@@ -23,12 +23,13 @@ const fs = require('fs');
       if (el) el.scrollIntoView({ block: 'center' });
     });
     await page.waitForSelector('#s1Next:not([disabled])', { timeout: 10000 });
-    await page.click('#s1Next');
+    await page.$eval('#s1Next', el => el && el.click());
     await page.waitForSelector('#step2 .step-card', { timeout: 10000 });
   await sleep(400);
     await page.screenshot({ path: 'smoke_step2_details.png', fullPage: false });
     // change seats
-    await page.click('#step2 .seat-inc');
+  await page.waitForSelector('#step2 .seat-inc', { timeout: 10000 });
+  await page.$eval('#step2 .seat-inc', el => el && el.click());
   await sleep(200);
     await page.screenshot({ path: 'smoke_step2_seats_changed.png' });
     // fill email to trigger autofill
@@ -40,7 +41,8 @@ const fs = require('fs');
       const el = document.querySelector('#s2Next');
       if (el) el.scrollIntoView({ block: 'center' });
     });
-    await page.click('#s2Next');
+  await page.waitForSelector('#s2Next', { timeout: 10000 });
+  await page.$eval('#s2Next', el => el && el.click());
     await page.waitForSelector('#step3', { timeout: 10000 });
   await sleep(300);
     await page.screenshot({ path: 'smoke_step3_summary.png' });

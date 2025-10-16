@@ -13,6 +13,13 @@
   --mountain-2: 20,83,45;
   --culture-1: 243,156,18;
   --culture-2: 214,160,52;
+
+  /* 🎨 Greekaway Color Palette v1 (official) */
+  /* Keep these as the canonical names used in discussions/docs */
+  --color-background: var(--site-bg-color); /* κύριο φόντο */
+  --color-background-gradient: var(--site-gradient);
+  --color-logo-bg: #0E1520; /* φόντο λογότυπου & κουμπιών */
+  --color-gold: #D4AF37; /* χρυσό λογότυπου & τίτλων */
 }
 
 /* -------- Βασικά -------- */

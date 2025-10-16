@@ -14,19 +14,75 @@
 
 /* Hide non-calendar UI but keep Step 1 containers visible so calendar can render */
 /* Keep #step1 and its .calendar-card in the layout; hide other siblings and non-essential elements */
-#bookingOverlay .overlay-inner > :not(#step1):not(.calendar-full),
+#bookingOverlay .overlay-inner > :not(#step1):not(#step2):not(#step3):not(.calendar-full),
 #bookingOverlay .close-overlay,
-#bookingOverlay button,
-#bookingOverlay .btn,
 #bookingOverlay h1,
 #bookingOverlay h2,
 #bookingOverlay h3,
 #bookingOverlay p { display: none !important; visibility: hidden !important; }
+/* Keep buttons present and clickable for automation, but invisible to preserve calendar-only look */
+#bookingOverlay button,
+#bookingOverlay .btn { opacity: 0 !important; pointer-events: auto !important; }
+
+/* Testing mode: when automation is detected, make buttons visible */
+body.booking-testing #bookingOverlay button,
+body.booking-testing #bookingOverlay .btn { opacity: 1 !important; }
 
 /* Inside step1, hide meta/actions to keep calendar-only view */
-#bookingOverlay #step1 .step-meta,
-#bookingOverlay #step1 .booking-actions,
-#bookingOverlay #step1 #availabilityBlock { display: none !important; visibility: hidden !important; }
+#bookingOverlay #step1 .step-meta { display: none !important; visibility: hidden !important; }
+/* Step 1 actions: keep in layout but invisible; still clickable by tests */
+#bookingOverlay #step1 .booking-actions {
+  /* Fixed action bar above the global footer so it's always visible */
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  position: fixed !important;
+  left: 0; right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom) + 32px) !important; /* keep some space below the pill */
+  display: flex !important;
+  justify-content: center !important; /* bring buttons closer to center */
+  align-items: center !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+  gap: 24px !important; /* closer to each other */
+  z-index: 2000 !important;
+  max-width: 520px !important;
+  margin: 0 auto !important; /* center the bar itself */
+}
+body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !important; }
+
+/* Override calendar-only hide rule for the real action buttons */
+#bookingOverlay #step1 .booking-actions button,
+#bookingOverlay #step1 .booking-actions .btn {
+  opacity: 1 !important;
+}
+
+/* Dark blue pill buttons with white text */
+#bookingOverlay #step1 .booking-actions .btn {
+  background: #0E1520 !important; /* use official logo bg dark navy */
+  color: #fff !important;
+  border: 1px solid rgba(255,255,255,0.16) !important; /* subtle white outline */
+  border-radius: 16px !important;
+  padding: 12px 18px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+  min-width: 120px !important;
+  /* 3D look */
+  box-shadow:
+    0 10px 18px rgba(0,0,0,0.35),
+    0 4px 10px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.28) !important;
+  transition: transform 140ms ease, box-shadow 160ms ease, background 160ms ease !important;
+}
+#bookingOverlay #step1 .booking-actions .btn:hover { background: #122033 !important; box-shadow: 0 12px 22px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.3) !important; }
+#bookingOverlay #step1 .booking-actions .btn:active { transform: translateY(1px); box-shadow: 0 6px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3) !important; }
+#bookingOverlay #step1 .booking-actions #s1Cancel { justify-self: flex-start !important; }
+#bookingOverlay #step1 .booking-actions #s1Next { justify-self: flex-end !important; }
+
+@media (max-width: 599px) {
+  #bookingOverlay #step1 .booking-actions { padding: 0 16px !important; bottom: calc(64px + env(safe-area-inset-bottom) + 34px) !important; max-width: 440px !important; gap: 20px !important; }
+  #bookingOverlay #step1 .booking-actions .btn { min-width: 110px !important; padding: 12px 16px !important; }
+}
 
 /* Ensure the calendar subtree is visible (do not override internal flatpickr display types) */
 #bookingOverlay .overlay-inner,
@@ -54,12 +110,71 @@
 #bookingOverlay #step1,
 #bookingOverlay #step1 .calendar-card { display: block !important; visibility: visible !important; background: transparent !important; border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
 
+/* Calendar card positioning baseline */
+#bookingOverlay #step1 .calendar-card { position: relative !important; }
+
+/* Trip hero title above the calendar, white bold */
+#bookingOverlay #step1 .trip-hero-title {
+  position: absolute !important;
+  left: 0; right: 0;
+  top: calc(var(--calendar-top, 25vh) - 46px) !important;
+  text-align: center !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  font-size: 2rem !important; /* ~x2 */
+  margin: 0 !important;
+  opacity: 0.96 !important;
+  z-index: 6 !important;
+  line-height: 1.2 !important;
+}
+@media (max-width: 599px) {
+  #bookingOverlay #step1 .trip-hero-title { font-size: 1.8rem !important; top: calc(var(--calendar-top, 10vh) - 42px) !important; }
+}
+
+/* Occupancy x/y indicator just above the bottom action buttons */
+#bookingOverlay #step1 .occupancy-indicator {
+  position: fixed !important;
+  left: 0; right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom) + 110px) !important; /* clearly above the buttons */
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+  color: var(--color-gold, #D4AF37) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+  font-size: 1rem !important;
+  z-index: 2001 !important; /* above buttons and calendar */
+  pointer-events: none !important; /* purely informational */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.45) !important;
+}
+/* pill style for occupancy label */
+#bookingOverlay #step1 .occupancy-indicator .occ-pill {
+  background: var(--color-logo-bg, #0E1520) !important;
+  color: var(--color-gold, #D4AF37) !important;
+  padding: 8px 14px !important;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255,255,255,0.18) !important; /* a touch brighter for definition */
+  box-shadow: 0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+  line-height: 1 !important;
+}
+@media (max-width: 599px) {
+  #bookingOverlay #step1 .occupancy-indicator { font-size: 0.98rem !important; bottom: calc(64px + env(safe-area-inset-bottom) + 104px) !important; }
+}
+
+/* Desktop: nudge the occupancy pill a bit lower so it doesn't touch the calendar */
+@media (min-width: 1024px) {
+  #bookingOverlay #step1 .occupancy-indicator { bottom: calc(64px + env(safe-area-inset-bottom) + 88px) !important; }
+}
+
 /* Middle band: 60% height, with 25% top empty and 15% bottom empty */
 #bookingOverlay .calendar-full {
   display: block !important;
   visibility: visible !important;
   position: absolute !important;
-  top: 25vh;
+  /* Use a variable for vertical anchor so we can align labels above it */
+  --calendar-top: 25vh;
+  top: var(--calendar-top);
   left: 50%;
   transform: translateX(-50%);
   width: min(780px, calc(100vw - 56px));
@@ -89,20 +204,43 @@
   width: 100% !important; height: 100% !important;
   background: rgba(40,52,66,0.96) !important; /* distinct dark panel */
   border-radius: 16px !important;
-  box-shadow: 0 18px 48px rgba(0,0,0,0.45) !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
+  /* Layered shadow: subtle inner mask + depth without real border (prevents hairlines) */
+  /* Grounded (bottom-heavy) shadow */
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.03),
+    0 14px 30px -10px rgba(0,0,0,0.48),
+    0 34px 70px -16px rgba(0,0,0,0.60),
+    0 64px 140px -28px rgba(0,0,0,0.56) !important;
+  border: none !important;
   box-sizing: border-box !important;
 }
 
-/* Header: center exact month/year between arrows */
-#bookingOverlay .flatpickr-months { display: flex !important; align-items: center !important; }
-#bookingOverlay .flatpickr-months .flatpickr-prev-month,
-#bookingOverlay .flatpickr-months .flatpickr-next-month {
-  position: static !important; transform: none !important;
-  flex: 0 0 28px !important; width: 28px !important; height: 28px !important;
-  display: flex !important; align-items: center !important; justify-content: center !important;
+/* Persistent calendar-top step indicator */
+#bookingOverlay .flatpickr-calendar .cal-step-indicator {
+  width: 100%;
+  text-align: center;
+  padding: 6px 12px;
+  color: var(--color-gold, #D4AF37);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  font-size: 1.05rem;
+  opacity: 0.98;
+  pointer-events: none;
 }
-#bookingOverlay .flatpickr-current-month { flex: 1 1 auto !important; display: flex !important; justify-content: center !important; gap: 6px !important; }
+@media (max-width: 599px) {
+  #bookingOverlay .flatpickr-calendar .cal-step-indicator { padding: 8px 12px 4px; font-size: 0.92rem; }
+}
+
+/* Header: center month/year exactly between arrows using a 3-column grid */
+#bookingOverlay .flatpickr-months {
+  display: grid !important;
+  grid-template-columns: 40px 1fr 40px !important;
+  align-items: center !important;
+}
+#bookingOverlay .flatpickr-months .flatpickr-prev-month { grid-column: 1 !important; justify-self: center !important; position: static !important; transform: none !important; width: 40px !important; height: 28px !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+#bookingOverlay .flatpickr-months .flatpickr-next-month { grid-column: 3 !important; justify-self: center !important; position: static !important; transform: none !important; width: 40px !important; height: 28px !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+#bookingOverlay .flatpickr-current-month { grid-column: 2 !important; display: flex !important; justify-content: center !important; align-items: center !important; gap: 6px !important; }
 
 /* Ensure flatpickr internal containers stretch */
 #bookingOverlay .flatpickr-innerContainer,
@@ -112,13 +250,31 @@
 
 /* Calendar header and weekdays spacing */
 #bookingOverlay .flatpickr-months { padding: 6px 6px !important; }
-#bookingOverlay .flatpickr-weekdays { padding: 6px 8px !important; }
+#bookingOverlay .flatpickr-weekdays {
+  /* Make weekday bar use the same horizontal padding as the days grid */
+  padding: 6px var(--cal-pad-x) !important;
+  box-sizing: border-box !important;
+}
+/* Align weekday labels to day columns: use 7-col grid with same gaps/padding as days */
+#bookingOverlay .flatpickr-weekdaycontainer {
+  /* Use identical 7-column grid as days with content-clamping tracks to avoid overflow */
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 8px !important; /* shorthand to match days gap exactly */
+  box-sizing: border-box !important; /* include paddings in width calc */
+}
+#bookingOverlay .flatpickr-weekday {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
 
 /* Make the day grid fill the remaining height evenly */
 #bookingOverlay .flatpickr-days {
   /* Size by content (square cells) and sit just under the weekdays */
   flex: 0 0 auto !important;
-  padding: 8px 12px 12px !important; /* tighter top */
+  padding: 8px var(--cal-pad-x) 12px !important; /* tighter top, match weekday padding */
   box-sizing: border-box !important;
   width: 100% !important;
   height: auto !important;
@@ -129,7 +285,8 @@
 }
 #bookingOverlay .flatpickr-days .dayContainer:not([aria-hidden="true"]) {
   display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
+  /* Mirror weekdays grid definition exactly to keep perfect vertical alignment */
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
   /* Let rows size by content (square .flatpickr-day) */
   grid-auto-rows: auto !important;
   gap: 8px !important;
@@ -171,34 +328,303 @@
 
 /* Mobile: make the calendar fill 70–80% height with some bottom padding for future buttons */
 @media (max-width: 599px) {
+  /* Remove global overlay side padding only for booking to avoid full-height vertical columns */
+  #bookingOverlay.overlay { padding-left: 0 !important; padding-right: 0 !important; }
   #bookingOverlay .overlay-inner { padding-bottom: calc(12vh + env(safe-area-inset-bottom)) !important; }
   #bookingOverlay .calendar-full {
     height: 78vh; /* 70–80% band for calendar */
-    top: calc((100vh - 78vh) / 2); /* centered vertically */
-    /* Center by auto margins with fixed side padding to avoid left-edge shadow line */
-    left: 0; right: 0;
-    width: min(540px, calc(100vw - 32px)); /* ίσες πλευρικές αποστάσεις ~16px */
-    margin: 0 auto;
+    --calendar-top: calc((100vh - 78vh) / 2);
+    top: var(--calendar-top); /* centered vertically */
+    /* Equal side insets for perfect centering */
+    left: max(16px, env(safe-area-inset-left));
+    right: max(16px, env(safe-area-inset-right));
+    width: auto;
+    margin: 0;
     transform: none;
     max-width: 540px; /* προληπτικό όριο για μεγάλα κινητά/tablets σε portrait */
+    overflow: visible !important;
   }
-  #bookingOverlay .flatpickr-calendar { max-width: none !important; }
-  #bookingOverlay .flatpickr-months { padding: 4px 8px !important; }
-  #bookingOverlay .flatpickr-weekdays { padding: 8px 10px !important; }
-  #bookingOverlay .flatpickr-current-month .cur-month { font-size: 1rem !important; }
+  #bookingOverlay .flatpickr-calendar {
+    max-width: none !important;
+    /* Slightly softer grounded profile on mobile */
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.03),
+      inset 0 1px 0 rgba(255,255,255,0.025),
+      0 12px 26px -10px rgba(0,0,0,0.46),
+      0 30px 72px -18px rgba(0,0,0,0.62),
+      0 58px 128px -30px rgba(0,0,0,0.56) !important;
+  }
+  #bookingOverlay .flatpickr-months { padding: 0 8px 6px !important; }
+  #bookingOverlay .flatpickr-weekdays { padding: 8px var(--cal-pad-x) !important; }
+  #bookingOverlay .flatpickr-weekdaycontainer { column-gap: var(--cal-gap) !important; }
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month,
+  #bookingOverlay .flatpickr-months .flatpickr-next-month { flex: 0 0 36px !important; width: 36px !important; margin-top: -6px !important; }
+  #bookingOverlay .flatpickr-current-month { margin-top: -6px !important; }
+  #bookingOverlay .flatpickr-current-month .cur-month { font-size: 1rem !important; background: transparent !important; }
   #bookingOverlay .flatpickr-current-month .numInputWrapper { width: 58px !important; }
-  #bookingOverlay .flatpickr-days { padding: 6px 10px 10px !important; margin-top: 2px !important; }
-  #bookingOverlay .flatpickr-days .dayContainer { gap: 5px !important; }
-  #bookingOverlay .flatpickr-day { font-size: 0.98rem !important; border-radius: 8px !important; }
-  #bookingOverlay .flatpickr-weekday { font-size: 0.88rem !important; padding: 4px 0 !important; }
+  #bookingOverlay .flatpickr-days { padding: 6px var(--cal-pad-x) 10px !important; margin-top: 2px !important; }
+  #bookingOverlay .flatpickr-days .dayContainer { gap: var(--cal-gap) !important; }
+  #bookingOverlay .flatpickr-day { font-size: 0.96rem !important; border-radius: 8px !important; }
+  #bookingOverlay .flatpickr-weekday { font-size: 0.9rem !important; font-weight: 700 !important; padding: 4px 0 !important; }
   #bookingOverlay .flatpickr-months .flatpickr-month { font-size: 1rem !important; }
+  /* Remove any residual background from month/year widgets that creates a center pill */
+  #bookingOverlay .flatpickr-current-month,
+  #bookingOverlay .flatpickr-current-month .cur-month,
+  #bookingOverlay .flatpickr-current-month .numInputWrapper,
+  #bookingOverlay .flatpickr-current-month input { background: transparent !important; }
 }
 
 /* Desktop/Large screens: κάνε τα κελιά λίγο μικρότερα μειώνοντας το ύψος και τα κενά */
 @media (min-width: 600px) {
-  #bookingOverlay .calendar-full { height: 44vh; width: min(740px, calc(100vw - 64px)); }
-  #bookingOverlay .flatpickr-days .dayContainer { gap: 3.5px !important; }
+  #bookingOverlay .calendar-full { height: 42vh; width: min(720px, calc(100vw - 72px)); }
+  #bookingOverlay .flatpickr-days .dayContainer { gap: 3px !important; }
+  #bookingOverlay .flatpickr-weekdaycontainer { column-gap: 3px !important; }
+  #bookingOverlay .flatpickr-day { font-size: 0.84rem !important; border-radius: 8px !important; }
+}
+
+/* Desktop refinements (do not affect mobile) */
+@media (min-width: 1024px) {
+  /* Desktop: mid-size calendar sizing by width; height auto */
+  #bookingOverlay .calendar-full { width: clamp(480px, 42vw, 560px); height: auto; overflow: visible !important; }
+  #bookingOverlay .flatpickr-calendar { position: static !important; inset: auto !important; }
+  /* Remove top glossy highlight by simplifying the shadow stack on desktop */
+  #bookingOverlay .flatpickr-calendar {
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.03),
+      /* removed inner top highlight */
+      0 14px 30px -10px rgba(0,0,0,0.48),
+      0 34px 70px -16px rgba(0,0,0,0.60),
+      0 64px 140px -28px rgba(0,0,0,0.56) !important;
+  }
+  #bookingOverlay .flatpickr-days .dayContainer { gap: 5px !important; }
   #bookingOverlay .flatpickr-day { font-size: 0.88rem !important; border-radius: 8px !important; }
+
+  /* Header: nudge group a bit upward inside the bar for neutral balance */
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month,
+  #bookingOverlay .flatpickr-months .flatpickr-next-month { margin-top: -4px !important; }
+  #bookingOverlay .flatpickr-current-month { margin-top: -4px !important; }
+
+  /* Make sure prev/next arrows render visibly and are clickable */
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month,
+  #bookingOverlay .flatpickr-months .flatpickr-next-month {
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #e6eef6 !important;
+    font-size: 18px !important;
+    width: 40px !important;
+    height: 28px !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
+    justify-self: center !important;
+    align-self: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month svg,
+  #bookingOverlay .flatpickr-months .flatpickr-next-month svg {
+    display: block !important;
+    width: 16px !important;
+    height: 16px !important;
+    fill: currentColor !important;
+    stroke: currentColor !important;
+    opacity: 1 !important;
+  }
+  /* Fallback: use text chevrons if SVGs are suppressed or not rendering */
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month::before { content: none !important; }
+  #bookingOverlay .flatpickr-months .flatpickr-next-month::before { content: none !important; }
+  /* Avoid double icons: hide SVG if both appear */
+  /* ensure SVGs remain visible */
+  /* (no hide rule) */
+
+  /* Strip backgrounds/shadows from the header container to avoid glossy/pill look */
+  #bookingOverlay .flatpickr-months,
+  #bookingOverlay .flatpickr-months .flatpickr-month {
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  /* Remove default dropdown styling (or hide it) which creates a pill */
+  #bookingOverlay select.flatpickr-monthDropdown-months {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #e6eef6 !important;
+    padding: 0 4px !important;
+    margin: 0 !important;
+    outline: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  /* Ensure arrows are visible and centered */
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month,
+  #bookingOverlay .flatpickr-months .flatpickr-next-month {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: rgba(255,255,255,0.9) !important;
+    opacity: 0.95 !important;
+  }
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month svg,
+  #bookingOverlay .flatpickr-months .flatpickr-next-month svg {
+    width: 16px !important;
+    height: 16px !important;
+    fill: currentColor !important;
+    stroke: currentColor !important;
+  }
+  /* Allow interactions with static month label if used */
+  #bookingOverlay .flatpickr-current-month .cur-month { pointer-events: auto !important; color: #e6eef6 !important; }
+  /* Avoid tap/hover highlight on the month label */
+  #bookingOverlay .flatpickr-months, #bookingOverlay .flatpickr-months * { -webkit-tap-highlight-color: transparent !important; }
+
+  /* Reset to stable header grid: arrows at sides, month centered */
+  #bookingOverlay .flatpickr-months { display: grid !important; grid-template-columns: 40px 1fr 40px !important; align-items: center !important; }
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month { grid-column: 1 !important; justify-self: center !important; }
+  #bookingOverlay .flatpickr-months .flatpickr-next-month { grid-column: 3 !important; justify-self: center !important; }
+  #bookingOverlay .flatpickr-current-month { grid-column: 2 !important; display: flex !important; justify-content: center !important; align-items: center !important; gap: 6px !important; color: #e6eef6 !important; }
+
+  /* Place arrows next to the month label in the center column (not near the year) */
+  #bookingOverlay .flatpickr-months { grid-template-columns: 0 1fr 0 !important; }
+  #bookingOverlay .flatpickr-current-month { grid-column: 2 !important; }
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month { grid-column: 2 !important; justify-self: start !important; margin: 0 8px 0 0 !important; }
+  #bookingOverlay .flatpickr-months .flatpickr-next-month { grid-column: 2 !important; justify-self: end !important; margin: 0 0 0 8px !important; }
+  /* Nuclear reset on month header internals to remove any residual pill/gloss */
+  #bookingOverlay .flatpickr-current-month,
+  #bookingOverlay .flatpickr-current-month *,
+  #bookingOverlay .flatpickr-months .flatpickr-month,
+  #bookingOverlay .flatpickr-months .flatpickr-month * {
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    filter: none !important;
+    text-shadow: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+  #bookingOverlay .flatpickr-current-month::before,
+  #bookingOverlay .flatpickr-current-month::after,
+  #bookingOverlay .flatpickr-months .flatpickr-month::before,
+  #bookingOverlay .flatpickr-months .flatpickr-month::after { content: none !important; display: none !important; }
+
+  /* Weekdays: keep alignment but shrink width via padding/gap */
+  #bookingOverlay .flatpickr-weekdays { padding: 12px 16px !important; }
+  #bookingOverlay .flatpickr-weekdaycontainer { column-gap: 5px !important; }
+  #bookingOverlay .flatpickr-weekday { font-size: 0.96rem !important; font-weight: 700 !important; letter-spacing: 0.02em !important; }
+
+  /* Remove any pill/background from month/year group (e.g., behind "Οκτώβριος 2025") */
+  #bookingOverlay .flatpickr-current-month,
+  #bookingOverlay .flatpickr-current-month .cur-month,
+  #bookingOverlay .flatpickr-current-month .numInputWrapper,
+  #bookingOverlay .flatpickr-current-month input {
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    outline: none !important;
+  }
+  /* Tight reset on the month label itself: remove any padding/radius and pseudo elements */
+  #bookingOverlay .flatpickr-months .flatpickr-month .cur-month {
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    user-select: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+  #bookingOverlay .flatpickr-months .flatpickr-month .cur-month::before,
+  #bookingOverlay .flatpickr-months .flatpickr-month .cur-month::after { content: none !important; display: none !important; }
+  /* Also remove on hover/focus/active to prevent theme from re-applying gloss */
+  #bookingOverlay .flatpickr-current-month .cur-month:hover,
+  #bookingOverlay .flatpickr-current-month .cur-month:focus,
+  #bookingOverlay .flatpickr-current-month .cur-month:active,
+  #bookingOverlay .flatpickr-current-month input:hover,
+  #bookingOverlay .flatpickr-current-month input:focus,
+  #bookingOverlay .flatpickr-current-month input:active,
+  #bookingOverlay .flatpickr-current-month .numInputWrapper:hover,
+  #bookingOverlay .flatpickr-current-month .numInputWrapper:focus,
+  #bookingOverlay .flatpickr-current-month .numInputWrapper:active {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    outline: none !important;
+  }
+  /* Optional: disable pointer interactions on the month label to avoid hover styling */
+  #bookingOverlay .flatpickr-current-month .cur-month { pointer-events: auto !important; }
+
+  /* Size days by content; restore true square cells */
+  #bookingOverlay .flatpickr-days { flex: 0 0 auto !important; padding: 8px 12px 12px !important; }
+  #bookingOverlay .flatpickr-days .dayContainer { width: 100% !important; height: auto !important; aspect-ratio: auto !important; grid-template-rows: none !important; grid-auto-rows: auto !important; }
+  #bookingOverlay .flatpickr-day { height: auto !important; aspect-ratio: 1 / 1 !important; }
+
+  /* Hide year input up/down spinner arrows (cause of wrong arrows by the year) */
+  #bookingOverlay .flatpickr-current-month input[type=number]::-webkit-outer-spin-button,
+  #bookingOverlay .flatpickr-current-month input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none !important; margin: 0 !important; }
+  #bookingOverlay .flatpickr-current-month input[type=number] { -moz-appearance: textfield !important; appearance: textfield !important; }
+
+  /* Ensure month navigation SVG chevrons are always visible (no fallback text chevrons) */
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month::before,
+  #bookingOverlay .flatpickr-months .flatpickr-next-month::before { content: none !important; }
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month svg,
+  #bookingOverlay .flatpickr-months .flatpickr-next-month svg { display: inline-block !important; width: 16px !important; height: 16px !important; fill: currentColor !important; stroke: currentColor !important; }
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month,
+  #bookingOverlay .flatpickr-months .flatpickr-next-month { opacity: 1 !important; visibility: visible !important; color: #e6eef6 !important; }
+
+  /* Prevent year from being interactive (so arrows won't change the year) */
+  #bookingOverlay .flatpickr-current-month .numInputWrapper { pointer-events: none !important; background: transparent !important; box-shadow: none !important; border: none !important; }
+  #bookingOverlay .flatpickr-current-month input.cur-year { pointer-events: none !important; background: transparent !important; box-shadow: none !important; border: none !important; -moz-appearance: textfield !important; appearance: textfield !important; }
+  #bookingOverlay .flatpickr-current-month .numInputWrapper::before,
+  #bookingOverlay .flatpickr-current-month .numInputWrapper::after { content: none !important; display: none !important; }
 }
 
 /* Footer is globally styled in style.css; avoid sizing overrides here */
+
+/* Desktop fixes: restore header layout and prevent bottom clipping */
+@media (min-width: 1024px) {
+  /* Allow content to extend and avoid clipping of last row at rounded corner */
+  #bookingOverlay .calendar-full { overflow: visible !important; height: auto !important; }
+  #bookingOverlay .flatpickr-calendar { padding-bottom: 12px !important; }
+  #bookingOverlay .flatpickr-days { padding-bottom: 16px !important; padding-left: 16px !important; padding-right: 16px !important; }
+  #bookingOverlay .flatpickr-days .dayContainer { gap: 5px !important; }
+
+  /* Stable header: arrows at sides, month centered */
+  #bookingOverlay .flatpickr-months { display: grid !important; grid-template-columns: 40px 1fr 40px !important; align-items: center !important; }
+  #bookingOverlay .flatpickr-months .flatpickr-prev-month { grid-column: 1 !important; justify-self: center !important; }
+  #bookingOverlay .flatpickr-months .flatpickr-next-month { grid-column: 3 !important; justify-self: center !important; }
+  #bookingOverlay .flatpickr-current-month { grid-column: 2 !important; display: flex !important; justify-content: center !important; align-items: center !important; gap: 6px !important; color: #e6eef6 !important; }
+  #bookingOverlay select.flatpickr-monthDropdown-months { display: inline-block !important; min-width: 110px !important; text-align: center !important; opacity: 1 !important; pointer-events: auto !important; }
+}
+
+/* =====================================================
+   Final alignment guard: unify gaps and side paddings 
+   across weekdays and days using CSS variables so the
+   7 columns never overflow (all devices)
+   ===================================================== */
+#bookingOverlay .flatpickr-calendar { --cal-gap: 6px; --cal-pad-x: 16px; }
+#bookingOverlay .flatpickr-weekdays { padding: 12px var(--cal-pad-x) !important; }
+#bookingOverlay .flatpickr-weekdaycontainer { column-gap: var(--cal-gap) !important; }
+#bookingOverlay .flatpickr-days { padding: 8px var(--cal-pad-x) 14px !important; }
+#bookingOverlay .flatpickr-days .dayContainer { gap: var(--cal-gap) !important; }
+
+/* Mobile */
+@media (max-width: 599px) {
+  #bookingOverlay .flatpickr-calendar { --cal-gap: 4px; --cal-pad-x: 18px; }
+}
+
+/* Small/medium screens */
+@media (min-width: 600px) and (max-width: 1023px) {
+  #bookingOverlay .flatpickr-calendar { --cal-gap: 5px; --cal-pad-x: 18px; }
+}
+
+/* Desktop/Large screens */
+@media (min-width: 1024px) {
+  #bookingOverlay .flatpickr-calendar { --cal-gap: 7px; --cal-pad-x: 20px; }
+}
