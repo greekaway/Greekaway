@@ -277,19 +277,25 @@ document.addEventListener("DOMContentLoaded", () => {
           // transform overlay-inner into step container
           const overlayInner = document.querySelector('#bookingOverlay .overlay-inner');
           if (!overlayInner) return;
+          const tripForHeader = window.__loadedTrip || {};
+          const stepDesc = (typeof getLocalized === 'function') ? (getLocalized(tripForHeader.description) || '') : '';
+          const stepTitle = (typeof getLocalized === 'function') ? (getLocalized(tripForHeader.title) || '') : '';
           overlayInner.innerHTML = `
             <div id="step1" class="booking-step">
-              <div class="progress-steps" style="margin-bottom:6px;font-size:13px;color:#c9a24a;">Βήμα 1 από 3</div>
-              <h2>Επιλέξτε Ημερομηνία</h2>
-              <div class="calendar-full" style="margin-top:12px;display:flex;justify-content:center;">
-                <input id="calendarFull" style="width:94%;max-width:720px;border-radius:12px;padding:8px;background:transparent;border:0;" />
+              <div class="step-meta">
+                <div class="step-indicator">Βήμα 1 από 3</div>
+                <div class="trip-title">${stepTitle}</div>
+                <div class="trip-desc">${stepDesc}</div>
               </div>
-              <div id="availabilityBlock" class="availability-block" style="display:none">Loading availability…</div>
-              <div style="margin-top:18px;">
-                <div class="booking-actions">
-                  <button id="s1Cancel" class="btn btn-secondary">Άκυρο</button>
-                  <button id="s1Next" class="btn btn-primary">Επόμενο</button>
+              <div class="calendar-card">
+                <div class="calendar-full">
+                  <input id="calendarFull" />
                 </div>
+              </div>
+              <div id="availabilityBlock" class="availability-block" style="display:none"></div>
+              <div class="booking-actions">
+                <button id="s1Cancel" class="btn btn-secondary">Άκυρο</button>
+                <button id="s1Next" class="btn btn-primary">Επόμενο</button>
               </div>
             </div>
             <div id="step2" class="booking-step" style="display:none"></div>

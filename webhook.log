@@ -269,3 +269,11 @@
 2025-10-14T00:41:43.259Z debug.allow_test_env=true
 2025-10-14T00:41:43.259Z event.test-received id=evt_succ_1760402503252 type=payment_intent.succeeded
 2025-10-14T00:41:43.260Z payment.recorded id=pi_fail_1760402503252
+2025-10-16T05:30:19.763Z debug.allow_test_env=undefined
+2025-10-16T05:30:19.764Z webhook.test-rejected allowTest=
+2025-10-16T05:30:19.773Z debug.allow_test_env=undefined
+2025-10-16T05:30:19.773Z webhook.test-rejected allowTest=
+2025-10-16T05:30:21.999Z debug.allow_test_env=undefined
+2025-10-16T05:30:22.000Z webhook.test-rejected allowTest=
+2025-10-16T05:30:23.681Z debug.allow_test_env=undefined
+2025-10-16T05:30:23.681Z webhook.test-rejected allowTest=

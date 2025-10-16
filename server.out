@@ -1,2 +1,3 @@
-better-sqlite3 not available, falling back to JSON persistence
-✅ Server running at http://localhost:3000
+server: bookings table ready
+webhook: using better-sqlite3 for persistence
+Server running at http://0.0.0.0:3000
