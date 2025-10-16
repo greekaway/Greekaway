@@ -360,6 +360,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     yearInput.addEventListener('keydown', (e)=>{
                       if (['ArrowUp','ArrowDown','PageUp','PageDown'].includes(e.key)) e.preventDefault();
                     });
+                    // Force bold year across devices (inline style beats theme rules)
+                    try { yearInput.style.fontWeight = '800'; yearInput.style.setProperty('font-variation-settings', "'wght' 800", 'important'); } catch(_){}
                   }
                   if (yearWrap) { yearWrap.style.pointerEvents = 'none'; }
                   // Ensure month nav chevrons are visible

@@ -445,6 +445,19 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
     box-shadow: none !important;
     border: none !important;
   }
+  /* Make the year value (e.g., 2025) bold in the calendar header */
+  #bookingOverlay .flatpickr-current-month .cur-year,
+  #bookingOverlay .flatpickr-current-month input.cur-year {
+    font-weight: 800 !important;
+  }
+
+  /* Reinforce bold year across all devices/breakpoints (higher specificity + variable font hint) */
+  #bookingOverlay .flatpickr-current-month .numInputWrapper input.cur-year,
+  #bookingOverlay .flatpickr-current-month .numInputWrapper .cur-year,
+  #bookingOverlay .flatpickr-current-month input.cur-year {
+    font-weight: 800 !important;
+    font-variation-settings: 'wght' 800 !important;
+  }
   /* Remove default dropdown styling (or hide it) which creates a pill */
   #bookingOverlay select.flatpickr-monthDropdown-months {
     appearance: none !important;
@@ -621,6 +634,9 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
 
 /* Small/medium screens */
 @media (min-width: 600px) and (max-width: 1023px) {
+  /* Nudge month header slightly upward for better centering inside the calendar */
+  #bookingOverlay .flatpickr-months { margin-top: -14px !important; }
+  #bookingOverlay .flatpickr-current-month { margin-top: -8px !important; }
   #bookingOverlay .flatpickr-calendar { --cal-gap: 5px; --cal-pad-x: 18px; }
 }
 
@@ -684,6 +700,9 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
 
 /* iPad landscape (touch devices around 1024px): apply same tablet-safe layout without touching desktops */
 @media (min-width: 1024px) and (max-width: 1180px) and (hover: none) and (pointer: coarse) {
+  /* iPad touch: nudge header a touch more */
+  #bookingOverlay .flatpickr-months { margin-top: -16px !important; }
+  #bookingOverlay .flatpickr-current-month { margin-top: -9px !important; }
   /* Lock overlay to viewport ONLY during Step 1 on iPad touch */
   #bookingOverlay.step1-active { position: fixed !important; inset: 0 !important; overflow: hidden !important; overscroll-behavior: none !important; }
   #bookingOverlay.step1-active .overlay-inner { height: 100vh !important; overflow: hidden !important; touch-action: pan-x !important; }
@@ -730,4 +749,15 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
 /* Desktop/Large screens */
 @media (min-width: 1024px) {
   #bookingOverlay .flatpickr-calendar { --cal-gap: 7px; --cal-pad-x: 20px; }
+}
+
+/* =============================================
+   Final enforcement: Bold year across devices
+   ============================================= */
+#bookingOverlay .flatpickr-current-month .numInputWrapper input.cur-year,
+#bookingOverlay .flatpickr-current-month input.cur-year,
+#bookingOverlay .flatpickr-current-month .cur-year,
+#bookingOverlay .flatpickr-months .flatpickr-month .cur-year {
+  font-weight: 800 !important;
+  font-variation-settings: 'wght' 800 !important;
 }
