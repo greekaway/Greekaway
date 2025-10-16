@@ -7,7 +7,16 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <style>
-    :root { --panel-top: 11vh; --s2-offset-under-header: 92px; }
+    /* Stage 1: surface tokens to break blue monotony safely */
+    :root {
+      --panel-top: 5vh;
+      --s2-offset-under-header: 36px;
+      /* Surfaces */
+      --surface-band-top: rgba(84, 122, 176, 0.38);   /* lighter blue */
+      --surface-band-bot: rgba(54, 86, 136, 0.30);
+      --surface-card-top: rgba(58, 78, 102, 0.98);    /* slightly different than before */
+      --surface-card-bot: rgba(36, 50, 68, 0.98);
+    }
     /* Keep page absolutely minimal and clean */
     html, body { height: 100%; }
     body {
@@ -25,23 +34,25 @@
       bottom: -80px; /* extend under the footer (~64px) so it goes behind it */
       margin: 0; padding: 0;
       overflow: hidden;
+      /* subtle lighter blue layer to separate from site bg */
+      background: linear-gradient(180deg, var(--surface-band-top) 0%, var(--surface-band-bot) 100%);
+      border-radius: 18px;
       pointer-events: none; /* purely decorative container for now */
     }
     /* The actual dark card panel (mirrors step1 .flatpickr-calendar look) */
     .step2-card {
       position: absolute;
       inset: 0;
-      /* Subtle top-to-bottom gradient for a lifted 3D look */
-      background: linear-gradient(180deg, rgba(52,65,80,0.98) 0%, rgba(36,46,60,0.98) 100%);
+      /* Slightly darker than band for depth */
+      background: linear-gradient(180deg, var(--surface-card-top) 0%, var(--surface-card-bot) 100%);
       border-radius: 16px;
-      /* Multi-layered shadow: inner highlight + deep grounded shadows */
+      /* Refined shadow for clearer elevation without heavy spread */
       box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.05),
-        inset 0 1px 0 rgba(255,255,255,0.06),
-        inset 0 -1px 0 rgba(0,0,0,0.35),
-        0 18px 36px -12px rgba(0,0,0,0.55),
-        0 42px 90px -24px rgba(0,0,0,0.65),
-        0 90px 180px -36px rgba(0,0,0,0.60);
+        inset 0 0 0 1px rgba(255,255,255,0.055),
+        inset 0 1px 0 rgba(255,255,255,0.07),
+        inset 0 -1px 0 rgba(0,0,0,0.30),
+        0 14px 28px -12px rgba(0,0,0,0.55),
+        0 36px 80px -24px rgba(0,0,0,0.60);
       will-change: transform, box-shadow;
     }
     @media (max-width: 599px) {
@@ -92,7 +103,7 @@
     /* Title + description header above the panel */
     .step2-header {
       position: fixed;
-      top: 48px; /* slightly higher */
+      top: 0px; /* another +3 clicks (~12px) */
       left: 0; right: 0;
       display: flex; flex-direction: column; align-items: center;
       gap: 6px;
@@ -116,28 +127,58 @@
       left: 50%; transform: translateX(-50%);
       top: calc(var(--panel-top) + var(--s2-offset-under-header));
       width: min(780px, calc(100vw - 56px));
-      z-index: 1200; /* above card */
+      z-index: 20000; /* above footer/actions to keep dropdowns on top */
       color: #fff;
       font-weight: 800; /* white bold text as requested */
     }
     @media (max-width: 599px) {
       .s2-fields { width: calc(100vw - 40px); }
-      :root { --s2-offset-under-header: 88px; }
+      :root { --s2-offset-under-header: 32px; }
     }
-    .s2-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
-    .s2-row + .s2-row { border-top: 1px solid rgba(255,255,255,0.06); }
+    .s2-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; position: relative; }
+    .s2-row + .s2-row {
+      border-top: 1px solid rgba(0,0,0,0.45); /* darker hairline */
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); /* subtle top highlight for 3D ridge */
+    }
     .s2-labels { display: flex; flex-direction: column; gap: 4px; }
     .s2-labels .title { color: #fff; font-weight: 800; }
     .s2-labels .sub { color: #fff; font-weight: 800; opacity: 0.92; font-size: 0.95rem; }
+    /* Center ages display between label and minus */
+    .s2-ages { flex: 1; text-align: center; color: #fff; font-weight: 800; opacity: 0.95; }
+    .s2-ages .hint { opacity: 0.7; font-weight: 700; }
     .s2-counter { display: flex; align-items: center; gap: 10px; }
     .s2-counter .btn-round {
-      width: 36px; height: 36px; border-radius: 50%;
+      width: 36px; height: 36px; border-radius: 10px; /* rounded square */
       background: #0E1520; color: #fff; border: 1px solid rgba(255,255,255,0.16);
       display: inline-flex; align-items: center; justify-content: center;
       font-size: 20px; font-weight: 800; cursor: pointer;
       box-shadow: 0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+      transition: transform 140ms ease, background 160ms ease, box-shadow 160ms ease;
     }
+    .s2-counter .btn-round:active { transform: translateY(1px); box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05); }
     .s2-counter .count { min-width: 28px; text-align: center; font-size: 1.05rem; font-weight: 800; color: #fff; }
+
+    /* Popover grid for choosing child age 1..17 */
+    .age-picker { position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 8px);
+      background: #0E1520; color: #fff; border: 1px solid rgba(255,255,255,0.16); border-radius: 12px; padding: 12px; z-index: 21000;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+      display: grid; grid-template-columns: repeat(6, 36px); gap: 8px; pointer-events: auto;
+    }
+    .age-picker.dropup { top: auto; bottom: calc(100% + 8px); }
+    .age-picker button { width: 36px; height: 36px; border-radius: 8px; background: #142132; color: #fff; border: 1px solid rgba(255,255,255,0.16); font-weight: 800; cursor: pointer; }
+    .age-picker button:hover { background: #1B2B42; }
+    .age-picker[hidden] { display: none; }
+
+  /* Language selector on the right */
+  .s2-right { display: flex; align-items: center; gap: 10px; }
+  .lang-select { background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:12px; padding:8px 12px; font-weight:800; display:flex; align-items:center; gap:8px; cursor:pointer; box-shadow:0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06); min-width: 140px; }
+  .lang-select .caret { opacity:0.8; }
+  .lang-select .flag.placeholder { opacity: 0; }
+  .lang-menu { position:absolute; right:16px; top: calc(100% + 8px); background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:12px; padding:8px; z-index:21000; box-shadow:0 16px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04); min-width:200px; }
+  .lang-menu[hidden]{ display:none; }
+  .lang-menu.dropup { top: auto; bottom: calc(100% + 8px); }
+  .lang-menu button { width:100%; text-align:left; background:#142132; color:#fff; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:8px 10px; margin:4px 0; font-weight:800; display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .lang-menu button:hover { background:#1B2B42; }
   </style>
 </head>
 <body class="site-gradient">
@@ -169,10 +210,147 @@
         <div class="title">Παιδιά</div>
         <div class="sub">0 – 17 ετών</div>
       </div>
+      <div class="s2-ages" id="childrenAges"><span class="hint">Επιλέξτε ηλικίες</span></div>
       <div class="s2-counter">
         <button class="btn-round" id="childrenDec" aria-label="Μείωση παιδιών">−</button>
         <div class="count" id="childrenCount">0</div>
         <button class="btn-round" id="childrenInc" aria-label="Αύξηση παιδιών">+</button>
+      </div>
+      <!-- Popover age picker -->
+      <div class="age-picker" id="agePicker" hidden></div>
+    </div>
+
+    <!-- Luggage: Large -->
+    <div class="s2-row">
+      <div class="s2-labels">
+        <div class="title">Βαλίτσες (Μεγάλες)</div>
+      </div>
+      <div class="s2-ages" id="largeBagsText"></div>
+      <div class="s2-counter">
+        <button class="btn-round" id="largeBagsDec" aria-label="Μείωση μεγάλων βαλιτσών">−</button>
+        <div class="count" id="largeBagsCount">0</div>
+        <button class="btn-round" id="largeBagsInc" aria-label="Αύξηση μεγάλων βαλιτσών">+</button>
+      </div>
+    </div>
+
+    <!-- Luggage: Small -->
+    <div class="s2-row">
+      <div class="s2-labels">
+        <div class="title">Βαλίτσες (Μικρές)</div>
+      </div>
+      <div class="s2-ages" id="smallBagsText"></div>
+      <div class="s2-counter">
+        <button class="btn-round" id="smallBagsDec" aria-label="Μείωση μικρών βαλιτσών">−</button>
+        <div class="count" id="smallBagsCount">0</div>
+        <button class="btn-round" id="smallBagsInc" aria-label="Αύξηση μικρών βαλιτσών">+</button>
+      </div>
+    </div>
+
+    <!-- Traveler Profile: Language -->
+    <div class="s2-row" id="travelerLanguageRow">
+      <div class="s2-labels">
+        <div class="title">Γλώσσα επικοινωνίας</div>
+      </div>
+      <div class="s2-ages"></div>
+      <div class="s2-right">
+        <button type="button" class="lang-select" id="langSelectBtn">
+          <span class="flag">🇬🇷</span>
+          <span class="label">Ελληνικά</span>
+          <span class="caret">▾</span>
+        </button>
+      </div>
+      <div class="lang-menu" id="langMenu" hidden>
+        <button type="button" data-code="el"><span>🇬🇷</span><span>Ελληνικά</span></button>
+        <button type="button" data-code="en"><span>🇬🇧</span><span>English</span></button>
+        <button type="button" data-code="fr"><span>🇫🇷</span><span>Français</span></button>
+        <button type="button" data-code="de"><span>🇩🇪</span><span>Deutsch</span></button>
+        <button type="button" data-code="it"><span>🇮🇹</span><span>Italiano</span></button>
+        <button type="button" data-code="es"><span>🇪🇸</span><span>Español</span></button>
+        <button type="button" data-code="zh"><span>🇨🇳</span><span>中文</span></button>
+        <button type="button" data-code="he"><span>🇮🇱</span><span>עברית</span></button>
+      </div>
+    </div>
+
+    <!-- Age Group -->
+    <div class="s2-row" id="ageGroupRow">
+      <div class="s2-labels">
+        <div class="title">Ηλικιακή ομάδα</div>
+      </div>
+      <div class="s2-ages"></div>
+      <div class="s2-right">
+        <button type="button" class="lang-select" id="ageSelectBtn">
+          <span class="flag placeholder">🇬🇷</span>
+          <span class="label">Επιλέξτε</span>
+          <span class="caret">▾</span>
+        </button>
+      </div>
+      <div class="lang-menu" id="ageMenu" hidden>
+        <button type="button" data-code="20-30"><span>👤</span><span>20–30</span></button>
+        <button type="button" data-code="30-40"><span>👤</span><span>30–40</span></button>
+        <button type="button" data-code="40-55"><span>👤</span><span>40–55</span></button>
+        <button type="button" data-code="55+"><span>👤</span><span>55+</span></button>
+      </div>
+    </div>
+
+    <!-- Traveler Type -->
+    <div class="s2-row" id="travTypeRow">
+      <div class="s2-labels">
+        <div class="title">Τύπος ταξιδιώτη</div>
+      </div>
+      <div class="s2-ages"></div>
+      <div class="s2-right">
+        <button type="button" class="lang-select" id="travTypeSelectBtn">
+          <span class="flag placeholder">🏷️</span>
+          <span class="label">Επιλέξτε</span>
+          <span class="caret">▾</span>
+        </button>
+      </div>
+      <div class="lang-menu" id="travTypeMenu" hidden>
+        <button type="button" data-code="explore"><span>🧭</span><span>Εξερευνητές – δραστήριοι</span></button>
+        <button type="button" data-code="relax"><span>🧘</span><span>Χαλαροί ταξιδιώτες</span></button>
+        <button type="button" data-code="family"><span>👨‍👩‍👧</span><span>Οικογενειακό ύφος</span></button>
+        <button type="button" data-code="solo"><span>🧍</span><span>Μοναχικοί ταξιδιώτες</span></button>
+      </div>
+    </div>
+
+    <!-- Interests -->
+    <div class="s2-row" id="interestsRow">
+      <div class="s2-labels">
+        <div class="title">Ενδιαφέροντα</div>
+      </div>
+      <div class="s2-ages"></div>
+      <div class="s2-right">
+        <button type="button" class="lang-select" id="interestSelectBtn">
+          <span class="flag placeholder">🏷️</span>
+          <span class="label">Επιλέξτε</span>
+          <span class="caret">▾</span>
+        </button>
+      </div>
+      <div class="lang-menu" id="interestMenu" hidden>
+        <button type="button" data-code="nature"><span>🌿</span><span>Φύση</span></button>
+        <button type="button" data-code="culture"><span>🏛️</span><span>Πολιτισμός</span></button>
+        <button type="button" data-code="mountain"><span>⛰️</span><span>Βουνό</span></button>
+        <button type="button" data-code="sea"><span>🌊</span><span>Θάλασσα</span></button>
+        <button type="button" data-code="gastronomy"><span>🍽️</span><span>Γαστρονομία</span></button>
+      </div>
+    </div>
+
+    <!-- Sociality -->
+    <div class="s2-row" id="socialityRow">
+      <div class="s2-labels">
+        <div class="title">Κοινωνικότητα</div>
+      </div>
+      <div class="s2-ages"></div>
+      <div class="s2-right">
+        <button type="button" class="lang-select" id="socialSelectBtn">
+          <span class="flag placeholder">🏷️</span>
+          <span class="label">Επιλέξτε</span>
+          <span class="caret">▾</span>
+        </button>
+      </div>
+      <div class="lang-menu" id="socialMenu" hidden>
+        <button type="button" data-code="social"><span>😊</span><span>Κοινωνικός</span></button>
+        <button type="button" data-code="quiet"><span>🤫</span><span>Ήσυχος</span></button>
       </div>
     </div>
   </div>
@@ -236,13 +414,221 @@
     (function(){
       const adultsCount = document.getElementById('adultsCount');
       const childrenCount = document.getElementById('childrenCount');
+      const childrenAgesEl = document.getElementById('childrenAges');
+      const agePicker = document.getElementById('agePicker');
+      const ages = [];
       const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
       const getN = (el) => parseInt((el && el.textContent) || '0', 10) || 0;
       const setN = (el, n) => { if (el) el.textContent = String(n); };
-      document.getElementById('adultsDec')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)-1,1,10); setN(adultsCount,n); });
-      document.getElementById('adultsInc')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)+1,1,10); setN(adultsCount,n); });
-      document.getElementById('childrenDec')?.addEventListener('click', ()=>{ const n=clamp(getN(childrenCount)-1,0,10); setN(childrenCount,n); });
-      document.getElementById('childrenInc')?.addEventListener('click', ()=>{ const n=clamp(getN(childrenCount)+1,0,10); setN(childrenCount,n); });
+      const renderAges = () => {
+        if (!childrenAgesEl) return;
+        if (ages.length === 0) {
+          childrenAgesEl.innerHTML = '<span class="hint">Επιλέξτε ηλικίες</span>';
+        } else {
+          childrenAgesEl.textContent = ages.join(', ');
+        }
+      };
+      const openPicker = () => {
+        if (!agePicker) return;
+        if (ages.length >= 10) return; // respect max children
+        if (agePicker.childElementCount === 0) {
+          for (let i=1; i<=17; i++) {
+            const b = document.createElement('button');
+            b.type = 'button'; b.textContent = String(i);
+            b.addEventListener('click', ()=>{
+              if (ages.length < 10) {
+                ages.push(i);
+                setN(childrenCount, ages.length);
+                renderAges();
+              }
+              closePicker();
+            });
+            agePicker.appendChild(b);
+          }
+        }
+        agePicker.hidden = false;
+        // decide drop direction
+        const row = agePicker.closest('.s2-row');
+        if (row) {
+          const rect = row.getBoundingClientRect();
+          const spaceBelow = window.innerHeight - rect.bottom;
+          agePicker.classList.toggle('dropup', spaceBelow < 260);
+        }
+        setTimeout(()=>{
+          const onDoc = (ev) => {
+            if (!agePicker.contains(ev.target)) { closePicker(); document.removeEventListener('click', onDoc); }
+          };
+          document.addEventListener('click', onDoc);
+        },0);
+      };
+      const closePicker = () => { if (agePicker) agePicker.hidden = true; };
+
+  document.getElementById('adultsDec')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)-1,1,10); setN(adultsCount,n); });
+  document.getElementById('adultsInc')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)+1,1,10); setN(adultsCount,n); });
+      document.getElementById('childrenDec')?.addEventListener('click', ()=>{
+        if (ages.length > 0) { ages.pop(); setN(childrenCount, ages.length); renderAges(); }
+        else { const n=clamp(getN(childrenCount)-1,0,10); setN(childrenCount,n); }
+      });
+      document.getElementById('childrenInc')?.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        openPicker();
+      });
+      renderAges();
+
+      // Luggage counters (0..10 each)
+      const largeBagsCount = document.getElementById('largeBagsCount');
+      const smallBagsCount = document.getElementById('smallBagsCount');
+      const largeBagsText = document.getElementById('largeBagsText');
+      const smallBagsText = document.getElementById('smallBagsText');
+      const renderBags = () => {
+        if (largeBagsText) largeBagsText.textContent = getN(largeBagsCount) ? '' : '';
+        if (smallBagsText) smallBagsText.textContent = getN(smallBagsCount) ? '' : '';
+      };
+      document.getElementById('largeBagsDec')?.addEventListener('click', ()=>{ const n=clamp(getN(largeBagsCount)-1,0,10); setN(largeBagsCount,n); renderBags(); });
+      document.getElementById('largeBagsInc')?.addEventListener('click', ()=>{ const n=clamp(getN(largeBagsCount)+1,0,10); setN(largeBagsCount,n); renderBags(); });
+      document.getElementById('smallBagsDec')?.addEventListener('click', ()=>{ const n=clamp(getN(smallBagsCount)-1,0,10); setN(smallBagsCount,n); renderBags(); });
+      document.getElementById('smallBagsInc')?.addEventListener('click', ()=>{ const n=clamp(getN(smallBagsCount)+1,0,10); setN(smallBagsCount,n); renderBags(); });
+
+      // Language selector
+      const langBtn = document.getElementById('langSelectBtn');
+      const langMenu = document.getElementById('langMenu');
+      const setLang = (code, label, flag) => {
+        langBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
+        langBtn?.querySelector('.flag')?.replaceChildren(document.createTextNode(flag));
+        try { sessionStorage.setItem('gw_lang', code); } catch(_){ }
+      };
+      const defaultLang = (()=>{ try { return sessionStorage.getItem('gw_lang') || 'el'; } catch(_){ return 'el'; } })();
+  const langMap = { el:['Ελληνικά','🇬🇷'], en:['English','🇬🇧'], fr:['Français','🇫🇷'], de:['Deutsch','🇩🇪'], it:['Italiano','🇮🇹'], es:['Español','🇪🇸'], zh:['中文','🇨🇳'], he:['עברית','🇮🇱'] };
+      if (langMap[defaultLang]) setLang(defaultLang, langMap[defaultLang][0], langMap[defaultLang][1]);
+  langBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (langMenu) { langMenu.hidden = !langMenu.hidden; if (!langMenu.hidden) { const row = langMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; langMenu.classList.toggle('dropup', spaceBelow < 220); } } } });
+      langMenu?.querySelectorAll('button')?.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const code = btn.getAttribute('data-code') || 'el';
+          const [label, flag] = langMap[code] || langMap['el'];
+          setLang(code, label, flag);
+          if (langMenu) langMenu.hidden = true;
+        });
+      });
+      document.addEventListener('click', (e)=>{
+        if (langMenu && !langMenu.hidden && !langMenu.contains(e.target) && e.target !== langBtn) langMenu.hidden = true;
+      });
+
+      // Age group selector
+      const ageBtn = document.getElementById('ageSelectBtn');
+      const ageMenu = document.getElementById('ageMenu');
+      const setAgeGroup = (code, label) => {
+        ageBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
+        try { sessionStorage.setItem('gw_age_group', code); } catch(_){ }
+      };
+  const ageMap = { '20-30':'20–30', '30-40':'30–40', '40-55':'40–55', '55+':'55+' };
+      const defaultAge = (()=>{ try { return sessionStorage.getItem('gw_age_group') || ''; } catch(_){ return ''; } })();
+      if (defaultAge && ageMap[defaultAge]) setAgeGroup(defaultAge, ageMap[defaultAge]);
+  ageBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (ageMenu) { ageMenu.hidden = !ageMenu.hidden; if (!ageMenu.hidden) { const row = ageMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; ageMenu.classList.toggle('dropup', spaceBelow < 220); } } } });
+      ageMenu?.querySelectorAll('button')?.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const code = btn.getAttribute('data-code') || '';
+          const label = ageMap[code] || 'Επιλέξτε';
+          setAgeGroup(code, label);
+          if (ageMenu) ageMenu.hidden = true;
+        });
+      });
+      document.addEventListener('click', (e)=>{
+        if (ageMenu && !ageMenu.hidden && !ageMenu.contains(e.target) && e.target !== ageBtn) ageMenu.hidden = true;
+      });
+
+      // Traveler type selector
+      const travTypeBtn = document.getElementById('travTypeSelectBtn');
+      const travTypeMenu = document.getElementById('travTypeMenu');
+      const travTypeMap = {
+        explore: 'Εξερευνητές – δραστήριοι',
+        relax: 'Χαλαροί ταξιδιώτες',
+        family: 'Οικογενειακό ύφος',
+        solo: 'Μοναχικοί ταξιδιώτες'
+      };
+      const setTravType = (code) => {
+        const label = travTypeMap[code] || 'Επιλέξτε';
+        travTypeBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
+        try { sessionStorage.setItem('gw_traveler_type', code); } catch(_){ }
+      };
+      const defaultTravType = (()=>{ try { return sessionStorage.getItem('gw_traveler_type') || ''; } catch(_){ return ''; } })();
+      if (defaultTravType) setTravType(defaultTravType);
+  travTypeBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (travTypeMenu) { travTypeMenu.hidden = !travTypeMenu.hidden; if (!travTypeMenu.hidden) { const row = travTypeMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; travTypeMenu.classList.toggle('dropup', spaceBelow < 220); } } } });
+      travTypeMenu?.querySelectorAll('button')?.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const code = btn.getAttribute('data-code') || '';
+          setTravType(code);
+          if (travTypeMenu) travTypeMenu.hidden = true;
+        });
+      });
+      document.addEventListener('click', (e)=>{
+        if (travTypeMenu && !travTypeMenu.hidden && !travTypeMenu.contains(e.target) && e.target !== travTypeBtn) travTypeMenu.hidden = true;
+      });
+
+      // Interests selector
+      const interestBtn = document.getElementById('interestSelectBtn');
+      const interestMenu = document.getElementById('interestMenu');
+      const interestMap = {
+        nature: 'Φύση',
+        culture: 'Πολιτισμός',
+        mountain: 'Βουνό',
+        sea: 'Θάλασσα',
+        gastronomy: 'Γαστρονομία'
+      };
+      const setInterest = (code) => {
+        const label = interestMap[code] || 'Επιλέξτε';
+        interestBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
+        try { sessionStorage.setItem('gw_interest', code); } catch(_){ }
+      };
+      const defaultInterest = (()=>{ try { return sessionStorage.getItem('gw_interest') || ''; } catch(_){ return ''; } })();
+      if (defaultInterest) setInterest(defaultInterest);
+  interestBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (interestMenu) { interestMenu.hidden = !interestMenu.hidden; if (!interestMenu.hidden) { const row = interestMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; interestMenu.classList.toggle('dropup', spaceBelow < 220); } } } });
+      interestMenu?.querySelectorAll('button')?.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const code = btn.getAttribute('data-code') || '';
+          setInterest(code);
+          if (interestMenu) interestMenu.hidden = true;
+        });
+      });
+      document.addEventListener('click', (e)=>{
+        if (interestMenu && !interestMenu.hidden && !interestMenu.contains(e.target) && e.target !== interestBtn) interestMenu.hidden = true;
+      });
+
+      // Sociality selector
+      const socialBtn = document.getElementById('socialSelectBtn');
+      const socialMenu = document.getElementById('socialMenu');
+      const socialMap = { social: 'Κοινωνικός', quiet: 'Ήσυχος' };
+      const setSocial = (code) => {
+        const label = socialMap[code] || 'Επιλέξτε';
+        socialBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
+        try { sessionStorage.setItem('gw_sociality', code); } catch(_){ }
+      };
+      const defaultSocial = (()=>{ try { return sessionStorage.getItem('gw_sociality') || ''; } catch(_){ return ''; } })();
+      if (defaultSocial) setSocial(defaultSocial);
+  socialBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (socialMenu) { socialMenu.hidden = !socialMenu.hidden; if (!socialMenu.hidden) { const row = socialMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; socialMenu.classList.toggle('dropup', spaceBelow < 220); } } } });
+      socialMenu?.querySelectorAll('button')?.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const code = btn.getAttribute('data-code') || '';
+          setSocial(code);
+          if (socialMenu) socialMenu.hidden = true;
+        });
+      });
+      document.addEventListener('click', (e)=>{
+        if (socialMenu && !socialMenu.hidden && !socialMenu.contains(e.target) && e.target !== socialBtn) socialMenu.hidden = true;
+      });
+
+      // Persist all values on Next and go to Step 3
+      document.getElementById('s2Next')?.addEventListener('click', ()=>{
+        try {
+          // adults
+          sessionStorage.setItem('gw_adults', String(getN(adultsCount)));
+          // children ages
+          sessionStorage.setItem('gw_children_ages', JSON.stringify(ages));
+          // bags
+          sessionStorage.setItem('gw_bags_large', String(getN(document.getElementById('largeBagsCount'))));
+          sessionStorage.setItem('gw_bags_small', String(getN(document.getElementById('smallBagsCount'))));
+        } catch(_){}
+        location.href = '/step3.html';
+      });
     })();
   </script>
 </body>
