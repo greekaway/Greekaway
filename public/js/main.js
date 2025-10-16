@@ -10,6 +10,10 @@ const G = {
   error: (...a) => { if (G.debug) console.error(...a); }
 };
 
+// Temporary flag to disable any flatpickr calendar initialization in the booking overlay
+// Allow only the inline calendar inside the overlay; prevent other calendars/popups
+const GW_DISABLE_BOOKING_CALENDAR = false;
+
 // Global i18n helpers used by multiple blocks
 function getCurrentLang() {
   return (window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el';
@@ -306,7 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const calEl = document.getElementById('calendarFull');
           const trip = window.__loadedTrip || {};
           const disabledDates = trip.unavailable_dates || [];
-          if (window.flatpickr && calEl) {
+          if (!GW_DISABLE_BOOKING_CALENDAR && window.flatpickr && calEl) {
             window.flatpickr(calEl, {
               inline: true,
               altInput: false,
@@ -689,7 +693,7 @@ document.addEventListener("DOMContentLoaded", () => {
               dateEl.setAttribute('min', iso);
               // init flatpickr for a modern calendar picker (dark theme)
               try {
-                if (window.flatpickr) {
+                if (!GW_DISABLE_BOOKING_CALENDAR && window.flatpickr) {
                   window.flatpickr(dateEl, {
                     altInput: true,
                     altFormat: 'd F Y',

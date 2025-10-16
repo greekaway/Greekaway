@@ -3,30 +3,85 @@
 /* Cinematic entrance for overlay content */
 @keyframes bookingFadeSlideUp {
   0% { opacity: 0; transform: translateY(10px); }
-  #bookingOverlay {
-    background: linear-gradient(180deg, #1B2A3A 0%, #223345 100%) !important;
-    min-height: 100vh;
-    #bookingOverlay {
-      background: linear-gradient(180deg, #1B2A3A 0%, #223345 100%) !important;
-      min-height: 100vh;
-      width: 100%;
-      display: block;
-    }
+}
 
-    #bookingOverlay .overlay-inner,
-    #bookingOverlay .close-overlay,
-    #bookingOverlay .booking-step,
-    #bookingOverlay .calendar-full,
-    #bookingOverlay #calendarFull,
-    #bookingOverlay .flatpickr-calendar {
-      display: none !important;
-      visibility: hidden !important;
-    }
+#bookingOverlay {
+  background: linear-gradient(180deg, #1B2A3A 0%, #223345 100%) !important;
+  min-height: 100vh;
+  width: 100%;
+  display: block;
+}
 
-    footer {
-      display: block !important;
-      visibility: visible !important;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-    }
+/* Hide non-calendar UI but keep Step 1 containers visible so calendar can render */
+/* Keep #step1 and its .calendar-card in the layout; hide other siblings and non-essential elements */
+#bookingOverlay .overlay-inner > :not(#step1):not(.calendar-full),
+#bookingOverlay .close-overlay,
+#bookingOverlay button,
+#bookingOverlay .btn,
+#bookingOverlay h1,
+#bookingOverlay h2,
+#bookingOverlay h3,
+#bookingOverlay p { display: none !important; visibility: hidden !important; }
+
+/* Inside step1, hide meta/actions to keep calendar-only view */
+#bookingOverlay #step1 .step-meta,
+#bookingOverlay #step1 .booking-actions,
+#bookingOverlay #step1 #availabilityBlock { display: none !important; visibility: hidden !important; }
+
+/* Ensure the calendar subtree is visible */
+#bookingOverlay .overlay-inner,
+#bookingOverlay .calendar-full,
+#bookingOverlay .calendar-full *,
+#bookingOverlay .flatpickr-calendar,
+#bookingOverlay .flatpickr-calendar * { display: initial !important; visibility: visible !important; }
+
+/* Reveal only the container and the calendar */
+#bookingOverlay .overlay-inner {
+  display: block !important;
+  visibility: visible !important;
+  background: transparent !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  position: relative !important; /* anchor for absolute calendar */
+}
+
+/* Ensure step1 and the calendar card are visible containers (ancestors of .calendar-full) */
+#bookingOverlay #step1,
+#bookingOverlay #step1 .calendar-card { display: block !important; visibility: visible !important; background: transparent !important; border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+
+/* Middle band: 60% height, with 25% top empty and 15% bottom empty */
+#bookingOverlay .calendar-full {
+  display: block !important;
+  visibility: visible !important;
+  position: absolute !important;
+  top: 25vh; left: 0; right: 0;
+  width: 100%; height: 60vh;
+  margin: 0 !important; padding: 0 !important;
+  border: none !important; border-radius: 0 !important;
+  background: transparent !important; box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+/* Hide the input itself; render only the inline calendar UI */
+#bookingOverlay #calendarFull {
+  display: block !important; /* required for flatpickr to attach */
+  position: absolute !important;
+  width: 0 !important; height: 0 !important;
+  opacity: 0 !important; pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* Make the inline flatpickr calendar fill the middle band edge-to-edge */
+#bookingOverlay .flatpickr-calendar {
+  display: block !important;
+  visibility: visible !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important; height: 100% !important;
+  box-shadow: none !important; border: none !important;
+}
+
+/* Footer is globally styled in style.css; avoid sizing overrides here */

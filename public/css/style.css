@@ -22,7 +22,7 @@ body {
   background: var(--site-gradient);
   color: #ecf0f1;
   text-align: center;
-  padding-bottom: 80px; /* χώρος για footer */
+  padding-bottom: 64px; /* reserve space matching global footer height */
   transition: background 0.4s, color 0.4s;
 }
 
@@ -89,9 +89,10 @@ footer {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 0.6rem 0;
+  /* unified height/padding will be enforced below; keep minimal here */
+  padding: 8px 0;
   border-radius: 20px 20px 0 0;
-  z-index: 1000;
+  z-index: 12000; /* above overlay (which is z-index: 10000) */
   box-shadow: 0 -2px 12px rgba(0,0,0,0.4);
 }
 footer a {
@@ -385,6 +386,9 @@ html.overlay-open { overflow: hidden; }
 body.rtl footer {
   direction: ltr; /* keep layout left-to-right */
 }
+
+/* Global enforcement: consistent footer height and vertical padding across all pages */
+footer { height: 64px !important; padding: 8px 0 !important; }
 
 
 /* ===== Category page panel (as in screenshot) ===== */
