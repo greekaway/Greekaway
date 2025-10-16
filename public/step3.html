@@ -7,30 +7,36 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <style>
-    :root { --panel-top: 5vh; }
+    :root {
+      --panel-top: 5vh;
+      /* Reuse step2 surfaces for consistent look */
+      --surface-band-top: rgba(84, 122, 176, 0.38);
+      --surface-band-bot: rgba(54, 86, 136, 0.30);
+      --surface-card-top: rgba(58, 78, 102, 0.98);
+      --surface-card-bot: rgba(36, 50, 68, 0.98);
+    }
     html, body { height: 100%; }
     body { margin: 0; background-image: var(--site-gradient); background-color: var(--site-bg-color); }
 
-    /* Middle band (light blue, like step1/2 but lighter) */
+    /* Middle band (same palette as step2) */
     .step3-band {
       position: fixed; top: var(--panel-top); left: 50%; transform: translateX(-50%);
       width: min(780px, calc(100vw - 56px)); bottom: -80px; margin: 0; padding: 0; overflow: hidden; pointer-events: none;
-      background: linear-gradient(180deg, rgba(70,110,160,0.60) 0%, rgba(40,70,115,0.50) 100%);
+      background: linear-gradient(180deg, var(--surface-band-top) 0%, var(--surface-band-bot) 100%);
       border-radius: 18px;
     }
     @media (max-width: 599px) { .step3-band { width: calc(100vw - 40px); } }
 
-    /* Foreground card panel (even lighter blue + 3D shadow like step2) */
+    /* Foreground card panel (like step2) */
     .step3-card {
-      position: absolute; inset: 10px 10px 10px 10px; border-radius: 16px;
-      background: linear-gradient(180deg, rgba(120,160,210,0.95) 0%, rgba(95,135,185,0.95) 100%);
+      position: absolute; inset: 0; border-radius: 16px;
+      background: linear-gradient(180deg, var(--surface-card-top) 0%, var(--surface-card-bot) 100%);
       box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.06),
-        inset 0 1px 0 rgba(255,255,255,0.08),
-        inset 0 -1px 0 rgba(0,0,0,0.28),
-        0 18px 36px -12px rgba(0,0,0,0.55),
-        0 42px 90px -24px rgba(0,0,0,0.65),
-        0 90px 180px -36px rgba(0,0,0,0.60);
+        inset 0 0 0 1px rgba(255,255,255,0.055),
+        inset 0 1px 0 rgba(255,255,255,0.07),
+        inset 0 -1px 0 rgba(0,0,0,0.30),
+        0 14px 28px -12px rgba(0,0,0,0.55),
+        0 36px 80px -24px rgba(0,0,0,0.60);
     }
 
     /* Header */
@@ -40,9 +46,9 @@
     /* Summary fields */
     .s3-summary { position: fixed; left: 50%; transform: translateX(-50%); top: calc(var(--panel-top) + 36px); width: min(780px, calc(100vw - 56px)); z-index: 10; color: #0b1220; font-weight: 800; }
     @media (max-width: 599px) { .s3-summary { width: calc(100vw - 40px); } }
-    .s3-card { margin: 18px; padding: 16px; border-radius: 14px; background: rgba(14,21,32,0.12); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.22); }
-    .s3-row { display:flex; align-items:center; justify-content:space-between; padding: 12px 14px; }
-    .s3-row + .s3-row { border-top: 1px solid rgba(255,255,255,0.12); }
+  .s3-card { margin: 12px; padding: 8px 6px; border-radius: 14px; background: transparent; color: #fff; }
+  .s3-row { display:flex; align-items:center; justify-content:space-between; padding: 12px 16px; }
+  .s3-row + .s3-row { border-top: 1px solid rgba(0,0,0,0.45); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
     .s3-label { color:#fff; font-weight:800; }
     .s3-value { color:#fff; opacity:0.95; font-weight:800; text-align:right; }
 
