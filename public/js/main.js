@@ -380,8 +380,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // wire buttons
           document.getElementById('s1Next').addEventListener('click', () => {
-            // move to step 2 (traveler details)
-            showStep2();
+            // Navigate in the SAME tab to avoid any browser opening extra Google/new-tab pages
+            // Persist trip info for Step 2 header
+            try {
+              sessionStorage.setItem('gw_trip_title', stepTitle || '');
+              sessionStorage.setItem('gw_trip_desc', stepDesc || '');
+            } catch(_) {}
+            const absUrl = new URL('/step2.html', window.location.origin).href;
+            window.location.href = absUrl;
           });
           document.getElementById('s1Cancel').addEventListener('click', () => { closeOverlay('bookingOverlay'); renderOriginalOverlayInner(); });
         } catch (e) { G.warn('startBookingFlow failed', e); }
@@ -900,11 +906,28 @@ document.addEventListener("DOMContentLoaded", () => {
               occ.dataset.capacity = String(capacity);
             }
           } catch(e) {}
-          // color-code low availability
-          let colorClass = '';
-          if (avail <= 0) colorClass = 'unavailable';
-          else if (avail < 3) colorClass = 'low';
-          el.innerHTML = `<strong>Διαθεσιμότητα για ${dateStr}:</strong> <span class="avail-count ${colorClass}">${avail}</span> διαθέσιμες θέση(εις) — (σύνολο ${capacity}, κρατημένες ${taken})`;
+          // Show compact message only with DD-MM-YYYY format as requested.
+          // Try to format ISO (YYYY-MM-DD) to DD-MM-YYYY; fallback to the original if parsing fails.
+          const formattedDate = (() => {
+            try {
+              if (typeof dateStr === 'string') {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                  const [yy, mm, dd] = parts;
+                  if (yy && mm && dd) return `${dd.padStart(2,'0')}-${mm.padStart(2,'0')}-${yy}`;
+                }
+                const d = new Date(dateStr);
+                if (!isNaN(d)) {
+                  const dd = String(d.getDate()).padStart(2,'0');
+                  const mm = String(d.getMonth()+1).padStart(2,'0');
+                  const yy = d.getFullYear();
+                  return `${dd}-${mm}-${yy}`;
+                }
+              }
+            } catch(_) {}
+            return dateStr;
+          })();
+          el.textContent = `Διαθεσιμότητα για ${formattedDate}: σύνολο ${capacity}, κρατημένες ${taken}`;
           // store last known availability on the block for other logic
           el.dataset.avail = String(avail);
           el.dataset.capacity = String(capacity);

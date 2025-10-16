@@ -190,6 +190,17 @@ footer a.central-btn:hover i {
   margin-bottom: 0.6rem;
 }
 
+/* Light-blue variant for the Step 2 overlay */
+#step2Overlay.overlay { background: rgba(10, 24, 40, 0.66); }
+#step2Overlay .overlay-inner {
+  background: linear-gradient(180deg, #e9f6ff 0%, #dff1ff 100%);
+  color: #09233a;
+  border: 1px solid rgba(9,35,58,0.08);
+}
+#step2Overlay h2 { color: #0b5ea8; }
+#step2Overlay .btn { background: #0b5ea8; color: #fff; }
+#step2Overlay .btn.ghost { background: transparent; color: #0b5ea8; border: 1px solid rgba(11,94,168,0.3); }
+
 /* Prevent 1–2px right-side seam on iOS Safari by avoiding fractional widths */
 .overlay, .overlay .overlay-inner { max-width: 100vw; }
 .overlay .overlay-inner { width: 100%; }

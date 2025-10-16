@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Greekaway – Βήμα 2</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    :root { --panel-top: 11vh; --s2-offset-under-header: 92px; }
+    /* Keep page absolutely minimal and clean */
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background-image: var(--site-gradient);
+      background-color: var(--site-bg-color);
+    }
+    /* Middle band (same sizing/placement as step1 calendar band) */
+    .step2-band {
+      position: fixed; /* anchor to viewport like an overlay */
+      top: var(--panel-top);
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(780px, calc(100vw - 56px));
+      bottom: -80px; /* extend under the footer (~64px) so it goes behind it */
+      margin: 0; padding: 0;
+      overflow: hidden;
+      pointer-events: none; /* purely decorative container for now */
+    }
+    /* The actual dark card panel (mirrors step1 .flatpickr-calendar look) */
+    .step2-card {
+      position: absolute;
+      inset: 0;
+      /* Subtle top-to-bottom gradient for a lifted 3D look */
+      background: linear-gradient(180deg, rgba(52,65,80,0.98) 0%, rgba(36,46,60,0.98) 100%);
+      border-radius: 16px;
+      /* Multi-layered shadow: inner highlight + deep grounded shadows */
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.05),
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        inset 0 -1px 0 rgba(0,0,0,0.35),
+        0 18px 36px -12px rgba(0,0,0,0.55),
+        0 42px 90px -24px rgba(0,0,0,0.65),
+        0 90px 180px -36px rgba(0,0,0,0.60);
+      will-change: transform, box-shadow;
+    }
+    @media (max-width: 599px) {
+      .step2-band { width: calc(100vw - 40px); }
+    }
+    /* Optional center marker to verify blank page visually; kept hidden by default */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,1px,1px); white-space: nowrap; border: 0; }
+
+    /* Step 2 action bar — same placement/look as Step 1 */
+    .s2-actions {
+      position: fixed;
+      left: 0; right: 0;
+      bottom: calc(64px + env(safe-area-inset-bottom) + 32px);
+      display: flex;
+      justify-content: center; /* κεντραρισμένα */
+      align-items: center;
+      padding: 0 20px;
+      box-sizing: border-box;
+      gap: 18px; /* πιο κοντά μεταξύ τους */
+      z-index: 2000;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    @media (max-width: 599px) {
+      .s2-actions { padding: 0 16px; bottom: calc(64px + env(safe-area-inset-bottom) + 34px); max-width: 440px; gap: 16px; }
+    }
+    .s2-actions .btn {
+      background: #0E1520; /* official dark navy */
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 16px;
+      padding: 12px 18px; /* ένα ακόμη κλικ πιο αδύνατα */
+      font-size: 1.03rem; /* ελαφρώς μικρότερα */
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      min-width: 114px; /* ελάχιστη μείωση */
+      box-shadow:
+        0 10px 18px rgba(0,0,0,0.35),
+        0 4px 10px rgba(0,0,0,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        inset 0 -1px 0 rgba(0,0,0,0.28);
+      transition: transform 140ms ease, box-shadow 160ms ease, background 160ms ease;
+      cursor: pointer;
+    }
+    .s2-actions .btn:hover { background: #122033; box-shadow: 0 12px 22px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.3); }
+    .s2-actions .btn:active { transform: translateY(1px); box-shadow: 0 6px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3); }
+
+    /* Title + description header above the panel */
+    .step2-header {
+      position: fixed;
+      top: 48px; /* slightly higher */
+      left: 0; right: 0;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 6px;
+      color: var(--color-text, #e8edf2);
+      z-index: 5;
+      padding: 0 16px;
+      text-align: center;
+    }
+    .step2-header .trip-title {
+      font-weight: 800;
+      /* ~+20% συνολικά από το αρχικό */
+      font-size: clamp(1.44rem, 2.88vw + 0.96rem, 2.28rem);
+      letter-spacing: 0.4px;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.35);
+    }
+    .step2-header .trip-desc { display: none; }
+
+    /* Inline fields under the header inside the top of the panel */
+    .s2-fields {
+      position: fixed;
+      left: 50%; transform: translateX(-50%);
+      top: calc(var(--panel-top) + var(--s2-offset-under-header));
+      width: min(780px, calc(100vw - 56px));
+      z-index: 1200; /* above card */
+      color: #fff;
+      font-weight: 800; /* white bold text as requested */
+    }
+    @media (max-width: 599px) {
+      .s2-fields { width: calc(100vw - 40px); }
+      :root { --s2-offset-under-header: 88px; }
+    }
+    .s2-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+    .s2-row + .s2-row { border-top: 1px solid rgba(255,255,255,0.06); }
+    .s2-labels { display: flex; flex-direction: column; gap: 4px; }
+    .s2-labels .title { color: #fff; font-weight: 800; }
+    .s2-labels .sub { color: #fff; font-weight: 800; opacity: 0.92; font-size: 0.95rem; }
+    .s2-counter { display: flex; align-items: center; gap: 10px; }
+    .s2-counter .btn-round {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #0E1520; color: #fff; border: 1px solid rgba(255,255,255,0.16);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; cursor: pointer;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .s2-counter .count { min-width: 28px; text-align: center; font-size: 1.05rem; font-weight: 800; color: #fff; }
+  </style>
+</head>
+<body class="site-gradient">
+  <div class="step2-header">
+    <div class="trip-title" id="s2TripTitle">&nbsp;</div>
+    <div class="trip-desc" id="s2TripDesc">&nbsp;</div>
+  <div class="step-indicator" style="margin-top:14px;color:var(--color-gold,#d9b85f);font-weight:700;opacity:.9">Βήμα 2 από 3</div>
+  </div>
+
+  <!-- Centered dark panel like Step 1 calendar host (empty for now) -->
+  <div class="step2-band" aria-hidden="true">
+    <div class="step2-card"></div>
+  </div>
+
+  <!-- Adults / Children counters -->
+  <div class="s2-fields" role="group" aria-label="Επιλογές ταξιδιωτών">
+    <div class="s2-row">
+      <div class="s2-labels">
+        <div class="title">Ενήλικες</div>
+      </div>
+      <div class="s2-counter">
+        <button class="btn-round" id="adultsDec" aria-label="Μείωση ενηλίκων">−</button>
+        <div class="count" id="adultsCount">2</div>
+        <button class="btn-round" id="adultsInc" aria-label="Αύξηση ενηλίκων">+</button>
+      </div>
+    </div>
+    <div class="s2-row">
+      <div class="s2-labels">
+        <div class="title">Παιδιά</div>
+        <div class="sub">0 – 17 ετών</div>
+      </div>
+      <div class="s2-counter">
+        <button class="btn-round" id="childrenDec" aria-label="Μείωση παιδιών">−</button>
+        <div class="count" id="childrenCount">0</div>
+        <button class="btn-round" id="childrenInc" aria-label="Αύξηση παιδιών">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom actions like Step 1 -->
+  <div class="s2-actions">
+    <button id="s2Back" class="btn">Πίσω</button>
+    <button id="s2Next" class="btn">Επόμενο</button>
+  </div>
+
+  <!-- Shared footer -->
+  <footer>
+    <a href="/index.html">
+      <i class="fas fa-home"></i>
+      <span data-i18n="nav.home">Home</span>
+    </a>
+
+    <a href="/checkout.html">
+      <i class="fas fa-credit-card"></i>
+      <span data-i18n="nav.checkout">Πληρωμή</span>
+    </a>
+
+    <a href="javascript:void(0)" class="central-btn">
+      <i class="fas fa-bell"></i>
+      <span data-i18n="nav.book">Κράτηση</span>
+    </a>
+
+    <a href="javascript:void(0)" onclick="openOverlay('aiOverlay')">
+      <i class="fas fa-comments"></i>
+      <span data-i18n="nav.ai">AI Assistant</span>
+    </a>
+
+    <a href="javascript:void(0)" onclick="openOverlay('profileOverlay')">
+      <i class="fas fa-user"></i>
+      <span data-i18n="nav.profile">Προφίλ</span>
+    </a>
+  </footer>
+  <!-- Optional: overlays can be added later if needed -->
+  <script src="/js/overlay-manager.js" defer></script>
+  <script src="/js/i18n.js" defer></script>
+  <script>
+    // Optional: lightweight behaviour — Πίσω γυρίζει στην προηγούμενη σελίδα
+    try { document.getElementById('s2Back').addEventListener('click', () => history.back()); } catch(_){ }
+    // Populate header from sessionStorage (set in Step 1)
+    (function() {
+      const headerEl = document.querySelector('.step2-header');
+      const titleEl = document.getElementById('s2TripTitle');
+      const descEl = document.getElementById('s2TripDesc');
+      try {
+        const t = sessionStorage.getItem('gw_trip_title') || '';
+        const d = sessionStorage.getItem('gw_trip_desc') || '';
+        if (t) titleEl.textContent = t;
+        if (d) descEl.textContent = d;
+        if (!t && !d && headerEl) headerEl.style.display = 'none';
+      } catch(_) {
+        if (headerEl) headerEl.style.display = 'none';
+      }
+    })();
+
+    // Simple counters logic (limits: adults 1..10, children 0..10)
+    (function(){
+      const adultsCount = document.getElementById('adultsCount');
+      const childrenCount = document.getElementById('childrenCount');
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+      const getN = (el) => parseInt((el && el.textContent) || '0', 10) || 0;
+      const setN = (el, n) => { if (el) el.textContent = String(n); };
+      document.getElementById('adultsDec')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)-1,1,10); setN(adultsCount,n); });
+      document.getElementById('adultsInc')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)+1,1,10); setN(adultsCount,n); });
+      document.getElementById('childrenDec')?.addEventListener('click', ()=>{ const n=clamp(getN(childrenCount)-1,0,10); setN(childrenCount,n); });
+      document.getElementById('childrenInc')?.addEventListener('click', ()=>{ const n=clamp(getN(childrenCount)+1,0,10); setN(childrenCount,n); });
+    })();
+  </script>
+</body>
+</html>
