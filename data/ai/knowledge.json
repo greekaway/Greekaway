@@ -1,0 +1,45 @@
+{
+  "about": {
+    "brand": "Greekaway is a curated travel experience platform offering small-group excursions (5–7 travelers) across Greece. Each trip combines culture, nature, and comfort, focusing on authentic experiences rather than mass tourism."
+  },
+  "trips": [
+    {
+      "name": "Delphi & Arachova",
+      "description": "Day trip combining ancient history and mountain charm. Includes visit to the archaeological site of Delphi, the Temple of Apollo, and leisure time in Arachova village."
+    },
+    {
+      "name": "Lefkada Island Experience",
+      "description": "Sea and nature adventure including beach hopping, local cuisine, and scenic viewpoints of the Ionian islands."
+    },
+    {
+      "name": "Ancient Olympia",
+      "description": "Cultural full-day trip exploring the birthplace of the Olympic Games, museum visit, and lunch at a traditional taverna."
+    }
+  ],
+  "booking": {
+    "steps": "The booking process includes: selecting date and seats, entering traveler details, confirming payment through Stripe, and receiving an automatic confirmation email.",
+    "availability": "Each excursion operates ideally with 5–7 participants. The system shows seat availability (e.g., 4/6) to help travelers join compatible groups."
+  },
+  "profile": {
+    "purpose": "Traveler profiles help Greekaway create balanced groups based on personality type and travel style (e.g., Explorers, Relaxed Travelers, Family Style, Solo Adventurers).",
+    "fields": "Profiles may include age range, language preference, social style, and trip interests."
+  },
+  "faq": [
+    {
+      "question": "Why do I need to fill out my traveler profile?",
+      "answer": "Your profile helps Greekaway group you with travelers who match your style, ensuring a more harmonious and enjoyable experience."
+    },
+    {
+      "question": "Can I cancel or change my booking?",
+      "answer": "Yes, cancellations or modifications are accepted according to the Greekaway terms and refund policy. Details are shown at checkout."
+    },
+    {
+      "question": "What payment methods are supported?",
+      "answer": "Greekaway supports Stripe payments, Apple Pay, Google Pay, and major credit cards."
+    }
+  ],
+  "policies": {
+    "terms": "All excursions follow the Greekaway Terms & Conditions, which ensure fair booking, refund, and travel safety practices.",
+    "privacy": "Greekaway respects user privacy. Personal data is used only for trip coordination and never shared with third parties."
+  }
+}

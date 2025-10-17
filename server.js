@@ -138,6 +138,72 @@ try {
   bookingsDb = null;
 }
 
+// Load assistant knowledge base (JSON) to enrich the system prompt, with hot-reload
+const KNOWLEDGE_DIR = path.join(__dirname, 'data', 'ai');
+const KNOWLEDGE_PATH = path.join(KNOWLEDGE_DIR, 'knowledge.json');
+let KNOWLEDGE_TEXT = null;
+
+function loadKnowledgeOnce() {
+  try {
+    let txt = fs.readFileSync(KNOWLEDGE_PATH, 'utf8');
+    if (txt && txt.length > 200_000) {
+      console.warn('assistant: knowledge.json seems very large; truncating for prompt');
+      txt = txt.slice(0, 200_000);
+    }
+    KNOWLEDGE_TEXT = txt;
+    return true;
+  } catch (e) {
+    if (e && e.code === 'ENOENT') {
+      KNOWLEDGE_TEXT = null;
+    }
+    return false;
+  }
+}
+
+if (loadKnowledgeOnce()) {
+  console.log('assistant: knowledge loaded');
+} else {
+  console.warn('assistant: knowledge.json not loaded');
+}
+
+let knowledgeReloadTimer = null;
+function scheduleKnowledgeReload() {
+  if (knowledgeReloadTimer) clearTimeout(knowledgeReloadTimer);
+  knowledgeReloadTimer = setTimeout(() => {
+    const ok = loadKnowledgeOnce();
+    if (ok && KNOWLEDGE_TEXT != null) {
+      console.log('assistant: knowledge reloaded');
+    } else if (KNOWLEDGE_TEXT == null) {
+      console.warn('assistant: knowledge file missing; cleared');
+    } else {
+      console.warn('assistant: failed to reload knowledge');
+    }
+  }, 300);
+}
+
+try {
+  // Watch the directory to handle editors that use atomic writes (rename)
+  fs.watch(KNOWLEDGE_DIR, { persistent: true }, (eventType, filename) => {
+    if (!filename) return;
+    if (path.basename(filename) !== 'knowledge.json') return;
+    scheduleKnowledgeReload();
+  });
+} catch (e) {
+  // Fallback to polling if fs.watch is not available or fails
+  try {
+    fs.watchFile(KNOWLEDGE_PATH, { interval: 1000 }, () => scheduleKnowledgeReload());
+    console.warn('assistant: fs.watch fallback to watchFile');
+  } catch (e2) {
+    console.warn('assistant: unable to watch knowledge.json', e2 && e2.message ? e2.message : e2);
+  }
+}
+
+function buildAssistantSystemPrompt() {
+  const base = 'You are the helpful, concise Greekaway travel assistant. Answer in the language of the user when possible.';
+  if (!KNOWLEDGE_TEXT) return base;
+  return base + '\n\nGreekaway knowledge base (JSON):\n' + KNOWLEDGE_TEXT + '\n\nUse this knowledge as ground truth when relevant. If a topic is not covered, answer normally.';
+}
+
 // Serve /trips/trip.html with the API key injected from environment.
 // This route is placed before the static middleware so it takes precedence
 // over the on-disk file and avoids writing the key into committed files.
@@ -245,7 +311,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
 
     // Build messages array (optional short system prompt guiding assistant tone)
     const messages = [
-      { role: 'system', content: 'You are the helpful, concise Greekaway travel assistant. Answer in the language of the user when possible.' },
+      { role: 'system', content: buildAssistantSystemPrompt() },
       ...history.filter(m => m && m.role && m.content).map(m => ({ role: m.role, content: String(m.content) })),
       { role: 'user', content: message }
     ];
@@ -299,7 +365,7 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
     if (!message) { res.status(400).end('Missing message'); return; }
 
     const messages = [
-      { role: 'system', content: 'You are the helpful, concise Greekaway travel assistant. Answer in the language of the user when possible.' },
+      { role: 'system', content: buildAssistantSystemPrompt() },
       ...history.filter(m => m && m.role && m.content).map(m => ({ role: m.role, content: String(m.content) })),
       { role: 'user', content: message }
     ];
@@ -362,6 +428,13 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
     console.error('AI Assistant stream error:', e && e.stack ? e.stack : e);
     try { res.end(); } catch(_e) {}
   }
+});
+
+// Simple status endpoint to check assistant mode/model (local only convenience)
+app.get('/api/assistant/status', (req, res) => {
+  const mode = OPENAI_API_KEY ? 'openai' : 'mock';
+  // Keep in sync with the hardcoded model used above
+  res.json({ mode, model: 'gpt-4o-mini' });
 });
 
 // Bookings API: create and read bookings
