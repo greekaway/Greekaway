@@ -7,11 +7,38 @@
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="../js/main.js" defer></script>
+  <script src="/js/overlay-manager.js" defer></script>
+  <script src="/js/assistant.js" defer></script>
 </head>
 
   <body data-category="culture">
   <h2 data-i18n="categories.culture.title">Εκδρομές Πολιτισμού</h2>
   <div id="trips-container"></div>
+
+  <!-- Overlays: About, AI, Profile -->
+  <div id="aboutOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
+    <button class="close-overlay" onclick="closeOverlay('aboutOverlay')" data-i18n-aria="ui.close">×</button>
+    <div class="overlay-inner">
+      <h2 data-i18n="about.title">Σχετικά με εμάς</h2>
+      <p data-i18n="about.text">Το Greekaway δημιουργήθηκε για να σας προσφέρει επιλεγμένες εκδρομές στην Ελλάδα με άνεση, τεχνολογία και στυλ.</p>
+    </div>
+  </div>
+
+  <div id="aiOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
+    <button class="close-overlay" onclick="closeOverlay('aiOverlay')" data-i18n-aria="ui.close">×</button>
+    <div class="overlay-inner">
+      <h2 data-i18n="nav.ai">Βοηθός AI</h2>
+      <p data-i18n="welcome.ask">Ρωτήστε μας ό,τι θέλετε για την εκδρομή σας!</p>
+    </div>
+  </div>
+
+  <div id="profileOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
+    <button class="close-overlay" onclick="closeOverlay('profileOverlay')" data-i18n-aria="ui.close">×</button>
+    <div class="overlay-inner">
+      <h2 data-i18n="nav.profile">Το Προφίλ μου</h2>
+      <p data-i18n="profile.info">Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας.</p>
+    </div>
+  </div>
 
   <!-- FOOTER (ίδιο look με το welcome) -->
   <footer>
@@ -20,7 +47,7 @@
       <span data-i18n="nav.home">Home</span>
     </a>
 
-    <a href="javascript:void(0)">
+    <a href="javascript:void(0)" onclick="openOverlay('aboutOverlay')">
       <i class="fas fa-info-circle"></i>
       <span data-i18n="nav.about">About Us</span>
     </a>
@@ -30,12 +57,12 @@
       <span data-i18n="nav.trips">Δες Εκδρομές</span>
     </a>
 
-    <a href="javascript:void(0)">
+    <a href="javascript:void(0)" onclick="openOverlay('aiOverlay')">
       <i class="fas fa-comments"></i>
       <span data-i18n="nav.ai">AI Assistant</span>
     </a>
 
-    <a href="javascript:void(0)">
+    <a href="javascript:void(0)" onclick="openOverlay('profileOverlay')">
       <i class="fas fa-user"></i>
       <span data-i18n="nav.profile">Προφίλ</span>
     </a>

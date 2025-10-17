@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const crypto = require('crypto');
+const { TextDecoder } = require('util');
 
 // Load local .env (if present). Safe to leave out in production where env vars are set
 try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installed */ }
@@ -22,6 +23,12 @@ const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY || null;
 let stripe = null;
 if (STRIPE_SECRET) {
   try { stripe = require('stripe')(STRIPE_SECRET); } catch(e) { console.warn('Stripe not initialized (install package?)'); }
+}
+
+// OpenAI API key from environment (for the Greekaway AI Assistant)
+let OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.OPENAI_API_key || null;
+if (typeof OPENAI_API_KEY === 'string') {
+  OPENAI_API_KEY = OPENAI_API_KEY.trim().replace(/^['"]|['"]$/g, '');
 }
 
 // Initialize a simple SQLite bookings table so server endpoints can create bookings
@@ -212,6 +219,123 @@ app.post('/create-payment-intent', express.json(), async (req, res) => {
   } catch (err) {
     console.error('Stripe create payment intent error:', err && err.stack ? err.stack : err);
     res.status(500).json({ error: 'Failed to create payment intent' });
+  }
+});
+
+// Greekaway AI Assistant — JSON response
+// POST /api/assistant { message: string, history?: [{role,content}] }
+app.post('/api/assistant', express.json(), async (req, res) => {
+  try {
+    if (!OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY not configured on server.' });
+    const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
+    const history = Array.isArray(req.body && req.body.history) ? req.body.history : [];
+    if (!message) return res.status(400).json({ error: 'Missing message' });
+
+    // Build messages array (optional short system prompt guiding assistant tone)
+    const messages = [
+      { role: 'system', content: 'You are the helpful, concise Greekaway travel assistant. Answer in the language of the user when possible.' },
+      ...history.filter(m => m && m.role && m.content).map(m => ({ role: m.role, content: String(m.content) })),
+      { role: 'user', content: message }
+    ];
+
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-5',
+        messages,
+        temperature: 0.2,
+        stream: false
+      })
+    });
+    if (!resp.ok) {
+      const errText = await resp.text().catch(()=> '');
+      return res.status(502).json({ error: 'OpenAI request failed', details: errText.slice(0, 400) });
+    }
+    const data = await resp.json();
+    const reply = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content ? data.choices[0].message.content : '';
+    return res.json({ reply, model: 'gpt-5' });
+  } catch (e) {
+    console.error('AI Assistant JSON error:', e && e.stack ? e.stack : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Greekaway AI Assistant — Streaming response (chunked text)
+// POST /api/assistant/stream { message, history? } -> streams plain text tokens
+app.post('/api/assistant/stream', express.json(), async (req, res) => {
+  try {
+    if (!OPENAI_API_KEY) { res.status(500).end('OPENAI_API_KEY not configured'); return; }
+    const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
+    const history = Array.isArray(req.body && req.body.history) ? req.body.history : [];
+    if (!message) { res.status(400).end('Missing message'); return; }
+
+    const messages = [
+      { role: 'system', content: 'You are the helpful, concise Greekaway travel assistant. Answer in the language of the user when possible.' },
+      ...history.filter(m => m && m.role && m.content).map(m => ({ role: m.role, content: String(m.content) })),
+      { role: 'user', content: message }
+    ];
+
+    // Prepare streaming response
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+
+    const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-5',
+        messages,
+        temperature: 0.2,
+        stream: true
+      })
+    });
+
+    if (!upstream.ok || !upstream.body) {
+      const errText = await upstream.text().catch(()=> '');
+      res.status(upstream.status || 502);
+      res.end(errText || 'Upstream error');
+      return;
+    }
+
+    const reader = upstream.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let done = false;
+    while (!done) {
+      const { value, done: d } = await reader.read();
+      done = d;
+      if (value) {
+        const chunk = decoder.decode(value, { stream: true });
+        // OpenAI streams as SSE lines: data: {json}\n\n
+        const lines = chunk.split(/\n/).filter(Boolean);
+        for (const line of lines) {
+          const m = line.match(/^data:\s*(.*)$/);
+          const payload = m ? m[1] : null;
+          if (!payload) continue;
+          if (payload === '[DONE]') { done = true; break; }
+          try {
+            const obj = JSON.parse(payload);
+            const delta = obj && obj.choices && obj.choices[0] && obj.choices[0].delta || {};
+            const content = delta.content || '';
+            if (content) res.write(content);
+          } catch (_e) {
+            // Fallback: if not JSON, attempt to forward raw
+            res.write('');
+          }
+        }
+      }
+    }
+    res.end();
+  } catch (e) {
+    console.error('AI Assistant stream error:', e && e.stack ? e.stack : e);
+    try { res.end(); } catch(_e) {}
   }
 });
 
