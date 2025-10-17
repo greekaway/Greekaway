@@ -435,7 +435,7 @@ html.overlay-open { overflow: hidden; }
   width: 100%;
   padding: 10px 44px 10px 12px !important; /* slightly tighter right padding */
   border-radius: 16px; border: 1px solid #333945 !important;
-  background: #0e1620 !important; color: #fff !important; font-size: 15px !important;
+  background: #0e1620 !important; color: #fff !important; font-size: 16px !important; /* iOS: >=16px prevents auto-zoom */
   box-sizing: border-box;
 }
 #aiOverlay .ga-form input[type="text"]::placeholder { color: #9ba6b2; }
@@ -444,13 +444,13 @@ html.overlay-open { overflow: hidden; }
 /* Up-arrow send button inside the input */
 #aiOverlay .ga-send {
   position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-  width: 34px; height: 34px; /* keep hit area */
+  width: 35px; height: 35px; /* +~3% hit area */
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 12px;
   background: transparent !important; color: #fff;
   border: none !important; box-shadow: none !important;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 19px; /* +~3% */
 }
 /* slightly lift the button to align visually with text baseline */
 #aiOverlay .ga-send { transform: translateY(calc(-50% - 16px)) !important; }
@@ -459,6 +459,14 @@ html.overlay-open { overflow: hidden; }
   background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 12px; padding: 10px 14px;
 }
 #aiOverlay .ga-form button:hover { background: #334155; }
+
+/* Global 3% magnification for the chat input bar text and controls */
+#aiOverlay .ga-inputbar { font-size: 103%; }
+
+/* Mobile-only slight left nudge of the chat input wrapper */
+@media (max-width: 599px) {
+  #aiOverlay .ga-inputwrap { margin-left: -12px; width: calc(100% + 12px); }
+}
 
 /* Hide global footer while AI chat overlay is open */
 #aiOverlay.active ~ footer { display: none !important; }
@@ -475,6 +483,9 @@ html.overlay-open { overflow: hidden; }
   }
 
   /* make trip cards respect the container padding and add subtle elevation */
+
+  /* iOS/Safari: help stabilize text sizing and gestures inside AI overlay */
+  #aiOverlay { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
   .trip-card {
     width: calc(100% - 32px);
     margin-left: auto;

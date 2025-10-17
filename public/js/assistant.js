@@ -47,7 +47,7 @@
     bubble.textContent = text;
     row.appendChild(bubble);
     log.appendChild(row);
-    log.scrollTop = log.scrollHeight;
+    try { log.scrollTop = log.scrollHeight; } catch(_){ }
   }
 
   async function sendMessage(text){
@@ -61,8 +61,8 @@
     const bubble = document.createElement('div');
     bubble.className = 'ga-bubble';
     assistantRow.appendChild(bubble);
-    log.appendChild(assistantRow);
-    log.scrollTop = log.scrollHeight;
+  log.appendChild(assistantRow);
+  try { log.scrollTop = log.scrollHeight; } catch(_){ }
 
     // Streaming
     try {
@@ -87,7 +87,7 @@
           const chunk = decoder.decode(value, { stream: true });
           acc += chunk;
           bubble.textContent = acc;
-          log.scrollTop = log.scrollHeight;
+          try { log.scrollTop = log.scrollHeight; } catch(_){ }
         }
       }
     } catch (e) {
@@ -101,12 +101,15 @@
   const form = document.getElementById('gaChatForm');
   const input = document.getElementById('gaChatInput');
   const sendBtn = document.getElementById('gaSendBtn');
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (!form || !input) return;
     form.addEventListener('submit', function(e){
       e.preventDefault();
       const text = input.value.trim();
       if (!text) return;
       input.value = '';
+      // On mobile Safari, blur to dismiss keyboard and avoid sticky zoom state
+      try { input.blur(); } catch(_){ }
       sendMessage(text);
     });
     if (sendBtn) {
@@ -114,11 +117,14 @@
         const text = input.value.trim();
         if (!text) return;
         input.value = '';
+        try { input.blur(); } catch(_){ }
         sendMessage(text);
       });
     }
-    // Focus input so the user immediately sees where to type
-    try { input.focus(); } catch(_) {}
+    // Avoid auto-focus on iOS to prevent Safari auto-zoom/viewport jump
+    if (!isIOS) {
+      try { input.focus(); } catch(_) {}
+    }
 
     // When overlay opens later (via openOverlay), attempt to refocus input
     const origOpen = window.openOverlay;
@@ -128,7 +134,11 @@
         if (id === 'aiOverlay') {
           // Rebuild UI in case the page changed content
           ensureUI();
-          setTimeout(() => { try { document.getElementById('gaChatInput').focus(); } catch(_){} }, 60);
+          // Avoid auto-focus on iOS
+          setTimeout(() => {
+            const el = document.getElementById('gaChatInput');
+            if (!isIOS) { try { el && el.focus(); } catch(_){} }
+          }, 80);
         }
       };
     }
