@@ -222,11 +222,23 @@ app.post('/create-payment-intent', express.json(), async (req, res) => {
   }
 });
 
+// Helper: minimal mock reply when OPENAI key is not configured
+function mockAssistantReply(message) {
+  const m = String(message || '').trim();
+  if (!m) return 'Γεια σου! Πώς μπορώ να βοηθήσω με τα ταξίδια σου;';
+  // Simple, friendly echo-style mock with a helpful note
+  return `(δοκιμαστική απάντηση) Σε κατάλαβα: "${m}". Πες μου λίγες περισσότερες λεπτομέρειες για να βοηθήσω καλύτερα.`;
+}
+
 // Greekaway AI Assistant — JSON response
 // POST /api/assistant { message: string, history?: [{role,content}] }
 app.post('/api/assistant', express.json(), async (req, res) => {
   try {
-    if (!OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY not configured on server.' });
+    // If no key, return a friendly mock reply instead of erroring out
+    if (!OPENAI_API_KEY) {
+      const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
+      return res.json({ reply: mockAssistantReply(message), model: 'mock' });
+    }
     const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
     const history = Array.isArray(req.body && req.body.history) ? req.body.history : [];
     if (!message) return res.status(400).json({ error: 'Missing message' });
@@ -245,7 +257,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-5',
+        model: 'gpt-4o-mini',
         messages,
         temperature: 0.2,
         stream: false
@@ -256,8 +268,9 @@ app.post('/api/assistant', express.json(), async (req, res) => {
       return res.status(502).json({ error: 'OpenAI request failed', details: errText.slice(0, 400) });
     }
     const data = await resp.json();
-    const reply = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content ? data.choices[0].message.content : '';
-    return res.json({ reply, model: 'gpt-5' });
+    let reply = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content ? data.choices[0].message.content : '';
+    if (!reply) reply = 'Συγγνώμη, δεν μπόρεσα να συντάξω απάντηση αυτή τη στιγμή.';
+    return res.json({ reply, model: 'gpt-4o-mini' });
   } catch (e) {
     console.error('AI Assistant JSON error:', e && e.stack ? e.stack : e);
     return res.status(500).json({ error: 'Server error' });
@@ -268,7 +281,19 @@ app.post('/api/assistant', express.json(), async (req, res) => {
 // POST /api/assistant/stream { message, history? } -> streams plain text tokens
 app.post('/api/assistant/stream', express.json(), async (req, res) => {
   try {
-    if (!OPENAI_API_KEY) { res.status(500).end('OPENAI_API_KEY not configured'); return; }
+    // If no key, stream a quick mock reply so the UI doesn't error
+    if (!OPENAI_API_KEY) {
+      const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
+      res.setHeader('Connection', 'keep-alive');
+      const txt = mockAssistantReply(message);
+      // Write in a couple of chunks to simulate streaming
+      const parts = txt.match(/.{1,40}/g) || [txt];
+      for (const p of parts) res.write(p);
+      res.end();
+      return;
+    }
     const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
     const history = Array.isArray(req.body && req.body.history) ? req.body.history : [];
     if (!message) { res.status(400).end('Missing message'); return; }
@@ -291,7 +316,7 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-5',
+        model: 'gpt-4o-mini',
         messages,
         temperature: 0.2,
         stream: true

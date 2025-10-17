@@ -74,7 +74,7 @@
       if (!resp.ok || !resp.body) {
         const fallback = await fetch('/api/assistant', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message: text }) });
         const data = await fallback.json();
-        bubble.textContent = (data && data.reply) ? data.reply : 'Σφάλμα: δεν λάβαμε απάντηση τώρα.';
+        bubble.textContent = (data && data.reply) ? data.reply : ((data && data.error) ? `Σφάλμα: ${data.error}` : 'Σφάλμα: δεν λάβαμε απάντηση τώρα.');
         return;
       }
       const reader = resp.body.getReader();
