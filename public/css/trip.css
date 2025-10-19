@@ -26,7 +26,7 @@ header {
 
 .brand-logo {
   height: 50px;
-  border-radius: 10px;
+  border-radius: 14px;
 }
 
 .title {
@@ -46,7 +46,7 @@ header {
   cursor: pointer;
   font-size: 1.6rem;
   background: #2c3e50;
-  border-radius: 10px;
+  border-radius: 14px;
   padding: 6px 10px;
 }
 
@@ -114,7 +114,7 @@ html[data-view="trip"], body[data-view="trip"] {
    Use a slightly lighter background (#1c2430) behind cards to create contrast. */
 .video-card {
   background: #1c2430; /* subtle lighter tone for cards */
-  border-radius: 14px;
+  border-radius: 10px;
   padding: 14px;
   margin: 12px 0; /* vertical spacing between cards (12-20px range) */
   box-shadow: 0 8px 22px rgba(0,0,0,0.45);
@@ -358,7 +358,7 @@ body[data-view="trip"] .trip-card h3 {
   height: 0;
   overflow: hidden;
   margin-bottom: 1rem;
-  border-radius: 20px;
+  border-radius: 10px;
 }
 
 .video-wrap iframe {
@@ -368,7 +368,74 @@ body[data-view="trip"] .trip-card h3 {
   width: 100%;
   height: 100%;
   border: 0;
-  border-radius: 20px;
+  border-radius: 14px;
+}
+
+/* Per-slide overlay arrows inside video (desktop-only) */
+.video-carousel .slide-arrow { display: none; position: absolute; top: 50%; transform: translateY(-50%); z-index: 4; border: none; border-radius: 999px; width: 36px; height: 36px; background: rgba(0,0,0,0.45); color: #fff; font-size: 18px; line-height: 36px; text-align: center; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.25); transition: background 160ms ease, transform 160ms ease, opacity 160ms ease; opacity: 0.9; }
+.video-carousel .slide-arrow:hover { background: rgba(0,0,0,0.6); transform: translateY(-50%) scale(1.05); }
+.video-carousel .slide-arrow.left { left: 10px; }
+.video-carousel .slide-arrow.right { right: 10px; }
+@media (min-width: 900px) {
+  .video-carousel .carousel-slide.is-current .slide-arrow { display: inline-flex; align-items: center; justify-content: center; }
+}
+
+/* --- Native scroll-snap video carousel --- */
+.video-carousel { width: 100%; }
+.video-carousel .carousel-viewport { overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; touch-action: pan-y; cursor: grab; }
+.video-carousel .carousel-viewport:focus-visible { outline: 2px solid rgba(212, 175, 55, 0.6); outline-offset: 2px; }
+.video-carousel .carousel-viewport.dragging { cursor: grabbing; scroll-snap-type: none; }
+.video-carousel .carousel-track { display: flex; width: 100%; }
+.video-carousel .carousel-slide { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; }
+.video-carousel .carousel-slide .video-wrap { margin-bottom: 0; }
+/* dots removed for YouTube-like UI */
+
+/* Edge hints */
+.video-carousel .carousel-viewport { position: relative; }
+.video-carousel .carousel-edge { position: absolute; top: 0; bottom: 0; width: 26px; z-index: 2; pointer-events: none; transition: opacity 200ms ease; }
+.video-carousel .carousel-edge.left { left: 0; background: linear-gradient(90deg, rgba(0,0,0,0.4), rgba(0,0,0,0)); }
+.video-carousel .carousel-edge.right { right: 0; background: linear-gradient(270deg, rgba(0,0,0,0.4), rgba(0,0,0,0)); }
+
+/* remove old viewport-level arrows styling */
+
+/* Peek of next slide (~20%) */
+/* Restore full-width slides on all devices (no shrink), and use asymmetric edge hints only */
+.video-carousel.peek { --edge-left: 22px; --edge-right: 12px; }
+.video-carousel.peek .carousel-track { gap: 0; }
+.video-carousel.peek .carousel-slide { flex-basis: 100%; }
+.video-carousel.peek .carousel-viewport { padding-right: 0; }
+/* Asymmetric edge widths: left larger than right to imply smaller right gap */
+.video-carousel.peek .carousel-edge.left { width: var(--edge-left); }
+.video-carousel.peek .carousel-edge.right { width: var(--edge-right); }
+
+/* On phones, very subtle right-side peek like YouTube */
+@media (max-width: 599px) {
+  .video-carousel.peek { --peek-right: 10%; --gap: -15px; }
+  /* Fallback gap using margins for browsers without flex-gap */
+  .video-carousel.peek .carousel-slide { margin-right: var(--gap); }
+  .video-carousel.peek .carousel-track { margin-right: 0; }
+  @supports (gap: 1rem) {
+    /* For negative gap, keep using margin fallback and disable flex gap */
+    .video-carousel.peek .carousel-slide { margin-right: var(--gap); }
+    .video-carousel.peek .carousel-track { margin-right: 0; gap: 0; }
+  }
+  .video-carousel.peek .carousel-slide { flex-basis: calc(100% - var(--peek-right) - var(--gap)); }
+  /* ensure you can scroll fully to the last slide */
+  .video-carousel.peek .carousel-viewport { padding-right: var(--peek-right); }
+}
+
+/* On tablets/desktop, keep a small peek as well (slightly larger than mobile if desired) */
+@media (min-width: 600px) {
+  .video-carousel.peek { --peek-right: 6%; --gap: 20px; }
+  /* Fallback gap using margins for browsers without flex-gap */
+  .video-carousel.peek .carousel-slide { margin-right: var(--gap); }
+  .video-carousel.peek .carousel-track { margin-right: calc(-1 * var(--gap)); }
+  @supports (gap: 1rem) {
+    .video-carousel.peek .carousel-slide { margin-right: 0; }
+    .video-carousel.peek .carousel-track { margin-right: 0; gap: var(--gap); }
+  }
+  .video-carousel.peek .carousel-slide { flex-basis: calc(100% - var(--peek-right) - var(--gap)); }
+  .video-carousel.peek .carousel-viewport { padding-right: var(--peek-right); }
 }
 
 /* Χάρτης */

@@ -15,7 +15,13 @@
   "stops": [
     {
   "name": { "el": "Αρχαία Κόρινθος", "en": "Ancient Corinth", "he": "קורינתוס העתיקה", "fr": "Corinthe ancienne", "de": "Antikes Korinth" },
-      "video": "https://www.youtube.com/embed/uGHGkqogFlI",
+      "videos": [
+        "https://www.youtube.com/embed/tVF4iFb2x7c",
+        "https://www.youtube.com/embed/d73yDLJ86ZI",
+        "https://www.youtube.com/embed/xRMwaQevkQc",
+        "https://www.youtube.com/embed/pBSK478Ic-E",
+        "https://www.youtube.com/embed/iuu1h7dO9ds"
+      ],
   "description": { "el": "Η πρώτη στάση της διαδρομής, όπου θα γνωρίσετε τον αρχαιολογικό χώρο και το Ακροκόρινθο.", "en": "The first stop where you'll explore the archaeological site of Ancient Corinth.", "he": "התחנה הראשונה שבה תכירו את האתר הארכאולוגי של קורינתוס העתיקה.", "fr": "Première étape : exploration du site archéologique de la Corinthe antique.", "de": "Erster Halt: Erkundung der archäologischen Stätte des antiken Korinth." }
     },
     {

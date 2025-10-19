@@ -207,22 +207,61 @@ document.addEventListener("DOMContentLoaded", () => {
           stopEl.className = "trip-stop video-card";
           const stopLabelTemplate = (window.t && typeof window.t === 'function') ? window.t('stop.label') : 'Stop {n}';
           const stopLabel = stopLabelTemplate.replace('{n}', String(i + 1));
+          const titleHtml = `<h3 class="stop-title">${stopLabel}: ${getLocalized(stop.name) || ""}</h3>`;
+          const videos = Array.isArray(stop.videos) && stop.videos.length ? stop.videos : (stop.video ? [stop.video] : []);
+
+          let videoArea = '';
+          if (videos.length <= 1) {
+            const v = videos[0] || '';
+            videoArea = `
+              <div class="video-wrap">
+                <iframe
+                  src="${v}"
+                  title="${getLocalized(stop.name) || 'video'}"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                  loading="lazy"
+                  width="100%"
+                  height="315"></iframe>
+              </div>`;
+          } else {
+            const slides = videos.map((url, idx) => `
+              <div class="carousel-slide" data-idx="${idx}">
+                <div class="video-wrap">
+                  <iframe
+                    data-src="${url}"
+                    title="${(getLocalized(stop.name) || 'video') + ' — ' + (idx+1)}"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                    loading="lazy"
+                    width="100%"
+                    height="315"></iframe>
+                  <button class="slide-arrow left" type="button" aria-label="Προηγούμενο">&#10094;</button>
+                  <button class="slide-arrow right" type="button" aria-label="Επόμενο">&#10095;</button>
+                </div>
+              </div>`).join('');
+            videoArea = `
+              <div class="video-carousel peek" data-count="${videos.length}">
+                <div class="carousel-viewport" tabindex="0" aria-label="Video carousel">
+                  <div class="carousel-track">${slides}</div>
+                  <div class="carousel-edge left" aria-hidden="true"></div>
+                  <div class="carousel-edge right" aria-hidden="true"></div>
+                </div>
+              </div>`;
+          }
+
           stopEl.innerHTML = `
-            <h3 class="stop-title">${stopLabel}: ${getLocalized(stop.name) || ""}</h3>
-            <div class="video-wrap">
-              <iframe
-                src="${stop.video}"
-                title="${getLocalized(stop.name) || "video"}"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-                width="100%"
-                height="315">
-              </iframe>
-            </div>
+            ${titleHtml}
+            ${videoArea}
             <p class="stop-description">${getLocalized(stop.description) || ""}</p>
           `;
           stopsWrap.appendChild(stopEl);
+
+          // Initialize carousel if present
+          const carousel = stopEl.querySelector('.video-carousel');
+          if (carousel) initScrollSnapCarousel(carousel);
         });
 
         // Render experience description below the last video on mobile
@@ -237,6 +276,182 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // initial render
       renderTripLocalized();
+
+      // Native scroll-snap carousel with mouse drag, touch swipe and lazy-loading
+      function initScrollSnapCarousel(root) {
+  const viewport = root.querySelector('.carousel-viewport');
+  const track = root.querySelector('.carousel-track');
+  const slides = Array.from(root.querySelectorAll('.carousel-slide'));
+  const edgeLeft = root.querySelector('.carousel-edge.left');
+  const edgeRight = root.querySelector('.carousel-edge.right');
+        if (!viewport || !track || slides.length < 2) return;
+
+        // No dots: YouTube-like shelf UI (only swipe/drag + subtle peek)
+
+        // Lazy load helper: set src from data-src for visible and neighbor
+        const lazyLoadIndex = (i) => {
+          [i-1, i, i+1].forEach(k => {
+            if (k < 0 || k >= slides.length) return;
+            const ifr = slides[k].querySelector('iframe');
+            if (ifr && !ifr.src) {
+              const ds = ifr.getAttribute('data-src');
+              if (ds) ifr.src = ds;
+            }
+          });
+        };
+
+        // On scroll, compute nearest index
+        let curIdx = 0;
+        const computeIndex = () => {
+          // pick the slide whose left edge is closest to current scrollLeft (robust to non-100% widths)
+          let best = 0;
+          let bestDist = Infinity;
+          const sl = viewport.scrollLeft;
+          for (let i = 0; i < slides.length; i++) {
+            const left = slides[i].offsetLeft;
+            const d = Math.abs(left - sl);
+            if (d < bestDist) { bestDist = d; best = i; }
+          }
+          return best;
+        };
+
+        const onScroll = () => {
+          const i = computeIndex();
+          if (i !== curIdx) {
+            curIdx = i;
+            lazyLoadIndex(curIdx);
+          }
+          // Toggle arrows and edge hints
+          const maxScroll = track.scrollWidth - viewport.clientWidth;
+          const atStart = viewport.scrollLeft <= 2;
+          const atEnd = viewport.scrollLeft >= (maxScroll - 2);
+          if (edgeLeft) edgeLeft.style.opacity = atStart ? '0' : '1';
+          if (edgeRight) edgeRight.style.opacity = atEnd ? '0' : '1';
+          // Mark current slide to control per-slide arrows visibility
+          slides.forEach((s, idx) => s.classList.toggle('is-current', idx === curIdx));
+        };
+        viewport.addEventListener('scroll', onScroll, { passive: true });
+
+        // Per-slide arrow buttons
+        slides.forEach((slide) => {
+          const prevBtn = slide.querySelector('.slide-arrow.left');
+          const nextBtn = slide.querySelector('.slide-arrow.right');
+          if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); goToIndex(Math.max(0, curIdx - 1)); });
+          if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); goToIndex(Math.min(slides.length - 1, curIdx + 1)); });
+        });
+
+        // No dots; navigation only via swipe/drag or wheel
+
+        const goToIndex = (idx) => {
+          const target = slides[idx] ? slides[idx].offsetLeft : idx * viewport.clientWidth;
+          viewport.scrollTo({ left: target, behavior: 'smooth' }); // uses browser's default smooth easing; consistent across slides
+        };
+
+        // Keyboard navigation for desktop (focus the viewport and use arrow keys)
+        viewport.addEventListener('keydown', (e) => {
+          // Only handle when viewport has focus
+          if (!['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) return;
+          e.preventDefault();
+          if (e.key === 'ArrowLeft') {
+            goToIndex(Math.max(0, curIdx - 1));
+          } else if (e.key === 'ArrowRight') {
+            goToIndex(Math.min(slides.length - 1, curIdx + 1));
+          } else if (e.key === 'Home') {
+            goToIndex(0);
+          } else if (e.key === 'End') {
+            goToIndex(slides.length - 1);
+          }
+        });
+
+        // Make sure viewport is focusable programmatically if not already (safety)
+        if (!viewport.hasAttribute('tabindex')) viewport.setAttribute('tabindex', '0');
+
+        // Drag/swipe to page exactly one slide per gesture
+        let isDown = false, startX = 0, startLeft = 0, startIdx = 0, dragStartTime = 0;
+        viewport.addEventListener('mousedown', (e) => {
+          isDown = true;
+          startX = e.clientX;
+          startLeft = viewport.scrollLeft;
+          startIdx = computeIndex();
+          dragStartTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+          viewport.classList.add('dragging');
+          e.preventDefault();
+        });
+        window.addEventListener('mousemove', (e) => {
+          if (!isDown) return;
+          const dx = e.clientX - startX;
+          viewport.scrollLeft = startLeft - dx;
+        });
+        window.addEventListener('mouseup', () => {
+          if (!isDown) return;
+          isDown = false;
+          viewport.classList.remove('dragging');
+          const delta = viewport.scrollLeft - startLeft; // >0 if moved towards next
+          const w = viewport.clientWidth;
+          const threshold = Math.max(20, w * 0.06);
+          const dt = ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - dragStartTime;
+          const velocity = Math.abs(delta) / Math.max(1, dt); // px per ms
+          const fastFlick = (velocity > 0.6) || (dt < 250 && Math.abs(delta) > 16);
+          let target = startIdx;
+          if (delta > 0 && (Math.abs(delta) > threshold || fastFlick)) target = Math.min(slides.length - 1, startIdx + 1);
+          else if (delta < 0 && (Math.abs(delta) > threshold || fastFlick)) target = Math.max(0, startIdx - 1);
+          goToIndex(target);
+        });
+        // Touch swipe with controlled paging (disable native momentum)
+        viewport.addEventListener('touchstart', (e) => {
+          if (!(e.touches && e.touches[0])) return;
+          isDown = true;
+          startX = e.touches[0].clientX;
+          startLeft = viewport.scrollLeft;
+          startIdx = computeIndex();
+          dragStartTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+          viewport.classList.add('dragging');
+        }, { passive: true });
+        window.addEventListener('touchmove', (e) => {
+          if (!isDown || !(e.touches && e.touches[0])) return;
+          const dx = e.touches[0].clientX - startX;
+          viewport.scrollLeft = startLeft - dx;
+          e.preventDefault(); // prevent momentum
+        }, { passive: false });
+        window.addEventListener('touchend', () => {
+          if (!isDown) return;
+          isDown = false;
+          viewport.classList.remove('dragging');
+          const delta = viewport.scrollLeft - startLeft;
+          const w = viewport.clientWidth;
+          const threshold = Math.max(20, w * 0.06);
+          const dt = ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - dragStartTime;
+          const velocity = Math.abs(delta) / Math.max(1, dt);
+          const fastFlick = (velocity > 0.6) || (dt < 250 && Math.abs(delta) > 16);
+          let target = startIdx;
+          if (delta > 0 && (Math.abs(delta) > threshold || fastFlick)) target = Math.min(slides.length - 1, startIdx + 1);
+          else if (delta < 0 && (Math.abs(delta) > threshold || fastFlick)) target = Math.max(0, startIdx - 1);
+          goToIndex(target);
+        }, { passive: true });
+
+        // Trackpad wheel: treat a substantial horizontal wheel as a single page
+        let wheelCooldown = false;
+        viewport.addEventListener('wheel', (e) => {
+          // Prefer horizontal deltas; if vertical dominant, ignore
+          const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : 0;
+          if (!dx) return;
+          if (wheelCooldown) { e.preventDefault(); return; }
+          const dir = dx > 0 ? 1 : -1;
+          const next = Math.max(0, Math.min(slides.length - 1, curIdx + dir));
+          if (next !== curIdx) {
+            e.preventDefault();
+            goToIndex(next);
+            wheelCooldown = true;
+            setTimeout(() => { wheelCooldown = false; }, 280);
+          }
+        }, { passive: false });
+  // Initial state
+        // Preload first and neighbor
+        lazyLoadIndex(0);
+        // Ensure edge/arrows visibility initial and correct snap state
+        requestAnimationFrame(onScroll);
+        window.addEventListener('resize', () => { requestAnimationFrame(onScroll); });
+      }
 
       // listen for language changes and re-render localized content
       window.addEventListener('i18n:changed', () => {
