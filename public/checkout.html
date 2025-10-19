@@ -13,6 +13,13 @@
     input[type=text], input[type=email] { width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; }
     .btn { background:#004080; color:#fff; padding:10px 14px; border-radius:8px; border:none; cursor:pointer; }
     .result { margin-top:1rem; padding:12px; border-radius:8px; }
+    /* Centered header with absolute back button */
+    .checkout-header { position: relative; display:flex; align-items:center; justify-content:center; margin-bottom:0.5rem; min-height:44px; }
+    .checkout-header .back-btn { position:absolute; left:0; top:50%; transform:translateY(-50%); }
+    .checkout-header .title-wrap { text-align:center; }
+    .checkout-header .title-wrap small { display:block; opacity:0.7; font-size:0.8rem; }
+    .checkout-header .title-wrap h1 { margin:0; font-size:1.25rem; }
+    .checkout-subtitle { text-align:center; margin-top:0.25rem; }
   </style>
 </head>
 <body>
@@ -20,16 +27,16 @@
     <select id="langSelect" aria-label="Language"></select>
   </div>
   <main>
-    <div style="display:flex;align-items:center;justify-content:flex-start;gap:12px;margin-bottom:1rem;">
-      <button type="button" class="back-btn three-d" onclick="history.back()" data-i18n-aria="ui.close" style="position:relative;left:0;">
+    <div class="checkout-header">
+      <button type="button" class="back-btn three-d" onclick="history.back()" data-i18n-aria="ui.close">
         <i class="fas fa-arrow-left"></i>
       </button>
-      <div style="display:flex;flex-direction:column;">
-  <small style="color:rgba(255,255,255,0.6);font-size:0.8rem;" data-i18n="nav.home">Επιστροφή</small>
-  <h1 style="margin:0;font-size:1.25rem" data-i18n="checkout.title">Checkout — Greekaway</h1>
+      <div class="title-wrap">
+  <small data-i18n="nav.home">Επιστροφή</small>
+  <h1 data-i18n="checkout.title">Checkout — Greekaway</h1>
       </div>
     </div>
-  <p data-i18n="checkout.notice">Secure Payment via Stripe</p>
+  <p class="checkout-subtitle" data-i18n="checkout.notice">Secure Payment via Stripe</p>
 
     <form id="checkoutForm">
       <!-- Payment Request Button (Apple Pay / Google Pay) will mount here when available -->
