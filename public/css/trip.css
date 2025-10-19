@@ -358,7 +358,7 @@ body[data-view="trip"] .trip-card h3 {
   height: 0;
   overflow: hidden;
   margin-bottom: 1rem;
-  border-radius: 10px;
+  border-radius: var(--video-radius, 14px);
 }
 
 .video-wrap iframe {
@@ -368,7 +368,7 @@ body[data-view="trip"] .trip-card h3 {
   width: 100%;
   height: 100%;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--video-radius, 14px);
 }
 
 /* Per-slide overlay arrows inside video (desktop-only) */
@@ -410,7 +410,8 @@ body[data-view="trip"] .trip-card h3 {
 
 /* On phones, very subtle right-side peek like YouTube */
 @media (max-width: 599px) {
-  .video-carousel.peek { --peek-right: 10%; --gap: -15px; }
+  /* Allow overrides via JS: --cfg-peek-mobile / --cfg-gap-mobile */
+  .video-carousel.peek { --peek-right: var(--cfg-peek-mobile, 10%); --gap: var(--cfg-gap-mobile, -15px); }
   /* Fallback gap using margins for browsers without flex-gap */
   .video-carousel.peek .carousel-slide { margin-right: var(--gap); }
   .video-carousel.peek .carousel-track { margin-right: 0; }
@@ -426,7 +427,8 @@ body[data-view="trip"] .trip-card h3 {
 
 /* On tablets/desktop, keep a small peek as well (slightly larger than mobile if desired) */
 @media (min-width: 600px) {
-  .video-carousel.peek { --peek-right: 6%; --gap: 20px; }
+  /* Allow overrides via JS: --cfg-peek-desktop / --cfg-gap-desktop */
+  .video-carousel.peek { --peek-right: var(--cfg-peek-desktop, 6%); --gap: var(--cfg-gap-desktop, 20px); }
   /* Fallback gap using margins for browsers without flex-gap */
   .video-carousel.peek .carousel-slide { margin-right: var(--gap); }
   .video-carousel.peek .carousel-track { margin-right: calc(-1 * var(--gap)); }

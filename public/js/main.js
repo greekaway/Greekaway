@@ -277,8 +277,21 @@ document.addEventListener("DOMContentLoaded", () => {
       // initial render
       renderTripLocalized();
 
+      // Apply global carousel config to CSS variables once
+      try {
+        const C = window.GW_CAROUSEL_CONFIG || {};
+        const rootStyle = document.documentElement && document.documentElement.style;
+        if (rootStyle && C) {
+          if (C.videoRadiusPx != null) rootStyle.setProperty('--video-radius', `${C.videoRadiusPx}px`);
+          if (C.mobile && C.mobile.peek) rootStyle.setProperty('--cfg-peek-mobile', C.mobile.peek);
+          if (C.mobile && C.mobile.gap) rootStyle.setProperty('--cfg-gap-mobile', C.mobile.gap);
+          if (C.desktop && C.desktop.peek) rootStyle.setProperty('--cfg-peek-desktop', C.desktop.peek);
+          if (C.desktop && C.desktop.gap) rootStyle.setProperty('--cfg-gap-desktop', C.desktop.gap);
+        }
+      } catch(_) {}
+
       // Native scroll-snap carousel with mouse drag, touch swipe and lazy-loading
-      function initScrollSnapCarousel(root) {
+  function initScrollSnapCarousel(root) {
   const viewport = root.querySelector('.carousel-viewport');
   const track = root.querySelector('.carousel-track');
   const slides = Array.from(root.querySelectorAll('.carousel-slide'));
@@ -382,16 +395,23 @@ document.addEventListener("DOMContentLoaded", () => {
           const dx = e.clientX - startX;
           viewport.scrollLeft = startLeft - dx;
         });
+        const C = window.GW_CAROUSEL_CONFIG || {};
+        const swipe = C.swipe || {};
+        const thresholdFrac = (typeof swipe.thresholdFrac === 'number') ? swipe.thresholdFrac : 0.06;
+        const minFlickDeltaPx = (typeof swipe.minFlickDeltaPx === 'number') ? swipe.minFlickDeltaPx : 16;
+        const maxFlickMs = (typeof swipe.maxFlickMs === 'number') ? swipe.maxFlickMs : 250;
+        const minVelocityPxPerMs = (typeof swipe.minVelocityPxPerMs === 'number') ? swipe.minVelocityPxPerMs : 0.6;
+
         window.addEventListener('mouseup', () => {
           if (!isDown) return;
           isDown = false;
           viewport.classList.remove('dragging');
           const delta = viewport.scrollLeft - startLeft; // >0 if moved towards next
           const w = viewport.clientWidth;
-          const threshold = Math.max(20, w * 0.06);
+          const threshold = Math.max(20, w * thresholdFrac);
           const dt = ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - dragStartTime;
           const velocity = Math.abs(delta) / Math.max(1, dt); // px per ms
-          const fastFlick = (velocity > 0.6) || (dt < 250 && Math.abs(delta) > 16);
+          const fastFlick = (velocity > minVelocityPxPerMs) || (dt < maxFlickMs && Math.abs(delta) > minFlickDeltaPx);
           let target = startIdx;
           if (delta > 0 && (Math.abs(delta) > threshold || fastFlick)) target = Math.min(slides.length - 1, startIdx + 1);
           else if (delta < 0 && (Math.abs(delta) > threshold || fastFlick)) target = Math.max(0, startIdx - 1);
@@ -419,10 +439,10 @@ document.addEventListener("DOMContentLoaded", () => {
           viewport.classList.remove('dragging');
           const delta = viewport.scrollLeft - startLeft;
           const w = viewport.clientWidth;
-          const threshold = Math.max(20, w * 0.06);
+          const threshold = Math.max(20, w * thresholdFrac);
           const dt = ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - dragStartTime;
           const velocity = Math.abs(delta) / Math.max(1, dt);
-          const fastFlick = (velocity > 0.6) || (dt < 250 && Math.abs(delta) > 16);
+          const fastFlick = (velocity > minVelocityPxPerMs) || (dt < maxFlickMs && Math.abs(delta) > minFlickDeltaPx);
           let target = startIdx;
           if (delta > 0 && (Math.abs(delta) > threshold || fastFlick)) target = Math.min(slides.length - 1, startIdx + 1);
           else if (delta < 0 && (Math.abs(delta) > threshold || fastFlick)) target = Math.max(0, startIdx - 1);
@@ -442,7 +462,8 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             goToIndex(next);
             wheelCooldown = true;
-            setTimeout(() => { wheelCooldown = false; }, 280);
+            const cooldown = (window.GW_CAROUSEL_CONFIG && window.GW_CAROUSEL_CONFIG.wheelStepCooldownMs) || 280;
+            setTimeout(() => { wheelCooldown = false; }, cooldown);
           }
         }, { passive: false });
   // Initial state
