@@ -26,12 +26,18 @@
     },
     {
   "name": { "el": "Καλαμάτα", "en": "Kalamata", "he": "קלמאטה", "fr": "Kalamata", "de": "Kalamata" },
-      "video": "https://www.youtube.com/embed/PK93H44gFj8",
+      "videos": [
+        "https://www.youtube.com/embed/PK93H44gFj8",
+        "https://www.youtube.com/embed/xRMwaQevkQc"
+      ],
   "description": { "el": "Η δεύτερη στάση περιλαμβάνει περιήγηση στο ιστορικό κέντρο και γεύμα με θέα στη Μεσσηνιακή θάλασσα.", "en": "The second stop includes a tour of the historic center and a meal overlooking the Messenian Gulf.", "he": "התחנה השנייה כוללת סיור במרכז ההיסטורי וארוחה המשקיפה על המפרץ המסיני.", "fr": "Deuxième étape : visite du centre historique et déjeuner avec vue sur le golfe Messénien.", "de": "Zweiter Halt: Führung durch das historische Zentrum und Mittagessen mit Blick auf den Messenischen Golf." }
     },
     {
   "name": { "el": "Αρχαία Ολυμπία", "en": "Ancient Olympia", "he": "אולימפיה העתיקה", "fr": "Olympie ancienne", "de": "Antikes Olympia" },
-      "video": "https://www.youtube.com/embed/8VGroEdeZzo",
+      "videos": [
+        "https://www.youtube.com/embed/8VGroEdeZzo",
+        "https://www.youtube.com/embed/pBSK478Ic-E"
+      ],
   "description": { "el": "Η τελική στάση στον ιερό χώρο των Ολυμπιακών Αγώνων, με επίσκεψη στο μουσείο και στο στάδιο.", "en": "The final stop at the sacred site of the Olympic Games, including the museum and the stadium.", "he": "התחנה הסופית באתר הקדוש של המשחקים האולימפיים, כולל המוזיאון והאצטדיון.", "fr": "Dernière étape : site sacré des Jeux, visite du musée et du stade.", "de": "Letzter Halt: heiliger Ort der Olympischen Spiele, einschließlich Museum und Stadion." }
     }
   ]

@@ -825,3 +825,33 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
   color: #ffffff !important;
   text-shadow: 0 1px 1px rgba(0,0,0,0.18) !important;
 }
+
+  /* ===============================
+     Light Mode: Booking Overlay
+     ===============================
+     Keep changes scoped to system light preference and avoid altering
+     dark mode visuals. Turn booking overlay into a light surface with
+     dark navy text and subtle shadow for depth.
+  */
+  @media (prefers-color-scheme: light) {
+    /* Light backdrop for the full-screen overlay */
+    #bookingOverlay.overlay { background: #DCE8F0 !important; }
+
+    /* Light panel for any inner container that is visible on booking */
+    #bookingOverlay .overlay-inner {
+      background: #DCE8F0 !important;
+      color: #1B2A3A !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+      border: 1px solid rgba(0,0,0,0.04) !important;
+      transition: background 0.4s ease-in-out, color 0.4s ease-in-out, box-shadow 0.4s ease-in-out !important;
+    }
+
+    /* Trip hero title: switch from white to dark navy for readability on light bg */
+    #bookingOverlay #step1 .trip-hero-title { color: #1B2A3A !important; text-shadow: none !important; }
+
+    /* Normal content text inside booking: adopt token + slight weight bump */
+    #bookingOverlay :is(p, li, small, label, em, strong, span) {
+      color: var(--ga-text) !important;
+      font-weight: 600;
+    }
+  }

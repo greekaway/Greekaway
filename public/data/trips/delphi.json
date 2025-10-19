@@ -7,7 +7,10 @@
     {
   "name": { "el": "Αρχαιολογικός Χώρος Δελφών", "en": "Archaeological Site of Delphi", "he": "אתר הארכאולוגי של דלפי", "fr": "Site archéologique de Delphes", "de": "Archäologische Stätte von Delphi" },
   "description": { "el": "Εξερεύνηση των ερειπίων και του αρχαίου μαντείου.", "en": "Explore the ruins and the ancient oracle.", "he": "חקירת ההריסות והאורקל העתיק.", "fr": "Explorez les ruines et l'ancien oracle.", "de": "Erkunden Sie die Ruinen und das antike Orakel." },
-      "video": "https://www.youtube.com/embed/xG6B_drQoe8"
+      "videos": [
+        "https://www.youtube.com/embed/xG6B_drQoe8",
+        "https://www.youtube.com/embed/NXFnVqeuKZI"
+      ]
     }
   ],
   "experience": { "el": "Μία μέρα γεμάτη ιστορία και θέα στο Παναχαϊκό τοπίο.", "en": "A day full of history and panoramic views.", "he": "יום מלא בהיסטוריה ונופים פנורמיים.", "fr": "Une journée riche en histoire et vues panoramiques.", "de": "Ein Tag voller Geschichte und Panoramablicke." },
