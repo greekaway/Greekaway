@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Checkout — Greekaway (Mock)</title>
+  <title>Checkout — Greekaway</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <style>
@@ -26,10 +26,10 @@
       </button>
       <div style="display:flex;flex-direction:column;">
   <small style="color:rgba(255,255,255,0.6);font-size:0.8rem;" data-i18n="nav.home">Επιστροφή</small>
-  <h1 style="margin:0;font-size:1.25rem" data-i18n="checkout.title">Δοκιμαστικό Ταμείο</h1>
+  <h1 style="margin:0;font-size:1.25rem" data-i18n="checkout.title">Checkout — Greekaway</h1>
       </div>
     </div>
-  <p data-i18n="checkout.notice">Αυτό είναι ένα δοκιμαστικό ταμείο. Δεν θα γίνει πραγματική χρέωση.</p>
+  <p data-i18n="checkout.notice">Secure Payment via Stripe</p>
 
     <form id="checkoutForm">
       <!-- Payment Request Button (Apple Pay / Google Pay) will mount here when available -->
@@ -43,10 +43,10 @@
         <input name="email" type="email" required>
       </div>
       <div class="form-row">
-  <label data-i18n="checkout.cardLabel">Κάρτα (δοκιμή)</label>
-  <input name="card" type="text" data-i18n-placeholder="checkout.cardPlaceholder" placeholder="4242 4242 4242 4242">
+  <label data-i18n="checkout.cardLabel">Κάρτα</label>
+  <input name="card" type="text" data-i18n-placeholder="checkout.cardPlaceholder" placeholder="Card number">
       </div>
-  <button class="btn" type="submit" data-i18n-value="checkout.pay">Πλήρωσε (δοκιμή)</button>
+  <button class="btn" type="submit" data-i18n-value="checkout.pay">Pay</button>
     </form>
 
     <div id="result" class="result" aria-live="polite" style="display:none;"></div>

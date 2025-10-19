@@ -17,17 +17,18 @@
   },
   "checkout": {
     "pay":"Pay",
-    "cardPlaceholder":"Card number (4242... for tests)",
-    "title": "Mock Checkout",
+    "cardPlaceholder":"Card number",
+    "title": "Checkout — Greekaway",
     "name": "Name",
     "email": "Email",
-    "cardLabel": "Card (test)",
+    "cardLabel": "Card",
     "payment_error": "Payment error",
     "payment_failed": "Payment failed",
-    "payment_success_test": "Payment successful (test)",
-    "mock_complete": "Completed (mock)",
+    "payment_success_test": "Payment successful",
+    "mock_complete": "Completed",
     "network_error": "Network error",
-    "info": "The payment form will appear here."
+    "info": "The payment form will appear here.",
+    "notice": "Secure Payment via Stripe"
   },
   "welcome":{
     "title":"Welcome to Greekaway",

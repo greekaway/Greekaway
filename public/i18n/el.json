@@ -26,18 +26,18 @@
   },
   "checkout": {
     "pay": "Πληρωμή",
-    "cardPlaceholder": "Αριθμός κάρτας (4242... για τεστ)",
-    "title": "Δοκιμαστικό Ταμείο",
+    "cardPlaceholder": "Αριθμός κάρτας",
+    "title": "Checkout — Greekaway",
     "name": "Όνομα",
     "email": "Email",
-    "cardLabel": "Κάρτα (δοκιμή)",
+    "cardLabel": "Κάρτα",
     "payment_error": "Πρόβλημα με πληρωμή",
     "payment_failed": "Η πληρωμή απέτυχε",
-    "payment_success_test": "Η πληρωμή ολοκληρώθηκε (δοκιμή)",
-    "mock_complete": "Ολοκληρώθηκε (mock)",
+    "payment_success_test": "Η πληρωμή ολοκληρώθηκε",
+    "mock_complete": "Ολοκληρώθηκε",
     "network_error": "Σφάλμα δικτύου",
     "info": "Η φόρμα πληρωμής θα εμφανίζεται εδώ.",
-    "notice": "Αυτό είναι ένα δοκιμαστικό ταμείο. Δεν θα γίνει πραγματική χρέωση."
+    "notice": "Ασφαλής πληρωμή μέσω Stripe"
   },
   "welcome": {
     "title": "Καλώς ήρθατε στο Greekaway",
