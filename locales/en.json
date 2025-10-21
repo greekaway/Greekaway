@@ -133,8 +133,21 @@
     "traveler_type_options": {
       "explorer": "Explorers",
       "relaxed": "Relaxed Travelers",
+      "explore": "Explorers – active",
+      "relax": "Relaxed travelers",
       "family": "Family Style",
       "solo": "Solo Adventurers"
+    },
+    "interests_options": {
+      "nature": "Nature",
+      "culture": "Culture",
+      "mountain": "Mountain",
+      "sea": "Sea",
+      "gastronomy": "Gastronomy"
+    },
+    "sociality_options": {
+      "social": "Sociable",
+      "quiet": "Quiet"
     },
     "travel_style_options": {
       "sociable": "Sociable",
@@ -146,7 +159,11 @@
       "en": "English",
       "fr": "Français",
       "de": "Deutsch",
-      "el": "Ελληνικά"
+      "el": "Ελληνικά",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית"
     },
     "daily_rhythm_options": {
       "early": "Early riser",

@@ -50,7 +50,8 @@
     const tryPaths = [`/locales/${lang}.json`, `/i18n/${lang}.json`];
     for (const url of tryPaths) {
       try {
-        const res = await fetch(url, { cache: 'no-cache' });
+        // Allow browser/HTTP caching as configured by the server
+        const res = await fetch(url);
         if (!res.ok) throw new Error('not-ok');
         const json = await res.json();
         CACHE[lang] = json || {};
@@ -103,6 +104,45 @@
     });
   }
 
+  // Translate a specific node and its subtree (faster than scanning the whole document)
+  function translateNode(node, msgs){
+    if (!node || node.nodeType !== 1) return; // element only
+    const root = node;
+    // Single combined query to minimize selector passes
+    const nodes = root.querySelectorAll('[data-i18n], [data-i18n-placeholder], [data-i18n-title], [data-i18n-aria], [data-i18n-value]');
+    // Also check the root itself if it carries attrs
+    const list = [];
+    if (root.matches && root.matches('[data-i18n], [data-i18n-placeholder], [data-i18n-title], [data-i18n-aria], [data-i18n-value]')) list.push(root);
+    nodes.forEach(n => list.push(n));
+    for (const el of list) {
+      if (el.hasAttribute('data-i18n')) {
+        const k = el.getAttribute('data-i18n');
+        const v = lookup(msgs, k);
+        if (v) el.textContent = v;
+      }
+      if (el.hasAttribute('data-i18n-placeholder')) {
+        const k = el.getAttribute('data-i18n-placeholder');
+        const v = lookup(msgs, k);
+        if (v) el.setAttribute('placeholder', v);
+      }
+      if (el.hasAttribute('data-i18n-title')) {
+        const k = el.getAttribute('data-i18n-title');
+        const v = lookup(msgs, k);
+        if (v) el.setAttribute('title', v);
+      }
+      if (el.hasAttribute('data-i18n-aria')) {
+        const k = el.getAttribute('data-i18n-aria');
+        const v = lookup(msgs, k);
+        if (v) el.setAttribute('aria-label', v);
+      }
+      if (el.hasAttribute('data-i18n-value')) {
+        const k = el.getAttribute('data-i18n-value');
+        const v = lookup(msgs, k);
+        if (v) el.value = v;
+      }
+    }
+  }
+
   async function setLanguage(lang){
     try { if (window.gwI18nDebug) console.info('[i18n] setLanguage', lang); } catch(_) {}
     try { localStorage.setItem('gw_lang', lang); } catch(_){ }
@@ -132,13 +172,7 @@
         const flag = FLAGS[code] ? FLAGS[code] + ' ' : '';
         opt.textContent = flag + (labelMap[code] || code.toUpperCase());
         sel.appendChild(opt);
-        // Try to refine label from the locale file meta.languageName without blocking UI
-        loadMessages(code).then(m => {
-          try {
-            const name = m && m.meta && m.meta.languageName;
-            if (name) opt.textContent = flag + name;
-          } catch(_){}
-        }).catch(()=>{});
+        // Do not prefetch other locale files here to keep it truly lazy.
       }
     }
     sel.value = lang;
@@ -149,24 +183,61 @@
     }
   }
 
+  function maybeRefineActiveOptionLabel(lang, msgs){
+    try {
+      const sel = document.getElementById('langSelect');
+      if (!sel) return;
+      const opt = Array.from(sel.options || []).find(o => o.value === lang);
+      if (!opt) return;
+      const flag = FLAGS[lang] ? FLAGS[lang] + ' ' : '';
+      const name = msgs && msgs.meta && msgs.meta.languageName;
+      if (name) opt.textContent = flag + name;
+    } catch(_){ }
+  }
+
   // init on DOM ready
   async function initI18n(){
     await discoverLanguages();
     const lang = detectLang();
     await populateSelector(lang);
-    const msgs = await loadMessages(lang);
+  const msgs = await loadMessages(lang);
     applyTranslations(msgs);
-    // Observe DOM mutations and re-apply translations (debounced) to catch injected content (e.g., footer)
+  maybeRefineActiveOptionLabel(lang, msgs);
+    // Observe DOM mutations and translate only new/changed nodes (debounced) to reduce jank
     try {
       if (!window.__gwI18nObserver) {
+        let queue = [];
         let moTimer = null;
-        const observer = new MutationObserver(() => {
+        const flush = () => {
+          const seen = new Set();
+          const m = window.currentI18n && window.currentI18n.msgs || msgs;
+          for (const n of queue) {
+            if (!n || n.nodeType !== 1) continue;
+            if (seen.has(n)) continue;
+            seen.add(n);
+            try { translateNode(n, m); } catch(_){ }
+          }
+          queue = [];
+        };
+        const schedule = () => {
           if (moTimer) clearTimeout(moTimer);
-          moTimer = setTimeout(() => {
-            try { applyTranslations(window.currentI18n && window.currentI18n.msgs || msgs); } catch(_) {}
-          }, 50);
+          // Prefer idle callback to avoid blocking the main thread during heavy updates
+          const run = () => flush();
+          if (window.requestIdleCallback) moTimer = requestIdleCallback(run, { timeout: 120 });
+          else moTimer = setTimeout(run, 50);
+        };
+        const observer = new MutationObserver((mutations) => {
+          for (const mu of mutations) {
+            if (mu.type === 'childList') {
+              mu.addedNodes && mu.addedNodes.forEach(n => queue.push(n));
+            } else if (mu.type === 'attributes') {
+              // If i18n-related attribute changed, retranslate that element only
+              if (/^data-i18n($|-)/.test(mu.attributeName || '')) queue.push(mu.target);
+            }
+          }
+          schedule();
         });
-        observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
+        observer.observe(document.body || document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-i18n','data-i18n-placeholder','data-i18n-title','data-i18n-aria','data-i18n-value'] });
         window.__gwI18nObserver = observer;
         try { if (window.gwI18nDebug) console.info('[i18n] MutationObserver attached'); } catch(_) {}
       }

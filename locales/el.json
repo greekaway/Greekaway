@@ -133,8 +133,21 @@
     "traveler_type_options": {
       "explorer": "Εξερευνητές",
       "relaxed": "Χαλαροί Ταξιδιώτες",
+      "explore": "Εξερευνητές – δραστήριοι",
+      "relax": "Χαλαροί ταξιδιώτες",
       "family": "Οικογενειακό Στυλ",
       "solo": "Μοναχικοί Ταξιδιώτες"
+    },
+    "interests_options": {
+      "nature": "Φύση",
+      "culture": "Πολιτισμός",
+      "mountain": "Βουνό",
+      "sea": "Θάλασσα",
+      "gastronomy": "Γαστρονομία"
+    },
+    "sociality_options": {
+      "social": "Κοινωνικός",
+      "quiet": "Ήσυχος"
     },
     "travel_style_options": {
       "sociable": "Κοινωνικοί",
@@ -146,7 +159,11 @@
       "en": "English",
       "fr": "Français",
       "de": "Deutsch",
-      "el": "Ελληνικά"
+      "el": "Ελληνικά",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית"
     },
     "daily_rhythm_options": {
       "early": "Πρωινός τύπος",

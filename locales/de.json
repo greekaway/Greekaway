@@ -125,8 +125,21 @@
     "traveler_type_options": {
       "explorer": "Entdecker",
       "relaxed": "Entspannte Reisende",
+      "explore": "Entdecker – aktiv",
+      "relax": "Entspannte Reisende",
       "family": "Familienstil",
       "solo": "Alleinreisende Abenteurer"
+    },
+    "interests_options": {
+      "nature": "Natur",
+      "culture": "Kultur",
+      "mountain": "Berg",
+      "sea": "Meer",
+      "gastronomy": "Gastronomie"
+    },
+    "sociality_options": {
+      "social": "Gesellig",
+      "quiet": "Ruhig"
     },
     "travel_style_options": {
       "sociable": "Gesellig",
@@ -138,7 +151,11 @@
       "en": "English",
       "fr": "Français",
       "de": "Deutsch",
-      "el": "Ελληνικά"
+      "el": "Ελληνικά",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית"
     },
     "daily_rhythm_options": {
       "early": "Frühaufsteher",

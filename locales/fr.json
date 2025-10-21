@@ -125,8 +125,21 @@
     "traveler_type_options": {
       "explorer": "Explorateurs",
       "relaxed": "Voyageurs détendus",
+      "explore": "Explorateurs – actifs",
+      "relax": "Voyageurs détendus",
       "family": "Style familial",
       "solo": "Aventuriers solo"
+    },
+    "interests_options": {
+      "nature": "Nature",
+      "culture": "Culture",
+      "mountain": "Montagne",
+      "sea": "Mer",
+      "gastronomy": "Gastronomie"
+    },
+    "sociality_options": {
+      "social": "Sociable",
+      "quiet": "Calme"
     },
     "travel_style_options": {
       "sociable": "Sociable",
@@ -138,7 +151,11 @@
       "en": "English",
       "fr": "Français",
       "de": "Deutsch",
-      "el": "Ελληνικά"
+      "el": "Ελληνικά",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית"
     },
     "daily_rhythm_options": {
       "early": "Lève-tôt",

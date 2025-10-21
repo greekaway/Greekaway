@@ -1,4 +1,6 @@
 const express = require("express");
+let compression = null;
+try { compression = require('compression'); } catch(e) { /* compression optional in dev */ }
 const path = require("path");
 const fs = require("fs");
 const crypto = require('crypto');
@@ -8,6 +10,10 @@ const { TextDecoder } = require('util');
 try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installed */ }
 
 const app = express();
+// Enable gzip compression if available to reduce payload size
+if (compression) {
+  try { app.use(compression()); console.log('server: compression enabled'); } catch(e) { /* ignore */ }
+}
 // Bind explicitly to 0.0.0.0:3000 for LAN access
 const HOST = '0.0.0.0';
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -213,6 +219,7 @@ app.get('/trips/trip.html', (req, res) => {
     if (err) return res.status(500).send('Error reading trip.html');
     // Replace the placeholder key in the Google Maps script URL.
     const replaced = data.replace('key=YOUR_GOOGLE_MAPS_API_KEY', `key=${encodeURIComponent(MAP_KEY)}`);
+    res.set('Cache-Control', 'no-cache');
     res.send(replaced);
   });
 });
@@ -224,17 +231,40 @@ app.get('/checkout.html', (req, res) => {
     if (err) return res.status(500).send('Error reading checkout.html');
     const pub = process.env.STRIPE_PUBLISHABLE_KEY || '%STRIPE_PUBLISHABLE_KEY%';
     const replaced = data.replace('%STRIPE_PUBLISHABLE_KEY%', pub);
+    res.set('Cache-Control', 'no-cache');
     res.send(replaced);
   });
 });
 
-// 1️⃣ Σερβίρουμε στατικά αρχεία από το /public
-app.use(express.static(path.join(__dirname, "public")));
+// 1️⃣ Σερβίρουμε στατικά αρχεία από το /public με caching για non-HTML assets
+app.use(express.static(path.join(__dirname, "public"), {
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else {
+      // 7 days + immutable for hashed/static assets
+      res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+    }
+  }
+}));
 
 // Serve locales statically and provide an index for auto-discovery
 const LOCALES_DIR = path.join(__dirname, 'locales');
 try { fs.mkdirSync(LOCALES_DIR, { recursive: true }); } catch (e) {}
-app.use('/locales', express.static(LOCALES_DIR));
+app.use('/locales', express.static(LOCALES_DIR, {
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    // Locales rarely change during a session; allow caching
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    if (filePath.endsWith('index.json')) {
+      // keep index relatively fresh to allow new languages to appear
+      res.setHeader('Cache-Control', 'public, max-age=300');
+    }
+  }
+}));
 app.get('/locales/index.json', (req, res) => {
   try {
     const files = fs.readdirSync(LOCALES_DIR, { withFileTypes: true });
@@ -243,9 +273,11 @@ app.get('/locales/index.json', (req, res) => {
       .map(f => f.name.replace(/\.json$/,'').toLowerCase())
       .filter((v, i, a) => a.indexOf(v) === i)
       .sort();
+    res.set('Cache-Control', 'public, max-age=300');
     res.json({ languages: langs });
   } catch (e) {
     // Fallback to a sensible default set if directory missing
+    res.set('Cache-Control', 'public, max-age=60');
     res.json({ languages: ['el','en','fr','de','he'] });
   }
 });

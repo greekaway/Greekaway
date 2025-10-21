@@ -125,8 +125,21 @@
     "traveler_type_options": {
       "explorer": "מגלים",
       "relaxed": "מטיילים רגועים",
+      "explore": "מגלים – פעילים",
+      "relax": "נוסעים רגועים",
       "family": "סגנון משפחתי",
       "solo": "הרפתקנים בודדים"
+    },
+    "interests_options": {
+      "nature": "טבע",
+      "culture": "תרבות",
+      "mountain": "הר",
+      "sea": "ים",
+      "gastronomy": "קולינריה"
+    },
+    "sociality_options": {
+      "social": "חברתי",
+      "quiet": "שקט"
     },
     "travel_style_options": {
       "sociable": "חברותי",
@@ -138,7 +151,11 @@
       "en": "English",
       "fr": "Français",
       "de": "Deutsch",
-      "el": "Ελληνικά"
+      "el": "Ελληνικά",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית"
     },
     "daily_rhythm_options": {
       "early": "קם מוקדם",
