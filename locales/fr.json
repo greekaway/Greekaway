@@ -81,6 +81,8 @@
     "create": "Créer la réservation",
     "name_placeholder": "Nom complet",
     "email_placeholder": "name@example.com",
+  "loading": "Chargement...",
+  "step1_of3": "Étape 1 sur 3",
   "traveler_options": "Options du voyageur",
   "adults": "Adultes",
   "children": "Enfants",
@@ -118,6 +120,8 @@
     "created": "Réservation créée",
     "proceed_to_checkout": "Aller au paiement",
     "occupancy": "Taux d'occupation",
+    "trip": "Excursion",
+    "confirmation_title": "Confirmation de Réservation",
     "traveler_type_options": {
       "explorer": "Explorateurs",
       "relaxed": "Voyageurs détendus",

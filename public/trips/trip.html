@@ -16,10 +16,16 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <!-- Greek locale for flatpickr -->
+  <!-- Flatpickr locales: Greek + common site languages for calendar month/day names -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/gr.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/he.js"></script>
   <script src="/js/carousel-config.js"></script>
-  <script src="/js/main.js" defer></script>
+  <!-- Load i18n early so booking/labels can translate immediately -->
+  <script src="/js/i18n.js?v=20251021" defer></script>
+  <!-- App logic (cache-busted) -->
+  <script src="/js/main.js?v=20251021" defer></script>
 </head>
 
 <body>
@@ -197,7 +203,7 @@
   </footer>
 
   <script src="/js/overlay-manager.js" defer></script>
-  <script src="/js/i18n.js" defer></script>
+  <script src="/js/footer.js?v=20251021" defer></script>
   <script src="/js/assistant.js" defer></script>
 
   <!-- Google Maps -->

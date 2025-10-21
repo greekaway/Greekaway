@@ -81,6 +81,8 @@
     "create": "Buchung erstellen",
     "name_placeholder": "Vollständiger Name",
     "email_placeholder": "name@example.com",
+  "loading": "Lädt...",
+  "step1_of3": "Schritt 1 von 3",
   "traveler_options": "Reiseoptionen",
   "adults": "Erwachsene",
   "children": "Kinder",
@@ -118,6 +120,8 @@
     "created": "Buchung erstellt",
     "proceed_to_checkout": "Zum Bezahlen fortfahren",
     "occupancy": "Auslastung",
+    "trip": "Reise",
+    "confirmation_title": "Buchungsbestätigung",
     "traveler_type_options": {
       "explorer": "Entdecker",
       "relaxed": "Entspannte Reisende",

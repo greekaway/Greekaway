@@ -89,6 +89,8 @@
     "create": "Δημιούργησε κράτηση",
     "name_placeholder": "Όνομα και επώνυμο",
     "email_placeholder": "name@example.com",
+    "loading": "Φόρτωση...",
+    "step1_of3": "Βήμα 1 από 3",
   "traveler_options": "Επιλογές ταξιδιώτη",
   "adults": "Ενήλικες",
   "children": "Παιδιά",
@@ -126,6 +128,8 @@
     "created": "Κράτηση δημιουργήθηκε",
     "proceed_to_checkout": "Μετάβαση στο Ταμείο",
     "occupancy": "Πληρότητα",
+    "trip": "Εκδρομή",
+    "confirmation_title": "Επιβεβαίωση Κράτησης",
     "traveler_type_options": {
       "explorer": "Εξερευνητές",
       "relaxed": "Χαλαροί Ταξιδιώτες",

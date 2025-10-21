@@ -13,7 +13,64 @@
   ,
   "trips": { "selectCategory": "Choisir une catégorie", "noneFound": "Aucune excursion trouvée dans cette catégorie." }
   ,
-  "ui": { "close": "Fermer" },
+  "booking": {
+    "title": "Réservation",
+    "step1_of3": "Étape 1 sur 3",
+    "step2_of3": "Étape 2 sur 3",
+    "step3_of3": "Étape 3 sur 3",
+    "availability_msg": "Disponibilité pour {date}: total {capacity}, réservées {taken}",
+    "loading_availability": "Chargement des disponibilités…",
+    "occupancy": "Occupation",
+    "next": "Suivant",
+    "adults": "Adultes",
+    "children": "Enfants",
+    "children_age_range": "Âges 0–17",
+    "pick_ages": "Sélectionner les âges",
+    "bags_large": "Valises (Grandes)",
+    "bags_small": "Valises (Petites)",
+    "decrease_bags_large": "Diminuer grandes valises",
+    "increase_bags_large": "Augmenter grandes valises",
+    "decrease_bags_small": "Diminuer petites valises",
+    "increase_bags_small": "Augmenter petites valises",
+    "decrease_adults": "Diminuer adultes",
+    "increase_adults": "Augmenter adultes",
+    "decrease_children": "Diminuer enfants",
+    "increase_children": "Augmenter enfants",
+    "preferred_language": "Langue préférée",
+    "preferred_language_options": {
+      "el": "Ελληνικά",
+      "en": "English",
+      "fr": "Français",
+      "de": "Deutsch",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית"
+    },
+    "age_group": "Tranche d'âge",
+    "traveler_type": "Type de voyageur",
+    "traveler_type_options": {
+      "explore": "Explorateurs — actifs",
+      "relax": "Voyageurs détendus",
+      "family": "Style familial",
+      "solo": "Voyageurs solo"
+    },
+    "interests": "Centre d'intérêt",
+    "interests_options": {
+      "nature": "Nature",
+      "culture": "Culture",
+      "mountain": "Montagne",
+      "sea": "Mer",
+      "gastronomy": "Gastronomie"
+    },
+    "sociality": "Sociabilité",
+    "sociality_options": {
+      "social": "Sociable",
+      "quiet": "Calme"
+    },
+    "traveler_options": "Options du voyageur"
+  },
+  "ui": { "close": "Fermer", "back": "Retour", "choose": "Choisir", "finish": "Terminer" },
   "trips_ui": { "backToCategories": "Retour aux catégories" }
 
 }

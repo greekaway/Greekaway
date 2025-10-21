@@ -24,18 +24,16 @@ const fs = require('fs');
     });
     await page.waitForSelector('#s1Next:not([disabled])', { timeout: 10000 });
     await page.$eval('#s1Next', el => el && el.click());
-    await page.waitForSelector('#step2 .step-card', { timeout: 10000 });
-  await sleep(400);
+    // Step 2 is now a standalone page (/step2.html)
+    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 });
+    await page.waitForSelector('.s2-fields', { timeout: 10000 });
+    await sleep(400);
     await page.screenshot({ path: 'smoke_step2_details.png', fullPage: false });
-    // change seats
-  await page.waitForSelector('#step2 .seat-inc', { timeout: 10000 });
-  await page.$eval('#step2 .seat-inc', el => el && el.click());
-  await sleep(200);
-    await page.screenshot({ path: 'smoke_step2_seats_changed.png' });
-    // fill email to trigger autofill
-    await page.type('#bookingEmail2', 'john.doe@example.com');
-  await sleep(300);
-    await page.screenshot({ path: 'smoke_step2_autofill.png' });
+    // Increase adults by 1
+    await page.waitForSelector('#adultsInc', { timeout: 10000 });
+    await page.$eval('#adultsInc', el => el && el.click());
+    await sleep(200);
+    await page.screenshot({ path: 'smoke_step2_adults_changed.png' });
     // proceed to summary
     await page.evaluate(() => {
       const el = document.querySelector('#s2Next');
@@ -43,7 +41,9 @@ const fs = require('fs');
     });
   await page.waitForSelector('#s2Next', { timeout: 10000 });
   await page.$eval('#s2Next', el => el && el.click());
-    await page.waitForSelector('#step3', { timeout: 10000 });
+    // Step 3 is standalone page (/step3.html)
+    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 });
+    await page.waitForSelector('.s3-summary', { timeout: 10000 });
   await sleep(300);
     await page.screenshot({ path: 'smoke_step3_summary.png' });
     console.log('Screenshots saved in project root.');

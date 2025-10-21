@@ -12,6 +12,11 @@
   display: block;
 }
 
+/* Ensure booking overlay visually and interactively sits above the global footer on all devices */
+#bookingOverlay.overlay { z-index: 13000 !important; }
+/* While the booking overlay is active, hide the footer to avoid intercepting clicks near the buttons */
+#bookingOverlay.active ~ footer { display: none !important; }
+
 /* Hide non-calendar UI but keep Step 1 containers visible so calendar can render */
 /* Keep #step1 and its .calendar-card in the layout; hide other siblings and non-essential elements */
 #bookingOverlay .overlay-inner > :not(#step1):not(#step2):not(#step3):not(.calendar-full),
@@ -227,9 +232,16 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
   font-size: 1.05rem;
   opacity: 0.98;
   pointer-events: none;
+  /* make sure there is visual separation from the month header */
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+/* when the step indicator exists, push the month header slightly down */
+#bookingOverlay .flatpickr-calendar .cal-step-indicator + .flatpickr-months {
+  margin-top: 4px !important;
 }
 @media (max-width: 599px) {
-  #bookingOverlay .flatpickr-calendar .cal-step-indicator { padding: 8px 12px 4px; font-size: 0.92rem; }
+  #bookingOverlay .flatpickr-calendar .cal-step-indicator { padding: 8px 12px 4px; font-size: 0.92rem; margin-bottom: 4px; }
 }
 
 /* Header: center month/year exactly between arrows using a 3-column grid */

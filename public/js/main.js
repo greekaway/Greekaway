@@ -13,6 +13,30 @@ const G = {
 // Temporary flag to disable any flatpickr calendar initialization in the booking overlay
 // Allow only the inline calendar inside the overlay; prevent other calendars/popups
 const GW_DISABLE_BOOKING_CALENDAR = false;
+// Return translation for key if available; otherwise, return fallback
+function tSafe(key, fallback){
+  try {
+    const v = (typeof window.t === 'function') ? window.t(key) : '';
+    if (v && v !== key) return v;
+  } catch(_){ }
+  return fallback;
+}
+
+// Map current language to flatpickr locale pack key
+function getFlatpickrLocale() {
+  try {
+    const lang = getCurrentLang();
+    const l10n = (window.flatpickr && window.flatpickr.l10ns) ? window.flatpickr.l10ns : null;
+    if (!l10n) return 'default';
+    // Greek uses 'gr' in flatpickr
+    if (lang === 'el') return l10n.gr || 'gr';
+    // English is default when no l10n specified
+    if (lang === 'en') return 'default';
+    // direct mapping for fr, de, he if loaded
+    if (l10n[lang]) return l10n[lang];
+    return 'default';
+  } catch(_) { return 'default'; }
+}
 
 // Global i18n helpers used by multiple blocks
 function getCurrentLang() {
@@ -41,37 +65,38 @@ document.addEventListener("DOMContentLoaded", () => {
   // indicate this is the category-listing view
   document.body.dataset.view = 'category';
 
+  function renderCategories(cats){
+    const container = document.getElementById("categories-container");
+    if (!container) return;
+    container.innerHTML = "";
+    cats.forEach(cat => {
+      const btn = document.createElement("button");
+      btn.className = "category-btn";
+      const catTitle = getLocalized(cat.title) || '';
+      btn.innerHTML = `<img src="${cat.image}" alt="${catTitle}"><span class="cat-label">${catTitle}</span>`;
+      btn.dataset.cat = cat.id;
+      btn.classList.add(`cat-${cat.id}`);
+      btn.title = catTitle;
+      btn.addEventListener("click", () => { window.location.href = `/categories/${cat.id}.html`; });
+      container.appendChild(btn);
+      if (["sea","mountain","culture"].includes(cat.id)) {
+        const delay = (["sea","mountain","culture"].indexOf(cat.id) * 100) + 90;
+        setTimeout(() => btn.classList.add('cinematic'), delay);
+      }
+    });
+  }
+
   fetch("/data/categories.json")
     .then(r => {
       if (!r.ok) throw new Error("Αποτυχία φόρτωσης categories.json");
       return r.json();
     })
     .then(cats => {
-      categoriesContainer.innerHTML = "";
-      cats.forEach(cat => {
-        const btn = document.createElement("button");
-        btn.className = "category-btn";
-
-  // ΜΟΝΟ η εικόνα (ο τίτλος υπάρχει ήδη πάνω στην ίδια την εικόνα)
-  const catTitle = getLocalized(cat.title) || '';
-  btn.innerHTML = `<img src="${cat.image}" alt="${catTitle}"><span class="cat-label">${catTitle}</span>`;
-  // expose category id for styling and accessibility
-  btn.dataset.cat = cat.id;
-  btn.classList.add(`cat-${cat.id}`);
-  btn.title = catTitle;
-
-        btn.addEventListener("click", () => {
-          // Μετάβαση στη σελίδα της κατηγορίας
-          window.location.href = `/categories/${cat.id}.html`;
-        });
-
-        // Apply cinematic entrance for the three main categories (sea, mountain, culture)
-        categoriesContainer.appendChild(btn);
-        if (['sea','mountain','culture'].includes(cat.id)) {
-          // tiny stagger so entrance feels natural
-          const delay = (['sea','mountain','culture'].indexOf(cat.id) * 100) + 90;
-          setTimeout(() => btn.classList.add('cinematic'), delay);
-        }
+      window.__gwCategories = cats;
+      renderCategories(cats);
+      // Re-render titles on language switch
+      window.addEventListener('i18n:changed', () => {
+        try { renderCategories(window.__gwCategories || cats); } catch(_) {}
       });
     })
   .catch(err => G.error("Σφάλμα φόρτωσης κατηγοριών:", err));
@@ -87,49 +112,50 @@ document.addEventListener("DOMContentLoaded", () => {
   document.body.dataset.view = 'category';
   if (!category) return;
 
+  function renderCategoryTrips(allTrips){
+    const container = document.getElementById("trips-container");
+    if (!container) return;
+    container.innerHTML = "";
+    allTrips
+      .filter(t => t.category === category)
+      .forEach(trip => {
+        const card = document.createElement("div");
+        card.className = "trip-card";
+        card.dataset.tripId = trip.id;
+        if (trip.id === 'lefkas') {
+          card.style.setProperty('background-color', '#0E1520', 'important');
+          card.style.setProperty('background-image', 'none', 'important');
+          card.style.setProperty('box-shadow', 'inset 0 0 0 1px #0E1520, 0 6px 18px rgba(0,0,0,0.48)', 'important');
+          card.style.setProperty('filter', 'none', 'important');
+          card.style.setProperty('backdrop-filter', 'none', 'important');
+          card.style.setProperty('border', 'none', 'important');
+          card.style.setProperty('outline', 'none', 'important');
+        }
+        if (trip.id === 'olympia' || trip.id === 'lefkas' || trip.id === 'parnassos') card.classList.add('logo-pop');
+        card.dataset.cat = trip.category || category;
+        card.classList.add(`cat-${trip.category || category}`);
+        card.innerHTML = `<h3>${getLocalized(trip.title)}</h3>`;
+        card.addEventListener("click", () => {
+          try { sessionStorage.setItem('highlightTrip', trip.id); } catch(e) {}
+          window.location.href = `/trips/trip.html?id=${trip.id}`;
+        });
+        container.appendChild(card);
+      });
+
+    if (!container.children.length) {
+      const noTrips = (window.t && typeof window.t === 'function') ? window.t('trips.noneFound') : 'No trips found in this category.';
+      container.innerHTML = `<p>${noTrips}</p>`;
+    }
+  }
+
   fetch("/data/tripindex.json")
     .then(r => r.json())
     .then(allTrips => {
-      tripsContainer.innerHTML = "";
-      allTrips
-        .filter(t => t.category === category)
-        .forEach(trip => {
-          const card = document.createElement("div");
-          card.className = "trip-card";
-          // expose trip id so we can target specific cards (e.g. lefkas) with CSS
-          card.dataset.tripId = trip.id;
-          // If this is the Lefkada card, force the dark navy inline to avoid stylesheet overrides
-          if (trip.id === 'lefkas') {
-            // use setProperty with priority 'important' so it's inline-important
-            card.style.setProperty('background-color', '#0E1520', 'important');
-            card.style.setProperty('background-image', 'none', 'important');
-            // inset 1px mask plus slightly stronger outer depth shadow to balance perceived tone
-            card.style.setProperty('box-shadow', 'inset 0 0 0 1px #0E1520, 0 6px 18px rgba(0,0,0,0.48)', 'important');
-            card.style.setProperty('filter', 'none', 'important');
-            card.style.setProperty('backdrop-filter', 'none', 'important');
-            card.style.setProperty('border', 'none', 'important');
-            // (already applied above) subtle outer shadow + inset mask applied to blend perfectly
-            card.style.setProperty('outline', 'none', 'important');
-          }
-          // If this is the olympia, lefkas, or parnassos trip, add the logo-pop animation class
-          if (trip.id === 'olympia' || trip.id === 'lefkas' || trip.id === 'parnassos') card.classList.add('logo-pop');
-          // add category metadata so we can style per-category
-          card.dataset.cat = trip.category || category;
-          card.classList.add(`cat-${trip.category || category}`);
-          card.innerHTML = `<h3>${getLocalized(trip.title)}</h3>`;
-          card.addEventListener("click", () => {
-            // Mark this trip so the destination page can show a persistent highlight
-            try { sessionStorage.setItem('highlightTrip', trip.id); } catch(e) {}
-            // ΜΟΝΟ ΕΝΑ trip.html — δίνουμε id με query
-            window.location.href = `/trips/trip.html?id=${trip.id}`;
-          });
-          tripsContainer.appendChild(card);
-        });
-
-      if (!tripsContainer.children.length) {
-        const noTrips = (window.t && typeof window.t === 'function') ? window.t('trips.noneFound') : 'No trips found in this category.';
-        tripsContainer.innerHTML = `<p>${noTrips}</p>`;
-      }
+      window.__gwCategoryTrips = allTrips;
+      renderCategoryTrips(allTrips);
+      window.addEventListener('i18n:changed', () => {
+        try { renderCategoryTrips(window.__gwCategoryTrips || allTrips); } catch(_) {}
+      });
     })
   .catch(err => G.error("Σφάλμα tripindex:", err));
 });
@@ -507,7 +533,10 @@ document.addEventListener("DOMContentLoaded", () => {
               const tripId = window.__loadedTrip.id;
               const tripTitle = getLocalized(window.__loadedTrip.title) || tripId;
               const titleEl = document.getElementById('bookingOverlayTitle');
-              if (titleEl) titleEl.textContent = `Κράτηση — ${tripTitle}`;
+              if (titleEl) {
+                const prefix = (typeof window.t === 'function') ? window.t('booking.title') : 'Booking';
+                titleEl.textContent = `${prefix} — ${tripTitle}`;
+              }
               const tripIdInput = document.getElementById('bookingTripId');
               if (tripIdInput) tripIdInput.value = tripId;
               // start multi-step flow at Step 1 (calendar)
@@ -515,6 +544,25 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (err) { G.warn('Failed to start booking flow', err); }
           }, { passive: true });
         }
+        // Also attach a delegated click handler to survive footer re-injection
+        document.addEventListener('click', (ev) => {
+          try {
+            const link = ev.target && ev.target.closest && ev.target.closest('a.central-btn');
+            if (!link) return;
+            if (!document.getElementById('bookingOverlay') || !window.__loadedTrip || !window.__loadedTrip.id) return;
+            ev.preventDefault();
+            const tripId = window.__loadedTrip.id;
+            const tripTitle = getLocalized(window.__loadedTrip.title) || tripId;
+            const titleEl = document.getElementById('bookingOverlayTitle');
+            if (titleEl) {
+              const prefix = (typeof window.t === 'function') ? window.t('booking.title') : 'Booking';
+              titleEl.textContent = `${prefix} — ${tripTitle}`;
+            }
+            const tripIdInput = document.getElementById('bookingTripId');
+            if (tripIdInput) tripIdInput.value = tripId;
+            startBookingFlow();
+          } catch(e) { /* noop */ }
+        }, { passive: false });
       } catch (e) { G.warn('Failed to wire central booking button', e); }
 
       // Multi-step booking flow helpers
@@ -531,7 +579,7 @@ document.addEventListener("DOMContentLoaded", () => {
           overlayInner.innerHTML = `
             <div id="step1" class="booking-step">
               <div class="step-meta">
-                <div class="step-indicator">Βήμα 1 από 3</div>
+                <div class="step-indicator" data-i18n="booking.step1_of3">${tSafe('booking.step1_of3','Step 1 of 3')}</div>
                 <div class="trip-title">${stepTitle}</div>
                 <div class="trip-desc">${stepDesc}</div>
               </div>
@@ -541,11 +589,13 @@ document.addEventListener("DOMContentLoaded", () => {
                   <input id="calendarFull" />
                 </div>
               </div>
-              <div id="occupancyIndicator" class="occupancy-indicator" aria-live="polite" style="text-align:center;margin-top:10px;"><span class="occ-pill">Πληρότητα: —/7</span></div>
+              <div id="occupancyIndicator" class="occupancy-indicator" aria-live="polite" style="text-align:center;margin-top:10px;">
+                <span class="occ-pill"><span class="occ-label" data-i18n="booking.occupancy">${tSafe('booking.occupancy','Occupancy')}</span>: <span class="occ-count">—/7</span></span>
+              </div>
               <div id="availabilityBlock" class="availability-block" style="display:none"></div>
               <div class="booking-actions">
-                <button id="s1Cancel" class="btn btn-secondary">Πίσω</button>
-                <button id="s1Next" class="btn btn-primary" data-i18n="booking.next">Επόμενο</button>
+                <button id="s1Cancel" class="btn btn-secondary" data-i18n="ui.back">${tSafe('ui.back','Back')}</button>
+                <button id="s1Next" class="btn btn-primary" data-i18n="booking.next">${tSafe('booking.next','Next')}</button>
               </div>
             </div>
             <div id="step2" class="booking-step" style="display:none"></div>
@@ -558,8 +608,9 @@ document.addEventListener("DOMContentLoaded", () => {
           const disabledDates = trip.unavailable_dates || [];
           if (!GW_DISABLE_BOOKING_CALENDAR && window.flatpickr && calEl) {
             // Use Greek locale (gr) for month/day names and Monday-first week
-            try { if (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.gr) { /* locale loaded */ } } catch(_){}
-            window.flatpickr(calEl, {
+            try { if (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.gr) { /* locale loaded */ } } catch(_){ }
+            const fpLocale = getFlatpickrLocale();
+            const fpOpts = {
               inline: true,
               altInput: false,
               monthSelectorType: 'static',
@@ -567,7 +618,7 @@ document.addEventListener("DOMContentLoaded", () => {
               defaultDate: (new Date()).toISOString().slice(0,10),
               minDate: (new Date()).toISOString().slice(0,10),
               disable: disabledDates,
-              locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.gr) ? window.flatpickr.l10ns.gr : 'gr',
+              locale: fpLocale,
               onReady: function(selectedDates, dateStr, instance) {
                 try {
                   const cal = instance && instance.calendarContainer;
@@ -576,7 +627,8 @@ document.addEventListener("DOMContentLoaded", () => {
                   if (!cal.querySelector('.cal-step-indicator')) {
                     const step = document.createElement('div');
                     step.className = 'cal-step-indicator';
-                    step.textContent = 'Βήμα 1 από 3';
+                    step.setAttribute('data-i18n','booking.step1_of3');
+                    step.textContent = (typeof window.t==='function')?window.t('booking.step1_of3'):'Step 1 of 3';
                     cal.insertBefore(step, cal.firstChild);
                   }
                   // Force month selector to static text (hide dropdown if theme injected one)
@@ -611,14 +663,15 @@ document.addEventListener("DOMContentLoaded", () => {
                   try { document.getElementById('bookingDate').value = dateStr; } catch(e){}
                   try { showAvailability(dateStr); } catch(e){}
                 }
-            });
+            };
+            window.flatpickr(calEl, fpOpts);
           }
 
             // show availability for the default date immediately
             try { const def = (new Date()).toISOString().slice(0,10); document.getElementById('bookingDate').value = def; showAvailability(def); } catch(e){}
 
           // wire buttons
-          document.getElementById('s1Next').addEventListener('click', () => {
+          const goStep2 = () => {
             try { document.getElementById('bookingOverlay').classList.remove('step1-active'); } catch(e){}
             // Navigate in the SAME tab to avoid any browser opening extra Google/new-tab pages
             // Persist trip info for Step 2 header
@@ -626,10 +679,97 @@ document.addEventListener("DOMContentLoaded", () => {
               sessionStorage.setItem('gw_trip_title', stepTitle || '');
               sessionStorage.setItem('gw_trip_desc', stepDesc || '');
             } catch(_) {}
-            const absUrl = new URL('/step2.html', window.location.origin).href;
-            window.location.href = absUrl;
-          });
+            try {
+              const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
+              const absUrl = origin ? (new URL('/step2.html', origin).href) : '/step2.html';
+              try { window.location.assign(absUrl); }
+              catch(_e1){ try { window.location.href = absUrl; } catch(_e2){ setTimeout(()=>{ window.location.href = '/step2.html'; }, 0); } }
+            } catch(_){ window.location.href = '/step2.html'; }
+          };
+          document.getElementById('s1Next').addEventListener('click', (ev) => { try{ ev.preventDefault(); }catch(_){ } goStep2(); });
           document.getElementById('s1Cancel').addEventListener('click', () => { try { document.getElementById('bookingOverlay').classList.remove('step1-active'); } catch(e){} closeOverlay('bookingOverlay'); renderOriginalOverlayInner(); });
+
+          // Ensure translations are applied to the freshly injected step (once and with a short retry)
+          try { if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); } catch(_){ }
+          try { setTimeout(() => { if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); }, 80); } catch(_){ }
+
+          // Refresh step1 localized bits when language changes (title/desc and availability message)
+          try {
+            const onLang = () => {
+              try {
+                const tripForHeader2 = window.__loadedTrip || {};
+                const stepDesc2 = (typeof getLocalized === 'function') ? (getLocalized(tripForHeader2.description) || '') : '';
+                const stepTitle2 = (typeof getLocalized === 'function') ? (getLocalized(tripForHeader2.title) || '') : '';
+                const titleEl2 = document.querySelector('#step1 .trip-title');
+                const descEl2 = document.querySelector('#step1 .trip-desc');
+                if (titleEl2) titleEl2.textContent = stepTitle2;
+                if (descEl2) descEl2.textContent = stepDesc2;
+              } catch(_){ }
+              try {
+                const calEl2 = document.getElementById('calendarFull');
+                if (calEl2 && calEl2._flatpickr) {
+                  const inst = calEl2._flatpickr;
+                  const selected = inst.selectedDates && inst.selectedDates[0] ? inst.formatDate(inst.selectedDates[0], 'Y-m-d') : calEl2.value;
+                  inst.destroy();
+                  const fpLocale2 = getFlatpickrLocale();
+                  window.flatpickr(calEl2, {
+                    inline: true,
+                    altInput: false,
+                    monthSelectorType: 'static',
+                    dateFormat: 'Y-m-d',
+                    defaultDate: selected || (new Date()).toISOString().slice(0,10),
+                    minDate: (new Date()).toISOString().slice(0,10),
+                    disable: (window.__loadedTrip && window.__loadedTrip.unavailable_dates) || [],
+                    locale: fpLocale2,
+                    onReady: function(selectedDates, dateStr, instance){
+                      try {
+                        const cal = instance && instance.calendarContainer;
+                        if (!cal) return;
+                        if (!cal.querySelector('.cal-step-indicator')) {
+                          const step = document.createElement('div');
+                          step.className = 'cal-step-indicator';
+                          step.setAttribute('data-i18n','booking.step1_of3');
+                          step.textContent = (typeof window.t==='function')?window.t('booking.step1_of3'):'Step 1 of 3';
+                          cal.insertBefore(step, cal.firstChild);
+                        }
+                        const monthSelect = cal.querySelector('select.flatpickr-monthDropdown-months');
+                        const curMonthSpan = cal.querySelector('.cur-month');
+                        if (monthSelect && curMonthSpan) {
+                          const opt = monthSelect.options[monthSelect.selectedIndex];
+                          if (opt) curMonthSpan.textContent = opt.textContent;
+                          monthSelect.style.display = 'none';
+                        }
+                        const yearInput = cal.querySelector('.cur-year');
+                        const yearWrap = cal.querySelector('.numInputWrapper');
+                        if (yearInput) {
+                          yearInput.setAttribute('readonly', 'readonly');
+                          yearInput.addEventListener('wheel', (e)=>{ e.preventDefault(); }, { passive: false });
+                          yearInput.addEventListener('keydown', (e)=>{
+                            if (['ArrowUp','ArrowDown','PageUp','PageDown'].includes(e.key)) e.preventDefault();
+                          });
+                          try { yearInput.style.fontWeight = '800'; yearInput.style.setProperty('font-variation-settings', "'wght' 800", 'important'); } catch(_){ }
+                        }
+                        if (yearWrap) { yearWrap.style.pointerEvents = 'none'; }
+                        const prev = cal.querySelector('.flatpickr-prev-month');
+                        const next = cal.querySelector('.flatpickr-next-month');
+                        if (prev) { prev.style.visibility = 'visible'; prev.style.opacity = '1'; }
+                        if (next) { next.style.visibility = 'visible'; next.style.opacity = '1'; }
+                      } catch(_){ }
+                    },
+                    onChange: (selectedDates, dateStr) => {
+                      try { document.getElementById('bookingDate').value = dateStr; } catch(e){}
+                      try { showAvailability(dateStr); } catch(e){}
+                    }
+                  });
+                }
+              } catch(_){ }
+              try {
+                const cur = document.getElementById('calendarFull') && document.getElementById('calendarFull').value;
+                if (cur) showAvailability(cur);
+              } catch(_){ }
+            };
+            window.addEventListener('i18n:changed', onLang);
+          } catch(_){ }
         } catch (e) { G.warn('startBookingFlow failed', e); }
       }
 
@@ -652,57 +792,60 @@ document.addEventListener("DOMContentLoaded", () => {
           step2.style.display = 'block';
           step2.innerHTML = `
             <div class="step-card form-narrow">
-              <div class="progress-steps" style="margin-bottom:6px;font-size:13px;color:#c9a24a;">Βήμα 2 από 3</div>
-              <h2>Στοιχεία Ταξιδιώτη</h2>
+              <div class="progress-steps" data-i18n="booking.step2_of3" style="margin-bottom:6px;font-size:13px;color:#c9a24a;">${(typeof window.t==='function')?window.t('booking.step2_of3'):'Step 2 of 3'}</div>
+              <h2 data-i18n="booking.traveler_profile">${(typeof window.t==='function')?window.t('booking.traveler_profile'):'Traveler Profile'}</h2>
               <div style="margin-top:12px">
-                <label>Θέσεις</label>
+                <label data-i18n="booking.seats">${(typeof window.t==='function')?window.t('booking.seats'):'Seats'}</label>
                 <div class="seats-price" style="margin-top:6px;display:flex;align-items:center;gap:12px;">
                   <div class="seat-control"><button class="seat-dec">−</button><input id="bookingSeats2" type="number" value="1" min="1" max="10"><button class="seat-inc">+</button></div>
                   <div id="miniPrice" class="price-badge">—</div>
                 </div>
               </div>
-              <div style="margin-top:12px"><label>Όνομα</label><input id="bookingName2" type="text" /></div>
-              <div style="margin-top:12px"><label>Email</label><input id="bookingEmail2" type="email" /></div>
-              <div style="margin-top:12px"><label>Traveler Profile</label>
+              <div style="margin-top:12px"><label data-i18n="checkout.name">${(typeof window.t==='function')?window.t('checkout.name'):'Name'}</label><input id="bookingName2" type="text" /></div>
+              <div style="margin-top:12px"><label data-i18n="checkout.email">${(typeof window.t==='function')?window.t('checkout.email'):'Email'}</label><input id="bookingEmail2" type="email" /></div>
+              <div style="margin-top:12px"><label data-i18n="booking.traveler_profile">${(typeof window.t==='function')?window.t('booking.traveler_profile'):'Traveler Profile'}</label>
                 <select id="travelerProfile2" class="profile-select">
-                  <option value="explorer">🌍 Explorers</option>
-                  <option value="relaxed">😌 Relaxed Travelers</option>
-                  <option value="family">👨‍👩‍👧 Family Style</option>
-                  <option value="solo">🚶 Solo Adventurers</option>
+                  <option value="explorer" data-i18n="booking.traveler_type_options.explorer">🌍 ${(typeof window.t==='function')?window.t('booking.traveler_type_options.explorer'):'Explorers'}</option>
+                  <option value="relaxed" data-i18n="booking.traveler_type_options.relaxed">😌 ${(typeof window.t==='function')?window.t('booking.traveler_type_options.relaxed'):'Relaxed Travelers'}</option>
+                  <option value="family" data-i18n="booking.traveler_type_options.family">👨‍👩‍👧 ${(typeof window.t==='function')?window.t('booking.traveler_type_options.family'):'Family Style'}</option>
+                  <option value="solo" data-i18n="booking.traveler_type_options.solo">🚶 ${(typeof window.t==='function')?window.t('booking.traveler_type_options.solo'):'Solo Adventurers'}</option>
                 </select>
               </div>
-              <div style="margin-top:8px"><label>Travel Style</label>
+              <div style="margin-top:8px"><label data-i18n="booking.travel_style">${(typeof window.t==='function')?window.t('booking.travel_style'):'Travel Style'}</label>
                 <select id="travelStyle2" class="profile-select">
-                  <option value="sociable">👥 Sociable</option>
-                  <option value="quiet">🤫 Quiet</option>
-                  <option value="cultural">🏛️ Cultural</option>
-                  <option value="nature">🌲 Nature-oriented</option>
+                  <option value="sociable" data-i18n="booking.travel_style_options.sociable">👥 ${(typeof window.t==='function')?window.t('booking.travel_style_options.sociable'):'Sociable'}</option>
+                  <option value="quiet" data-i18n="booking.travel_style_options.quiet">🤫 ${(typeof window.t==='function')?window.t('booking.travel_style_options.quiet'):'Quiet'}</option>
+                  <option value="cultural" data-i18n="booking.travel_style_options.cultural">🏛️ ${(typeof window.t==='function')?window.t('booking.travel_style_options.cultural'):'Cultural'}</option>
+                  <option value="nature" data-i18n="booking.travel_style_options.nature">🌲 ${(typeof window.t==='function')?window.t('booking.travel_style_options.nature'):'Nature-oriented'}</option>
                 </select>
               </div>
-              <div style="margin-top:8px"><label>Preferred Language</label>
+              <div style="margin-top:8px"><label data-i18n="booking.preferred_language">${(typeof window.t==='function')?window.t('booking.preferred_language'):'Preferred Language'}</label>
                 <select id="preferredLanguage2" class="profile-select">
-                  <option value="en">🇬🇧 English</option>
-                  <option value="fr">🇫🇷 Français</option>
-                  <option value="de">🇩🇪 Deutsch</option>
-                  <option value="el">🇬🇷 Ελληνικά</option>
+                  <option value="en" data-i18n="booking.preferred_language_options.en">🇬🇧 ${(typeof window.t==='function')?window.t('booking.preferred_language_options.en'):'English'}</option>
+                  <option value="fr" data-i18n="booking.preferred_language_options.fr">🇫🇷 ${(typeof window.t==='function')?window.t('booking.preferred_language_options.fr'):'Français'}</option>
+                  <option value="de" data-i18n="booking.preferred_language_options.de">🇩🇪 ${(typeof window.t==='function')?window.t('booking.preferred_language_options.de'):'Deutsch'}</option>
+                  <option value="el" data-i18n="booking.preferred_language_options.el">🇬🇷 ${(typeof window.t==='function')?window.t('booking.preferred_language_options.el'):'Ελληνικά'}</option>
                 </select>
               </div>
-              <div style="margin-top:8px"><label>Day Style</label>
+              <div style="margin-top:8px"><label data-i18n="booking.daily_rhythm">${(typeof window.t==='function')?window.t('booking.daily_rhythm'):'Daily rhythm'}</label>
                 <select id="travelTempo2" class="profile-select">
-                  <option value="early">🌅 Early riser</option>
-                  <option value="night">🌙 Night type</option>
-                  <option value="talkative">💬 Talkative</option>
-                  <option value="reserved">🙊 Reserved</option>
+                  <option value="early" data-i18n="booking.daily_rhythm_options.early">🌅 ${(typeof window.t==='function')?window.t('booking.daily_rhythm_options.early'):'Early riser'}</option>
+                  <option value="night" data-i18n="booking.daily_rhythm_options.night">🌙 ${(typeof window.t==='function')?window.t('booking.daily_rhythm_options.night'):'Night type'}</option>
+                  <option value="talkative" data-i18n="booking.daily_rhythm_options.talkative">💬 ${(typeof window.t==='function')?window.t('booking.daily_rhythm_options.talkative'):'Talkative'}</option>
+                  <option value="reserved" data-i18n="booking.daily_rhythm_options.reserved">🙊 ${(typeof window.t==='function')?window.t('booking.daily_rhythm_options.reserved'):'Reserved'}</option>
                 </select>
               </div>
               <div style="margin-top:12px;">
                 <div class="booking-actions">
-                  <button id="s2Back" class="btn btn-secondary">Πίσω</button>
-                  <button id="s2Next" class="btn btn-primary" data-i18n="booking.next">Επόμενο</button>
+                  <button id="s2Back" class="btn btn-secondary" data-i18n="ui.back">${(typeof window.t==='function')?window.t('ui.back'):'Back'}</button>
+                  <button id="s2Next" class="btn btn-primary" data-i18n="booking.next">${(typeof window.t==='function')?window.t('booking.next'):'Next'}</button>
                 </div>
               </div>
             </div>
           `;
+          // Apply translations on newly injected markup (once + short retry)
+          try { if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); } catch(_){ }
+          try { setTimeout(() => { if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); }, 80); } catch(_){ }
           // copy any existing values from original hidden form to these new fields
           try { const seats = document.getElementById('bookingSeats'); if (seats) document.getElementById('bookingSeats2').value = seats.value; } catch(e){}
           try { const name = document.getElementById('bookingName'); if (name) document.getElementById('bookingName2').value = name.value; } catch(e){}
@@ -787,22 +930,25 @@ document.addEventListener("DOMContentLoaded", () => {
           const total = (base * parseInt(seats || '1',10))/100;
           step3.innerHTML = `
             <div class="booking-confirmation step-card confirmation-view">
-              <h2>Επιβεβαίωση Κράτησης</h2>
-              <div class="progress-steps" style="margin-top:8px;margin-bottom:6px;font-size:13px;color:#c9a24a;">Βήμα 3 από 3</div>
-              <div style="text-align:left;margin-top:12px;"> <strong>Εκδρομή:</strong> ${getLocalized(trip.title) || ''}</div>
-              <div style="text-align:left;margin-top:6px;"> <strong>Ημερομηνία:</strong> ${date}</div>
-              <div style="text-align:left;margin-top:6px;"> <strong>Θέσεις:</strong> ${seats}</div>
-              <div style="text-align:left;margin-top:6px;"> <strong>Σύνολο:</strong> ${total.toLocaleString(getCurrentLang(), { style:'currency', currency:(trip.currency||'EUR').toUpperCase() })}</div>
-              <div style="text-align:left;margin-top:6px;"> <strong>Όνομα:</strong> ${name}</div>
-              <div style="text-align:left;margin-top:6px;"> <strong>Email:</strong> ${email}</div>
+              <h2 data-i18n="booking.confirmation_title">${(typeof window.t==='function')?window.t('booking.confirmation_title'):'Booking Confirmation'}</h2>
+              <div class="progress-steps" data-i18n="booking.step3_of3" style="margin-top:8px;margin-bottom:6px;font-size:13px;color:#c9a24a;">${(typeof window.t==='function')?window.t('booking.step3_of3'):'Step 3 of 3'}</div>
+              <div style="text-align:left;margin-top:12px;"> <strong data-i18n="booking.trip">${(typeof window.t==='function')?window.t('booking.trip'):'Trip'}</strong>: ${getLocalized(trip.title) || ''}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.date">${(typeof window.t==='function')?window.t('booking.date'):'Date'}</strong>: ${date}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.seats">${(typeof window.t==='function')?window.t('booking.seats'):'Seats'}</strong>: ${seats}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.total">${(typeof window.t==='function')?window.t('booking.total'):'Total'}</strong>: ${total.toLocaleString(getCurrentLang(), { style:'currency', currency:(trip.currency||'EUR').toUpperCase() })}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong data-i18n="checkout.name">${(typeof window.t==='function')?window.t('checkout.name'):'Name'}</strong>: ${name}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong data-i18n="checkout.email">${(typeof window.t==='function')?window.t('checkout.email'):'Email'}</strong>: ${email}</div>
               <div style="margin-top:18px;">
                 <div class="booking-actions">
-                  <button id="s3Edit" class="btn btn-secondary">Edit</button>
-                  <button id="s3Proceed" class="btn btn-primary" data-i18n="checkout.pay">Proceed to Payment</button>
+                  <button id="s3Edit" class="btn btn-secondary">${(typeof window.t==='function')?window.t('ui.back'):'Back'}</button>
+                  <button id="s3Proceed" class="btn btn-primary" data-i18n="checkout.pay">${(typeof window.t==='function')?window.t('checkout.pay'):'Pay'}</button>
                 </div>
               </div>
             </div>
           `;
+          // Apply translations on confirmation view (once + short retry)
+          try { if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); } catch(_){ }
+          try { setTimeout(() => { if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); }, 80); } catch(_){ }
           // mark overlay as confirmation-active to trigger high-specificity iOS fixes
           try { document.getElementById('bookingOverlay').classList.add('confirmation-active'); } catch(e){}
           document.getElementById('s3Edit').addEventListener('click', () => { document.getElementById('step3').style.display='none'; document.getElementById('step2').style.display='block'; try{ document.getElementById('bookingOverlay').classList.remove('confirmation-active'); }catch(e){} refreshProceedButtons(); });
@@ -855,87 +1001,87 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!overlayInner) return;
         // reconstruct the original booking form markup (must match /public/trips/trip.html structure)
         overlayInner.innerHTML = `
-      <h2 id="bookingOverlayTitle">Κράτηση</h2>
+      <h2 id="bookingOverlayTitle" data-i18n="booking.title">${(typeof window.t==='function')?window.t('booking.title'):'Booking'}</h2>
       <form id="bookingForm" class="booking-form">
         <input type="hidden" name="trip_id" id="bookingTripId">
 
         <div class="row">
-          <label for="bookingDate">Ημερομηνία</label>
-          <input id="bookingDate" name="date" type="date" required />
+          <label for="bookingDate" data-i18n="booking.date">${(typeof window.t==='function')?window.t('booking.date'):'Date'}</label>
+          <input id="bookingDate" name="date" type="date" required data-i18n-placeholder="booking.date_placeholder" placeholder="${(typeof window.t==='function')?window.t('booking.date_placeholder'):'YYYY-MM-DD'}" />
         </div>
 
         <div class="row two-col">
           <div>
-            <label for="bookingSeats">Θέσεις</label>
+            <label for="bookingSeats" data-i18n="booking.seats">${(typeof window.t==='function')?window.t('booking.seats'):'Seats'}</label>
             <div class="seat-control">
-              <button type="button" class="seat-dec" aria-label="Μείωση">−</button>
+              <button type="button" class="seat-dec" data-i18n-aria="booking.decrease" aria-label="${(typeof window.t==='function')?window.t('booking.decrease'):'Decrease'}">−</button>
               <input id="bookingSeats" name="seats" type="number" value="1" min="1" max="10" required />
-              <button type="button" class="seat-inc" aria-label="Αύξηση">+</button>
+              <button type="button" class="seat-inc" data-i18n-aria="booking.increase" aria-label="${(typeof window.t==='function')?window.t('booking.increase'):'Increase'}">+</button>
             </div>
           </div>
 
           <div>
-            <label for="bookingPrice">Σύνολο</label>
+            <label for="bookingPrice" data-i18n="booking.total">${(typeof window.t==='function')?window.t('booking.total'):'Total'}</label>
             <div id="bookingPrice" class="price-tag">—</div>
           </div>
         </div>
 
         <div class="row">
-          <label for="bookingName">Όνομα</label>
-          <input id="bookingName" name="user_name" type="text" placeholder="Όνομα και επώνυμο" required />
+          <label for="bookingName" data-i18n="checkout.name">${(typeof window.t==='function')?window.t('checkout.name'):'Name'}</label>
+          <input id="bookingName" name="user_name" type="text" data-i18n-placeholder="booking.name_placeholder" placeholder="${(typeof window.t==='function')?window.t('booking.name_placeholder'):'Full name'}" required />
         </div>
 
         <div class="row">
-          <label for="bookingEmail">Email</label>
-          <input id="bookingEmail" name="user_email" type="email" placeholder="name@example.com" required />
+          <label for="bookingEmail" data-i18n="checkout.email">${(typeof window.t==='function')?window.t('checkout.email'):'Email'}</label>
+          <input id="bookingEmail" name="user_email" type="email" data-i18n-placeholder="booking.email_placeholder" placeholder="${(typeof window.t==='function')?window.t('booking.email_placeholder'):'name@example.com'}" required />
         </div>
 
-        <div class="row section-title"><h3>Προφίλ Ταξιδιώτη</h3></div>
+        <div class="row section-title"><h3 data-i18n="booking.traveler_profile">${(typeof window.t==='function')?window.t('booking.traveler_profile'):'Traveler Profile'}</h3></div>
         <div class="row two-col">
           <div>
-            <label for="travelerProfile">Traveler Type</label>
+            <label for="travelerProfile" data-i18n="booking.traveler_type">${(typeof window.t==='function')?window.t('booking.traveler_type'):'Traveler Type'}</label>
             <select id="travelerProfile" name="travelerProfile">
-              <option value="explorer">🌍 Explorers</option>
-              <option value="relaxed">😌 Relaxed Travelers</option>
-              <option value="family">👨‍👩‍👧 Family Style</option>
-              <option value="solo">🚶 Solo Adventurers</option>
+              <option value="explorer" data-i18n="booking.traveler_type_options.explorer">🌍 ${(typeof window.t==='function')?window.t('booking.traveler_type_options.explorer'):'Explorers'}</option>
+              <option value="relaxed" data-i18n="booking.traveler_type_options.relaxed">😌 ${(typeof window.t==='function')?window.t('booking.traveler_type_options.relaxed'):'Relaxed Travelers'}</option>
+              <option value="family" data-i18n="booking.traveler_type_options.family">👨‍👩‍👧 ${(typeof window.t==='function')?window.t('booking.traveler_type_options.family'):'Family Style'}</option>
+              <option value="solo" data-i18n="booking.traveler_type_options.solo">🚶 ${(typeof window.t==='function')?window.t('booking.traveler_type_options.solo'):'Solo Adventurers'}</option>
             </select>
           </div>
           <div>
-            <label for="travelStyle">Travel Style</label>
+            <label for="travelStyle" data-i18n="booking.travel_style">${(typeof window.t==='function')?window.t('booking.travel_style'):'Travel Style'}</label>
             <select id="travelStyle" name="travelStyle">
-              <option value="sociable">👥 Sociable</option>
-              <option value="quiet">🤫 Quiet</option>
-              <option value="cultural">🏛️ Cultural</option>
-              <option value="nature">🌲 Nature-oriented</option>
+              <option value="sociable" data-i18n="booking.travel_style_options.sociable">👥 ${(typeof window.t==='function')?window.t('booking.travel_style_options.sociable'):'Sociable'}</option>
+              <option value="quiet" data-i18n="booking.travel_style_options.quiet">🤫 ${(typeof window.t==='function')?window.t('booking.travel_style_options.quiet'):'Quiet'}</option>
+              <option value="cultural" data-i18n="booking.travel_style_options.cultural">🏛️ ${(typeof window.t==='function')?window.t('booking.travel_style_options.cultural'):'Cultural'}</option>
+              <option value="nature" data-i18n="booking.travel_style_options.nature">🌲 ${(typeof window.t==='function')?window.t('booking.travel_style_options.nature'):'Nature-oriented'}</option>
             </select>
           </div>
         </div>
 
         <div class="row two-col">
           <div>
-            <label for="preferredLanguage">Προτιμώμενη Γλώσσα</label>
+            <label for="preferredLanguage" data-i18n="booking.preferred_language">${(typeof window.t==='function')?window.t('booking.preferred_language'):'Preferred Language'}</label>
             <select id="preferredLanguage" name="preferredLanguage">
-              <option value="en">🇬🇧 English</option>
-              <option value="fr">🇫🇷 Français</option>
-              <option value="de">🇩🇪 Deutsch</option>
-              <option value="el">🇬🇷 Ελληνικά</option>
+              <option value="en" data-i18n="booking.preferred_language_options.en">🇬🇧 ${(typeof window.t==='function')?window.t('booking.preferred_language_options.en'):'English'}</option>
+              <option value="fr" data-i18n="booking.preferred_language_options.fr">🇫🇷 ${(typeof window.t==='function')?window.t('booking.preferred_language_options.fr'):'Français'}</option>
+              <option value="de" data-i18n="booking.preferred_language_options.de">🇩🇪 ${(typeof window.t==='function')?window.t('booking.preferred_language_options.de'):'Deutsch'}</option>
+              <option value="el" data-i18n="booking.preferred_language_options.el">🇬🇷 ${(typeof window.t==='function')?window.t('booking.preferred_language_options.el'):'Ελληνικά'}</option>
             </select>
           </div>
           <div>
-            <label for="travelTempo">Στυλ Ώρας / Ημέρας</label>
+            <label for="travelTempo" data-i18n="booking.daily_rhythm">${(typeof window.t==='function')?window.t('booking.daily_rhythm'):'Daily rhythm'}</label>
             <select id="travelTempo" name="travelTempo">
-              <option value="early">🌅 Early riser</option>
-              <option value="night">🌙 Night type</option>
-              <option value="talkative">💬 Talkative</option>
-              <option value="reserved">🙊 Reserved</option>
+              <option value="early" data-i18n="booking.daily_rhythm_options.early">🌅 ${(typeof window.t==='function')?window.t('booking.daily_rhythm_options.early'):'Early riser'}</option>
+              <option value="night" data-i18n="booking.daily_rhythm_options.night">🌙 ${(typeof window.t==='function')?window.t('booking.daily_rhythm_options.night'):'Night type'}</option>
+              <option value="talkative" data-i18n="booking.daily_rhythm_options.talkative">💬 ${(typeof window.t==='function')?window.t('booking.daily_rhythm_options.talkative'):'Talkative'}</option>
+              <option value="reserved" data-i18n="booking.daily_rhythm_options.reserved">🙊 ${(typeof window.t==='function')?window.t('booking.daily_rhythm_options.reserved'):'Reserved'}</option>
             </select>
           </div>
         </div>
 
         <div class="row actions">
-          <button class="btn" type="submit">Δημιούργησε κράτηση</button>
-          <button type="button" class="btn ghost" onclick="closeOverlay('bookingOverlay')">Άκυρο</button>
+          <button class="btn" type="submit" data-i18n="booking.create">${(typeof window.t==='function')?window.t('booking.create'):'Create booking'}</button>
+          <button type="button" class="btn ghost" onclick="closeOverlay('bookingOverlay')" data-i18n="ui.cancel">${(typeof window.t==='function')?window.t('ui.cancel'):'Cancel'}</button>
         </div>
       </form>
 
@@ -992,13 +1138,14 @@ document.addEventListener("DOMContentLoaded", () => {
               // init flatpickr for a modern calendar picker (dark theme)
               try {
                 if (!GW_DISABLE_BOOKING_CALENDAR && window.flatpickr) {
+                  const fpLocale = getFlatpickrLocale();
                   window.flatpickr(dateEl, {
                     altInput: true,
                     altFormat: 'd F Y',
                     dateFormat: 'Y-m-d',
                     defaultDate: iso,
                     minDate: iso,
-                    locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.gr) ? window.flatpickr.l10ns.gr : 'gr',
+                    locale: fpLocale,
                     theme: 'dark',
                     animate: true,
                     onOpen: function() { dateEl.classList.add('fp-open'); },
@@ -1127,8 +1274,9 @@ document.addEventListener("DOMContentLoaded", () => {
           const el = document.getElementById('availabilityBlock');
           const occ = document.getElementById('occupancyIndicator');
           if (!el) return;
+          // Show the availability banner (without the step indicator prefix).
           el.style.display = 'block';
-          el.textContent = 'Φόρτωση διαθεσιμότητας...';
+          el.textContent = tSafe('booking.loading_availability','Loading availability…');
           const q = new URLSearchParams({ trip_id: trip.id, date: dateStr });
           let capacity = 7, taken = 0, avail = 0;
           try {
@@ -1172,8 +1320,13 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch(_) {}
             return dateStr;
           })();
-          const availMsg = (window.t && window.t('booking.availability_msg')) || 'Availability for {date}: total {capacity}, booked {taken}';
-          el.textContent = availMsg.replace('{date}', formattedDate).replace('{capacity}', String(capacity)).replace('{taken}', String(taken));
+          const availMsg = tSafe('booking.availability_msg','Availability for {date}: total {capacity}, booked {taken}');
+          const msg = availMsg
+            .replace('{date}', formattedDate)
+            .replace('{capacity}', String(capacity))
+            .replace('{taken}', String(taken));
+          // Show only the availability message here (step indicator lives in the calendar header)
+          try { el.textContent = msg; } catch(_){ }
           // store last known availability on the block for other logic
           el.dataset.avail = String(avail);
           el.dataset.capacity = String(capacity);

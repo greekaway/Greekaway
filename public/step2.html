@@ -72,7 +72,7 @@
       padding: 0 20px;
       box-sizing: border-box;
       gap: 18px; /* πιο κοντά μεταξύ τους */
-      z-index: 2000;
+      z-index: 13001; /* above global footer (z-index ~12000) */
       max-width: 520px;
       margin: 0 auto;
     }
@@ -260,14 +260,14 @@
         </button>
       </div>
       <div class="lang-menu" id="langMenu" hidden>
-        <button type="button" data-code="el"><span>🇬🇷</span><span>Ελληνικά</span></button>
-        <button type="button" data-code="en"><span>🇬🇧</span><span>English</span></button>
-        <button type="button" data-code="fr"><span>🇫🇷</span><span>Français</span></button>
-        <button type="button" data-code="de"><span>🇩🇪</span><span>Deutsch</span></button>
-        <button type="button" data-code="it"><span>🇮🇹</span><span>Italiano</span></button>
-        <button type="button" data-code="es"><span>🇪🇸</span><span>Español</span></button>
-        <button type="button" data-code="zh"><span>🇨🇳</span><span>中文</span></button>
-        <button type="button" data-code="he"><span>🇮🇱</span><span>עברית</span></button>
+        <button type="button" data-code="el"><span>🇬🇷</span><span data-i18n="booking.preferred_language_options.el">Ελληνικά</span></button>
+        <button type="button" data-code="en"><span>🇬🇧</span><span data-i18n="booking.preferred_language_options.en">English</span></button>
+        <button type="button" data-code="fr"><span>🇫🇷</span><span data-i18n="booking.preferred_language_options.fr">Français</span></button>
+        <button type="button" data-code="de"><span>🇩🇪</span><span data-i18n="booking.preferred_language_options.de">Deutsch</span></button>
+        <button type="button" data-code="it"><span>🇮🇹</span><span data-i18n="booking.preferred_language_options.it">Italiano</span></button>
+        <button type="button" data-code="es"><span>🇪🇸</span><span data-i18n="booking.preferred_language_options.es">Español</span></button>
+        <button type="button" data-code="zh"><span>🇨🇳</span><span data-i18n="booking.preferred_language_options.zh">中文</span></button>
+        <button type="button" data-code="he"><span>🇮🇱</span><span data-i18n="booking.preferred_language_options.he">עברית</span></button>
       </div>
     </div>
 
@@ -306,10 +306,10 @@
         </button>
       </div>
       <div class="lang-menu" id="travTypeMenu" hidden>
-        <button type="button" data-code="explore"><span>🧭</span><span>Εξερευνητές – δραστήριοι</span></button>
-        <button type="button" data-code="relax"><span>🧘</span><span>Χαλαροί ταξιδιώτες</span></button>
-        <button type="button" data-code="family"><span>👨‍👩‍👧</span><span>Οικογενειακό ύφος</span></button>
-        <button type="button" data-code="solo"><span>🧍</span><span>Μοναχικοί ταξιδιώτες</span></button>
+        <button type="button" data-code="explore"><span>🧭</span><span data-i18n="booking.traveler_type_options.explore">Εξερευνητές – δραστήριοι</span></button>
+        <button type="button" data-code="relax"><span>🧘</span><span data-i18n="booking.traveler_type_options.relax">Χαλαροί ταξιδιώτες</span></button>
+        <button type="button" data-code="family"><span>👨‍👩‍👧</span><span data-i18n="booking.traveler_type_options.family">Οικογενειακό ύφος</span></button>
+        <button type="button" data-code="solo"><span>🧍</span><span data-i18n="booking.traveler_type_options.solo">Μοναχικοί ταξιδιώτες</span></button>
       </div>
     </div>
 
@@ -327,11 +327,11 @@
         </button>
       </div>
       <div class="lang-menu" id="interestMenu" hidden>
-        <button type="button" data-code="nature"><span>🌿</span><span>Φύση</span></button>
-        <button type="button" data-code="culture"><span>🏛️</span><span>Πολιτισμός</span></button>
-        <button type="button" data-code="mountain"><span>⛰️</span><span>Βουνό</span></button>
-        <button type="button" data-code="sea"><span>🌊</span><span>Θάλασσα</span></button>
-        <button type="button" data-code="gastronomy"><span>🍽️</span><span>Γαστρονομία</span></button>
+        <button type="button" data-code="nature"><span>🌿</span><span data-i18n="booking.interests_options.nature">Φύση</span></button>
+        <button type="button" data-code="culture"><span>🏛️</span><span data-i18n="booking.interests_options.culture">Πολιτισμός</span></button>
+        <button type="button" data-code="mountain"><span>⛰️</span><span data-i18n="booking.interests_options.mountain">Βουνό</span></button>
+        <button type="button" data-code="sea"><span>🌊</span><span data-i18n="booking.interests_options.sea">Θάλασσα</span></button>
+        <button type="button" data-code="gastronomy"><span>🍽️</span><span data-i18n="booking.interests_options.gastronomy">Γαστρονομία</span></button>
       </div>
     </div>
 
@@ -349,8 +349,8 @@
         </button>
       </div>
       <div class="lang-menu" id="socialMenu" hidden>
-        <button type="button" data-code="social"><span>😊</span><span>Κοινωνικός</span></button>
-        <button type="button" data-code="quiet"><span>🤫</span><span>Ήσυχος</span></button>
+        <button type="button" data-code="social"><span>😊</span><span data-i18n="booking.sociality_options.social">Κοινωνικός</span></button>
+        <button type="button" data-code="quiet"><span>🤫</span><span data-i18n="booking.sociality_options.quiet">Ήσυχος</span></button>
       </div>
     </div>
   </div>
@@ -414,9 +414,10 @@
     </a>
   </footer>
   <!-- Optional: overlays can be added later if needed -->
-  <script src="/js/overlay-manager.js" defer></script>
-  <script src="/js/i18n.js" defer></script>
-  <script src="/js/assistant.js" defer></script>
+  <!-- Load i18n first so translations are ready before other logic; add cache-busting -->
+  <script src="/js/i18n.js?v=2" defer></script>
+  <script src="/js/overlay-manager.js?v=2" defer></script>
+  <script src="/js/assistant.js?v=2" defer></script>
   <script>
     // Optional: lightweight behaviour — Πίσω γυρίζει στην προηγούμενη σελίδα
     try { document.getElementById('s2Back').addEventListener('click', () => history.back()); } catch(_){ }
@@ -438,6 +439,10 @@
 
     // Simple counters logic (limits: adults 1..10, children 0..10)
     (function(){
+        // Safe i18n accessor to avoid rendering raw keys before i18n is ready
+        function tSafe(key, fallback){
+          try { const v = (window.t && window.t(key)) || ''; return (v && v !== key) ? v : fallback; } catch(_){ return fallback; }
+        }
       const adultsCount = document.getElementById('adultsCount');
       const childrenCount = document.getElementById('childrenCount');
       const childrenAgesEl = document.getElementById('childrenAges');
@@ -449,7 +454,12 @@
       const renderAges = () => {
         if (!childrenAgesEl) return;
         if (ages.length === 0) {
-          childrenAgesEl.innerHTML = '<span class="hint">Επιλέξτε ηλικίες</span>';
+          // Show translatable hint; fallback if t() not ready
+          const hint = (window.t ? window.t('booking.pick_ages') : 'Επιλέξτε ηλικίες');
+          childrenAgesEl.innerHTML = '<span class="hint" data-i18n="booking.pick_ages"></span>';
+          // Also set immediate text for UX
+          const span = childrenAgesEl.querySelector('.hint');
+          if (span) span.textContent = hint;
         } else {
           childrenAgesEl.textContent = ages.join(', ');
         }
@@ -518,19 +528,33 @@
       // Language selector
       const langBtn = document.getElementById('langSelectBtn');
       const langMenu = document.getElementById('langMenu');
+      // Set ONLY the preferred communication language (do NOT change global UI)
       const setLang = (code, label, flag) => {
         langBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
         langBtn?.querySelector('.flag')?.replaceChildren(document.createTextNode(flag));
-        try { sessionStorage.setItem('gw_lang', code); } catch(_){ }
+        // Persist under gw_pref_lang so it won't affect global UI language
+        try { sessionStorage.setItem('gw_pref_lang', code); } catch(_){ }
+        try { localStorage.setItem('gw_pref_lang', code); } catch(_){ }
       };
-      const defaultLang = (()=>{ try { return sessionStorage.getItem('gw_lang') || 'el'; } catch(_){ return 'el'; } })();
-  const langMap = { el:['Ελληνικά','🇬🇷'], en:['English','🇬🇧'], fr:['Français','🇫🇷'], de:['Deutsch','🇩🇪'], it:['Italiano','🇮🇹'], es:['Español','🇪🇸'], zh:['中文','🇨🇳'], he:['עברית','🇮🇱'] };
-      if (langMap[defaultLang]) setLang(defaultLang, langMap[defaultLang][0], langMap[defaultLang][1]);
+      // Initial preferred value: previously chosen preference, or fall back to current UI language
+      const defaultLang = (()=>{ 
+        try {
+          return sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_lang') || sessionStorage.getItem('gw_lang') || 'el';
+        } catch(_){ return 'el'; }
+      })();
+      const langFlags = { el:'🇬🇷', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', es:'🇪🇸', zh:'🇨🇳', he:'🇮🇱' };
+      const langFallbackLabels = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', zh:'中文', he:'עברית' };
+      {
+    const label = tSafe('booking.preferred_language_options.' + defaultLang, (langFallbackLabels[defaultLang] || defaultLang.toUpperCase()));
+        const flag = langFlags[defaultLang] || '';
+        setLang(defaultLang, label, flag);
+      }
   langBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (langMenu) { langMenu.hidden = !langMenu.hidden; if (!langMenu.hidden) { const row = langMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; langMenu.classList.toggle('dropup', spaceBelow < 220); } } } });
       langMenu?.querySelectorAll('button')?.forEach(btn=>{
         btn.addEventListener('click', ()=>{
           const code = btn.getAttribute('data-code') || 'el';
-          const [label, flag] = langMap[code] || langMap['el'];
+          const label = tSafe('booking.preferred_language_options.' + code, (langFallbackLabels[code] || code.toUpperCase()));
+          const flag = langFlags[code] || '';
           setLang(code, label, flag);
           if (langMenu) langMenu.hidden = true;
         });
@@ -543,7 +567,10 @@
       const ageBtn = document.getElementById('ageSelectBtn');
       const ageMenu = document.getElementById('ageMenu');
       const setAgeGroup = (code, label) => {
-        ageBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
+        const lblEl = ageBtn?.querySelector('.label');
+        lblEl?.replaceChildren(document.createTextNode(label));
+        // Prevent i18n auto-apply from reverting to "Choose"
+        lblEl?.removeAttribute('data-i18n');
         try { sessionStorage.setItem('gw_age_group', code); } catch(_){ }
       };
   const ageMap = { '20-30':'20–30', '30-40':'30–40', '40-55':'40–55', '55+':'55+' };
@@ -565,15 +592,17 @@
       // Traveler type selector
       const travTypeBtn = document.getElementById('travTypeSelectBtn');
       const travTypeMenu = document.getElementById('travTypeMenu');
-      const travTypeMap = {
+      const travTypeFallback = {
         explore: 'Εξερευνητές – δραστήριοι',
         relax: 'Χαλαροί ταξιδιώτες',
         family: 'Οικογενειακό ύφος',
         solo: 'Μοναχικοί ταξιδιώτες'
       };
       const setTravType = (code) => {
-        const label = travTypeMap[code] || 'Επιλέξτε';
-        travTypeBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
+        const label = (code ? (window.t ? window.t('booking.traveler_type_options.' + code) : (travTypeFallback[code] || 'Επιλέξτε')) : 'Επιλέξτε');
+        const lblEl = travTypeBtn?.querySelector('.label');
+        lblEl?.replaceChildren(document.createTextNode(label));
+        lblEl?.removeAttribute('data-i18n');
         try { sessionStorage.setItem('gw_traveler_type', code); } catch(_){ }
       };
       const defaultTravType = (()=>{ try { return sessionStorage.getItem('gw_traveler_type') || ''; } catch(_){ return ''; } })();
@@ -593,7 +622,7 @@
       // Interests selector
       const interestBtn = document.getElementById('interestSelectBtn');
       const interestMenu = document.getElementById('interestMenu');
-      const interestMap = {
+      const interestFallback = {
         nature: 'Φύση',
         culture: 'Πολιτισμός',
         mountain: 'Βουνό',
@@ -601,8 +630,10 @@
         gastronomy: 'Γαστρονομία'
       };
       const setInterest = (code) => {
-        const label = interestMap[code] || 'Επιλέξτε';
-        interestBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
+        const label = (code ? (window.t ? window.t('booking.interests_options.' + code) : (interestFallback[code] || 'Επιλέξτε')) : 'Επιλέξτε');
+        const lblEl = interestBtn?.querySelector('.label');
+        lblEl?.replaceChildren(document.createTextNode(label));
+        lblEl?.removeAttribute('data-i18n');
         try { sessionStorage.setItem('gw_interest', code); } catch(_){ }
       };
       const defaultInterest = (()=>{ try { return sessionStorage.getItem('gw_interest') || ''; } catch(_){ return ''; } })();
@@ -622,10 +653,12 @@
       // Sociality selector
       const socialBtn = document.getElementById('socialSelectBtn');
       const socialMenu = document.getElementById('socialMenu');
-      const socialMap = { social: 'Κοινωνικός', quiet: 'Ήσυχος' };
+      const socialFallback = { social: 'Κοινωνικός', quiet: 'Ήσυχος' };
       const setSocial = (code) => {
-        const label = socialMap[code] || 'Επιλέξτε';
-        socialBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
+        const label = (code ? (window.t ? window.t('booking.sociality_options.' + code) : (socialFallback[code] || 'Επιλέξτε')) : 'Επιλέξτε');
+        const lblEl = socialBtn?.querySelector('.label');
+        lblEl?.replaceChildren(document.createTextNode(label));
+        lblEl?.removeAttribute('data-i18n');
         try { sessionStorage.setItem('gw_sociality', code); } catch(_){ }
       };
       const defaultSocial = (()=>{ try { return sessionStorage.getItem('gw_sociality') || ''; } catch(_){ return ''; } })();
@@ -643,7 +676,8 @@
       });
 
       // Persist all values on Next and go to Step 3
-      document.getElementById('s2Next')?.addEventListener('click', ()=>{
+      document.getElementById('s2Next')?.addEventListener('click', (ev)=>{
+        try { ev.preventDefault(); } catch(_){ }
         try {
           // adults
           sessionStorage.setItem('gw_adults', String(getN(adultsCount)));
@@ -653,9 +687,51 @@
           sessionStorage.setItem('gw_bags_large', String(getN(document.getElementById('largeBagsCount'))));
           sessionStorage.setItem('gw_bags_small', String(getN(document.getElementById('smallBagsCount'))));
         } catch(_){}
-        location.href = '/step3.html';
+        try {
+          const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
+          const absUrl = origin ? (new URL('/step3.html', origin).href) : '/step3.html';
+          try { window.location.assign(absUrl); }
+          catch(_e1){ try { window.location.href = absUrl; } catch(_e2){ setTimeout(()=>{ window.location.href = '/step3.html'; }, 0); } }
+        } catch(_){ window.location.href = '/step3.html'; }
       });
+      // Re-apply selected labels when language changes
+      try {
+        window.addEventListener('i18n:changed', () => {
+          try {
+            // Keep showing the chosen communication language, but translate its label in current UI language
+            const curPref = (sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || defaultLang);
+            const label = (window.t ? window.t('booking.preferred_language_options.' + curPref) : (langFallbackLabels[curPref] || curPref.toUpperCase()));
+            const flag = langFlags[curPref] || '';
+            langBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
+            langBtn?.querySelector('.flag')?.replaceChildren(document.createTextNode(flag));
+          } catch(_){ }
+
+          try {
+            const curTrav = sessionStorage.getItem('gw_traveler_type') || '';
+            if (curTrav) setTravType(curTrav);
+          } catch(_){ }
+          try {
+            const curInterest = sessionStorage.getItem('gw_interest') || '';
+            if (curInterest) setInterest(curInterest);
+          } catch(_){ }
+          try {
+            const curSocial = sessionStorage.getItem('gw_sociality') || '';
+            if (curSocial) setSocial(curSocial);
+          } catch(_){ }
+          try {
+            const curAge = sessionStorage.getItem('gw_age_group') || '';
+            if (curAge) setAgeGroup(curAge, (ageMap[curAge] || ''));
+          } catch(_){ }
+          // Ages hint may need re-translation
+          try { renderAges(); } catch(_){ }
+        });
+      } catch(_){ }
     })();
+    // Ensure translations apply after DOM is fully ready (covers any early t() fallback rendering)
+    document.addEventListener('DOMContentLoaded', function(){
+      try { if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); } catch(_){ }
+      try { setTimeout(() => { if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); }, 60); } catch(_){ }
+    });
   </script>
 </body>
 </html>

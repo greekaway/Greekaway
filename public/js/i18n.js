@@ -20,6 +20,17 @@
         }
       }
     } catch(_){ }
+    // Try optional fallback index under /i18n if present
+    try {
+      const res2 = await fetch('/i18n/index.json', { cache: 'no-cache' });
+      if (res2.ok) {
+        const data2 = await res2.json();
+        if (data2 && Array.isArray(data2.languages)) {
+          AVAILABLE = data2.languages;
+          return AVAILABLE;
+        }
+      }
+    } catch(_){ }
     // fallback to common set
     AVAILABLE = ['el','en','fr','de','he'];
     return AVAILABLE;
@@ -35,16 +46,21 @@
 
   async function loadMessages(lang){
     if (CACHE[lang]) return CACHE[lang];
-    try{
-      const res = await fetch('/locales/' + lang + '.json', { cache: 'no-cache' });
-      if(!res.ok) throw new Error('Not found');
-      const json = await res.json();
-      CACHE[lang] = json || {};
-      return CACHE[lang];
-    }catch(e){
-      if(lang !== DEFAULT) return loadMessages(DEFAULT);
-      return {};
+    // Try primary /locales path, then fallback to /i18n path
+    const tryPaths = [`/locales/${lang}.json`, `/i18n/${lang}.json`];
+    for (const url of tryPaths) {
+      try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) throw new Error('not-ok');
+        const json = await res.json();
+        CACHE[lang] = json || {};
+        return CACHE[lang];
+      } catch (e) {
+        try { if (window.gwI18nDebug) console.warn('[i18n] failed to load', url); } catch(_){}
+      }
     }
+    if (lang !== DEFAULT) return loadMessages(DEFAULT);
+    return {};
   }
 
   function lookup(obj, path){
@@ -59,6 +75,7 @@
   }
 
   function applyTranslations(msgs){
+    try { if (window.gwI18nDebug) console.info('[i18n] applyTranslations'); } catch(_) {}
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
       const text = lookup(msgs, key);
@@ -87,7 +104,9 @@
   }
 
   async function setLanguage(lang){
-    localStorage.setItem('gw_lang', lang);
+    try { if (window.gwI18nDebug) console.info('[i18n] setLanguage', lang); } catch(_) {}
+    try { localStorage.setItem('gw_lang', lang); } catch(_){ }
+    try { sessionStorage.setItem('gw_lang', lang); } catch(_){ }
     const msgs = await loadMessages(lang);
     applyTranslations(msgs);
     const sel = document.getElementById('langSelect');
@@ -137,6 +156,21 @@
     await populateSelector(lang);
     const msgs = await loadMessages(lang);
     applyTranslations(msgs);
+    // Observe DOM mutations and re-apply translations (debounced) to catch injected content (e.g., footer)
+    try {
+      if (!window.__gwI18nObserver) {
+        let moTimer = null;
+        const observer = new MutationObserver(() => {
+          if (moTimer) clearTimeout(moTimer);
+          moTimer = setTimeout(() => {
+            try { applyTranslations(window.currentI18n && window.currentI18n.msgs || msgs); } catch(_) {}
+          }, 50);
+        });
+        observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
+        window.__gwI18nObserver = observer;
+        try { if (window.gwI18nDebug) console.info('[i18n] MutationObserver attached'); } catch(_) {}
+      }
+    } catch(_) {}
     try {
       const isRtl = RTL_LANGS.includes(lang);
       document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
@@ -147,6 +181,7 @@
   window.setLanguage = setLanguage;
   window.loadLanguage = setLanguage; // alias per API contract
     try{ window.dispatchEvent(new CustomEvent('i18n:changed', { detail: { lang, msgs } })); }catch(e){}
+    try { if (window.gwI18nDebug) console.info('[i18n] init done', lang); } catch(_) {}
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initI18n);

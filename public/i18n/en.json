@@ -43,7 +43,64 @@
   ,
   "trips": { "selectCategory": "Select Category", "noneFound": "No trips found in this category." }
   ,
-  "ui": { "close": "Close" },
+  "booking": {
+    "title": "Booking",
+    "step1_of3": "Step 1 of 3",
+    "step2_of3": "Step 2 of 3",
+    "step3_of3": "Step 3 of 3",
+    "availability_msg": "Availability for {date}: total {capacity}, booked {taken}",
+    "loading_availability": "Loading availability…",
+    "occupancy": "Occupancy",
+    "next": "Next",
+    "adults": "Adults",
+    "children": "Children",
+    "children_age_range": "Ages 0–17",
+    "pick_ages": "Select ages",
+    "bags_large": "Suitcases (Large)",
+    "bags_small": "Suitcases (Small)",
+    "decrease_bags_large": "Decrease large bags",
+    "increase_bags_large": "Increase large bags",
+    "decrease_bags_small": "Decrease small bags",
+    "increase_bags_small": "Increase small bags",
+    "decrease_adults": "Decrease adults",
+    "increase_adults": "Increase adults",
+    "decrease_children": "Decrease children",
+    "increase_children": "Increase children",
+    "preferred_language": "Preferred language",
+    "preferred_language_options": {
+      "el": "Ελληνικά",
+      "en": "English",
+      "fr": "Français",
+      "de": "Deutsch",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית"
+    },
+    "age_group": "Age group",
+    "traveler_type": "Traveler type",
+    "traveler_type_options": {
+      "explore": "Explorers — active",
+      "relax": "Relaxed travelers",
+      "family": "Family style",
+      "solo": "Solo travelers"
+    },
+    "interests": "Interests",
+    "interests_options": {
+      "nature": "Nature",
+      "culture": "Culture",
+      "mountain": "Mountain",
+      "sea": "Sea",
+      "gastronomy": "Gastronomy"
+    },
+    "sociality": "Sociality",
+    "sociality_options": {
+      "social": "Sociable",
+      "quiet": "Quiet"
+    },
+    "traveler_options": "Traveler options"
+  },
+  "ui": { "close": "Close", "back": "Back", "choose": "Choose", "finish": "Finish" },
   "trips_ui": { "backToCategories": "Back to categories" },
   "profile": { "info": "Here you'll see your past trips and bookings." }
 }

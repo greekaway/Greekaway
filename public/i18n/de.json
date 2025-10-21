@@ -5,11 +5,68 @@
   "checkout": {"pay":"Bezahlen","cardPlaceholder":"Kartennummer","title":"Checkout — Greekaway","name":"Name","email":"E-Mail","cardLabel":"Karte","notice":"Sichere Zahlung über Stripe","payment_success_test":"Zahlung erfolgreich","payment_failed":"Zahlung fehlgeschlagen","payment_error":"Zahlungsfehler","network_error":"Netzwerkfehler"},
   "welcome": {"title":"Willkommen bei Greekaway","subtitle":"Entdecken Sie die besten Tagesausflüge in Griechenland"}
 
-,  "categories": { "mountain": { "title": "Bergtouren" }, "sea": { "title": "Meeresausflüge" }, "culture": { "title": "Kulturelle Ausflüge" } },
+  ,  "categories": { "mountain": { "title": "Bergtouren" }, "sea": { "title": "Meeresausflüge" }, "culture": { "title": "Kulturelle Ausflüge" } },
   "stop": { "label": "Stopp {n}" },
   "trip": { "experienceTitle": "Experience" },
   "trips": { "selectCategory": "Kategorie wählen", "noneFound": "Keine Ausflüge in dieser Kategorie gefunden." }
   ,
-  "ui": { "close": "Schließen" },
+  "booking": {
+    "title": "Buchung",
+    "step1_of3": "Schritt 1 von 3",
+    "step2_of3": "Schritt 2 von 3",
+    "step3_of3": "Schritt 3 von 3",
+    "availability_msg": "Verfügbarkeit für {date}: gesamt {capacity}, belegt {taken}",
+    "loading_availability": "Verfügbarkeit wird geladen…",
+    "occupancy": "Belegung",
+    "next": "Weiter",
+    "adults": "Erwachsene",
+    "children": "Kinder",
+    "children_age_range": "Alter 0–17",
+    "pick_ages": "Alter auswählen",
+    "bags_large": "Koffer (Groß)",
+    "bags_small": "Koffer (Klein)",
+    "decrease_bags_large": "Große Koffer verringern",
+    "increase_bags_large": "Große Koffer erhöhen",
+    "decrease_bags_small": "Kleine Koffer verringern",
+    "increase_bags_small": "Kleine Koffer erhöhen",
+    "decrease_adults": "Erwachsene verringern",
+    "increase_adults": "Erwachsene erhöhen",
+    "decrease_children": "Kinder verringern",
+    "increase_children": "Kinder erhöhen",
+    "preferred_language": "Bevorzugte Sprache",
+    "preferred_language_options": {
+      "el": "Ελληνικά",
+      "en": "English",
+      "fr": "Français",
+      "de": "Deutsch",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית"
+    },
+    "age_group": "Altersgruppe",
+    "traveler_type": "Reisetyp",
+    "traveler_type_options": {
+      "explore": "Entdecker – aktiv",
+      "relax": "Entspannte Reisende",
+      "family": "Familienstil",
+      "solo": "Alleinreisende"
+    },
+    "interests": "Interessen",
+    "interests_options": {
+      "nature": "Natur",
+      "culture": "Kultur",
+      "mountain": "Berg",
+      "sea": "Meer",
+      "gastronomy": "Gastronomie"
+    },
+    "sociality": "Geselligkeit",
+    "sociality_options": {
+      "social": "Gesellig",
+      "quiet": "Ruhig"
+    },
+    "traveler_options": "Reiseoptionen"
+  },
+  "ui": { "close": "Schließen", "back": "Zurück", "choose": "Auswählen", "finish": "Abschließen" },
   "trips_ui": { "backToCategories": "Zurück zu den Kategorien" }
 }

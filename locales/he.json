@@ -81,6 +81,8 @@
     "create": "צור הזמנה",
     "name_placeholder": "שם מלא",
     "email_placeholder": "name@example.com",
+  "loading": "טוען...",
+  "step1_of3": "שלב 1 מתוך 3",
   "traveler_options": "אפשרויות מטייל",
   "adults": "מבוגרים",
   "children": "ילדים",
@@ -118,6 +120,8 @@
     "created": "הזמנה נוצרה",
     "proceed_to_checkout": "המשך לתשלום",
     "occupancy": "תפוסה",
+    "trip": "טיול",
+    "confirmation_title": "אישור הזמנה",
     "traveler_type_options": {
       "explorer": "מגלים",
       "relaxed": "מטיילים רגועים",

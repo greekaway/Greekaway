@@ -12,7 +12,64 @@
   ,
   "trips": { "selectCategory": "בחר קטגוריה", "noneFound": "לא נמצאו טיולים בקטגוריה זו." }
   ,
-  "ui": { "close": "סגור" },
+  "booking": {
+    "title": "הזמנה",
+    "step1_of3": "שלב 1 מתוך 3",
+    "step2_of3": "שלב 2 מתוך 3",
+    "step3_of3": "שלב 3 מתוך 3",
+  "availability_msg": "זמינות עבור {date}: סה\"כ {capacity}, הוזמנו {taken}",
+    "loading_availability": "טוען זמינות…",
+    "occupancy": "תפוסה",
+    "next": "הבא",
+    "adults": "מבוגרים",
+    "children": "ילדים",
+    "children_age_range": "גילאים 0–17",
+    "pick_ages": "בחר גילאים",
+    "bags_large": "מזוודות (גדולות)",
+    "bags_small": "מזוודות (קטנות)",
+    "decrease_bags_large": "הפחת מזוודות גדולות",
+    "increase_bags_large": "הוסף מזוודות גדולות",
+    "decrease_bags_small": "הפחת מזוודות קטנות",
+    "increase_bags_small": "הוסף מזוודות קטנות",
+    "decrease_adults": "הפחת מבוגרים",
+    "increase_adults": "הוסף מבוגרים",
+    "decrease_children": "הפחת ילדים",
+    "increase_children": "הוסף ילדים",
+    "preferred_language": "שפת תקשורת",
+    "preferred_language_options": {
+      "el": "Ελληνικά",
+      "en": "English",
+      "fr": "Français",
+      "de": "Deutsch",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית"
+    },
+    "age_group": "קבוצת גיל",
+    "traveler_type": "סוג מטייל",
+    "traveler_type_options": {
+      "explore": "חוקרים — פעילים",
+      "relax": "מטיילים רגועים",
+      "family": "סגנון משפחתי",
+      "solo": "מטיילים יחידים"
+    },
+    "interests": "תחומי עניין",
+    "interests_options": {
+      "nature": "טבע",
+      "culture": "תרבות",
+      "mountain": "הר",
+      "sea": "ים",
+      "gastronomy": "גסטרונומיה"
+    },
+    "sociality": "חברתיות",
+    "sociality_options": {
+      "social": "חברתי",
+      "quiet": "שקט"
+    },
+    "traveler_options": "אפשרויות מטייל"
+  },
+  "ui": { "close": "סגור", "back": "חזרה", "choose": "בחר", "finish": "סיום" },
   "trips_ui": { "backToCategories": "חזרה לקטגוריות" }
 }
 
