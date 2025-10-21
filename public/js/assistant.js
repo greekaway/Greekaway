@@ -22,7 +22,7 @@
         <div class="ga-inputbar">
           <form class="ga-form" id="gaChatForm">
             <div class="ga-inputwrap">
-              <input id="gaChatInput" type="text" placeholder="Ρώτα οτιδήποτε" aria-label="Message" required />
+              <textarea id="gaChatInput" placeholder="Ρώτα οτιδήποτε" aria-label="Message" rows="1" required></textarea>
               <button type="button" class="ga-send" id="gaSendBtn" aria-label="Send">↑</button>
             </div>
           </form>
@@ -103,27 +103,52 @@
   const sendBtn = document.getElementById('gaSendBtn');
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (!form || !input) return;
+    // Autosize textarea and keep it wrapping
+    const ta = /** @type {HTMLTextAreaElement} */(input);
+    const MIN_HEIGHT = 42; // match input height baseline
+    const MAX_HEIGHT = Math.max(160, Math.floor(window.innerHeight * 0.4));
+    const autosize = () => {
+      try {
+        ta.style.height = 'auto';
+        const next = Math.min(ta.scrollHeight, MAX_HEIGHT);
+        ta.style.height = next + 'px';
+        ta.style.overflowY = (ta.scrollHeight > MAX_HEIGHT) ? 'auto' : 'hidden';
+      } catch(_) {}
+    };
+    autosize();
+    ta.addEventListener('input', autosize);
     form.addEventListener('submit', function(e){
       e.preventDefault();
-      const text = input.value.trim();
+      const text = ta.value.trim();
       if (!text) return;
-      input.value = '';
+      ta.value = '';
+      ta.style.height = MIN_HEIGHT + 'px';
+      ta.style.overflowY = 'hidden';
       // On mobile Safari, blur to dismiss keyboard and avoid sticky zoom state
-      try { input.blur(); } catch(_){ }
+      try { ta.blur(); } catch(_){ }
       sendMessage(text);
     });
     if (sendBtn) {
       sendBtn.addEventListener('click', function(){
-        const text = input.value.trim();
+        const text = ta.value.trim();
         if (!text) return;
-        input.value = '';
-        try { input.blur(); } catch(_){ }
+        ta.value = '';
+        ta.style.height = MIN_HEIGHT + 'px';
+        ta.style.overflowY = 'hidden';
+        try { ta.blur(); } catch(_){ }
         sendMessage(text);
       });
     }
+    // Enter sends; Shift+Enter = newline
+    ta.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        form.requestSubmit();
+      }
+    });
     // Avoid auto-focus on iOS to prevent Safari auto-zoom/viewport jump
     if (!isIOS) {
-      try { input.focus(); } catch(_) {}
+  try { ta.focus(); } catch(_) {}
     }
 
     // When overlay opens later (via openOverlay), attempt to refocus input

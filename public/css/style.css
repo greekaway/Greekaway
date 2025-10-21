@@ -451,6 +451,25 @@ html.overlay-open { overflow: hidden; }
 #aiOverlay .ga-form input[type="text"]::placeholder { color: #9ba6b2; }
 #aiOverlay .ga-form input[type="text"]:focus { outline: 2px solid #334155; outline-offset: 0; }
 
+/* Multiline chat input (textarea) — keep same visuals and wrapping */
+#aiOverlay .ga-form textarea#gaChatInput {
+  width: 100%;
+  min-height: 42px; /* align with previous input height */
+  max-height: min(40vh, 220px);
+  resize: none; /* autosize via JS */
+  overflow-y: hidden; /* becomes auto past max height */
+  padding: 10px 44px 10px 12px !important; /* preserve space for send button */
+  border-radius: 16px; border: 1px solid #333945 !important;
+  background: #0e1620 !important; color: #fff !important; font-size: 16px !important;
+  box-sizing: border-box;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+#aiOverlay .ga-form textarea#gaChatInput::placeholder { color: #9ba6b2; }
+#aiOverlay .ga-form textarea#gaChatInput:focus { outline: 2px solid #334155; outline-offset: 0; }
+
 /* Up-arrow send button inside the input */
 #aiOverlay .ga-send {
   position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
@@ -464,8 +483,8 @@ html.overlay-open { overflow: hidden; }
   font-size: 19px; /* +~3% */
 }
 /* slightly lift the button to align visually with text baseline */
-#aiOverlay .ga-send { transform: translateY(calc(-50% - 16px)) !important; }
-#aiOverlay .ga-send:active { transform: translateY(calc(-50% - 16px)) scale(0.98) !important; }
+#aiOverlay .ga-send { transform: translateY(calc(-50% - 19px)) !important; }
+#aiOverlay .ga-send:active { transform: translateY(calc(-50% - 19px)) scale(0.98) !important; }
 #aiOverlay .ga-form button {
   background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 12px; padding: 10px 14px;
 }
@@ -1100,7 +1119,8 @@ html[data-category="culture"], body[data-category="culture"] { background-attach
   #aiOverlay .overlay-inner { background: #FFF9EB !important; color: var(--ga-text) !important; }
   #aiOverlay .ga-chat-topbar { background: #FFF9EB !important; border-bottom: 1px solid rgba(0,0,0,0.06) !important; }
   #aiOverlay .ga-inputbar { background: #FFF9EB !important; border-top: 1px solid rgba(0,0,0,0.06) !important; }
-  #aiOverlay .ga-form input[type="text"] {
+  #aiOverlay .ga-form input[type="text"],
+  #aiOverlay .ga-form textarea#gaChatInput {
     background: #FFF9EB !important;
     color: var(--ga-text) !important;
     border: 1px solid rgba(0,0,0,0.12) !important;
