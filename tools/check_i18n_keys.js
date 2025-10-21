@@ -15,7 +15,7 @@ function findHtmlFiles(dir){
 function extractKeysFromHtml(file){
   const s = fs.readFileSync(file,'utf8');
   const keys = new Set();
-  const re = /data-i18n(?:-placeholder|-title|-value)?\s*=\s*"([^"]+)"/g;
+  const re = /data-i18n(?:-placeholder|-title|-value|-aria)?\s*=\s*"([^"]+)"/g;
   let m;
   while((m=re.exec(s))){ keys.add(m[1]); }
   return Array.from(keys);
@@ -40,7 +40,7 @@ function lookup(obj, path){
 }
 
 const htmlFiles = findHtmlFiles(path.join(__dirname,'..','public'));
-const i18n = loadJsons(path.join(__dirname,'..','public','i18n'));
+const i18n = loadJsons(path.join(__dirname,'..','locales'));
 
 const report = {};
 for(const hf of htmlFiles){

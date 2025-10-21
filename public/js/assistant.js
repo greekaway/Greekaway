@@ -9,21 +9,22 @@
 
     // Only build the UI once; avoid wiping event listeners on subsequent calls
     if (!inner.querySelector('#gaChatForm')) {
+      const tr = (k) => (window.t ? window.t(k) : k);
       inner.innerHTML = `
         <div class="ga-chat-topbar">
-          <div class="ga-chat-title">AI Assistant</div>
-          <button type="button" class="ga-chat-close" aria-label="Κλείσιμο">✕</button>
+          <div class="ga-chat-title">${tr('assistant.title')}</div>
+          <button type="button" class="ga-chat-close" aria-label="${tr('assistant.close')}">✕</button>
         </div>
 
         <div class="ga-chat-log" id="gaChatLog"></div>
 
-        <div class="ga-suggestion" id="gaSuggestion">Ρώτα ό,τι θέλεις για τα ταξίδια.</div>
+        <div class="ga-suggestion" id="gaSuggestion">${tr('assistant.suggestion')}</div>
 
         <div class="ga-inputbar">
           <form class="ga-form" id="gaChatForm">
             <div class="ga-inputwrap">
-              <textarea id="gaChatInput" placeholder="Ρώτα οτιδήποτε" aria-label="Message" rows="1" required></textarea>
-              <button type="button" class="ga-send" id="gaSendBtn" aria-label="Send">↑</button>
+              <textarea id="gaChatInput" placeholder="${tr('assistant.placeholder')}" aria-label="${tr('assistant.aria_message')}" rows="1" required></textarea>
+              <button type="button" class="ga-send" id="gaSendBtn" aria-label="${tr('assistant.aria_send')}">↑</button>
             </div>
           </form>
         </div>
@@ -74,7 +75,8 @@
       if (!resp.ok || !resp.body) {
         const fallback = await fetch('/api/assistant', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message: text }) });
         const data = await fallback.json();
-        bubble.textContent = (data && data.reply) ? data.reply : ((data && data.error) ? `Σφάλμα: ${data.error}` : 'Σφάλμα: δεν λάβαμε απάντηση τώρα.');
+        const tr = (k) => (window.t ? window.t(k) : k);
+        bubble.textContent = (data && data.reply) ? data.reply : ((data && data.error) ? `${tr('assistant.error_prefix')} ${data.error}` : tr('assistant.fallback_error'));
         return;
       }
       const reader = resp.body.getReader();
@@ -91,7 +93,8 @@
         }
       }
     } catch (e) {
-      bubble.textContent = 'Σφάλμα σύνδεσης με τον βοηθό.';
+      const tr = (k) => (window.t ? window.t(k) : k);
+      bubble.textContent = tr('assistant.stream_error');
     }
   }
 
@@ -171,4 +174,17 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
   else setup();
+
+  // React to language changes to update static labels
+  window.addEventListener('i18n:changed', () => {
+    const inner = document.querySelector('#aiOverlay .overlay-inner');
+    if (!inner) return;
+    // Update title, suggestion, placeholders, buttons without rebuilding log
+    const tr = (k) => (window.t ? window.t(k) : k);
+    const title = inner.querySelector('.ga-chat-title'); if (title) title.textContent = tr('assistant.title');
+    const closeBtn = inner.querySelector('.ga-chat-close'); if (closeBtn) closeBtn.setAttribute('aria-label', tr('assistant.close'));
+    const sug = inner.querySelector('#gaSuggestion'); if (sug) sug.textContent = tr('assistant.suggestion');
+    const ta = inner.querySelector('#gaChatInput'); if (ta) { ta.setAttribute('placeholder', tr('assistant.placeholder')); ta.setAttribute('aria-label', tr('assistant.aria_message')); }
+    const send = inner.querySelector('#gaSendBtn'); if (send) send.setAttribute('aria-label', tr('assistant.aria_send'));
+  });
 })();

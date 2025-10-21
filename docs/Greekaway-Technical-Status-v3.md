@@ -145,7 +145,7 @@ Current carousel defaults (from config):
    - Add idempotency keys for booking creation/update endpoints.
 
 4) i18n completion
-   - Audit `main.js`, `admin.html`, `checkout.html` for literals; move to `public/i18n/*.json` and leverage `i18n.js` helpers.
+  - Audit `main.js`, `admin.html`, `checkout.html` for literals; move to `/locales/*.json` and leverage the unified `public/js/i18n.js` loader.
 
 5) Security and ops
    - Add rate limiting to admin and payment endpoints; consider behind-VPN for admin.

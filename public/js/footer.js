@@ -13,6 +13,12 @@
         f.innerHTML = html;
         document.body.appendChild(f);
       }
+      // Re-apply translations for newly injected nodes
+      try {
+        if (window.currentI18n && window.setLanguage) {
+          window.setLanguage(window.currentI18n.lang);
+        }
+      } catch(_) { /* noop */ }
     } catch (e) { /* ignore */ }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applySharedFooter);

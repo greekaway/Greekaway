@@ -185,7 +185,7 @@
   <div class="step2-header">
     <div class="trip-title" id="s2TripTitle">&nbsp;</div>
     <div class="trip-desc" id="s2TripDesc">&nbsp;</div>
-  <div class="step-indicator" style="margin-top:14px;color:var(--color-gold,#d9b85f);font-weight:700;opacity:.9">Βήμα 2 από 3</div>
+  <div class="step-indicator" style="margin-top:14px;color:var(--color-gold,#d9b85f);font-weight:700;opacity:.9" data-i18n="booking.step2_of3">Βήμα 2 από 3</div>
   </div>
 
   <!-- Centered dark panel like Step 1 calendar host (empty for now) -->
@@ -194,27 +194,27 @@
   </div>
 
   <!-- Adults / Children counters -->
-  <div class="s2-fields" role="group" aria-label="Επιλογές ταξιδιωτών">
+  <div class="s2-fields" role="group" data-i18n-aria="booking.traveler_options">
     <div class="s2-row">
       <div class="s2-labels">
-        <div class="title">Ενήλικες</div>
+        <div class="title" data-i18n="booking.adults">Ενήλικες</div>
       </div>
       <div class="s2-counter">
-        <button class="btn-round" id="adultsDec" aria-label="Μείωση ενηλίκων">−</button>
+        <button class="btn-round" id="adultsDec" data-i18n-aria="booking.decrease_adults">−</button>
         <div class="count" id="adultsCount">2</div>
-        <button class="btn-round" id="adultsInc" aria-label="Αύξηση ενηλίκων">+</button>
+        <button class="btn-round" id="adultsInc" data-i18n-aria="booking.increase_adults">+</button>
       </div>
     </div>
     <div class="s2-row">
       <div class="s2-labels">
-        <div class="title">Παιδιά</div>
-        <div class="sub">0 – 17 ετών</div>
+        <div class="title" data-i18n="booking.children">Παιδιά</div>
+        <div class="sub" data-i18n="booking.children_age_range">0 – 17 ετών</div>
       </div>
-      <div class="s2-ages" id="childrenAges"><span class="hint">Επιλέξτε ηλικίες</span></div>
+      <div class="s2-ages" id="childrenAges"><span class="hint" data-i18n="booking.pick_ages">Επιλέξτε ηλικίες</span></div>
       <div class="s2-counter">
-        <button class="btn-round" id="childrenDec" aria-label="Μείωση παιδιών">−</button>
+        <button class="btn-round" id="childrenDec" data-i18n-aria="booking.decrease_children">−</button>
         <div class="count" id="childrenCount">0</div>
-        <button class="btn-round" id="childrenInc" aria-label="Αύξηση παιδιών">+</button>
+        <button class="btn-round" id="childrenInc" data-i18n-aria="booking.increase_children">+</button>
       </div>
       <!-- Popover age picker -->
       <div class="age-picker" id="agePicker" hidden></div>
@@ -223,33 +223,33 @@
     <!-- Luggage: Large -->
     <div class="s2-row">
       <div class="s2-labels">
-        <div class="title">Βαλίτσες (Μεγάλες)</div>
+        <div class="title" data-i18n="booking.bags_large">Βαλίτσες (Μεγάλες)</div>
       </div>
       <div class="s2-ages" id="largeBagsText"></div>
       <div class="s2-counter">
-        <button class="btn-round" id="largeBagsDec" aria-label="Μείωση μεγάλων βαλιτσών">−</button>
+        <button class="btn-round" id="largeBagsDec" data-i18n-aria="booking.decrease_bags_large">−</button>
         <div class="count" id="largeBagsCount">0</div>
-        <button class="btn-round" id="largeBagsInc" aria-label="Αύξηση μεγάλων βαλιτσών">+</button>
+        <button class="btn-round" id="largeBagsInc" data-i18n-aria="booking.increase_bags_large">+</button>
       </div>
     </div>
 
     <!-- Luggage: Small -->
     <div class="s2-row">
       <div class="s2-labels">
-        <div class="title">Βαλίτσες (Μικρές)</div>
+        <div class="title" data-i18n="booking.bags_small">Βαλίτσες (Μικρές)</div>
       </div>
       <div class="s2-ages" id="smallBagsText"></div>
       <div class="s2-counter">
-        <button class="btn-round" id="smallBagsDec" aria-label="Μείωση μικρών βαλιτσών">−</button>
+        <button class="btn-round" id="smallBagsDec" data-i18n-aria="booking.decrease_bags_small">−</button>
         <div class="count" id="smallBagsCount">0</div>
-        <button class="btn-round" id="smallBagsInc" aria-label="Αύξηση μικρών βαλιτσών">+</button>
+        <button class="btn-round" id="smallBagsInc" data-i18n-aria="booking.increase_bags_small">+</button>
       </div>
     </div>
 
     <!-- Traveler Profile: Language -->
     <div class="s2-row" id="travelerLanguageRow">
       <div class="s2-labels">
-        <div class="title">Γλώσσα επικοινωνίας</div>
+        <div class="title" data-i18n="booking.preferred_language">Γλώσσα επικοινωνίας</div>
       </div>
       <div class="s2-ages"></div>
       <div class="s2-right">
@@ -274,13 +274,13 @@
     <!-- Age Group -->
     <div class="s2-row" id="ageGroupRow">
       <div class="s2-labels">
-        <div class="title">Ηλικιακή ομάδα</div>
+        <div class="title" data-i18n="booking.age_group">Ηλικιακή ομάδα</div>
       </div>
       <div class="s2-ages"></div>
       <div class="s2-right">
         <button type="button" class="lang-select" id="ageSelectBtn">
           <span class="flag placeholder">🇬🇷</span>
-          <span class="label">Επιλέξτε</span>
+          <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
           <span class="caret">▾</span>
         </button>
       </div>
@@ -295,13 +295,13 @@
     <!-- Traveler Type -->
     <div class="s2-row" id="travTypeRow">
       <div class="s2-labels">
-        <div class="title">Τύπος ταξιδιώτη</div>
+        <div class="title" data-i18n="booking.traveler_type">Τύπος ταξιδιώτη</div>
       </div>
       <div class="s2-ages"></div>
       <div class="s2-right">
         <button type="button" class="lang-select" id="travTypeSelectBtn">
           <span class="flag placeholder">🏷️</span>
-          <span class="label">Επιλέξτε</span>
+          <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
           <span class="caret">▾</span>
         </button>
       </div>
@@ -316,13 +316,13 @@
     <!-- Interests -->
     <div class="s2-row" id="interestsRow">
       <div class="s2-labels">
-        <div class="title">Ενδιαφέροντα</div>
+        <div class="title" data-i18n="booking.interests">Ενδιαφέροντα</div>
       </div>
       <div class="s2-ages"></div>
       <div class="s2-right">
         <button type="button" class="lang-select" id="interestSelectBtn">
           <span class="flag placeholder">🏷️</span>
-          <span class="label">Επιλέξτε</span>
+          <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
           <span class="caret">▾</span>
         </button>
       </div>
@@ -338,13 +338,13 @@
     <!-- Sociality -->
     <div class="s2-row" id="socialityRow">
       <div class="s2-labels">
-        <div class="title">Κοινωνικότητα</div>
+        <div class="title" data-i18n="booking.sociality">Κοινωνικότητα</div>
       </div>
       <div class="s2-ages"></div>
       <div class="s2-right">
         <button type="button" class="lang-select" id="socialSelectBtn">
           <span class="flag placeholder">🏷️</span>
-          <span class="label">Επιλέξτε</span>
+          <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
           <span class="caret">▾</span>
         </button>
       </div>
@@ -357,8 +357,8 @@
 
   <!-- Bottom actions like Step 1 -->
   <div class="s2-actions">
-    <button id="s2Back" class="btn">Πίσω</button>
-    <button id="s2Next" class="btn">Επόμενο</button>
+    <button id="s2Back" class="btn" data-i18n="ui.back">Πίσω</button>
+    <button id="s2Next" class="btn" data-i18n="booking.next">Επόμενο</button>
   </div>
 
   <!-- Overlays: About, AI Assistant, Profile -->

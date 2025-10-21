@@ -238,8 +238,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     loading="lazy"
                     width="100%"
                     height="315"></iframe>
-                  <button class="slide-arrow left" type="button" aria-label="Προηγούμενο">&#10094;</button>
-                  <button class="slide-arrow right" type="button" aria-label="Επόμενο">&#10095;</button>
+                  <button class="slide-arrow left" type="button" data-i18n-aria="carousel.prev">&#10094;</button>
+                  <button class="slide-arrow right" type="button" data-i18n-aria="carousel.next">&#10095;</button>
                 </div>
               </div>`).join('');
             videoArea = `
@@ -545,7 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div id="availabilityBlock" class="availability-block" style="display:none"></div>
               <div class="booking-actions">
                 <button id="s1Cancel" class="btn btn-secondary">Πίσω</button>
-                <button id="s1Next" class="btn btn-primary">Επόμενο</button>
+                <button id="s1Next" class="btn btn-primary" data-i18n="booking.next">Επόμενο</button>
               </div>
             </div>
             <div id="step2" class="booking-step" style="display:none"></div>
@@ -698,7 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div style="margin-top:12px;">
                 <div class="booking-actions">
                   <button id="s2Back" class="btn btn-secondary">Πίσω</button>
-                  <button id="s2Next" class="btn btn-primary">Επόμενο</button>
+                  <button id="s2Next" class="btn btn-primary" data-i18n="booking.next">Επόμενο</button>
                 </div>
               </div>
             </div>
@@ -798,7 +798,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div style="margin-top:18px;">
                 <div class="booking-actions">
                   <button id="s3Edit" class="btn btn-secondary">Edit</button>
-                  <button id="s3Proceed" class="btn btn-primary">Proceed to Payment</button>
+                  <button id="s3Proceed" class="btn btn-primary" data-i18n="checkout.pay">Proceed to Payment</button>
                 </div>
               </div>
             </div>
@@ -1045,7 +1045,7 @@ document.addEventListener("DOMContentLoaded", () => {
               const json = await resp.json();
               const result = document.getElementById('bookingResult');
               if (!resp.ok) {
-                if (result) { result.style.display = 'block'; result.style.background = '#ffe6e6'; result.textContent = json && json.error ? json.error : 'Σφάλμα κατά τη δημιουργία της κράτησης'; }
+                if (result) { result.style.display = 'block'; result.style.background = '#ffe6e6'; result.textContent = json && json.error ? json.error : ((window.t && window.t('booking.error_create')) || 'Error creating booking'); }
                 return;
               }
               // success: show link to proceed to checkout with booking id attached
@@ -1055,15 +1055,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 const bookingId = json && json.bookingId ? json.bookingId : null;
                 if (bookingId) {
                   const href = `/checkout.html?trip=${encodeURIComponent(window.__loadedTrip.id)}&bookingId=${encodeURIComponent(bookingId)}`;
-                  result.innerHTML = `Κράτηση δημιουργήθηκε (ID: ${bookingId}). <div style="margin-top:10px;"><a class="btn" href="${href}">Μετάβαση στο Ταμείο</a></div>`;
+                  const created = (window.t && window.t('booking.created')) || 'Booking created';
+                  const link = (window.t && window.t('booking.proceed_to_checkout')) || 'Proceed to Checkout';
+                  result.innerHTML = `${created} (ID: ${bookingId}). <div style="margin-top:10px;"><a class="btn" href="${href}">${link}</a></div>`;
                 } else {
-                  result.textContent = 'Κράτηση δημιουργήθηκε.';
+                  result.textContent = (window.t && window.t('booking.created')) || 'Booking created';
                 }
               }
             } catch (err) {
               G.error('Booking submit error', err);
               const result = document.getElementById('bookingResult');
-              if (result) { result.style.display = 'block'; result.style.background = '#ffe6e6'; result.textContent = 'Σφάλμα δικτύου κατά τη δημιουργία της κράτησης'; }
+              if (result) { result.style.display = 'block'; result.style.background = '#ffe6e6'; result.textContent = (window.t && window.t('booking.error_network')) || 'Network error creating booking'; }
             }
           });
 
@@ -1142,7 +1144,8 @@ document.addEventListener("DOMContentLoaded", () => {
           try {
             if (occ) {
               const pill = occ.querySelector('.occ-pill');
-              const txt = `Πληρότητα: ${taken}/${capacity}`;
+              const occLabel = (window.t && window.t('booking.occupancy')) || 'Occupancy';
+              const txt = `${occLabel}: ${taken}/${capacity}`;
               if (pill) pill.textContent = txt; else occ.textContent = txt;
               occ.dataset.taken = String(taken);
               occ.dataset.capacity = String(capacity);
@@ -1169,7 +1172,8 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch(_) {}
             return dateStr;
           })();
-          el.textContent = `Διαθεσιμότητα για ${formattedDate}: σύνολο ${capacity}, κρατημένες ${taken}`;
+          const availMsg = (window.t && window.t('booking.availability_msg')) || 'Availability for {date}: total {capacity}, booked {taken}';
+          el.textContent = availMsg.replace('{date}', formattedDate).replace('{capacity}', String(capacity)).replace('{taken}', String(taken));
           // store last known availability on the block for other logic
           el.dataset.avail = String(avail);
           el.dataset.capacity = String(capacity);
@@ -1177,7 +1181,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // enable/disable step1 Next button when availability is zero
           try { const btn = document.getElementById('s1Next'); if (btn) btn.disabled = (avail <= 0); } catch(e){}
         } catch (e) {
-          try { const el = document.getElementById('availabilityBlock'); if (el) el.textContent = 'Σφάλμα κατά τον έλεγχο διαθεσιμότητας'; } catch(_){}
+          try { const el = document.getElementById('availabilityBlock'); if (el) el.textContent = (window.t && window.t('booking.error_availability')) || 'Error checking availability'; } catch(_){ }
         }
       }
 
@@ -1211,9 +1215,10 @@ document.addEventListener("DOMContentLoaded", () => {
       try { document.addEventListener('click', (ev) => { if (ev.target && ev.target.closest && ev.target.closest('a.central-btn')) setTimeout(updatePrice,150); }); } catch (e) {}
     })
     .catch(err => {
-      G.error("Σφάλμα εκδρομής:", err);
+      G.error("Trip error:", err);
+      const msg = (window.t && window.t('booking.error_trip')) || 'Error loading trip data';
       document.getElementById("trip-section").innerHTML =
-        "<p>Σφάλμα φόρτωσης δεδομένων εκδρομής.</p>";
+        `<p>${msg}.</p>`;
     });
 });
 

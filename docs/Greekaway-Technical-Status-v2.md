@@ -141,7 +141,7 @@ This document summarizes the current technical and visual progress of the Greeka
    - In `checkout.html`, fetch booking by `bookingId` and compute the exact amount from `price_cents` and seats; pass `booking_id` to `/create-payment-intent`.
 
 4) Complete i18n pass
-   - Audit `main.js`, `admin.html`, `checkout.html` for hard-coded text; move to `public/i18n/*.json`. Confirm RTL behavior.
+   - Audit `main.js`, `admin.html`, `checkout.html` for hard-coded text; move to `/locales/*.json`. Confirm RTL behavior.
 
 5) Security and ops
    - Harden admin with stronger auth or restrict it behind VPN. Add rate limiting to admin and payment endpoints.

@@ -1,0 +1,146 @@
+{
+  "meta": { "languageName": "עברית" },
+  "siteTitle": "Greekaway",
+  "nav": {
+    "home": "בית",
+    "trips": "טיולים",
+    "checkout": "תשלום",
+    "admin": "מנהל",
+    "about": "אודות",
+    "ai": "עוזר AI",
+    "profile": "פרופיל",
+    "book": "הזמנה"
+  },
+  "admin": {
+    "help": "הכנס אישורי מנהל כדי לצפות בתשלומים ובמצב הגיבוי.",
+    "loading": "טוען...",
+    "error": "שגיאה:",
+    "refresh": "רענן",
+    "backups": "גיבויים"
+  },
+  "checkout": {
+    "pay": "שלם",
+    "cardPlaceholder": "מספר כרטיס",
+    "title": "Checkout — Greekaway",
+    "name": "שם",
+    "email": "דוא\"ל",
+    "cardLabel": "כרטיס",
+    "notice": "תשלום מאובטח דרך Stripe",
+    "payment_success_test": "התשלום הצליח",
+    "payment_failed": "התשלום נכשל",
+    "payment_error": "שגיאת תשלום",
+    "network_error": "שגיאת רשת",
+    "info": "טופס התשלום יופיע כאן."
+  },
+  "welcome": {
+    "title": "ברוכים הבאים ל-Greekaway",
+    "subtitle": "גלה את הטיולים הטובים ביותר ביוון",
+    "ask": "שאלו אותנו כל דבר על הטיול שלכם!"
+  },
+  "about": { "title": "עלינו", "text": "Greekaway נוצר כדי להציע טיולים נבחרים ביוון עם נוחות, טכנולוגיה וסטייל." },
+  "profile": { "info": "כאן תראה את הטיולים וההזמנות הקודמות שלך." },
+  "categories": {
+    "mountain": { "title": "טיולי הרים" },
+    "sea": { "title": "טיולי ים" },
+    "culture": { "title": "טיולי תרבות" }
+  },
+  "stop": { "label": "תחנה {n}" },
+  "trip": { "experienceTitle": "חוויה" },
+  "trips": { "selectCategory": "בחר קטגוריה", "noneFound": "לא נמצאו טיולים בקטגוריה זו." },
+  "ui": { "close": "סגור", "cancel": "בטל", "back": "חזרה", "finish": "סיום", "choose": "בחר" },
+  "trips_ui": { "backToCategories": "חזרה לקטגוריות" },
+  "assistant": {
+    "title": "עוזר AI",
+    "close": "סגור",
+    "suggestion": "שאל כל דבר על הטיול שלך.",
+    "placeholder": "שאל כל דבר",
+    "aria_message": "הודעה",
+    "aria_send": "שלח",
+    "stream_error": "שגיאת חיבור עם העוזר.",
+    "fallback_error": "לא קיבלנו תשובה כרגע.",
+    "error_prefix": "שגיאה:"
+  }
+  ,
+  "feedback": {
+    "title": "איך הייתה החוויה שלך?",
+    "subtitle": "עזור לנו להתאים קבוצות טוב יותר.",
+    "positive": "טובה",
+    "neutral": "ניטרלית",
+    "negative": "רעה",
+    "placeholder": "הערה אופציונלית...",
+    "try_again": "נסה שוב"
+  }
+  ,
+  "carousel": { "prev": "הקודם", "next": "הבא" },
+  "booking": {
+    "title": "הזמנה",
+    "date": "תאריך",
+    "date_placeholder": "YYYY-MM-DD",
+    "seats": "מקומות",
+  "total": "סה\"כ",
+    "create": "צור הזמנה",
+    "name_placeholder": "שם מלא",
+    "email_placeholder": "name@example.com",
+  "traveler_options": "אפשרויות מטייל",
+  "adults": "מבוגרים",
+  "children": "ילדים",
+  "increase": "+",
+    "decrease": "−",
+    "increase_adults": "הגדלת מבוגרים",
+    "decrease_adults": "הפחתת מבוגרים",
+    "increase_children": "הגדלת ילדים",
+    "decrease_children": "הפחתת ילדים",
+    "bags_large": "מזוודות (גדולות)",
+  "bags_small": "מזוודות (קטנות)",
+  "increase_bags_large": "הגדל מזוודות גדולות",
+  "decrease_bags_large": "הפחת מזוודות גדולות",
+  "increase_bags_small": "הגדל מזוודות קטנות",
+  "decrease_bags_small": "הפחת מזוודות קטנות",
+    "preferred_language": "שפה מועדפת",
+    "age_group": "קבוצת גיל",
+  "traveler_profile": "פרופיל מטייל",
+  "traveler_type": "סוג מטייל",
+  "travel_style": "סגנון נסיעה",
+  "daily_rhythm": "קצב יומי",
+    "interests": "תחומי עניין",
+    "sociality": "חברתיות",
+    "children_ages": "גילאי ילדים",
+    "children_age_range": "0 – 17",
+    "pick_ages": "בחר גילאים",
+    "step2_of3": "שלב 2 מתוך 3",
+    "step3_of3": "שלב 3 מתוך 3",
+    "next": "הבא",
+    "error_create": "שגיאה ביצירת הזמנה",
+    "error_network": "שגיאת רשת בעת יצירת הזמנה",
+    "error_availability": "שגיאה בבדיקת זמינות",
+    "error_trip": "שגיאה בטעינת נתוני הטיול",
+    "availability_msg": "זמינות עבור {date}: סה\"כ {capacity}, הוזמנו {taken}",
+    "created": "הזמנה נוצרה",
+    "proceed_to_checkout": "המשך לתשלום",
+    "occupancy": "תפוסה",
+    "traveler_type_options": {
+      "explorer": "מגלים",
+      "relaxed": "מטיילים רגועים",
+      "family": "סגנון משפחתי",
+      "solo": "הרפתקנים בודדים"
+    },
+    "travel_style_options": {
+      "sociable": "חברותי",
+      "quiet": "שקט",
+      "cultural": "תרבותי",
+      "nature": "אוהב טבע"
+    },
+    "preferred_language_options": {
+      "en": "English",
+      "fr": "Français",
+      "de": "Deutsch",
+      "el": "Ελληνικά"
+    },
+    "daily_rhythm_options": {
+      "early": "קם מוקדם",
+      "night": "אוהב לילה",
+      "talkative": "פטפטן",
+      "reserved": "מופנם"
+    }
+  }
+}

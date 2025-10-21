@@ -14,6 +14,7 @@
   function buildUI(){
     const wrap = document.createElement('div');
     wrap.className = 'gw-feedback-wrap';
+    const tr = (k)=> (window.t? window.t(k): k);
     wrap.innerHTML = `
       <style>
         .gw-feedback-wrap{ position:fixed; right:16px; bottom:calc(84px + env(safe-area-inset-bottom)); z-index:30000; background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:14px; box-shadow:0 16px 36px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05); max-width:320px; padding:12px; font-family:system-ui,-apple-system,Segoe UI,Roboto; }
@@ -24,15 +25,15 @@
         .gw-feedback-close{ position:absolute; top:6px; right:8px; opacity:.7; cursor:pointer; }
         .gw-feedback-text{ width:100%; margin-top:8px; background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:10px; padding:6px 8px; min-height:34px; }
       </style>
-      <div class="gw-feedback-close" aria-label="Κλείσιμο">✕</div>
-      <div class="gw-feedback-title">Πώς ήταν η εμπειρία σας;</div>
-      <div style="font-size:.92rem; opacity:.9">Βοηθήστε μας να ταιριάζουμε καλύτερα τις ομάδες.</div>
+      <div class="gw-feedback-close" aria-label="${tr('ui.close')}">✕</div>
+      <div class="gw-feedback-title">${tr('feedback.title')}</div>
+      <div style="font-size:.92rem; opacity:.9">${tr('feedback.subtitle')}</div>
       <div class="gw-feedback-actions">
-        <button class="gw-feedback-btn" data-rating="positive">😊 Καλή</button>
-        <button class="gw-feedback-btn" data-rating="neutral">😐 Ουδέτερη</button>
-        <button class="gw-feedback-btn" data-rating="negative">🙁 Κακή</button>
+        <button class="gw-feedback-btn" data-rating="positive">😊 ${tr('feedback.positive')}</button>
+        <button class="gw-feedback-btn" data-rating="neutral">😐 ${tr('feedback.neutral')}</button>
+        <button class="gw-feedback-btn" data-rating="negative">🙁 ${tr('feedback.negative')}</button>
       </div>
-      <textarea class="gw-feedback-text" placeholder="Προαιρετικό σχόλιο..."></textarea>
+      <textarea class="gw-feedback-text" placeholder="${tr('feedback.placeholder')}"></textarea>
     `;
     return wrap;
   }
@@ -57,11 +58,29 @@
           const comment = ui.querySelector('.gw-feedback-text').value || null;
           const ok = await submitFeedback({ trip_id: booking.trip_id, traveler_email: booking.user_email, rating, comment });
           if (ok) { try{ localStorage.setItem(k,'1'); }catch(_){ } close(); }
-          else { btn.textContent = 'Προσπαθήστε ξανά'; }
+          else { btn.textContent = (window.t? window.t('feedback.try_again') : 'Try again'); }
         });
       });
     }catch(_){ }
   }
 
   window.GWFeedbackPrompt = { init: ()=> ready(maybeShow) };
+  // React to language change to update an already rendered prompt
+  window.addEventListener('i18n:changed', ()=>{
+    try{
+      const wrap = document.querySelector('.gw-feedback-wrap');
+      if (!wrap) return;
+      const tr = (k)=> (window.t? window.t(k): k);
+      const close = wrap.querySelector('.gw-feedback-close'); if (close) close.setAttribute('aria-label', tr('ui.close'));
+      const title = wrap.querySelector('.gw-feedback-title'); if (title) title.textContent = tr('feedback.title');
+      const subtitle = title && title.nextElementSibling; if (subtitle) subtitle.textContent = tr('feedback.subtitle');
+      const buttons = wrap.querySelectorAll('.gw-feedback-btn');
+      if (buttons && buttons.length === 3) {
+        buttons[0].textContent = `😊 ${tr('feedback.positive')}`;
+        buttons[1].textContent = `😐 ${tr('feedback.neutral')}`;
+        buttons[2].textContent = `🙁 ${tr('feedback.negative')}`;
+      }
+      const ta = wrap.querySelector('.gw-feedback-text'); if (ta) ta.setAttribute('placeholder', tr('feedback.placeholder'));
+    }catch(_){ }
+  });
 })();

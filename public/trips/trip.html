@@ -38,7 +38,7 @@
 
   <!-- Overlays -->
   <div id="aiOverlay" class="overlay" role="dialog" aria-modal="true">
-    <button class="close-overlay" onclick="closeOverlay('aiOverlay')" aria-label="Κλείσιμο">×</button>
+    <button class="close-overlay" onclick="closeOverlay('aiOverlay')" data-i18n-aria="ui.close">×</button>
     <div class="overlay-inner">
       <h2 data-i18n="nav.ai">AI Assistant</h2>
         <p data-i18n="welcome.ask">Ρωτήστε μας ό,τι θέλετε για την εκδρομή σας!</p>
@@ -46,7 +46,7 @@
   </div>
 
   <div id="profileOverlay" class="overlay" role="dialog" aria-modal="true">
-    <button class="close-overlay" onclick="closeOverlay('profileOverlay')" aria-label="Κλείσιμο">×</button>
+    <button class="close-overlay" onclick="closeOverlay('profileOverlay')" data-i18n-aria="ui.close">×</button>
     <div class="overlay-inner">
       <h2 data-i18n="nav.profile">Το Προφίλ μου</h2>
         <p data-i18n="profile.info">Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας.</p>
@@ -54,7 +54,7 @@
   </div>
 
   <div id="aboutOverlay" class="overlay" role="dialog" aria-modal="true">
-    <button class="close-overlay" onclick="closeOverlay('aboutOverlay')" aria-label="Κλείσιμο">×</button>
+    <button class="close-overlay" onclick="closeOverlay('aboutOverlay')" data-i18n-aria="ui.close">×</button>
     <div class="overlay-inner">
       <h2 data-i18n="about.title">Σχετικά με εμάς</h2>
       <p data-i18n="about.text">Το Greekaway δημιουργήθηκε για να σας προσφέρει επιλεγμένες εκδρομές στην Ελλάδα με άνεση, τεχνολογία και στυλ.</p>
@@ -62,7 +62,7 @@
   </div>
 
   <div id="paymentOverlay" class="overlay" role="dialog" aria-modal="true">
-    <button class="close-overlay" onclick="closeOverlay('paymentOverlay')" aria-label="Κλείσιμο">×</button>
+    <button class="close-overlay" onclick="closeOverlay('paymentOverlay')" data-i18n-aria="ui.close">×</button>
     <div class="overlay-inner">
       <h2 data-i18n="nav.checkout">Πληρωμή</h2>
         <p data-i18n="checkout.info">Η φόρμα πληρωμής θα εμφανίζεται εδώ.</p>
@@ -70,89 +70,89 @@
   </div>
 
   <div id="bookingOverlay" class="overlay" role="dialog" aria-modal="true">
-    <button class="close-overlay" onclick="closeOverlay('bookingOverlay')" aria-label="Κλείσιμο">×</button>
+    <button class="close-overlay" onclick="closeOverlay('bookingOverlay')" data-i18n-aria="ui.close">×</button>
     <div class="overlay-inner">
-      <h2 id="bookingOverlayTitle">Κράτηση</h2>
+      <h2 id="bookingOverlayTitle" data-i18n="booking.title">Κράτηση</h2>
       <form id="bookingForm" class="booking-form">
         <input type="hidden" name="trip_id" id="bookingTripId">
 
         <div class="row">
-          <label for="bookingDate">Ημερομηνία</label>
-          <input id="bookingDate" name="date" type="date" required />
+          <label for="bookingDate" data-i18n="booking.date">Ημερομηνία</label>
+          <input id="bookingDate" name="date" type="date" required data-i18n-placeholder="booking.date_placeholder" placeholder="YYYY-MM-DD" />
         </div>
 
         <div class="row two-col">
           <div>
-            <label for="bookingSeats">Θέσεις</label>
+            <label for="bookingSeats" data-i18n="booking.seats">Θέσεις</label>
             <div class="seat-control">
-              <button type="button" class="seat-dec" aria-label="Μείωση">−</button>
+              <button type="button" class="seat-dec" data-i18n-aria="booking.decrease">Μείωση</button>
               <input id="bookingSeats" name="seats" type="number" value="1" min="1" max="10" required />
-              <button type="button" class="seat-inc" aria-label="Αύξηση">+</button>
+              <button type="button" class="seat-inc" data-i18n-aria="booking.increase">Αύξηση</button>
             </div>
           </div>
 
           <div>
-            <label for="bookingPrice">Σύνολο</label>
+            <label for="bookingPrice" data-i18n="booking.total">Σύνολο</label>
             <div id="bookingPrice" class="price-tag">—</div>
           </div>
         </div>
 
         <div class="row">
-          <label for="bookingName">Όνομα</label>
-          <input id="bookingName" name="user_name" type="text" placeholder="Όνομα και επώνυμο" required />
+          <label for="bookingName" data-i18n="checkout.name">Όνομα</label>
+          <input id="bookingName" name="user_name" type="text" data-i18n-placeholder="booking.name_placeholder" placeholder="Full name" required />
         </div>
 
         <div class="row">
-          <label for="bookingEmail">Email</label>
-          <input id="bookingEmail" name="user_email" type="email" placeholder="name@example.com" required />
+          <label for="bookingEmail" data-i18n="checkout.email">Email</label>
+          <input id="bookingEmail" name="user_email" type="email" data-i18n-placeholder="booking.email_placeholder" placeholder="name@example.com" required />
         </div>
 
-        <div class="row section-title"><h3>Προφίλ Ταξιδιώτη</h3></div>
+        <div class="row section-title"><h3 data-i18n="booking.traveler_profile">Προφίλ Ταξιδιώτη</h3></div>
         <div class="row two-col">
           <div>
-            <label for="travelerProfile">Traveler Type</label>
+            <label for="travelerProfile" data-i18n="booking.traveler_type">Traveler Type</label>
             <select id="travelerProfile" name="travelerProfile">
-              <option value="explorer">🌍 Explorers</option>
-              <option value="relaxed">😌 Relaxed Travelers</option>
-              <option value="family">👨‍👩‍👧 Family Style</option>
-              <option value="solo">🚶 Solo Adventurers</option>
+              <option value="explorer" data-i18n="booking.traveler_type_options.explorer">🌍 Explorers</option>
+              <option value="relaxed" data-i18n="booking.traveler_type_options.relaxed">😌 Relaxed Travelers</option>
+              <option value="family" data-i18n="booking.traveler_type_options.family">👨‍👩‍👧 Family Style</option>
+              <option value="solo" data-i18n="booking.traveler_type_options.solo">🚶 Solo Adventurers</option>
             </select>
           </div>
           <div>
-            <label for="travelStyle">Travel Style</label>
+            <label for="travelStyle" data-i18n="booking.travel_style">Travel Style</label>
             <select id="travelStyle" name="travelStyle">
-              <option value="sociable">👥 Sociable</option>
-              <option value="quiet">🤫 Quiet</option>
-              <option value="cultural">🏛️ Cultural</option>
-              <option value="nature">🌲 Nature-oriented</option>
+              <option value="sociable" data-i18n="booking.travel_style_options.sociable">👥 Sociable</option>
+              <option value="quiet" data-i18n="booking.travel_style_options.quiet">🤫 Quiet</option>
+              <option value="cultural" data-i18n="booking.travel_style_options.cultural">🏛️ Cultural</option>
+              <option value="nature" data-i18n="booking.travel_style_options.nature">🌲 Nature-oriented</option>
             </select>
           </div>
         </div>
 
         <div class="row two-col">
           <div>
-            <label for="preferredLanguage">Προτιμώμενη Γλώσσα</label>
+            <label for="preferredLanguage" data-i18n="booking.preferred_language">Προτιμώμενη Γλώσσα</label>
             <select id="preferredLanguage" name="preferredLanguage">
-              <option value="en">🇬🇧 English</option>
-              <option value="fr">🇫🇷 Français</option>
-              <option value="de">🇩🇪 Deutsch</option>
-              <option value="el">🇬🇷 Ελληνικά</option>
+              <option value="en" data-i18n="booking.preferred_language_options.en">🇬🇧 English</option>
+              <option value="fr" data-i18n="booking.preferred_language_options.fr">🇫🇷 Français</option>
+              <option value="de" data-i18n="booking.preferred_language_options.de">🇩🇪 Deutsch</option>
+              <option value="el" data-i18n="booking.preferred_language_options.el">🇬🇷 Ελληνικά</option>
             </select>
           </div>
           <div>
-            <label for="travelTempo">Στυλ Ώρας / Ημέρας</label>
+            <label for="travelTempo" data-i18n="booking.daily_rhythm">Στυλ Ώρας / Ημέρας</label>
             <select id="travelTempo" name="travelTempo">
-              <option value="early">🌅 Early riser</option>
-              <option value="night">🌙 Night type</option>
-              <option value="talkative">💬 Talkative</option>
-              <option value="reserved">🙊 Reserved</option>
+              <option value="early" data-i18n="booking.daily_rhythm_options.early">🌅 Early riser</option>
+              <option value="night" data-i18n="booking.daily_rhythm_options.night">🌙 Night type</option>
+              <option value="talkative" data-i18n="booking.daily_rhythm_options.talkative">💬 Talkative</option>
+              <option value="reserved" data-i18n="booking.daily_rhythm_options.reserved">🙊 Reserved</option>
             </select>
           </div>
         </div>
 
         <div class="row actions">
-          <button class="btn" type="submit">Δημιούργησε κράτηση</button>
-          <button type="button" class="btn ghost" onclick="closeOverlay('bookingOverlay')">Άκυρο</button>
+          <button class="btn" type="submit" data-i18n="booking.create">Δημιούργησε κράτηση</button>
+          <button type="button" class="btn ghost" onclick="closeOverlay('bookingOverlay')" data-i18n="ui.cancel">Άκυρο</button>
         </div>
       </form>
 
@@ -162,7 +162,7 @@
 
   <!-- New light-blue overlay for Step 2 (details) -->
   <div id="step2Overlay" class="overlay" role="dialog" aria-modal="true">
-    <button class="close-overlay" onclick="closeOverlay('step2Overlay')" aria-label="Κλείσιμο">×</button>
+    <button class="close-overlay" onclick="closeOverlay('step2Overlay')" data-i18n-aria="ui.close">×</button>
     <div class="overlay-inner" id="step2OverlayInner">
       <!-- Step 2 content is injected dynamically -->
     </div>

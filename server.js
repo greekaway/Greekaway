@@ -231,6 +231,25 @@ app.get('/checkout.html', (req, res) => {
 // 1️⃣ Σερβίρουμε στατικά αρχεία από το /public
 app.use(express.static(path.join(__dirname, "public")));
 
+// Serve locales statically and provide an index for auto-discovery
+const LOCALES_DIR = path.join(__dirname, 'locales');
+try { fs.mkdirSync(LOCALES_DIR, { recursive: true }); } catch (e) {}
+app.use('/locales', express.static(LOCALES_DIR));
+app.get('/locales/index.json', (req, res) => {
+  try {
+    const files = fs.readdirSync(LOCALES_DIR, { withFileTypes: true });
+    const langs = files
+      .filter(f => f.isFile() && f.name.endsWith('.json'))
+      .map(f => f.name.replace(/\.json$/,'').toLowerCase())
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort();
+    res.json({ languages: langs });
+  } catch (e) {
+    // Fallback to a sensible default set if directory missing
+    res.json({ languages: ['el','en','fr','de','he'] });
+  }
+});
+
 // Mock checkout endpoint (POST) — simulates a payment processor response
 app.post('/mock-checkout', express.urlencoded({ extended: true }), (req, res) => {
   try {
