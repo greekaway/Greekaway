@@ -278,7 +278,7 @@ app.get('/locales/index.json', (req, res) => {
   } catch (e) {
     // Fallback to a sensible default set if directory missing
     res.set('Cache-Control', 'public, max-age=60');
-    res.json({ languages: ['el','en','fr','de','he'] });
+    res.json({ languages: ['el','en','fr','de','he','it','es','zh'] });
   }
 });
 

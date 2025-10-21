@@ -2,14 +2,14 @@
   "meta": { "languageName": "Español" },
   "siteTitle": "Greekaway",
   "nav": {
-    "home": "Home",
-    "trips": "Trips",
-    "checkout": "Checkout",
-    "admin": "Admin",
-    "about": "About",
-    "ai": "AI Assistant",
-    "profile": "Profile",
-    "book": "Book"
+    "home": "Inicio",
+    "trips": "Excursiones",
+    "checkout": "Pago",
+    "admin": "Administración",
+    "about": "Acerca de",
+    "ai": "Asistente IA",
+    "profile": "Perfil",
+    "book": "Reservar"
   },
   "admin": {
     "title": "Admin Payments",
@@ -41,9 +41,9 @@
     "notice": "Secure Payment via Stripe"
   },
   "welcome": {
-    "title": "Welcome to Greekaway",
-    "subtitle": "Discover the best day trips across Greece",
-    "ask": "Ask us anything about your trip!"
+    "title": "Bienvenido a Greekaway",
+    "subtitle": "Descubre las mejores excursiones por Grecia",
+    "ask": "¡Pregúntanos lo que quieras sobre tu viaje!"
   },
   "about": { "title": "About us", "text": "Greekaway was created to offer curated trips in Greece with comfort, technology, and style." },
   "categories": {

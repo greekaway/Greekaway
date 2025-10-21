@@ -2,14 +2,14 @@
   "meta": { "languageName": "中文" },
   "siteTitle": "Greekaway",
   "nav": {
-    "home": "Home",
-    "trips": "Trips",
-    "checkout": "Checkout",
-    "admin": "Admin",
-    "about": "About",
-    "ai": "AI Assistant",
-    "profile": "Profile",
-    "book": "Book"
+    "home": "首页",
+    "trips": "行程",
+    "checkout": "结账",
+    "admin": "管理",
+    "about": "关于",
+    "ai": "AI 助手",
+    "profile": "个人资料",
+    "book": "预订"
   },
   "admin": {
     "title": "Admin Payments",
@@ -41,9 +41,9 @@
     "notice": "Secure Payment via Stripe"
   },
   "welcome": {
-    "title": "Welcome to Greekaway",
-    "subtitle": "Discover the best day trips across Greece",
-    "ask": "Ask us anything about your trip!"
+    "title": "欢迎来到 Greekaway",
+    "subtitle": "探索希腊最棒的一日游",
+    "ask": "关于你的行程尽管来问！"
   },
   "about": { "title": "About us", "text": "Greekaway was created to offer curated trips in Greece with comfort, technology, and style." },
   "categories": {

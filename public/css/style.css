@@ -630,11 +630,11 @@ body.overlay-open #aiOverlay { z-index: 20000 !important; }
 }
 
 /* language selector styling: flags + text appear in the option text (emoji) */
-#langSelect { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 8px; height: 34px; }
+#langSelect { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 8px; height: 34px; }
 #langSelect option { padding: 2px 6px; color: #000; }
-/* Visibility: show only on the Welcome page (all modes) */
-#langSelect { display: none; }
-body:has(#welcome-section) #langSelect { display: inline-block; }
+/* Visibility: show on all pages (can be positioned by page markup) */
+/* previously hidden on non-welcome pages; now always visible */
+/* #langSelect display rules removed to allow universal visibility */
 /* Prevent the footer items from reversing order when document dir is rtl.
    Keep text alignment and reading order inside footer left-to-right while
    the rest of the page can be RTL. This preserves the footer layout for
@@ -1181,8 +1181,7 @@ html[data-category="culture"], body[data-category="culture"] { background-attach
   #langSelect { color: #1B2A3A !important; border: 1px solid #1B2A3A !important; background: transparent !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08); }
   #langSelect option { color: #1B2A3A; }
 
-  /* Hide language selector on all pages except the Welcome page (keep on Welcome only) */
-  body:not(:has(#welcome-section)) #langSelect { display: none !important; }
+  /* Language selector remains visible in light mode as well */
 
   /* Subtle text shadow for dark navy text across common content (exclude buttons and gold text) */
   :where(h1,h2,h3,h4,h5,h6,p,li,small,label,span,.welcome-subtitle,.title,.price-top,.stop-title, body[data-category] h2, #trip-title, #trip-description, header h1):not(.cat-label):not(.welcome-title):not(.overlay h2):not(button):not(.btn):not(.central-btn):not(#trips-container .trip-card h3) {
