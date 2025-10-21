@@ -312,7 +312,7 @@ html.overlay-open { overflow: hidden; }
    AI Chat Overlay (full-screen black)
    =============================== */
 /* Make AI overlay a native chat screen: black background, no panel edges */
-#aiOverlay.overlay { background: #000; z-index: 13000; }
+#aiOverlay.overlay { background: rgba(11,21,32,0.96); z-index: 20000; }
 #aiOverlay .close-overlay { display: none; }
 #aiOverlay .overlay-inner {
   background: #000;
@@ -345,22 +345,27 @@ html.overlay-open { overflow: hidden; }
 }
 #aiOverlay .ga-chat-title { font-weight: 600; font-size: 24px; }
 
+/* Remove any assistant hint/suggestion text */
+#aiOverlay .ga-suggestion { display: none !important; }
+#aiOverlay [data-i18n="welcome.ask"] { display: none !important; }
+
 /* Close button: rounded square with X */
 #aiOverlay .ga-chat-close {
   position: absolute;
   top: 50%;
   right: calc(clamp(72px, 14vw, 192px) + env(safe-area-inset-right)); /* push it well left from the edge */
-  transform: translateY(-50%);
+  transform: translateY(calc(-50% - 16px));
   width: 48px; height: 48px;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.04);
-  color: #fff; cursor: pointer;
+  border: none !important;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
   font-size: 22px;
   z-index: 2;
 }
-#aiOverlay .ga-chat-close:active { transform: translateY(-50%) scale(0.98); }
+#aiOverlay .ga-chat-close:active { transform: translateY(calc(-50% - 16px)) scale(0.98); }
 
 /* On tablets and desktops, keep close button at the far right */
 @media (min-width: 600px) {
@@ -371,6 +376,7 @@ html.overlay-open { overflow: hidden; }
     position: static;
     right: auto; top: auto;
     transform: none;
+  margin-top: -2px; /* one-click downward adjustment on larger screens */
     margin-left: auto; /* push to the right in the flex row */
     margin-right: 32px;
   }
@@ -447,12 +453,13 @@ html.overlay-open { overflow: hidden; }
 
 /* Up-arrow send button inside the input */
 #aiOverlay .ga-send {
-  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
   width: 35px; height: 35px; /* +~3% hit area */
   display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 12px;
-  background: transparent !important; color: #fff;
-  border: none !important; box-shadow: none !important;
+  border-radius: 8px; /* square-ish */
+  background: transparent !important;
+  color: inherit;
+  border: 1px solid transparent !important; box-shadow: none !important;
   cursor: pointer;
   font-size: 19px; /* +~3% */
 }
@@ -464,6 +471,22 @@ html.overlay-open { overflow: hidden; }
 }
 #aiOverlay .ga-form button:hover { background: #334155; }
 
+/* Theme-aware send button arrow & border colors */
+@media (prefers-color-scheme: light) {
+  #aiOverlay .ga-send {
+    border-color: #000 !important;
+    background: #000 !important;
+    color: #fff !important; /* arrow */
+  }
+}
+@media (prefers-color-scheme: dark) {
+  #aiOverlay .ga-send {
+    border-color: #fff !important;
+    background: #fff !important;
+    color: #000 !important; /* arrow */
+  }
+}
+
 /* Global 3% magnification for the chat input bar text and controls */
 #aiOverlay .ga-inputbar { font-size: 103%; }
 
@@ -474,6 +497,8 @@ html.overlay-open { overflow: hidden; }
 
 /* Hide global footer while AI chat overlay is open */
 #aiOverlay.active ~ footer { display: none !important; }
+/* Defensive: ensure AI overlay remains above any fixed elements from booking/profile pages */
+body.overlay-open #aiOverlay { z-index: 20000 !important; }
 
 
 /* -------- Mobile gutters & content max-widths -------- */
@@ -588,6 +613,9 @@ html.overlay-open { overflow: hidden; }
 /* language selector styling: flags + text appear in the option text (emoji) */
 #langSelect { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 8px; height: 34px; }
 #langSelect option { padding: 2px 6px; color: #000; }
+/* Visibility: show only on the Welcome page (all modes) */
+#langSelect { display: none; }
+body:has(#welcome-section) #langSelect { display: inline-block; }
 /* Prevent the footer items from reversing order when document dir is rtl.
    Keep text alignment and reading order inside footer left-to-right while
    the rest of the page can be RTL. This preserves the footer layout for
@@ -1015,7 +1043,7 @@ html[data-category="culture"], body[data-category="culture"] { background-attach
 
   /* Base document background only (don't force text so headings/titles remain styled) */
   html, body {
-    background: #DCE8F0 !important; /* soft blue */
+    background: #FFF9EB !important; /* new lighter vanilla tone */
     transition: background 0.4s ease-in-out, background-color 0.4s ease-in-out, color 0.4s ease-in-out;
   }
 
@@ -1032,9 +1060,9 @@ html[data-category="culture"], body[data-category="culture"] { background-attach
   body[data-view="trip"],
   html.navy-bg,
   body.navy-bg {
-    background: #DCE8F0 !important;
+    background: #FFF9EB !important;
     background-image: none !important; /* neutralize dark gradient in light mode */
-    background-color: #DCE8F0 !important;
+    background-color: #FFF9EB !important;
     transition: background 0.4s ease-in-out, color 0.4s ease-in-out;
   }
 
@@ -1050,12 +1078,12 @@ html[data-category="culture"], body[data-category="culture"] { background-attach
 
   /* Overlays and modals — flip to light surfaces and dark text */
   .overlay {
-    background: rgba(220, 232, 240, 0.92) !important; /* soften backdrop */
+    background: rgba(255, 249, 235, 0.92) !important; /* soften backdrop to match new light bg */
     color: var(--ga-text) !important;
     transition: background 0.4s ease-in-out, color 0.4s ease-in-out;
   }
   .overlay .overlay-inner {
-    background: #DCE8F0 !important; /* unify light panel tone */
+    background: #FFF9EB !important; /* unify light panel tone */
     color: var(--ga-text) !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important; /* subtle depth */
     border: 1px solid rgba(0,0,0,0.04) !important;
@@ -1065,59 +1093,109 @@ html[data-category="culture"], body[data-category="culture"] { background-attach
   .overlay .close-overlay { color: rgba(27,42,58,0.9) !important; }
 
   /* Booking overlay container: ensure light backdrop even if dark by default */
-  #bookingOverlay.overlay { background: #DCE8F0 !important; }
+  #bookingOverlay.overlay { background: #FFF9EB !important; }
 
   /* AI Assistant overlay — invert fully to light */
   #aiOverlay.overlay,
-  #aiOverlay .overlay-inner { background: #DCE8F0 !important; color: var(--ga-text) !important; }
-  #aiOverlay .ga-chat-topbar { background: #DCE8F0 !important; border-bottom: 1px solid rgba(0,0,0,0.06) !important; }
-  #aiOverlay .ga-inputbar { background: #DCE8F0 !important; border-top: 1px solid rgba(0,0,0,0.06) !important; }
+  #aiOverlay .overlay-inner { background: #FFF9EB !important; color: var(--ga-text) !important; }
+  #aiOverlay .ga-chat-topbar { background: #FFF9EB !important; border-bottom: 1px solid rgba(0,0,0,0.06) !important; }
+  #aiOverlay .ga-inputbar { background: #FFF9EB !important; border-top: 1px solid rgba(0,0,0,0.06) !important; }
   #aiOverlay .ga-form input[type="text"] {
-    background: #DCE8F0 !important;
+    background: #FFF9EB !important;
     color: var(--ga-text) !important;
     border: 1px solid rgba(0,0,0,0.12) !important;
   }
-  #aiOverlay .ga-send { color: var(--ga-text) !important; }
+  #aiOverlay .ga-send { color: #fff !important; }
   #aiOverlay .ga-msg.user .ga-bubble {
-    background: #DCE8F0 !important;
+    background: #FFF9EB !important;
     color: var(--ga-text) !important;
     border: 1px solid rgba(0,0,0,0.06) !important;
   }
   #aiOverlay .ga-msg.assistant .ga-bubble {
-    background: #DCE8F0 !important;
+    background: #FFF9EB !important;
     color: var(--ga-text) !important;
     border: 1px solid rgba(0,0,0,0.06) !important;
   }
   #aiOverlay .ga-suggestion {
-    background: #DCE8F0 !important;
+    background: #FFF9EB !important;
     color: var(--ga-text) !important;
     border: 1px solid rgba(0,0,0,0.06) !important;
   }
 
-  /* Headings/titles: navy and no white text-shadow */
-  :is(h1,h2,h3,h4,h5,h6),
-  .welcome-title,
-  body[data-category] h2,
-  .title,
-  .price-top,
-  .stop-title,
-  #trips-container .trip-card h3,
-  .overlay h2 { color: #1B2A3A !important; text-shadow: none !important; }
+  /* AI close buttons: solid black bg, white X */
+  #aiOverlay .ga-chat-close,
+  #aiOverlay .close-overlay {
+    border-radius: 8px !important;
+    background: #000 !important;
+    color: #fff !important;
+    border: 1px solid #000 !important;
+  }
 
-  /* Light mode: replace gold text with navy for readability */
+  /* Preserve gold text for trip cards and category labels in light mode */
   .category-btn .cat-label,
-  .card h2,
-  .trip-card h3,
-  .stop-title,
-  .video-card h3,
-  .title,
-  #trips-container .trip-card h3,
-  .overlay h2,
-  .booking-form .section-title h3 { color: #1B2A3A !important; }
+  #trips-container .trip-card h3 { color: #D4AF37 !important; }
+
+  /* Welcome subtitle to navy + subtle depth */
+  .welcome-subtitle { color: #1B2A3A !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08) !important; }
+
+  /* Traveler profile (Step 2) trip title in light mode */
+  .step2-header .trip-title { color: #1B2A3A !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08) !important; }
+
+  /* Step 3 (traveler profile final step) — trip title */
+  .step3-header .trip-title { color: #1B2A3A !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08) !important; }
+
+  /* Category listing title (e.g., Εκδρομές Βουνού) */
+  body[data-category] h2 { color: #1B2A3A !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08) !important; }
+
+  /* Select Category page title */
+  header h1 { color: #1B2A3A !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08) !important; }
+
+  /* Checkout page title */
+  .checkout-header .title-wrap h1 { color: #1B2A3A !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08) !important; }
+
+  /* Trip details page title and description */
+  #trip-title { color: #1B2A3A !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08) !important; }
+  #trip-description { color: #1B2A3A !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08) !important; }
+
+  /* Language selector: navy text/border in light mode */
+  #langSelect { color: #1B2A3A !important; border: 1px solid #1B2A3A !important; background: transparent !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  #langSelect option { color: #1B2A3A; }
+
+  /* Hide language selector on all pages except the Welcome page (keep on Welcome only) */
+  body:not(:has(#welcome-section)) #langSelect { display: none !important; }
+
+  /* Subtle text shadow for dark navy text across common content (exclude buttons and gold text) */
+  :where(h1,h2,h3,h4,h5,h6,p,li,small,label,span,.welcome-subtitle,.title,.price-top,.stop-title, body[data-category] h2, #trip-title, #trip-description, header h1):not(.cat-label):not(.welcome-title):not(.overlay h2):not(button):not(.btn):not(.central-btn):not(#trips-container .trip-card h3) {
+    text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
 
   /* Slightly lighten very dark buttons (#0E1520 -> #1F2F40) */
   /* Booking primary action buttons */
   #bookingOverlay #step1 .booking-actions .btn { background: #1F2F40 !important; }
+}
+
+/* Explicit dark mode reinforcement for AI overlay to fully mask background */
+@media (prefers-color-scheme: dark) {
+  #aiOverlay.overlay,
+  #aiOverlay .overlay-inner,
+  #aiOverlay .ga-inputbar,
+  #aiOverlay .ga-chat-topbar { background: rgba(7, 18, 26, 0.98) !important; }
+
+  /* AI close buttons: solid white bg, black X */
+  #aiOverlay .ga-chat-close,
+  #aiOverlay .close-overlay {
+    border-radius: 8px !important;
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #fff !important;
+  }
+
+  /* Send button: solid white bg, black arrow */
+  #aiOverlay .ga-send {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #fff !important;
+  }
 }
 
 /* Εμφάνιση με zoom */

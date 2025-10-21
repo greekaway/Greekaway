@@ -835,11 +835,11 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
   */
   @media (prefers-color-scheme: light) {
     /* Light backdrop for the full-screen overlay */
-    #bookingOverlay.overlay { background: #DCE8F0 !important; }
+  #bookingOverlay.overlay { background: #FFF9EB !important; }
 
     /* Light panel for any inner container that is visible on booking */
     #bookingOverlay .overlay-inner {
-      background: #DCE8F0 !important;
+      background: #FFF9EB !important;
       color: #1B2A3A !important;
       box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
       border: 1px solid rgba(0,0,0,0.04) !important;
@@ -848,6 +848,13 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
 
     /* Trip hero title: switch from white to dark navy for readability on light bg */
     #bookingOverlay #step1 .trip-hero-title { color: #1B2A3A !important; text-shadow: none !important; }
+
+    /* Keep month names/labels and day numbers white as in dark mode */
+    #bookingOverlay .flatpickr-current-month,
+    #bookingOverlay .flatpickr-current-month .cur-month,
+    #bookingOverlay .flatpickr-current-month .cur-year,
+    #bookingOverlay .flatpickr-weekday,
+    #bookingOverlay .flatpickr-day { color: #ffffff !important; text-shadow: 0 1px 1px rgba(0,0,0,0.18) !important; }
 
     /* Normal content text inside booking: adopt token + slight weight bump */
     #bookingOverlay :is(p, li, small, label, em, strong, span) {
