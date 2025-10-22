@@ -140,8 +140,29 @@
       // Title
       try {
         const t = sessionStorage.getItem('gw_trip_title') || '';
+        const id = sessionStorage.getItem('gw_trip_id') || '';
         if (t) document.getElementById('s3TripTitle').textContent = t;
-      } catch(_){}
+        else if (id) {
+          (async function(){
+            try {
+              let dv = '';
+              try { const rv = await fetch('/version.json', { cache: 'no-cache' }); if (rv.ok) { const j = await rv.json(); dv = j && j.dataVersion ? ('?v='+encodeURIComponent(String(j.dataVersion))) : ''; } } catch(_){ }
+              const r = await fetch(`/data/trips/${encodeURIComponent(id)}.json${dv}`, { cache: 'no-cache' });
+              if (!r.ok) return;
+              const trip = await r.json();
+              const lang = (localStorage.getItem('gw_lang') || 'el');
+              const getLocalized = (field) => {
+                if (!field) return '';
+                if (typeof field === 'string') return field;
+                if (typeof field === 'object') return field[lang] || field['el'] || Object.values(field)[0] || '';
+                return '';
+              };
+              const title = getLocalized(trip.title);
+              if (title) document.getElementById('s3TripTitle').textContent = title;
+            } catch(_){ }
+          })();
+        }
+      } catch(_){ }
 
       const get = (k, d='')=>{ 
         try { 

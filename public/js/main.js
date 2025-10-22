@@ -532,6 +532,40 @@ document.addEventListener("DOMContentLoaded", () => {
         try{ renderTripLocalized(); } catch(e){ G.error('i18n render failed', e); }
       });
 
+      // When the global UI language changes, ensure any open booking overlay or injected
+      // step content updates titles and calendar locale immediately.
+      window.addEventListener('i18n:changed', (ev) => {
+        try {
+          const lang = (ev && ev.detail && ev.detail.lang) || (window.currentI18n && window.currentI18n.lang) || getCurrentLang();
+          // Update booking overlay title prefix and trip title inside overlay if present
+          try {
+            const bookingTitleEl = document.getElementById('bookingOverlayTitle');
+            const overlayStepTitle = document.querySelector('#step1 .trip-title');
+            const overlayHero = document.querySelector('#step1 .trip-hero-title');
+            const prefix = (typeof window.t === 'function') ? window.t('booking.title') : 'Booking';
+            const tripTitle = (window.__loadedTrip && getLocalized(window.__loadedTrip.title)) || '';
+            if (bookingTitleEl) bookingTitleEl.textContent = tripTitle ? `${prefix} — ${tripTitle}` : prefix;
+            if (overlayStepTitle) overlayStepTitle.textContent = tripTitle;
+            if (overlayHero) overlayHero.textContent = tripTitle;
+          } catch(_){}
+          // Re-init any visible flatpickr calendars to pick up month/day names
+          try {
+            const allCal = document.querySelectorAll('.flatpickr-calendar, input.flatpickr-input, #calendarFull');
+            allCal && allCal.forEach(el => {
+              try {
+                if (el._flatpickr) {
+                  const inst = el._flatpickr;
+                  const selected = inst.selectedDates && inst.selectedDates[0] ? inst.formatDate(inst.selectedDates[0], 'Y-m-d') : (el.value || inst.input && inst.input.value);
+                  inst.destroy();
+                  const fpLocale = getFlatpickrLocale();
+                  window.flatpickr(inst.input || el, Object.assign({}, inst.config, { locale: fpLocale, defaultDate: selected }));
+                }
+              } catch(_){ }
+            });
+          } catch(_){ }
+        } catch(_){ }
+      });
+
       if (trip.map && trip.map.waypoints && trip.map.waypoints.length >= 2) {
         ensureGoogleMaps(() => renderRoute(trip.map));
       }
@@ -703,8 +737,11 @@ document.addEventListener("DOMContentLoaded", () => {
             // Navigate in the SAME tab to avoid any browser opening extra Google/new-tab pages
             // Persist trip info for Step 2 header
             try {
-              sessionStorage.setItem('gw_trip_title', stepTitle || '');
-              sessionStorage.setItem('gw_trip_desc', stepDesc || '');
+              // store the trip id rather than a pre-rendered localized title so Step 2
+              // can render the title in the user's current UI language when it loads
+              sessionStorage.setItem('gw_trip_id', (tripForHeader && tripForHeader.id) ? String(tripForHeader.id) : '');
+              sessionStorage.setItem('gw_trip_title', ''); // keep blank so step2 will fetch/localize
+              sessionStorage.setItem('gw_trip_desc', '');
             } catch(_) {}
             try {
               const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
