@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "languageName": "Italiano"
+  },
+  "siteTitle": "Greekaway",
+  "nav": {
+    "home": "Home",
+    "trips": "Viaggi",
+    "checkout": "Pagamento",
+    "admin": "Amministrazione",
+    "about": "Informazioni",
+    "ai": "Assistente IA",
+    "profile": "Profilo",
+    "book": "Prenota"
+  },
+  "admin": {
+    "title": "Admin Payments",
+    "downloadCsv": "Download CSV",
+    "backups": "Backups",
+    "filter": "Filter",
+    "status": "Status",
+    "amount": "Amount",
+    "help": "Enter admin credentials to view payments and backup status.",
+    "loading": "Loading...",
+    "error": "Error:",
+    "page": "Page",
+    "no_records": "No records found for this page/filters.",
+    "refresh": "Refresh"
+  },
+  "checkout": {
+    "pay": "Paga",
+    "cardPlaceholder": "Numero di carta",
+    "title": "Pagamento — Greekaway",
+    "name": "Nome",
+    "email": "Email",
+    "cardLabel": "Carta",
+    "expiry": "MM / AA",
+    "cvc": "CVC",
+    "payment_error": "Errore di pagamento",
+    "payment_failed": "Pagamento non riuscito",
+    "payment_success_test": "Pagamento riuscito",
+    "mock_complete": "Completato",
+    "network_error": "Errore di rete",
+    "info": "Il modulo di pagamento apparirà qui.",
+    "notice": "Pagamento sicuro tramite Stripe"
+  },
+  "welcome": {
+    "title": "Benvenuto su Greekaway",
+    "subtitle": "Scopri le migliori escursioni in Grecia",
+    "ask": "Chiedici qualsiasi cosa sul tuo viaggio!"
+  },
+  "about": {
+    "title": "About us",
+    "text": "Greekaway was created to offer curated trips in Greece with comfort, technology, and style."
+  },
+  "categories": {
+    "mountain": {
+      "title": "Escursioni in montagna"
+    },
+    "sea": {
+      "title": "Escursioni al mare"
+    },
+    "culture": {
+      "title": "Escursioni culturali"
+    }
+  },
+  "stop": {
+    "label": "Stop {n}"
+  },
+  "trip": {
+    "experienceTitle": "Experience"
+  },
+  "trips": {
+    "selectCategory": "Seleziona categoria",
+    "noneFound": "Nessun viaggio trovato in questa categoria."
+  },
+  "ui": {
+    "close": "Chiudi",
+    "cancel": "Annulla",
+    "back": "Indietro",
+    "finish": "Termina",
+    "choose": "Scegli"
+  },
+  "trips_ui": {
+    "backToCategories": "Back to categories"
+  },
+  "profile": {
+    "info": "Here you'll see your past trips and bookings."
+  },
+  "assistant": {
+    "title": "AI Assistant",
+    "close": "Close",
+    "suggestion": "Ask anything about your trip.",
+    "placeholder": "Ask anything",
+    "aria_message": "Message",
+    "aria_send": "Send",
+    "stream_error": "Connection error with the assistant.",
+    "fallback_error": "We didn't receive a reply right now.",
+    "error_prefix": "Error:"
+  },
+  "feedback": {
+    "title": "How was your experience?",
+    "subtitle": "Help us match groups better.",
+    "positive": "Good",
+    "neutral": "Neutral",
+    "negative": "Bad",
+    "placeholder": "Optional comment...",
+    "try_again": "Try again"
+  },
+  "carousel": {
+    "prev": "Previous",
+    "next": "Next"
+  },
+  "booking": {
+    "title": "Booking",
+    "date": "Data",
+    "date_placeholder": "YYYY-MM-DD",
+    "seats": "Posti",
+    "total": "Total",
+    "create": "Create booking",
+    "name_placeholder": "Full name",
+    "email_placeholder": "name@example.com",
+    "loading": "Loading...",
+    "step1_of3": "Passo 1 di 3",
+    "traveler_options": "Opzioni del viaggiatore",
+    "adults": "Adulti",
+    "children": "Bambini",
+    "increase": "+",
+    "decrease": "−",
+    "increase_adults": "Increase adults",
+    "decrease_adults": "Decrease adults",
+    "increase_children": "Increase children",
+    "decrease_children": "Decrease children",
+    "bags_large": "Valigie grandi",
+    "bags_small": "Valigie piccole",
+    "increase_bags_large": "Increase large suitcases",
+    "decrease_bags_large": "Decrease large suitcases",
+    "increase_bags_small": "Increase small suitcases",
+    "decrease_bags_small": "Decrease small suitcases",
+    "preferred_language": "Lingua di comunicazione",
+    "age_group": "Fascia d'età",
+    "traveler_profile": "Profilo del viaggiatore",
+    "traveler_type": "Tipo di viaggiatore",
+    "travel_style": "Stile di viaggio",
+    "daily_rhythm": "Ritmo quotidiano",
+    "interests": "Interessi",
+    "sociality": "Socialità",
+    "children_ages": "Età dei bambini",
+    "children_age_range": "0 – 17 anni",
+    "pick_ages": "Seleziona età",
+    "step2_of3": "Passo 2 di 3",
+    "step3_of3": "Passo 3 di 3",
+    "next": "Avanti",
+    "error_create": "Error creating booking",
+    "error_network": "Network error creating booking",
+    "error_availability": "Error checking availability",
+    "error_trip": "Error loading trip data",
+    "availability_msg": "Disponibilità per {date}: totale {capacity}, prenotate {taken}",
+    "created": "Booking created",
+    "proceed_to_checkout": "Proceed to Checkout",
+    "occupancy": "Occupazione",
+    "trip": "Trip",
+    "confirmation_title": "Booking Confirmation",
+    "traveler_type_options": {
+      "explorer": "Esploratori",
+      "relaxed": "Viaggiatori rilassati",
+      "explore": "Esploratori – attivi",
+      "relax": "Viaggiatori rilassati",
+      "family": "Stile famiglia",
+      "solo": "Viaggiatori solitari"
+    },
+    "interests_options": {
+      "nature": "Natura",
+      "culture": "Cultura",
+      "mountain": "Montagna",
+      "sea": "Mare",
+      "gastronomy": "Gastronomia"
+    },
+    "sociality_options": {
+      "social": "Socievole",
+      "quiet": "Riservato"
+    },
+    "travel_style_options": {
+      "sociable": "Sociable",
+      "quiet": "Quiet",
+      "cultural": "Cultural",
+      "nature": "Nature-oriented"
+    },
+    "preferred_language_options": {
+      "en": "English",
+      "fr": "Français",
+      "de": "Deutsch",
+      "el": "Ελληνικά",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית",
+      "nl": "Nederlands",
+      "sv": "Svenska",
+      "ko": "한국어",
+      "pt": "Português",
+      "ru": "Русский"
+    },
+    "daily_rhythm_options": {
+      "early": "Early riser",
+      "night": "Night type",
+      "talkative": "Talkative",
+      "reserved": "Reserved"
+    }
+  }
+}

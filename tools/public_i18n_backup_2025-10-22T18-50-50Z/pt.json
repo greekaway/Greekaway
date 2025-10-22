@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "languageName": "Português"
+  },
+  "siteTitle": "Greekaway",
+  "nav": {
+    "home": "Início",
+    "trips": "Viagens",
+    "checkout": "Pagamento",
+    "admin": "Admin",
+    "about": "Sobre",
+    "ai": "Assistente de IA",
+    "profile": "Perfil",
+    "book": "Reservar"
+  },
+  "admin": {
+    "title": "Admin Payments",
+    "downloadCsv": "Download CSV",
+    "backups": "Backups",
+    "filter": "Filter",
+    "status": "Status",
+    "amount": "Amount",
+    "help": "Enter admin credentials to view payments and backup status.",
+    "loading": "Loading...",
+    "error": "Error:",
+    "page": "Page",
+    "no_records": "No records found for this page/filters.",
+    "refresh": "Refresh"
+  },
+  "checkout": {
+    "pay": "Pagar",
+    "cardPlaceholder": "Número do cartão",
+    "title": "Pagamento — Greekaway",
+    "name": "Nome",
+    "email": "Email",
+    "cardLabel": "Cartão",
+    "expiry": "MM / AA",
+    "cvc": "CVC",
+    "payment_error": "Erro no pagamento",
+    "payment_failed": "Falha no pagamento",
+    "payment_success_test": "Pagamento bem-sucedido",
+    "mock_complete": "Concluído",
+    "network_error": "Erro de rede",
+    "info": "O formulário de pagamento aparecerá aqui.",
+    "notice": "Pagamento seguro através do Stripe"
+  },
+  "welcome": {
+    "title": "Bem-vindo à Greekaway",
+    "subtitle": "Descubra as melhores excursões de um dia pela Grécia",
+    "ask": "Pergunte-nos qualquer coisa sobre a sua viagem!"
+  },
+  "about": {
+    "title": "Sobre nós",
+    "text": "A Greekaway foi criada para oferecer viagens selecionadas na Grécia com conforto, tecnologia e estilo."
+  },
+  "categories": {
+    "mountain": {
+      "title": "Viagens de Montanha"
+    },
+    "sea": {
+      "title": "Viagens de Mar"
+    },
+    "culture": {
+      "title": "Viagens Culturais"
+    }
+  },
+  "stop": {
+    "label": "Stop {n}"
+  },
+  "trip": {
+    "experienceTitle": "Experience"
+  },
+  "trips": {
+    "selectCategory": "Selecionar Categoria",
+    "noneFound": "Nenhuma viagem encontrada nesta categoria."
+  },
+  "ui": {
+    "close": "Fechar",
+    "cancel": "Cancelar",
+    "back": "Voltar",
+    "finish": "Concluir",
+    "choose": "Escolher"
+  },
+  "trips_ui": {
+    "backToCategories": "Back to categories"
+  },
+  "profile": {
+    "info": "Aqui você verá suas viagens e reservas anteriores."
+  },
+  "assistant": {
+    "title": "Assistente de IA",
+    "close": "Fechar",
+    "suggestion": "Pergunte-nos qualquer coisa sobre a sua viagem.",
+    "placeholder": "Escreva a sua pergunta",
+    "aria_message": "Mensagem",
+    "aria_send": "Enviar",
+    "stream_error": "Erro de conexão com o assistente.",
+    "fallback_error": "Não recebemos resposta agora.",
+    "error_prefix": "Erro:"
+  },
+  "feedback": {
+    "title": "How was your experience?",
+    "subtitle": "Help us match groups better.",
+    "positive": "Good",
+    "neutral": "Neutral",
+    "negative": "Bad",
+    "placeholder": "Optional comment...",
+    "try_again": "Try again"
+  },
+  "carousel": {
+    "prev": "Anterior",
+    "next": "Seguinte"
+  },
+  "booking": {
+    "title": "Booking",
+    "date": "Data",
+    "date_placeholder": "YYYY-MM-DD",
+    "seats": "Lugares",
+    "total": "Total",
+    "create": "Create booking",
+    "name_placeholder": "Full name",
+    "email_placeholder": "name@example.com",
+    "loading": "Loading...",
+    "step1_of3": "Etapa 1 de 3",
+    "traveler_options": "Opções do viajante",
+    "adults": "Adultos",
+    "children": "Crianças",
+    "increase": "+",
+    "decrease": "−",
+    "increase_adults": "Aumentar adultos",
+    "decrease_adults": "Diminuir adultos",
+    "increase_children": "Aumentar crianças",
+    "decrease_children": "Diminuir crianças",
+    "bags_large": "Mala grande",
+    "bags_small": "Mala pequena",
+    "increase_bags_large": "Aumentar malas grandes",
+    "decrease_bags_large": "Diminuir malas grandes",
+    "increase_bags_small": "Aumentar malas pequenas",
+    "decrease_bags_small": "Diminuir malas pequenas",
+    "preferred_language": "Idioma de comunicação",
+    "age_group": "Faixa etária",
+    "traveler_profile": "Perfil do viajante",
+    "traveler_type": "Tipo de viajante",
+    "travel_style": "Estilo de viagem",
+    "daily_rhythm": "Ritmo diário",
+    "interests": "Interesses",
+    "sociality": "Sociabilidade",
+    "children_ages": "Idades das crianças",
+    "children_age_range": "0 – 17 anos",
+    "pick_ages": "Escolher idades",
+    "step2_of3": "Etapa 2 de 3",
+    "step3_of3": "Etapa 3 de 3",
+    "next": "Próximo",
+    "error_create": "Error creating booking",
+    "error_network": "Network error creating booking",
+    "error_availability": "Error checking availability",
+    "error_trip": "Error loading trip data",
+    "availability_msg": "Disponibilidade para {date}: total {capacity}, reservadas {taken}",
+    "created": "Booking created",
+    "proceed_to_checkout": "Proceed to Checkout",
+    "occupancy": "Ocupação",
+    "trip": "Trip",
+    "confirmation_title": "Booking Confirmation",
+    "traveler_type_options": {
+      "explorer": "Exploradores",
+      "relaxed": "Viajantes descontraídos",
+      "explore": "Exploradores – ativos",
+      "relax": "Viajantes descontraídos",
+      "family": "Estilo familiar",
+      "solo": "Viajantes solo"
+    },
+    "interests_options": {
+      "nature": "Natureza",
+      "culture": "Cultura",
+      "mountain": "Montanha",
+      "sea": "Mar",
+      "gastronomy": "Gastronomia"
+    },
+    "sociality_options": {
+      "social": "Sociável",
+      "quiet": "Reservado"
+    },
+    "travel_style_options": {
+      "sociable": "Sociable",
+      "quiet": "Quiet",
+      "cultural": "Cultural",
+      "nature": "Nature-oriented"
+    },
+    "preferred_language_options": {
+      "en": "English",
+      "fr": "Français",
+      "de": "Deutsch",
+      "el": "Ελληνικά",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית",
+      "nl": "Nederlands",
+      "sv": "Svenska",
+      "ko": "한국어",
+      "pt": "Português",
+      "ru": "Русский"
+    },
+    "daily_rhythm_options": {
+      "early": "Early riser",
+      "night": "Night type",
+      "talkative": "Talkative",
+      "reserved": "Reserved"
+    }
+  }
+}

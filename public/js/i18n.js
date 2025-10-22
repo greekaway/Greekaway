@@ -51,7 +51,8 @@
   async function discoverLanguages(){
     if (Array.isArray(AVAILABLE) && AVAILABLE.length) return AVAILABLE;
     try {
-      const res = await fetch('/locales/index.json', { cache: 'no-cache' });
+      // Prefer the lightweight public bundles index if present (truly client-side)
+      const res = await fetch('/i18n/index.json', { cache: 'no-cache' }).catch(()=>null) || await fetch('/locales/index.json', { cache: 'no-cache' });
       if (res.ok) {
         const data = await res.json();
         if (data && Array.isArray(data.languages)) {
@@ -63,17 +64,7 @@
         }
       }
     } catch(_){ }
-    // Try optional fallback index under /i18n if present
-    try {
-      const res2 = await fetch('/i18n/index.json', { cache: 'no-cache' });
-      if (res2.ok) {
-        const data2 = await res2.json();
-        if (data2 && Array.isArray(data2.languages)) {
-          AVAILABLE = data2.languages;
-          return AVAILABLE;
-        }
-      }
-    } catch(_){ }
+    // If neither index is available, fallback to a sensible list
     // fallback to common set (broader list in case /locales/index.json is unreachable)
     AVAILABLE = ['el','en','fr','de','he','it','es','zh','nl','sv','ko','pt','ru'];
     // As a fallback, try to obtain a version tag from /version.json so locale JSONs can be cache-busted
@@ -106,10 +97,10 @@
 
   async function loadMessages(lang){
     if (CACHE[lang]) return CACHE[lang];
-    // Try primary /locales path, then fallback to /i18n path
-    const ver = I18N_VERSION || (typeof window !== 'undefined' && (window.__BUILD_TIME || window.__LOCALES_DEV_VERSION));
+  // Prefer the public `/i18n` bundles first (lazy-load only selected language), then fallback to `/locales`
+  const ver = I18N_VERSION || (typeof window !== 'undefined' && (window.__BUILD_TIME || window.__LOCALES_DEV_VERSION));
     const qp = ver ? (`?v=` + encodeURIComponent(String(ver))) : (`?ts=` + Date.now());
-    const tryPaths = [`/locales/${lang}.json${qp}`, `/i18n/${lang}.json${qp}`];
+  const tryPaths = [`/i18n/${lang}.json${qp}`, `/locales/${lang}.json${qp}`];
     for (const url of tryPaths) {
       try {
         // Force bypass of any stale HTTP caches while keeping ETag/304 semantics server-side
