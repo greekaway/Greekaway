@@ -26,21 +26,21 @@
     "refresh": "Refresh"
   },
   "checkout": {
-    "pay": "Pay",
-    "cardPlaceholder": "Card number",
-    "title": "Checkout — Greekaway",
-    "name": "Name",
+    "pay": "Pagar",
+    "cardPlaceholder": "Número do cartão",
+    "title": "Pagamento — Greekaway",
+    "name": "Nome",
     "email": "Email",
-    "cardLabel": "Card",
+    "cardLabel": "Cartão",
   "expiry": "MM / AA",
   "cvc": "CVC",
-    "payment_error": "Payment error",
-    "payment_failed": "Payment failed",
-    "payment_success_test": "Payment successful",
-    "mock_complete": "Completed",
-    "network_error": "Network error",
-    "info": "The payment form will appear here.",
-    "notice": "Secure Payment via Stripe"
+    "payment_error": "Erro no pagamento",
+    "payment_failed": "Falha no pagamento",
+    "payment_success_test": "Pagamento bem-sucedido",
+    "mock_complete": "Concluído",
+    "network_error": "Erro de rede",
+    "info": "O formulário de pagamento aparecerá aqui.",
+    "notice": "Pagamento seguro através do Stripe"
   },
   "welcome": {
     "title": "Bem-vindo à Greekaway",
