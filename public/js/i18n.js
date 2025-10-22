@@ -7,6 +7,44 @@
   const RTL_LANGS = ['he', 'ar', 'fa', 'ur'];
   let AVAILABLE = null; // discovered languages from /locales/index.json
   let I18N_VERSION = null; // version tag to bust cache for locale JSONs
+  // Create/update a tiny debug watermark showing the current locales version (bottom-right)
+  function ensureVersionWatermark(){
+    try {
+      let el = document.getElementById('gwVersionMark');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'gwVersionMark';
+        el.setAttribute('aria-hidden', 'true');
+        // Fixed, small, unobtrusive: bottom-right, pointer-events none
+        el.style.position = 'fixed';
+        el.style.right = '8px';
+        el.style.bottom = '6px';
+        el.style.zIndex = '2147483647';
+        el.style.pointerEvents = 'none';
+        el.style.userSelect = 'none';
+        el.style.fontFamily = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+        el.style.fontSize = '11px';
+        el.style.lineHeight = '1.2';
+        el.style.opacity = '0.4';
+        el.style.color = '#D4AF37';
+        el.style.background = 'transparent';
+        el.style.whiteSpace = 'nowrap';
+        el.style.maxWidth = '60vw';
+        el.style.textAlign = 'right';
+        document.body.appendChild(el);
+      }
+      // Prefer the discovered i18n version; else fetch from /version.json
+      const setText = (v) => { try { el.textContent = v ? ("Locales v" + v) : ""; } catch(_){ } };
+      if (I18N_VERSION) {
+        setText(I18N_VERSION);
+      } else {
+        fetch('/version.json', { cache: 'no-cache' })
+          .then(r => r.ok ? r.json() : null)
+          .then(j => setText(j && (j.localesVersion || j.dataVersion)))
+          .catch(()=>{});
+      }
+    } catch(_){ }
+  }
   const CACHE = {}; // lang -> messages
   const normalize = (code) => (String(code||'').toLowerCase().slice(0,2));
 
@@ -20,6 +58,7 @@
           AVAILABLE = data.languages;
           if (data.version) I18N_VERSION = String(data.version);
           try { window.I18N_VERSION = I18N_VERSION; } catch(_){ }
+          try { ensureVersionWatermark(); } catch(_){ }
           return AVAILABLE;
         }
       }
@@ -171,6 +210,7 @@
     } catch(e){}
     window.currentI18n = { lang, msgs };
     try{ window.dispatchEvent(new CustomEvent('i18n:changed', { detail: { lang, msgs } })); }catch(e){}
+    try { ensureVersionWatermark(); } catch(_){ }
   }
 
   async function populateSelector(lang){
@@ -220,6 +260,7 @@
   const msgs = await loadMessages(lang);
     applyTranslations(msgs);
   maybeRefineActiveOptionLabel(lang, msgs);
+    try { ensureVersionWatermark(); } catch(_){ }
     // Observe DOM mutations and translate only new/changed nodes (debounced) to reduce jank
     try {
       if (!window.__gwI18nObserver) {
@@ -279,4 +320,5 @@
   window.t = function(key){
     try{ return lookup(window.currentI18n && window.currentI18n.msgs || {}, key) || key; } catch(e){ return key; }
   };
+  try { window.addEventListener('focus', () => ensureVersionWatermark(), { passive: true }); } catch(_){ }
 })();
