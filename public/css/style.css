@@ -297,6 +297,8 @@ footer a.central-btn:hover i {
   .overlay .close-overlay { top: 10px; right: 10px; }
   /* ensure selects are inset from the screen edges on mobile for breathing room */
   .overlay select, .profile-select { width: 90vw; max-width: calc(100% - 40px); margin-left: auto; margin-right: auto; }
+  /* Move AI chat close button slightly further right on mobile (approx. two taps) */
+  #aiOverlay .ga-chat-close { right: 42px; }
 }
 
 /* Additional guard: ensure html/body have no unintended margin that can
