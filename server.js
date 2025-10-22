@@ -40,6 +40,15 @@ if (typeof OPENAI_API_KEY === 'string') {
   OPENAI_API_KEY = OPENAI_API_KEY.trim().replace(/^['"]|['"]$/g, '');
 }
 
+// Live data helpers (weather, optional news) with caching
+let liveData = null;
+try {
+  liveData = require('./live/liveData');
+  console.log('live-data: module loaded');
+} catch (e) {
+  console.warn('live-data: not available', e && e.message ? e.message : e);
+}
+
 // Initialize a simple SQLite bookings table so server endpoints can create bookings
 let bookingsDb = null;
 try {
@@ -211,6 +220,66 @@ function buildAssistantSystemPrompt() {
   const base = 'You are the helpful, concise Greekaway travel assistant. Answer in the language of the user when possible.';
   if (!KNOWLEDGE_TEXT) return base;
   return base + '\n\nGreekaway knowledge base (JSON):\n' + KNOWLEDGE_TEXT + '\n\nUse this knowledge as ground truth when relevant. If a topic is not covered, answer normally.';
+}
+
+// -----------------------------
+// Live-data: destination detection and snippets for assistant
+// -----------------------------
+const TRIPINDEX_PATH = path.join(__dirname, 'public', 'data', 'tripindex.json');
+let DEST_NAMES = null; // Set of names in various languages
+let DEST_LOADED_AT = 0;
+function loadDestinationsOnce() {
+  try {
+    const raw = fs.readFileSync(TRIPINDEX_PATH, 'utf8');
+    const arr = JSON.parse(raw);
+    const names = new Set();
+    arr.forEach((t) => {
+      const title = t && t.title ? t.title : {};
+      Object.values(title || {}).forEach((v) => {
+        if (!v) return;
+        // Split combined titles like "Parnassos & Delphi"
+        String(v).split(/\s*[&/,]|\s+και\s+|\s+and\s+/i).forEach((p) => {
+          const s = String(p).trim();
+          if (s) names.add(s.toLowerCase());
+        });
+        names.add(String(v).trim().toLowerCase());
+      });
+      // simple synonyms
+      if (t.id === 'lefkas' || t.id === 'lefkas' || t.id === 'lefkas') {
+        names.add('lefkas');
+        names.add('λευκάδα');
+        names.add('lefka');
+      }
+    });
+    DEST_NAMES = names;
+    DEST_LOADED_AT = Date.now();
+  } catch (e) {
+    DEST_NAMES = new Set(['lefkas','lefka','lefka\u03b4\u03b1','λε\u03c5κάδα','lefka\u03b4a','parnassos','delphi','olympia']);
+  }
+}
+function ensureDestinationsFresh() {
+  if (!DEST_NAMES || (Date.now() - DEST_LOADED_AT > 5 * 60 * 1000)) {
+    loadDestinationsOnce();
+  }
+}
+function detectPlaceFromMessage(message) {
+  ensureDestinationsFresh();
+  const m = String(message || '').toLowerCase();
+  let best = null;
+  for (const name of DEST_NAMES) {
+    if (name && m.includes(name)) { best = name; break; }
+  }
+  // normalize some known variants
+  if (best === 'lefkas') return 'Lefkada';
+  if (best === 'λεφκάδα' || best === 'λευκάδα') return 'Λευκάδα';
+  if (best === 'delphi' || best === 'δελφοί') return 'Delphi';
+  if (best === 'parnassos' || best === 'πάρνασος') return 'Parnassos';
+  if (best === 'olympia' || best === 'ολυμπία') return 'Olympia';
+  return best ? best : null;
+}
+function wantsWeather(message) {
+  const m = String(message || '').toLowerCase();
+  return /(weather|temperature|forecast|rain|wind|sunny|cloud|\bmeteo\b|\bκαιρ)/i.test(m);
 }
 
 // Serve /trips/trip.html with the API key injected from environment.
@@ -545,15 +614,39 @@ app.post('/api/assistant', express.json(), async (req, res) => {
     // If no key, return a friendly mock reply instead of erroring out
     if (!OPENAI_API_KEY) {
       const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
-      return res.json({ reply: mockAssistantReply(message), model: 'mock' });
+      // Enrich mock with live weather snippet if relevant for local testing
+      let extra = '';
+      try {
+        const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
+        const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
+        const place = detectPlaceFromMessage(message);
+        if (liveData && (place || wantsWeather(message))) {
+          const lc = await liveData.buildLiveContext({ place: place || 'Athens', lang: userLang, include: { weather: true, news: false }, rssUrl: process.env.NEWS_RSS_URL || null });
+          if (lc && lc.text) extra = `\n\n${lc.text}`;
+        }
+      } catch (_) {}
+      return res.json({ reply: mockAssistantReply(message) + extra, model: 'mock' });
     }
     const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
     const history = Array.isArray(req.body && req.body.history) ? req.body.history : [];
     if (!message) return res.status(400).json({ error: 'Missing message' });
 
+    // Live data enrichment (weather/news) — lightweight heuristic
+    const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
+    const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
+    const place = detectPlaceFromMessage(message);
+    let liveContextText = '';
+    if (liveData && (place || wantsWeather(message))) {
+      try {
+        const lc = await liveData.buildLiveContext({ place: place || 'Athens', lang: userLang, include: { weather: true, news: false }, rssUrl: process.env.NEWS_RSS_URL || null });
+        if (lc && lc.text) liveContextText = lc.text;
+      } catch (e) { /* non-fatal */ }
+    }
+
     // Build messages array (optional short system prompt guiding assistant tone)
     const messages = [
       { role: 'system', content: buildAssistantSystemPrompt() },
+      ...(liveContextText ? [{ role: 'system', content: `Live data context (refreshed every ~5m):\n${liveContextText}` }] : []),
       ...history.filter(m => m && m.role && m.content).map(m => ({ role: m.role, content: String(m.content) })),
       { role: 'user', content: message }
     ];
@@ -595,7 +688,16 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache, no-transform');
       res.setHeader('Connection', 'keep-alive');
-      const txt = mockAssistantReply(message);
+      let txt = mockAssistantReply(message);
+      try {
+        const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
+        const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
+        const place = detectPlaceFromMessage(message);
+        if (liveData && (place || wantsWeather(message))) {
+          const lc = await liveData.buildLiveContext({ place: place || 'Athens', lang: userLang, include: { weather: true, news: false }, rssUrl: process.env.NEWS_RSS_URL || null });
+          if (lc && lc.text) txt += `\n\n${lc.text}`;
+        }
+      } catch (_) {}
       // Write in a couple of chunks to simulate streaming
       const parts = txt.match(/.{1,40}/g) || [txt];
       for (const p of parts) res.write(p);
@@ -606,8 +708,21 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
     const history = Array.isArray(req.body && req.body.history) ? req.body.history : [];
     if (!message) { res.status(400).end('Missing message'); return; }
 
+    // Live enrichment
+    const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
+    const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
+    const place = detectPlaceFromMessage(message);
+    let liveContextText = '';
+    if (liveData && (place || wantsWeather(message))) {
+      try {
+        const lc = await liveData.buildLiveContext({ place: place || 'Athens', lang: userLang, include: { weather: true, news: false }, rssUrl: process.env.NEWS_RSS_URL || null });
+        if (lc && lc.text) liveContextText = lc.text;
+      } catch (e) {}
+    }
+
     const messages = [
       { role: 'system', content: buildAssistantSystemPrompt() },
+      ...(liveContextText ? [{ role: 'system', content: `Live data context (refreshed every ~5m):\n${liveContextText}` }] : []),
       ...history.filter(m => m && m.role && m.content).map(m => ({ role: m.role, content: String(m.content) })),
       { role: 'user', content: message }
     ];
@@ -669,6 +784,20 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
   } catch (e) {
     console.error('AI Assistant stream error:', e && e.stack ? e.stack : e);
     try { res.end(); } catch(_e) {}
+  }
+});
+
+// Public live weather endpoint for quick UI/tests: /api/live/weather?place=Lefkada&lang=en
+app.get('/api/live/weather', async (req, res) => {
+  if (!liveData) return res.status(501).json({ error: 'live-data module unavailable' });
+  try {
+    const place = (req.query.place || '').toString();
+    const lang = (req.query.lang || '').toString() || 'en';
+    if (!place) return res.status(400).json({ error: 'Missing place' });
+    const w = await liveData.getCurrentWeatherByPlace(place, lang);
+    return res.json({ ok: true, place: w.place, country: w.country, temperature_c: w.temperature_c, conditions: w.conditions, windspeed_kmh: w.windspeed_kmh, time: w.time });
+  } catch (e) {
+    return res.status(500).json({ error: e && e.message ? e.message : 'Failed' });
   }
 });
 
