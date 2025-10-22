@@ -388,14 +388,27 @@ app.get('/locales/index.json', (req, res) => {
       .filter((v, i, a) => a.indexOf(v) === i)
       .sort();
     const version = computeLocalesVersion();
-    if (IS_DEV) res.set('Cache-Control', 'no-store');
-    else res.set('Cache-Control', 'public, max-age=300');
+    // Avoid stale locales discovery. In prod too, instruct all caches to revalidate or not store.
+    if (IS_DEV) {
+      res.set('Cache-Control', 'no-store');
+    } else {
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      res.set('Surrogate-Control', 'no-store');
+    }
     res.json({ languages: langs, version });
   } catch (e) {
     // Fallback to a sensible default set if directory missing
     const version = computeLocalesVersion();
-    if (IS_DEV) res.set('Cache-Control', 'no-store');
-    else res.set('Cache-Control', 'public, max-age=60');
+    if (IS_DEV) {
+      res.set('Cache-Control', 'no-store');
+    } else {
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      res.set('Surrogate-Control', 'no-store');
+    }
     res.json({ languages: ['el','en','fr','de','he','it','es','zh','nl','sv','ko','pt','ru'], version });
   }
 });
@@ -406,7 +419,11 @@ app.get('/version.json', (req, res) => {
     const startedAt = new Date().toISOString();
     const localesVersion = computeLocalesVersion();
     const dataVersion = computeDataVersion();
-    res.set('Cache-Control', IS_DEV ? 'no-store' : 'public, max-age=60');
+    // Force no caching anywhere (browser, CDN, proxy) to prevent stale version info
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
     return res.json({
       node: process.version,
       isDev: IS_DEV,
@@ -416,6 +433,10 @@ app.get('/version.json', (req, res) => {
       dataVersion
     });
   } catch (e) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
     return res.json({ isDev: IS_DEV, isRender: IS_RENDER });
   }
 });
