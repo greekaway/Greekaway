@@ -348,9 +348,10 @@ function computeLocalesVersion() {
         } catch(_) { /* ignore */ }
       }
     }
-    return maxMtime || Date.now();
+    // Normalize to integer milliseconds for consistent display across OS (no decimals)
+    return Math.floor(maxMtime || Date.now());
   } catch(_) {
-    return Date.now();
+    return Math.floor(Date.now());
   }
 }
 
@@ -373,9 +374,9 @@ function computeDataVersion() {
       }
     };
     walk(DATA_DIR);
-    return maxMtime || Date.now();
+    return Math.floor(maxMtime || Date.now());
   } catch(_) {
-    return Date.now();
+    return Math.floor(Date.now());
   }
 }
 
