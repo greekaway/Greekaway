@@ -12,10 +12,10 @@
   display: block;
 }
 
-/* Ensure booking overlay visually and interactively sits above the global footer on all devices */
-#bookingOverlay.overlay { z-index: 13000 !important; }
-/* While the booking overlay is active, hide the footer to avoid intercepting clicks near the buttons */
-#bookingOverlay.active ~ footer { display: none !important; }
+/* Ensure booking overlay visually sits above page content; keep footer visible for uniformity */
+#bookingOverlay.overlay { z-index: 11000 !important; }
+/* Do not hide the footer on calendar anymore; overlay remains above so clicks are safe */
+/* #bookingOverlay.active ~ footer { display: none !important; } */
 
 /* Hide non-calendar UI but keep Step 1 containers visible so calendar can render */
 /* Keep #step1 and its .calendar-card in the layout; hide other siblings and non-essential elements */
