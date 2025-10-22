@@ -10,6 +10,9 @@ const { TextDecoder } = require('util');
 try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installed */ }
 
 const app = express();
+// Environment detection: treat non-production and non-Render as local dev
+const IS_RENDER = !!process.env.RENDER;
+const IS_DEV = (process.env.NODE_ENV !== 'production') && !IS_RENDER;
 // Enable gzip compression if available to reduce payload size
 if (compression) {
   try { app.use(compression()); console.log('server: compression enabled'); } catch(e) { /* ignore */ }
@@ -238,9 +241,14 @@ app.get('/checkout.html', (req, res) => {
 
 // 1️⃣ Σερβίρουμε στατικά αρχεία από το /public με caching για non-HTML assets
 app.use(express.static(path.join(__dirname, "public"), {
-  etag: true,
+  etag: !IS_DEV,
   lastModified: true,
   setHeaders: (res, filePath) => {
+    if (IS_DEV) {
+      // In dev, force freshest assets across devices
+      res.setHeader('Cache-Control', 'no-store');
+      return;
+    }
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache');
     } else {
@@ -254,9 +262,13 @@ app.use(express.static(path.join(__dirname, "public"), {
 const LOCALES_DIR = path.join(__dirname, 'locales');
 try { fs.mkdirSync(LOCALES_DIR, { recursive: true }); } catch (e) {}
 app.use('/locales', express.static(LOCALES_DIR, {
-  etag: true,
+  etag: !IS_DEV,
   lastModified: true,
   setHeaders: (res, filePath) => {
+    if (IS_DEV) {
+      res.setHeader('Cache-Control', 'no-store');
+      return;
+    }
     // Locales rarely change during a session; allow caching
     res.setHeader('Cache-Control', 'public, max-age=3600');
     if (filePath.endsWith('index.json')) {
@@ -273,11 +285,13 @@ app.get('/locales/index.json', (req, res) => {
       .map(f => f.name.replace(/\.json$/,'').toLowerCase())
       .filter((v, i, a) => a.indexOf(v) === i)
       .sort();
-    res.set('Cache-Control', 'public, max-age=300');
+    if (IS_DEV) res.set('Cache-Control', 'no-store');
+    else res.set('Cache-Control', 'public, max-age=300');
     res.json({ languages: langs });
   } catch (e) {
     // Fallback to a sensible default set if directory missing
-    res.set('Cache-Control', 'public, max-age=60');
+    if (IS_DEV) res.set('Cache-Control', 'no-store');
+    else res.set('Cache-Control', 'public, max-age=60');
     res.json({ languages: ['el','en','fr','de','he','it','es','zh'] });
   }
 });
