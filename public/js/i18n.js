@@ -6,6 +6,7 @@
   const FLAGS = { el: '🇬🇷', en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', he: '🇮🇱', it: '🇮🇹', es: '🇪🇸', zh: '🇨🇳', nl: '🇳🇱', sv: '🇸🇪', ko: '🇰🇷', pt: '🇵🇹', ru: '🇷🇺' };
   const RTL_LANGS = ['he', 'ar', 'fa', 'ur'];
   let AVAILABLE = null; // discovered languages from /locales/index.json
+  let I18N_VERSION = null; // version tag to bust cache for locale JSONs
   const CACHE = {}; // lang -> messages
   const normalize = (code) => (String(code||'').toLowerCase().slice(0,2));
 
@@ -17,6 +18,7 @@
         const data = await res.json();
         if (data && Array.isArray(data.languages)) {
           AVAILABLE = data.languages;
+          if (data.version) I18N_VERSION = String(data.version);
           return AVAILABLE;
         }
       }
@@ -53,7 +55,8 @@
   async function loadMessages(lang){
     if (CACHE[lang]) return CACHE[lang];
     // Try primary /locales path, then fallback to /i18n path
-    const tryPaths = [`/locales/${lang}.json`, `/i18n/${lang}.json`];
+    const qp = I18N_VERSION ? (`?v=` + encodeURIComponent(I18N_VERSION)) : '';
+    const tryPaths = [`/locales/${lang}.json${qp}`, `/i18n/${lang}.json${qp}`];
     for (const url of tryPaths) {
       try {
         // Allow browser/HTTP caching as configured by the server

@@ -303,6 +303,24 @@ app.use('/locales', express.static(LOCALES_DIR, {
     }
   }
 }));
+function computeLocalesVersion() {
+  try {
+    const entries = fs.readdirSync(LOCALES_DIR, { withFileTypes: true });
+    let maxMtime = 0;
+    for (const e of entries) {
+      if (e.isFile() && e.name.endsWith('.json')) {
+        try {
+          const st = fs.statSync(path.join(LOCALES_DIR, e.name));
+          maxMtime = Math.max(maxMtime, st.mtimeMs || 0);
+        } catch(_) { /* ignore */ }
+      }
+    }
+    return maxMtime || Date.now();
+  } catch(_) {
+    return Date.now();
+  }
+}
+
 app.get('/locales/index.json', (req, res) => {
   try {
     const files = fs.readdirSync(LOCALES_DIR, { withFileTypes: true });
@@ -311,14 +329,34 @@ app.get('/locales/index.json', (req, res) => {
       .map(f => f.name.replace(/\.json$/,'').toLowerCase())
       .filter((v, i, a) => a.indexOf(v) === i)
       .sort();
+    const version = computeLocalesVersion();
     if (IS_DEV) res.set('Cache-Control', 'no-store');
     else res.set('Cache-Control', 'public, max-age=300');
-    res.json({ languages: langs });
+    res.json({ languages: langs, version });
   } catch (e) {
     // Fallback to a sensible default set if directory missing
+    const version = computeLocalesVersion();
     if (IS_DEV) res.set('Cache-Control', 'no-store');
     else res.set('Cache-Control', 'public, max-age=60');
-    res.json({ languages: ['el','en','fr','de','he','it','es','zh','nl','sv','ko','pt','ru'] });
+    res.json({ languages: ['el','en','fr','de','he','it','es','zh','nl','sv','ko','pt','ru'], version });
+  }
+});
+
+// Lightweight version info for quick sanity checks across devices/environments
+app.get('/version.json', (req, res) => {
+  try {
+    const startedAt = new Date().toISOString();
+    const localesVersion = computeLocalesVersion();
+    res.set('Cache-Control', IS_DEV ? 'no-store' : 'public, max-age=60');
+    return res.json({
+      node: process.version,
+      isDev: IS_DEV,
+      isRender: IS_RENDER,
+      startedAt,
+      localesVersion
+    });
+  } catch (e) {
+    return res.json({ isDev: IS_DEV, isRender: IS_RENDER });
   }
 });
 
