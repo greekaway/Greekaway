@@ -459,6 +459,8 @@
               };
               const title = getLocalized(trip.title);
               const desc = getLocalized(trip.description);
+              // cache loaded trip so i18n:changed can re-render it
+              try { window.__loadedTrip = trip; } catch(_){ }
               if (title) titleEl.textContent = title;
               if (desc) descEl.textContent = desc;
             } catch(_){ }
@@ -757,6 +759,23 @@
           } catch(_){ }
           // Ages hint may need re-translation
           try { renderAges(); } catch(_){ }
+          // Re-render trip title/description if we have cached trip JSON
+          try {
+            const t = window.__loadedTrip || null;
+            if (t) {
+              const lang = (window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el';
+              const getLocalized = (field) => {
+                if (!field) return '';
+                if (typeof field === 'string') return field;
+                if (typeof field === 'object') return field[lang] || field['el'] || Object.values(field)[0] || '';
+                return '';
+              };
+              const title = getLocalized(t.title);
+              const desc = getLocalized(t.description);
+              if (title) titleEl.textContent = title;
+              if (desc) descEl.textContent = desc;
+            }
+          } catch(_){ }
         });
       } catch(_){ }
     })();

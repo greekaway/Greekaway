@@ -129,23 +129,23 @@
     "trip": "Trip",
     "confirmation_title": "Booking Confirmation",
     "traveler_type_options": {
-      "explorer": "Explorers",
-      "relaxed": "Relaxed Travelers",
-      "explore": "Explorers – active",
-      "relax": "Relaxed travelers",
-      "family": "Family Style",
-      "solo": "Solo Adventurers"
+      "explorer": "Esploratori",
+      "relaxed": "Viaggiatori rilassati",
+      "explore": "Esploratori – attivi",
+      "relax": "Viaggiatori rilassati",
+      "family": "Stile famiglia",
+      "solo": "Viaggiatori solitari"
     },
     "interests_options": {
-      "nature": "Nature",
-      "culture": "Culture",
-      "mountain": "Mountain",
-      "sea": "Sea",
-      "gastronomy": "Gastronomy"
+      "nature": "Natura",
+      "culture": "Cultura",
+      "mountain": "Montagna",
+      "sea": "Mare",
+      "gastronomy": "Gastronomia"
     },
     "sociality_options": {
-      "social": "Sociable",
-      "quiet": "Quiet"
+      "social": "Socievole",
+      "quiet": "Riservato"
     },
     "travel_style_options": {
       "sociable": "Sociable",

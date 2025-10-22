@@ -131,23 +131,23 @@
     "trip": "Trip",
     "confirmation_title": "Booking Confirmation",
     "traveler_type_options": {
-      "explorer": "Explorers",
-      "relaxed": "Relaxed Travelers",
-      "explore": "Explorers – active",
-      "relax": "Relaxed travelers",
-      "family": "Family Style",
-      "solo": "Solo Adventurers"
+      "explorer": "Исследователи",
+      "relaxed": "Расслабленные путешественники",
+      "explore": "Исследователи – активные",
+      "relax": "Расслабленные путешественники",
+      "family": "Семейный стиль",
+      "solo": "Путешественники в одиночку"
     },
     "interests_options": {
-      "nature": "Nature",
-      "culture": "Culture",
-      "mountain": "Mountain",
-      "sea": "Sea",
-      "gastronomy": "Gastronomy"
+      "nature": "Природа",
+      "culture": "Культура",
+      "mountain": "Гора",
+      "sea": "Море",
+      "gastronomy": "Гастрономия"
     },
     "sociality_options": {
-      "social": "Sociable",
-      "quiet": "Quiet"
+      "social": "Общительный",
+      "quiet": "Тихий"
     },
     "travel_style_options": {
       "sociable": "Sociable",

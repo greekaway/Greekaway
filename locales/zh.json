@@ -129,23 +129,23 @@
     "trip": "Trip",
     "confirmation_title": "Booking Confirmation",
     "traveler_type_options": {
-      "explorer": "Explorers",
-      "relaxed": "Relaxed Travelers",
-      "explore": "Explorers – active",
-      "relax": "Relaxed travelers",
-      "family": "Family Style",
-      "solo": "Solo Adventurers"
+      "explorer": "探索者",
+      "relaxed": "放松型旅客",
+      "explore": "探索者 – 活跃",
+      "relax": "放松型旅客",
+      "family": "家庭式",
+      "solo": "单人旅行者"
     },
     "interests_options": {
-      "nature": "Nature",
-      "culture": "Culture",
-      "mountain": "Mountain",
-      "sea": "Sea",
-      "gastronomy": "Gastronomy"
+      "nature": "自然",
+      "culture": "文化",
+      "mountain": "山",
+      "sea": "海",
+      "gastronomy": "美食"
     },
     "sociality_options": {
-      "social": "Sociable",
-      "quiet": "Quiet"
+      "social": "健谈",
+      "quiet": "安静"
     },
     "travel_style_options": {
       "sociable": "Sociable",

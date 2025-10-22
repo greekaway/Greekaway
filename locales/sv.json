@@ -131,23 +131,23 @@
     "trip": "Trip",
     "confirmation_title": "Booking Confirmation",
     "traveler_type_options": {
-      "explorer": "Explorers",
-      "relaxed": "Relaxed Travelers",
-      "explore": "Explorers – active",
-      "relax": "Relaxed travelers",
-      "family": "Family Style",
-      "solo": "Solo Adventurers"
+      "explorer": "Upptäckare",
+      "relaxed": "Avslappnade resenärer",
+      "explore": "Upptäckare – aktiva",
+      "relax": "Avslappnade resenärer",
+      "family": "Familjestil",
+      "solo": "Enskilda resenärer"
     },
     "interests_options": {
-      "nature": "Nature",
-      "culture": "Culture",
-      "mountain": "Mountain",
-      "sea": "Sea",
-      "gastronomy": "Gastronomy"
+      "nature": "Natur",
+      "culture": "Kultur",
+      "mountain": "Berg",
+      "sea": "Hav",
+      "gastronomy": "Gastronomi"
     },
     "sociality_options": {
-      "social": "Sociable",
-      "quiet": "Quiet"
+      "social": "Sällskaplig",
+      "quiet": "Tystlåten"
     },
     "travel_style_options": {
       "sociable": "Sociable",
