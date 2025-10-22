@@ -1,0 +1,34 @@
+[
+  {
+    "lang": "es",
+    "error": "TimeoutError: Waiting for selector `#bookingOverlayTitle` failed"
+  },
+  {
+    "lang": "it",
+    "error": "TimeoutError: Waiting for selector `#bookingOverlayTitle` failed"
+  },
+  {
+    "lang": "ko",
+    "error": "TimeoutError: Waiting for selector `#bookingOverlayTitle` failed"
+  },
+  {
+    "lang": "nl",
+    "error": "TimeoutError: Waiting for selector `#bookingOverlayTitle` failed"
+  },
+  {
+    "lang": "pt",
+    "error": "TimeoutError: Waiting for selector `#bookingOverlayTitle` failed"
+  },
+  {
+    "lang": "ru",
+    "error": "TimeoutError: Waiting for selector `#bookingOverlayTitle` failed"
+  },
+  {
+    "lang": "sv",
+    "error": "TimeoutError: Waiting for selector `#bookingOverlayTitle` failed"
+  },
+  {
+    "lang": "zh",
+    "error": "TimeoutError: Waiting for selector `#bookingOverlayTitle` failed"
+  }
+]
