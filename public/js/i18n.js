@@ -3,7 +3,7 @@
   'use strict';
 
   const DEFAULT = 'el';
-  const FLAGS = { el: '🇬🇷', en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', he: '🇮🇱', it: '🇮🇹', es: '🇪🇸', zh: '🇨🇳' };
+  const FLAGS = { el: '🇬🇷', en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', he: '🇮🇱', it: '🇮🇹', es: '🇪🇸', zh: '🇨🇳', nl: '🇳🇱', sv: '🇸🇪', ko: '🇰🇷', pt: '🇵🇹', ru: '🇷🇺' };
   const RTL_LANGS = ['he', 'ar', 'fa', 'ur'];
   let AVAILABLE = null; // discovered languages from /locales/index.json
   const CACHE = {}; // lang -> messages
@@ -165,9 +165,9 @@
     const sel = document.getElementById('langSelect');
     if(!sel) return;
     if (sel.children.length === 0) {
-      const labelMap = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', he:'עברית', it:'Italiano', es:'Español', zh:'中文' };
+  const labelMap = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', he:'עברית', it:'Italiano', es:'Español', zh:'中文', nl:'Nederlands', sv:'Svenska', ko:'한국어', pt:'Português', ru:'Русский' };
       // Build a robust list: discovered languages + known set, with Greek first
-      const known = ['el','en','fr','de','he','it','es','zh'];
+  const known = ['el','en','fr','de','he','it','es','zh','nl','sv','ko','pt','ru'];
       const discovered = Array.isArray(AVAILABLE) ? AVAILABLE.slice() : [];
       const merged = Array.from(new Set([...discovered, ...known]));
       const ordered = ['el', ...merged.filter(c => c !== 'el').sort()];

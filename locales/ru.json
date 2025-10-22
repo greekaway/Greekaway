@@ -1,15 +1,15 @@
 {
-  "meta": { "languageName": "中文" },
+  "meta": { "languageName": "Русский" },
   "siteTitle": "Greekaway",
   "nav": {
-    "home": "首页",
-    "trips": "行程",
-    "checkout": "结账",
-    "admin": "管理",
-    "about": "关于",
-    "ai": "AI 助手",
-    "profile": "个人资料",
-    "book": "预订"
+    "home": "Home",
+    "trips": "Trips",
+    "checkout": "Checkout",
+    "admin": "Admin",
+    "about": "About",
+    "ai": "AI Assistant",
+    "profile": "Profile",
+    "book": "Book"
   },
   "admin": {
     "title": "Admin Payments",
@@ -41,9 +41,9 @@
     "notice": "Secure Payment via Stripe"
   },
   "welcome": {
-    "title": "欢迎来到 Greekaway",
-    "subtitle": "探索希腊最棒的一日游",
-    "ask": "关于你的行程尽管来问！"
+    "title": "Welcome to Greekaway",
+    "subtitle": "Discover the best day trips across Greece",
+    "ask": "Ask us anything about your trip!"
   },
   "about": { "title": "About us", "text": "Greekaway was created to offer curated trips in Greece with comfort, technology, and style." },
   "categories": {
@@ -67,7 +67,8 @@
     "stream_error": "Connection error with the assistant.",
     "fallback_error": "We didn't receive a reply right now.",
     "error_prefix": "Error:"
-  },
+  }
+  ,
   "feedback": {
     "title": "How was your experience?",
     "subtitle": "Help us match groups better.",
@@ -76,7 +77,8 @@
     "negative": "Bad",
     "placeholder": "Optional comment...",
     "try_again": "Try again"
-  },
+  }
+  ,
   "carousel": { "prev": "Previous", "next": "Next" },
   "booking": {
     "title": "Booking",
@@ -89,27 +91,27 @@
     "email_placeholder": "name@example.com",
     "loading": "Loading...",
     "step1_of3": "Step 1 of 3",
-    "traveler_options": "Traveler options",
-    "adults": "Adults",
-    "children": "Children",
-    "increase": "+",
+  "traveler_options": "Traveler options",
+  "adults": "Adults",
+  "children": "Children",
+  "increase": "+",
     "decrease": "−",
     "increase_adults": "Increase adults",
     "decrease_adults": "Decrease adults",
     "increase_children": "Increase children",
     "decrease_children": "Decrease children",
     "bags_large": "Large suitcases",
-    "bags_small": "Small suitcases",
-    "increase_bags_large": "Increase large suitcases",
-    "decrease_bags_large": "Decrease large suitcases",
-    "increase_bags_small": "Increase small suitcases",
-    "decrease_bags_small": "Decrease small suitcases",
+  "bags_small": "Small suitcases",
+  "increase_bags_large": "Increase large suitcases",
+  "decrease_bags_large": "Decrease large suitcases",
+  "increase_bags_small": "Increase small suitcases",
+  "decrease_bags_small": "Decrease small suitcases",
     "preferred_language": "Preferred language",
     "age_group": "Age group",
-    "traveler_profile": "Traveler Profile",
-    "traveler_type": "Traveler type",
-    "travel_style": "Travel style",
-    "daily_rhythm": "Daily rhythm",
+  "traveler_profile": "Traveler Profile",
+  "traveler_type": "Traveler type",
+  "travel_style": "Travel style",
+  "daily_rhythm": "Daily rhythm",
     "interests": "Interests",
     "sociality": "Sociality",
     "children_ages": "Children ages",
