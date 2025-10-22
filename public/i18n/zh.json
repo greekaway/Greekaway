@@ -1,17 +1,17 @@
 {
   "meta": {
-    "languageName": "English"
+    "languageName": "中文"
   },
   "siteTitle": "Greekaway",
   "nav": {
-    "home": "Home",
-    "trips": "Trips",
-    "checkout": "Checkout",
-    "admin": "Admin",
-    "about": "About",
-    "ai": "AI Assistant",
-    "profile": "Profile",
-    "book": "Book"
+    "home": "首页",
+    "trips": "行程",
+    "checkout": "结账",
+    "admin": "管理",
+    "about": "关于",
+    "ai": "AI 助手",
+    "profile": "个人资料",
+    "book": "预订"
   },
   "admin": {
     "title": "Admin Payments",
@@ -28,26 +28,26 @@
     "refresh": "Refresh"
   },
   "checkout": {
-    "pay": "Pay",
-    "cardPlaceholder": "Card number",
-    "title": "Checkout — Greekaway",
-    "name": "Name",
-    "email": "Email",
-    "cardLabel": "Card",
+    "pay": "支付",
+    "cardPlaceholder": "卡号",
+    "title": "结账 — Greekaway",
+    "name": "姓名",
+    "email": "电子邮箱",
+    "cardLabel": "银行卡",
     "expiry": "MM / YY",
     "cvc": "CVC",
-    "payment_error": "Payment error",
-    "payment_failed": "Payment failed",
-    "payment_success_test": "Payment successful",
-    "mock_complete": "Completed",
-    "network_error": "Network error",
-    "info": "The payment form will appear here.",
-    "notice": "Secure Payment via Stripe"
+    "payment_error": "支付错误",
+    "payment_failed": "支付失败",
+    "payment_success_test": "支付成功",
+    "mock_complete": "已完成",
+    "network_error": "网络错误",
+    "info": "支付表单将显示在此处。",
+    "notice": "通过 Stripe 安全支付"
   },
   "welcome": {
-    "title": "Welcome to Greekaway",
-    "subtitle": "Discover the best day trips across Greece",
-    "ask": "Ask us anything about your trip!"
+    "title": "欢迎来到 Greekaway",
+    "subtitle": "探索希腊最棒的一日游",
+    "ask": "关于你的行程尽管来问！"
   },
   "about": {
     "title": "About us",
@@ -55,13 +55,13 @@
   },
   "categories": {
     "mountain": {
-      "title": "Mountain Trips"
+      "title": "山地旅行"
     },
     "sea": {
-      "title": "Sea Trips"
+      "title": "海上旅行"
     },
     "culture": {
-      "title": "Culture Trips"
+      "title": "文化之旅"
     }
   },
   "stop": {
@@ -71,15 +71,15 @@
     "experienceTitle": "Experience"
   },
   "trips": {
-    "selectCategory": "Select Category",
-    "noneFound": "No trips found in this category."
+    "selectCategory": "选择类别",
+    "noneFound": "该类别中未找到行程。"
   },
   "ui": {
-    "close": "Close",
-    "cancel": "Cancel",
-    "back": "Back",
-    "finish": "Finish",
-    "choose": "Choose"
+    "close": "关闭",
+    "cancel": "取消",
+    "back": "返回",
+    "finish": "完成",
+    "choose": "选择"
   },
   "trips_ui": {
     "backToCategories": "Back to categories"
@@ -113,72 +113,72 @@
   },
   "booking": {
     "title": "Booking",
-    "date": "Date",
+    "date": "日期",
     "date_placeholder": "YYYY-MM-DD",
-    "seats": "Seats",
+    "seats": "座位",
     "total": "Total",
     "create": "Create booking",
     "name_placeholder": "Full name",
     "email_placeholder": "name@example.com",
     "loading": "Loading...",
-    "step1_of3": "Step 1 of 3",
-    "traveler_options": "Traveler options",
-    "adults": "Adults",
-    "children": "Children",
+    "step1_of3": "第1步，共3步",
+    "traveler_options": "旅行者选项",
+    "adults": "成人",
+    "children": "儿童",
     "increase": "+",
     "decrease": "−",
-    "increase_adults": "Increase adults",
-    "decrease_adults": "Decrease adults",
-    "increase_children": "Increase children",
-    "decrease_children": "Decrease children",
-    "bags_large": "Large suitcases",
-    "bags_small": "Small suitcases",
-    "increase_bags_large": "Increase large suitcases",
-    "decrease_bags_large": "Decrease large suitcases",
-    "increase_bags_small": "Increase small suitcases",
-    "decrease_bags_small": "Decrease small suitcases",
-    "preferred_language": "Preferred language",
-    "age_group": "Age group",
-    "traveler_profile": "Traveler Profile",
-    "traveler_type": "Traveler type",
-    "travel_style": "Travel style",
-    "daily_rhythm": "Daily rhythm",
-    "interests": "Interests",
-    "sociality": "Sociality",
-    "children_ages": "Children ages",
-    "children_age_range": "0 – 17 years",
-    "pick_ages": "Pick ages",
-    "step2_of3": "Step 2 of 3",
-    "step3_of3": "Step 3 of 3",
-    "next": "Next",
+    "increase_adults": "增加成人",
+    "decrease_adults": "减少成人",
+    "increase_children": "增加儿童",
+    "decrease_children": "减少儿童",
+    "bags_large": "大行李",
+    "bags_small": "小行李",
+    "increase_bags_large": "增加大行李",
+    "decrease_bags_large": "减少大行李",
+    "increase_bags_small": "增加小行李",
+    "decrease_bags_small": "减少小行李",
+    "preferred_language": "沟通语言",
+    "age_group": "年龄组",
+    "traveler_profile": "旅行者档案",
+    "traveler_type": "旅行者类型",
+    "travel_style": "旅行风格",
+    "daily_rhythm": "作息节奏",
+    "interests": "兴趣",
+    "sociality": "社交性",
+    "children_ages": "儿童年龄",
+    "children_age_range": "0 – 17 岁",
+    "pick_ages": "选择年龄",
+    "step2_of3": "第二步 / 共三步",
+    "step3_of3": "第3步，共3步",
+    "next": "下一步",
     "error_create": "Error creating booking",
     "error_network": "Network error creating booking",
     "error_availability": "Error checking availability",
     "error_trip": "Error loading trip data",
-    "availability_msg": "Availability for {date}: total {capacity}, booked {taken}",
+    "availability_msg": "{date} 的可用性：总数 {capacity}，已预订 {taken}",
     "created": "Booking created",
     "proceed_to_checkout": "Proceed to Checkout",
-    "occupancy": "Occupancy",
+    "occupancy": "占用率",
     "trip": "Trip",
     "confirmation_title": "Booking Confirmation",
     "traveler_type_options": {
-      "explorer": "Explorers",
-      "relaxed": "Relaxed Travelers",
-      "explore": "Explorers – active",
-      "relax": "Relaxed travelers",
-      "family": "Family Style",
-      "solo": "Solo Adventurers"
+      "explorer": "探索者",
+      "relaxed": "放松型旅客",
+      "explore": "探索者 – 活跃",
+      "relax": "放松型旅客",
+      "family": "家庭式",
+      "solo": "单人旅行者"
     },
     "interests_options": {
-      "nature": "Nature",
-      "culture": "Culture",
-      "mountain": "Mountain",
-      "sea": "Sea",
-      "gastronomy": "Gastronomy"
+      "nature": "自然",
+      "culture": "文化",
+      "mountain": "山",
+      "sea": "海",
+      "gastronomy": "美食"
     },
     "sociality_options": {
-      "social": "Sociable",
-      "quiet": "Quiet"
+      "social": "健谈",
+      "quiet": "安静"
     },
     "travel_style_options": {
       "sociable": "Sociable",

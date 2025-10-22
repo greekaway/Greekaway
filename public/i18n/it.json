@@ -1,17 +1,17 @@
 {
   "meta": {
-    "languageName": "English"
+    "languageName": "Italiano"
   },
   "siteTitle": "Greekaway",
   "nav": {
     "home": "Home",
-    "trips": "Trips",
-    "checkout": "Checkout",
-    "admin": "Admin",
-    "about": "About",
-    "ai": "AI Assistant",
-    "profile": "Profile",
-    "book": "Book"
+    "trips": "Viaggi",
+    "checkout": "Pagamento",
+    "admin": "Amministrazione",
+    "about": "Informazioni",
+    "ai": "Assistente IA",
+    "profile": "Profilo",
+    "book": "Prenota"
   },
   "admin": {
     "title": "Admin Payments",
@@ -28,26 +28,26 @@
     "refresh": "Refresh"
   },
   "checkout": {
-    "pay": "Pay",
-    "cardPlaceholder": "Card number",
-    "title": "Checkout — Greekaway",
-    "name": "Name",
+    "pay": "Paga",
+    "cardPlaceholder": "Numero di carta",
+    "title": "Pagamento — Greekaway",
+    "name": "Nome",
     "email": "Email",
-    "cardLabel": "Card",
-    "expiry": "MM / YY",
+    "cardLabel": "Carta",
+    "expiry": "MM / AA",
     "cvc": "CVC",
-    "payment_error": "Payment error",
-    "payment_failed": "Payment failed",
-    "payment_success_test": "Payment successful",
-    "mock_complete": "Completed",
-    "network_error": "Network error",
-    "info": "The payment form will appear here.",
-    "notice": "Secure Payment via Stripe"
+    "payment_error": "Errore di pagamento",
+    "payment_failed": "Pagamento non riuscito",
+    "payment_success_test": "Pagamento riuscito",
+    "mock_complete": "Completato",
+    "network_error": "Errore di rete",
+    "info": "Il modulo di pagamento apparirà qui.",
+    "notice": "Pagamento sicuro tramite Stripe"
   },
   "welcome": {
-    "title": "Welcome to Greekaway",
-    "subtitle": "Discover the best day trips across Greece",
-    "ask": "Ask us anything about your trip!"
+    "title": "Benvenuto su Greekaway",
+    "subtitle": "Scopri le migliori escursioni in Grecia",
+    "ask": "Chiedici qualsiasi cosa sul tuo viaggio!"
   },
   "about": {
     "title": "About us",
@@ -55,13 +55,13 @@
   },
   "categories": {
     "mountain": {
-      "title": "Mountain Trips"
+      "title": "Escursioni in montagna"
     },
     "sea": {
-      "title": "Sea Trips"
+      "title": "Escursioni al mare"
     },
     "culture": {
-      "title": "Culture Trips"
+      "title": "Escursioni culturali"
     }
   },
   "stop": {
@@ -71,15 +71,15 @@
     "experienceTitle": "Experience"
   },
   "trips": {
-    "selectCategory": "Select Category",
-    "noneFound": "No trips found in this category."
+    "selectCategory": "Seleziona categoria",
+    "noneFound": "Nessun viaggio trovato in questa categoria."
   },
   "ui": {
-    "close": "Close",
-    "cancel": "Cancel",
-    "back": "Back",
-    "finish": "Finish",
-    "choose": "Choose"
+    "close": "Chiudi",
+    "cancel": "Annulla",
+    "back": "Indietro",
+    "finish": "Termina",
+    "choose": "Scegli"
   },
   "trips_ui": {
     "backToCategories": "Back to categories"
@@ -113,72 +113,72 @@
   },
   "booking": {
     "title": "Booking",
-    "date": "Date",
+    "date": "Data",
     "date_placeholder": "YYYY-MM-DD",
-    "seats": "Seats",
+    "seats": "Posti",
     "total": "Total",
     "create": "Create booking",
     "name_placeholder": "Full name",
     "email_placeholder": "name@example.com",
     "loading": "Loading...",
-    "step1_of3": "Step 1 of 3",
-    "traveler_options": "Traveler options",
-    "adults": "Adults",
-    "children": "Children",
+    "step1_of3": "Passo 1 di 3",
+    "traveler_options": "Opzioni del viaggiatore",
+    "adults": "Adulti",
+    "children": "Bambini",
     "increase": "+",
     "decrease": "−",
     "increase_adults": "Increase adults",
     "decrease_adults": "Decrease adults",
     "increase_children": "Increase children",
     "decrease_children": "Decrease children",
-    "bags_large": "Large suitcases",
-    "bags_small": "Small suitcases",
+    "bags_large": "Valigie grandi",
+    "bags_small": "Valigie piccole",
     "increase_bags_large": "Increase large suitcases",
     "decrease_bags_large": "Decrease large suitcases",
     "increase_bags_small": "Increase small suitcases",
     "decrease_bags_small": "Decrease small suitcases",
-    "preferred_language": "Preferred language",
-    "age_group": "Age group",
-    "traveler_profile": "Traveler Profile",
-    "traveler_type": "Traveler type",
-    "travel_style": "Travel style",
-    "daily_rhythm": "Daily rhythm",
-    "interests": "Interests",
-    "sociality": "Sociality",
-    "children_ages": "Children ages",
-    "children_age_range": "0 – 17 years",
-    "pick_ages": "Pick ages",
-    "step2_of3": "Step 2 of 3",
-    "step3_of3": "Step 3 of 3",
-    "next": "Next",
+    "preferred_language": "Lingua di comunicazione",
+    "age_group": "Fascia d'età",
+    "traveler_profile": "Profilo del viaggiatore",
+    "traveler_type": "Tipo di viaggiatore",
+    "travel_style": "Stile di viaggio",
+    "daily_rhythm": "Ritmo quotidiano",
+    "interests": "Interessi",
+    "sociality": "Socialità",
+    "children_ages": "Età dei bambini",
+    "children_age_range": "0 – 17 anni",
+    "pick_ages": "Seleziona età",
+    "step2_of3": "Passo 2 di 3",
+    "step3_of3": "Passo 3 di 3",
+    "next": "Avanti",
     "error_create": "Error creating booking",
     "error_network": "Network error creating booking",
     "error_availability": "Error checking availability",
     "error_trip": "Error loading trip data",
-    "availability_msg": "Availability for {date}: total {capacity}, booked {taken}",
+    "availability_msg": "Disponibilità per {date}: totale {capacity}, prenotate {taken}",
     "created": "Booking created",
     "proceed_to_checkout": "Proceed to Checkout",
-    "occupancy": "Occupancy",
+    "occupancy": "Occupazione",
     "trip": "Trip",
     "confirmation_title": "Booking Confirmation",
     "traveler_type_options": {
-      "explorer": "Explorers",
-      "relaxed": "Relaxed Travelers",
-      "explore": "Explorers – active",
-      "relax": "Relaxed travelers",
-      "family": "Family Style",
-      "solo": "Solo Adventurers"
+      "explorer": "Esploratori",
+      "relaxed": "Viaggiatori rilassati",
+      "explore": "Esploratori – attivi",
+      "relax": "Viaggiatori rilassati",
+      "family": "Stile famiglia",
+      "solo": "Viaggiatori solitari"
     },
     "interests_options": {
-      "nature": "Nature",
-      "culture": "Culture",
-      "mountain": "Mountain",
-      "sea": "Sea",
-      "gastronomy": "Gastronomy"
+      "nature": "Natura",
+      "culture": "Cultura",
+      "mountain": "Montagna",
+      "sea": "Mare",
+      "gastronomy": "Gastronomia"
     },
     "sociality_options": {
-      "social": "Sociable",
-      "quiet": "Quiet"
+      "social": "Socievole",
+      "quiet": "Riservato"
     },
     "travel_style_options": {
       "sociable": "Sociable",

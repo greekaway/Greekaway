@@ -1,0 +1,98 @@
+{
+  "generatedAt": "2025-10-22T18:30:53.386Z",
+  "applied": true,
+  "backupDir": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_backup_2025-10-22T18-30-53-380Z",
+  "items": [
+    {
+      "lang": "de",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/de.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/de.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/de.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "el",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/el.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/el.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/el.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "en",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/en.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/en.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/en.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "es",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/es.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/es.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/es.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "fr",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/fr.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/fr.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/fr.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "he",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/he.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/he.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/he.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "it",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/it.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/it.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/it.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "ko",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/ko.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/ko.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/ko.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "nl",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/nl.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/nl.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/nl.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "pt",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/pt.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/pt.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/pt.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "ru",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/ru.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/ru.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/ru.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "sv",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/sv.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/sv.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/sv.json",
+      "topLevelKeys": 18
+    },
+    {
+      "lang": "zh",
+      "src": "/Users/giannespalmos/Desktop/Greekaway/locales/zh.json",
+      "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/zh.json",
+      "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/zh.json",
+      "topLevelKeys": 18
+    }
+  ]
+}

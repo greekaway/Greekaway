@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "localesEn": "/Users/giannespalmos/Desktop/Greekaway/locales/en.json",
+    "publicEn": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/en.json",
+    "checkedAt": "2025-10-22T17:59:29.501Z"
+  },
+  "counts": {
+    "localesKeys": 157,
+    "publicKeys": 97
+  },
+  "missingInPublic": [
+    "meta.languageName",
+    "checkout.expiry",
+    "checkout.cvc",
+    "about.title",
+    "about.text",
+    "ui.cancel",
+    "assistant.title",
+    "assistant.close",
+    "assistant.suggestion",
+    "assistant.placeholder",
+    "assistant.aria_message",
+    "assistant.aria_send",
+    "assistant.stream_error",
+    "assistant.fallback_error",
+    "assistant.error_prefix",
+    "feedback.title",
+    "feedback.subtitle",
+    "feedback.positive",
+    "feedback.neutral",
+    "feedback.negative",
+    "feedback.placeholder",
+    "feedback.try_again",
+    "carousel.prev",
+    "carousel.next",
+    "booking.date",
+    "booking.date_placeholder",
+    "booking.seats",
+    "booking.total",
+    "booking.create",
+    "booking.name_placeholder",
+    "booking.email_placeholder",
+    "booking.loading",
+    "booking.increase",
+    "booking.decrease",
+    "booking.traveler_profile",
+    "booking.travel_style",
+    "booking.daily_rhythm",
+    "booking.children_ages",
+    "booking.error_create",
+    "booking.error_network",
+    "booking.error_availability",
+    "booking.error_trip",
+    "booking.created",
+    "booking.proceed_to_checkout",
+    "booking.trip",
+    "booking.confirmation_title",
+    "booking.traveler_type_options.explorer",
+    "booking.traveler_type_options.relaxed",
+    "booking.travel_style_options.sociable",
+    "booking.travel_style_options.quiet",
+    "booking.travel_style_options.cultural",
+    "booking.travel_style_options.nature",
+    "booking.preferred_language_options.nl",
+    "booking.preferred_language_options.sv",
+    "booking.preferred_language_options.ko",
+    "booking.preferred_language_options.pt",
+    "booking.preferred_language_options.ru",
+    "booking.daily_rhythm_options.early",
+    "booking.daily_rhythm_options.night",
+    "booking.daily_rhythm_options.talkative",
+    "booking.daily_rhythm_options.reserved"
+  ],
+  "missingInLocales": [
+    "booking.loading_availability"
+  ],
+  "diffValues": [
+    {
+      "key": "booking.bags_large",
+      "locales": "Large suitcases",
+      "public": "Suitcases (Large)"
+    },
+    {
+      "key": "booking.bags_small",
+      "locales": "Small suitcases",
+      "public": "Suitcases (Small)"
+    },
+    {
+      "key": "booking.increase_bags_large",
+      "locales": "Increase large suitcases",
+      "public": "Increase large bags"
+    },
+    {
+      "key": "booking.decrease_bags_large",
+      "locales": "Decrease large suitcases",
+      "public": "Decrease large bags"
+    },
+    {
+      "key": "booking.increase_bags_small",
+      "locales": "Increase small suitcases",
+      "public": "Increase small bags"
+    },
+    {
+      "key": "booking.decrease_bags_small",
+      "locales": "Decrease small suitcases",
+      "public": "Decrease small bags"
+    },
+    {
+      "key": "booking.children_age_range",
+      "locales": "0 – 17 years",
+      "public": "Ages 0–17"
+    },
+    {
+      "key": "booking.pick_ages",
+      "locales": "Pick ages",
+      "public": "Select ages"
+    },
+    {
+      "key": "booking.traveler_type_options.explore",
+      "locales": "Explorers – active",
+      "public": "Explorers — active"
+    },
+    {
+      "key": "booking.traveler_type_options.family",
+      "locales": "Family Style",
+      "public": "Family style"
+    },
+    {
+      "key": "booking.traveler_type_options.solo",
+      "locales": "Solo Adventurers",
+      "public": "Solo travelers"
+    }
+  ]
+}

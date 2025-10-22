@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "languageName": "Nederlands"
+  },
+  "siteTitle": "Greekaway",
+  "nav": {
+    "home": "Home",
+    "trips": "Reizen",
+    "checkout": "Afrekenen",
+    "admin": "Beheer",
+    "about": "Over",
+    "ai": "AI-assistent",
+    "profile": "Profiel",
+    "book": "Boeken"
+  },
+  "admin": {
+    "title": "Admin Payments",
+    "downloadCsv": "Download CSV",
+    "backups": "Backups",
+    "filter": "Filter",
+    "status": "Status",
+    "amount": "Amount",
+    "help": "Enter admin credentials to view payments and backup status.",
+    "loading": "Loading...",
+    "error": "Error:",
+    "page": "Page",
+    "no_records": "No records found for this page/filters.",
+    "refresh": "Refresh"
+  },
+  "checkout": {
+    "pay": "Betalen",
+    "cardPlaceholder": "Kaartnummer",
+    "title": "Afrekenen — Greekaway",
+    "name": "Naam",
+    "email": "E-mail",
+    "cardLabel": "Kaart",
+    "expiry": "MM / JJ",
+    "cvc": "CVC",
+    "payment_error": "Betalingsfout",
+    "payment_failed": "Betaling mislukt",
+    "payment_success_test": "Betaling geslaagd",
+    "mock_complete": "Voltooid",
+    "network_error": "Netwerkfout",
+    "info": "Het betalingsformulier verschijnt hier.",
+    "notice": "Veilige betaling via Stripe"
+  },
+  "welcome": {
+    "title": "Welkom bij Greekaway",
+    "subtitle": "Ontdek de beste dagtochten door Griekenland",
+    "ask": "Stel ons alles over je reis!"
+  },
+  "about": {
+    "title": "Over ons",
+    "text": "Greekaway is opgericht om zorgvuldig geselecteerde reizen in Griekenland te bieden met comfort, technologie en stijl."
+  },
+  "categories": {
+    "mountain": {
+      "title": "Bergreizen"
+    },
+    "sea": {
+      "title": "Zee-excursies"
+    },
+    "culture": {
+      "title": "Cultuurreizen"
+    }
+  },
+  "stop": {
+    "label": "Stop {n}"
+  },
+  "trip": {
+    "experienceTitle": "Experience"
+  },
+  "trips": {
+    "selectCategory": "Categorie kiezen",
+    "noneFound": "Geen reizen gevonden in deze categorie."
+  },
+  "ui": {
+    "close": "Sluiten",
+    "cancel": "Annuleren",
+    "back": "Terug",
+    "finish": "Voltooien",
+    "choose": "Kies"
+  },
+  "trips_ui": {
+    "backToCategories": "Back to categories"
+  },
+  "profile": {
+    "info": "Hier zie je je eerdere reizen en boekingen."
+  },
+  "assistant": {
+    "title": "AI-assistent",
+    "close": "Sluiten",
+    "suggestion": "Vraag ons alles over je reis.",
+    "placeholder": "Vraag iets",
+    "aria_message": "Bericht",
+    "aria_send": "Verzenden",
+    "stream_error": "Verbindingsfout met de assistent.",
+    "fallback_error": "We hebben nu geen antwoord ontvangen.",
+    "error_prefix": "Fout:"
+  },
+  "feedback": {
+    "title": "How was your experience?",
+    "subtitle": "Help us match groups better.",
+    "positive": "Good",
+    "neutral": "Neutral",
+    "negative": "Bad",
+    "placeholder": "Optional comment...",
+    "try_again": "Try again"
+  },
+  "carousel": {
+    "prev": "Vorige",
+    "next": "Volgende"
+  },
+  "booking": {
+    "title": "Booking",
+    "date": "Datum",
+    "date_placeholder": "YYYY-MM-DD",
+    "seats": "Plaatsen",
+    "total": "Total",
+    "create": "Create booking",
+    "name_placeholder": "Full name",
+    "email_placeholder": "name@example.com",
+    "loading": "Loading...",
+    "step1_of3": "Stap 1 van 3",
+    "traveler_options": "Reizigersopties",
+    "adults": "Volwassenen",
+    "children": "Kinderen",
+    "increase": "+",
+    "decrease": "−",
+    "increase_adults": "Increase adults",
+    "decrease_adults": "Decrease adults",
+    "increase_children": "Increase children",
+    "decrease_children": "Decrease children",
+    "bags_large": "Grote koffers",
+    "bags_small": "Kleine koffers",
+    "increase_bags_large": "Increase large suitcases",
+    "decrease_bags_large": "Decrease large suitcases",
+    "increase_bags_small": "Increase small suitcases",
+    "decrease_bags_small": "Decrease small suitcases",
+    "preferred_language": "Voorkeurstaal",
+    "age_group": "Leeftijdsgroep",
+    "traveler_profile": "Reizigersprofiel",
+    "traveler_type": "Type reiziger",
+    "travel_style": "Reisstijl",
+    "daily_rhythm": "Dagritme",
+    "interests": "Interesses",
+    "sociality": "Socialiteit",
+    "children_ages": "Leeftijden van kinderen",
+    "children_age_range": "0 – 17 jaar",
+    "pick_ages": "Leeftijden kiezen",
+    "step2_of3": "Stap 2 van 3",
+    "step3_of3": "Stap 3 van 3",
+    "next": "Volgende",
+    "error_create": "Error creating booking",
+    "error_network": "Network error creating booking",
+    "error_availability": "Error checking availability",
+    "error_trip": "Error loading trip data",
+    "availability_msg": "Beschikbaarheid voor {date}: totaal {capacity}, gereserveerd {taken}",
+    "created": "Booking created",
+    "proceed_to_checkout": "Proceed to Checkout",
+    "occupancy": "Bezetting",
+    "trip": "Trip",
+    "confirmation_title": "Booking Confirmation",
+    "traveler_type_options": {
+      "explorer": "Ontdekkingsreizigers",
+      "relaxed": "Ontspannen reizigers",
+      "explore": "Ontdekkingsreizigers – actief",
+      "relax": "Ontspannen reizigers",
+      "family": "Gezinsstijl",
+      "solo": "Solo reizigers"
+    },
+    "interests_options": {
+      "nature": "Natuur",
+      "culture": "Cultuur",
+      "mountain": "Berg",
+      "sea": "Zee",
+      "gastronomy": "Gastronomie"
+    },
+    "sociality_options": {
+      "social": "Sociaal",
+      "quiet": "Rustig"
+    },
+    "travel_style_options": {
+      "sociable": "Sociable",
+      "quiet": "Quiet",
+      "cultural": "Cultural",
+      "nature": "Nature-oriented"
+    },
+    "preferred_language_options": {
+      "en": "English",
+      "fr": "Français",
+      "de": "Deutsch",
+      "el": "Ελληνικά",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית",
+      "nl": "Nederlands",
+      "sv": "Svenska",
+      "ko": "한국어",
+      "pt": "Português",
+      "ru": "Русский"
+    },
+    "daily_rhythm_options": {
+      "early": "Early riser",
+      "night": "Night type",
+      "talkative": "Talkative",
+      "reserved": "Reserved"
+    }
+  }
+}
