@@ -221,9 +221,23 @@ app.get('/trips/trip.html', (req, res) => {
   fs.readFile(filePath, 'utf8', (err, data) => {
     if (err) return res.status(500).send('Error reading trip.html');
     // Replace the placeholder key in the Google Maps script URL.
-    const replaced = data.replace('key=YOUR_GOOGLE_MAPS_API_KEY', `key=${encodeURIComponent(MAP_KEY)}`);
-    res.set('Cache-Control', 'no-cache');
-    res.send(replaced);
+    let out = data.replace('key=YOUR_GOOGLE_MAPS_API_KEY', `key=${encodeURIComponent(MAP_KEY)}`);
+    // In dev, also inject a fresh cache-busting param and disable caching completely
+    if (IS_DEV) {
+      try {
+        const t = Date.now();
+        out = out.replace(/(\?v=)\d+/g, `$1${t}`);
+        out = out.replace(/(src=\"\/(?:js)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
+        out = out.replace(/(href=\"\/(?:css)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
+        res.setHeader('Cache-Control', 'no-store');
+      } catch (_) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    } else {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(out);
   });
 });
 
@@ -233,9 +247,22 @@ app.get('/checkout.html', (req, res) => {
   fs.readFile(filePath, 'utf8', (err, data) => {
     if (err) return res.status(500).send('Error reading checkout.html');
     const pub = process.env.STRIPE_PUBLISHABLE_KEY || '%STRIPE_PUBLISHABLE_KEY%';
-    const replaced = data.replace('%STRIPE_PUBLISHABLE_KEY%', pub);
-    res.set('Cache-Control', 'no-cache');
-    res.send(replaced);
+    let out = data.replace('%STRIPE_PUBLISHABLE_KEY%', pub);
+    if (IS_DEV) {
+      try {
+        const t = Date.now();
+        out = out.replace(/(\?v=)\d+/g, `$1${t}`);
+        out = out.replace(/(src=\"\/(?:js)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
+        out = out.replace(/(href=\"\/(?:css)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
+        res.setHeader('Cache-Control', 'no-store');
+      } catch (_) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    } else {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(out);
   });
 });
 
@@ -1247,7 +1274,27 @@ app.get('/admin/payments.csv', async (req, res) => {
 
 // 3️⃣ Όταν ο χρήστης πάει στο "/", να του δείχνει το index.html
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  const filePath = path.join(__dirname, 'public', 'index.html');
+  fs.readFile(filePath, 'utf8', (err, html) => {
+    if (err) return res.status(500).send('Error reading index.html');
+    if (IS_DEV) {
+      try {
+        const t = Date.now();
+        let out = html.replace(/(\?v=)\d+/g, `$1${t}`);
+        out = out.replace(/(src=\"\/(?:js)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
+        out = out.replace(/(href=\"\/(?:css)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-store');
+        return res.send(out);
+      } catch (e) {
+        // fallback just disable cache
+        res.setHeader('Cache-Control', 'no-store');
+        return res.send(html);
+      }
+    }
+    res.setHeader('Cache-Control', 'no-cache');
+    return res.send(html);
+  });
 });
 
 // Health/readiness endpoint for uptime checks
