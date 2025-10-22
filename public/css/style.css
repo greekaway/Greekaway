@@ -286,11 +286,22 @@ footer a.central-btn:hover i {
   #aboutOverlay .overlay-inner { text-align: left; }
   #aboutOverlay p { margin-top: 0.2rem; }
   /* Avoid tiny right gutter by matching overlay padding to panel */
-  .overlay { padding-left: 16px; padding-right: 16px; }
+  /* Prevent dark left strip / horizontal shift on some mobile browsers by
+     removing overlay side padding and using safe-area insets. This makes
+     overlays full-bleed while keeping content inset from device edges. */
+  .overlay {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    margin-left: 0; margin-right: 0;
+  }
   .overlay .close-overlay { top: 10px; right: 10px; }
   /* ensure selects are inset from the screen edges on mobile for breathing room */
   .overlay select, .profile-select { width: 90vw; max-width: calc(100% - 40px); margin-left: auto; margin-right: auto; }
 }
+
+/* Additional guard: ensure html/body have no unintended margin that can
+   create a visible gap when overlays are fixed. */
+html, body { margin: 0; padding: 0; }
 
 /* Lock background scroll when any overlay is open (applies globally) */
 body.overlay-open { overflow: hidden; touch-action: none; }
