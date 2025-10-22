@@ -12,6 +12,12 @@ body {
   min-height: 100vh;
 }
 
+/* Ensure vertical page scrolling is always possible on mobile/tablet
+  (even when interacting with carousels or other interactive blocks). */
+html, body { -webkit-overflow-scrolling: touch; }
+body:not(.overlay-open) { overflow-y: auto; touch-action: pan-y; overscroll-behavior-y: contain; }
+#trip-section { touch-action: pan-y; }
+
 /* Header */
 header {
   position: fixed; top: 0; left: 0; right: 0;
