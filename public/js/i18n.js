@@ -7,6 +7,7 @@
   const RTL_LANGS = ['he', 'ar', 'fa', 'ur'];
   let AVAILABLE = null; // discovered languages from /locales/index.json
   const CACHE = {}; // lang -> messages
+  const normalize = (code) => (String(code||'').toLowerCase().slice(0,2));
 
   async function discoverLanguages(){
     if (Array.isArray(AVAILABLE) && AVAILABLE.length) return AVAILABLE;
@@ -37,11 +38,16 @@
   }
 
   function detectLang(){
-    const stored = localStorage.getItem('gw_lang');
-    const nav = (navigator.language||navigator.userLanguage||'').slice(0,2);
-    const pick = stored || nav || DEFAULT;
-    if (!AVAILABLE || AVAILABLE.indexOf(pick) === -1) return DEFAULT;
-    return pick;
+    let stored = null;
+    try { stored = localStorage.getItem('gw_lang'); } catch(_){ }
+    const s2 = normalize(stored);
+    const n2 = normalize(navigator.language||navigator.userLanguage||'');
+    const pick = s2 || n2 || DEFAULT;
+    if (!Array.isArray(AVAILABLE) || AVAILABLE.length === 0) return DEFAULT;
+    if (AVAILABLE.includes(pick)) return pick;
+    // Gracefully map variants like "pt" when only "pt" exists etc.
+    const alt = AVAILABLE.find(a => normalize(a) === pick);
+    return alt || DEFAULT;
   }
 
   async function loadMessages(lang){
@@ -144,6 +150,8 @@
   }
 
   async function setLanguage(lang){
+    // Normalize to 2-letter code to avoid mismatches like sv-SE, pt-BR, etc.
+    lang = normalize(lang) || DEFAULT;
     try { if (window.gwI18nDebug) console.info('[i18n] setLanguage', lang); } catch(_) {}
     try { localStorage.setItem('gw_lang', lang); } catch(_){ }
     try { sessionStorage.setItem('gw_lang', lang); } catch(_){ }

@@ -47,13 +47,13 @@
   },
   "about": { "title": "About us", "text": "Greekaway was created to offer curated trips in Greece with comfort, technology, and style." },
   "categories": {
-    "mountain": { "title": "Mountain Trips" },
-    "sea": { "title": "Sea Trips" },
-    "culture": { "title": "Culture Trips" }
+    "mountain": { "title": "Excursiones de montaña" },
+    "sea": { "title": "Excursiones marítimas" },
+    "culture": { "title": "Excursiones culturales" }
   },
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "Select Category", "noneFound": "No trips found in this category." },
+  "trips": { "selectCategory": "Selecciona categoría", "noneFound": "No se encontraron excursiones en esta categoría." },
   "ui": { "close": "Close", "cancel": "Cancel", "back": "Back", "finish": "Finish", "choose": "Choose" },
   "trips_ui": { "backToCategories": "Back to categories" },
   "profile": { "info": "Here you'll see your past trips and bookings." },
