@@ -2,14 +2,14 @@
   "meta": { "languageName": "Svenska" },
   "siteTitle": "Greekaway",
   "nav": {
-    "home": "Home",
-    "trips": "Trips",
-    "checkout": "Checkout",
+    "home": "Hem",
+    "trips": "Resor",
+    "checkout": "Kassa",
     "admin": "Admin",
-    "about": "About",
-    "ai": "AI Assistant",
-    "profile": "Profile",
-    "book": "Book"
+    "about": "Om",
+    "ai": "AI-assistent",
+    "profile": "Profil",
+    "book": "Boka"
   },
   "admin": {
     "title": "Admin Payments",
@@ -41,22 +41,22 @@
     "notice": "Secure Payment via Stripe"
   },
   "welcome": {
-    "title": "Welcome to Greekaway",
-    "subtitle": "Discover the best day trips across Greece",
-    "ask": "Ask us anything about your trip!"
+    "title": "Välkommen till Greekaway",
+    "subtitle": "Upptäck de bästa dagsutflykterna i Grekland",
+    "ask": "Fråga oss vad som helst om din resa!"
   },
-  "about": { "title": "About us", "text": "Greekaway was created to offer curated trips in Greece with comfort, technology, and style." },
+  "about": { "title": "Om oss", "text": "Greekaway skapades för att erbjuda utvalda resor i Grekland med komfort, teknik och stil." },
   "categories": {
-    "mountain": { "title": "Mountain Trips" },
-    "sea": { "title": "Sea Trips" },
-    "culture": { "title": "Culture Trips" }
+    "mountain": { "title": "Bergsresor" },
+    "sea": { "title": "Havsresor" },
+    "culture": { "title": "Kulturresor" }
   },
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "Select Category", "noneFound": "No trips found in this category." },
-  "ui": { "close": "Close", "cancel": "Cancel", "back": "Back", "finish": "Finish", "choose": "Choose" },
+  "trips": { "selectCategory": "Välj kategori", "noneFound": "Inga resor hittades i denna kategori." },
+  "ui": { "close": "Stäng", "cancel": "Avbryt", "back": "Tillbaka", "finish": "Slutför", "choose": "Välj" },
   "trips_ui": { "backToCategories": "Back to categories" },
-  "profile": { "info": "Here you'll see your past trips and bookings." },
+  "profile": { "info": "Här ser du dina tidigare resor och bokningar." },
   "assistant": {
     "title": "AI Assistant",
     "close": "Close",

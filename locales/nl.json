@@ -3,13 +3,13 @@
   "siteTitle": "Greekaway",
   "nav": {
     "home": "Home",
-    "trips": "Trips",
-    "checkout": "Checkout",
-    "admin": "Admin",
-    "about": "About",
-    "ai": "AI Assistant",
-    "profile": "Profile",
-    "book": "Book"
+    "trips": "Reizen",
+    "checkout": "Afrekenen",
+    "admin": "Beheer",
+    "about": "Over",
+    "ai": "AI-assistent",
+    "profile": "Profiel",
+    "book": "Boeken"
   },
   "admin": {
     "title": "Admin Payments",
@@ -41,22 +41,22 @@
     "notice": "Secure Payment via Stripe"
   },
   "welcome": {
-    "title": "Welcome to Greekaway",
-    "subtitle": "Discover the best day trips across Greece",
-    "ask": "Ask us anything about your trip!"
+    "title": "Welkom bij Greekaway",
+    "subtitle": "Ontdek de beste dagtochten door Griekenland",
+    "ask": "Stel ons alles over je reis!"
   },
-  "about": { "title": "About us", "text": "Greekaway was created to offer curated trips in Greece with comfort, technology, and style." },
+  "about": { "title": "Over ons", "text": "Greekaway is opgericht om zorgvuldig geselecteerde reizen in Griekenland te bieden met comfort, technologie en stijl." },
   "categories": {
-    "mountain": { "title": "Mountain Trips" },
-    "sea": { "title": "Sea Trips" },
-    "culture": { "title": "Culture Trips" }
+    "mountain": { "title": "Bergreizen" },
+    "sea": { "title": "Zee-excursies" },
+    "culture": { "title": "Cultuurreizen" }
   },
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "Select Category", "noneFound": "No trips found in this category." },
-  "ui": { "close": "Close", "cancel": "Cancel", "back": "Back", "finish": "Finish", "choose": "Choose" },
+  "trips": { "selectCategory": "Categorie kiezen", "noneFound": "Geen reizen gevonden in deze categorie." },
+  "ui": { "close": "Sluiten", "cancel": "Annuleren", "back": "Terug", "finish": "Voltooien", "choose": "Kies" },
   "trips_ui": { "backToCategories": "Back to categories" },
-  "profile": { "info": "Here you'll see your past trips and bookings." },
+  "profile": { "info": "Hier zie je je eerdere reizen en boekingen." },
   "assistant": {
     "title": "AI Assistant",
     "close": "Close",

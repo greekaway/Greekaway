@@ -2,14 +2,14 @@
   "meta": { "languageName": "Русский" },
   "siteTitle": "Greekaway",
   "nav": {
-    "home": "Home",
-    "trips": "Trips",
-    "checkout": "Checkout",
-    "admin": "Admin",
-    "about": "About",
-    "ai": "AI Assistant",
-    "profile": "Profile",
-    "book": "Book"
+    "home": "Главная",
+    "trips": "Поездки",
+    "checkout": "Оплата",
+    "admin": "Админ",
+    "about": "О нас",
+    "ai": "ИИ-ассистент",
+    "profile": "Профиль",
+    "book": "Забронировать"
   },
   "admin": {
     "title": "Admin Payments",
@@ -41,22 +41,22 @@
     "notice": "Secure Payment via Stripe"
   },
   "welcome": {
-    "title": "Welcome to Greekaway",
-    "subtitle": "Discover the best day trips across Greece",
-    "ask": "Ask us anything about your trip!"
+    "title": "Добро пожаловать в Greekaway",
+    "subtitle": "Откройте лучшие однодневные поездки по Греции",
+    "ask": "Спросите нас о вашей поездке что угодно!"
   },
-  "about": { "title": "About us", "text": "Greekaway was created to offer curated trips in Greece with comfort, technology, and style." },
+  "about": { "title": "О нас", "text": "Greekaway создан для того, чтобы предложить тщательно подобранные поездки по Греции с комфортом, технологиями и стилем." },
   "categories": {
-    "mountain": { "title": "Mountain Trips" },
-    "sea": { "title": "Sea Trips" },
-    "culture": { "title": "Culture Trips" }
+    "mountain": { "title": "Горные поездки" },
+    "sea": { "title": "Морские поездки" },
+    "culture": { "title": "Культурные поездки" }
   },
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "Select Category", "noneFound": "No trips found in this category." },
-  "ui": { "close": "Close", "cancel": "Cancel", "back": "Back", "finish": "Finish", "choose": "Choose" },
+  "trips": { "selectCategory": "Выберите категорию", "noneFound": "В этой категории поездки не найдены." },
+  "ui": { "close": "Закрыть", "cancel": "Отмена", "back": "Назад", "finish": "Готово", "choose": "Выбрать" },
   "trips_ui": { "backToCategories": "Back to categories" },
-  "profile": { "info": "Here you'll see your past trips and bookings." },
+  "profile": { "info": "Здесь вы увидите свои прошлые поездки и бронирования." },
   "assistant": {
     "title": "AI Assistant",
     "close": "Close",

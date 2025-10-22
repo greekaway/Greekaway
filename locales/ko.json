@@ -2,14 +2,14 @@
   "meta": { "languageName": "한국어" },
   "siteTitle": "Greekaway",
   "nav": {
-    "home": "Home",
-    "trips": "Trips",
-    "checkout": "Checkout",
-    "admin": "Admin",
-    "about": "About",
-    "ai": "AI Assistant",
-    "profile": "Profile",
-    "book": "Book"
+    "home": "홈",
+    "trips": "여행",
+    "checkout": "결제",
+    "admin": "관리자",
+    "about": "소개",
+    "ai": "AI 도우미",
+    "profile": "프로필",
+    "book": "예약"
   },
   "admin": {
     "title": "Admin Payments",
@@ -41,22 +41,22 @@
     "notice": "Secure Payment via Stripe"
   },
   "welcome": {
-    "title": "Welcome to Greekaway",
-    "subtitle": "Discover the best day trips across Greece",
-    "ask": "Ask us anything about your trip!"
+    "title": "Greekaway에 오신 것을 환영합니다",
+    "subtitle": "그리스 전역의 최고의 당일치기 여행을 찾아보세요",
+    "ask": "여행에 대해 무엇이든 물어보세요!"
   },
-  "about": { "title": "About us", "text": "Greekaway was created to offer curated trips in Greece with comfort, technology, and style." },
+  "about": { "title": "회사 소개", "text": "Greekaway는 편안함, 기술, 스타일을 갖춘 엄선된 그리스 여행을 제공하기 위해 만들어졌습니다." },
   "categories": {
-    "mountain": { "title": "Mountain Trips" },
-    "sea": { "title": "Sea Trips" },
-    "culture": { "title": "Culture Trips" }
+    "mountain": { "title": "산 여행" },
+    "sea": { "title": "바다 여행" },
+    "culture": { "title": "문화 여행" }
   },
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "Select Category", "noneFound": "No trips found in this category." },
-  "ui": { "close": "Close", "cancel": "Cancel", "back": "Back", "finish": "Finish", "choose": "Choose" },
+  "trips": { "selectCategory": "카테고리 선택", "noneFound": "이 카테고리에 해당하는 여행이 없습니다." },
+  "ui": { "close": "닫기", "cancel": "취소", "back": "뒤로", "finish": "완료", "choose": "선택" },
   "trips_ui": { "backToCategories": "Back to categories" },
-  "profile": { "info": "Here you'll see your past trips and bookings." },
+  "profile": { "info": "여기에서 이전 여행과 예약을 확인할 수 있습니다." },
   "assistant": {
     "title": "AI Assistant",
     "close": "Close",
