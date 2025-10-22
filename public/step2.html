@@ -182,6 +182,9 @@
   </style>
 </head>
 <body class="site-gradient">
+  <div style="position:fixed;top:8px;right:12px;z-index:20050">
+    <select id="langSelect" aria-label="Language"></select>
+  </div>
   <div class="step2-header">
     <div class="trip-title" id="s2TripTitle">&nbsp;</div>
     <div class="trip-desc" id="s2TripDesc">&nbsp;</div>
@@ -268,6 +271,11 @@
         <button type="button" data-code="es"><span>🇪🇸</span><span data-i18n="booking.preferred_language_options.es">Español</span></button>
         <button type="button" data-code="zh"><span>🇨🇳</span><span data-i18n="booking.preferred_language_options.zh">中文</span></button>
         <button type="button" data-code="he"><span>🇮🇱</span><span data-i18n="booking.preferred_language_options.he">עברית</span></button>
+        <button type="button" data-code="nl"><span>🇳🇱</span><span data-i18n="booking.preferred_language_options.nl">Nederlands</span></button>
+        <button type="button" data-code="sv"><span>🇸🇪</span><span data-i18n="booking.preferred_language_options.sv">Svenska</span></button>
+        <button type="button" data-code="ko"><span>🇰🇷</span><span data-i18n="booking.preferred_language_options.ko">한국어</span></button>
+        <button type="button" data-code="pt"><span>🇵🇹</span><span data-i18n="booking.preferred_language_options.pt">Português</span></button>
+        <button type="button" data-code="ru"><span>🇷🇺</span><span data-i18n="booking.preferred_language_options.ru">Русский</span></button>
       </div>
     </div>
 
@@ -542,8 +550,8 @@
           return sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_lang') || sessionStorage.getItem('gw_lang') || 'el';
         } catch(_){ return 'el'; }
       })();
-      const langFlags = { el:'🇬🇷', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', es:'🇪🇸', zh:'🇨🇳', he:'🇮🇱' };
-      const langFallbackLabels = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', zh:'中文', he:'עברית' };
+  const langFlags = { el:'🇬🇷', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', es:'🇪🇸', zh:'🇨🇳', he:'🇮🇱', nl:'��🇱', sv:'🇸🇪', ko:'🇰🇷', pt:'🇵🇹', ru:'🇷🇺' };
+  const langFallbackLabels = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', zh:'中文', he:'עברית', nl:'Nederlands', sv:'Svenska', ko:'한국어', pt:'Português', ru:'Русский' };
       {
     const label = tSafe('booking.preferred_language_options.' + defaultLang, (langFallbackLabels[defaultLang] || defaultLang.toUpperCase()));
         const flag = langFlags[defaultLang] || '';

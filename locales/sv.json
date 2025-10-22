@@ -58,15 +58,15 @@
   "trips_ui": { "backToCategories": "Back to categories" },
   "profile": { "info": "Här ser du dina tidigare resor och bokningar." },
   "assistant": {
-    "title": "AI Assistant",
-    "close": "Close",
-    "suggestion": "Ask anything about your trip.",
-    "placeholder": "Ask anything",
-    "aria_message": "Message",
-    "aria_send": "Send",
-    "stream_error": "Connection error with the assistant.",
-    "fallback_error": "We didn't receive a reply right now.",
-    "error_prefix": "Error:"
+    "title": "AI-assistent",
+    "close": "Stäng",
+    "suggestion": "Fråga vad du vill om din resa.",
+    "placeholder": "Skriv en fråga",
+    "aria_message": "Meddelande",
+    "aria_send": "Skicka",
+    "stream_error": "Anslutningsfel med assistenten.",
+    "fallback_error": "Vi fick inget svar just nu.",
+    "error_prefix": "Fel:"
   }
   ,
   "feedback": {
@@ -79,7 +79,7 @@
     "try_again": "Try again"
   }
   ,
-  "carousel": { "prev": "Previous", "next": "Next" },
+  "carousel": { "prev": "Föregående", "next": "Nästa" },
   "booking": {
     "title": "Booking",
     "date": "Date",

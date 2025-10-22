@@ -58,15 +58,15 @@
   "trips_ui": { "backToCategories": "Back to categories" },
   "profile": { "info": "여기에서 이전 여행과 예약을 확인할 수 있습니다." },
   "assistant": {
-    "title": "AI Assistant",
-    "close": "Close",
-    "suggestion": "Ask anything about your trip.",
-    "placeholder": "Ask anything",
-    "aria_message": "Message",
-    "aria_send": "Send",
-    "stream_error": "Connection error with the assistant.",
-    "fallback_error": "We didn't receive a reply right now.",
-    "error_prefix": "Error:"
+    "title": "AI 도우미",
+    "close": "닫기",
+    "suggestion": "여행에 대해 무엇이든 물어보세요.",
+    "placeholder": "질문을 입력하세요",
+    "aria_message": "메시지",
+    "aria_send": "보내기",
+    "stream_error": "도우미 연결 오류입니다.",
+    "fallback_error": "지금은 응답을 받지 못했습니다.",
+    "error_prefix": "오류:"
   }
   ,
   "feedback": {
@@ -79,7 +79,7 @@
     "try_again": "Try again"
   }
   ,
-  "carousel": { "prev": "Previous", "next": "Next" },
+  "carousel": { "prev": "이전", "next": "다음" },
   "booking": {
     "title": "Booking",
     "date": "Date",

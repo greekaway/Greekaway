@@ -60,6 +60,9 @@
   </style>
 </head>
 <body class="site-gradient">
+  <div style="position:fixed;top:8px;right:12px;z-index:20050">
+    <select id="langSelect" aria-label="Language"></select>
+  </div>
   <div class="step3-header">
     <div class="trip-title" id="s3TripTitle">&nbsp;</div>
     <div class="step-indicator" style="margin-top:6px;color:var(--color-gold,#d9b85f);font-weight:700;opacity:.9" data-i18n="booking.step3_of3">Βήμα 3 από 3</div>
@@ -147,10 +150,10 @@
           return v == null ? d : v; 
         } catch(_){ return d; } 
       };
-      const langFlags = { el:'🇬🇷', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', es:'🇪🇸', zh:'🇨🇳', he:'🇮🇱' };
+  const langFlags = { el:'🇬🇷', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', es:'🇪🇸', zh:'🇨🇳', he:'🇮🇱', nl:'🇳🇱', sv:'🇸🇪', ko:'🇰🇷', pt:'🇵🇹', ru:'🇷🇺' };
   const travTypeFallback = { explore:'Εξερευνητές – δραστήριοι', relax:'Χαλαροί ταξιδιώτες', family:'Οικογενειακό ύφος', solo:'Μοναχικοί ταξιδιώτες' };
   const interestFallback = { nature:'Φύση', culture:'Πολιτισμός', mountain:'Βουνό', sea:'Θάλασσα', gastronomy:'Γαστρονομία' };
-  const langFallbackLabels = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', zh:'中文', he:'עברית' };
+  const langFallbackLabels = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', zh:'中文', he:'עברית', nl:'Nederlands', sv:'Svenska', ko:'한국어', pt:'Português', ru:'Русский' };
 
       const adults = get('gw_adults','2');
       const ages = (()=>{ try { return JSON.parse(get('gw_children_ages','[]')); } catch(_){ return []; } })();
