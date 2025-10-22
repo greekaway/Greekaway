@@ -76,6 +76,18 @@
     } catch(_){ }
     // fallback to common set (broader list in case /locales/index.json is unreachable)
     AVAILABLE = ['el','en','fr','de','he','it','es','zh','nl','sv','ko','pt','ru'];
+    // As a fallback, try to obtain a version tag from /version.json so locale JSONs can be cache-busted
+    try {
+      const vres = await fetch('/version.json', { cache: 'no-cache' });
+      if (vres.ok) {
+        const vj = await vres.json();
+        const ver = (vj && (vj.localesVersion || vj.dataVersion)) ? String(vj.localesVersion || vj.dataVersion) : null;
+        if (ver) {
+          I18N_VERSION = ver;
+          try { window.I18N_VERSION = I18N_VERSION; } catch(_){ }
+        }
+      }
+    } catch(_){ }
     return AVAILABLE;
   }
 
@@ -95,18 +107,19 @@
   async function loadMessages(lang){
     if (CACHE[lang]) return CACHE[lang];
     // Try primary /locales path, then fallback to /i18n path
-    const qp = I18N_VERSION ? (`?v=` + encodeURIComponent(I18N_VERSION)) : '';
+    const ver = I18N_VERSION || (typeof window !== 'undefined' && (window.__BUILD_TIME || window.__LOCALES_DEV_VERSION));
+    const qp = ver ? (`?v=` + encodeURIComponent(String(ver))) : (`?ts=` + Date.now());
     const tryPaths = [`/locales/${lang}.json${qp}`, `/i18n/${lang}.json${qp}`];
     for (const url of tryPaths) {
       try {
-        // Allow browser/HTTP caching as configured by the server
-        const res = await fetch(url);
+        // Force bypass of any stale HTTP caches while keeping ETag/304 semantics server-side
+        const res = await fetch(url, { cache: 'no-cache' });
         if (!res.ok) throw new Error('not-ok');
         const json = await res.json();
         CACHE[lang] = json || {};
         return CACHE[lang];
       } catch (e) {
-        try { if (window.gwI18nDebug) console.warn('[i18n] failed to load', url); } catch(_){}
+        try { if (window.gwI18nDebug) console.warn('[i18n] failed to load', url); } catch(_){ }
       }
     }
     if (lang !== DEFAULT) return loadMessages(DEFAULT);
@@ -255,6 +268,22 @@
   // init on DOM ready
   async function initI18n(){
     await discoverLanguages();
+    // If version is still unknown, attempt one more time to obtain it to ensure JSON cache-bust
+    if (!I18N_VERSION) {
+      try {
+        const vres = await fetch('/version.json', { cache: 'no-cache' });
+        if (vres.ok) {
+          const vj = await vres.json();
+          const ver = (vj && (vj.localesVersion || vj.dataVersion)) ? String(vj.localesVersion || vj.dataVersion) : null;
+          if (ver) {
+            I18N_VERSION = ver;
+            try { window.I18N_VERSION = I18N_VERSION; } catch(_){ }
+            // Clear cache so upcoming loads use the new version tag
+            try { Object.keys(CACHE).forEach(k => { delete CACHE[k]; }); } catch(_){ }
+          }
+        }
+      } catch(_){ }
+    }
     const lang = detectLang();
     await populateSelector(lang);
   const msgs = await loadMessages(lang);

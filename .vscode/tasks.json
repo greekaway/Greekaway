@@ -39,6 +39,13 @@
 			"command": "node tools/booking_smoke_test_multi.js",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "Run updated booking multi-viewport screenshots",
+			"type": "shell",
+			"command": "node tools/booking_smoke_test_multi.js",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

@@ -472,6 +472,45 @@
       }
     })();
 
+    // Force-apply translations to all nodes inside Step 2 area
+    function applyTranslationsToStep2() {
+      try {
+        if (!window.t) return;
+        // narrow scope to the step2 container to avoid global reflow
+        const root = document.body;
+        const selAll = root.querySelectorAll('[data-i18n], [data-i18n-placeholder], [data-i18n-title], [data-i18n-aria], [data-i18n-value]');
+        selAll.forEach(el => {
+          try {
+            if (el.hasAttribute('data-i18n')) {
+              const key = el.getAttribute('data-i18n');
+              const val = window.t(key);
+              if (val && val !== key) el.textContent = val;
+            }
+            if (el.hasAttribute('data-i18n-placeholder')) {
+              const key = el.getAttribute('data-i18n-placeholder');
+              const val = window.t(key);
+              if (val && val !== key) el.setAttribute('placeholder', val);
+            }
+            if (el.hasAttribute('data-i18n-title')) {
+              const key = el.getAttribute('data-i18n-title');
+              const val = window.t(key);
+              if (val && val !== key) el.setAttribute('title', val);
+            }
+            if (el.hasAttribute('data-i18n-aria')) {
+              const key = el.getAttribute('data-i18n-aria');
+              const val = window.t(key);
+              if (val && val !== key) el.setAttribute('aria-label', val);
+            }
+            if (el.hasAttribute('data-i18n-value')) {
+              const key = el.getAttribute('data-i18n-value');
+              const val = window.t(key);
+              if (val && val !== key) el.value = val;
+            }
+          } catch(_){}
+        });
+      } catch(_){}
+    }
+
     // Simple counters logic (limits: adults 1..10, children 0..10)
     (function(){
         // Safe i18n accessor to avoid rendering raw keys before i18n is ready
@@ -577,14 +616,14 @@
           return sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_lang') || sessionStorage.getItem('gw_lang') || 'el';
         } catch(_){ return 'el'; }
       })();
-  const langFlags = { el:'🇬🇷', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', es:'🇪🇸', zh:'🇨🇳', he:'🇮🇱', nl:'��🇱', sv:'🇸🇪', ko:'🇰🇷', pt:'🇵🇹', ru:'🇷🇺' };
+  const langFlags = { el:'🇬🇷', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', es:'🇪🇸', zh:'🇨🇳', he:'🇮🇱', nl:'🇳🇱', sv:'🇸🇪', ko:'🇰🇷', pt:'🇵🇹', ru:'🇷🇺' };
   const langFallbackLabels = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', zh:'中文', he:'עברית', nl:'Nederlands', sv:'Svenska', ko:'한국어', pt:'Português', ru:'Русский' };
       {
     const label = tSafe('booking.preferred_language_options.' + defaultLang, (langFallbackLabels[defaultLang] || defaultLang.toUpperCase()));
         const flag = langFlags[defaultLang] || '';
         setLang(defaultLang, label, flag);
       }
-  langBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (langMenu) { langMenu.hidden = !langMenu.hidden; if (!langMenu.hidden) { const row = langMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; langMenu.classList.toggle('dropup', spaceBelow < 220); } } } });
+  langBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (langMenu) { langMenu.hidden = !langMenu.hidden; if (!langMenu.hidden) { const row = langMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; langMenu.classList.toggle('dropup', spaceBelow < 220); } } try { applyTranslationsToStep2(); } catch(_){} } });
       langMenu?.querySelectorAll('button')?.forEach(btn=>{
         btn.addEventListener('click', ()=>{
           const code = btn.getAttribute('data-code') || 'el';
@@ -611,7 +650,7 @@
   const ageMap = { '20-30':'20–30', '30-40':'30–40', '40-55':'40–55', '55+':'55+' };
       const defaultAge = (()=>{ try { return sessionStorage.getItem('gw_age_group') || ''; } catch(_){ return ''; } })();
       if (defaultAge && ageMap[defaultAge]) setAgeGroup(defaultAge, ageMap[defaultAge]);
-  ageBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (ageMenu) { ageMenu.hidden = !ageMenu.hidden; if (!ageMenu.hidden) { const row = ageMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; ageMenu.classList.toggle('dropup', spaceBelow < 220); } } } });
+  ageBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (ageMenu) { ageMenu.hidden = !ageMenu.hidden; if (!ageMenu.hidden) { const row = ageMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; ageMenu.classList.toggle('dropup', spaceBelow < 220); } } try { applyTranslationsToStep2(); } catch(_){} } });
       ageMenu?.querySelectorAll('button')?.forEach(btn=>{
         btn.addEventListener('click', ()=>{
           const code = btn.getAttribute('data-code') || '';
@@ -642,7 +681,7 @@
       };
       const defaultTravType = (()=>{ try { return sessionStorage.getItem('gw_traveler_type') || ''; } catch(_){ return ''; } })();
       if (defaultTravType) setTravType(defaultTravType);
-  travTypeBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (travTypeMenu) { travTypeMenu.hidden = !travTypeMenu.hidden; if (!travTypeMenu.hidden) { const row = travTypeMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; travTypeMenu.classList.toggle('dropup', spaceBelow < 220); } } } });
+  travTypeBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (travTypeMenu) { travTypeMenu.hidden = !travTypeMenu.hidden; if (!travTypeMenu.hidden) { const row = travTypeMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; travTypeMenu.classList.toggle('dropup', spaceBelow < 220); } } try { applyTranslationsToStep2(); } catch(_){} } });
       travTypeMenu?.querySelectorAll('button')?.forEach(btn=>{
         btn.addEventListener('click', ()=>{
           const code = btn.getAttribute('data-code') || '';
@@ -673,7 +712,7 @@
       };
       const defaultInterest = (()=>{ try { return sessionStorage.getItem('gw_interest') || ''; } catch(_){ return ''; } })();
       if (defaultInterest) setInterest(defaultInterest);
-  interestBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (interestMenu) { interestMenu.hidden = !interestMenu.hidden; if (!interestMenu.hidden) { const row = interestMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; interestMenu.classList.toggle('dropup', spaceBelow < 220); } } } });
+  interestBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (interestMenu) { interestMenu.hidden = !interestMenu.hidden; if (!interestMenu.hidden) { const row = interestMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; interestMenu.classList.toggle('dropup', spaceBelow < 220); } } try { applyTranslationsToStep2(); } catch(_){} } });
       interestMenu?.querySelectorAll('button')?.forEach(btn=>{
         btn.addEventListener('click', ()=>{
           const code = btn.getAttribute('data-code') || '';
@@ -698,7 +737,7 @@
       };
       const defaultSocial = (()=>{ try { return sessionStorage.getItem('gw_sociality') || ''; } catch(_){ return ''; } })();
       if (defaultSocial) setSocial(defaultSocial);
-  socialBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (socialMenu) { socialMenu.hidden = !socialMenu.hidden; if (!socialMenu.hidden) { const row = socialMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; socialMenu.classList.toggle('dropup', spaceBelow < 220); } } } });
+  socialBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (socialMenu) { socialMenu.hidden = !socialMenu.hidden; if (!socialMenu.hidden) { const row = socialMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; socialMenu.classList.toggle('dropup', spaceBelow < 220); } } try { applyTranslationsToStep2(); } catch(_){} } });
       socialMenu?.querySelectorAll('button')?.forEach(btn=>{
         btn.addEventListener('click', ()=>{
           const code = btn.getAttribute('data-code') || '';
@@ -731,7 +770,7 @@
       });
       // Re-apply selected labels when language changes
       try {
-        window.addEventListener('i18n:changed', () => {
+      window.addEventListener('i18n:changed', () => {
           try {
             // Keep showing the chosen communication language, but translate its label in current UI language
             const curPref = (sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || defaultLang);
@@ -778,6 +817,10 @@
           } catch(_){ }
         });
       } catch(_){ }
+      // Ensure translations are applied to step2 DOM nodes when i18n loads/changes
+      try { window.addEventListener('i18n:changed', () => { try { applyTranslationsToStep2(); } catch(_){} }); } catch(_){ }
+      // Also run once after DOM ready to catch initial language
+      try { document.addEventListener('DOMContentLoaded', () => { try { applyTranslationsToStep2(); } catch(_){} }); } catch(_){ }
     })();
     // Ensure translations apply after DOM is fully ready (covers any early t() fallback rendering)
     document.addEventListener('DOMContentLoaded', function(){

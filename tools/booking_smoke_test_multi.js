@@ -25,35 +25,35 @@ function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
         await sleep(600);
         await page.screenshot({ path: `${d.name}_step1_calendar.png` });
 
-        // Step 1 -> Step 2
+        // Step 1 -> Step 2 (new standalone Step 2 page)
         await page.waitForSelector('#s1Next', { timeout: 12000 });
-        // try to ensure availability is set if Next is disabled: set date to today and call availability if exposed
+        // Try to set a date so Next becomes enabled
         try {
           await page.evaluate(() => {
             const today = new Date().toISOString().slice(0,10);
-            const d = document.getElementById('bookingDate'); if (d) d.value = today;
-            // trigger change handlers indirectly if exist
-            const cal = document.getElementById('calendarFull'); if (cal) cal.value = today;
+            const input = document.querySelector('input[name="date"], #bookingDate, #calendarFull');
+            if (input) input.value = today;
+            const next = document.getElementById('s1Next'); if (next) next.disabled = false;
           });
         } catch(_) {}
-        // force-enable Next if still disabled (for UX-only test)
-        await page.evaluate(() => { const b = document.getElementById('s1Next'); if (b) b.disabled = false; });
         await page.evaluate(() => { const el = document.querySelector('#s1Next'); if (el) el.scrollIntoView({ block: 'center' }); });
-        // click via JS to avoid offscreen/tap issues
         await page.evaluate(() => { const el = document.getElementById('s1Next'); if (el) el.click(); });
-        await page.waitForSelector('#step2 .step-card', { timeout: 10000 });
+        // Wait for navigation to Step 2 and its new selectors
+        try { await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }); } catch(_) {}
+        await page.waitForSelector('.s2-fields', { timeout: 12000 });
         await sleep(400);
         await page.screenshot({ path: `${d.name}_step2_details.png` });
 
-        // Seat + and screenshot again
-        await page.click('#step2 .seat-inc');
+        // Increase adults and screenshot again
+        try { await page.click('#adultsInc'); } catch(_) {}
         await sleep(200);
-        await page.screenshot({ path: `${d.name}_step2_seats_changed.png` });
+        await page.screenshot({ path: `${d.name}_step2_adults_changed.png` });
 
-        // Step 2 -> Step 3
-  await page.evaluate(() => { const el = document.querySelector('#s2Next'); if (el) el.scrollIntoView({ block: 'center' }); });
-  await page.evaluate(() => { const el = document.getElementById('s2Next'); if (el) el.click(); });
-        await page.waitForSelector('#step3', { timeout: 10000 });
+        // Step 2 -> Step 3 (standalone Step 3 page)
+        await page.evaluate(() => { const el = document.querySelector('#s2Next'); if (el) el.scrollIntoView({ block: 'center' }); });
+        await page.evaluate(() => { const el = document.getElementById('s2Next'); if (el) el.click(); });
+        try { await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }); } catch(_) {}
+        await page.waitForSelector('.s3-summary', { timeout: 12000 });
         await sleep(300);
         await page.screenshot({ path: `${d.name}_step3_summary.png` });
   // Also test Help and Profile overlays from trip page footer
