@@ -278,8 +278,14 @@ app.use(express.static(path.join(__dirname, "public"), {
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache');
     } else {
-      // 7 days + immutable for hashed/static assets
-      res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+      // JSON under /public/data should stay fairly fresh (translations, catalogs)
+      const isDataJson = filePath.includes(path.join('public', 'data') + path.sep) && filePath.endsWith('.json');
+      if (isDataJson) {
+        res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes
+      } else {
+        // 7 days + immutable for other static assets
+        res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+      }
     }
   }
 }));
@@ -321,6 +327,31 @@ function computeLocalesVersion() {
   }
 }
 
+function computeDataVersion() {
+  const DATA_DIR = path.join(__dirname, 'public', 'data');
+  try {
+    const entries = fs.readdirSync(DATA_DIR, { withFileTypes: true });
+    let maxMtime = 0;
+    const walk = (dir) => {
+      const items = fs.readdirSync(dir, { withFileTypes: true });
+      for (const it of items) {
+        const p = path.join(dir, it.name);
+        if (it.isDirectory()) walk(p);
+        else if (it.isFile() && it.name.endsWith('.json')) {
+          try {
+            const st = fs.statSync(p);
+            maxMtime = Math.max(maxMtime, st.mtimeMs || 0);
+          } catch(_) {}
+        }
+      }
+    };
+    walk(DATA_DIR);
+    return maxMtime || Date.now();
+  } catch(_) {
+    return Date.now();
+  }
+}
+
 app.get('/locales/index.json', (req, res) => {
   try {
     const files = fs.readdirSync(LOCALES_DIR, { withFileTypes: true });
@@ -347,13 +378,15 @@ app.get('/version.json', (req, res) => {
   try {
     const startedAt = new Date().toISOString();
     const localesVersion = computeLocalesVersion();
+    const dataVersion = computeDataVersion();
     res.set('Cache-Control', IS_DEV ? 'no-store' : 'public, max-age=60');
     return res.json({
       node: process.version,
       isDev: IS_DEV,
       isRender: IS_RENDER,
       startedAt,
-      localesVersion
+      localesVersion,
+      dataVersion
     });
   } catch (e) {
     return res.json({ isDev: IS_DEV, isRender: IS_RENDER });

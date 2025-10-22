@@ -1,19 +1,61 @@
 [
   {
     "id": "olympia",
-    "title": { "el": "Αρχαία Ολυμπία", "en": "Ancient Olympia", "he": "אולימפיה העתיקה", "fr": "Olympie ancienne", "de": "Antikes Olympia" },
+    "title": {
+      "el": "Αρχαία Ολυμπία",
+      "en": "Ancient Olympia",
+      "he": "אולימפיה העתיקה",
+      "fr": "Olympie ancienne",
+      "de": "Antikes Olympia",
+      "es": "Antigua Olimpia",
+      "it": "Antica Olimpia",
+      "sv": "Antika Olympia",
+      "nl": "Oude Olympia",
+      "pt": "Antiga Olímpia",
+      "ru": "Древняя Олимпия",
+      "ko": "고대 올림피아",
+      "zh": "古奥林匹亚"
+    },
     "category": "culture"
   }
   ,
   {
     "id": "lefkas",
-    "title": { "el": "Λευκάδα", "en": "Lefkada", "he": "לֶפְקָדָה", "fr": "Lefkada", "de": "Lefkada" },
+    "title": {
+      "el": "Λευκάδα",
+      "en": "Lefkada",
+      "he": "לֶפְקָדָה",
+      "fr": "Lefkada",
+      "de": "Lefkada",
+      "es": "Lefkada",
+      "it": "Lefkada",
+      "sv": "Lefkada",
+      "nl": "Lefkada",
+      "pt": "Lefkada",
+      "ru": "Лефкада",
+      "ko": "레프카다",
+      "zh": "莱夫卡达"
+    },
     "category": "sea"
   }
   ,
   {
     "id": "parnassos",
-    "title": { "el": "Πάρνασος & Δελφοί", "en": "Parnassos & Delphi", "he": "פארנאסוס ודלפי", "fr": "Parnasse & Delphes", "de": "Parnassos und Delphi" },
+    "title": {
+      "el": "Πάρνασος & Δελφοί",
+      "en": "Parnassos & Delphi",
+      "he": "פארנאסוס ודלפי",
+      "fr": "Parnasse & Delphes",
+      "de": "Parnassos und Delphi",
+      "es": "Parnaso y Delfos",
+      "it": "Parnaso e Delfi",
+      "sv": "Parnassos & Delfi",
+      "nl": "Parnassos & Delphi",
+      "pt": "Parnasso e Delfos",
+      "ru": "Парнас и Дельфы",
+      "ko": "파르나소스 & 델피",
+      "zh": "帕纳索斯与德尔斐"
+    },
     "category": "mountain"
   }
 ]

@@ -51,6 +51,21 @@ function getLocalized(field) {
   return '';
 }
 
+// Helper: ensure we have a data version to cache-bust /public/data JSON in prod
+async function getDataVersionEnsure(){
+  if (typeof window.__GW_DATA_VER !== 'undefined') return window.__GW_DATA_VER || '';
+  try {
+    const r = await fetch('/version.json', { cache: 'no-cache' });
+    if (r.ok) {
+      const j = await r.json();
+      window.__GW_DATA_VER = (j && j.dataVersion) ? String(j.dataVersion) : '';
+      return window.__GW_DATA_VER;
+    }
+  } catch(_){ }
+  window.__GW_DATA_VER = '';
+  return '';
+}
+
 // ---------- [A] Λίστα Κατηγοριών (trips.html) ----------
 document.addEventListener("DOMContentLoaded", () => {
   try {
@@ -86,7 +101,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  fetch("/data/categories.json")
+  (async () => {
+    const dv = await getDataVersionEnsure();
+    return fetch(`/data/categories.json${dv ? ('?v='+encodeURIComponent(dv)) : ''}`)
+  })()
     .then(r => {
       if (!r.ok) throw new Error("Αποτυχία φόρτωσης categories.json");
       return r.json();
@@ -148,7 +166,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  fetch("/data/tripindex.json")
+  ;(async () => {
+    const dv = await getDataVersionEnsure();
+    return fetch(`/data/tripindex.json${dv ? ('?v='+encodeURIComponent(dv)) : ''}`)
+  })()
     .then(r => r.json())
     .then(allTrips => {
       window.__gwCategoryTrips = allTrips;
@@ -175,7 +196,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Try to set category early from tripindex so per-category background
   // appears as soon as possible (before the full trip JSON finishes loading).
-  fetch('/data/tripindex.json')
+  ;(async () => {
+    const dv = await getDataVersionEnsure();
+    return fetch(`/data/tripindex.json${dv ? ('?v='+encodeURIComponent(dv)) : ''}`)
+  })()
     .then(r => r.json())
     .then(all => {
       const meta = (all || []).find(t => t.id === tripId);
@@ -183,7 +207,10 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .catch(() => {});
 
-  fetch(`/data/trips/${tripId}.json`)
+  ;(async () => {
+    const dv = await getDataVersionEnsure();
+    return fetch(`/data/trips/${tripId}.json${dv ? ('?v='+encodeURIComponent(dv)) : ''}`)
+  })()
     .then(r => {
       if (!r.ok) throw new Error("Αποτυχία φόρτωσης δεδομένων εκδρομής");
       return r.json();

@@ -19,6 +19,7 @@
         if (data && Array.isArray(data.languages)) {
           AVAILABLE = data.languages;
           if (data.version) I18N_VERSION = String(data.version);
+          try { window.I18N_VERSION = I18N_VERSION; } catch(_){ }
           return AVAILABLE;
         }
       }
