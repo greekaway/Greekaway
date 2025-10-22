@@ -297,20 +297,20 @@ footer a.central-btn:hover i {
   .overlay .close-overlay { top: 10px; right: 10px; }
   /* ensure selects are inset from the screen edges on mobile for breathing room */
   .overlay select, .profile-select { width: 90vw; max-width: calc(100% - 40px); margin-left: auto; margin-right: auto; }
-  /* Move AI chat close button slightly further right on mobile (approx. 2-3 taps) */
-  /* push close button further right so it's easier to tap and visually separated
-    (only on phones) */
-  #aiOverlay .ga-chat-close { right: 72px; }
-  /* Nudge the input bar contents to the right to keep the send arrow inside the
-    visible area and aligned with the moved close button. We use safe-area inset
-    plus an extra offset to achieve the desired '2-3 clicks' visual shift. */
+  /* Phone-only: place the X close button closer to the right edge */
+  #aiOverlay .ga-chat-close { right: 12px; }
+  /* Phone-only: shift the chat bar content to the right WITHOUT changing its width.
+     We increase left padding by a small shift and decrease right padding by the
+     same amount so total inner width remains constant. */
   #aiOverlay .ga-inputbar {
-   padding-right: calc(env(safe-area-inset-right, 0px) + 56px) !important;
+    --ga-pad: clamp(16px, 5vw, 32px);
+    --ga-shift: 12px; /* ~3 taps worth on small phones; adjustable */
+    padding-left: calc(var(--ga-pad) + var(--ga-shift)) !important;
+    padding-right: max(0px, calc(var(--ga-pad) - var(--ga-shift))) !important;
   }
-  /* Ensure the input wrapper (which holds the textarea) doesn't overflow and
-    accounts for the extra right padding; move the absolute send button left so
-    it remains inside the padded area visually aligned with the textarea. */
-  #aiOverlay .ga-inputwrap { margin-right: 0 !important; box-sizing: border-box; }
+  /* Ensure wrapper fills full available width; do not shrink or grow beyond 100% */
+  #aiOverlay .ga-inputwrap { margin-left: 0 !important; width: 100% !important; box-sizing: border-box; }
+  /* Send arrow stays pinned inside the input on the right */
   #aiOverlay .ga-send { right: 12px; }
 }
 
@@ -535,9 +535,20 @@ html.overlay-open { overflow: hidden; }
 /* Global 3% magnification for the chat input bar text and controls */
 #aiOverlay .ga-inputbar { font-size: 103%; }
 
-/* Mobile-only slight left nudge of the chat input wrapper */
+/* Mobile-only: fine-tune AI overlay without changing widths */
 @media (max-width: 599px) {
-  #aiOverlay .ga-inputwrap { margin-left: -12px; width: calc(100% + 12px); }
+  /* X close button: move 2 clicks further left from the right edge */
+  #aiOverlay .ga-chat-close { right: 60px; }
+  /* Keep input wrapper full width; no negative nudge */
+  #aiOverlay .ga-inputwrap { margin-left: 0; width: 100%; }
+  /* Shift chat bar content half-click to the right while preserving inner width */
+  #aiOverlay .ga-inputbar {
+    --ga-pad: clamp(16px, 5vw, 32px);
+    --ga-shift: 4px; /* half-click right */
+    /* add to left padding and reduce right padding for a right shift */
+    padding-left: calc(var(--ga-pad) + var(--ga-shift)) !important;
+    padding-right: max(0px, calc(var(--ga-pad) - var(--ga-shift))) !important;
+  }
 }
 
 /* Hide global footer while AI chat overlay is open */
