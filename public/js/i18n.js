@@ -31,8 +31,8 @@
         }
       }
     } catch(_){ }
-    // fallback to common set
-    AVAILABLE = ['el','en','fr','de','he'];
+    // fallback to common set (broader list in case /locales/index.json is unreachable)
+    AVAILABLE = ['el','en','fr','de','he','it','es','zh','nl','sv','ko','pt','ru'];
     return AVAILABLE;
   }
 

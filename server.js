@@ -239,6 +239,32 @@ app.get('/checkout.html', (req, res) => {
   });
 });
 
+// 1️⃣ Σε DEV: Σερβίρουμε ΠΑΝΤΑ φρέσκα HTML/JS/CSS για να αποφεύγουμε stale cache σε άλλες συσκευές
+if (IS_DEV) {
+  app.get(/^\/(?:.*)\.html$/, (req, res, next) => {
+    const filePath = path.join(__dirname, 'public', req.path);
+    fs.readFile(filePath, 'utf8', (err, html) => {
+      if (err) return next();
+      try {
+        const t = Date.now();
+        // 1) Ανανεώνουμε οποιοδήποτε υπάρχον v=NNN query param
+        let out = html.replace(/(\?v=)\d+/g, `$1${t}`);
+        // 2) Για /js/*.js χωρίς query, προσθέτουμε ?dev=timestamp
+        out = out.replace(/(src=\"\/(?:js)\/[^\"?#]+)(\")/g, (m, p1, p2) => {
+          return p1.includes('?') ? m : `${p1}?dev=${t}${p2}`;
+        });
+        // 3) Για /css/*.css χωρίς query, προσθέτουμε ?dev=timestamp
+        out = out.replace(/(href=\"\/(?:css)\/[^\"?#]+)(\")/g, (m, p1, p2) => {
+          return p1.includes('?') ? m : `${p1}?dev=${t}${p2}`;
+        });
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-store');
+        return res.send(out);
+      } catch (e) { return next(); }
+    });
+  });
+}
+
 // 1️⃣ Σερβίρουμε στατικά αρχεία από το /public με caching για non-HTML assets
 app.use(express.static(path.join(__dirname, "public"), {
   etag: !IS_DEV,
@@ -292,7 +318,7 @@ app.get('/locales/index.json', (req, res) => {
     // Fallback to a sensible default set if directory missing
     if (IS_DEV) res.set('Cache-Control', 'no-store');
     else res.set('Cache-Control', 'public, max-age=60');
-    res.json({ languages: ['el','en','fr','de','he','it','es','zh'] });
+    res.json({ languages: ['el','en','fr','de','he','it','es','zh','nl','sv','ko','pt','ru'] });
   }
 });
 
