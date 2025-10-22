@@ -433,7 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!viewport.hasAttribute('tabindex')) viewport.setAttribute('tabindex', '0');
 
         // Drag/swipe to page exactly one slide per gesture
-        let isDown = false, startX = 0, startLeft = 0, startIdx = 0, dragStartTime = 0;
+  let isDown = false, startX = 0, startY = 0, startLeft = 0, startIdx = 0, dragStartTime = 0;
         viewport.addEventListener('mousedown', (e) => {
           isDown = true;
           startX = e.clientX;
@@ -475,16 +475,26 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!(e.touches && e.touches[0])) return;
           isDown = true;
           startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
           startLeft = viewport.scrollLeft;
           startIdx = computeIndex();
           dragStartTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
           viewport.classList.add('dragging');
         }, { passive: true });
-        window.addEventListener('touchmove', (e) => {
+        // Limit horizontal drag handling to the carousel viewport only.
+        // Allow vertical swipes to bubble so the page can scroll on mobile/tablets.
+        viewport.addEventListener('touchmove', (e) => {
           if (!isDown || !(e.touches && e.touches[0])) return;
-          const dx = e.touches[0].clientX - startX;
-          viewport.scrollLeft = startLeft - dx;
-          e.preventDefault(); // prevent momentum
+          const tx = e.touches[0].clientX;
+          const ty = e.touches[0].clientY;
+          const dx = tx - startX;
+          const dy = ty - startY;
+          // If horizontal intent is stronger than vertical, handle as carousel drag
+          if (Math.abs(dx) > Math.abs(dy) + 4) { // small bias to favor vertical page scroll
+            viewport.scrollLeft = startLeft - dx;
+            e.preventDefault(); // prevent page scroll while dragging horizontally
+          }
+          // else: let the event bubble so the page can scroll vertically
         }, { passive: false });
         window.addEventListener('touchend', () => {
           if (!isDown) return;
