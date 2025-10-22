@@ -380,6 +380,33 @@ function computeDataVersion() {
   }
 }
 
+function computeAssetsVersion() {
+  try {
+    const ROOT = path.join(__dirname, 'public');
+    const targets = [path.join(ROOT, 'js'), path.join(ROOT, 'css')];
+    let maxMtime = 0;
+    const walk = (dir) => {
+      try {
+        const items = fs.readdirSync(dir, { withFileTypes: true });
+        for (const it of items) {
+          const p = path.join(dir, it.name);
+          if (it.isDirectory()) walk(p);
+          else if (it.isFile() && (p.endsWith('.js') || p.endsWith('.css'))) {
+            try {
+              const st = fs.statSync(p);
+              maxMtime = Math.max(maxMtime, st.mtimeMs || 0);
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    };
+    targets.forEach(walk);
+    return Math.floor(maxMtime || Date.now());
+  } catch (_) {
+    return Math.floor(Date.now());
+  }
+}
+
 app.get('/locales/index.json', (req, res) => {
   try {
     const files = fs.readdirSync(LOCALES_DIR, { withFileTypes: true });
@@ -420,6 +447,8 @@ app.get('/version.json', (req, res) => {
     const startedAt = new Date().toISOString();
     const localesVersion = computeLocalesVersion();
     const dataVersion = computeDataVersion();
+    const assetsVersion = computeAssetsVersion();
+    const appVersion = Math.max(localesVersion || 0, dataVersion || 0, assetsVersion || 0);
     // Force no caching anywhere (browser, CDN, proxy) to prevent stale version info
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.set('Pragma', 'no-cache');
@@ -431,7 +460,9 @@ app.get('/version.json', (req, res) => {
       isRender: IS_RENDER,
       startedAt,
       localesVersion,
-      dataVersion
+      dataVersion,
+      assetsVersion,
+      appVersion
     });
   } catch (e) {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
