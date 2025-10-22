@@ -32,6 +32,8 @@
     "name": "Όνομα",
     "email": "Email",
     "cardLabel": "Κάρτα",
+  "expiry": "MM / YY",
+  "cvc": "CVC",
     "payment_error": "Πρόβλημα με πληρωμή",
     "payment_failed": "Η πληρωμή απέτυχε",
     "payment_success_test": "Η πληρωμή ολοκληρώθηκε",

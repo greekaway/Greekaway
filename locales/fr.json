@@ -25,6 +25,8 @@
     "name": "Nom",
     "email": "Email",
     "cardLabel": "Carte",
+  "expiry": "MM / AA",
+  "cvc": "CVC",
     "notice": "Paiement sécurisé via Stripe",
     "payment_success_test": "Paiement réussi",
     "payment_failed": "Échec du paiement",

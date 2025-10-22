@@ -25,6 +25,8 @@
     "name": "Name",
     "email": "E-Mail",
     "cardLabel": "Karte",
+  "expiry": "MM / JJ",
+  "cvc": "CVC",
     "notice": "Sichere Zahlung über Stripe",
     "payment_success_test": "Zahlung erfolgreich",
     "payment_failed": "Zahlung fehlgeschlagen",

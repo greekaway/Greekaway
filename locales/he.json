@@ -25,6 +25,8 @@
     "name": "שם",
     "email": "דוא\"ל",
     "cardLabel": "כרטיס",
+  "expiry": "MM / YY",
+  "cvc": "CVC",
     "notice": "תשלום מאובטח דרך Stripe",
     "payment_success_test": "התשלום הצליח",
     "payment_failed": "התשלום נכשל",

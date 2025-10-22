@@ -32,6 +32,8 @@
     "name": "Name",
     "email": "Email",
     "cardLabel": "Card",
+  "expiry": "MM / YY",
+  "cvc": "CVC",
     "payment_error": "Payment error",
     "payment_failed": "Payment failed",
     "payment_success_test": "Payment successful",
