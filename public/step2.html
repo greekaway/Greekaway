@@ -811,8 +811,11 @@
               };
               const title = getLocalized(t.title);
               const desc = getLocalized(t.description);
-              if (title) titleEl.textContent = title;
-              if (desc) descEl.textContent = desc;
+              // Re-select DOM nodes here to avoid scope issues with earlier IIFEs
+              const titleEl = document.getElementById('s2TripTitle');
+              const descEl = document.getElementById('s2TripDesc');
+              if (title && titleEl) titleEl.textContent = title;
+              if (desc && descEl) descEl.textContent = desc;
             }
           } catch(_){ }
         });

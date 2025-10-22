@@ -150,6 +150,7 @@
               const r = await fetch(`/data/trips/${encodeURIComponent(id)}.json${dv}`, { cache: 'no-cache' });
               if (!r.ok) return;
               const trip = await r.json();
+              try { window.__loadedTrip = trip; } catch(_){}
               const lang = (localStorage.getItem('gw_lang') || 'el');
               const getLocalized = (field) => {
                 if (!field) return '';
@@ -205,6 +206,36 @@
         document.getElementById('vInterest').textContent = intLabel;
         document.getElementById('vSocial').textContent = socLabel;
       }
+
+      // When UI language changes, re-render the trip title using loaded trip or fetch by id
+      try {
+        window.addEventListener('i18n:changed', async () => {
+          try {
+            const titleEl = document.getElementById('s3TripTitle');
+            const lang = (window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el';
+            const getLocalized = (field) => {
+              if (!field) return '';
+              if (typeof field === 'string') return field;
+              if (typeof field === 'object') return field[lang] || field['el'] || Object.values(field)[0] || '';
+              return '';
+            };
+            let trip = (window.__loadedTrip || null);
+            let tripId = (sessionStorage.getItem('gw_trip_id') || '');
+            if (!trip && tripId) {
+              try {
+                let dv = '';
+                try { const rv = await fetch('/version.json', { cache: 'no-cache' }); if (rv.ok) { const j = await rv.json(); dv = j && j.dataVersion ? ('?v='+encodeURIComponent(String(j.dataVersion))) : ''; } } catch(_){ }
+                const r = await fetch(`/data/trips/${encodeURIComponent(tripId)}.json${dv}`, { cache: 'no-cache' });
+                if (r.ok) { trip = await r.json(); try { window.__loadedTrip = trip; } catch(_){} }
+              } catch(_){ }
+            }
+            if (trip && titleEl) {
+              const title = getLocalized(trip.title);
+              if (title) titleEl.textContent = title;
+            }
+          } catch(_){ }
+        });
+      } catch(_){ }
       renderValues();
 
       document.getElementById('s3Back')?.addEventListener('click', ()=> history.back());
