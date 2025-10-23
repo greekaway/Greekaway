@@ -77,7 +77,7 @@ body.ga-variant-flat .category-btn.cat-culture::after {
 }
 /* Make mountain icon 10% larger than base + offset slightly higher */
 /* Move the mountain icon further up (~two more clicks) */
-body.ga-variant-flat .category-btn.cat-mountain::after { width: 68%; height: 68%; top: 0%; }
+body.ga-variant-flat .category-btn.cat-mountain::after { width: 68%; height: 68%; top: -4%; }
 
 /* Place label under the icon inside the tile */
 body.ga-variant-flat .category-btn .cat-label {
