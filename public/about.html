@@ -36,8 +36,13 @@
     .fade-reveal.visible { opacity: 1; transform: translateY(0); }
 
     /* Version footer */
-    .about-version { margin: 28px auto 92px; text-align: center; color: #dcdcdc; opacity: 0.9; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; }
+    .about-version { margin: 28px auto 92px; text-align: center; color: #FFFFFF; opacity: 0.9; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; }
     .about-version strong { color: var(--color-gold); font-weight: 600; }
+
+    /* Day/night color for version footer (About page only) */
+    @media (prefers-color-scheme: light) {
+      .about-version { color: #000000 !important; }
+    }
 
     @media (min-width: 720px) {
       .about-section { padding: 18px 20px; }
