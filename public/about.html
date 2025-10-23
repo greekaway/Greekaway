@@ -20,6 +20,10 @@
       font-size: clamp(1.6rem, 2.6vw + 1rem, 2.4rem);
       margin: 0 0 10px;
     }
+    /* In light (day) mode, use white for the hero title so it stands out on the blue background */
+    @media (prefers-color-scheme: light) {
+      .about-hero h1 { color: #FFFFFF !important; }
+    }
     .about-hero p.lead { color: #f0f4f8; opacity: 0.92; margin: 0 auto; max-width: 60ch; }
 
     .about-wrap { max-width: 980px; margin: 0 auto; padding: 8px 16px 64px; text-align: left; }
@@ -41,9 +45,7 @@
   </style>
 </head>
 <body>
-  <div style="position:fixed;top:8px;right:12px;z-index:999">
-    <select id="langSelect" aria-label="Language"></select>
-  </div>
+  <!-- Language selector intentionally hidden on About page (kept on the home page only) -->
 
   <header class="about-hero">
     <h1 data-i18n="aboutPage.title">About Us – Greekaway</h1>
