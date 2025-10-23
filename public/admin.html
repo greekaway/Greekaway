@@ -34,7 +34,11 @@
     .modal pre{white-space:pre-wrap;background:#f7f9fc;padding:8px;border-radius:6px}
     .sortable { cursor: pointer; text-decoration: underline dotted; }
     /* zebra for bookings too */
+    #bookingsTable thead th{background:#f3f6fb;border:1px solid #cfd8e3;font-weight:700}
+    #bookingsTable tbody td{border:1px solid #e6edf5;padding:6px}
     #bookingsTable tbody tr:nth-child(even){background:#fbfcfe}
+    #bookingsTable tbody tr:hover{background:#eef6ff}
+    #bookingsTable td{text-align:left;font-family: Arial, Helvetica, sans-serif}
   </style>
 </head>
 <body>
@@ -413,7 +417,37 @@
 
     function renderBookings(arr){
       bookingsTbody.innerHTML = '';
-      if (!arr || arr.length === 0) { bookingsMessage.textContent = 'No bookings found.'; return; }
+      if (!arr || arr.length === 0) {
+        // Show a single demo row when no bookings exist, for visual verification only
+        bookingsMessage.textContent = 'No bookings found. Showing a sample row for testing.';
+        const demo = document.createElement('tr');
+        demo.id = 'demo-booking-row';
+        const demoCreated = new Date();
+        const demoPrice = formatAmount(32000, 'eur');
+        const demoPartnerShare = formatAmount(25600, 'eur');
+        const demoCommission = formatAmount(6400, 'eur');
+        demo.innerHTML = `
+          <td>bk_demo_1</td>
+          <td>confirmed</td>
+          <td></td>
+          <td></td>
+          <td>John Demo</td>
+          <td></td>
+          <td>Lefkada Experience</td>
+          <td style="text-align:right">2</td>
+          <td style="text-align:right">${escapeHtml(demoPrice)}</td>
+          <td>${escapeHtml(formatDate(demoCreated.toISOString()))}</td>
+          <td>stripe</td>
+          <td class="editable-partner" contenteditable data-trip="" data-partnerid="">BlueWave Cruises</td>
+          <td style="text-align:right">${escapeHtml(demoPartnerShare)}</td>
+          <td style="text-align:right">${escapeHtml(demoCommission)}</td>
+          <td class="payout-status" data-booking="bk_demo_1">sent</td>
+          <td class="payout-date" data-booking="bk_demo_1">${escapeHtml(formatDate('2025-10-23T00:00:00Z'))}</td>
+          <td></td>
+        `;
+        bookingsTbody.appendChild(demo);
+        return;
+      }
       bookingsMessage.textContent = '';
       for (const b of arr) {
         const tr = document.createElement('tr');
