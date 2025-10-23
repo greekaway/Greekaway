@@ -180,4 +180,29 @@
       "reserved": "Reserved"
     }
   }
+  ,
+  "aboutPage": {
+    "title": "Sobre nós – Greekaway",
+    "lead": "",
+    "s1": {
+      "title": "A ideia por trás da Greekaway",
+      "body": "A Greekaway nasceu de algo simples, mas raro: o desejo de tornar a viagem pela Grécia novamente autêntica.\nNão somos uma operadora de turismo — somos a ligação entre viajantes e as pessoas que vivem aqui.\nCada rota que você vê na Greekaway é desenhada, testada e guiada por locais que conhecem as estradas, as histórias e a alma de cada lugar.\nCriamos a Greekaway porque acreditamos que viajar deve ser pessoal, justo e profundamente humano."
+    },
+    "s2": {
+      "title": "Grupos pequenos. Viagens reais.",
+      "body": "Nossas experiências são feitas para grupos pequenos de 5–7 viajantes — o suficiente para companhia, mas ainda assim pessoais.\nCada viagem ocorre em datas fixas para manter os custos baixos e a qualidade alta.\nSeja um percurso por vilas de montanha, uma noite à beira-mar ou uma visita a um sítio arqueológico, cada momento é planejado com cuidado, equilíbrio e respeito pela terra e pelas pessoas que o recebem."
+    },
+    "s3": {
+      "title": "Parceiros, não fornecedores",
+      "body": "Por trás de cada experiência Greekaway há um parceiro — não um fornecedor.\nMotoristas, hotéis e operadores locais fazem parte do mesmo sistema, tratados com justiça e pagos com transparência por meio da nossa rede automatizada de dupla quitação.\nEsse equilíbrio mantém nosso ecossistema sustentável, honesto e focado no valor de longo prazo, não no lucro imediato."
+    },
+    "s4": {
+      "title": "A tecnologia por trás do toque humano",
+      "body": "A Greekaway usa tecnologia de forma discreta — para tornar tudo mais fluido, e não mais frio.\nNosso assistente de IA responde em tempo real, mostra disponibilidade real, atualiza clima e notícias e garante que cada grupo se forme naturalmente através de um algoritmo que combina perfis, idades e idiomas.\nO resultado é algo raro no turismo: jornadas humanas, aprimoradas — não substituídas — pela tecnologia."
+    },
+    "s5": {
+      "title": "Transparência, simplicidade, evolução",
+      "body": "Acreditamos que o progresso nasce da clareza.\nCada pagamento, cada cancelamento, cada política é aberta, estruturada e justa.\nContinuamos evoluindo, linha por linha, atualização após atualização, sempre com um objetivo: manter a Greekaway humana, transparente e maravilhosamente viva."
+    }
+  }
 }

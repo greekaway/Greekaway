@@ -1,5 +1,7 @@
 {
-  "meta": { "languageName": "Español" },
+  "meta": {
+    "languageName": "Español"
+  },
   "siteTitle": "Greekaway",
   "nav": {
     "home": "Inicio",
@@ -32,8 +34,8 @@
     "name": "Nombre",
     "email": "Correo electrónico",
     "cardLabel": "Tarjeta",
-  "expiry": "MM / AA",
-  "cvc": "CVC",
+    "expiry": "MM / AA",
+    "cvc": "CVC",
     "payment_error": "Error de pago",
     "payment_failed": "Pago fallido",
     "payment_success_test": "Pago realizado correctamente",
@@ -47,18 +49,44 @@
     "subtitle": "Descubre las mejores excursiones por Grecia",
     "ask": "¡Pregúntanos lo que quieras sobre tu viaje!"
   },
-  "about": { "title": "Sobre nosotros", "text": "Greekaway nació para ofrecer viajes seleccionados en Grecia con comodidad, tecnología y estilo." },
-  "categories": {
-    "mountain": { "title": "Excursiones de montaña" },
-    "sea": { "title": "Excursiones marítimas" },
-    "culture": { "title": "Excursiones culturales" }
+  "about": {
+    "title": "About us",
+    "text": "Greekaway was created to offer curated trips in Greece with comfort, technology, and style."
   },
-  "stop": { "label": "Stop {n}" },
-  "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "Selecciona categoría", "noneFound": "No se encontraron excursiones en esta categoría." },
-  "ui": { "close": "Cerrar", "cancel": "Cancelar", "back": "Atrás", "finish": "Finalizar", "choose": "Elegir" },
-  "trips_ui": { "backToCategories": "Back to categories" },
-  "profile": { "info": "Here you'll see your past trips and bookings." },
+  "categories": {
+    "mountain": {
+      "title": "Excursiones de montaña"
+    },
+    "sea": {
+      "title": "Excursiones marítimas"
+    },
+    "culture": {
+      "title": "Excursiones culturales"
+    }
+  },
+  "stop": {
+    "label": "Stop {n}"
+  },
+  "trip": {
+    "experienceTitle": "Experience"
+  },
+  "trips": {
+    "selectCategory": "Selecciona categoría",
+    "noneFound": "No se encontraron excursiones en esta categoría."
+  },
+  "ui": {
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "back": "Atrás",
+    "finish": "Finalizar",
+    "choose": "Elegir"
+  },
+  "trips_ui": {
+    "backToCategories": "Back to categories"
+  },
+  "profile": {
+    "info": "Here you'll see your past trips and bookings."
+  },
   "assistant": {
     "title": "AI Assistant",
     "close": "Close",
@@ -79,55 +107,58 @@
     "placeholder": "Optional comment...",
     "try_again": "Try again"
   },
-  "carousel": { "prev": "Previous", "next": "Next" },
+  "carousel": {
+    "prev": "Previous",
+    "next": "Next"
+  },
   "booking": {
     "title": "Booking",
-  "date": "Fecha",
+    "date": "Fecha",
     "date_placeholder": "YYYY-MM-DD",
-  "seats": "Plazas",
+    "seats": "Plazas",
     "total": "Total",
     "create": "Create booking",
     "name_placeholder": "Full name",
     "email_placeholder": "name@example.com",
     "loading": "Loading...",
-  "step1_of3": "Paso 1 de 3",
-  "traveler_options": "Opciones del viajero",
-  "adults": "Adultos",
-  "children": "Niños",
+    "step1_of3": "Paso 1 de 3",
+    "traveler_options": "Opciones del viajero",
+    "adults": "Adultos",
+    "children": "Niños",
     "increase": "+",
     "decrease": "−",
     "increase_adults": "Increase adults",
     "decrease_adults": "Decrease adults",
     "increase_children": "Increase children",
     "decrease_children": "Decrease children",
-  "bags_large": "Maletas grandes",
-  "bags_small": "Maletas pequeñas",
+    "bags_large": "Maletas grandes",
+    "bags_small": "Maletas pequeñas",
     "increase_bags_large": "Increase large suitcases",
     "decrease_bags_large": "Decrease large suitcases",
     "increase_bags_small": "Increase small suitcases",
     "decrease_bags_small": "Decrease small suitcases",
-  "preferred_language": "Idioma de comunicación",
-  "age_group": "Grupo de edad",
-  "traveler_profile": "Perfil del viajero",
-  "traveler_type": "Tipo de viajero",
-  "travel_style": "Estilo de viaje",
-  "daily_rhythm": "Ritmo diario",
-  "interests": "Intereses",
-  "sociality": "Sociabilidad",
-  "children_ages": "Edades de los niños",
-  "children_age_range": "0 – 17 años",
-  "pick_ages": "Seleccionar edades",
+    "preferred_language": "Idioma de comunicación",
+    "age_group": "Grupo de edad",
+    "traveler_profile": "Perfil del viajero",
+    "traveler_type": "Tipo de viajero",
+    "travel_style": "Estilo de viaje",
+    "daily_rhythm": "Ritmo diario",
+    "interests": "Intereses",
+    "sociality": "Sociabilidad",
+    "children_ages": "Edades de los niños",
+    "children_age_range": "0 – 17 años",
+    "pick_ages": "Seleccionar edades",
     "step2_of3": "Paso 2 de 3",
-  "step3_of3": "Paso 3 de 3",
-  "next": "Siguiente",
+    "step3_of3": "Paso 3 de 3",
+    "next": "Siguiente",
     "error_create": "Error creating booking",
     "error_network": "Network error creating booking",
     "error_availability": "Error checking availability",
     "error_trip": "Error loading trip data",
-  "availability_msg": "Disponibilidad para {date}: total {capacity}, reservadas {taken}",
+    "availability_msg": "Disponibilidad para {date}: total {capacity}, reservadas {taken}",
     "created": "Booking created",
     "proceed_to_checkout": "Proceed to Checkout",
-  "occupancy": "Ocupación",
+    "occupancy": "Ocupación",
     "trip": "Trip",
     "confirmation_title": "Confirmación de Reserva",
     "trip_cost": "Coste del viaje",
@@ -177,8 +208,7 @@
       "talkative": "Talkative",
       "reserved": "Reserved"
     }
-  }
-  ,
+  },
   "aboutPage": {
     "title": "Sobre nosotros – Greekaway",
     "lead": "",

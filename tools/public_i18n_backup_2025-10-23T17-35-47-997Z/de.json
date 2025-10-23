@@ -1,5 +1,7 @@
 {
-  "meta": { "languageName": "Deutsch" },
+  "meta": {
+    "languageName": "Deutsch"
+  },
   "siteTitle": "Greekaway",
   "nav": {
     "home": "Startseite",
@@ -25,8 +27,8 @@
     "name": "Name",
     "email": "E-Mail",
     "cardLabel": "Karte",
-  "expiry": "MM / JJ",
-  "cvc": "CVC",
+    "expiry": "MM / JJ",
+    "cvc": "CVC",
     "notice": "Sichere Zahlung über Stripe",
     "payment_success_test": "Zahlung erfolgreich",
     "payment_failed": "Zahlung fehlgeschlagen",
@@ -39,18 +41,44 @@
     "subtitle": "Entdecken Sie die besten Tagesausflüge in Griechenland",
     "ask": "Fragen Sie uns alles zu Ihrer Reise!"
   },
-  "about": { "title": "Über uns", "text": "Greekaway wurde geschaffen, um kuratierte Reisen in Griechenland mit Komfort, Technologie und Stil anzubieten." },
-  "profile": { "info": "Hier sehen Sie Ihre vergangenen Reisen und Buchungen." },
-  "categories": {
-    "mountain": { "title": "Bergtouren" },
-    "sea": { "title": "Meeresausflüge" },
-    "culture": { "title": "Kulturelle Ausflüge" }
+  "about": {
+    "title": "Über uns",
+    "text": "Greekaway wurde geschaffen, um kuratierte Reisen in Griechenland mit Komfort, Technologie und Stil anzubieten."
   },
-  "stop": { "label": "Stopp {n}" },
-  "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "Kategorie wählen", "noneFound": "Keine Ausflüge in dieser Kategorie gefunden." },
-  "ui": { "close": "Schließen", "cancel": "Abbrechen", "back": "Zurück", "finish": "Fertig", "choose": "Wählen" },
-  "trips_ui": { "backToCategories": "Zurück zu den Kategorien" },
+  "profile": {
+    "info": "Hier sehen Sie Ihre vergangenen Reisen und Buchungen."
+  },
+  "categories": {
+    "mountain": {
+      "title": "Bergtouren"
+    },
+    "sea": {
+      "title": "Meeresausflüge"
+    },
+    "culture": {
+      "title": "Kulturelle Ausflüge"
+    }
+  },
+  "stop": {
+    "label": "Stopp {n}"
+  },
+  "trip": {
+    "experienceTitle": "Experience"
+  },
+  "trips": {
+    "selectCategory": "Kategorie wählen",
+    "noneFound": "Keine Ausflüge in dieser Kategorie gefunden."
+  },
+  "ui": {
+    "close": "Schließen",
+    "cancel": "Abbrechen",
+    "back": "Zurück",
+    "finish": "Fertig",
+    "choose": "Wählen"
+  },
+  "trips_ui": {
+    "backToCategories": "Zurück zu den Kategorien"
+  },
   "assistant": {
     "title": "AI Assistent",
     "close": "Schließen",
@@ -61,8 +89,7 @@
     "stream_error": "Verbindungsfehler mit dem Assistenten.",
     "fallback_error": "Wir haben gerade keine Antwort erhalten.",
     "error_prefix": "Fehler:"
-  }
-  ,
+  },
   "feedback": {
     "title": "Wie war Ihre Erfahrung?",
     "subtitle": "Helfen Sie uns, Gruppen besser zusammenzustellen.",
@@ -71,9 +98,11 @@
     "negative": "Schlecht",
     "placeholder": "Optionaler Kommentar...",
     "try_again": "Erneut versuchen"
-  }
-  ,
-  "carousel": { "prev": "Zurück", "next": "Weiter" },
+  },
+  "carousel": {
+    "prev": "Zurück",
+    "next": "Weiter"
+  },
   "booking": {
     "title": "Buchung",
     "date": "Datum",
@@ -83,29 +112,29 @@
     "create": "Buchung erstellen",
     "name_placeholder": "Vollständiger Name",
     "email_placeholder": "name@example.com",
-  "loading": "Lädt...",
-  "step1_of3": "Schritt 1 von 3",
-  "traveler_options": "Reiseoptionen",
-  "adults": "Erwachsene",
-  "children": "Kinder",
-  "increase": "+",
+    "loading": "Lädt...",
+    "step1_of3": "Schritt 1 von 3",
+    "traveler_options": "Reiseoptionen",
+    "adults": "Erwachsene",
+    "children": "Kinder",
+    "increase": "+",
     "decrease": "−",
     "increase_adults": "Erwachsene erhöhen",
     "decrease_adults": "Erwachsene verringern",
     "increase_children": "Kinder erhöhen",
     "decrease_children": "Kinder verringern",
     "bags_large": "Koffer (groß)",
-  "bags_small": "Koffer (klein)",
-  "increase_bags_large": "Große Koffer erhöhen",
-  "decrease_bags_large": "Große Koffer verringern",
-  "increase_bags_small": "Kleine Koffer erhöhen",
-  "decrease_bags_small": "Kleine Koffer verringern",
+    "bags_small": "Koffer (klein)",
+    "increase_bags_large": "Große Koffer erhöhen",
+    "decrease_bags_large": "Große Koffer verringern",
+    "increase_bags_small": "Kleine Koffer erhöhen",
+    "decrease_bags_small": "Kleine Koffer verringern",
     "preferred_language": "Bevorzugte Sprache",
     "age_group": "Altersgruppe",
-  "traveler_profile": "Reiseprofil",
-  "traveler_type": "Reisetyp",
-  "travel_style": "Reisestil",
-  "daily_rhythm": "Tagesrhythmus",
+    "traveler_profile": "Reiseprofil",
+    "traveler_type": "Reisetyp",
+    "travel_style": "Reisestil",
+    "daily_rhythm": "Tagesrhythmus",
     "interests": "Interessen",
     "sociality": "Sozialität",
     "children_ages": "Kinderalter",
@@ -123,8 +152,8 @@
     "proceed_to_checkout": "Zum Bezahlen fortfahren",
     "occupancy": "Auslastung",
     "trip": "Reise",
-  "confirmation_title": "Buchungsbestätigung",
-  "trip_cost": "Reisekosten",
+    "confirmation_title": "Buchungsbestätigung",
+    "trip_cost": "Reisekosten",
     "traveler_type_options": {
       "explorer": "Entdecker",
       "relaxed": "Entspannte Reisende",
@@ -170,31 +199,6 @@
       "night": "Nachtmensch",
       "talkative": "Gesprächig",
       "reserved": "Zurückhaltend"
-    }
-  }
-  ,
-  "aboutPage": {
-    "title": "Über uns – Greekaway",
-    "lead": "",
-    "s1": {
-      "title": "Die Idee hinter Greekaway",
-      "body": "Greekaway entstand aus etwas Einfachem und doch Seltenem: dem Wunsch, Reisen in Griechenland wieder echt zu machen.\nWir sind kein Reiseveranstalter — wir sind die Verbindung zwischen Reisenden und den Menschen, die hier leben.\nJede Route auf Greekaway wird von Einheimischen entworfen, erprobt und begleitet, die die Straßen, die Geschichten und die Seele jedes Ortes kennen.\nWir haben Greekaway aufgebaut, weil wir glauben, dass Reisen persönlich, fair und zutiefst menschlich sein sollte."
-    },
-    "s2": {
-      "title": "Kleine Gruppen. Echte Reisen.",
-      "body": "Unsere Erlebnisse sind für kleine Gruppen von 5–7 Reisenden gemacht — groß genug für Gesellschaft, aber dennoch persönlich.\nJede Reise findet zu festen Terminen statt, um die Kosten niedrig und die Qualität hoch zu halten.\nOb Fahrt durch Bergdörfer, eine Nacht am Meer oder der Besuch einer antiken Stätte — jeder Moment ist mit Sorgfalt, Balance und Respekt für Land und Gastgeber geplant."
-    },
-    "s3": {
-      "title": "Partner, keine Anbieter",
-      "body": "Hinter jedem Greekaway-Erlebnis steht ein Partner — kein bloßer Lieferant.\nFahrer, Hotels und lokale Betreiber sind Teil desselben Systems, fair behandelt und transparent bezahlt über unser automatisiertes Dual-Payment-Netzwerk.\nDieses Gleichgewicht hält unser Ökosystem nachhaltig, ehrlich und auf langfristige Werte ausgerichtet — nicht auf kurzfristigen Profit."
-    },
-    "s4": {
-      "title": "Die Technologie hinter der menschlichen Note",
-      "body": "Greekaway setzt Technologie dezent ein — um Abläufe reibungsloser zu machen, nicht kühler.\nUnser KI-Assistent beantwortet Anfragen live, zeigt echte Verfügbarkeit, aktualisiert Wetter und Nachrichten und sorgt dafür, dass sich jede Gruppe natürlich formt — mithilfe eines Matching-Algorithmus, der Profile, Alter und Sprachen vereint.\nDas Ergebnis ist im Tourismus selten: menschliche Reisen, unterstützt — nicht ersetzt — durch Technologie."
-    },
-    "s5": {
-      "title": "Transparenz, Einfachheit, Weiterentwicklung",
-      "body": "Wir glauben, dass Fortschritt aus Klarheit entsteht.\nJede Zahlung, jede Stornierung, jede Richtlinie ist offen, strukturiert und fair.\nWir entwickeln uns weiter, Zeile für Zeile, Update für Update — mit einem Ziel: Greekaway menschlich, transparent und lebendig zu halten."
     }
   }
 }
