@@ -142,7 +142,7 @@ html[data-view="trip"], body[data-view="trip"] {
 .seat-control input[type=number] { width:44px; text-align:center; }
 .seat-control button { background: rgba(255,255,255,0.03); color: #fff; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
 .seat-control button:hover { background: rgba(255,255,255,0.06); }
-.price-tag { background: linear-gradient(90deg,#00293f,#003a5a); padding:10px;border-radius:8px;color:#f9d65c;font-weight:700;text-align:center; }
+.price-tag { background: linear-gradient(90deg,#00293f,#003a5a); padding:10px;border-radius:8px;color:#2ecc71;font-weight:700;text-align:center; }
 .booking-form .actions { display:flex; gap:10px; align-items:center; }
 .booking-form .btn.ghost { background: transparent; border:1px solid rgba(255,255,255,0.08); color:#fff; }
 .booking-result { margin-top:12px; padding:10px; border-radius:8px; }

@@ -57,6 +57,10 @@
     @media (max-width: 599px) { .s3-actions { padding: 0 16px; bottom: calc(64px + env(safe-area-inset-bottom) + 34px); max-width: 440px; gap: 16px; } }
     .s3-actions .btn { background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:16px; padding:12px 18px; font-size:1.03rem; font-weight:800; letter-spacing:0.02em; min-width: 140px; box-shadow:0 10px 18px rgba(0,0,0,0.35), 0 4px 10px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.28); cursor:pointer; }
 
+    /* Emphasize cost row with money-green color */
+    .s3-row.emph .s3-label,
+    .s3-row.emph .s3-value { color: #2ecc71; }
+
   </style>
 </head>
 <body class="site-gradient">
@@ -82,7 +86,7 @@
   <div class="s3-row"><div class="s3-label" data-i18n="booking.traveler_type">Τύπος ταξιδιώτη</div><div class="s3-value" id="vTravelerType">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.interests">Ενδιαφέροντα</div><div class="s3-value" id="vInterest">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.sociality">Κοινωνικότητα</div><div class="s3-value" id="vSocial">–</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.trip_cost">Κόστος εκδρομής</div><div class="s3-value" id="vTripCost">–</div></div>
+  <div class="s3-row emph"><div class="s3-label" data-i18n="booking.trip_cost">Κόστος εκδρομής</div><div class="s3-value" id="vTripCost">–</div></div>
     </div>
   </div>
 
@@ -226,6 +230,16 @@
         } catch(_){ }
       }
 
+      // Ensure the "trip cost" label translates explicitly even if auto-scan misses it
+      function translateTripCostLabel(){
+        try {
+          const el = document.querySelector('[data-i18n="booking.trip_cost"]');
+          if (!el) return;
+          const tx = (window.t && window.t('booking.trip_cost')) || '';
+          if (tx && tx !== 'booking.trip_cost') el.textContent = tx;
+        } catch(_){ }
+      }
+
       // When UI language changes, re-render the trip title using loaded trip or fetch by id
       try {
         window.addEventListener('i18n:changed', async () => {
@@ -255,7 +269,8 @@
           } catch(_){ }
         });
       } catch(_){ }
-      renderValues();
+  renderValues();
+  try { translateTripCostLabel(); } catch(_){}
 
       document.getElementById('s3Back')?.addEventListener('click', ()=> history.back());
       document.getElementById('s3Finish')?.addEventListener('click', async (ev)=>{
@@ -309,10 +324,10 @@
       });
 
       // Ensure labels translate after i18n is ready and on future language changes
-      try { if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); } catch(_){ }
-      try { setTimeout(()=>{ if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); }, 60); } catch(_){ }
+  try { if (window.currentI18n && window.setLanguage) { window.setLanguage(window.currentI18n.lang); translateTripCostLabel(); } } catch(_){ }
+  try { setTimeout(()=>{ try { if (window.currentI18n && window.setLanguage) { window.setLanguage(window.currentI18n.lang); translateTripCostLabel(); } } catch(_){ } }, 60); } catch(_){ }
       try {
-        window.addEventListener('i18n:changed', ()=>{ try { renderValues(); renderTripCost(); } catch(_){ } });
+        window.addEventListener('i18n:changed', ()=>{ try { renderValues(); renderTripCost(); translateTripCostLabel(); } catch(_){ } });
       } catch(_){ }
     });
   </script>
