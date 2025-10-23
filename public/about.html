@@ -110,7 +110,7 @@
       els.forEach(e => io.observe(e));
     })();
 
-    // Version footer: read from /version (version + build timestamp)
+    // Version footer: read from /version (version + build timestamp + optional build number/commit)
     (async function(){
       try {
         const el = document.getElementById('aboutVersion');
@@ -119,7 +119,9 @@
         const j = await r.json();
         const v = (j && j.version) ? String(j.version) : '1.0.0';
         const ts = (j && j.build) ? String(j.build) : '';
-        el.innerHTML = `Greekaway <strong>v${v}</strong> – build ${ts}`;
+        const bn = (j && typeof j.buildNumber !== 'undefined' && j.buildNumber !== null) ? ` • b${j.buildNumber}` : '';
+        const c = (j && j.commit) ? ` • ${j.commit}` : '';
+        el.innerHTML = `Greekaway <strong>v${v}</strong> – build ${ts}${bn}${c}`;
       } catch(_) {}
     })();
   </script>
