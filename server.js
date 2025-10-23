@@ -87,6 +87,15 @@ try {
   console.warn('live-data: not available', e && e.message ? e.message : e);
 }
 
+// Trip data integration module (reads public/data/trips/*.json)
+let tripData = null;
+try {
+  tripData = require('./live/tripData');
+  console.log('trip-data: module loaded');
+} catch (e) {
+  console.warn('trip-data: not available', e && e.message ? e.message : e);
+}
+
 // Initialize a simple SQLite bookings table so server endpoints can create bookings
 let bookingsDb = null;
 try {
@@ -674,6 +683,39 @@ app.get('/locales/index.json', (req, res) => {
   }
 });
 
+// Minimal server-side i18n accessor for assistant replies
+const LOCALE_CACHE = new Map();
+function loadLocale(lang) {
+  const key = (lang || 'en').toLowerCase();
+  const cached = LOCALE_CACHE.get(key);
+  if (cached && (Date.now() - cached.loadedAt < 5*60*1000)) return cached.data;
+  try {
+    const p = path.join(LOCALES_DIR, `${key}.json`);
+    const raw = fs.readFileSync(p, 'utf8');
+    const data = JSON.parse(raw);
+    LOCALE_CACHE.set(key, { data, loadedAt: Date.now() });
+    return data;
+  } catch (_) {
+    if (key !== 'en') return loadLocale('en');
+    return {};
+  }
+}
+function deepGet(obj, keyPath) {
+  try {
+    return keyPath.split('.').reduce((o,k)=> (o && typeof o === 'object') ? o[k] : undefined, obj);
+  } catch (_) { return undefined; }
+}
+function t(lang, key, vars){
+  const loc = loadLocale(lang);
+  let s = deepGet(loc, key) || key;
+  if (vars && typeof vars === 'object') {
+    for (const [k,v] of Object.entries(vars)) {
+      s = String(s).replace(new RegExp(`\\{${k}\\}`,'g'), String(v));
+    }
+  }
+  return String(s);
+}
+
 // Lightweight version info for quick sanity checks across devices/environments
 app.get('/version.json', (req, res) => {
   try {
@@ -812,6 +854,50 @@ app.post('/api/assistant', express.json(), async (req, res) => {
     // If no key, return a friendly mock reply instead of erroring out
     if (!OPENAI_API_KEY) {
       const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
+      // Trip data fast-path in mock mode too
+      try {
+        const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
+        const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
+        if (tripData) {
+          const tripId = tripData.detectTripIdFromMessage(message);
+          if (tripId) {
+            const trip = tripData.readTripJsonById(tripId);
+            if (trip) {
+              const summary = tripData.buildTripSummary(trip, userLang);
+              const parts = [];
+              parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
+              if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+              if (summary.priceCents != null) {
+                const euros = (summary.priceCents/100).toFixed(0);
+                parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
+              }
+              if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
+              // Stops
+              if (summary.stops && summary.stops.length) {
+                parts.push(t(userLang, 'assistant_trip.stops'));
+                summary.stops.slice(0,6).forEach((s, i) => {
+                  const name = s.name || t(userLang, 'assistant_trip.missing');
+                  const desc = s.description ? ` — ${s.description}` : '';
+                  parts.push(`• ${name}${desc}`);
+                });
+              }
+              // Includes
+              parts.push(t(userLang, 'assistant_trip.includes'));
+              if (Array.isArray(summary.includes) && summary.includes.length) {
+                summary.includes.forEach(v => parts.push(`• ${v}`));
+              } else {
+                parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+              }
+              // Availability (from JSON unavailable dates if any)
+              if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
+                parts.push(t(userLang, 'assistant_trip.availability'));
+                parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
+              }
+              return res.json({ reply: parts.join('\n'), model: 'mock' });
+            }
+          }
+        }
+      } catch (_) {}
       // Enrich mock with live weather snippet if relevant for local testing
       let extra = '';
       try {
@@ -845,6 +931,67 @@ app.post('/api/assistant', express.json(), async (req, res) => {
     // Live data enrichment (weather/news) — lightweight heuristic
     const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
     const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
+
+    // Trip data fast-path: generate structured reply directly when a known trip is mentioned
+    try {
+      if (tripData) {
+        const tripId = tripData.detectTripIdFromMessage(message);
+        if (tripId) {
+          const trip = tripData.readTripJsonById(tripId);
+          if (trip) {
+            const summary = tripData.buildTripSummary(trip, userLang);
+            const parts = [];
+            parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
+            if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+            if (summary.priceCents != null) {
+              const euros = (summary.priceCents/100).toFixed(0);
+              parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
+            }
+            if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
+            if (summary.stops && summary.stops.length) {
+              parts.push(t(userLang, 'assistant_trip.stops'));
+              summary.stops.slice(0,6).forEach((s, i) => {
+                const name = s.name || t(userLang, 'assistant_trip.missing');
+                const desc = s.description ? ` — ${s.description}` : '';
+                parts.push(`• ${name}${desc}`);
+              });
+            }
+            parts.push(t(userLang, 'assistant_trip.includes'));
+            if (Array.isArray(summary.includes) && summary.includes.length) {
+              summary.includes.forEach(v => parts.push(`• ${v}`));
+            } else {
+              parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+            }
+            if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
+              parts.push(t(userLang, 'assistant_trip.availability'));
+              parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
+            }
+            // Optionally append concise live context if weather/news requested
+            let liveContextText = '';
+            const place = await resolvePlaceForMessage(message, userLang);
+            const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
+            const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
+            if (liveData && (includeWeather || includeNews)) {
+              try {
+                if (includeWeather) {
+                  const lc = await liveData.buildLiveContext({ place: place || summary.title, lang: userLang, include: { weather: true, news: false }, rssUrl: null });
+                  if (lc && lc.text) liveContextText += lc.text;
+                }
+                if (includeNews) {
+                  const headlines = await getCachedHeadlinesOrRefresh();
+                  if (headlines && headlines.length) {
+                    if (liveContextText) liveContextText += '\n';
+                    liveContextText += `Local headlines: ${headlines.slice(0,5).join(' • ')}`;
+                  }
+                }
+              } catch(_) {}
+            }
+            const replyText = parts.join('\n') + (liveContextText ? ('\n\n' + liveContextText) : '');
+            return res.json({ reply: replyText, model: 'trip-data' });
+          }
+        }
+      }
+    } catch (_) { /* fallthrough to OpenAI */ }
     const place = await resolvePlaceForMessage(message, userLang);
     let liveContextText = '';
     const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
@@ -927,6 +1074,47 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
       res.setHeader('Cache-Control', 'no-cache, no-transform');
       res.setHeader('Connection', 'keep-alive');
       let txt = mockAssistantReply(message);
+      // Trip data fast-path in mock stream
+      try {
+        const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
+        const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
+        if (tripData) {
+          const tripId = tripData.detectTripIdFromMessage(message);
+          if (tripId) {
+            const trip = tripData.readTripJsonById(tripId);
+            if (trip) {
+              const summary = tripData.buildTripSummary(trip, userLang);
+              const parts = [];
+              parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
+              if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+              if (summary.priceCents != null) {
+                const euros = (summary.priceCents/100).toFixed(0);
+                parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
+              }
+              if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
+              if (summary.stops && summary.stops.length) {
+                parts.push(t(userLang, 'assistant_trip.stops'));
+                summary.stops.slice(0,6).forEach((s) => {
+                  const name = s.name || t(userLang, 'assistant_trip.missing');
+                  const desc = s.description ? ` — ${s.description}` : '';
+                  parts.push(`• ${name}${desc}`);
+                });
+              }
+              parts.push(t(userLang, 'assistant_trip.includes'));
+              if (Array.isArray(summary.includes) && summary.includes.length) {
+                summary.includes.forEach(v => parts.push(`• ${v}`));
+              } else {
+                parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+              }
+              if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
+                parts.push(t(userLang, 'assistant_trip.availability'));
+                parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
+              }
+              txt = parts.join('\n');
+            }
+          }
+        }
+      } catch(_) {}
       try {
         const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
         const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');

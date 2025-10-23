@@ -71,6 +71,18 @@
     "error_prefix": "Error:"
   }
   ,
+  "assistant_trip": {
+    "title": "Trip: {title}",
+    "duration": "Duration: {duration}",
+    "price": "Price: €{price}",
+    "description": "Description: {text}",
+    "stops": "Stops",
+    "includes": "Includes",
+    "availability": "Availability",
+    "unavailable_on": "Unavailable dates: {dates}",
+    "missing": "This information hasn’t been added yet for this trip."
+  }
+  ,
   "feedback": {
     "title": "How was your experience?",
     "subtitle": "Help us match groups better.",
