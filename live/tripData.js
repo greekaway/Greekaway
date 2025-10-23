@@ -117,8 +117,9 @@ function buildTripSummary(trip, lang) {
   let duration = trip.duration || null;
   if (!duration && description) {
     const d = String(description).toLowerCase();
-    if (/two\s+days|2\s+days|δύο\s+μέρ|2\s*ημερ/.test(d)) duration = '2 days';
-    if (!duration && /day\s+trip|μονοημερη|1\s*day/.test(d)) duration = '1 day';
+    const isGreek = (lang && String(lang).toLowerCase().startsWith('el'));
+    if (/two\s+days|2\s*days|δύο\s+μέρ|2\s*ημερ/.test(d)) duration = isGreek ? '2 μέρες' : '2 days';
+    if (!duration && /day\s+trip|μονοημερη|μονοήμερη|1\s*day/.test(d)) duration = isGreek ? '1 μέρα' : '1 day';
   }
   const priceCents = typeof trip.price_cents === 'number' ? trip.price_cents : null;
   return { title, description, stops, includes, unavailable, duration, priceCents };

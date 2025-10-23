@@ -716,6 +716,29 @@ function t(lang, key, vars){
   return String(s);
 }
 
+// Intent detectors for focused Q&A (duration, stops, price, includes, availability)
+function parseTripIntent(message, lang) {
+  const m = String(message || '').toLowerCase();
+  const el = (lang || '').toLowerCase().startsWith('el');
+  const askDuration = el
+    ? /(πόσες\s+μέρες|πόση\s+διάρκεια|διάρκεια|διαρκεί|μέρες|ημέρες)/i.test(m)
+    : /(how\s+many\s+days|duration|how\s+long|lasts?)/i.test(m);
+  const hasStopsGr = /(στάση|στάσεις|ποια\s+στάση|ποιες\s+στάσεις)/i.test(m);
+  const askStops = el
+    ? (hasStopsGr || /stops?/i.test(m))
+    : /(stop|stops|which\s+stop|what\s+stops|itinerary)/i.test(m);
+  const askIncludes = el
+    ? (/(περιλαμβάνει|συμπεριλαμβάνεται|τι\s+περιλαμβάνει|includes?)/i.test(m) && !hasStopsGr)
+    : /(include|includes|what\s+is\s+included)/i.test(m);
+  const askPrice = el
+    ? /(τιμή|κοστίζει|κόστος|πόσο)/i.test(m)
+    : /(price|cost|how\s+much)/i.test(m);
+  const askAvailability = el
+    ? /(διαθεσιμότητα|διαθέσιμες|διαθέσιμο|ημερομηνίες)/i.test(m)
+    : /(availability|available|dates?)/i.test(m);
+  return { askDuration, askStops, askIncludes, askPrice, askAvailability };
+}
+
 // Lightweight version info for quick sanity checks across devices/environments
 app.get('/version.json', (req, res) => {
   try {
@@ -940,31 +963,67 @@ app.post('/api/assistant', express.json(), async (req, res) => {
           const trip = tripData.readTripJsonById(tripId);
           if (trip) {
             const summary = tripData.buildTripSummary(trip, userLang);
+            const intent = parseTripIntent(message, userLang);
             const parts = [];
             parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
-            if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
-            if (summary.priceCents != null) {
+            // Focused answers if user asked specific things
+            if (intent.askDuration && summary.duration) {
+              parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+            }
+            if (intent.askPrice && summary.priceCents != null) {
               const euros = (summary.priceCents/100).toFixed(0);
               parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
             }
-            if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
-            if (summary.stops && summary.stops.length) {
-              parts.push(t(userLang, 'assistant_trip.stops'));
-              summary.stops.slice(0,6).forEach((s, i) => {
-                const name = s.name || t(userLang, 'assistant_trip.missing');
-                const desc = s.description ? ` — ${s.description}` : '';
-                parts.push(`• ${name}${desc}`);
-              });
+            if (intent.askStops) {
+              if (summary.stops && summary.stops.length) {
+                parts.push(t(userLang, 'assistant_trip.stops'));
+                summary.stops.slice(0,6).forEach((s) => {
+                  const name = s.name || t(userLang, 'assistant_trip.missing');
+                  parts.push(`• ${name}`);
+                });
+              } else {
+                parts.push(t(userLang, 'assistant_trip.stops'));
+                parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+              }
             }
-            parts.push(t(userLang, 'assistant_trip.includes'));
-            if (Array.isArray(summary.includes) && summary.includes.length) {
-              summary.includes.forEach(v => parts.push(`• ${v}`));
-            } else {
-              parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+            if (intent.askIncludes) {
+              parts.push(t(userLang, 'assistant_trip.includes'));
+              if (Array.isArray(summary.includes) && summary.includes.length) {
+                summary.includes.forEach(v => parts.push(`• ${v}`));
+              } else {
+                parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+              }
             }
-            if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
+            if (intent.askAvailability && Array.isArray(summary.unavailable) && summary.unavailable.length) {
               parts.push(t(userLang, 'assistant_trip.availability'));
               parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
+            }
+            // If no specific intent detected, fall back to concise summary
+            if (!(intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
+              if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+              if (summary.priceCents != null) {
+                const euros = (summary.priceCents/100).toFixed(0);
+                parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
+              }
+              if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
+              if (summary.stops && summary.stops.length) {
+                parts.push(t(userLang, 'assistant_trip.stops'));
+                summary.stops.slice(0,6).forEach((s) => {
+                  const name = s.name || t(userLang, 'assistant_trip.missing');
+                  const desc = s.description ? ` — ${s.description}` : '';
+                  parts.push(`• ${name}${desc}`);
+                });
+              }
+              parts.push(t(userLang, 'assistant_trip.includes'));
+              if (Array.isArray(summary.includes) && summary.includes.length) {
+                summary.includes.forEach(v => parts.push(`• ${v}`));
+              } else {
+                parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+              }
+              if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
+                parts.push(t(userLang, 'assistant_trip.availability'));
+                parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
+              }
             }
             // Optionally append concise live context if weather/news requested
             let liveContextText = '';
@@ -1084,31 +1143,65 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
             const trip = tripData.readTripJsonById(tripId);
             if (trip) {
               const summary = tripData.buildTripSummary(trip, userLang);
+              const intent = parseTripIntent(message, userLang);
               const parts = [];
               parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
-              if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
-              if (summary.priceCents != null) {
+              if (intent.askDuration && summary.duration) {
+                parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+              }
+              if (intent.askPrice && summary.priceCents != null) {
                 const euros = (summary.priceCents/100).toFixed(0);
                 parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
               }
-              if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
-              if (summary.stops && summary.stops.length) {
-                parts.push(t(userLang, 'assistant_trip.stops'));
-                summary.stops.slice(0,6).forEach((s) => {
-                  const name = s.name || t(userLang, 'assistant_trip.missing');
-                  const desc = s.description ? ` — ${s.description}` : '';
-                  parts.push(`• ${name}${desc}`);
-                });
+              if (intent.askStops) {
+                if (summary.stops && summary.stops.length) {
+                  parts.push(t(userLang, 'assistant_trip.stops'));
+                  summary.stops.slice(0,6).forEach((s) => {
+                    const name = s.name || t(userLang, 'assistant_trip.missing');
+                    parts.push(`• ${name}`);
+                  });
+                } else {
+                  parts.push(t(userLang, 'assistant_trip.stops'));
+                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+                }
               }
-              parts.push(t(userLang, 'assistant_trip.includes'));
-              if (Array.isArray(summary.includes) && summary.includes.length) {
-                summary.includes.forEach(v => parts.push(`• ${v}`));
-              } else {
-                parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+              if (intent.askIncludes) {
+                parts.push(t(userLang, 'assistant_trip.includes'));
+                if (Array.isArray(summary.includes) && summary.includes.length) {
+                  summary.includes.forEach(v => parts.push(`• ${v}`));
+                } else {
+                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+                }
               }
-              if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
+              if (intent.askAvailability && Array.isArray(summary.unavailable) && summary.unavailable.length) {
                 parts.push(t(userLang, 'assistant_trip.availability'));
                 parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
+              }
+              if (!(intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
+                if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+                if (summary.priceCents != null) {
+                  const euros = (summary.priceCents/100).toFixed(0);
+                  parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
+                }
+                if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
+                if (summary.stops && summary.stops.length) {
+                  parts.push(t(userLang, 'assistant_trip.stops'));
+                  summary.stops.slice(0,6).forEach((s) => {
+                    const name = s.name || t(userLang, 'assistant_trip.missing');
+                    const desc = s.description ? ` — ${s.description}` : '';
+                    parts.push(`• ${name}${desc}`);
+                  });
+                }
+                parts.push(t(userLang, 'assistant_trip.includes'));
+                if (Array.isArray(summary.includes) && summary.includes.length) {
+                  summary.includes.forEach(v => parts.push(`• ${v}`));
+                } else {
+                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+                }
+                if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
+                  parts.push(t(userLang, 'assistant_trip.availability'));
+                  parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
+                }
               }
               txt = parts.join('\n');
             }
