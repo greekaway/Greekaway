@@ -116,6 +116,27 @@
         </div>
     </div>
   </div>
+  
+  <!-- Partners panel -->
+  <div id="partnersPanel" style="display:none;margin-top:12px;background:#fff;padding:10px;border-radius:6px">
+    <h3>Partners</h3>
+    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center">
+      <label>Partner Email: <input id="partnerEmail" type="email" placeholder="partner@example.com" style="width:280px;padding:6px"></label>
+      <button id="genStripeLink" class="btn">Generate Stripe Link</button>
+      <span id="genStatus" style="margin-left:8px;color:#666"></span>
+    </div>
+    <div id="onboardingResult" style="margin-top:10px; display:none">
+      <div>
+        <label>Onboarding URL:</label>
+        <input id="onboardingUrl" type="text" readonly style="width:90%; padding:6px" />
+        <button id="copyOnboarding" class="btn">Copy</button>
+      </div>
+      <div style="margin-top:6px;color:#333">
+        Account ID: <span id="onboardingAccount" style="font-family:monospace"></span>
+      </div>
+      <div style="margin-top:6px;color:#777; font-size:12px">Note: Stripe onboarding links are single-use and time-limited. Use promptly.</div>
+    </div>
+  </div>
   <hr style="margin-top:16px" />
   <div id="bookingsPanel" style="display:none;margin-top:12px">
     <h3>Κρατήσεις</h3>
@@ -203,6 +224,8 @@
       fetchPayments();
       // show bookings panel and load bookings
       document.getElementById('bookingsPanel').style.display = 'block';
+  // show partners panel
+  document.getElementById('partnersPanel').style.display = 'block';
       // load partners list for autocompletion
       fetchPartnersList();
       // open SSE for realtime payout updates
@@ -363,6 +386,38 @@
     document.getElementById('bfPaymentType').addEventListener('change', fetchBookings);
     document.getElementById('bfPartner').addEventListener('change', fetchBookings);
     document.getElementById('bfPayoutStatus').addEventListener('change', fetchBookings);
+
+    // Partners UI logic
+    document.getElementById('genStripeLink').addEventListener('click', async () => {
+      const email = (document.getElementById('partnerEmail').value || '').trim();
+      const status = document.getElementById('genStatus');
+      const resultDiv = document.getElementById('onboardingResult');
+      const urlInput = document.getElementById('onboardingUrl');
+      const acctSpan = document.getElementById('onboardingAccount');
+      if (!email) { alert('Please enter an email'); return; }
+      status.textContent = 'Generating...';
+      resultDiv.style.display = 'none';
+      try {
+        const res = await fetch('/api/partners/connect-link?email=' + encodeURIComponent(email));
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !j || !j.url) throw new Error(j && j.error ? j.error : ('HTTP ' + res.status));
+        urlInput.value = j.url;
+        acctSpan.textContent = j.accountId || '';
+        resultDiv.style.display = 'block';
+        status.textContent = 'Ready';
+      } catch (e) {
+        status.textContent = 'Error generating link';
+        alert('Failed to generate Stripe link: ' + e.message);
+      }
+    });
+
+    document.getElementById('copyOnboarding').addEventListener('click', async () => {
+      const url = document.getElementById('onboardingUrl').value || '';
+      if (!url) return;
+      try { await navigator.clipboard.writeText(url); alert('Copied!'); } catch (_) { /* fallback */
+        const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); alert('Copied.');
+      }
+    });
 
     async function fetchPartnersList(){
       try {

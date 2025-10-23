@@ -98,6 +98,7 @@ async function ensurePgTable(client) {
       partner_name TEXT,
       partner_email TEXT,
       stripe_account_id TEXT,
+      onboarding_url TEXT,
       iban TEXT,
       vat_number TEXT,
       agreed BOOLEAN,
@@ -108,6 +109,8 @@ async function ensurePgTable(client) {
       agreement_version TEXT
     )
   `);
+  // Ensure new columns for existing tables
+  try { await client.query('ALTER TABLE partner_agreements ADD COLUMN IF NOT EXISTS onboarding_url TEXT'); } catch (_) {}
 }
 
 function ensureSqliteTable(db) {
@@ -116,6 +119,7 @@ function ensureSqliteTable(db) {
     partner_name TEXT,
     partner_email TEXT,
     stripe_account_id TEXT,
+    onboarding_url TEXT,
     iban TEXT,
     vat_number TEXT,
     agreed INTEGER,
@@ -125,6 +129,7 @@ function ensureSqliteTable(db) {
     agreement_hash TEXT,
     agreement_version TEXT
   )`);
+  try { db.exec('ALTER TABLE partner_agreements ADD COLUMN onboarding_url TEXT'); } catch (_) {}
 }
 
 async function insertPartnerAgreement(record) {
@@ -135,6 +140,7 @@ async function insertPartnerAgreement(record) {
     partner_name: record.partner_name || null,
     partner_email: record.partner_email || null,
     stripe_account_id: record.stripe_account_id || null,
+    onboarding_url: record.onboarding_url || null,
     iban: record.iban || null,
     vat_number: record.vat_number || null,
     agreed: !!record.agreed,
@@ -151,9 +157,9 @@ async function insertPartnerAgreement(record) {
     await client.connect();
     await ensurePgTable(client);
     await client.query(
-      `INSERT INTO partner_agreements (id, partner_name, partner_email, stripe_account_id, iban, vat_number, agreed, ip, timestamp, source, agreement_hash, agreement_version)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-      [row.id, row.partner_name, row.partner_email, row.stripe_account_id, row.iban, row.vat_number, row.agreed, row.ip, row.timestamp, row.source, row.agreement_hash, row.agreement_version]
+      `INSERT INTO partner_agreements (id, partner_name, partner_email, stripe_account_id, onboarding_url, iban, vat_number, agreed, ip, timestamp, source, agreement_hash, agreement_version)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+      [row.id, row.partner_name, row.partner_email, row.stripe_account_id, row.onboarding_url, row.iban, row.vat_number, row.agreed, row.ip, row.timestamp, row.source, row.agreement_hash, row.agreement_version]
     );
     await client.end();
     return id;
@@ -162,13 +168,14 @@ async function insertPartnerAgreement(record) {
     const Database = require('better-sqlite3');
     const db = new Database(path.join(__dirname, '..', 'data', 'db.sqlite3'));
     ensureSqliteTable(db);
-    const stmt = db.prepare(`INSERT INTO partner_agreements (id, partner_name, partner_email, stripe_account_id, iban, vat_number, agreed, ip, timestamp, source, agreement_hash, agreement_version)
-                             VALUES (@id, @partner_name, @partner_email, @stripe_account_id, @iban, @vat_number, @agreed, @ip, @timestamp, @source, @agreement_hash, @agreement_version)`);
+    const stmt = db.prepare(`INSERT INTO partner_agreements (id, partner_name, partner_email, stripe_account_id, onboarding_url, iban, vat_number, agreed, ip, timestamp, source, agreement_hash, agreement_version)
+                             VALUES (@id, @partner_name, @partner_email, @stripe_account_id, @onboarding_url, @iban, @vat_number, @agreed, @ip, @timestamp, @source, @agreement_hash, @agreement_version)`);
     stmt.run({
       id: row.id,
       partner_name: row.partner_name,
       partner_email: row.partner_email,
       stripe_account_id: row.stripe_account_id,
+      onboarding_url: row.onboarding_url,
       iban: row.iban,
       vat_number: row.vat_number,
       agreed: row.agreed ? 1 : 0,
@@ -246,7 +253,7 @@ router.get('/connect-link', async (req, res) => {
     const returnUrl = absoluteUrl(req, `/api/partners/connect-callback?account=${encodeURIComponent(account.id)}`);
     const refreshUrl = absoluteUrl(req, `/api/partners/connect-callback?refresh=1&account=${encodeURIComponent(account.id)}`);
 
-    let url;
+  let url;
     if (type === 'standard') {
       // Standard: OAuth link
       // Note: In production, you'd use the Connect OAuth flow. Here we return dashboard login link as a convenience.
@@ -262,6 +269,21 @@ router.get('/connect-link', async (req, res) => {
       });
       url = link.url;
     }
+
+    // Persist a record for audit: generated onboarding link (not yet agreed)
+    const info = getAgreementInfo();
+    try {
+      await insertPartnerAgreement({
+        partner_email: email || null,
+        stripe_account_id: account.id,
+        onboarding_url: url,
+        agreed: false,
+        source: 'connect_link',
+        agreement_hash: info.sha256,
+        agreement_version: info.version
+      });
+    } catch (_) { /* non-fatal */ }
+
     return res.json({ ok: true, accountId: account.id, url });
   } catch (e) {
     console.error('partners/connect-link error', e && e.message ? e.message : e);
