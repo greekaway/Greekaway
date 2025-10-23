@@ -102,6 +102,14 @@ body.has-bg-video .welcome-logo { box-shadow: none !important; }
   color: #ecf0f1;
   margin-bottom: 1.5rem;
 }
+/* --- Welcome subtitle: always white, bolder and slightly larger --- */
+#welcome-section .welcome-subtitle {
+  color: #ffffff !important; /* force white in both dark and light modes */
+  font-weight: 700;           /* bold */
+  font-size: clamp(1.1rem, 2.4vw, 1.25rem); /* a touch larger, responsive */
+  white-space: pre-line;      /* render \n from locale as line break */
+  line-height: 1.25;          /* comfortable two-line spacing */
+}
 
 /* -------- Animation για Logo -------- */
 .welcome-logo {
