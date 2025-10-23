@@ -173,13 +173,13 @@ html[data-view="trip"], body[data-view="trip"] {
 /* Trip page title price badge: center and reduce size by ~50% */
 #trip-price {
   display: block;
-  margin: 6px auto 10px;
+  margin: 8px auto 12px;
   width: -webkit-fit-content;
   width: -moz-fit-content;
   width: fit-content;
   text-align: center;
-  font-size: 0.735rem; /* +40% vs previous 0.525rem */
-  padding: 8px 10px; /* scale padding proportionally */
+  font-size: 0.96rem; /* +30% over previous 0.735rem */
+  padding: 10px 12px; /* scale padding proportionally */
 }
 
 /* Ensure the trip title is centered above the price badge */
