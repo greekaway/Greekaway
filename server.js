@@ -268,6 +268,12 @@ function buildAssistantSystemPrompt() {
   if (!KNOWLEDGE_TEXT) return base;
   return base + '\n\nGreekaway knowledge base (JSON):\n' + KNOWLEDGE_TEXT + '\n\nUse this knowledge as ground truth when relevant. If a topic is not covered, answer normally.';
 }
+function wantsResetTopic(message, lang) {
+  const m = String(message || '').toLowerCase();
+  // Generic browse/reset queries: "show all trips", "όλες οι εκδρομές", "reset", "start over"
+  return /(all\s+trips|show\s+trips|list\s+trips|όλες\s+οι\s+εκδρομές|όλες\s+τις\s+εκδρομές|όλα\s+τα\s+ταξίδια|reset|ξεκινήσ?ουμε\s+από\s+την\s+αρχή|από\s+την\s+αρχή)/i.test(m);
+}
+
 
 function buildLiveRulesPrompt() {
   return [
@@ -875,6 +881,9 @@ function mockAssistantReply(message) {
 // POST /api/assistant { message: string, history?: [{role,content}] }
 app.post('/api/assistant', express.json(), async (req, res) => {
   try {
+    const incomingContext = (req.body && req.body.context) || {};
+    const sessionContext = { lastTripId: incomingContext.lastTripId || null, lastTopic: incomingContext.lastTopic || null };
+
     // If no key, return a friendly mock reply instead of erroring out
     if (!OPENAI_API_KEY) {
       const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
@@ -882,9 +891,17 @@ app.post('/api/assistant', express.json(), async (req, res) => {
       try {
         const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
         const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
+        if (wantsResetTopic(message, userLang)) { sessionContext.lastTripId = null; }
+        let usedTripId = null;
         if (tripData) {
-          const tripId = tripData.detectTripIdFromMessage(message);
+          let tripId = tripData.detectTripIdFromMessage(message);
+          // If none detected, try fallback to previous context for follow-ups (duration, stops, etc.)
+          const intent = parseTripIntent(message, userLang);
+          if (!tripId && sessionContext.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
+            tripId = sessionContext.lastTripId;
+          }
           if (tripId) {
+            usedTripId = tripId;
             const trip = tripData.readTripJsonById(tripId);
             if (trip) {
               const summary = tripData.buildTripSummary(trip, userLang);
@@ -917,7 +934,9 @@ app.post('/api/assistant', express.json(), async (req, res) => {
                 parts.push(t(userLang, 'assistant_trip.availability'));
                 parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
               }
-              return res.json({ reply: parts.join('\n'), model: 'mock' });
+              // Update session context with the last used trip
+              if (usedTripId) sessionContext.lastTripId = usedTripId;
+              return res.json({ reply: parts.join('\n'), model: 'mock', context: sessionContext });
             }
           }
         }
@@ -946,7 +965,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
           if (txt) extra = `\n\n${txt}`;
         }
       } catch (_) {}
-      return res.json({ reply: mockAssistantReply(message) + extra, model: 'mock' });
+      return res.json({ reply: mockAssistantReply(message) + extra, model: 'mock', context: sessionContext });
     }
     const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
     const history = Array.isArray(req.body && req.body.history) ? req.body.history : [];
@@ -958,9 +977,18 @@ app.post('/api/assistant', express.json(), async (req, res) => {
 
     // Trip data fast-path: generate structured reply directly when a known trip is mentioned
     try {
+      const incomingContext2 = (req.body && req.body.context) || {};
+      const sessionContext2 = { lastTripId: incomingContext2.lastTripId || null, lastTopic: incomingContext2.lastTopic || null };
+      if (wantsResetTopic(message, userLang)) { sessionContext2.lastTripId = null; }
+      let usedTripId = null;
       if (tripData) {
-        const tripId = tripData.detectTripIdFromMessage(message);
+        let tripId = tripData.detectTripIdFromMessage(message);
+        const intent = parseTripIntent(message, userLang);
+        if (!tripId && sessionContext2.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
+          tripId = sessionContext2.lastTripId;
+        }
         if (tripId) {
+          usedTripId = tripId;
           const trip = tripData.readTripJsonById(tripId);
           if (trip) {
             const summary = tripData.buildTripSummary(trip, userLang);
@@ -1051,7 +1079,8 @@ app.post('/api/assistant', express.json(), async (req, res) => {
               } catch(_) {}
             }
             const replyText = parts.join('\n') + (liveContextText ? ('\n\n' + liveContextText) : '');
-            return res.json({ reply: replyText, model: 'trip-data' });
+            if (usedTripId) sessionContext2.lastTripId = usedTripId;
+            return res.json({ reply: replyText, model: 'trip-data', context: sessionContext2 });
           }
         }
       }
@@ -1178,7 +1207,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
         reply = (reply ? reply + '\n\n' : '') + liveContextText;
       }
     } catch(_) {}
-    return res.json({ reply, model: 'gpt-4o-mini' });
+    return res.json({ reply, model: 'gpt-4o-mini', context: { lastTripId: null, lastTopic: null } });
   } catch (e) {
     console.error('AI Assistant JSON error:', e && e.stack ? e.stack : e);
     return res.status(500).json({ error: 'Server error' });
@@ -1189,6 +1218,8 @@ app.post('/api/assistant', express.json(), async (req, res) => {
 // POST /api/assistant/stream { message, history? } -> streams plain text tokens
 app.post('/api/assistant/stream', express.json(), async (req, res) => {
   try {
+    const incomingContext = (req.body && req.body.context) || {};
+    const sessionContext = { lastTripId: incomingContext.lastTripId || null, lastTopic: incomingContext.lastTopic || null };
     // If no key, stream a quick mock reply so the UI doesn't error
     if (!OPENAI_API_KEY) {
       const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
@@ -1200,9 +1231,16 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
       try {
         const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
         const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
+        if (wantsResetTopic(message, userLang)) { sessionContext.lastTripId = null; }
+        let usedTripId = null;
         if (tripData) {
-          const tripId = tripData.detectTripIdFromMessage(message);
+          let tripId = tripData.detectTripIdFromMessage(message);
+          const intent = parseTripIntent(message, userLang);
+          if (!tripId && sessionContext.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
+            tripId = sessionContext.lastTripId;
+          }
           if (tripId) {
+            usedTripId = tripId;
             const trip = tripData.readTripJsonById(tripId);
             if (trip) {
               const summary = tripData.buildTripSummary(trip, userLang);
@@ -1271,10 +1309,12 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
                 }
               }
               txt = parts.join('\n');
+              if (usedTripId) sessionContext.lastTripId = usedTripId;
             }
           }
         }
       } catch(_) {}
+      try { res.setHeader('X-Assistant-Context', JSON.stringify(sessionContext)); } catch(_){ }
       try {
         const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
         const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
@@ -1347,9 +1387,11 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
     ];
 
     // Prepare streaming response
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
+  // Include session context header early (no-op for OpenAI flow, but client can keep lastTripId)
+  try { res.setHeader('X-Assistant-Context', JSON.stringify(sessionContext)); } catch(_){ }
 
   const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

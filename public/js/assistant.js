@@ -1,6 +1,9 @@
 // Greekaway AI Assistant client
 // Renders a lightweight chat UI inside the #aiOverlay and handles streaming
 (function(){
+  // In-memory session context and short chat history (resets when page/overlay reloads)
+  let __gaChatContext = { lastTripId: null, lastTopic: null };
+  let __gaChatHistory = []; // {role:'user'|'assistant', content:string}
   function ensureUI(){
     const overlay = document.getElementById('aiOverlay');
     if (!overlay) return null;
@@ -65,7 +68,8 @@
     // Hide suggestion once user sends first message
     try { const sug = document.getElementById('gaSuggestion'); if (sug) sug.style.display = 'none'; } catch(_){ }
 
-    appendMessage('user', text);
+  appendMessage('user', text);
+  try { __gaChatHistory.push({ role: 'user', content: text }); } catch(_){ }
     const log = document.getElementById('gaChatLog');
     const assistantRow = document.createElement('div');
     assistantRow.className = 'ga-msg assistant';
@@ -77,18 +81,30 @@
 
     // Streaming
     try {
+      const payload = { message: text, history: __gaChatHistory.slice(-8), context: __gaChatContext };
       const resp = await fetch('/api/assistant/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify(payload)
       });
       if (!resp.ok || !resp.body) {
-        const fallback = await fetch('/api/assistant', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message: text }) });
+        const fallback = await fetch('/api/assistant', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         const data = await fallback.json();
         const tr = (k) => (window.t ? window.t(k) : k);
         bubble.textContent = (data && data.reply) ? data.reply : ((data && data.error) ? `${tr('assistant.error_prefix')} ${data.error}` : tr('assistant.fallback_error'));
+        // Update context from JSON fallback
+        try { if (data && data.context) __gaChatContext = Object.assign({}, __gaChatContext, data.context); } catch(_){ }
+        try { __gaChatHistory.push({ role: 'assistant', content: bubble.textContent || '' }); } catch(_){ }
         return;
       }
+      // Update context from streaming response header if provided
+      try {
+        const cx = resp.headers.get('X-Assistant-Context');
+        if (cx) {
+          const obj = JSON.parse(cx);
+          if (obj && typeof obj === 'object') __gaChatContext = Object.assign({}, __gaChatContext, obj);
+        }
+      } catch(_){ }
       const reader = resp.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let done = false; let acc = '';
@@ -102,6 +118,7 @@
           try { log.scrollTop = log.scrollHeight; } catch(_){ }
         }
       }
+      try { __gaChatHistory.push({ role: 'assistant', content: bubble.textContent || acc || '' }); } catch(_){ }
     } catch (e) {
       const tr = (k) => (window.t ? window.t(k) : k);
       bubble.textContent = tr('assistant.stream_error');
@@ -178,6 +195,18 @@
             if (!isIOS) { try { el && el.focus(); } catch(_){} }
           }, 80);
         }
+      };
+    }
+    // Reset session memory when the AI overlay closes
+    const origClose = window.closeOverlay;
+    if (typeof origClose === 'function') {
+      window.closeOverlay = function(id){
+        const r = origClose(id);
+        if (id === 'aiOverlay') {
+          try { __gaChatContext = { lastTripId: null, lastTopic: null }; } catch(_){ }
+          try { __gaChatHistory = []; } catch(_){ }
+        }
+        return r;
       };
     }
   }
