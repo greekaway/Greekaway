@@ -68,10 +68,16 @@ html, body { min-height: 100%; }
 
 /* -------- Καλωσόρισμα -------- */
 #welcome-section {
-  margin-top: 70px;
+  /* Center the welcome stack vertically in the viewport, accounting for the fixed footer */
+  margin-top: 0;
+  min-height: calc(100vh - 64px);
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  padding-top: env(safe-area-inset-top, 0px);
+  /* fine-tune: raise by ~8 clicks total (~41px) */
+  transform: translateY(-41px);
 }
 
 /* Welcome panel removed: keep selector harmless in case of stray markup */
@@ -123,6 +129,11 @@ body.has-bg-video .welcome-logo { box-shadow: none !important; }
   transform: scale(0.85);
   animation: logoFadeIn 1.5s ease forwards;
   animation-delay: 0.3s;
+}
+
+/* Match the previous inline sizing that was on index.html (tablet) */
+@media (min-width: 600px) {
+  .welcome-logo { width: 55%; max-width: 560px; }
 }
 
 @keyframes logoFadeIn {
