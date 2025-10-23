@@ -11,3 +11,4 @@ partners: routes mounted at /api/partners
 Server running at http://0.0.0.0:3000
 news: refreshed 5 headlines from 2 feed(s) (initial)
 partners/connect-link error You can only create new accounts if you've signed up for Connect, which you can learn how to do at https://stripe.com/docs/connect.
+partners/connect-link error You can only create new accounts if you've signed up for Connect, which you can learn how to do at https://stripe.com/docs/connect.
