@@ -76,7 +76,8 @@ body.ga-variant-flat .category-btn.cat-culture::after {
   -webkit-mask-size: contain;     mask-size: contain;
 }
 /* Make mountain icon 10% larger than base + offset slightly higher */
-body.ga-variant-flat .category-btn.cat-mountain::after { width: 68%; height: 68%; top: 6%; }
+/* Move the mountain icon further up (~two more clicks) */
+body.ga-variant-flat .category-btn.cat-mountain::after { width: 68%; height: 68%; top: 0%; }
 
 /* Place label under the icon inside the tile */
 body.ga-variant-flat .category-btn .cat-label {
@@ -221,12 +222,13 @@ body.is-loaded :is(.category-btn, #trips-container .trip-card) {
 /* unify label color for trip cards' titles and category labels */
 :is(.category-btn .cat-label, #trips-container .trip-card h3) { color: var(--ga-gold) !important; }
 
-/* Hover state: unified lift without extra white flash */
+/* Hover state: unified lift without extra white flash on trip cards */
 :is(.category-btn, #trips-container .trip-card):hover {
   transform: translateY(-6px) scale(1.05);
   box-shadow: var(--ga-shadow-2) !important;
-  filter: none !important;
 }
+/* Specifically remove any hover filter only for trip cards (keep category look intact) */
+#trips-container .trip-card:hover { filter: none !important; }
 
 /* Press state for trip cards: remove the bright glow/flash; keep subtle press */
 body[data-view="category"] #trips-container .trip-card:active,
@@ -259,6 +261,42 @@ body[data-view="category"] #trips-container .trip-card.cat-sea:hover {
   box-shadow: var(--ga-shadow-2) !important;
   filter: none !important;
 }
+
+/* ================= Anti-flash hardening for trip tiles ================= */
+/* Kill tap highlight on the card and all interactive descendants */
+body[data-view="category"] #trips-container .trip-card,
+body[data-view="category"] #trips-container .trip-card * {
+  -webkit-tap-highlight-color: transparent !important;
+}
+/* Avoid compositing flashes on iOS by isolating the container */
+body[data-view="category"] #trips-container {
+  isolation: isolate;
+}
+/* Force GPU layer on cards to reduce repaint flashes */
+body[data-view="category"] #trips-container .trip-card {
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
+/* Do not animate filter on trip cards to avoid compositing flashes */
+body[data-view="category"] #trips-container .trip-card { transition: transform 200ms ease, box-shadow 200ms ease !important; }
+/* On touch devices, avoid fixed backgrounds which can cause white flash during tap */
+@media (hover: none) and (pointer: coarse) {
+  html[data-view="category"][data-category],
+  body[data-view="category"][data-category] {
+    background-attachment: scroll !important;
+  }
+}
+
+/* As a final safeguard, disable fixed backgrounds globally on category pages */
+html[data-category], body[data-category] { background-attachment: scroll !important; }
+
+/* Remove any filter usage on trip-card interactive states and pseudo-elements */
+#trips-container .trip-card,
+#trips-container .trip-card::before,
+#trips-container .trip-card::after,
+#trips-container .trip-card:hover,
+#trips-container .trip-card:active,
+#trips-container .trip-card:focus-visible { filter: none !important; }
 
 /* Light mode preservation: keep gold text visible */
 @media (prefers-color-scheme: light) {
