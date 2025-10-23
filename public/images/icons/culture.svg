@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Greek temple silhouette (pediment + columns + base), filled for mask -->
+  <!-- Pediment -->
+  <path fill="#FFFFFF" d="M16 44l48-20 48 20H16z"/>
+  <!-- Entablature -->
+  <rect x="20" y="44" width="88" height="10" fill="#FFFFFF"/>
+  <!-- Columns (5) -->
+  <rect x="24" y="54" width="10" height="44" fill="#FFFFFF"/>
+  <rect x="42" y="54" width="10" height="44" fill="#FFFFFF"/>
+  <rect x="60" y="54" width="10" height="44" fill="#FFFFFF"/>
+  <rect x="78" y="54" width="10" height="44" fill="#FFFFFF"/>
+  <rect x="96" y="54" width="10" height="44" fill="#FFFFFF"/>
+  <!-- Base -->
+  <rect x="16" y="98" width="96" height="10" fill="#FFFFFF"/>
+</svg>

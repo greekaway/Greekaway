@@ -1,5 +1,59 @@
 [
-  { "id": "sea", "title": { "el": "Θάλασσα", "en": "Sea", "fr": "Mer", "de": "Meer", "he": "ים" }, "image": "/images/sea.png" },
-  { "id": "mountain", "title": { "el": "Βουνό", "en": "Mountain", "fr": "Montagne", "de": "Berg", "he": "הרים" }, "image": "/images/mountain.png" },
-  { "id": "culture", "title": { "el": "Πολιτισμός", "en": "Culture", "fr": "Culture", "de": "Kultur", "he": "תרבות" }, "image": "/images/culture.png" }
+  {
+    "id": "sea",
+    "title": {
+      "el": "Θάλασσα",
+      "en": "Sea",
+      "fr": "Mer",
+      "de": "Meer",
+      "he": "ים",
+      "es": "Mar",
+      "it": "Mare",
+      "ko": "바다",
+      "nl": "Zee",
+      "pt": "Mar",
+      "ru": "Море",
+      "sv": "Hav",
+      "zh": "海"
+    },
+    "image": "/images/sea.png"
+  },
+  {
+    "id": "mountain",
+    "title": {
+      "el": "Βουνό",
+      "en": "Mountain",
+      "fr": "Montagne",
+      "de": "Berg",
+      "he": "הרים",
+      "es": "Montaña",
+      "it": "Montagna",
+      "ko": "산",
+      "nl": "Berg",
+      "pt": "Montanha",
+      "ru": "Гора",
+      "sv": "Berg",
+      "zh": "山"
+    },
+    "image": "/images/mountain.png"
+  },
+  {
+    "id": "culture",
+    "title": {
+      "el": "Πολιτισμός",
+      "en": "Culture",
+      "fr": "Culture",
+      "de": "Kultur",
+      "he": "תרבות",
+      "es": "Cultura",
+      "it": "Cultura",
+      "ko": "문화",
+      "nl": "Cultuur",
+      "pt": "Cultura",
+      "ru": "Культура",
+      "sv": "Kultur",
+      "zh": "文化"
+    },
+    "image": "/images/culture.png"
+  }
 ]

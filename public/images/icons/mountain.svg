@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Bold, filled mountain silhouette for mask usage (previous icon) -->
+  <path fill="#FFFFFF" d="M12 108h104L78 60l-9 12-12-18-33 54z"/>
+  <!-- Foreground peak with snow cap -->
+  <path fill="#FFFFFF" d="M38 108h68L74 70l-8 10-10-15-18 43z"/>
+  <!-- Small flag on peak -->
+  <path fill="#FFFFFF" d="M74 70h8v14h-4V70z"/>
+  <path fill="#FFFFFF" d="M82 70l-8 4V66l8 4z"/>
+</svg>

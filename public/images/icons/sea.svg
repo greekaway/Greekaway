@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#C9D6E4"/>
+      <stop offset="100%" stop-color="#FFFFFF"/>
+    </linearGradient>
+  </defs>
+  <!-- Umbrella pole -->
+  <rect x="62" y="44" width="4" height="46" rx="2" fill="url(#g1)"/>
+  <!-- Umbrella canopy -->
+  <path d="M20 52c10-16 30-26 44-26s34 10 44 26H20z" fill="#FFFFFF" opacity="0.92"/>
+  <path d="M20 52h88" stroke="#FFFFFF" stroke-opacity="0.6"/>
+  <!-- Waves -->
+  <path d="M16 92c8 0 8-6 16-6s8 6 16 6 8-6 16-6 8 6 16 6 8-6 16-6" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+  <path d="M16 100c8 0 8-6 16-6s8 6 16 6 8-6 16-6 8 6 16 6 8-6 16-6" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+</svg>
