@@ -331,6 +331,7 @@ function detectPlaceFromMessage(message) {
   if (best === 'delphi' || best === 'δελφοί') return 'Delphi';
   if (best === 'parnassos' || best === 'πάρνασος') return 'Parnassos';
   if (best === 'olympia' || best === 'ολυμπία') return 'Olympia';
+  if (best === 'santorini' || best === 'σαντορίνη') return 'Santorini';
   return best ? best : null;
 }
 function wantsWeather(message) {
@@ -1055,6 +1056,64 @@ app.post('/api/assistant', express.json(), async (req, res) => {
         }
       }
     } catch (_) { /* fallthrough to OpenAI */ }
+    // Fallback: if place is recognized (e.g., "Santorini") but id detection failed, map place name to a trip id via tripindex
+    try {
+      const place = await resolvePlaceForMessage(message, userLang);
+      if (place) {
+        const id = (function findTripIdByPlaceName(p){
+          try {
+            const raw = fs.readFileSync(TRIPINDEX_PATH, 'utf8');
+            const arr = JSON.parse(raw);
+            const norm = (s)=> String(s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}+/gu,'');
+            const pn = norm(p);
+            for (const t of arr) {
+              if (t && t.id && norm(t.id) === pn) return t.id;
+              const title = t && t.title ? t.title : {};
+              for (const v of Object.values(title)) { if (v && norm(String(v)) === pn) return t.id; }
+            }
+            // contains match as last resort
+            for (const t of arr) {
+              const title = t && t.title ? t.title : {};
+              for (const v of Object.values(title)) { if (v && norm(String(v)).includes(pn)) return t.id; }
+            }
+          } catch(_) {}
+          return null;
+        })(place);
+        if (id) {
+          const trip = tripData && tripData.readTripJsonById(id);
+          if (trip) {
+            const summary = tripData.buildTripSummary(trip, userLang);
+            const parts = [];
+            parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
+            if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+            if (summary.priceCents != null) {
+              const euros = (summary.priceCents/100).toFixed(0);
+              parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
+            }
+            if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
+            if (summary.stops && summary.stops.length) {
+              parts.push(t(userLang, 'assistant_trip.stops'));
+              summary.stops.slice(0,6).forEach((s) => {
+                const name = s.name || t(userLang, 'assistant_trip.missing');
+                const desc = s.description ? ` — ${s.description}` : '';
+                parts.push(`• ${name}${desc}`);
+              });
+            }
+            parts.push(t(userLang, 'assistant_trip.includes'));
+            if (Array.isArray(summary.includes) && summary.includes.length) {
+              summary.includes.forEach(v => parts.push(`• ${v}`));
+            } else {
+              parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+            }
+            if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
+              parts.push(t(userLang, 'assistant_trip.availability'));
+              parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
+            }
+            return res.json({ reply: parts.join('\n'), model: 'trip-data-fallback' });
+          }
+        }
+      }
+    } catch(_) {}
     const place = await resolvePlaceForMessage(message, userLang);
     let liveContextText = '';
     const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
@@ -1292,7 +1351,7 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
 
-    const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
+  const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
