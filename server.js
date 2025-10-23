@@ -235,6 +235,15 @@ function buildAssistantSystemPrompt() {
   return base + '\n\nGreekaway knowledge base (JSON):\n' + KNOWLEDGE_TEXT + '\n\nUse this knowledge as ground truth when relevant. If a topic is not covered, answer normally.';
 }
 
+function buildLiveRulesPrompt() {
+  return [
+    'Live-data usage rules:',
+    '- If a system message titled "Live data context" is present, you MUST use it to answer questions about weather or news.',
+    '- Do not say you lack access to weather or news; use the provided context to answer succinctly.',
+    '- Keep answers short and relevant to Greek travel and Greekaway.',
+  ].join('\n');
+}
+
 // -----------------------------
 // Live-data: destination detection and snippets for assistant
 // -----------------------------
@@ -705,6 +714,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
     // Build messages array (optional short system prompt guiding assistant tone)
     const messages = [
       { role: 'system', content: buildAssistantSystemPrompt() },
+      { role: 'system', content: buildLiveRulesPrompt() },
       ...(liveContextText ? [{ role: 'system', content: `Live data context (refreshed every ~5m):\n${liveContextText}` }] : []),
       ...history.filter(m => m && m.role && m.content).map(m => ({ role: m.role, content: String(m.content) })),
       { role: 'user', content: message }
@@ -791,6 +801,7 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
 
     const messages = [
       { role: 'system', content: buildAssistantSystemPrompt() },
+      { role: 'system', content: buildLiveRulesPrompt() },
       ...(liveContextText ? [{ role: 'system', content: `Live data context (refreshed every ~5m):\n${liveContextText}` }] : []),
       ...history.filter(m => m && m.role && m.content).map(m => ({ role: m.role, content: String(m.content) })),
       { role: 'user', content: message }
