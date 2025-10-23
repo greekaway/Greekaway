@@ -58,6 +58,7 @@ body.ga-variant-flat .category-btn.cat-sea::after {
   -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
   -webkit-mask-position: center;  mask-position: center;
   -webkit-mask-size: contain;     mask-size: contain;
+  top: 12%; /* fine-tune vertical centering: a touch lower */
 }
 body.ga-variant-flat .category-btn.cat-mountain::after {
   -webkit-mask-image: url('/images/icons/mountain.svg');
@@ -66,8 +67,7 @@ body.ga-variant-flat .category-btn.cat-mountain::after {
   -webkit-mask-position: center;  mask-position: center;
   -webkit-mask-size: contain;     mask-size: contain;
 }
-/* Make mountain icon 10% larger than base */
-body.ga-variant-flat .category-btn.cat-mountain::after { width: 68%; height: 68%; }
+/* Make mountain icon 10% larger than base (handled below with top offset) */
 body.ga-variant-flat .category-btn.cat-culture::after {
   -webkit-mask-image: url('/images/icons/culture.svg');
           mask-image: url('/images/icons/culture.svg');
@@ -75,6 +75,8 @@ body.ga-variant-flat .category-btn.cat-culture::after {
   -webkit-mask-position: center;  mask-position: center;
   -webkit-mask-size: contain;     mask-size: contain;
 }
+/* Make mountain icon 10% larger than base + offset slightly higher */
+body.ga-variant-flat .category-btn.cat-mountain::after { width: 68%; height: 68%; top: 6%; }
 
 /* Place label under the icon inside the tile */
 body.ga-variant-flat .category-btn .cat-label {
@@ -99,8 +101,9 @@ body.ga-variant-flat .category-btn::before {
 }
 
 /* Subtle cinematic entrance once page loads */
+/* Subtle cinematic entrance once page loads (unified for all tiles) */
 body.is-loaded .category-btn { will-change: transform, opacity, filter; }
-body.is-loaded .category-btn { animation: gaZoomBlur 720ms cubic-bezier(.22,.9,.32,1) both; }
+body.is-loaded .category-btn { animation: gaZoomBlur 760ms cubic-bezier(.22,.9,.32,1) both !important; }
 /* small stagger using nth-child so tiles "walk" in */
 body.is-loaded #categories-container .category-btn:nth-child(1){ animation-delay: 60ms; }
 body.is-loaded #categories-container .category-btn:nth-child(2){ animation-delay: 120ms; }
@@ -110,9 +113,10 @@ body.is-loaded #categories-container .category-btn:nth-child(5){ animation-delay
 body.is-loaded #categories-container .category-btn:nth-child(6){ animation-delay: 360ms; }
 
 /* Hover/active interactions: consistent 3D and white underglow when pressed */
+/* Hover/press interactions: consistent 3D and white underglow when pressed */
 .category-btn { transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease; -webkit-tap-highlight-color: transparent; }
 .category-btn:hover {
-  transform: translateY(-6px) scale(1.04);
+  transform: translateY(-6px) scale(1.05);
   box-shadow: var(--ga-shadow-2);
   /* white glow visible on hover as well */
   filter: drop-shadow(0 0 18px rgba(255,255,255,0.28));
@@ -124,20 +128,20 @@ body.is-loaded #categories-container .category-btn:nth-child(6){ animation-delay
   box-shadow: var(--ga-shadow-2), 0 0 0 2px rgba(255,255,255,0.22);
   filter: drop-shadow(0 0 18px rgba(255,255,255,0.28));
 }
-/* White underglow on press like Lefkas/Olympia/Parnassos (use drop-shadow to avoid overflow clipping) */
+/* On press: enlarge slightly and show underglow */
 .category-btn:active {
-  transform: translateY(-1px) scale(0.995);
+  transform: translateY(-2px) scale(1.04);
   box-shadow: var(--ga-shadow-2);
   filter: drop-shadow(0 0 18px rgba(255,255,255,0.34));
 }
-.category-btn:active::before { opacity: 1; transform: scaleX(1.04); }
+.category-btn:active::before { opacity: 1; transform: scaleX(1.06); }
 /* Programmatic press class for reliable touch feedback */
 .category-btn.is-pressing {
-  transform: translateY(-1px) scale(0.995);
+  transform: translateY(-2px) scale(1.04);
   box-shadow: var(--ga-shadow-2);
   filter: drop-shadow(0 0 18px rgba(255,255,255,0.34));
 }
-.category-btn.is-pressing::before { opacity: 1; transform: scaleX(1.04); }
+.category-btn.is-pressing::before { opacity: 1; transform: scaleX(1.06); }
 
 /* ============ Trip listing cards (category pages) ============ */
 /* Only on category listing view to avoid affecting other pages */
@@ -157,26 +161,19 @@ body[data-view="category"] #trips-container .trip-card h3 {
 body[data-view="category"] #trips-container .trip-card::before { background: transparent !important; }
 
 /* Cinematic entrance for trip tiles */
+/* Cinematic entrance (unified with category tiles) */
 body.is-loaded #trips-container .trip-card { will-change: transform, opacity, filter; }
-/* Heartbeat-like cinematic entrance (uniform for all trip tiles) */
-@keyframes gaHeartbeatPop {
-  0%   { transform: scale(0.92); opacity: 0.85; }
-  35%  { transform: scale(1.10); }
-  55%  { transform: scale(0.96); }
-  75%  { transform: scale(1.04); }
-  100% { transform: scale(1.00); opacity: 1; }
-}
-body.is-loaded #trips-container .trip-card { animation: gaHeartbeatPop 820ms cubic-bezier(.2,.9,.3,1) both !important; }
+body.is-loaded #trips-container .trip-card { animation: gaZoomBlur 760ms cubic-bezier(.22,.9,.32,1) both !important; }
 body.is-loaded #trips-container .trip-card:nth-child(1){ animation-delay: 70ms; }
 body.is-loaded #trips-container .trip-card:nth-child(2){ animation-delay: 140ms; }
 body.is-loaded #trips-container .trip-card:nth-child(3){ animation-delay: 210ms; }
 body.is-loaded #trips-container .trip-card:nth-child(4){ animation-delay: 280ms; }
 /* Ensure special logo-pop tiles use the same animation */
-body.is-loaded #trips-container .trip-card.logo-pop { animation: gaHeartbeatPop 820ms cubic-bezier(.2,.9,.3,1) both !important; }
+body.is-loaded #trips-container .trip-card.logo-pop { animation: gaZoomBlur 760ms cubic-bezier(.22,.9,.32,1) both !important; }
 
 /* Hover/active with white underglow */
 body[data-view="category"] #trips-container .trip-card:hover {
-  transform: translateY(-6px) scale(1.03);
+  transform: translateY(-6px) scale(1.05);
   box-shadow: var(--ga-shadow-2);
   filter: drop-shadow(0 0 18px rgba(255,255,255,0.22));
 }
@@ -196,17 +193,25 @@ body[data-view="category"] #trips-container .trip-card:focus-visible {
   filter: drop-shadow(0 0 18px rgba(255,255,255,0.22));
 }
 body[data-view="category"] #trips-container .trip-card:active {
-  transform: translateY(-1px) scale(0.995);
+  transform: translateY(-2px) scale(1.04);
   box-shadow: var(--ga-shadow-2);
   filter: drop-shadow(0 0 18px rgba(255,255,255,0.28));
 }
 body[data-view="category"] #trips-container .trip-card:active::after { opacity: 1; transform: scaleX(1.04); }
 body[data-view="category"] #trips-container .trip-card.is-pressing {
-  transform: translateY(-1px) scale(0.995);
+  transform: translateY(-2px) scale(1.04);
   box-shadow: var(--ga-shadow-2);
   filter: drop-shadow(0 0 18px rgba(255,255,255,0.28));
 }
 body[data-view="category"] #trips-container .trip-card.is-pressing::after { opacity: 1; transform: scaleX(1.04); }
+
+/* ============ Global unification across tiles ============ */
+/* Write once: apply same hover/press transforms to both categories and trip tiles */
+body.is-loaded :is(.category-btn, #trips-container .trip-card) {
+  transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+}
+/* unify label color for trip cards' titles and category labels */
+:is(.category-btn .cat-label, #trips-container .trip-card h3) { color: var(--ga-gold) !important; }
 /* Use drop-shadow for consistent underglow on mobile */
 
 /* Light mode preservation: keep gold text visible */
