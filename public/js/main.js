@@ -249,6 +249,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const t = window.__loadedTrip || trip;
         if (!t) return;
         if (titleEl) titleEl.textContent = getLocalized(t.title) || "";
+        // Render base price badge under title if available
+        try {
+          const priceEl = document.getElementById('trip-price');
+          if (priceEl) {
+            if (t.price_cents) {
+              const base = Math.max(0, parseInt(t.price_cents, 10)) / 100;
+              const cur = (t.currency || 'EUR').toUpperCase();
+              priceEl.textContent = base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur });
+              priceEl.style.display = '';
+              // gentle flash when language changes or trip switches
+              priceEl.classList.remove('animate');
+              void priceEl.offsetWidth; // reflow
+              priceEl.classList.add('animate');
+              setTimeout(() => { priceEl.classList.remove('animate'); }, 600);
+            } else {
+              priceEl.style.display = 'none';
+            }
+          }
+        } catch(_) {}
         if (descEl) descEl.textContent = getLocalized(t.description) || "";
 
         const stopsWrap = document.getElementById("stops");
