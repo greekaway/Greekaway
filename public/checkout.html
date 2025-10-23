@@ -211,7 +211,7 @@
 
             pr.paymentRequest.on('paymentmethod', async (ev) => {
               try {
-                const resp = await fetch('/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 1000), currency: (CHECKOUT_CURRENCY || 'eur') }) });
+                const resp = await fetch('/api/partners/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 1000), currency: (CHECKOUT_CURRENCY || 'eur') }) });
                 const data = await resp.json();
                 if (!data.clientSecret) { ev.complete('fail'); return showResult('i18n:checkout.payment_error', false); }
 

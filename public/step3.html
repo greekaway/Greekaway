@@ -82,6 +82,7 @@
   <div class="s3-row"><div class="s3-label" data-i18n="booking.traveler_type">Τύπος ταξιδιώτη</div><div class="s3-value" id="vTravelerType">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.interests">Ενδιαφέροντα</div><div class="s3-value" id="vInterest">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.sociality">Κοινωνικότητα</div><div class="s3-value" id="vSocial">–</div></div>
+  <div class="s3-row"><div class="s3-label" data-i18n="booking.trip_cost">Κόστος εκδρομής</div><div class="s3-value" id="vTripCost">–</div></div>
     </div>
   </div>
 
@@ -203,6 +204,26 @@
         document.getElementById('vTravelerType').textContent = travLabel;
         document.getElementById('vInterest').textContent = intLabel;
         document.getElementById('vSocial').textContent = socLabel;
+        try { renderTripCost(); } catch(_){}
+      }
+
+      function renderTripCost(){
+        try {
+          const trip = (window.__loadedTrip || null);
+          const seats = (parseInt(adults||'0',10) || 0) + (parseInt(children||'0',10) || 0);
+          let baseCents = 5000; // conservative fallback
+          let cur = 'EUR';
+          if (trip) {
+            if (trip.price_cents != null) baseCents = Math.max(0, parseInt(trip.price_cents,10) || 0);
+            if (trip.currency) cur = String(trip.currency).toUpperCase();
+          }
+          const totalCents = Math.max(0, baseCents * Math.max(1, seats));
+          const val = (totalCents/100).toLocaleString((window.currentI18n && window.currentI18n.lang) || (navigator.language||'el'), { style:'currency', currency: cur });
+          const el = document.getElementById('vTripCost'); if (el) el.textContent = val;
+          // persist intended amount so checkout can use it if booking creation fails (last resort)
+          try { sessionStorage.setItem('gw_amount_cents', String(totalCents)); } catch(_){ }
+          try { sessionStorage.setItem('gw_currency', cur.toLowerCase()); } catch(_){ }
+        } catch(_){ }
       }
 
       // When UI language changes, re-render the trip title using loaded trip or fetch by id
@@ -237,22 +258,61 @@
       renderValues();
 
       document.getElementById('s3Back')?.addEventListener('click', ()=> history.back());
-      document.getElementById('s3Finish')?.addEventListener('click', (ev)=>{
+      document.getElementById('s3Finish')?.addEventListener('click', async (ev)=>{
         try { ev.preventDefault(); } catch(_){ }
-        // could post or navigate to checkout
+        const btn = document.getElementById('s3Finish'); if (btn) btn.disabled = true;
         try {
+          // Build booking payload using stored selections and loaded trip
+          const tripId = (sessionStorage.getItem('gw_trip_id') || '').trim();
+          let trip = (window.__loadedTrip || null);
+          if (!trip && tripId) {
+            try {
+              let dv = '';
+              try { const rv = await fetch('/version.json', { cache: 'no-cache' }); if (rv.ok) { const j = await rv.json(); dv = j && j.dataVersion ? ('?v='+encodeURIComponent(String(j.dataVersion))) : ''; } } catch(_){ }
+              const r = await fetch(`/data/trips/${encodeURIComponent(tripId)}.json${dv}`, { cache: 'no-cache' });
+              if (r.ok) trip = await r.json();
+            } catch(_){ }
+          }
+          const seats = (parseInt(adults||'0',10) || 0) + (parseInt(children||'0',10) || 0) || 1;
+          const baseCents = trip && trip.price_cents ? Math.max(0, parseInt(trip.price_cents,10)||0) : 5000;
+          const currency = (trip && trip.currency ? String(trip.currency).toLowerCase() : 'eur');
+          const price_cents = Math.max(0, baseCents * seats);
+          const payload = {
+            trip_id: tripId,
+            date: null,
+            seats,
+            price_cents,
+            currency,
+            language: (sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_lang') || 'el'),
+            travelerProfile: (sessionStorage.getItem('gw_traveler_type') || ''),
+            travelStyle: (sessionStorage.getItem('gw_interest') || ''),
+            preferredLanguage: (sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || ''),
+            travelTempo: (sessionStorage.getItem('gw_sociality') || ''),
+            children_ages: (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]'); } catch(_){ return []; } })()
+          };
+          let bookingId = '';
+          try {
+            const resp = await fetch('/api/bookings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+            const j = await resp.json();
+            if (resp.ok && j.bookingId) bookingId = j.bookingId;
+          } catch(_){ }
           const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
-          const absUrl = origin ? (new URL('/checkout.html', origin).href) : '/checkout.html';
-          try { window.location.assign(absUrl); }
-          catch(_e1){ try { window.location.href = absUrl; } catch(_e2){ setTimeout(()=>{ window.location.href = '/checkout.html'; }, 0); } }
-        } catch(_){ window.location.href = '/checkout.html'; }
+          const url = new URL('/checkout.html', origin || window.location.href);
+          if (tripId) url.searchParams.set('trip', tripId);
+          if (bookingId) url.searchParams.set('bookingId', bookingId);
+          // Navigation
+          try { window.location.assign(url.href); }
+          catch(_e1){ try { window.location.href = url.href; } catch(_e2){ setTimeout(()=>{ window.location.href = url.href; }, 0); } }
+        } finally {
+          if (btn) btn.disabled = false;
+        }
       });
 
       // Ensure labels translate after i18n is ready and on future language changes
       try { if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); } catch(_){ }
       try { setTimeout(()=>{ if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); }, 60); } catch(_){ }
       try {
-        window.addEventListener('i18n:changed', ()=>{ try { renderValues(); } catch(_){ } });
+        window.addEventListener('i18n:changed', ()=>{ try { renderValues(); renderTripCost(); } catch(_){ } });
       } catch(_){ }
     });
   </script>
