@@ -967,8 +967,12 @@ app.post('/api/assistant', express.json(), async (req, res) => {
             const parts = [];
             parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
             // Focused answers if user asked specific things
-            if (intent.askDuration && summary.duration) {
-              parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+            if (intent.askDuration) {
+              if (summary.duration) {
+                parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+              } else {
+                parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
+              }
             }
             if (intent.askPrice && summary.priceCents != null) {
               const euros = (summary.priceCents/100).toFixed(0);
@@ -1146,8 +1150,12 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
               const intent = parseTripIntent(message, userLang);
               const parts = [];
               parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
-              if (intent.askDuration && summary.duration) {
-                parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+              if (intent.askDuration) {
+                if (summary.duration) {
+                  parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+                } else {
+                  parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
+                }
               }
               if (intent.askPrice && summary.priceCents != null) {
                 const euros = (summary.priceCents/100).toFixed(0);

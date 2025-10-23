@@ -80,6 +80,11 @@ function detectTripIdFromMessage(message) {
   for (const [name, id] of NAME_TO_ID.entries()) {
     if (name && m.includes(name)) return id;
   }
+  // Fallback heuristics for common stems not present verbatim in titles
+  try {
+    if (/\blefka/i.test(m) || /\blefkad/i.test(m) || m.includes('λευκαδ')) return 'lefkas';
+    if (/delph/i.test(m) || m.includes('δελφ')) return 'delphi';
+  } catch(_) {}
   return null;
 }
 
