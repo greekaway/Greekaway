@@ -13,6 +13,7 @@ What’s included
 - The assistant UI (`public/js/assistant.js`) talks to server endpoints `/api/assistant` and `/api/assistant/stream`.
 - On the server (`server.js`), incoming messages are lightly analyzed:
   - If the text mentions a known destination (from `public/data/tripindex.json`) or contains weather keywords, the server fetches live weather.
+  - If no known destination is detected, the server now tries a lightweight geocoding fallback that extracts a likely place name from the message (e.g. «σε Αράχοβα», "weather in Delphi") and geocodes it via Open‑Meteo’s geocoding API.
   - The live data is injected as an extra system message: “Live data context …”.
   - The model (or mock) then composes the final answer and can naturally include the live snippet in the user’s language.
 - All remote calls are cached for 5 minutes.
@@ -50,3 +51,4 @@ To add a new source (e.g., public holidays, ferry status):
 - Open-Meteo is keyless and fast. If you prefer another provider (e.g., OpenWeatherMap), swap the implementation in `live/liveData.js` and read the API key from env.
 - Caching is in-memory; resets on server restart. For longer retention, plug a Redis cache (same key strategy) without changing the assistant API.
 - Destination detection uses the multilingual titles from `public/data/tripindex.json`. If you add trips or translations, detection improves automatically.
+ - In addition, dynamic geocoding from free‑form user messages is used as a fallback, so queries like “Καιρός στην Αράχοβα” resolve correctly even if the location isn’t a trip title.

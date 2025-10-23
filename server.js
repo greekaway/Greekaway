@@ -320,6 +320,61 @@ function wantsStrikesOrTraffic(message) {
   return /(\bαπεργία|\bαπεργιες|\bπορεία|\bπορείες|\bμπλοκάρ|\bδρόμοι\b|traffic|strike|protest)/i.test(m);
 }
 
+// Attempt to infer a place from free-form user message using lightweight heuristics + geocoding
+// 1) Try our curated destinations list via detectPlaceFromMessage
+// 2) Otherwise extract candidate phrases (quotes, prepositions, capitalized sequences)
+// 3) Geocode each candidate with Open-Meteo geocoding via liveData.geocodePlace
+// Returns a normalized place name on success, otherwise null
+async function resolvePlaceForMessage(message, lang = 'en') {
+  try {
+    const direct = detectPlaceFromMessage(message);
+    if (direct) return direct;
+    if (!liveData || typeof liveData.geocodePlace !== 'function') return null;
+
+    const text = String(message || '');
+    const candidates = new Set();
+
+    // Quoted phrases: "Αράχοβα", «Αράχοβα», “Delphi” etc.
+    try {
+      const quoteRe = /["“”«»‚‘’„]([^"“”«»‚‘’„]{2,80})["“”«»‚‘’„]/gu;
+      let qm;
+      while ((qm = quoteRe.exec(text))) {
+        const s = (qm[1] || '').trim();
+        if (s) candidates.add(s);
+      }
+    } catch (_) {}
+
+    // Prepositions -> place: σε/στη(ν)/στο(ν)/για/in/at/near/to/for + 1-3 capitalized words (Greek or Latin)
+    try {
+      const prepRe = /\b(?:σε|στη|στην|στο|στον|προς|για|in|at|near|to|for)\s+([A-ZΑ-ΩΆΈΉΊΌΎΏ][\p{L}\-]+(?:\s+[A-ZΑ-ΩΆΈΉΊΌΎΏ][\p{L}\-]+){0,2})/giu;
+      let pm;
+      while ((pm = prepRe.exec(text))) {
+        const s = (pm[1] || '').trim();
+        if (s) candidates.add(s);
+      }
+    } catch (_) {}
+
+    // Standalone capitalized sequences (1-3 words) — last resort
+    try {
+      const capRe = /(?:^|[\s,])([A-ZΑ-ΩΆΈΉΊΌΎΏ][\p{L}\-]{3,}(?:\s+[A-ZΑ-ΩΆΈΉΊΌΎΏ][\p{L}\-]{3,}){0,2})(?=[\s,?.!]|$)/gu;
+      let cm;
+      while ((cm = capRe.exec(text))) {
+        const s = (cm[1] || '').trim();
+        if (s) candidates.add(s);
+      }
+    } catch (_) {}
+
+    // Try up to a handful of candidates to limit latency
+    for (const c of Array.from(candidates).slice(0, 6)) {
+      try {
+        const r = await liveData.geocodePlace(c, lang);
+        if (r && r.name) return r.name;
+      } catch (_) { /* ignore and try next */ }
+    }
+  } catch (_) {}
+  return null;
+}
+
 // -----------------------------
 // Background RSS prefetch (every few hours) so headlines are warm in memory
 // -----------------------------
@@ -707,7 +762,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
       try {
         const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
         const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
-        const place = detectPlaceFromMessage(message);
+        const place = await resolvePlaceForMessage(message, userLang);
         const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
         const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
         if (liveData && (includeWeather || includeNews)) {
@@ -735,7 +790,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
     // Live data enrichment (weather/news) — lightweight heuristic
     const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
     const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
-    const place = detectPlaceFromMessage(message);
+    const place = await resolvePlaceForMessage(message, userLang);
     let liveContextText = '';
     const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
     const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
@@ -820,7 +875,7 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
       try {
         const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
         const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
-        const place = detectPlaceFromMessage(message);
+        const place = await resolvePlaceForMessage(message, userLang);
         const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
         const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
         if (liveData && (includeWeather || includeNews)) {
@@ -857,7 +912,7 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
     // Live enrichment
     const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
     const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
-    const place = detectPlaceFromMessage(message);
+    const place = await resolvePlaceForMessage(message, userLang);
     let liveContextText = '';
     const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
     const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
