@@ -43,7 +43,7 @@ describe('booking flow', () => {
     expect(bookingJson.bookingId).toBeDefined();
 
     // create payment intent for this booking
-    const piResp = await fetch('http://localhost:3000/create-payment-intent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'book-test-'+Date.now() }, body: JSON.stringify({ amount: 5000, currency: 'eur', booking_id: bookingJson.bookingId }) });
+  const piResp = await fetch('http://localhost:3000/api/partners/create-payment-intent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'book-test-'+Date.now() }, body: JSON.stringify({ amount: 5000, currency: 'eur', booking_id: bookingJson.bookingId }) });
     expect(piResp.status).toBe(200);
     const piJson = await piResp.json();
     expect(piJson.paymentIntentId).toBeDefined();

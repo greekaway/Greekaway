@@ -248,7 +248,7 @@
         // create payment intent on server (amount in cents) — example 10 EUR, include booking_id for linkage
         const body = { amount: 1000, currency: 'eur' };
         if (bookingId) body.booking_id = bookingId;
-        const resp = await fetch('/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const resp = await fetch('/api/partners/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
         const data = await resp.json();
         if(!data.clientSecret) return showResult('i18n:checkout.payment_error', false);
         const { error } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardNumber, billing_details: { name, email } } });

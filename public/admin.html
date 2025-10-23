@@ -115,7 +115,24 @@
   <hr style="margin-top:16px" />
   <div id="bookingsPanel" style="display:none;margin-top:12px">
     <h3>Κρατήσεις</h3>
-    <div style="margin-bottom:8px">
+    <div id="bookingFilters" style="margin:12px 0; display:flex; flex-wrap:wrap; gap:10px; align-items:center">
+      <label>Payment Type:
+        <select id="bfPaymentType">
+          <option value="">(any)</option>
+          <option value="stripe">Stripe</option>
+          <option value="manual">Manual</option>
+        </select>
+      </label>
+      <label>Partner: <input id="bfPartner" type="text" placeholder="name or id" list="partnersList"/></label>
+      <datalist id="partnersList"></datalist>
+      <label>Payout Status:
+        <select id="bfPayoutStatus">
+          <option value="">(any)</option>
+          <option value="pending">Pending</option>
+          <option value="sent">Sent</option>
+          <option value="failed">Failed</option>
+        </select>
+      </label>
       <button id="refreshBookings">Ανανέωση Κρατήσεων</button>
       <button id="exportBookings">Εξαγωγή Κρατήσεων (CSV)</button>
     </div>
@@ -133,6 +150,12 @@
             <th style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Seats</th>
             <th class="sortable" data-sort="price_cents" style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Τιμή</th>
             <th class="sortable" data-sort="created_at" style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Δημιουργήθηκε</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Payment Type</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Partner</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Partner Share (€)</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:right">Greekaway Comm. (€)</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Payout Status</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Payout Date</th>
             <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Metadata</th>
           </tr>
         </thead>
@@ -174,6 +197,12 @@
       fetchPayments();
       // show bookings panel and load bookings
       document.getElementById('bookingsPanel').style.display = 'block';
+      // load partners list for autocompletion
+      fetchPartnersList();
+      // open SSE for realtime payout updates
+      openAdminStream(u, p);
+      // fallback polling to keep statuses fresh
+      setInterval(() => { if (basicAuth) fetchBookings(); }, 20000);
       fetchBookings();
     });
 
@@ -325,6 +354,40 @@
 
     document.getElementById('refreshBookings').addEventListener('click', fetchBookings);
     document.getElementById('exportBookings').addEventListener('click', exportBookings);
+    document.getElementById('bfPaymentType').addEventListener('change', fetchBookings);
+    document.getElementById('bfPartner').addEventListener('change', fetchBookings);
+    document.getElementById('bfPayoutStatus').addEventListener('change', fetchBookings);
+
+    async function fetchPartnersList(){
+      try {
+        const res = await fetch('/api/partners/list', { headers: { Authorization: basicAuth } });
+        if (!res.ok) return;
+        const arr = await res.json();
+        const dl = document.getElementById('partnersList');
+        dl.innerHTML = '';
+        for (const p of arr) {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.label = (p.partner_name || p.partner_email || p.id);
+          dl.appendChild(opt);
+        }
+      } catch (_) {}
+    }
+
+    function openAdminStream(u, p){
+      try {
+        const auth = btoa(String(u||'')+':'+String(p||''));
+        const es = new EventSource('/api/partners/admin/stream?auth='+encodeURIComponent(auth));
+        es.onmessage = (ev) => {
+          try {
+            const msg = JSON.parse(ev.data || '{}');
+            if (msg && msg.type && msg.booking_id) {
+              if (msg.type === 'payout_sent' || msg.type === 'payout_failed') updatePayoutCells(msg.booking_id, msg.status || (msg.type==='payout_sent'?'sent':'failed'), msg.payout_date || '');
+            }
+          } catch(_){}
+        };
+      } catch (_) { /* ignore */ }
+    }
 
     async function fetchBookings(){
       if (!basicAuth) return;
@@ -334,10 +397,14 @@
         const params = new URLSearchParams();
         params.set('limit', '1000');
         params.set('offset', '0');
-        if (bookingsSortField) params.set('sort', bookingsSortField);
-        if (bookingsSortDir) params.set('dir', bookingsSortDir);
+        const pt = document.getElementById('bfPaymentType').value;
+        const partner = document.getElementById('bfPartner').value.trim();
+        const ps = document.getElementById('bfPayoutStatus').value;
+        if (pt) params.set('payment_type', pt);
+        if (partner) params.set('partner', partner);
+        if (ps) params.set('payout_status', ps);
         const qs = '?' + params.toString();
-        const res = await fetch('/admin/bookings' + qs, { headers: { Authorization: basicAuth } });
+        const res = await fetch('/api/partners/admin/bookings' + qs, { headers: { Authorization: basicAuth } });
         if (!res.ok) throw new Error(res.status);
         const arr = await res.json();
         renderBookings(arr || []);
@@ -352,6 +419,9 @@
         const tr = document.createElement('tr');
         const when = formatDate(b.created_at);
         const price = formatAmount(b.price_cents || 0, 'eur');
+        const partnerName = b.partner_name || b.partner_id || '';
+        const partnerShare = formatAmount(b.partner_share_cents || 0, 'eur');
+        const commission = formatAmount(b.commission_cents || 0, 'eur');
         tr.innerHTML = `
           <td>${escapeHtml(b.id||'')}</td>
           <td>${escapeHtml(b.status||'')}</td>
@@ -363,10 +433,36 @@
           <td style="text-align:right">${escapeHtml(String(b.seats||''))}</td>
           <td style="text-align:right">${escapeHtml(price)}</td>
           <td>${escapeHtml(when)}</td>
+          <td>${escapeHtml(b.payment_type||'')}</td>
+          <td class="editable-partner" contenteditable data-trip="${escapeHtml(b.trip_id||'')}" data-partnerid="${escapeHtml(b.partner_id||'')}">${escapeHtml(partnerName)}</td>
+          <td style="text-align:right">${escapeHtml(partnerShare)}</td>
+          <td style="text-align:right">${escapeHtml(commission)}</td>
+          <td class="payout-status" data-booking="${escapeHtml(b.id||'')}">${escapeHtml(b.payout_status||'')}</td>
+          <td class="payout-date" data-booking="${escapeHtml(b.id||'')}">${escapeHtml(formatDate(b.payout_date||''))}</td>
           <td>${escapeHtml(typeof b.metadata === 'object' ? JSON.stringify(b.metadata) : (b.metadata||''))} ${renderBookingMetaButton(b.metadata||b.metadata||'', b.id, b.payment_intent_id)}</td>
         `;
         bookingsTbody.appendChild(tr);
       }
+      // Wire inline editing for partner mapping
+      bookingsTbody.querySelectorAll('.editable-partner').forEach(td => {
+        td.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter') { ev.preventDefault(); td.blur(); }
+        });
+        td.addEventListener('blur', async () => {
+          const tripId = td.getAttribute('data-trip');
+          const val = td.textContent.trim();
+          if (!tripId) return;
+          // Accept either partner id or name; if name, try to find matching id from datalist
+          let partnerId = val;
+          const opt = Array.from(document.querySelectorAll('#partnersList option')).find(o => o.label === val || o.value === val);
+          if (opt) partnerId = opt.value;
+          try {
+            await fetch('/api/partners/admin/mapping', { method: 'POST', headers: { 'Content-Type':'application/json', Authorization: basicAuth }, body: JSON.stringify({ trip_id: tripId, partner_id: partnerId }) });
+            // refresh bookings to reflect updated mapping
+            fetchBookings();
+          } catch (_) {}
+        });
+      });
     }
 
     // Make bookings table headers sortable
@@ -383,7 +479,14 @@
       if (!basicAuth) return;
       const btn = document.getElementById('exportBookings'); btn.disabled = true; btn.textContent = 'Ετοιμάζεται...';
       try {
-        const res = await fetch('/admin/bookings.csv', { headers: { Authorization: basicAuth } });
+        const params = new URLSearchParams();
+        const pt = document.getElementById('bfPaymentType').value;
+        const partner = document.getElementById('bfPartner').value.trim();
+        const ps = document.getElementById('bfPayoutStatus').value;
+        if (pt) params.set('payment_type', pt);
+        if (partner) params.set('partner', partner);
+        if (ps) params.set('payout_status', ps);
+        const res = await fetch('/api/partners/admin/bookings.csv?' + params.toString(), { headers: { Authorization: basicAuth } });
         if (!res.ok) throw new Error('Export failed: ' + res.status);
         const blob = await res.blob();
         const a = document.createElement('a');
@@ -395,6 +498,13 @@
         a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
       } catch (e) { alert('Export failed: ' + e); }
       finally { btn.disabled = false; btn.textContent = 'Εξαγωγή Κρατήσεων (CSV)'; }
+    }
+
+    function updatePayoutCells(bookingId, status, dateIso){
+      const rowStatus = bookingsTbody.querySelector(`.payout-status[data-booking="${CSS.escape(bookingId)}"]`);
+      const rowDate = bookingsTbody.querySelector(`.payout-date[data-booking="${CSS.escape(bookingId)}"]`);
+      if (rowStatus) rowStatus.textContent = status || '';
+      if (rowDate) rowDate.textContent = dateIso ? formatDate(dateIso) : '';
     }
 
 

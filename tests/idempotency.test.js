@@ -44,9 +44,9 @@ describe('idempotency and webhook replay', () => {
   test('create-payment-intent idempotency and webhook replay handling', async () => {
     const key = 'jest-test-key-' + Date.now();
     const body = JSON.stringify({ amount: 1000, currency: 'eur' });
-    const r1 = await fetch('http://localhost:3000/create-payment-intent', { method:'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': key }, body });
+  const r1 = await fetch('http://localhost:3000/api/partners/create-payment-intent', { method:'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': key }, body });
     const j1 = await r1.json();
-    const r2 = await fetch('http://localhost:3000/create-payment-intent', { method:'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': key }, body });
+  const r2 = await fetch('http://localhost:3000/api/partners/create-payment-intent', { method:'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': key }, body });
     const j2 = await r2.json();
     expect(j1.clientSecret).toBeDefined();
     expect(j1.clientSecret).toEqual(j2.clientSecret);

@@ -219,6 +219,13 @@ module.exports = function attachWebhook(app, stripe) {
                 const now = new Date().toISOString();
                 const stmt = bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?');
                 stmt.run('confirmed', event.id || null, now, bookingId);
+                try {
+                  // If this booking used Stripe Connect transfer_data (set at PI creation time), mark payout as sent
+                  const ext = bookingsDb.prepare('SELECT payment_type, partner_id FROM bookings WHERE id = ?').get(bookingId) || {};
+                  if (ext && ext.payment_type === 'stripe' && ext.partner_id) {
+                    bookingsDb.prepare('UPDATE bookings SET payout_status = ?, payout_date = ?, updated_at = ? WHERE id = ?').run('sent', now, now, bookingId);
+                  }
+                } catch (_) {}
                 safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${bookingId} for_pi=${pid}`);
                 // read booking to capture metadata for traveler upsert and co-travel stats
                 try {
@@ -246,6 +253,12 @@ module.exports = function attachWebhook(app, stripe) {
                 if (b && b.id) {
                   const now = new Date().toISOString();
                   bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?').run('confirmed', event.id || null, now, b.id);
+                  try {
+                    const ext = bookingsDb.prepare('SELECT payment_type, partner_id FROM bookings WHERE id = ?').get(b.id) || {};
+                    if (ext && ext.payment_type === 'stripe' && ext.partner_id) {
+                      bookingsDb.prepare('UPDATE bookings SET payout_status = ?, payout_date = ?, updated_at = ? WHERE id = ?').run('sent', now, now, b.id);
+                    }
+                  } catch (_) {}
                   safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${b.id} for_pi=${pid}`);
                   // upsert traveler from booking metadata as well
                   try {
