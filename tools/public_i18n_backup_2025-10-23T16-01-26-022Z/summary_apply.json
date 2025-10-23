@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2025-10-23T16:01:26.030Z",
+  "generatedAt": "2025-10-22T18:30:53.386Z",
   "applied": true,
-  "backupDir": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_backup_2025-10-23T16-01-26-022Z",
+  "backupDir": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_backup_2025-10-22T18-30-53-380Z",
   "items": [
     {
       "lang": "de",
@@ -15,14 +15,14 @@
       "src": "/Users/giannespalmos/Desktop/Greekaway/locales/el.json",
       "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/el.json",
       "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/el.json",
-      "topLevelKeys": 19
+      "topLevelKeys": 18
     },
     {
       "lang": "en",
       "src": "/Users/giannespalmos/Desktop/Greekaway/locales/en.json",
       "dryOutPath": "/Users/giannespalmos/Desktop/Greekaway/tools/public_i18n_dryrun/en.json",
       "publicOutPath": "/Users/giannespalmos/Desktop/Greekaway/public/i18n/en.json",
-      "topLevelKeys": 19
+      "topLevelKeys": 18
     },
     {
       "lang": "es",

@@ -98,17 +98,6 @@
     "fallback_error": "We didn't receive a reply right now.",
     "error_prefix": "Error:"
   },
-  "assistant_trip": {
-    "title": "Trip: {title}",
-    "duration": "Duration: {duration}",
-    "price": "Price: €{price}",
-    "description": "Description: {text}",
-    "stops": "Stops",
-    "includes": "Includes",
-    "availability": "Availability",
-    "unavailable_on": "Unavailable dates: {dates}",
-    "missing": "This information hasn’t been added yet for this trip."
-  },
   "feedback": {
     "title": "How was your experience?",
     "subtitle": "Help us match groups better.",
@@ -172,7 +161,6 @@
     "occupancy": "Occupancy",
     "trip": "Trip",
     "confirmation_title": "Booking Confirmation",
-    "trip_cost": "Trip cost",
     "traveler_type_options": {
       "explorer": "Explorers",
       "relaxed": "Relaxed Travelers",
@@ -218,6 +206,30 @@
       "night": "Night type",
       "talkative": "Talkative",
       "reserved": "Reserved"
+    }
+  },
+  "aboutPage": {
+    "title": "About Us – Greekaway",
+    "lead": "",
+    "s1": {
+      "title": "SECTION 1 – The Idea Behind Greekaway",
+      "body": "Greekaway was created from something simple yet rare: the wish to make travel in Greece feel real again.\nWe are not a tour operator — we are a connection between travelers and people who live here.\nEvery route you see on Greekaway is designed, tested, and guided by locals who know the roads, the stories, and the soul of each place.\nWe built Greekaway because we believe that travel should be personal, fair, and deeply human."
+    },
+    "s2": {
+      "title": "SECTION 2 – Small Groups. Real Journeys.",
+      "body": "Our experiences are made for small groups of 5–7 travelers — just enough for company, but still personal.\nEvery trip runs on fixed dates to keep costs low and quality high.\nWhether it’s a drive through mountain villages, a night by the sea, or a visit to an ancient site, each moment is planned with care, balance, and respect for the land and the people who host you."
+    },
+    "s3": {
+      "title": "SECTION 3 – Partners, Not Providers",
+      "body": "Behind every Greekaway experience there’s a partner — not a vendor.\nDrivers, hotels, and local operators are part of the same system, treated fairly and paid transparently through our automated dual-payment network.\nThis balance keeps our ecosystem sustainable, honest, and focused on long-term value, not short-term profit."
+    },
+    "s4": {
+      "title": "SECTION 4 – The Technology Behind the Human Touch",
+      "body": "Greekaway uses technology quietly — to make things smoother, not colder.\nOur AI assistant answers travelers live, shows real availability, updates weather and news, and ensures that each group forms naturally through a matching algorithm that blends traveler profiles, ages, and languages.\nThe result is something rare in tourism: human journeys, enhanced — not replaced — by technology."
+    },
+    "s5": {
+      "title": "SECTION 5 – Transparency, Simplicity, Evolution",
+      "body": "We believe progress comes from clarity.\nEvery payment, every cancellation, every policy is open, structured, and fair.\nWe keep evolving, line by line, update by update, always with one goal: to keep Greekaway human, transparent, and beautifully alive."
     }
   }
 }

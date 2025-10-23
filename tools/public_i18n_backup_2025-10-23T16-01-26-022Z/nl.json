@@ -161,7 +161,6 @@
     "occupancy": "Bezetting",
     "trip": "Trip",
     "confirmation_title": "Booking Confirmation",
-    "trip_cost": "Reiskosten",
     "traveler_type_options": {
       "explorer": "Ontdekkingsreizigers",
       "relaxed": "Ontspannen reizigers",
@@ -207,6 +206,31 @@
       "night": "Night type",
       "talkative": "Talkative",
       "reserved": "Reserved"
+    }
+  }
+  ,
+  "aboutPage": {
+    "title": "Over ons – Greekaway",
+    "lead": "",
+    "s1": {
+      "title": "Het idee achter Greekaway",
+      "body": "Greekaway is ontstaan uit iets eenvoudigs maar zeldzaams: de wens om reizen in Griekenland weer écht te laten voelen.\nWij zijn geen touroperator — wij vormen de verbinding tussen reizigers en de mensen die hier wonen.\nElke route op Greekaway is ontworpen, getest en begeleid door locals die de wegen, de verhalen en de ziel van elke plek kennen.\nWe bouwden Greekaway omdat wij geloven dat reizen persoonlijk, eerlijk en diep menselijk moet zijn."
+    },
+    "s2": {
+      "title": "Kleine groepen. Echte reizen.",
+  "body": "Onze ervaringen zijn gemaakt voor kleine groepen van 5–7 reizigers — groot genoeg voor gezelschap, maar toch persoonlijk.\nElke reis vindt plaats op vaste data om de kosten laag en de kwaliteit hoog te houden.\nOf het nu gaat om een rit door bergdorpen, een nacht aan zee of een bezoek aan een archeologische locatie — elk moment wordt gepland met zorg, balans en respect voor het land en de gastheer."
+    },
+    "s3": {
+      "title": "Partners, geen leveranciers",
+      "body": "Achter elke Greekaway-ervaring staat een partner — geen leverancier.\nChauffeurs, hotels en lokale aanbieders maken deel uit van hetzelfde systeem, eerlijk behandeld en transparant betaald via ons geautomatiseerde dubbel-betalingsnetwerk.\nDeze balans houdt ons ecosysteem duurzaam, eerlijk en gericht op langetermijnwaarde in plaats van kortetermijnwinst."
+    },
+    "s4": {
+      "title": "De technologie achter de menselijke touch",
+      "body": "Greekaway gebruikt technologie op een stille manier — om alles soepeler te laten verlopen, niet kouder.\nOnze AI-assistent antwoordt live, toont echte beschikbaarheid, werkt weer en nieuws bij en zorgt ervoor dat elke groep zich natuurlijk vormt via een algoritme dat profielen, leeftijden en talen combineert.\nHet resultaat is iets zeldzaams in het toerisme: menselijke reizen, versterkt — niet vervangen — door technologie."
+    },
+    "s5": {
+      "title": "Transparantie, eenvoud, evolutie",
+      "body": "Wij geloven dat vooruitgang voortkomt uit duidelijkheid.\nElke betaling, elke annulering, elk beleid is open, gestructureerd en eerlijk.\nWe blijven ontwikkelen, regel voor regel, update na update, met één doel: Greekaway menselijk, transparant en prachtig levend houden."
     }
   }
 }
