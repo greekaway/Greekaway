@@ -189,6 +189,8 @@
   // separate bookings sort state so bookings and payments sorting don't interfere
   let bookingsSortField = '';
   let bookingsSortDir = 'desc';
+  // force demo row when fetch fails
+  let bookingsDemoForce = false;
 
     authForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -412,14 +414,21 @@
         if (!res.ok) throw new Error(res.status);
         const arr = await res.json();
         renderBookings(arr || []);
-      } catch (e) { bookingsTbody.innerHTML = ''; bookingsMessage.textContent = 'Error: ' + e; }
+      } catch (e) {
+        bookingsTbody.innerHTML = '';
+        bookingsMessage.textContent = 'Σφάλμα φόρτωσης κρατήσεων. Εμφανίζεται δείγμα.';
+        bookingsDemoForce = true;
+        renderBookings([]);
+      }
     }
 
     function renderBookings(arr){
       bookingsTbody.innerHTML = '';
-      if (!arr || arr.length === 0) {
-        // Show a single demo row when no bookings exist, for visual verification only
-        bookingsMessage.textContent = 'No bookings found. Showing a sample row for testing.';
+      if (!arr || arr.length === 0 || bookingsDemoForce) {
+        // Show a single demo row when no bookings exist or when fetch failed
+        if (!bookingsDemoForce) {
+          bookingsMessage.textContent = 'No bookings found. Showing a sample row for testing.';
+        }
         const demo = document.createElement('tr');
         demo.id = 'demo-booking-row';
         const demoCreated = new Date();
@@ -446,6 +455,7 @@
           <td></td>
         `;
         bookingsTbody.appendChild(demo);
+        bookingsDemoForce = false;
         return;
       }
       bookingsMessage.textContent = '';
