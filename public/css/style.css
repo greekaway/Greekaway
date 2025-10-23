@@ -74,20 +74,9 @@ html, body { min-height: 100%; }
   align-items: center;
 }
 
-/* Semi-transparent panel for the welcome content (keeps fade-in on logo) */
-#welcome-section .welcome-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: rgba(14,21,32,0.4);
-  border-radius: 24px;
-  padding: 12px 16px 18px;
-  /* no blur or backdrop effects to avoid darker frames */
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: none;
-}
-@media (min-width: 600px) { #welcome-section .welcome-inner { padding: 16px 22px 22px; } }
+/* Welcome panel removed: keep selector harmless in case of stray markup */
+#welcome-section .welcome-inner { background: none !important; padding: 0 !important; border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; display: contents; }
+@media (min-width: 600px) { #welcome-section .welcome-inner { padding: 0 !important; } }
 
 /* Safety: remove any pseudo overlays/shadows on the logo container */
 body.has-bg-video .welcome-inner::before,
@@ -99,9 +88,8 @@ body.has-bg-video .welcome-logo::after {
   background-image: none !important;
   box-shadow: none !important;
 }
-/* Ensure no shadow on logo or its container when video background is active */
-body.has-bg-video .welcome-logo,
-body.has-bg-video .welcome-inner { box-shadow: none !important; }
+/* Ensure no shadow on logo when video background is active */
+body.has-bg-video .welcome-logo { box-shadow: none !important; }
 
 .welcome-title {
   font-size: 1.6rem;
