@@ -1,11 +1,12 @@
 // Live data providers for Greekaway Assistant
-// - Weather via Open-Meteo (no API key required)
+// - Weather via Open-Meteo (no API key required) or custom WEATHER_API_URL
 // - Optional News via RSS (pluggable, off by default)
 // Includes a small in-memory cache with TTL
 
 const fetch = global.fetch || ((...args) => import('node-fetch').then(({default: f}) => f(...args)));
 
 const DEFAULT_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const WEATHER_API_URL = (process.env.WEATHER_API_URL || '').trim();
 
 class TTLCache {
   constructor() { this.map = new Map(); }
@@ -73,7 +74,10 @@ function weatherCodeToText(code) {
 
 async function getCurrentWeatherByPlace(placeName, lang = 'en') {
   const place = await geocodePlace(placeName, lang);
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true`;
+  const base = (WEATHER_API_URL && /^https?:\/\//i.test(WEATHER_API_URL))
+    ? WEATHER_API_URL.replace(/\/$/, '')
+    : 'https://api.open-meteo.com/v1/forecast';
+  const url = `${base}?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true`;
   const data = await fetchJsonWithCache(url);
   const cw = data && data.current_weather;
   if (!cw) throw new Error('No current weather');
@@ -137,10 +141,16 @@ async function buildLiveContext({ place, lang = 'en', include = { weather: true,
   }
   if (include.news && rssUrl) {
     try {
-      const headlines = await getRssHeadlines(rssUrl, 3);
-      if (headlines && headlines.length) {
-        parts.push(`Local headlines: ${headlines.join(' • ')}`);
-        meta.news = headlines;
+      const urls = Array.isArray(rssUrl) ? rssUrl : [rssUrl];
+      const all = [];
+      for (const u of urls) {
+        const hs = await getRssHeadlines(u, 3);
+        (hs || []).forEach(h => all.push(h));
+      }
+      const deduped = Array.from(new Set(all)).slice(0, 5);
+      if (deduped.length) {
+        parts.push(`Local headlines: ${deduped.join(' • ')}`);
+        meta.news = deduped;
       }
     } catch (e) {}
   }
