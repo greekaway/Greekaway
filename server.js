@@ -10,6 +10,26 @@ const { TextDecoder } = require('util');
 try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installed */ }
 
 const app = express();
+// App version from package.json
+let APP_VERSION = '0.0.0';
+try { APP_VERSION = require('./package.json').version || APP_VERSION; } catch (_) {}
+// Optional version.json path for build metadata
+const VERSION_FILE_PATH = path.join(__dirname, 'version.json');
+function readVersionFile() {
+  try {
+    const raw = fs.readFileSync(VERSION_FILE_PATH, 'utf8');
+    const obj = JSON.parse(raw);
+    if (obj && typeof obj === 'object') return obj;
+  } catch (_) {}
+  return null;
+}
+function formatBuild(ts) {
+  try {
+    const d = ts instanceof Date ? ts : new Date(ts);
+    const pad = (n) => (n < 10 ? '0' + n : '' + n);
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch(_) { return null; }
+}
 // Environment detection: treat non-production and non-Render as local dev
 const IS_RENDER = !!process.env.RENDER;
 const IS_DEV = (process.env.NODE_ENV !== 'production') && !IS_RENDER;
@@ -20,9 +40,7 @@ if (compression) {
 // Bind explicitly to 0.0.0.0:3000 for LAN access
 const HOST = '0.0.0.0';
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-// App version from package.json for UI/version footer
-let APP_VERSION = '0.0.0';
-try { APP_VERSION = require('./package.json').version || APP_VERSION; } catch (_) {}
+// (removed duplicate APP_VERSION declaration)
 
 // Read Maps API key from environment. If not provided, the placeholder remains.
 // Trim and strip surrounding quotes if the value was pasted with quotes.
@@ -660,6 +678,10 @@ app.get('/locales/index.json', (req, res) => {
 app.get('/version.json', (req, res) => {
   try {
     const startedAt = new Date().toISOString();
+    const vf = readVersionFile();
+    const buildOverride = (process.env.BUILD_DATE_OVERRIDE || '').trim();
+    const build = buildOverride ? buildOverride : (vf && vf.build ? String(vf.build) : formatBuild(startedAt));
+    const ver = (vf && vf.version) ? String(vf.version) : APP_VERSION;
     const localesVersion = computeLocalesVersion();
     const dataVersion = computeDataVersion();
     const assetsVersion = computeAssetsVersion();
@@ -670,7 +692,8 @@ app.get('/version.json', (req, res) => {
     res.set('Expires', '0');
     res.set('Surrogate-Control', 'no-store');
     return res.json({
-      version: APP_VERSION,
+      version: ver,
+      build,
       node: process.version,
       isDev: IS_DEV,
       isRender: IS_RENDER,
@@ -686,6 +709,25 @@ app.get('/version.json', (req, res) => {
     res.set('Expires', '0');
     res.set('Surrogate-Control', 'no-store');
     return res.json({ isDev: IS_DEV, isRender: IS_RENDER });
+  }
+});
+
+// Minimal version endpoint: returns stable version and build timestamp
+app.get('/version', (req, res) => {
+  try {
+    const vf = readVersionFile();
+    const ver = (vf && vf.version) ? String(vf.version) : APP_VERSION;
+    const buildOverride = (process.env.BUILD_DATE_OVERRIDE || '').trim();
+    let build = vf && vf.build ? String(vf.build) : null;
+    if (buildOverride) build = buildOverride;
+    if (!build) build = formatBuild(new Date());
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
+    return res.json({ version: ver, build });
+  } catch (e) {
+    return res.json({ version: APP_VERSION, build: formatBuild(new Date()) });
   }
 });
 
