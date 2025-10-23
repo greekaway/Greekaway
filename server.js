@@ -324,6 +324,7 @@ function wantsStrikesOrTraffic(message) {
 // Background RSS prefetch (every few hours) so headlines are warm in memory
 // -----------------------------
 const NEWS_CACHE = { headlines: [], updatedAt: null };
+const NEWS_TTL_MS = 3 * 60 * 60 * 1000; // 3 hours
 async function refreshNewsFeed(reason = 'scheduled') {
   try {
     if (!liveData || !NEWS_RSS_URLS || NEWS_RSS_URLS.length === 0) return;
@@ -341,7 +342,7 @@ async function refreshNewsFeed(reason = 'scheduled') {
     if (deduped.length) {
       NEWS_CACHE.headlines = deduped;
       NEWS_CACHE.updatedAt = new Date().toISOString();
-      console.log(`news: fetched ${deduped.length} headlines from ${NEWS_RSS_URLS.length} feed(s) (${reason})`);
+      console.log(`news: refreshed ${deduped.length} headlines from ${NEWS_RSS_URLS.length} feed(s) (${reason})`);
     }
   } catch (e) {
     console.warn('news: refresh failed', e && e.message ? e.message : e);
@@ -351,6 +352,22 @@ async function refreshNewsFeed(reason = 'scheduled') {
 if (NEWS_RSS_URLS && NEWS_RSS_URLS.length) {
   setTimeout(() => refreshNewsFeed('initial'), 10_000);
   setInterval(() => refreshNewsFeed('interval'), 3 * 60 * 60 * 1000);
+}
+
+function isNewsCacheFresh() {
+  try {
+    if (!NEWS_CACHE.updatedAt) return false;
+    const t = new Date(NEWS_CACHE.updatedAt).getTime();
+    return isFinite(t) && (Date.now() - t) < NEWS_TTL_MS;
+  } catch (_) { return false; }
+}
+
+async function getCachedHeadlinesOrRefresh() {
+  if (isNewsCacheFresh() && Array.isArray(NEWS_CACHE.headlines) && NEWS_CACHE.headlines.length) {
+    return NEWS_CACHE.headlines;
+  }
+  await refreshNewsFeed('stale-or-empty');
+  return NEWS_CACHE.headlines || [];
 }
 
 // Serve /trips/trip.html with the API key injected from environment.
@@ -694,8 +711,19 @@ app.post('/api/assistant', express.json(), async (req, res) => {
         const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
         const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
         if (liveData && (includeWeather || includeNews)) {
-          const lc = await liveData.buildLiveContext({ place: place || 'Athens', lang: userLang, include: { weather: includeWeather, news: includeNews }, rssUrl: NEWS_RSS_URLS.length ? NEWS_RSS_URLS : null });
-          if (lc && lc.text) extra = `\n\n${lc.text}`;
+          let txt = '';
+          if (includeWeather) {
+            const lc = await liveData.buildLiveContext({ place: place || 'Athens', lang: userLang, include: { weather: true, news: false }, rssUrl: null });
+            if (lc && lc.text) txt += lc.text;
+          }
+          if (includeNews) {
+            const headlines = await getCachedHeadlinesOrRefresh();
+            if (headlines && headlines.length) {
+              if (txt) txt += '\n';
+              txt += `Local headlines: ${headlines.slice(0,5).join(' • ')}`;
+            }
+          }
+          if (txt) extra = `\n\n${txt}`;
         }
       } catch (_) {}
       return res.json({ reply: mockAssistantReply(message) + extra, model: 'mock' });
@@ -713,13 +741,24 @@ app.post('/api/assistant', express.json(), async (req, res) => {
     const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
     if (liveData && (includeWeather || includeNews)) {
       try {
-        const lc = await liveData.buildLiveContext({
-          place: place || 'Athens',
-          lang: userLang,
-          include: { weather: includeWeather, news: includeNews },
-          rssUrl: NEWS_RSS_URLS
-        });
-        if (lc && lc.text) liveContextText = lc.text;
+        // Weather via liveData
+        if (includeWeather) {
+          const lc = await liveData.buildLiveContext({
+            place: place || 'Athens',
+            lang: userLang,
+            include: { weather: true, news: false },
+            rssUrl: null
+          });
+          if (lc && lc.text) liveContextText += lc.text;
+        }
+        // News via cached headlines (3h TTL)
+        if (includeNews) {
+          const headlines = await getCachedHeadlinesOrRefresh();
+          if (headlines && headlines.length) {
+            if (liveContextText) liveContextText += '\n';
+            liveContextText += `Local headlines: ${headlines.slice(0,5).join(' • ')}`;
+          }
+        }
       } catch (e) { /* non-fatal */ }
     }
 
@@ -785,13 +824,24 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
         const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
         const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
         if (liveData && (includeWeather || includeNews)) {
-          const lc = await liveData.buildLiveContext({
-            place: place || 'Athens',
-            lang: userLang,
-            include: { weather: includeWeather, news: includeNews },
-            rssUrl: NEWS_RSS_URLS
-          });
-          if (lc && lc.text) txt += `\n\n${lc.text}`;
+          let liveTxt = '';
+          if (includeWeather) {
+            const lc = await liveData.buildLiveContext({
+              place: place || 'Athens',
+              lang: userLang,
+              include: { weather: true, news: false },
+              rssUrl: null
+            });
+            if (lc && lc.text) liveTxt += lc.text;
+          }
+          if (includeNews) {
+            const headlines = await getCachedHeadlinesOrRefresh();
+            if (headlines && headlines.length) {
+              if (liveTxt) liveTxt += '\n';
+              liveTxt += `Local headlines: ${headlines.slice(0,5).join(' • ')}`;
+            }
+          }
+          if (liveTxt) txt += `\n\n${liveTxt}`;
         }
       } catch (_) {}
       // Write in a couple of chunks to simulate streaming
@@ -812,13 +862,22 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
     const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
     const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
     if (liveData && (includeWeather || includeNews)) {
-      const lc = await liveData.buildLiveContext({
-        place: place || 'Athens',
-        lang: userLang,
-        include: { weather: includeWeather, news: includeNews },
-        rssUrl: NEWS_RSS_URLS
-      });
-      if (lc && lc.text) liveContextText = lc.text;
+      if (includeWeather) {
+        const lc = await liveData.buildLiveContext({
+          place: place || 'Athens',
+          lang: userLang,
+          include: { weather: true, news: false },
+          rssUrl: null
+        });
+        if (lc && lc.text) liveContextText += lc.text;
+      }
+      if (includeNews) {
+        const headlines = await getCachedHeadlinesOrRefresh();
+        if (headlines && headlines.length) {
+          if (liveContextText) liveContextText += '\n';
+          liveContextText += `Local headlines: ${headlines.slice(0,5).join(' • ')}`;
+        }
+      }
     }
 
     const messages = [
@@ -907,10 +966,10 @@ app.get('/api/live/weather', async (req, res) => {
 app.get('/api/live/news', async (req, res) => {
   try {
     if (!NEWS_RSS_URLS || NEWS_RSS_URLS.length === 0) return res.status(501).json({ error: 'NEWS_RSS_URL not configured' });
-    if (!NEWS_CACHE.updatedAt || !Array.isArray(NEWS_CACHE.headlines) || NEWS_CACHE.headlines.length === 0) {
+    if (!isNewsCacheFresh() || !Array.isArray(NEWS_CACHE.headlines) || NEWS_CACHE.headlines.length === 0) {
       await refreshNewsFeed('on-demand');
     }
-    return res.json({ ok: true, sources: NEWS_RSS_URLS.length, headlines: NEWS_CACHE.headlines || [], updatedAt: NEWS_CACHE.updatedAt });
+    return res.json({ ok: true, sources: NEWS_RSS_URLS.length, headlines: NEWS_CACHE.headlines || [], updatedAt: NEWS_CACHE.updatedAt, lastUpdated: NEWS_CACHE.updatedAt });
   } catch (e) {
     return res.status(500).json({ error: e && e.message ? e.message : 'Failed' });
   }
