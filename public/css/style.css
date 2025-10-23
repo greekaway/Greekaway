@@ -39,6 +39,33 @@ body {
 
 html, body { min-height: 100%; }
 
+/* -------- Welcome background video (fullscreen) -------- */
+.bg-video {
+  position: fixed;
+  inset: 0;
+  z-index: -2; /* below everything */
+  overflow: hidden;
+  pointer-events: none; /* never steal taps/clicks */
+}
+.bg-video iframe {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  /* Cover algorithm: base on viewport width, then ensure min cover for tall screens */
+  width: 100vw;
+  height: 56.25vw; /* 16:9 relative to width */
+  min-width: 177.78vh; /* 100 * (16/9) → cover tall viewports */
+  min-height: 100vh;  /* at least full height */
+  border: 0;
+}
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4); /* readability */
+  z-index: -1; /* above video, below content */
+  pointer-events: none;
+}
+
 /* -------- Καλωσόρισμα -------- */
 #welcome-section {
   margin-top: 70px;
@@ -46,6 +73,19 @@ html, body { min-height: 100%; }
   flex-direction: column;
   align-items: center;
 }
+
+/* Semi-transparent panel for the welcome content (keeps fade-in on logo) */
+#welcome-section .welcome-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(14,21,32,0.4);
+  border-radius: 24px;
+  padding: 12px 16px 18px;
+  /* micro glass effect for polish without heavy blur */
+  backdrop-filter: saturate(120%) blur(0.5px);
+}
+@media (min-width: 600px) { #welcome-section .welcome-inner { padding: 16px 22px 22px; } }
 
 .welcome-title {
   font-size: 1.6rem;
@@ -1207,6 +1247,64 @@ html[data-category="culture"], body[data-category="culture"] { background-attach
 @keyframes appearZoom {
   0% { opacity: 0; transform: scale(0.8); }
   100% { opacity: 1; transform: scale(1); }
+}
+
+/* ===== Welcome page: remove static gradient when video is active ===== */
+/* Ensure only the video + overlay are visible behind content */
+html.has-bg-video,
+body.has-bg-video {
+  background: none !important;
+  background-image: none !important;
+  background-color: transparent !important;
+}
+/* Also neutralize any attribute-based page backgrounds if present */
+html.has-bg-video[data-view],
+body.has-bg-video[data-view],
+html.has-bg-video[data-category],
+body.has-bg-video[data-category] {
+  background: none !important;
+  background-image: none !important;
+  background-color: transparent !important;
+}
+
+/* Remove any intermediate container backgrounds and pseudo overlays on welcome */
+body.has-bg-video #welcome-section,
+body.has-bg-video main,
+body.has-bg-video .welcome-wrapper,
+body.has-bg-video .main-container,
+body.has-bg-video .content,
+body.has-bg-video .content-wrapper,
+body.has-bg-video .page,
+body.has-bg-video .hero,
+body.has-bg-video .hero-bg {
+  background: none !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+/* Kill pseudo-elements that might add tints or gradients */
+body.has-bg-video #welcome-section::before,
+body.has-bg-video #welcome-section::after,
+body.has-bg-video main::before,
+body.has-bg-video main::after,
+body.has-bg-video .welcome-wrapper::before,
+body.has-bg-video .welcome-wrapper::after,
+body.has-bg-video .main-container::before,
+body.has-bg-video .main-container::after,
+body.has-bg-video .content::before,
+body.has-bg-video .content::after,
+body.has-bg-video .content-wrapper::before,
+body.has-bg-video .content-wrapper::after,
+body.has-bg-video .page::before,
+body.has-bg-video .page::after,
+body.has-bg-video .hero::before,
+body.has-bg-video .hero::after,
+body.has-bg-video .hero-bg::before,
+body.has-bg-video .hero-bg::after {
+  content: none !important;
+  background: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
 }
 
 /* --------------------------------------------------------------------------
