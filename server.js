@@ -20,6 +20,9 @@ if (compression) {
 // Bind explicitly to 0.0.0.0:3000 for LAN access
 const HOST = '0.0.0.0';
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+// App version from package.json for UI/version footer
+let APP_VERSION = '0.0.0';
+try { APP_VERSION = require('./package.json').version || APP_VERSION; } catch (_) {}
 
 // Read Maps API key from environment. If not provided, the placeholder remains.
 // Trim and strip surrounding quotes if the value was pasted with quotes.
@@ -667,6 +670,7 @@ app.get('/version.json', (req, res) => {
     res.set('Expires', '0');
     res.set('Surrogate-Control', 'no-store');
     return res.json({
+      version: APP_VERSION,
       node: process.version,
       isDev: IS_DEV,
       isRender: IS_RENDER,
@@ -682,6 +686,15 @@ app.get('/version.json', (req, res) => {
     res.set('Expires', '0');
     res.set('Surrogate-Control', 'no-store');
     return res.json({ isDev: IS_DEV, isRender: IS_RENDER });
+  }
+});
+
+// Pretty route for About page -> serve static HTML
+app.get('/about', (req, res) => {
+  try {
+    res.sendFile(path.join(__dirname, 'public', 'about.html'));
+  } catch (e) {
+    res.status(404).send('Not found');
   }
 });
 

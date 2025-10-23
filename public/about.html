@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us – Greekaway</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* About page specific styles */
+    .about-hero {
+      padding: clamp(32px, 8vh, 72px) 16px 8px;
+      background: var(--color-background-gradient);
+      color: #fff;
+      text-align: center;
+    }
+    .about-hero h1 {
+      color: var(--color-gold);
+      letter-spacing: 0.2px;
+      font-size: clamp(1.6rem, 2.6vw + 1rem, 2.4rem);
+      margin: 0 0 10px;
+    }
+    .about-hero p.lead { color: #f0f4f8; opacity: 0.92; margin: 0 auto; max-width: 60ch; }
+
+    .about-wrap { max-width: 980px; margin: 0 auto; padding: 8px 16px 64px; text-align: left; }
+    .about-section { margin: 24px auto; padding: 16px 14px; background: rgba(10,18,28,0.35); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; box-shadow: 0 6px 22px rgba(0,0,0,0.35); }
+    .about-section h2 { color: var(--color-gold); margin: 0 0 8px; font-size: clamp(1.1rem, 1.6vw + 0.9rem, 1.6rem); }
+    .about-section p { color: #fff; line-height: 1.6; margin: 0; opacity: 0.96; }
+
+    /* Fade-in on reveal */
+    .fade-reveal { opacity: 0; transform: translateY(12px); transition: opacity 500ms ease, transform 500ms ease; }
+    .fade-reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* Version footer */
+    .about-version { margin: 28px auto 92px; text-align: center; color: #dcdcdc; opacity: 0.9; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; }
+    .about-version strong { color: var(--color-gold); font-weight: 600; }
+
+    @media (min-width: 720px) {
+      .about-section { padding: 18px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div style="position:fixed;top:8px;right:12px;z-index:999">
+    <select id="langSelect" aria-label="Language"></select>
+  </div>
+
+  <header class="about-hero">
+    <h1 data-i18n="aboutPage.title">About Us – Greekaway</h1>
+    <p class="lead" data-i18n="aboutPage.lead"></p>
+  </header>
+
+  <main class="about-wrap">
+    <section class="about-section fade-reveal">
+      <h2 data-i18n="aboutPage.s1.title">SECTION 1 – The Idea Behind Greekaway</h2>
+      <p data-i18n="aboutPage.s1.body">Greekaway was created from something simple yet rare: the wish to make travel in Greece feel real again.\nWe are not a tour operator — we are a connection between travelers and people who live here.\nEvery route you see on Greekaway is designed, tested, and guided by locals who know the roads, the stories, and the soul of each place.\nWe built Greekaway because we believe that travel should be personal, fair, and deeply human.</p>
+    </section>
+
+    <section class="about-section fade-reveal">
+      <h2 data-i18n="aboutPage.s2.title">SECTION 2 – Small Groups. Real Journeys.</h2>
+      <p data-i18n="aboutPage.s2.body">Our experiences are made for small groups of 5–7 travelers — just enough for company, but still personal.\nEvery trip runs on fixed dates to keep costs low and quality high.\nWhether it’s a drive through mountain villages, a night by the sea, or a visit to an ancient site, each moment is planned with care, balance, and respect for the land and the people who host you.</p>
+    </section>
+
+    <section class="about-section fade-reveal">
+      <h2 data-i18n="aboutPage.s3.title">SECTION 3 – Partners, Not Providers</h2>
+      <p data-i18n="aboutPage.s3.body">Behind every Greekaway experience there’s a partner — not a vendor.\nDrivers, hotels, and local operators are part of the same system, treated fairly and paid transparently through our automated dual-payment network.\nThis balance keeps our ecosystem sustainable, honest, and focused on long-term value, not short-term profit.</p>
+    </section>
+
+    <section class="about-section fade-reveal">
+      <h2 data-i18n="aboutPage.s4.title">SECTION 4 – The Technology Behind the Human Touch</h2>
+      <p data-i18n="aboutPage.s4.body">Greekaway uses technology quietly — to make things smoother, not colder.\nOur AI assistant answers travelers live, shows real availability, updates weather and news, and ensures that each group forms naturally through a matching algorithm that blends traveler profiles, ages, and languages.\nThe result is something rare in tourism: human journeys, enhanced — not replaced — by technology.</p>
+    </section>
+
+    <section class="about-section fade-reveal">
+      <h2 data-i18n="aboutPage.s5.title">SECTION 5 – Transparency, Simplicity, Evolution</h2>
+      <p data-i18n="aboutPage.s5.body">We believe progress comes from clarity.\nEvery payment, every cancellation, every policy is open, structured, and fair.\nWe keep evolving, line by line, update by update, always with one goal: to keep Greekaway human, transparent, and beautifully alive.</p>
+    </section>
+
+    <div class="about-version" id="aboutVersion">
+      Greekaway <strong>v1.0.0</strong>  October 2025
+    </div>
+  </main>
+
+  <!-- Shared footer (injected) -->
+  <footer></footer>
+
+  <!-- Scripts: i18n first -->
+  <script src="/js/i18n.js" defer></script>
+  <script src="/js/overlay-manager.js" defer></script>
+  <script src="/js/footer.js" defer></script>
+  <script src="/js/assistant.js" defer></script>
+
+  <script>
+    // Reveal sections on scroll
+    (function(){
+      const els = Array.from(document.querySelectorAll('.fade-reveal'));
+      if (!('IntersectionObserver' in window)) { els.forEach(e => e.classList.add('visible')); return; }
+      const io = new IntersectionObserver((entries) => {
+        for (const en of entries) {
+          if (en.isIntersecting) { en.target.classList.add('visible'); io.unobserve(en.target); }
+        }
+      }, { root: null, rootMargin: '0px', threshold: 0.15 });
+      els.forEach(e => io.observe(e));
+    })();
+
+    // Version footer: read from /version.json (version + month/year)
+    (async function(){
+      try {
+        const el = document.getElementById('aboutVersion');
+        const r = await fetch('/version.json', { cache: 'no-cache' });
+        if (!r.ok) return;
+        const j = await r.json();
+        const v = (j && j.version) ? String(j.version) : '1.0.0';
+        const d = (j && j.startedAt) ? new Date(j.startedAt) : new Date();
+        const monthYear = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        el.innerHTML = `Greekaway <strong>v${v}</strong>  ${monthYear}`;
+      } catch(_) {}
+    })();
+  </script>
+</body>
+</html>

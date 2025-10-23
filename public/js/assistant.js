@@ -52,6 +52,16 @@
   }
 
   async function sendMessage(text){
+    // If user is asking about "About Us" or who we are, navigate to About page instead
+    try {
+      const m = String(text || '').toLowerCase();
+      const aboutIntent = /\babout\b|about\s+us|who\s+are\s+you|what\s+is\s+greekaway|\bσχετικά\b|ποιοι\s+είστε|τι\s+είναι\s+το\s+greekaway/.test(m);
+      if (aboutIntent) {
+        try { window.closeOverlay && window.closeOverlay('aiOverlay'); } catch(_) {}
+        window.location.href = '/about';
+        return;
+      }
+    } catch(_) {}
     // Hide suggestion once user sends first message
     try { const sug = document.getElementById('gaSuggestion'); if (sug) sug.style.display = 'none'; } catch(_){ }
 
