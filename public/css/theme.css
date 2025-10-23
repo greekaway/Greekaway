@@ -206,13 +206,59 @@ body[data-view="category"] #trips-container .trip-card.is-pressing {
 body[data-view="category"] #trips-container .trip-card.is-pressing::after { opacity: 1; transform: scaleX(1.04); }
 
 /* ============ Global unification across tiles ============ */
-/* Write once: apply same hover/press transforms to both categories and trip tiles */
+/* Base visuals: same background, border, shadow, radius and gold text */
+:is(.category-btn, #trips-container .trip-card) {
+  background: var(--ga-card-bg) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  box-shadow: var(--ga-shadow-1) !important;
+  border-radius: var(--ga-radius-md) !important;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Motion + interactions: same transitions */
 body.is-loaded :is(.category-btn, #trips-container .trip-card) {
   transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
 }
 /* unify label color for trip cards' titles and category labels */
 :is(.category-btn .cat-label, #trips-container .trip-card h3) { color: var(--ga-gold) !important; }
-/* Use drop-shadow for consistent underglow on mobile */
+
+/* Hover state: unified lift without extra white flash */
+:is(.category-btn, #trips-container .trip-card):hover {
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: var(--ga-shadow-2) !important;
+  filter: none !important;
+}
+
+/* Press state for trip cards: remove the bright glow/flash; keep subtle press */
+body[data-view="category"] #trips-container .trip-card:active,
+body[data-view="category"] #trips-container .trip-card.is-pressing {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: var(--ga-shadow-2) !important;
+  filter: none !important; /* kill white flash on tap */
+}
+
+/* Focus-visible: subtle ring, no big glow, consistent for both */
+:is(.category-btn, #trips-container .trip-card):focus-visible {
+  outline: none;
+  box-shadow: var(--ga-shadow-2), 0 0 0 2px rgba(212,175,55,0.20) !important;
+  filter: none !important;
+}
+
+/* Trip-card under-glow lip: soften intensity so there is no flash on press */
+body[data-view="category"] #trips-container .trip-card::after {
+  background: radial-gradient(60% 100% at 50% 0%, rgba(255,255,255,0.18), rgba(255,255,255,0) 70%) !important;
+}
+/* Only show the underglow on hover, not on press */
+body[data-view="category"] #trips-container .trip-card:hover::after { opacity: 1; transform: scaleX(1.02); }
+body[data-view="category"] #trips-container .trip-card:active::after,
+body[data-view="category"] #trips-container .trip-card.is-pressing::after { opacity: 0; transform: none; }
+
+/* Guard against legacy per-category hover glows (culture/mountain/sea) */
+body[data-view="category"] #trips-container .trip-card.cat-culture:hover,
+body[data-view="category"] #trips-container .trip-card.cat-mountain:hover,
+body[data-view="category"] #trips-container .trip-card.cat-sea:hover {
+  box-shadow: var(--ga-shadow-2) !important;
+  filter: none !important;
+}
 
 /* Light mode preservation: keep gold text visible */
 @media (prefers-color-scheme: light) {
