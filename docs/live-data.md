@@ -3,9 +3,9 @@
 This adds live data to the AI assistant while keeping `data/ai/knowledge.json` as the static knowledge base.
 
 What’s included
-- Current weather for a destination using Open-Meteo (no API key required)
-- Optional local news headlines via RSS (configurable)
-- A tiny in-memory cache (~5 minutes) to avoid performance issues and API rate limits
+- Current weather for a destination using Open-Meteo (no API key required) or a custom provider via WEATHER_API_URL
+- Optional local news headlines via one or more RSS feeds (configurable)
+- A tiny in-memory cache (~5 minutes for fetches, ~3 hours scheduled prefetch for news) to avoid performance issues and API rate limits
 - Extensible design to add more sources later
 
 ## How it works
@@ -22,11 +22,13 @@ What’s included
 - /api/assistant (POST): Main assistant (JSON). Live data is auto-injected when relevant.
 - /api/assistant/stream (POST): Streaming assistant. Live data is auto-injected when relevant.
 - /api/live/weather (GET): Utility endpoint for quick tests: `?place=Lefkada&lang=en`
+ - /api/live/news (GET): Returns aggregated cached headlines and last update time. Enabled only when at least one RSS URL is configured.
 
 ## Configuration
 
-- NEWS_RSS_URL (optional): Provide an RSS URL to enable simple local headlines injection. Example: `https://www.iefimerida.gr/rss.xml`.
 - OPENAI_API_KEY (optional in dev): Without a key, the assistant returns a friendly mock. The mock also appends live data when relevant so you can test the integration locally.
+- WEATHER_API_URL (optional): Override the default forecast endpoint. Must be compatible with Open-Meteo’s `current_weather=true` response shape.
+- NEWS_RSS_URL / NEWS_RSS_URL_1 / NEWS_RSS_URL_2 (optional): Provide one or more RSS URLs to enable headlines injection. Multiple sources are aggregated and deduplicated.
 
 ## Extending with new data sources
 
@@ -35,7 +37,7 @@ The live layer is in `live/liveData.js`. It exposes a small contract:
 - geocodePlace(name, lang)
 - getCurrentWeatherByPlace(placeName, lang)
 - getRssHeadlines(rssUrl, max)
-- buildLiveContext({ place, lang, include, rssUrl }) → { text, meta }
+- buildLiveContext({ place, lang, include, rssUrl }) → { text, meta }  // rssUrl can be a string or an array of URLs
 
 To add a new source (e.g., public holidays, ferry status):
 1. Add a new function that fetches and caches data (use `fetchJsonWithCache` or similar).
