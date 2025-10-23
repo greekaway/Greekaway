@@ -746,6 +746,23 @@ function parseTripIntent(message, lang) {
   return { askDuration, askStops, askIncludes, askPrice, askAvailability };
 }
 
+function priceAvailabilityNote(lang) {
+  const L = String(lang || 'en').toLowerCase();
+  if (L.startsWith('el')) return 'Σημείωση: Η τιμή είναι ανά άτομο. Ελέγξτε διαθεσιμότητα για την ημερομηνία που προτιμάτε.';
+  if (L.startsWith('de')) return 'Hinweis: Der Preis gilt pro Person. Prüfen Sie die Verfügbarkeit für Ihr Wunschdatum.';
+  if (L.startsWith('fr')) return "Note : Le prix est par personne. Vérifiez la disponibilité à la date souhaitée.";
+  if (L.startsWith('es')) return 'Nota: El precio es por persona. Verifique la disponibilidad para su fecha preferida.';
+  if (L.startsWith('it')) return 'Nota: Il prezzo è per persona. Verificare la disponibilità per la data preferita.';
+  if (L.startsWith('pt')) return 'Nota: O preço é por pessoa. Verifique a disponibilidade para a sua data preferida.';
+  if (L.startsWith('nl')) return 'Opmerking: De prijs is per persoon. Controleer de beschikbaarheid voor uw voorkeursdatum.';
+  if (L.startsWith('sv')) return 'Observera: Priset är per person. Kontrollera tillgänglighet för önskat datum.';
+  if (L.startsWith('ru')) return 'Примечание: цена указана за человека. Проверьте доступность на желаемую дату.';
+  if (L.startsWith('he')) return 'לתשומת לבך: המחיר הוא לאדם. בדקו זמינות לתאריך המועדף עליכם.';
+  if (L.startsWith('ko')) return '참고: 가격은 1인 기준입니다. 원하시는 날짜의 이용 가능 여부를 확인해 주세요.';
+  if (L.startsWith('zh')) return '说明：价格为每人价格。请查看您偏好日期的可用性。';
+  return 'Note: Price is per person. Please check availability for your preferred date.';
+}
+
 // Lightweight version info for quick sanity checks across devices/environments
 app.get('/version.json', (req, res) => {
   try {
@@ -905,34 +922,71 @@ app.post('/api/assistant', express.json(), async (req, res) => {
             const trip = tripData.readTripJsonById(tripId);
             if (trip) {
               const summary = tripData.buildTripSummary(trip, userLang);
+              // Mirror the focused-intent behavior from the non-mock fast-path
               const parts = [];
               parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
-              if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
-              if (summary.priceCents != null) {
+              if (intent.askDuration) {
+                if (summary.duration) {
+                  parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+                } else {
+                  parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
+                }
+              }
+              if (intent.askPrice && summary.priceCents != null) {
                 const euros = (summary.priceCents/100).toFixed(0);
                 parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
+                parts.push(priceAvailabilityNote(userLang));
               }
-              if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
-              // Stops
-              if (summary.stops && summary.stops.length) {
-                parts.push(t(userLang, 'assistant_trip.stops'));
-                summary.stops.slice(0,6).forEach((s, i) => {
-                  const name = s.name || t(userLang, 'assistant_trip.missing');
-                  const desc = s.description ? ` — ${s.description}` : '';
-                  parts.push(`• ${name}${desc}`);
-                });
+              if (intent.askStops) {
+                if (summary.stops && summary.stops.length) {
+                  parts.push(t(userLang, 'assistant_trip.stops'));
+                  summary.stops.slice(0,6).forEach((s) => {
+                    const name = s.name || t(userLang, 'assistant_trip.missing');
+                    parts.push(`• ${name}`);
+                  });
+                } else {
+                  parts.push(t(userLang, 'assistant_trip.stops'));
+                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+                }
               }
-              // Includes
-              parts.push(t(userLang, 'assistant_trip.includes'));
-              if (Array.isArray(summary.includes) && summary.includes.length) {
-                summary.includes.forEach(v => parts.push(`• ${v}`));
-              } else {
-                parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+              if (intent.askIncludes) {
+                parts.push(t(userLang, 'assistant_trip.includes'));
+                if (Array.isArray(summary.includes) && summary.includes.length) {
+                  summary.includes.forEach(v => parts.push(`• ${v}`));
+                } else {
+                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+                }
               }
-              // Availability (from JSON unavailable dates if any)
-              if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
+              if (intent.askAvailability && Array.isArray(summary.unavailable) && summary.unavailable.length) {
                 parts.push(t(userLang, 'assistant_trip.availability'));
                 parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
+              }
+              // If no specific intent detected, fall back to concise summary
+              if (!(intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
+                if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
+                if (summary.priceCents != null) {
+                  const euros = (summary.priceCents/100).toFixed(0);
+                  parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
+                }
+                if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
+                if (summary.stops && summary.stops.length) {
+                  parts.push(t(userLang, 'assistant_trip.stops'));
+                  summary.stops.slice(0,6).forEach((s) => {
+                    const name = s.name || t(userLang, 'assistant_trip.missing');
+                    const desc = s.description ? ` — ${s.description}` : '';
+                    parts.push(`• ${name}${desc}`);
+                  });
+                }
+                parts.push(t(userLang, 'assistant_trip.includes'));
+                if (Array.isArray(summary.includes) && summary.includes.length) {
+                  summary.includes.forEach(v => parts.push(`• ${v}`));
+                } else {
+                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
+                }
+                if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
+                  parts.push(t(userLang, 'assistant_trip.availability'));
+                  parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
+                }
               }
               // Update session context with the last used trip
               if (usedTripId) sessionContext.lastTripId = usedTripId;
@@ -1006,6 +1060,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
             if (intent.askPrice && summary.priceCents != null) {
               const euros = (summary.priceCents/100).toFixed(0);
               parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
+              parts.push(priceAvailabilityNote(userLang));
             }
             if (intent.askStops) {
               if (summary.stops && summary.stops.length) {
@@ -1113,11 +1168,13 @@ app.post('/api/assistant', express.json(), async (req, res) => {
           if (trip) {
             const summary = tripData.buildTripSummary(trip, userLang);
             const parts = [];
+            const intent = parseTripIntent(message, userLang);
             parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
             if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
             if (summary.priceCents != null) {
               const euros = (summary.priceCents/100).toFixed(0);
               parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
+              if (intent.askPrice) parts.push(priceAvailabilityNote(userLang));
             }
             if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
             if (summary.stops && summary.stops.length) {
@@ -1257,6 +1314,7 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
               if (intent.askPrice && summary.priceCents != null) {
                 const euros = (summary.priceCents/100).toFixed(0);
                 parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
+                parts.push(priceAvailabilityNote(userLang));
               }
               if (intent.askStops) {
                 if (summary.stops && summary.stops.length) {
