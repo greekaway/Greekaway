@@ -12,6 +12,8 @@ router.use(express.json());
 
 // Stripe (reuse env keys; do not create new)
 const STRIPE_SECRET = (process.env.STRIPE_SECRET_KEY || '').toString().trim().replace(/^['"]|['"]$/g, '');
+// Optional: force HTTPS callback base for live-mode Connect (e.g. https://greekaway.com)
+const CONNECT_CALLBACK_BASE = (process.env.CONNECT_CALLBACK_BASE || '').toString().trim().replace(/^['"]|['"]$/g, '');
 let stripe = null;
 if (STRIPE_SECRET) {
   try { stripe = require('stripe')(STRIPE_SECRET); } catch (e) { console.warn('partners: stripe not initialized (missing dependency?)'); }
@@ -222,6 +224,10 @@ function getAgreementInfo() {
 }
 
 function absoluteUrl(req, pathname) {
+  // If a forced base is configured, prefer that (helps when running locally with live-mode which requires HTTPS)
+  if (CONNECT_CALLBACK_BASE) {
+    try { return new URL(pathname, CONNECT_CALLBACK_BASE).toString(); } catch (_) { return `${CONNECT_CALLBACK_BASE}${pathname}`; }
+  }
   const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http');
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   return `${proto}://${host}${pathname}`;
