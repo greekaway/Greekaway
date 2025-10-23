@@ -40,6 +40,26 @@
   }
   ,
   {
+    "id": "santorini",
+    "title": {
+      "el": "Σαντορίνη – Εμπειρία Θάλασσας & Ηλιοβασιλέματος",
+      "en": "Santorini – Sea & Sunset Experience",
+      "he": "סנטוריני – חוויית ים ושקיעה",
+      "fr": "Santorin – Expérience Mer & Coucher de Soleil",
+      "de": "Santorin – Meer- & Sonnenuntergangserlebnis",
+      "es": "Santorini – Experiencia de Mar y Atardecer",
+      "it": "Santorini – Esperienza Mare e Tramonto",
+      "sv": "Santorini – Hav- och solnedgångsupplevelse",
+      "nl": "Santorini – Zee- en zonsondergangsbeleving",
+      "pt": "Santorini – Experiência Mar e Pôr do Sol",
+      "ru": "Санторини – Море и закат: впечатления",
+      "ko": "산토리니 – 바다와 석양 경험",
+      "zh": "圣托里尼——海与日落体验"
+    },
+    "category": "sea"
+  }
+  ,
+  {
     "id": "parnassos",
     "title": {
       "el": "Πάρνασος & Δελφοί",
