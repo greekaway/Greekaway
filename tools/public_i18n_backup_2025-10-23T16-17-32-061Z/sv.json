@@ -1,0 +1,212 @@
+{
+  "meta": {
+    "languageName": "Svenska"
+  },
+  "siteTitle": "Greekaway",
+  "nav": {
+    "home": "Hem",
+    "trips": "Resor",
+    "checkout": "Kassa",
+    "admin": "Admin",
+    "about": "Om",
+    "ai": "AI-assistent",
+    "profile": "Profil",
+    "book": "Boka"
+  },
+  "admin": {
+    "title": "Admin Payments",
+    "downloadCsv": "Download CSV",
+    "backups": "Backups",
+    "filter": "Filter",
+    "status": "Status",
+    "amount": "Amount",
+    "help": "Enter admin credentials to view payments and backup status.",
+    "loading": "Loading...",
+    "error": "Error:",
+    "page": "Page",
+    "no_records": "No records found for this page/filters.",
+    "refresh": "Refresh"
+  },
+  "checkout": {
+    "pay": "Betala",
+    "cardPlaceholder": "Kortnummer",
+    "title": "Kassa — Greekaway",
+    "name": "Namn",
+    "email": "E-post",
+    "cardLabel": "Kort",
+    "expiry": "MM / ÅÅ",
+    "cvc": "CVC",
+    "payment_error": "Betalningsfel",
+    "payment_failed": "Betalning misslyckades",
+    "payment_success_test": "Betalning genomförd",
+    "mock_complete": "Slutförd",
+    "network_error": "Nätverksfel",
+    "info": "Betalningsformuläret visas här.",
+    "notice": "Säker betalning via Stripe"
+  },
+  "welcome": {
+    "title": "Välkommen till Greekaway",
+    "subtitle": "Upptäck de bästa dagsutflykterna i Grekland",
+    "ask": "Fråga oss vad som helst om din resa!"
+  },
+  "about": {
+    "title": "Om oss",
+    "text": "Greekaway skapades för att erbjuda utvalda resor i Grekland med komfort, teknik och stil."
+  },
+  "categories": {
+    "mountain": {
+      "title": "Bergsresor"
+    },
+    "sea": {
+      "title": "Havsresor"
+    },
+    "culture": {
+      "title": "Kulturresor"
+    }
+  },
+  "stop": {
+    "label": "Stop {n}"
+  },
+  "trip": {
+    "experienceTitle": "Experience"
+  },
+  "trips": {
+    "selectCategory": "Välj kategori",
+    "noneFound": "Inga resor hittades i denna kategori."
+  },
+  "ui": {
+    "close": "Stäng",
+    "cancel": "Avbryt",
+    "back": "Tillbaka",
+    "finish": "Slutför",
+    "choose": "Välj"
+  },
+  "trips_ui": {
+    "backToCategories": "Back to categories"
+  },
+  "profile": {
+    "info": "Här ser du dina tidigare resor och bokningar."
+  },
+  "assistant": {
+    "title": "AI-assistent",
+    "close": "Stäng",
+    "suggestion": "Fråga vad du vill om din resa.",
+    "placeholder": "Skriv en fråga",
+    "aria_message": "Meddelande",
+    "aria_send": "Skicka",
+    "stream_error": "Anslutningsfel med assistenten.",
+    "fallback_error": "Vi fick inget svar just nu.",
+    "error_prefix": "Fel:"
+  },
+  "feedback": {
+    "title": "How was your experience?",
+    "subtitle": "Help us match groups better.",
+    "positive": "Good",
+    "neutral": "Neutral",
+    "negative": "Bad",
+    "placeholder": "Optional comment...",
+    "try_again": "Try again"
+  },
+  "carousel": {
+    "prev": "Föregående",
+    "next": "Nästa"
+  },
+  "booking": {
+    "title": "Booking",
+    "date": "Datum",
+    "date_placeholder": "YYYY-MM-DD",
+    "seats": "Platser",
+    "total": "Total",
+    "create": "Create booking",
+    "name_placeholder": "Full name",
+    "email_placeholder": "name@example.com",
+    "loading": "Loading...",
+    "step1_of3": "Steg 1 av 3",
+    "traveler_options": "Resenärsalternativ",
+    "adults": "Vuxna",
+    "children": "Barn",
+    "increase": "+",
+    "decrease": "−",
+    "increase_adults": "Fler vuxna",
+    "decrease_adults": "Färre vuxna",
+    "increase_children": "Fler barn",
+    "decrease_children": "Färre barn",
+    "bags_large": "Stora väskor",
+    "bags_small": "Små väskor",
+    "increase_bags_large": "Fler stora väskor",
+    "decrease_bags_large": "Färre stora väskor",
+    "increase_bags_small": "Fler små väskor",
+    "decrease_bags_small": "Färre små väskor",
+    "preferred_language": "Föredraget språk",
+    "age_group": "Åldersgrupp",
+    "traveler_profile": "Resenärsprofil",
+    "traveler_type": "Resenärstyp",
+    "travel_style": "Resestil",
+    "daily_rhythm": "Dagsrytm",
+    "interests": "Intressen",
+    "sociality": "Socialitet",
+    "children_ages": "Barnens åldrar",
+    "children_age_range": "0–17 år",
+    "pick_ages": "Välj åldrar",
+    "step2_of3": "Steg 2 av 3",
+    "step3_of3": "Steg 3 av 3",
+    "next": "Nästa",
+    "error_create": "Error creating booking",
+    "error_network": "Network error creating booking",
+    "error_availability": "Error checking availability",
+    "error_trip": "Error loading trip data",
+    "availability_msg": "Tillgänglighet för {date}: totalt {capacity}, bokade {taken}",
+    "created": "Booking created",
+    "proceed_to_checkout": "Proceed to Checkout",
+    "occupancy": "Beläggning",
+    "trip": "Trip",
+    "confirmation_title": "Booking Confirmation",
+    "trip_cost": "Resekostnad",
+    "traveler_type_options": {
+      "explorer": "Upptäckare",
+      "relaxed": "Avslappnade resenärer",
+      "explore": "Upptäckare – aktiva",
+      "relax": "Avslappnade resenärer",
+      "family": "Familjestil",
+      "solo": "Enskilda resenärer"
+    },
+    "interests_options": {
+      "nature": "Natur",
+      "culture": "Kultur",
+      "mountain": "Berg",
+      "sea": "Hav",
+      "gastronomy": "Gastronomi"
+    },
+    "sociality_options": {
+      "social": "Sällskaplig",
+      "quiet": "Tystlåten"
+    },
+    "travel_style_options": {
+      "sociable": "Sociable",
+      "quiet": "Quiet",
+      "cultural": "Cultural",
+      "nature": "Nature-oriented"
+    },
+    "preferred_language_options": {
+      "en": "English",
+      "fr": "Français",
+      "de": "Deutsch",
+      "el": "Ελληνικά",
+      "it": "Italiano",
+      "es": "Español",
+      "zh": "中文",
+      "he": "עברית",
+      "nl": "Nederlands",
+      "sv": "Svenska",
+      "ko": "한국어",
+      "pt": "Português",
+      "ru": "Русский"
+    },
+    "daily_rhythm_options": {
+      "early": "Early riser",
+      "night": "Night type",
+      "talkative": "Talkative",
+      "reserved": "Reserved"
+    }
+  }
+}

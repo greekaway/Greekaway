@@ -162,6 +162,7 @@
     "occupancy": "Заполняемость",
     "trip": "Trip",
     "confirmation_title": "Booking Confirmation",
+    "trip_cost": "Стоимость поездки",
     "traveler_type_options": {
       "explorer": "Исследователи",
       "relaxed": "Расслабленные путешественники",
