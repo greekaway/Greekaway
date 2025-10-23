@@ -53,6 +53,10 @@ const RSS_CANDIDATES = [
 ].filter(Boolean).map(s => String(s).trim().replace(/^['"]|['"]$/g, '')).filter(u => /^https?:\/\//i.test(u));
 const NEWS_RSS_URLS = Array.from(new Set(RSS_CANDIDATES));
 
+// Server-side override: force include live data when users ask (or always)
+// Set ASSISTANT_LIVE_ALWAYS=1 to aggressively include weather/news when relevant
+const ASSISTANT_LIVE_ALWAYS = /^1|true$/i.test(String(process.env.ASSISTANT_LIVE_ALWAYS || '').trim());
+
 // Live data helpers (weather, optional news) with caching
 let liveData = null;
 try {
@@ -230,7 +234,7 @@ try {
 }
 
 function buildAssistantSystemPrompt() {
-  const base = 'You are the Greekaway travel assistant. Be concise. Focus only on Greek travel planning and Greekaway context. Do not mention news unless the user explicitly asks; when asked, summarize briefly and relate to travel where helpful.';
+  const base = 'You are the Greekaway travel assistant. Be concise. Focus only on Greek travel planning and Greekaway context. When live data (weather or headlines) is provided, use it to answer succinctly and relate to travel where helpful.';
   if (!KNOWLEDGE_TEXT) return base;
   return base + '\n\nGreekaway knowledge base (JSON):\n' + KNOWLEDGE_TEXT + '\n\nUse this knowledge as ground truth when relevant. If a topic is not covered, answer normally.';
 }
@@ -308,6 +312,12 @@ function wantsNews(message) {
   const m = String(message || '').toLowerCase();
   // English + Greek + a few EU languages keywords for "news/headlines"
   return /(news|headline|headlines|updates|\bειδήσ|\bνέα\b|επικαιρότητα|noticias|notizie|nachrichten|actualités|notícias)/i.test(m);
+}
+
+function wantsStrikesOrTraffic(message) {
+  const m = String(message || '').toLowerCase();
+  // Greek strike/traffic-related terms + English fallback
+  return /(\bαπεργία|\bαπεργιες|\bπορεία|\bπορείες|\bμπλοκάρ|\bδρόμοι\b|traffic|strike|protest)/i.test(m);
 }
 
 // -----------------------------
@@ -681,9 +691,10 @@ app.post('/api/assistant', express.json(), async (req, res) => {
         const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
         const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
         const place = detectPlaceFromMessage(message);
-        const includeNews = !!(NEWS_RSS_URL && wantsNews(message));
-        if (liveData && (place || wantsWeather(message) || includeNews)) {
-          const lc = await liveData.buildLiveContext({ place: place || 'Athens', lang: userLang, include: { weather: !!(place || wantsWeather(message)), news: includeNews }, rssUrl: NEWS_RSS_URL || null });
+        const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
+        const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
+        if (liveData && (includeWeather || includeNews)) {
+          const lc = await liveData.buildLiveContext({ place: place || 'Athens', lang: userLang, include: { weather: includeWeather, news: includeNews }, rssUrl: NEWS_RSS_URLS.length ? NEWS_RSS_URLS : null });
           if (lc && lc.text) extra = `\n\n${lc.text}`;
         }
       } catch (_) {}
@@ -698,13 +709,14 @@ app.post('/api/assistant', express.json(), async (req, res) => {
     const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
     const place = detectPlaceFromMessage(message);
     let liveContextText = '';
-    const includeNews = !!(NEWS_RSS_URLS.length && wantsNews(message));
-    if (liveData && (place || wantsWeather(message) || includeNews)) {
+    const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
+    const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
+    if (liveData && (includeWeather || includeNews)) {
       try {
         const lc = await liveData.buildLiveContext({
           place: place || 'Athens',
           lang: userLang,
-          include: { weather: !!(place || wantsWeather(message)), news: includeNews },
+          include: { weather: includeWeather, news: includeNews },
           rssUrl: NEWS_RSS_URLS
         });
         if (lc && lc.text) liveContextText = lc.text;
@@ -762,12 +774,13 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
         const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
         const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
         const place = detectPlaceFromMessage(message);
-        const includeNews = !!(NEWS_RSS_URL && wantsNews(message));
-        if (liveData && (place || wantsWeather(message) || includeNews)) {
+        const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
+        const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
+        if (liveData && (includeWeather || includeNews)) {
           const lc = await liveData.buildLiveContext({
             place: place || 'Athens',
             lang: userLang,
-            include: { weather: !!(place || wantsWeather(message)), news: includeNews },
+            include: { weather: includeWeather, news: includeNews },
             rssUrl: NEWS_RSS_URLS
           });
           if (lc && lc.text) txt += `\n\n${lc.text}`;
@@ -788,12 +801,13 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
     const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
     const place = detectPlaceFromMessage(message);
     let liveContextText = '';
-    const includeNews = !!(NEWS_RSS_URLS.length && wantsNews(message));
-    if (liveData && (place || wantsWeather(message) || includeNews)) {
+    const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
+    const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
+    if (liveData && (includeWeather || includeNews)) {
       const lc = await liveData.buildLiveContext({
         place: place || 'Athens',
         lang: userLang,
-        include: { weather: !!(place || wantsWeather(message)), news: includeNews },
+        include: { weather: includeWeather, news: includeNews },
         rssUrl: NEWS_RSS_URLS
       });
       if (lc && lc.text) liveContextText = lc.text;
@@ -898,7 +912,7 @@ app.get('/api/live/news', async (req, res) => {
 app.get('/api/assistant/status', (req, res) => {
   const mode = OPENAI_API_KEY ? 'openai' : 'mock';
   // Keep in sync with the hardcoded model used above
-  res.json({ mode, model: 'gpt-4o-mini' });
+  res.json({ mode, model: 'gpt-4o-mini', live: { rssSources: (NEWS_RSS_URLS||[]).length, weatherBase: (process.env.WEATHER_API_URL||'open-meteo'), aggressive: ASSISTANT_LIVE_ALWAYS } });
 });
 
 // Bookings API: create and read bookings
