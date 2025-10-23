@@ -1,3 +1,13 @@
-server: bookings table ready
-webhook: using better-sqlite3 for persistence
+server: compression enabled
+live-data: module loaded
+server: bookings DB not available The module '/Users/giannespalmos/Desktop/Greekaway/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 108. This version of Node.js requires
+NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+assistant: knowledge loaded
+better-sqlite3 not available, falling back to JSON persistence
+partners: routes mounted at /api/partners
 Server running at http://0.0.0.0:3000
+news: refreshed 5 headlines from 2 feed(s) (initial)
+partners/connect-link error You can only create new accounts if you've signed up for Connect, which you can learn how to do at https://stripe.com/docs/connect.
