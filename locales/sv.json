@@ -131,7 +131,8 @@
     "proceed_to_checkout": "Proceed to Checkout",
   "occupancy": "Beläggning",
     "trip": "Trip",
-    "confirmation_title": "Booking Confirmation",
+  "confirmation_title": "Booking Confirmation",
+  "trip_cost": "Resekostnad",
     "traveler_type_options": {
       "explorer": "Upptäckare",
       "relaxed": "Avslappnade resenärer",

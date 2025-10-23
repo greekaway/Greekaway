@@ -37,7 +37,8 @@
     "payment_error": "Ошибка платежа",
     "payment_failed": "Платеж не выполнен",
     "payment_success_test": "Платеж успешно выполнен",
-    "mock_complete": "Завершено",
+      "confirmation_title": "Подтверждение бронирования",
+      "trip_cost": "Стоимость поездки",
     "network_error": "Сетевая ошибка",
     "info": "Здесь появится форма оплаты.",
     "notice": "Безопасная оплата через Stripe"

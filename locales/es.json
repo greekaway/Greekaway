@@ -129,7 +129,8 @@
     "proceed_to_checkout": "Proceed to Checkout",
   "occupancy": "Ocupación",
     "trip": "Trip",
-    "confirmation_title": "Booking Confirmation",
+    "confirmation_title": "Confirmación de Reserva",
+    "trip_cost": "Coste del viaje",
     "traveler_type_options": {
       "explorer": "Exploradores",
       "relaxed": "Viajeros relajados",

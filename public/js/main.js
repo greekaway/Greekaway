@@ -1031,6 +1031,10 @@ document.addEventListener("DOMContentLoaded", () => {
               <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.total">${(typeof window.t==='function')?window.t('booking.total'):'Total'}</strong>: ${total.toLocaleString(getCurrentLang(), { style:'currency', currency:(trip.currency||'EUR').toUpperCase() })}</div>
               <div style="text-align:left;margin-top:6px;"> <strong data-i18n="checkout.name">${(typeof window.t==='function')?window.t('checkout.name'):'Name'}</strong>: ${name}</div>
               <div style="text-align:left;margin-top:6px;"> <strong data-i18n="checkout.email">${(typeof window.t==='function')?window.t('checkout.email'):'Email'}</strong>: ${email}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);">
+                <strong data-i18n="booking.trip_cost">${(typeof window.t==='function')?window.t('booking.trip_cost'):'Trip cost'}</strong>
+                <span>${total.toLocaleString(getCurrentLang(), { style:'currency', currency:(trip.currency||'EUR').toUpperCase() })}</span>
+              </div>
               <div style="margin-top:18px;">
                 <div class="booking-actions">
                   <button id="s3Edit" class="btn btn-secondary">${(typeof window.t==='function')?window.t('ui.back'):'Back'}</button>

@@ -20,6 +20,7 @@
     .checkout-header .title-wrap small { display:block; opacity:0.7; font-size:0.8rem; }
     .checkout-header .title-wrap h1 { margin:0; font-size:1.25rem; }
     .checkout-subtitle { text-align:center; margin-top:0.25rem; }
+    .price-badge { background: linear-gradient(90deg,#00293f,#003a5a); color:#f9d65c; font-weight:700; border-radius:8px; padding:8px 10px; display:inline-block; }
   </style>
 </head>
 <body>
@@ -35,6 +36,7 @@
       </div>
     </div>
   <p class="checkout-subtitle" data-i18n="checkout.notice">Secure Payment via Stripe</p>
+  <div id="checkoutAmount" class="price-badge" style="display:none; margin:8px auto; text-align:center;">—</div>
 
     <form id="checkoutForm">
       <!-- Payment Request Button (Apple Pay / Google Pay) will mount here when available -->
@@ -89,6 +91,24 @@
     } catch(_){ }
 
     (async function(){
+    let CHECKOUT_AMOUNT_CENTS = null;
+    let CHECKOUT_CURRENCY = 'eur';
+    const amountEl = document.getElementById('checkoutAmount');
+    const getLang = () => (window.currentI18n && window.currentI18n.lang) || (navigator.language || 'el');
+    const showAmount = () => {
+      try {
+        if (!amountEl) return;
+        if (CHECKOUT_AMOUNT_CENTS != null) {
+          const cur = (CHECKOUT_CURRENCY || 'eur').toUpperCase();
+          const val = (CHECKOUT_AMOUNT_CENTS/100).toLocaleString(getLang(), { style:'currency', currency: cur });
+          amountEl.textContent = val;
+          amountEl.style.display = 'inline-block';
+        } else {
+          amountEl.style.display = 'none';
+        }
+      } catch(_){}
+    };
+    try { window.addEventListener('i18n:changed', showAmount); } catch(_){}
     // If landed with a bookingId, fetch booking and prefill name/email
     try {
       const qs = new URLSearchParams(window.location.search);
@@ -99,6 +119,9 @@
           const jb = await bk.json();
           try { if (jb.user_name) form.name.value = jb.user_name; } catch(e){}
           try { if (jb.user_email) form.email.value = jb.user_email; } catch(e){}
+          try { if (typeof jb.price_cents === 'number') CHECKOUT_AMOUNT_CENTS = jb.price_cents; } catch(_){ }
+          try { if (jb.currency) CHECKOUT_CURRENCY = String(jb.currency).toLowerCase(); } catch(_){ }
+          showAmount();
         }
       }
     } catch(e) { /* ignore prefill errors */ }
@@ -180,7 +203,7 @@
         if (window.GWPaymentRequest && window.GWPaymentRequest.init) {
           console.debug('[checkout] calling GWPaymentRequest.init...');
           const merchantLabel = (window.t ? (window.t('siteTitle') || 'Greekaway') : 'Greekaway');
-          const pr = await window.GWPaymentRequest.init(STRIPE_PUBLISHABLE, { total: { label: merchantLabel, amount: 1000 } });
+          const pr = await window.GWPaymentRequest.init(STRIPE_PUBLISHABLE, { total: { label: merchantLabel, amount: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 1000) } });
           console.debug('[checkout] GWPaymentRequest.init returned', pr);
           if (pr && pr.prButton) {
             document.getElementById('payment-request-container').style.display = 'block';
@@ -188,7 +211,7 @@
 
             pr.paymentRequest.on('paymentmethod', async (ev) => {
               try {
-                const resp = await fetch('/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount: 1000, currency: 'eur' }) });
+                const resp = await fetch('/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ amount: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 1000), currency: (CHECKOUT_CURRENCY || 'eur') }) });
                 const data = await resp.json();
                 if (!data.clientSecret) { ev.complete('fail'); return showResult('i18n:checkout.payment_error', false); }
 
@@ -246,7 +269,7 @@
         } catch (err) { console.warn('[checkout] create booking failed (continuing)', err); }
 
         // create payment intent on server (amount in cents) — example 10 EUR, include booking_id for linkage
-        const body = { amount: 1000, currency: 'eur' };
+  const body = { amount: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 1000), currency: (CHECKOUT_CURRENCY || 'eur') };
         if (bookingId) body.booking_id = bookingId;
   const resp = await fetch('/api/partners/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
         const data = await resp.json();

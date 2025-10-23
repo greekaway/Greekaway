@@ -123,7 +123,8 @@
     "proceed_to_checkout": "Zum Bezahlen fortfahren",
     "occupancy": "Auslastung",
     "trip": "Reise",
-    "confirmation_title": "Buchungsbestätigung",
+  "confirmation_title": "Buchungsbestätigung",
+  "trip_cost": "Reisekosten",
     "traveler_type_options": {
       "explorer": "Entdecker",
       "relaxed": "Entspannte Reisende",

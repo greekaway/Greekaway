@@ -170,6 +170,21 @@ html[data-view="trip"], body[data-view="trip"] {
 .price-tag.animate { animation: priceFlash 420ms ease; }
 @keyframes priceFlash { 0% { opacity:0.2; transform: translateY(-4px) scale(0.98); } 50% { opacity:1; transform: translateY(0) scale(1.015); } 100% { opacity:1; transform: translateY(0) scale(1); } }
 
+/* Trip page title price badge: center and reduce size by ~50% */
+#trip-price {
+  display: block;
+  margin: 6px auto 10px;
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  width: fit-content;
+  text-align: center;
+  font-size: 0.735rem; /* +40% vs previous 0.525rem */
+  padding: 8px 10px; /* scale padding proportionally */
+}
+
+/* Ensure the trip title is centered above the price badge */
+#trip-title { text-align: center; }
+
 /* full-width gold CTA */
 .booking-form .actions { flex-direction:column; }
 .booking-form .actions .btn { width:100%; border-radius:12px; padding:14px 16px; font-size:1.05rem; background: linear-gradient(90deg,#b8860b,#d4af37); color:#08171b; font-weight:700; box-shadow: 0 10px 30px rgba(212,175,55,0.12); transition: transform 180ms ease, box-shadow 180ms ease; }

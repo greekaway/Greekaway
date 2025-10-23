@@ -123,7 +123,8 @@
     "proceed_to_checkout": "Aller au paiement",
     "occupancy": "Taux d'occupation",
     "trip": "Excursion",
-    "confirmation_title": "Confirmation de Réservation",
+  "confirmation_title": "Confirmation de Réservation",
+  "trip_cost": "Coût de l'excursion",
     "traveler_type_options": {
       "explorer": "Explorateurs",
       "relaxed": "Voyageurs détendus",

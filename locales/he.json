@@ -123,7 +123,8 @@
     "proceed_to_checkout": "המשך לתשלום",
     "occupancy": "תפוסה",
     "trip": "טיול",
-    "confirmation_title": "אישור הזמנה",
+  "confirmation_title": "אישור הזמנה",
+  "trip_cost": "עלות הטיול",
     "traveler_type_options": {
       "explorer": "מגלים",
       "relaxed": "מטיילים רגועים",

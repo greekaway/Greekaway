@@ -131,7 +131,8 @@
     "proceed_to_checkout": "Proceed to Checkout",
   "occupancy": "점유율",
     "trip": "Trip",
-    "confirmation_title": "Booking Confirmation",
+  "confirmation_title": "Booking Confirmation",
+  "trip_cost": "여행 비용",
     "traveler_type_options": {
       "explorer": "탐험가",
       "relaxed": "여유로운 여행자",

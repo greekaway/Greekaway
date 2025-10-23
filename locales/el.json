@@ -142,7 +142,8 @@
     "proceed_to_checkout": "Μετάβαση στο Ταμείο",
     "occupancy": "Πληρότητα",
     "trip": "Εκδρομή",
-    "confirmation_title": "Επιβεβαίωση Κράτησης",
+  "confirmation_title": "Επιβεβαίωση Κράτησης",
+  "trip_cost": "Κόστος εκδρομής",
     "traveler_type_options": {
       "explorer": "Εξερευνητές",
       "relaxed": "Χαλαροί Ταξιδιώτες",
