@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Greekaway Partner Manual Onboarding</title>
+  <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.4;padding:24px;max-width:760px;margin:0 auto}label{display:block;margin:12px 0 4px}input[type=text],input[type=email]{width:100%;padding:10px;border:1px solid #ccc;border-radius:6px}button{background:#0a7; color:#fff; padding:10px 16px; border:0; border-radius:6px; cursor:pointer}button:hover{background:#096} .agree{display:flex;align-items:center;gap:.5rem;margin-top:12px}</style>
+</head>
+<body>
+  <h1>Greekaway Partner Onboarding</h1>
+  <p>Fill in the details below. Your submission implies consent to the <a href="/partner-agreement" target="_blank">Greekaway Partner Agreement</a>.</p>
+  <form method="POST" action="/api/partners/partner-manual-submit">
+    <label for="name">Name / Business Name</label>
+    <input id="name" name="name" type="text" required>
+
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" required>
+
+    <label for="iban">IBAN</label>
+    <input id="iban" name="iban" type="text" required>
+
+    <label for="vat">VAT Number (ΑΦΜ)</label>
+    <input id="vat" name="vat" type="text" required>
+
+    <div class="agree">
+      <input id="agree" name="agree" type="checkbox" value="1" required>
+      <label for="agree">I accept the <a href="/partner-agreement" target="_blank" rel="noopener">Greekaway Partner Agreement</a></label>
+    </div>
+
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>

@@ -1085,6 +1085,15 @@ try {
   console.warn('Could not attach webhook module:', err && err.message ? err.message : err);
 }
 
+// Partners module (Stripe Connect + manual onboarding + legal pages)
+// Keep server.js light: just mount the router
+try {
+  app.use('/api/partners', require('./routes/partners'));
+  console.log('partners: routes mounted at /api/partners');
+} catch (err) {
+  console.warn('partners: failed to mount', err && err.message ? err.message : err);
+}
+
 // Global error handlers to prevent process exit on unexpected errors
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err && err.stack ? err.stack : err);
