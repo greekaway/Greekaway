@@ -752,6 +752,14 @@ app.post('/api/assistant', express.json(), async (req, res) => {
     const data = await resp.json();
     let reply = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content ? data.choices[0].message.content : '';
     if (!reply) reply = 'Συγγνώμη, δεν μπόρεσα να συντάξω απάντηση αυτή τη στιγμή.';
+    // In aggressive/live mode (or if the model claimed lack of access), append concise live snippets directly
+    try {
+      const cannot = /cannot\s+provide|no\s+access|δεν\s+μπορώ\s+να\s+παρέχω/i.test(reply || '');
+      if ((ASSISTANT_LIVE_ALWAYS || cannot) && liveContextText) {
+        // Keep it short; append as-is since it's already concise
+        reply = (reply ? reply + '\n\n' : '') + liveContextText;
+      }
+    } catch(_) {}
     return res.json({ reply, model: 'gpt-4o-mini' });
   } catch (e) {
     console.error('AI Assistant JSON error:', e && e.stack ? e.stack : e);
