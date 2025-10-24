@@ -140,12 +140,36 @@
         try { const v = (window.t && window.t(key)) || ''; return (v && v !== key) ? v : fallback; } catch(_){ return fallback; }
       }
 
-      // Title
+      // Helper: load trip details by id and update cost immediately when ready
+      async function loadTripAndUpdate(tripId){
+        if (!tripId) return;
+        try {
+          let dv = '';
+          try {
+            const rv = await fetch('/version.json', { cache: 'no-cache' });
+            if (rv.ok) {
+              const j = await rv.json();
+              dv = j && j.dataVersion ? ('?v=' + encodeURIComponent(String(j.dataVersion))) : '';
+            }
+          } catch(_) {}
+          const r = await fetch(`/data/trips/${encodeURIComponent(tripId)}.json${dv}`, { cache: 'no-cache' });
+          if (!r.ok) return;
+          const trip = await r.json();
+          try { window.__loadedTrip = trip; } catch(_) {}
+          try { renderTripCost(); } catch(_) {}
+          return trip;
+        } catch(_) { /* silent */ }
+      }
+
       try {
         const t = sessionStorage.getItem('gw_trip_title') || '';
         const id = sessionStorage.getItem('gw_trip_id') || '';
-        if (t) document.getElementById('s3TripTitle').textContent = t;
-        else if (id) {
+        if (t) {
+          const el = document.getElementById('s3TripTitle');
+          if (el) el.textContent = t;
+          // Even if title exists, ensure we fetch the trip for accurate pricing
+          loadTripAndUpdate(id);
+        } else if (id) {
           (async function(){
             try {
               let dv = '';
@@ -153,7 +177,7 @@
               const r = await fetch(`/data/trips/${encodeURIComponent(id)}.json${dv}`, { cache: 'no-cache' });
               if (!r.ok) return;
               const trip = await r.json();
-              try { window.__loadedTrip = trip; } catch(_){}
+              try { window.__loadedTrip = trip; } catch(_){ }
               const lang = (localStorage.getItem('gw_lang') || 'el');
               const getLocalized = (field) => {
                 if (!field) return '';
@@ -163,10 +187,11 @@
               };
               const title = getLocalized(trip.title);
               if (title) document.getElementById('s3TripTitle').textContent = title;
+              try { renderTripCost(); } catch(_) {}
             } catch(_){ }
           })();
         }
-      } catch(_){ }
+  } catch(_){ }
 
       const get = (k, d='')=>{ 
         try { 
@@ -255,17 +280,13 @@
             let trip = (window.__loadedTrip || null);
             let tripId = (sessionStorage.getItem('gw_trip_id') || '');
             if (!trip && tripId) {
-              try {
-                let dv = '';
-                try { const rv = await fetch('/version.json', { cache: 'no-cache' }); if (rv.ok) { const j = await rv.json(); dv = j && j.dataVersion ? ('?v='+encodeURIComponent(String(j.dataVersion))) : ''; } } catch(_){ }
-                const r = await fetch(`/data/trips/${encodeURIComponent(tripId)}.json${dv}`, { cache: 'no-cache' });
-                if (r.ok) { trip = await r.json(); try { window.__loadedTrip = trip; } catch(_){} }
-              } catch(_){ }
+              trip = await loadTripAndUpdate(tripId);
             }
             if (trip && titleEl) {
               const title = getLocalized(trip.title);
               if (title) titleEl.textContent = title;
             }
+            try { renderTripCost(); } catch(_) {}
           } catch(_){ }
         });
       } catch(_){ }

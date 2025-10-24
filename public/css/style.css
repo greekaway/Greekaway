@@ -76,8 +76,8 @@ html, body { min-height: 100%; }
   align-items: center;
   justify-content: center;
   padding-top: env(safe-area-inset-top, 0px);
-  /* fine-tune: raise by ~8 clicks total (~41px) */
-  transform: translateY(-41px);
+  /* fine-tune: previously ~-41px; raise by ~2 more clicks (~16px) for a total ~-56px */
+  transform: translateY(-56px);
 }
 
 /* Welcome panel removed: keep selector harmless in case of stray markup */
