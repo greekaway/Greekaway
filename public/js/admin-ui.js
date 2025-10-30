@@ -81,11 +81,19 @@
       .then(j => {
         try { console.info('[admin] backup-status', j); } catch(_) {}
         const count = (j && (j.count ?? j.backupsCount ?? j.total)) || 0;
-        const latestAt = j && (j.lastRunAt || j.latestAt || j.latestDate || '');
-        const latestName = j && (j.latestDb || j.latestZip || j.latest || '');
+        const latestObj = j && (j.latestDb || j.latest || j.latestZip || j.latestLog) || null;
+        const latestAt = j && (j.lastRunAt || j.latestAt || j.latestDate || (latestObj && latestObj.mtime) || '');
         const when = latestAt ? formatDate(latestAt) : '';
+        const whenPretty = when ? when.replace(' ', ' – ') : '';
+        const size = latestObj && typeof latestObj === 'object' ? latestObj.size : undefined;
+        const sizeStr = (typeof size === 'number') ? formatFileSize(size) : '';
         const line1 = (window.t ? window.t('admin.backups_count') : 'Σύνολο αντιγράφων') + ': ' + String(count || '—');
-        const line2 = (window.t ? window.t('admin.backups_latest') : 'Τελευταίο') + ': ' + (when || (latestName ? escapeHtml(String(latestName)) : '—'));
+        const latestLabel = (window.t ? window.t('admin.backups_latest') : 'Τελευταίο αντίγραφο');
+        let latestDisplay = '—';
+        if (whenPretty && sizeStr) latestDisplay = whenPretty + ' (' + sizeStr + ')';
+        else if (whenPretty) latestDisplay = whenPretty;
+        else if (latestObj) latestDisplay = escapeHtml(typeof latestObj === 'object' ? (latestObj.file || latestObj.name || '[?]') : String(latestObj));
+        const line2 = latestLabel + ': ' + latestDisplay;
         backupDiv.innerHTML = '<div>'+ line1 +'</div><div>'+ line2 +'</div>';
       })
       .catch(err => {
@@ -502,6 +510,18 @@
     const hh = String(d.getHours()).padStart(2,'0');
     const min = String(d.getMinutes()).padStart(2,'0');
     return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+  }
+
+  function formatFileSize(bytes){
+    try {
+      let n = Number(bytes);
+      if (!isFinite(n) || n < 0) return '';
+      const units = ['B','KB','MB','GB','TB'];
+      let i = 0;
+      while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+      const val = Math.round(n);
+      return val + ' ' + units[i];
+    } catch (_) { return ''; }
   }
 
   function statusIconFor(s){
