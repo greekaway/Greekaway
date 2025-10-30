@@ -640,9 +640,7 @@ body.overlay-open #aiOverlay { z-index: 20000 !important; }
     margin-left: auto;
     margin-right: auto;
     padding: 12px;
-    background: #223648;
-    box-shadow: 0 8px 18px rgba(0,0,0,0.35);
-    border: 1px solid rgba(255,255,255,0.03);
+    /* visuals moved to cards.css (.ga-card) */
   }
 
   .trip-card h3 { font-size: 1.05rem; }
@@ -840,17 +838,12 @@ body[data-category] h2 {
 #trips-container .trip-card {
   width: 140px;
   height: 140px;
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(12,22,30,0.98), rgba(20,32,42,0.98));
-  box-shadow: 0 24px 60px rgba(0,0,0,0.6), inset 0 6px 12px rgba(0,0,0,0.35);
+  /* visuals moved to cards.css (.ga-card) */
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #f9d65c;
-  font-weight: 700;
   cursor: pointer;
-  transition: transform 220ms ease, box-shadow 220ms ease;
   position: relative;
   overflow: visible;
 }
@@ -858,27 +851,24 @@ body[data-category] h2 {
 /* Disabled legacy trip-card overlay + hover (now unified in theme.css) */
 
 #trips-container .trip-card h3 {
-  /* color handled by theme.css; keep spacing only */
+  /* color handled by cards.css; keep spacing only */
   margin: 0;
   padding: 6px;
   font-size: 1rem;
-  text-shadow: 0 2px 0 rgba(0,0,0,0.45);
   z-index: 2;
 }
 
 
 /* Trip card visible styling for category pages */
 .trip-card {
-  background: #203346;
-  border-radius: 14px;
+  /* visuals moved to cards.css (.ga-card) */
   padding: 14px;
   margin: 10px auto;
   max-width: 760px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
   text-align: left;
 }
 
-.trip-card h3 { margin: 0; color: #f9d65c; }
+.trip-card h3 { margin: 0; }
 
 /* Make trip cards inside the category list behave like app-icon tiles */
 #trips-container .trip-card {
@@ -890,8 +880,7 @@ body[data-category] h2 {
   align-items: center;
   justify-content: center;
   text-align: center;
-  border-radius: 20px;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+  /* visuals moved to cards.css (.ga-card) */
 }
 
 #trips-container .trip-card h3 {
@@ -908,17 +897,17 @@ body[data-category] h2 {
 }
 
 @media (min-width: 400px) and (max-width: 767px) {
-  #trips-container .trip-card { width: 96px; height: 96px; border-radius: 18px; }
+  #trips-container .trip-card { width: 96px; height: 96px; }
   #trips-container .trip-card h3 { font-size: 0.8rem; }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
-  #trips-container .trip-card { width: 128px; height: 128px; border-radius: 20px; }
+  #trips-container .trip-card { width: 128px; height: 128px; }
   #trips-container .trip-card h3 { font-size: 0.9rem; }
 }
 
 @media (min-width: 1024px) {
-  #trips-container .trip-card { width: 160px; height: 160px; border-radius: 22px; }
+  #trips-container .trip-card { width: 160px; height: 160px; }
   #trips-container .trip-card h3 { font-size: 1rem; }
 }
 
@@ -928,14 +917,10 @@ body[data-category] h2 {
   width: 80px;
   height: 80px;
   aspect-ratio: 1 / 1;
-  border-radius: 20px;
   overflow: hidden;
-  border: none;
-  background: #0d1a26;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.35);
   cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
   display: block;
+  /* visuals moved to cards.css (.ga-card) */
 }
 
 /* Cinematic entrance for main category tiles (zoom + fade + deblur) */
@@ -976,10 +961,7 @@ body[data-category] h2 {
 
 /* Legacy category overlay/hover removed (handled in theme.css) */
 
-/* subtle border to separate from background */
-.category-btn {
-  border: 1px solid rgba(255,255,255,0.04);
-}
+/* subtle border removed (handled by cards.css) */
 
 /* Per-category color themes */
 /* Force gold overlay for each category variant as well (no per-category tint) */
@@ -989,10 +971,7 @@ body[data-category] h2 {
   background: linear-gradient(135deg, rgba(212,175,55,0.95), rgba(184,134,11,0.85));
 }
 
-/* Slightly stronger hover accent per category */
-.category-btn.cat-sea:hover { box-shadow: 0 18px 44px rgba(0,160,255,0.28); }
-.category-btn.cat-mountain:hover { box-shadow: 0 18px 44px rgba(34,153,84,0.22); }
-.category-btn.cat-culture:hover { box-shadow: 0 18px 44px rgba(243,156,18,0.22); }
+/* per-category hover shadows removed (handled by cards.css) */
 
 /* Η εικόνα γεμίζει όλο το τετράγωνο */
 .category-btn img {
@@ -1006,20 +985,16 @@ body[data-category] h2 {
 }
 
 /* Category card title (Sea, Mountain, Culture) — gold by default and above overlay */
+/* label color/weight unified in cards.css */
 .category-btn .cat-label {
-  color: #D4AF37 !important;
   position: relative; /* keep in flow but enable z-index */
   z-index: 3;        /* above ::before overlay (z-index:2) */
   mix-blend-mode: normal;
-  /* Balance cross-language visual weight */
-  font-weight: 600; /* default weight for Latin */
   -webkit-font-smoothing: antialiased; /* lighter on macOS */
   text-rendering: optimizeLegibility;
 }
 /* Extra specificity per category to defeat any inherited accent colors */
-.category-btn.cat-sea .cat-label,
-.category-btn.cat-mountain .cat-label,
-.category-btn.cat-culture .cat-label { color: #D4AF37 !important; }
+/* per-category label color removed (handled by cards.css) */
 
 /* Slightly lighten Greek to offset heavier glyph rendering */
 html[lang="el"] .category-btn .cat-label { font-weight: 500; }
@@ -1029,19 +1004,7 @@ html[lang="el"] .category-btn .cat-label { font-weight: 500; }
 /* Disabled legacy trip-card overlay + hover (unified in theme.css) */
 
 /* Trip card category accents */
-#trips-container .trip-card.cat-sea::before {
-  background: linear-gradient(180deg, rgba(var(--sea-1), 0.10), rgba(var(--sea-2), 0.06));
-}
-#trips-container .trip-card.cat-mountain::before {
-  background: linear-gradient(180deg, rgba(var(--mountain-1), 0.10), rgba(var(--mountain-2), 0.06));
-}
-#trips-container .trip-card.cat-mountain.logo-pop::before {
-  /* stronger dark navy for mountain logo-pop cards (parnassos) */
-  background: linear-gradient(180deg, rgba(2,20,30,0.98), rgba(2,20,30,0.95));
-}
-#trips-container .trip-card.cat-culture::before {
-  background: linear-gradient(180deg, rgba(var(--culture-1), 0.10), rgba(var(--culture-2), 0.06));
-}
+/* per-category trip-card overlays removed (handled by theme/cards) */
 
 /* Disabled per-category hover shadows for trip cards (theme.css unifies) */
 
@@ -1050,25 +1013,25 @@ html[lang="el"] .category-btn .cat-label { font-weight: 500; }
 @media (max-width: 399px) {
   /* very small phones */
   #categories-container { grid-template-columns: repeat(auto-fit, 64px); gap: 10px; }
-  .category-btn { width: 64px; height: 64px; border-radius: 16px; }
+  .category-btn { width: 64px; height: 64px; }
 }
 
 @media (min-width: 400px) and (max-width: 767px) {
   /* large phones */
   #categories-container { grid-template-columns: repeat(auto-fit, 96px); gap: 12px; }
-  .category-btn { width: 96px; height: 96px; border-radius: 18px; }
+  .category-btn { width: 96px; height: 96px; }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
   /* tablets */
   #categories-container { grid-template-columns: repeat(auto-fit, 128px); gap: 18px; }
-  .category-btn { width: 128px; height: 128px; border-radius: 20px; }
+  .category-btn { width: 128px; height: 128px; }
 }
 
 @media (min-width: 1024px) {
   /* desktop */
   #categories-container { grid-template-columns: repeat(auto-fit, 160px); gap: 24px; }
-  .category-btn { width: 160px; height: 160px; border-radius: 22px; }
+  .category-btn { width: 160px; height: 160px; }
 }
 
 /* Per-page background based on category */
@@ -1202,8 +1165,7 @@ html[data-category="culture"], body[data-category="culture"] { background-attach
   }
 
   /* Preserve gold text for trip cards and category labels in light mode */
-  .category-btn .cat-label,
-  #trips-container .trip-card h3 { color: #D4AF37 !important; }
+  /* label/title colors unified in cards.css */
 
   /* Welcome subtitle to navy + subtle depth */
   .welcome-subtitle { color: #1B2A3A !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08) !important; }
@@ -1354,29 +1316,7 @@ html[data-category="culture"], body[data-category="culture"] {
   background-color: var(--site-bg-color);
 }
 
-/* Micro-zoom for culture tiles: small, subtle lift and scale then revert */
-/* Culture tile: force dark navy background and smooth transitions */
-#trips-container .trip-card.cat-culture {
-  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
-  background-color: #071827; /* very dark navy for the tile itself */
-  color: #f9d65c; /* ensure gold text stays visible */
-}
-
-/* Remove any light overlay that makes the tile appear grey */
-#trips-container .trip-card.cat-culture::before {
-  background: transparent;
-  background-image: none;
-}
-
-#trips-container .trip-card.cat-culture:hover {
-  transform: translateY(-6px) scale(1.06);
-  /* stronger white glow + warm accent + darker outline */
-  box-shadow:
-    0 26px 56px rgba(0,0,0,0.6),
-    0 0 32px rgba(255,255,255,0.28),
-    0 8px 20px rgba(243,156,18,0.14);
-  filter: saturate(1.02);
-}
+/* culture-specific trip-card visuals removed (unified by cards.css/theme.css) */
 
 /* Disabled legacy logo-pop hover/white glow (theme.css unifies visuals) */
 
@@ -1386,14 +1326,7 @@ body.highlight-trip {
   box-shadow: inset 0 0 60px rgba(255,255,255,0.02);
 }
 
-/* ensure hover transform for any tile even if animation applied earlier */
-#trips-container .trip-card.cat-culture:hover { transform: translateY(-6px) scale(1.06); }
-
-#trips-container .trip-card.cat-culture:active {
-  transform: translateY(-2px) scale(0.995);
-}
-
-#trips-container .trip-card.cat-culture h3 { z-index: 3; position: relative; }
+/* per-category hover/active transforms removed */
 
 /* Pop-in animation when entering a category: small grow then settle */
 @keyframes popIn {
@@ -1402,18 +1335,7 @@ body.highlight-trip {
   100% { transform: scale(1); opacity: 1; }
 }
 
-body[data-view="category"] #trips-container .trip-card:not(.logo-pop) {
-  /* slower, more pronounced pop-in so tiles appear to 'walk' into place */
-  animation: popIn 800ms cubic-bezier(.2,.9,.3,1) both;
-}
-
-/* small stagger so tiles pop sequentially */
-body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(1) { animation-delay: 90ms; }
-body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(2) { animation-delay: 180ms; }
-body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(3) { animation-delay: 270ms; }
-body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(4) { animation-delay: 360ms; }
-body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(5) { animation-delay: 450ms; }
-body[data-view="category"] #trips-container .trip-card:not(.logo-pop):nth-child(6) { animation-delay: 540ms; }
+/* legacy pop-in animations removed (theme.css handles cinematic entrance) */
 
 
 
