@@ -54,12 +54,39 @@
 	font-size: 1.6rem;
 	color: #f9d65c;
 	margin-top: 1.2rem;
+	/* Cinematic entrance like logo */
+	opacity: 0;
+	transform: scale(0.96);
+	animation: logoFadeIn 1.2s ease forwards;
+	animation-delay: 0.55s; /* logo at 0.3s, title after */
+	will-change: transform, opacity;
+	/* Subtle 3D depth to stand off from the video */
+	text-shadow:
+		0 1px 0 rgba(0,0,0,0.55),
+		0 2.5px 3.5px rgba(0,0,0,0.50),
+		0 6px 12px rgba(0,0,0,0.40),
+		0 12px 28px rgba(0,0,0,0.32),
+		0 24px 48px rgba(0,0,0,0.26);
+	-webkit-text-stroke: 0.5px rgba(255,255,255,0.38); /* stronger rim */
 }
 
 .welcome-subtitle {
 	font-size: 1rem;
 	color: #ecf0f1;
 	margin-bottom: 1.5rem;
+	/* Cinematic entrance like logo, a bit later */
+	opacity: 0;
+	transform: scale(0.96);
+	animation: logoFadeIn 1.2s ease forwards;
+	animation-delay: 0.8s;
+	will-change: transform, opacity;
+	/* Gentle depth; lighter than title to remain clean */
+	text-shadow:
+		0 1px 1px rgba(0,0,0,0.50),
+		0 3px 6px rgba(0,0,0,0.38),
+		0 10px 22px rgba(0,0,0,0.28);
+	/* For very bright frames behind, a slightly stronger dark stroke helps readability */
+	-webkit-text-stroke: 0.35px rgba(0,0,0,0.35);
 }
 /* --- Welcome subtitle: always white, bolder and slightly larger --- */
 #welcome-section .welcome-subtitle {
@@ -87,6 +114,12 @@
 /* Tablet sizing parity with prior inline rules */
 @media (min-width: 600px) {
 	.welcome-logo { width: 55%; max-width: 560px; }
+	.welcome-title { font-size: 2rem; }
+}
+
+/* Desktop refinement */
+@media (min-width: 1024px) {
+	.welcome-logo { width: 48%; max-width: 720px; }
 }
 
 /* Safety: remove any pseudo overlays/shadows on the logo container when bg video is active */
@@ -102,9 +135,58 @@ body.has-bg-video .welcome-logo::after {
 /* Ensure no shadow on logo when video background is active */
 body.has-bg-video .welcome-logo { box-shadow: none !important; }
 
-/* Light mode tweak: subtitle as navy with subtle depth if OS prefers light */
+/* Lock welcome to dark visual regardless of OS light setting */
 @media (prefers-color-scheme: light) {
-	.welcome-subtitle { color: #1B2A3A !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08) !important; }
+	html.has-bg-video, body.has-bg-video { color-scheme: dark; }
+	#welcome-section .welcome-title { color: #f9d65c !important; }
+	#welcome-section .welcome-subtitle { color: #ffffff !important; -webkit-text-stroke: 0.35px rgba(0,0,0,0.35); }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+	.welcome-logo,
+	.welcome-title,
+	.welcome-subtitle {
+		animation: none !important;
+		opacity: 1 !important;
+		transform: none !important;
+	}
+}
+
+/* -------- Language selector (top-right) — 3D depth on welcome -------- */
+/* Make the selector stand off the video: subtle glassy dark chip with depth */
+body.has-bg-video #langSelect {
+	appearance: none;
+	-webkit-appearance: none;
+	background: rgba(14, 21, 32, 0.68);
+	color: #fff;
+	border: 1px solid rgba(255,255,255,0.35);
+	border-radius: 12px;
+	padding: 8px 12px;
+	font-weight: 600;
+	box-shadow:
+		0 2px 4px rgba(0,0,0,0.45),
+		0 8px 20px rgba(0,0,0,0.35),
+		inset 0 0 0.5px rgba(255,255,255,0.5);
+	backdrop-filter: blur(4px) saturate(1.05);
+	-webkit-backdrop-filter: blur(4px) saturate(1.05);
+	text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+}
+body.has-bg-video #langSelect:focus {
+	outline: none;
+	border-color: rgba(255,255,255,0.6);
+	box-shadow:
+		0 2px 6px rgba(0,0,0,0.55),
+		0 12px 28px rgba(0,0,0,0.40),
+		0 0 0 2px rgba(255,255,255,0.18);
+}
+/* Keep dark styling even if OS is light on welcome */
+@media (prefers-color-scheme: light) {
+	body.has-bg-video #langSelect {
+		background: rgba(14, 21, 32, 0.72) !important;
+		color: #fff !important;
+		border-color: rgba(255,255,255,0.4) !important;
+	}
 }
 
 /* ===== Welcome page: remove static gradient when video is active ===== */
