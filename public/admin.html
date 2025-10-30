@@ -7,12 +7,11 @@
   <!-- Base site styles -->
   <link rel="stylesheet" href="/css/style.css">
   <!-- Admin CSS (load in this order after style.css) -->
-  <link rel="stylesheet" href="/css/admin-base.css">
+  <link rel="stylesheet" href="/css/admin-core.css">
   <link rel="stylesheet" href="/css/admin-bookings.css">
   <link rel="stylesheet" href="/css/admin-payments.css">
   <link rel="stylesheet" href="/css/admin-partners.css">
-  <link rel="stylesheet" href="/css/admin-responsive.css">
-  <link rel="stylesheet" href="/css/admin-tuning.css">
+  
 </head>
 <body class="admin-main">
   
@@ -177,7 +176,8 @@
     </div>
   </div>
 
-  <script>
+  <script type="module/disabled">
+    /* moved to /js/admin-ui.js */
     const authForm = document.getElementById('auth');
     const main = document.getElementById('main');
     const userInput = document.getElementById('user');
@@ -995,5 +995,6 @@
     }
   </script>
   <script src="/js/i18n.js" defer></script>
+  <script src="/js/admin-ui.js?v=20251030-1" defer></script>
 </body>
 </html>
