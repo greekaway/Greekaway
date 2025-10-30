@@ -54,10 +54,13 @@ async function checkMobileAdmin(page){
     return getComputedStyle(th).display === 'none';
   });
 
-  // Sticky headers (h2) and filters
+  // Sticky header area: accept either page h2 or the unified payments sticky bar
   res.checks.stickyHeader = await page.evaluate(() => {
     const h2 = document.querySelector('h2');
-    return !!h2 && getComputedStyle(h2).position === 'sticky';
+    const bar = document.querySelector('#paymentsStickyBar');
+    const h2Sticky = h2 && getComputedStyle(h2).position === 'sticky';
+    const barSticky = bar && getComputedStyle(bar).position === 'sticky';
+    return !!(h2Sticky || barSticky);
   });
   res.checks.stickyFilters = await page.evaluate(() => {
     const f = document.querySelector('#filters');
@@ -93,9 +96,11 @@ async function checkTabletAdmin(page){
   // Breakpoint: tablet layout => thead visible (table-header-group)
   res.checks.tableHeadersVisible = await page.evaluate(() => {
     const th = document.querySelector('#paymentsTable thead');
-    if (!th) return false;
-    const d = getComputedStyle(th).display;
-    return d !== 'none';
+    const hint = document.querySelector('#paymentsColumnsHint');
+    const thVisible = th && getComputedStyle(th).display !== 'none';
+    const hintVisible = !!(hint && getComputedStyle(hint).display !== 'none');
+    // Accept either real thead or sticky hint as header representation
+    return thVisible || hintVisible;
   });
   // Floating buttons back to normal flow
   res.checks.fabStatic = await page.evaluate(() => {
@@ -156,6 +161,72 @@ async function checkTabletPartners(page){
   return res;
 }
 
+(async function addBookingsChecks(){})();
+
+async function checkTabletBookings(page){
+  const res = { page: 'admin.html', viewport: 'tablet', checks: {} };
+  await page.setViewport({ width: 1180, height: 900, deviceScaleFactor: 2 });
+  await page.goto(BASE + '/admin.html', { waitUntil: 'domcontentloaded' });
+  await loginAdmin(page);
+  // Wait for table to render (real or demo row)
+  await page.waitForSelector('#bookingsTable tbody tr', { timeout: 12000 }).catch(()=>{});
+  // Ensure hint header is present (we hide the real thead on desktop in cleanup.css)
+  await page.waitForSelector('#bookingsHintTable thead th', { timeout: 12000 }).catch(()=>{});
+  // Give layout sync a moment (hint widths are measured from first row)
+  await new Promise(r => setTimeout(r, 400));
+
+  // Helper in page context: compare centers of header vs body cells for selected columns
+  const alignment = await page.evaluate(() => {
+    const head = document.querySelectorAll('#bookingsHintTable thead th');
+    const row = document.querySelector('#bookingsTable tbody tr');
+    if (!head || !row) return null;
+    const tds = row.querySelectorAll('td');
+    const pick = [2,4,5,8,9,10,11,12,13,14]; // 1-based columns to compare
+    const res = {};
+    for (const idx of pick) {
+      const th = head[idx-1]; const td = tds[idx-1];
+      if (!th || !td) { res['col'+idx] = false; continue; }
+      const brTh = th.getBoundingClientRect();
+      const brTd = td.getBoundingClientRect();
+      const cxTh = (brTh.left + brTh.right) / 2;
+      const cxTd = (brTd.left + brTd.right) / 2;
+      res['col'+idx] = Math.abs(cxTh - cxTd) <= 2.0; // within 2px tolerance
+    }
+    // Header text centered
+    const centered = Array.from(head).every(h => getComputedStyle(h).textAlign === 'center');
+    // Partner columns spacing: ensure decent widths
+    const w12 = head[11]?.getBoundingClientRect().width || 0;
+    const w13 = head[12]?.getBoundingClientRect().width || 0;
+    const w14 = head[13]?.getBoundingClientRect().width || 0;
+    res.minWidthsOk = (w12 >= 120 && w13 >= 120 && w14 >= 120);
+    // Payment Type not overlapping Partner: ensure a small gap between header cell boxes
+    const r11 = head[10]?.getBoundingClientRect();
+    const r12 = head[11]?.getBoundingClientRect();
+    res.paymentTypeNotOverlap = r11 && r12 ? (r11.right + 2 <= r12.left) : false;
+    res.centeredHeaders = centered;
+    return res;
+  });
+
+  if (!alignment) {
+    res.checks.rendered = false;
+    return res;
+  }
+
+  // Map checks
+  res.checks.colAfterStatusAligned = alignment.col2;
+  res.checks.eventCentered = alignment.col4; // center alignment match for Event column
+  res.checks.nameAligned = alignment.col5;
+  res.checks.seatsAligned = alignment.col8;
+  res.checks.priceAligned = alignment.col9;
+  res.checks.createdAligned = alignment.col10;
+  res.checks.paymentTypeAligned = alignment.col11;
+  res.checks.partnerColumnsSpaced = alignment.minWidthsOk;
+  res.checks.paymentTypeNotOverlap = alignment.paymentTypeNotOverlap;
+  res.checks.headersCentered = alignment.centeredHeaders;
+
+  return res;
+}
+
 (async () => {
   // Start or reuse server
   let child = null;
@@ -170,6 +241,7 @@ async function checkTabletPartners(page){
     results.push(await checkTabletAdmin(page));
     results.push(await checkMobilePartners(page));
     results.push(await checkTabletPartners(page));
+    results.push(await checkTabletBookings(page));
   } catch (e) {
     console.error('Error during visual checks:', e);
     await browser.close();

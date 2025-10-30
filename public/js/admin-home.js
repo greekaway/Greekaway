@@ -373,8 +373,13 @@
         const urlInput = document.getElementById('onboardingUrl');
         const acctSpan = document.getElementById('onboardingAccount');
         const email = (emailEl && emailEl.value || '').trim();
-        if (!email) { alert('Please enter an email'); return; }
-        if (status) status.textContent = 'Generating...';
+        if (!email) { if (status) { status.textContent = 'Please enter an email'; status.style.color = '#ff6b6b'; } return; }
+        if (status) {
+          status.textContent = 'Generating...';
+          status.style.color = '#ccc';
+          status.setAttribute('role','status');
+          status.setAttribute('aria-live','polite');
+        }
         if (resultDiv) resultDiv.style.display = 'none';
         try {
           const res = await fetch('/api/partners/connect-link?email=' + encodeURIComponent(email));
@@ -383,10 +388,13 @@
           if (urlInput) urlInput.value = j.url;
           if (acctSpan) acctSpan.textContent = j.accountId || '';
           if (resultDiv) resultDiv.style.display = 'block';
-          if (status) status.textContent = 'Ready';
+          if (status) { status.textContent = 'Ready'; status.style.color = '#7bd88f'; }
         } catch (e) {
-          if (status) status.textContent = 'Error generating link';
-          alert('Failed to generate Stripe link: ' + e.message);
+          if (resultDiv) resultDiv.style.display = 'none';
+          if (status) {
+            status.textContent = 'Error: ' + (e && e.message ? e.message : 'Failed to generate Stripe link');
+            status.style.color = '#ff6b6b';
+          }
         }
       });
     }

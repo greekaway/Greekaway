@@ -16,6 +16,16 @@
     setOffset();
     window.addEventListener('resize', setOffset);
   } catch(_) {}
+  // Compute sticky offset for payments sticky bar as well
+  try {
+    const payBar = document.getElementById('paymentsStickyBar');
+    const setPayOffset = () => {
+      const h = payBar ? (payBar.offsetHeight || 0) : 0;
+      document.documentElement.style.setProperty('--payments-sticky-offset', h + 'px');
+    };
+    setPayOffset();
+    window.addEventListener('resize', setPayOffset);
+  } catch(_) {}
   const authForm = document.getElementById('auth');
   const main = document.getElementById('main');
   const userInput = document.getElementById('user');
@@ -46,14 +56,20 @@
     const p = passInput.value || '';
     basicAuth = 'Basic ' + btoa(u + ':' + p);
     try { console.info('[admin-ui] login submit: starting data loads'); } catch(_){}
-  // Don't reveal #main: it's an empty legacy panel that creates a white gap above bookings
-  if (main) main.style.display = 'none';
+    // Decide visibility of #main depending on the page:
+    // - On admin.html (bookings view), #main is a legacy empty panel: keep it hidden
+    // - On standalone pages like admin-payments.html, #main hosts the content: show it
     authForm.style.display = 'none';
   if (backupDiv) fetchBackup();
   if (paymentsTbody) fetchPayments();
     // show bookings panel and load bookings
   const bookingsPanelEl = document.getElementById('bookingsPanel');
-  if (bookingsPanelEl) bookingsPanelEl.style.display = 'block';
+    if (bookingsPanelEl) {
+      bookingsPanelEl.style.display = 'block';
+      if (main) main.style.display = 'none';
+    } else {
+      if (main) main.style.display = 'block';
+    }
     // show partners panel
   const partnersPanelEl = document.getElementById('partnersPanel');
   if (partnersPanelEl) partnersPanelEl.style.display = 'block';
@@ -205,6 +221,9 @@
       `;
       paymentsTbody.appendChild(tr);
     }
+    // After rows rendered, sync hint header widths and scroll
+    queueUpdatePaymentsHintWidths();
+    setupPaymentsScrollSync();
   }
 
   // Apply current filter inputs to lastPayments and render
@@ -263,10 +282,57 @@
     });
   }
 
+  function updatePaymentsHintColumnWidths(){
+    try {
+      const hintHeadRow = document.querySelector('#paymentsHintTable thead tr');
+      if (!hintHeadRow || !paymentsTbody) return;
+      const firstRow = paymentsTbody.querySelector('tr');
+      if (!firstRow) return;
+      const dataCells = Array.from(firstRow.children);
+      const hintCells = Array.from(hintHeadRow.children);
+      if (dataCells.length !== hintCells.length) return;
+      let total = 0;
+      dataCells.forEach((td, i) => {
+        const w = Math.ceil(td.getBoundingClientRect().width);
+        hintCells[i].style.width = w + 'px';
+        hintCells[i].style.minWidth = w + 'px';
+        total += w;
+      });
+      const hintTable = document.getElementById('paymentsHintTable');
+      if (hintTable && total > 0) hintTable.style.width = total + 'px';
+    } catch(_) { /* ignore */ }
+  }
+
+  function queueUpdatePaymentsHintWidths(){
+    requestAnimationFrame(() => updatePaymentsHintColumnWidths());
+    setTimeout(updatePaymentsHintColumnWidths, 100);
+  }
+
+  function setupPaymentsScrollSync(){
+    const scroller = document.getElementById('paymentsHintScroller') || document.querySelector('#paymentsColumnsHint .hint-scroll');
+    const container = document.getElementById('paymentsContainer');
+    if (!scroller || !container) return;
+    const sync = (from, to) => {
+      if (isSyncingScroll) return; isSyncingScroll = true;
+      to.scrollLeft = from.scrollLeft;
+      requestAnimationFrame(() => { isSyncingScroll = false; });
+    };
+    if (!scroller.__gaSyncBound) {
+      scroller.addEventListener('scroll', () => sync(scroller, container));
+      scroller.__gaSyncBound = true;
+    }
+    if (!container.__gaSyncBound) {
+      container.addEventListener('scroll', () => sync(container, scroller));
+      container.__gaSyncBound = true;
+    }
+  }
+
   const bookingsPanel = document.getElementById('bookingsPanel');
   const bookingsTable = document.getElementById('bookingsTable');
   const bookingsTbody = bookingsTable ? bookingsTable.querySelector('tbody') : null;
   const bookingsMessage = document.getElementById('bookingsMessage');
+  let bookingsHintBuilt = false;
+  let isSyncingScroll = false;
 
   const btnRefreshBookings = document.getElementById('refreshBookings'); if (btnRefreshBookings) btnRefreshBookings.addEventListener('click', fetchBookings);
   const btnExportBookings = document.getElementById('exportBookings'); if (btnExportBookings) btnExportBookings.addEventListener('click', exportBookings);
@@ -396,6 +462,9 @@
         <td></td>
       `;
       bookingsTbody.appendChild(demo);
+      // Ensure hint exists and width-aligned even for demo
+      ensureBookingsHint();
+      queueUpdateBookingsHintWidths();
       bookingsDemoForce = false;
       return;
     }
@@ -424,10 +493,13 @@
         <td style="text-align:right">${escapeHtml(commission)}</td>
         <td class="payout-status" data-booking="${escapeHtml(b.id||'')}">${escapeHtml(b.payout_status||'')}</td>
         <td class="payout-date" data-booking="${escapeHtml(b.id||'')}">${escapeHtml(formatDate(b.payout_date||''))}</td>
-        <td>${escapeHtml(typeof b.metadata === 'object' ? JSON.stringify(b.metadata) : (b.metadata||''))} ${renderBookingMetaButton(b.metadata||b.metadata||'', b.id, b.payment_intent_id)}</td>
+        <td>${renderBookingMetaButton(b.metadata||'', b.id, b.payment_intent_id)}</td>
       `;
       bookingsTbody.appendChild(tr);
     }
+    // After rows rendered, build hint (if needed) and sync widths
+    ensureBookingsHint();
+    queueUpdateBookingsHintWidths();
   bookingsTbody.querySelectorAll('.editable-partner').forEach(td => {
       td.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter') { ev.preventDefault(); td.blur(); }
@@ -457,6 +529,98 @@
       });
     });
   }
+
+  function ensureBookingsHint(){
+    try {
+      const hintHost = document.getElementById('bookingsColumnsHint');
+      if (!hintHost || !bookingsTable) return;
+      if (!bookingsHintBuilt) {
+        // Build scroll container and hint table structure
+        hintHost.innerHTML = '';
+        const scroller = document.createElement('div');
+        scroller.className = 'hint-scroll';
+        scroller.id = 'bookingsHintScroller';
+        const tbl = document.createElement('table');
+        tbl.id = 'bookingsHintTable';
+        const thead = document.createElement('thead');
+        const tr = document.createElement('tr');
+        // Clone labels from the real header to stay in sync
+        const headCells = bookingsTable.querySelectorAll('thead th');
+        headCells.forEach(th => {
+          const th2 = document.createElement('th');
+          th2.textContent = (th.textContent || '').trim();
+          tr.appendChild(th2);
+        });
+        thead.appendChild(tr);
+        tbl.appendChild(thead);
+        scroller.appendChild(tbl);
+        hintHost.appendChild(scroller);
+        setupBookingsScrollSync();
+        bookingsHintBuilt = true;
+      } else {
+        // If already built but columns count changed, rebuild headers
+        const headCells = bookingsTable.querySelectorAll('thead th');
+        const hintHeadRow = document.querySelector('#bookingsHintTable thead tr');
+        if (hintHeadRow && hintHeadRow.children.length !== headCells.length) {
+          hintHeadRow.innerHTML = '';
+          headCells.forEach(th => {
+            const th2 = document.createElement('th');
+            th2.textContent = (th.textContent || '').trim();
+            hintHeadRow.appendChild(th2);
+          });
+        }
+      }
+    } catch(_) { /* ignore */ }
+  }
+
+  function setupBookingsScrollSync(){
+    const scroller = document.getElementById('bookingsHintScroller');
+    const container = document.getElementById('bookingsContainer');
+    if (!scroller || !container) return;
+    const sync = (from, to) => {
+      if (isSyncingScroll) return; isSyncingScroll = true;
+      to.scrollLeft = from.scrollLeft;
+      // Use rAF to release the flag next frame
+      requestAnimationFrame(() => { isSyncingScroll = false; });
+    };
+    scroller.addEventListener('scroll', () => sync(scroller, container));
+    container.addEventListener('scroll', () => sync(container, scroller));
+  }
+
+  function updateBookingsHintColumnWidths(){
+    try {
+      const hintHeadRow = document.querySelector('#bookingsHintTable thead tr');
+      if (!hintHeadRow || !bookingsTbody) return;
+      // Measure from first visible data row for exact computed widths
+      const firstRow = bookingsTbody.querySelector('tr');
+      if (!firstRow) return;
+      const dataCells = Array.from(firstRow.children);
+      const hintCells = Array.from(hintHeadRow.children);
+      if (dataCells.length !== hintCells.length) return;
+      let total = 0;
+      dataCells.forEach((td, i) => {
+        const w = Math.ceil(td.getBoundingClientRect().width);
+        hintCells[i].style.width = w + 'px';
+        hintCells[i].style.minWidth = w + 'px';
+        total += w;
+      });
+      const hintTable = document.getElementById('bookingsHintTable');
+      if (hintTable && total > 0) hintTable.style.width = total + 'px';
+    } catch(_) { /* ignore */ }
+  }
+
+  function queueUpdateBookingsHintWidths(){
+    // Wait for layout to settle
+    requestAnimationFrame(() => updateBookingsHintColumnWidths());
+    // Also re-run a bit later for fonts/scrollbars changes
+    setTimeout(updateBookingsHintColumnWidths, 100);
+  }
+
+  // Re-sync widths on resize
+  window.addEventListener('resize', () => {
+    queueUpdateBookingsHintWidths();
+    queueUpdatePaymentsHintWidths();
+  });
 
   async function exportBookings(){
     if (!basicAuth) return;
@@ -520,7 +684,7 @@
     let num = Number(amount);
     if (!isFinite(num)) return String(amount);
     if (Math.abs(num) > 1000) num = num / 100;
-    return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+    return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\u00A0€';
   }
 
   function formatDate(iso){

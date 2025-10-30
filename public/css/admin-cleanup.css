@@ -10,12 +10,22 @@ body.admin-main {
   margin: 0 !important; /* eliminate outer white band from body margin collapse */
   padding: 0 8px 0 8px; /* no top gap; slight side padding for breathing room */
 }
+/* Remove top white gap from #main so sticky payments bar touches the top */
+body.admin-main #main { padding-top: 0 !important; }
 
 body.admin-main h2,
 body.admin-main h3 {
   color: #d4af37; /* gold titles */
   font-weight: 700;
   margin: 8px 0 6px 0;
+}
+
+/* Make top-level page title sticky (used by admin-payments.html) */
+body.admin-main h2 {
+  position: sticky;
+  top: 0;
+  z-index: 140;
+  background: #0b1a2a;
 }
 
 /* Sticky helper for section bars (e.g., Bookings title + filters) */
@@ -31,7 +41,7 @@ body.admin-main h3 {
 /* Remove any vertical gap before bookings section */
 body.admin-main #bookingsPanel { margin-top: 0 !important; }
 /* Ensure legacy empty panel never shows (it caused a white gap above bookings) */
-body.admin-main #main { display: none !important; }
+/* Note: Do not globally hide #main; some standalone admin pages (e.g., Payments) render inside it. */
 
 /* Keep bookings header + filters readable over content while scrolling */
 #bookingsTable thead th {
@@ -40,6 +50,15 @@ body.admin-main #main { display: none !important; }
   z-index: 90; /* below sticky bar but above rows */
   background: #0E1520; /* solid dark backer */
   color: #ffffff; /* ensure readability on dark header */
+}
+
+/* Keep payments header readable and aligned below its sticky bar */
+#paymentsTable thead th {
+  position: sticky;
+  top: var(--payments-sticky-offset, 0px);
+  z-index: 90;
+  background: #0E1520;
+  color: #ffffff;
 }
 
 /* Keep tables readable on white background */
@@ -118,6 +137,17 @@ body.admin-main label {
   background: #0f2338; /* solid block to separate filters from background */
   border-radius: 4px; /* minimal rounding, no shadow */
 }
+/* Align meta controls to the right within filters row */
+#filters { display: flex; }
+#filters .filters-left { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+#filters .filters-meta-right { margin-left: auto; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+/* Ensure payments filters themselves are sticky as requested by the visual checks */
+#filters {
+  position: sticky;
+  top: 0;
+  z-index: 130;
+}
 
 /* Payments meta row: split left/right sets neatly */
 .payments-row.meta {
@@ -132,7 +162,8 @@ body.admin-main label {
 }
 
 /* Backup card: compact with side-by-side text & button */
-.admin-card.admin-backup-card {
+.admin-card.admin-backup-card,
+.admin-card.admin-stripe-tools {
   background: #0f2236;
   border: none;
   border-radius: 4px;
@@ -140,7 +171,8 @@ body.admin-main label {
   max-width: 640px; /* reduce width */
 }
 
-.admin-card.admin-backup-card .admin-card-body {
+.admin-card.admin-backup-card .admin-card-body,
+.admin-card.admin-stripe-tools .admin-card-body {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -156,18 +188,120 @@ body.admin-main label {
   margin: 0 !important;
 }
 
+/* Stripe tools: unify inner spacing and text color with dark card */
+.admin-card.admin-stripe-tools .admin-row { margin: 0 !important; }
+.admin-card.admin-stripe-tools h3 { margin: 0 0 6px 0 !important; color: #d4af37; }
+.admin-card.admin-stripe-tools .admin-card-body { color: #ffffff; }
+
 /* Table headers minimal styling; borders already inline */
 .admin-main table thead th {
   font-weight: 600;
 }
 
-/* Bookings: remove the empty blue header line and start rows immediately */
-#bookingsStickyBar { padding-bottom: 0; }
+/* Bookings sticky area: compact spacing but room for a hint line */
+#bookingsStickyBar { padding: 6px 8px; padding-bottom: 6px; }
 #bookingsStickyBar h3 { margin: 0 0 4px 0 !important; }
-#bookingsStickyBar .admin-row { margin-bottom: 0 !important; }
-#bookingsContainer { margin-top: 0 !important; }
-/* Hide the header row entirely so data starts right away */
+#bookingsStickyBar .admin-row { margin: 0 0 4px 0 !important; }
+#bookingsColumnsHint { color: #ffffff; opacity: 0.95; font-size: 12px; line-height: 1.3; margin-left: -8px; margin-right: -8px; }
+#bookingsColumnsHint .hint-scroll { overflow-x: auto; overflow-y: hidden; }
+#bookingsHintTable { width: auto; border-collapse: collapse; border-spacing: 0; table-layout: fixed; }
+/* Hint header cells mirror body cell box model so widths line up perfectly */
+#bookingsHintTable thead th {
+  color: #ffffff;
+  font-weight: 600;
+  background: transparent;
+  padding: 6px;
+  white-space: nowrap;
+  text-align: center; /* center all header titles as requested */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box; /* include borders in the set width */
+  border: 1px solid #e6edf5; /* match tbody cell borders to avoid cumulative shifts */
+}
+#bookingsHintTable thead th:not(:last-child) { border-right: 1px solid #e6edf5; }
+#bookingsHintTable thead th:first-child { border-left: 1px solid #e6edf5; }
+#bookingsHintTable thead th:last-child { border-right: 1px solid #e6edf5; }
+/* Keep metadata (view button) centered */
+#bookingsHintTable thead th:nth-child(17) { text-align: center; }
+#bookingsContainer { margin-top: 0 !important; overflow-x: auto; }
+
+/* Payments sticky area spacing mirrors bookings */
+#paymentsStickyBar { padding: 6px 8px; padding-bottom: 6px; }
+#paymentsStickyBar h3 { margin: 0 0 4px 0 !important; }
+#paymentsStickyBar .admin-row, #paymentsStickyBar .payments-row { margin: 0 0 4px 0 !important; }
+#paymentsContainer { margin-top: 0 !important; overflow-x: auto; }
+
+/* Payments inline columns hint: boxed headers aligned with table columns */
+#paymentsColumnsHint { color: #ffffff; opacity: 0.95; font-size: 12px; line-height: 1.3; margin-left: -8px; margin-right: -8px; padding: 2px 8px; }
+#paymentsColumnsHint .hint-scroll { overflow-x: auto; overflow-y: hidden; }
+#paymentsHintTable { width: auto; border-collapse: collapse; border-spacing: 0; table-layout: fixed; }
+/* Mirror tbody cell box model so widths line up closely */
+#paymentsHintTable thead th {
+  color: #ffffff;
+  font-weight: 600;
+  background: transparent;
+  padding: 6px;
+  white-space: nowrap;
+  text-align: center; /* center all header titles as requested */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box; /* include borders in the set width */
+  border: 1px solid #e6edf5; /* match tbody cell borders to avoid cumulative shifts */
+}
+#paymentsHintTable thead th:not(:last-child) { border-right: 1px solid #e6edf5; }
+#paymentsHintTable thead th:first-child { border-left: 1px solid #e6edf5; }
+#paymentsHintTable thead th:last-child { border-right: 1px solid #e6edf5; }
+/* Keep metadata column centered */
+#paymentsHintTable thead th:nth-child(7) { text-align: center; }
+
+/* Reduce payments filters size by ~25% */
+#paymentsStickyBar #filters { padding: 7px !important; }
+#paymentsStickyBar .filters-row { gap: 9px; }
+#paymentsStickyBar .filters-row label { font-size: 13.75px; gap: 4px; margin: 2px 4px 2px 0; }
+#paymentsStickyBar .filters-row input,
+#paymentsStickyBar .filters-row select { height: 29px; padding: 3px 6px; font-size: 13.75px; }
+
+/* Reduce action buttons size by ~25% (only in payments sticky bar) */
+#paymentsStickyBar .actions { gap: 6px; }
+#paymentsStickyBar .actions .btn,
+#paymentsStickyBar .actions button {
+  font-size: 10px;
+  padding: 2px 8px;
+  line-height: 1.2;
+  border-radius: 3px;
+}
+
+/* Ensure table cell padding matches hint header padding for perfect alignment */
+#bookingsContainer table th,
+#bookingsContainer table td { padding: 6px; vertical-align: middle; }
+
+/* Column width balancing for readability (desktop/tablet) */
+@media (min-width: 769px) {
+  /* Name */
+  #bookingsContainer table td:nth-child(5) { min-width: 160px; white-space: nowrap; }
+  /* Email */
+  #bookingsContainer table td:nth-child(6) { min-width: 240px; white-space: nowrap; }
+  /* Payment Type */
+  #bookingsContainer table td:nth-child(11) { min-width: 130px; white-space: nowrap; }
+  /* Partner */
+  #bookingsContainer table td:nth-child(12) { min-width: 140px; white-space: nowrap; }
+  /* Partner Share (€) */
+  #bookingsContainer table td:nth-child(13) { min-width: 150px; }
+  /* Greekaway Comm. */
+  #bookingsContainer table td:nth-child(14) { min-width: 160px; }
+  /* Amounts: keep number + € together, right aligned */
+  #bookingsContainer table td:nth-child(9),   /* Price */
+  #bookingsContainer table td:nth-child(13),  /* Partner Share */
+  #bookingsContainer table td:nth-child(14)   /* Greekaway Comm */
+  { white-space: nowrap; text-align: right; }
+  /* Seats also right aligned */
+  #bookingsContainer table td:nth-child(8) { text-align: right; }
+  /* View column consistent width and centered */
+  #bookingsContainer table td:nth-child(17) { min-width: 84px; text-align: center; }
+}
+/* Hide the header rows entirely so data starts right away; sticky hint shows titles */
 #bookingsTable thead { display: none !important; }
+#paymentsTable thead { display: none !important; }
 
 /* Status badge readability against white rows */
 .status-badge {
@@ -194,6 +328,11 @@ body.admin-main label {
 }
 
 @media (max-width: 768px) {
+  /* Hide the desktop/tablet-only hint line on mobile (mobile already shows field names) */
+  #bookingsColumnsHint { display: none; }
+  #paymentsColumnsHint { display: none; }
+  /* For payments on mobile, hide table header to reduce vertical clutter */
+  #paymentsTable thead { display: none; }
   .payments-row.meta {
     flex-direction: column;
     align-items: stretch;
