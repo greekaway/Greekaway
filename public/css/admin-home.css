@@ -67,7 +67,7 @@ body.admin-home {
 .note { opacity: 0.9; }
 
 /* Iframes fill remaining height */
-.view iframe { width: 100%; height: calc(100vh - var(--ah-nav-h-desktop) - 48px); border: none; background: #fff; border-radius: 8px; }
+.view iframe { width: 100%; height: calc(100vh - var(--ah-nav-h-desktop) - 48px); border: none; background: var(--ah-gradient); border-radius: 8px; transition: opacity 200ms ease, transform 220ms ease; opacity: 1; }
 
 /* Tablet */
 @media (min-width: 769px) and (max-width: 1024px) {

@@ -18,15 +18,46 @@
       state.creds.user = u; state.creds.pass = p;
       // Show loading indication
       setLoading(true, 'Επαλήθευση…');
+      // Quick preflight to validate credentials against a protected endpoint
+      try {
+        const r = await fetch('/admin/backup-status', { headers: { Authorization: 'Basic ' + btoa(u + ':' + p) } });
+        if (!r.ok) {
+          setStatus('Λάθος διαπιστευτήρια (401)');
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        setStatus('Σφάλμα σύνδεσης');
+        setLoading(false);
+        return;
+      }
       // Find iframes that require login (admin.html instances)
       const frames = $$('#adminContent iframe').filter(f => {
         try { return f && f.contentWindow && /\/admin\.html(\?|$)/.test(f.getAttribute('src')||''); } catch(_) { return false; }
       });
       // If active iframe exists, ensure we inject there immediately
       const activeView = $('#adminContent .view.active iframe');
-      if (activeView) { try { await tryInjectLogin(activeView); } catch(_) {} }
+      if (activeView) {
+        try {
+          const mode = activeView.id && activeView.id.includes('payments') ? 'payments' : (activeView.id && activeView.id.includes('bookings') ? 'bookings' : undefined);
+          await tryInjectLogin(activeView, mode);
+        } catch(_) {}
+      }
       // Inject into the rest in parallel (if already loaded)
-      const promises = frames.map(f => tryInjectLogin(f));
+      const promises = frames.map(f => {
+        const id = f.id || '';
+        const mode = id.includes('payments') ? 'payments' : (id.includes('bookings') ? 'bookings' : undefined);
+        return tryInjectLogin(f, mode);
+      });
+      // Also update partners iframe to include auth param if present
+      const partnersFrame = $('#tab-partners');
+      if (partnersFrame && u && p) {
+        try {
+          const url = new URL(partnersFrame.src, window.location.origin);
+          url.searchParams.set('auth', btoa(u + ':' + p));
+          partnersFrame.src = url.toString();
+        } catch(_) {}
+      }
       try { await Promise.allSettled(promises); } catch(_) {}
       // Done → hide form with a small fade-out and show success
       onLoginSuccess();
@@ -40,7 +71,17 @@
     // views
     const prev = state.active; const prevView = $(`#view-${prev}`);
     const nextView = ensureView(tab);
-    if (prevView) prevView.classList.remove('active');
+      // Fully clear previous iframe content when leaving a tab
+      if (prevView) {
+        const oldFrame = prevView.querySelector('iframe');
+        if (oldFrame) {
+          try { oldFrame.src = 'about:blank'; } catch(_) {}
+          oldFrame.remove();
+        }
+        // mark as not loaded to allow lazy reload next time
+        if (state.loaded.hasOwnProperty(prev)) state.loaded[prev] = false;
+        prevView.classList.remove('active');
+      }
     if (nextView) nextView.classList.add('active');
     state.active = tab;
 
@@ -48,7 +89,8 @@
     if ((tab === 'bookings' || tab === 'payments' || tab === 'partners') && !state.loaded[tab]) {
       const frame = $(`#view-${tab} iframe`);
       if (frame) {
-        frame.addEventListener('load', () => tryInjectLogin(frame), { once: true });
+          const mode = tab === 'bookings' ? 'bookings' : (tab === 'payments' ? 'payments' : 'partners');
+          frame.addEventListener('load', () => tryInjectLogin(frame, mode), { once: true });
         // src already set in ensureView
       }
       state.loaded[tab] = true;
@@ -61,11 +103,13 @@
     view = document.createElement('section');
     view.id = `view-${tab}`; view.className = 'view'; view.dataset.tab = tab;
     if (tab === 'bookings') {
-      view.innerHTML = `<iframe id="tab-bookings" title="Bookings" src="/admin.html"></iframe>`;
+      view.innerHTML = `<iframe id="tab-bookings" title="Bookings" src="/admin.html?view=bookings"></iframe>`;
     } else if (tab === 'payments') {
       view.innerHTML = `<iframe id="tab-payments" title="Payments" src="/admin.html?view=payments"></iframe>`;
     } else if (tab === 'partners') {
-      view.innerHTML = `<iframe id="tab-partners" title="Partners" src="/admin-groups.html"></iframe>`;
+      // partners iframe supports auth via ?auth=base64(user:pass) for protected admin endpoints
+      const authParam = (state.creds.user && state.creds.pass) ? `?auth=${encodeURIComponent(btoa(state.creds.user + ':' + state.creds.pass))}` : '';
+      view.innerHTML = `<iframe id="tab-partners" title="Partners" src="/admin-groups.html${authParam}"></iframe>`;
     } else if (tab === 'settings') {
       view.innerHTML = `<div class="settings-wrap"><h2>Settings</h2><p>Coming soon.</p></div>`;
     }
@@ -73,7 +117,7 @@
     return view;
   }
 
-  function tryInjectLogin(frame){
+  function tryInjectLogin(frame, mode){
     return new Promise((resolve) => {
       try {
         if (!frame || !frame.contentWindow || !state.creds.user) return resolve(false);
@@ -88,6 +132,15 @@
               user.value = state.creds.user; pass.value = state.creds.pass;
               login.click();
             }
+            // Partners view uses standalone page without auth form; reload with auth param if needed
+            if (!authForm && /admin-groups\.html/.test(frame.src)) {
+              const authParam = btoa(state.creds.user + ':' + state.creds.pass);
+              const url = new URL(frame.src, window.location.origin);
+              if (url.searchParams.get('auth') !== authParam) {
+                url.searchParams.set('auth', authParam);
+                frame.src = url.toString();
+              }
+            }
           } catch(_) {}
         };
         attempt();
@@ -98,13 +151,30 @@
             const main = doc.getElementById('main');
             const auth = doc.getElementById('auth');
             const ok = (main && getComputedStyle(main).display !== 'none') || (auth && getComputedStyle(auth).display === 'none');
-            if (ok) { clearInterval(timer); return resolve(true); }
+            if (ok) {
+              // Adjust visible panels depending on desired mode (bookings vs payments)
+              try {
+                if (mode === 'bookings') {
+                  const bookingsPanel = doc.getElementById('bookingsPanel');
+                  const paymentsContainer = doc.getElementById('paymentsContainer');
+                  if (bookingsPanel) bookingsPanel.style.display = 'block';
+                  if (paymentsContainer) paymentsContainer.style.display = 'none';
+                } else if (mode === 'payments') {
+                  const bookingsPanel = doc.getElementById('bookingsPanel');
+                  const paymentsContainer = doc.getElementById('paymentsContainer');
+                  if (bookingsPanel) bookingsPanel.style.display = 'none';
+                  if (paymentsContainer) paymentsContainer.style.display = 'block';
+                }
+              } catch(_) {}
+              clearInterval(timer); return resolve(true);
+            }
           } catch(_) {}
           if (Date.now() - t0 > 5000) { clearInterval(timer); return resolve(false); }
         }, 200);
       } catch (_) { return resolve(false); }
     });
   }
+
 
   function setLoading(isLoading, msg){
     const bar = $('#adminLoginBar');
