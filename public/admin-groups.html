@@ -7,12 +7,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <!-- Admin CSS (load in this order after style.css) -->
-  <link rel="stylesheet" href="/css/admin-base.css">
-  <link rel="stylesheet" href="/css/admin-bookings.css">
-  <link rel="stylesheet" href="/css/admin-payments.css">
+  <link rel="stylesheet" href="/css/admin-core.css">
   <link rel="stylesheet" href="/css/admin-partners.css">
-  <link rel="stylesheet" href="/css/admin-responsive.css">
-  <link rel="stylesheet" href="/css/admin-tuning.css">
 </head>
 <body class="site-gradient admin-partners">
   <header>
@@ -36,7 +32,8 @@
     </div>
   </div>
 
-  <script>
+  <script type="module/disabled">
+    /* moved to /js/admin-groups.js */
   (function(){
     // Basic auth passthrough: support ?auth=base64(user:pass)
     const qsFull = new URLSearchParams(location.search);
@@ -206,5 +203,6 @@
     if (tripIdEl.value && dateEl.value) { load(); }
   })();
   </script>
+  <script src="/js/admin-groups.js" defer></script>
 </body>
 </html>

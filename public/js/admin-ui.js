@@ -1,0 +1,715 @@
+// admin-ui.js — extracted from admin.html inline script
+// Contract:
+// - Requires DOM elements with the same IDs as admin.html
+// - Relies on i18n.js for window.t when present
+// - Exposes no globals; runs on DOMContentLoaded
+
+(function(){
+  function init(){
+  const authForm = document.getElementById('auth');
+  const main = document.getElementById('main');
+  const userInput = document.getElementById('user');
+  const passInput = document.getElementById('pass');
+  const backupDiv = document.getElementById('backup');
+  const paymentsTbody = document.getElementById('paymentsTable').querySelector('tbody');
+  const paymentsMessage = document.getElementById('paymentsMessage');
+
+  let basicAuth = null;
+  let lastPayments = null; // cached array from server
+  let lastFiltered = null; // cached filtered view
+  let currentOffset = 0;
+  let currentLimit = 50;
+  let currentSortField = '';
+  let currentSortDir = 'desc'; // or 'asc'
+  // separate bookings sort state so bookings and payments sorting don't interfere
+  let bookingsSortField = '';
+  let bookingsSortDir = 'desc';
+  // force demo row when fetch fails
+  let bookingsDemoForce = false;
+
+  if (!authForm) { console.error('[admin-ui] auth form not found'); return; }
+
+  authForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const u = userInput.value || '';
+    const p = passInput.value || '';
+    basicAuth = 'Basic ' + btoa(u + ':' + p);
+    try { console.info('[admin-ui] login submit: starting data loads'); } catch(_){}
+    main.style.display = 'block';
+    authForm.style.display = 'none';
+    fetchBackup();
+    fetchPayments();
+    // show bookings panel and load bookings
+    document.getElementById('bookingsPanel').style.display = 'block';
+    // show partners panel
+    document.getElementById('partnersPanel').style.display = 'block';
+    // load partners list for autocompletion
+    fetchPartnersList();
+    // open SSE for realtime payout updates
+    openAdminStream(u, p);
+    // fallback polling to keep statuses fresh
+    setInterval(() => { if (basicAuth) fetchBookings(); }, 20000);
+    fetchBookings();
+  });
+
+  // Load filters from URL on page load
+  (function loadFiltersFromUrl(){
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('status')) document.getElementById('filterStatus').value = params.get('status');
+    if (params.has('date_from')) document.getElementById('filterFrom').value = params.get('date_from');
+    if (params.has('date_to')) document.getElementById('filterTo').value = params.get('date_to');
+    if (params.has('min_amount')) document.getElementById('filterMin').value = (Number(params.get('min_amount'))/100).toFixed(2);
+    if (params.has('max_amount')) document.getElementById('filterMax').value = (Number(params.get('max_amount'))/100).toFixed(2);
+  })();
+
+  document.getElementById('refreshBackup').addEventListener('click', fetchBackup);
+  document.getElementById('refreshPayments').addEventListener('click', fetchPayments);
+  document.getElementById('exportPayments').addEventListener('click', exportPayments_v2);
+  document.getElementById('applyFilters').addEventListener('click', applyFilters);
+  document.getElementById('clearFilters').addEventListener('click', clearFilters);
+  document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
+  document.getElementById('nextPage').addEventListener('click', () => changePage(1));
+  document.getElementById('pageSize').addEventListener('change', (e) => { currentLimit = parseInt(e.target.value,10) || 50; currentOffset = 0; fetchPayments(); });
+  document.getElementById('sortField').addEventListener('change', (e) => { currentSortField = e.target.value || ''; applyFilters(); });
+  document.getElementById('sortDir').addEventListener('click', (e) => { currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc'; e.target.textContent = currentSortDir === 'asc' ? '▼' : '▲'; applyFilters(); });
+
+  function fetchBackup(){
+    if(!basicAuth) return;
+    backupDiv.textContent = window.t ? window.t('admin.loading') : 'Loading...';
+    fetch('/admin/backup-status', { headers: { Authorization: basicAuth } })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(j => {
+        try { console.info('[admin] backup-status', j); } catch(_) {}
+        const count = (j && (j.count ?? j.backupsCount ?? j.total)) || 0;
+        const latestAt = j && (j.lastRunAt || j.latestAt || j.latestDate || '');
+        const latestName = j && (j.latestDb || j.latestZip || j.latest || '');
+        const when = latestAt ? formatDate(latestAt) : '';
+        const line1 = (window.t ? window.t('admin.backups_count') : 'Σύνολο αντιγράφων') + ': ' + String(count || '—');
+        const line2 = (window.t ? window.t('admin.backups_latest') : 'Τελευταίο') + ': ' + (when || (latestName ? escapeHtml(String(latestName)) : '—'));
+        backupDiv.innerHTML = '<div>'+ line1 +'</div><div>'+ line2 +'</div>';
+      })
+      .catch(err => {
+        backupDiv.textContent = (window.t ? window.t('admin.error') : 'Error: ') + String(err);
+      });
+  }
+
+  function pageInfo(){
+    const page = Math.floor(currentOffset / currentLimit) + 1;
+    document.getElementById('pageInfo').textContent = (window.t ? window.t('admin.page') : 'Page: ') + ' ' + page;
+  }
+
+  function changePage(dir){
+    currentOffset = Math.max(0, currentOffset + dir * currentLimit);
+    fetchPayments();
+  }
+
+  function fetchPayments(){
+    if(!basicAuth) return;
+    if (!paymentsTbody) { console.error('[admin-ui] paymentsTbody missing'); return; }
+    paymentsTbody.innerHTML = '';
+    if (paymentsMessage) paymentsMessage.textContent = 'Φόρτωση...';
+    const qs = `?limit=${encodeURIComponent(currentLimit)}&offset=${encodeURIComponent(currentOffset)}`;
+    const params = new URLSearchParams();
+    const status = document.getElementById('filterStatus').value;
+    const from = document.getElementById('filterFrom').value;
+    const to = document.getElementById('filterTo').value;
+    const min = document.getElementById('filterMin').value;
+    const max = document.getElementById('filterMax').value;
+    if (status) params.set('status', status);
+    if (from) params.set('date_from', from);
+    if (to) params.set('date_to', to);
+    if (min) params.set('min_amount', Math.round(Number(min)*100));
+    if (max) params.set('max_amount', Math.round(Number(max)*100));
+    const newUrl = window.location.pathname + '?' + params.toString();
+    window.history.replaceState({}, '', newUrl);
+    const url = '/admin/payments' + qs + (params.toString() ? '&' + params.toString() : '');
+    fetch(url, { headers: { Authorization: basicAuth } })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(j => {
+        try { console.info('[admin-ui] fetchPayments: received', Array.isArray(j) ? j.length : 'n/a'); } catch(_){}
+        lastPayments = Array.isArray(j) ? j : [];
+        applyFilters();
+        pageInfo();
+      })
+      .catch(err => { paymentsTbody.innerHTML = ''; if (paymentsMessage) paymentsMessage.textContent = (window.t ? window.t('admin.error') : 'Error: ') + String(err); try { console.error('[admin-ui] fetchPayments error', err); } catch(_){} });
+  }
+
+  function renderPayments(arr){
+    lastFiltered = Array.isArray(arr) ? arr : [];
+    let out = lastFiltered.slice();
+    if (currentSortField) {
+      out.sort((a,b) => {
+        const fa = a && (currentSortField === 'amount' ? a.amount : a[currentSortField]);
+        const fb = b && (currentSortField === 'amount' ? b.amount : b[currentSortField]);
+        if (currentSortField === 'timestamp') {
+          const ta = fa ? new Date(fa).getTime() : 0;
+          const tb = fb ? new Date(fb).getTime() : 0;
+          return (ta - tb) * (currentSortDir === 'asc' ? 1 : -1);
+        }
+        if (currentSortField === 'amount') {
+          const na = Number(fa) || 0;
+          const nb = Number(fb) || 0;
+          return (na - nb) * (currentSortDir === 'asc' ? 1 : -1);
+        }
+        const sa = fa ? String(fa) : '';
+        const sb = fb ? String(fb) : '';
+        return sa.localeCompare(sb) * (currentSortDir === 'asc' ? 1 : -1);
+      });
+    }
+    paymentsTbody.innerHTML = '';
+    if (!out || out.length === 0) {
+      paymentsMessage.textContent = 'Δεν βρέθηκαν εγγραφές για αυτή τη σελίδα/φίλτρα.';
+      return;
+    }
+    paymentsMessage.textContent = '';
+    for (const row of out) {
+      const tr = document.createElement('tr');
+      const statusKey = (row.status || '').toString();
+      const statusLabel = greekStatus(statusKey);
+      const statusClass = statusClassFor(statusKey);
+      const amountVal = formatAmount(row.amount, row.currency);
+      const when = formatDate(row.timestamp);
+      const statusIcon = statusIconFor(statusKey);
+      tr.innerHTML = `
+        <td>${escapeHtml(row.id||'')}</td>
+        <td><span class="status-badge ${statusClass}"><span class="status-icon">${statusIcon}</span>${escapeHtml(statusLabel)}</span></td>
+        <td>${escapeHtml(row.eventId||row.event_id||'')}</td>
+        <td class="amount" style="text-align:right">${escapeHtml(amountVal)}</td>
+        <td>${escapeHtml(row.currency||'')}</td>
+        <td>${escapeHtml(when)}</td>
+        <td>${escapeHtml(formatMeta(row.metadata||row.meta||''))} ${renderMetaButton(row.metadata||row.meta||'')}</td>
+      `;
+      paymentsTbody.appendChild(tr);
+    }
+  }
+
+  // Apply current filter inputs to lastPayments and render
+  function applyFilters(){
+    if(!lastPayments) { fetchPayments(); return; }
+    const status = document.getElementById('filterStatus').value;
+    const from = document.getElementById('filterFrom').value;
+    const to = document.getElementById('filterTo').value;
+    const min = document.getElementById('filterMin').value;
+    const max = document.getElementById('filterMax').value;
+    const filtered = lastPayments.filter(p => {
+      try {
+        if (status && String(p.status) !== status) return false;
+        if (min) {
+          const m = Math.round(Number(min) * 100);
+          if (Number(p.amount) < m) return false;
+        }
+        if (max) {
+          const M = Math.round(Number(max) * 100);
+          if (Number(p.amount) > M) return false;
+        }
+        if (from) {
+          const fromTs = new Date(from + 'T00:00:00Z').getTime();
+          const pt = p.timestamp ? new Date(p.timestamp).getTime() : NaN;
+          if (isFinite(pt) && pt < fromTs) return false;
+        }
+        if (to) {
+          const toTs = new Date(to + 'T23:59:59Z').getTime();
+          const pt = p.timestamp ? new Date(p.timestamp).getTime() : NaN;
+          if (isFinite(pt) && pt > toTs) return false;
+        }
+        return true;
+      } catch (_) { return false; }
+    });
+    renderPayments(filtered);
+  }
+
+  // Reset filters and show unfiltered results
+  function clearFilters(){
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filterFrom').value = '';
+    document.getElementById('filterTo').value = '';
+    document.getElementById('filterMin').value = '';
+    document.getElementById('filterMax').value = '';
+    if (lastPayments) renderPayments(lastPayments);
+  }
+
+  document.querySelectorAll('#paymentsTable thead th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.getAttribute('data-sort');
+      if (currentSortField === field) currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+      else currentSortField = field;
+      applyFilters();
+    });
+  });
+
+  const bookingsPanel = document.getElementById('bookingsPanel');
+  const bookingsTbody = document.getElementById('bookingsTable').querySelector('tbody');
+  const bookingsMessage = document.getElementById('bookingsMessage');
+
+  document.getElementById('refreshBookings').addEventListener('click', fetchBookings);
+  document.getElementById('exportBookings').addEventListener('click', exportBookings);
+  document.getElementById('bfPaymentType').addEventListener('change', fetchBookings);
+  document.getElementById('bfPartner').addEventListener('change', fetchBookings);
+  document.getElementById('bfPayoutStatus').addEventListener('change', fetchBookings);
+
+  document.getElementById('genStripeLink').addEventListener('click', async () => {
+    const email = (document.getElementById('partnerEmail').value || '').trim();
+    const status = document.getElementById('genStatus');
+    const resultDiv = document.getElementById('onboardingResult');
+    const urlInput = document.getElementById('onboardingUrl');
+    const acctSpan = document.getElementById('onboardingAccount');
+    if (!email) { alert('Please enter an email'); return; }
+    status.textContent = 'Generating...';
+    resultDiv.style.display = 'none';
+    try {
+      const res = await fetch('/api/partners/connect-link?email=' + encodeURIComponent(email));
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j || !j.url) throw new Error(j && j.error ? j.error : ('HTTP ' + res.status));
+      urlInput.value = j.url;
+      acctSpan.textContent = j.accountId || '';
+      resultDiv.style.display = 'block';
+      status.textContent = 'Ready';
+    } catch (e) {
+      status.textContent = 'Error generating link';
+      alert('Failed to generate Stripe link: ' + e.message);
+    }
+  });
+
+  document.getElementById('copyOnboarding').addEventListener('click', async () => {
+    const url = document.getElementById('onboardingUrl').value || '';
+    if (!url) return;
+    try { await navigator.clipboard.writeText(url); alert('Copied!'); } catch (_) { /* fallback */
+      const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); alert('Copied.');
+    }
+  });
+
+  async function fetchPartnersList(){
+    try {
+      const res = await fetch('/api/partners/list', { headers: { Authorization: basicAuth } });
+      if (!res.ok) return;
+      const arr = await res.json();
+      const dl = document.getElementById('partnersList');
+      dl.innerHTML = '';
+      for (const p of arr) {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.label = (p.partner_name || p.partner_email || p.id);
+        dl.appendChild(opt);
+      }
+    } catch (_) {}
+  }
+
+  function openAdminStream(u, p){
+    try {
+      const auth = btoa(String(u||'')+':'+String(p||''));
+      const es = new EventSource('/api/partners/admin/stream?auth='+encodeURIComponent(auth));
+      es.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data || '{}');
+          if (msg && msg.type && msg.booking_id) {
+            if (msg.type === 'payout_sent' || msg.type === 'payout_failed') updatePayoutCells(msg.booking_id, msg.status || (msg.type==='payout_sent'?'sent':'failed'), msg.payout_date || '');
+          }
+        } catch(_){}
+      };
+    } catch (_) { /* ignore */ }
+  }
+
+  async function fetchBookings(){
+    if (!basicAuth) return;
+    bookingsTbody.innerHTML = '';
+    bookingsMessage.textContent = 'Φόρτωση...';
+    try {
+      const params = new URLSearchParams();
+      params.set('limit', '1000');
+      params.set('offset', '0');
+      const pt = document.getElementById('bfPaymentType').value;
+      const partner = document.getElementById('bfPartner').value.trim();
+      const ps = document.getElementById('bfPayoutStatus').value;
+      if (pt) params.set('payment_type', pt);
+      if (partner) params.set('partner', partner);
+      if (ps) params.set('payout_status', ps);
+      const qs = '?' + params.toString();
+      const res = await fetch('/api/partners/admin/bookings' + qs, { headers: { Authorization: basicAuth } });
+      if (!res.ok) throw new Error(res.status);
+      const arr = await res.json();
+      renderBookings(arr || []);
+    } catch (e) {
+      bookingsTbody.innerHTML = '';
+      bookingsMessage.textContent = 'Σφάλμα φόρτωσης κρατήσεων. Εμφανίζεται δείγμα.';
+      bookingsDemoForce = true;
+      renderBookings([]);
+    }
+  }
+
+  function renderBookings(arr){
+    bookingsTbody.innerHTML = '';
+    if (!arr || arr.length === 0 || bookingsDemoForce) {
+      if (!bookingsDemoForce) {
+        bookingsMessage.textContent = 'No bookings found. Showing a sample row for testing.';
+      }
+      const demo = document.createElement('tr');
+      demo.id = 'demo-booking-row';
+      const demoCreated = new Date();
+      const demoPrice = formatAmount(32000, 'eur');
+      const demoPartnerShare = formatAmount(25600, 'eur');
+      const demoCommission = formatAmount(6400, 'eur');
+      demo.innerHTML = `
+        <td>bk_demo_1</td>
+        <td>confirmed</td>
+        <td></td>
+        <td></td>
+        <td>John Demo</td>
+        <td></td>
+        <td>Lefkada Experience</td>
+        <td style="text-align:right">2</td>
+        <td style="text-align:right">${escapeHtml(demoPrice)}</td>
+        <td>${escapeHtml(formatDate(demoCreated.toISOString()))}</td>
+        <td>stripe</td>
+        <td class="editable-partner" contenteditable data-trip="" data-partnerid="">BlueWave Cruises</td>
+        <td style="text-align:right">${escapeHtml(demoPartnerShare)}</td>
+        <td style="text-align:right">${escapeHtml(demoCommission)}</td>
+        <td class="payout-status" data-booking="bk_demo_1">sent</td>
+        <td class="payout-date" data-booking="bk_demo_1">${escapeHtml(formatDate('2025-10-23T00:00:00Z'))}</td>
+        <td></td>
+      `;
+      bookingsTbody.appendChild(demo);
+      bookingsDemoForce = false;
+      return;
+    }
+    bookingsMessage.textContent = '';
+    for (const b of arr) {
+      const tr = document.createElement('tr');
+      const when = formatDate(b.created_at);
+      const price = formatAmount(b.price_cents || 0, 'eur');
+      const partnerName = b.partner_name || b.partner_id || '';
+      const partnerShare = formatAmount(b.partner_share_cents || 0, 'eur');
+      const commission = formatAmount(b.commission_cents || 0, 'eur');
+      tr.innerHTML = `
+        <td>${escapeHtml(b.id||'')}</td>
+        <td>${escapeHtml(b.status||'')}</td>
+        <td>${escapeHtml(b.payment_intent_id||'')}</td>
+        <td>${escapeHtml(b.event_id||'')}</td>
+        <td>${escapeHtml(b.user_name||'')}</td>
+        <td>${escapeHtml(b.user_email||'')}</td>
+        <td>${escapeHtml(b.trip_id||'')}</td>
+        <td style="text-align:right">${escapeHtml(String(b.seats||''))}</td>
+        <td style="text-align:right">${escapeHtml(price)}</td>
+        <td>${escapeHtml(when)}</td>
+        <td>${escapeHtml(b.payment_type||'')}</td>
+        <td class="editable-partner" contenteditable data-trip="${escapeHtml(b.trip_id||'')}" data-partnerid="${escapeHtml(b.partner_id||'')}">${escapeHtml(partnerName)}</td>
+        <td style="text-align:right">${escapeHtml(partnerShare)}</td>
+        <td style="text-align:right">${escapeHtml(commission)}</td>
+        <td class="payout-status" data-booking="${escapeHtml(b.id||'')}">${escapeHtml(b.payout_status||'')}</td>
+        <td class="payout-date" data-booking="${escapeHtml(b.id||'')}">${escapeHtml(formatDate(b.payout_date||''))}</td>
+        <td>${escapeHtml(typeof b.metadata === 'object' ? JSON.stringify(b.metadata) : (b.metadata||''))} ${renderBookingMetaButton(b.metadata||b.metadata||'', b.id, b.payment_intent_id)}</td>
+      `;
+      bookingsTbody.appendChild(tr);
+    }
+    bookingsTbody.querySelectorAll('.editable-partner').forEach(td => {
+      td.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') { ev.preventDefault(); td.blur(); }
+      });
+      td.addEventListener('blur', async () => {
+        const tripId = td.getAttribute('data-trip');
+        const val = td.textContent.trim();
+        if (!tripId) return;
+        let partnerId = val;
+        const opt = Array.from(document.querySelectorAll('#partnersList option')).find(o => o.label === val || o.value === val);
+        if (opt) partnerId = opt.value;
+        try {
+          await fetch('/api/partners/admin/mapping', { method: 'POST', headers: { 'Content-Type':'application/json', Authorization: basicAuth }, body: JSON.stringify({ trip_id: tripId, partner_id: partnerId }) });
+          fetchBookings();
+        } catch (_) {}
+      });
+    });
+  }
+
+  document.querySelectorAll('#bookingsTable thead th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.getAttribute('data-sort');
+      if (bookingsSortField === field) bookingsSortDir = bookingsSortDir === 'asc' ? 'desc' : 'asc';
+      else bookingsSortField = field;
+      fetchBookings();
+    });
+  });
+
+  async function exportBookings(){
+    if (!basicAuth) return;
+    const btn = document.getElementById('exportBookings'); btn.disabled = true; btn.textContent = 'Ετοιμάζεται...';
+    try {
+      const params = new URLSearchParams();
+      const pt = document.getElementById('bfPaymentType').value;
+      const partner = document.getElementById('bfPartner').value.trim();
+      const ps = document.getElementById('bfPayoutStatus').value;
+      if (pt) params.set('payment_type', pt);
+      if (partner) params.set('partner', partner);
+      if (ps) params.set('payout_status', ps);
+      const res = await fetch('/api/partners/admin/bookings.csv?' + params.toString(), { headers: { Authorization: basicAuth } });
+      if (!res.ok) throw new Error('Export failed: ' + res.status);
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      const cd = res.headers.get('Content-Disposition') || '';
+      let filename = 'bookings.csv';
+      const m = cd.match(/filename="?([^";]+)"?/);
+      if (m && m[1]) filename = m[1];
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    } catch (e) { alert('Export failed: ' + e); }
+    finally { btn.disabled = false; btn.textContent = 'Εξαγωγή Κρατήσεων (CSV)'; }
+  }
+
+  function updatePayoutCells(bookingId, status, dateIso){
+    const rowStatus = bookingsTbody.querySelector(`.payout-status[data-booking="${CSS.escape(bookingId)}"]`);
+    const rowDate = bookingsTbody.querySelector(`.payout-date[data-booking="${CSS.escape(bookingId)}"]`);
+    if (rowStatus) rowStatus.textContent = status || '';
+    if (rowDate) rowDate.textContent = dateIso ? formatDate(dateIso) : '';
+  }
+
+  function greekStatus(s){
+    if (!s) return '';
+    const map = {
+      'succeeded': 'Επιτυχής',
+      'failed': 'Αποτυχημένη',
+      'processing': 'Σε επεξεργασία',
+      'requires_payment_method': 'Χρειάζεται μέθοδο',
+      'canceled': 'Ακυρώθηκε'
+    };
+    return map[s] || s;
+  }
+
+  function statusClassFor(s){
+    if (!s) return '';
+    const map = {
+      'succeeded': 'status-succeeded',
+      'failed': 'status-failed',
+      'processing': 'status-processing',
+      'requires_payment_method': 'status-requires_payment_method',
+      'canceled': 'status-canceled'
+    };
+    return map[s] || '';
+  }
+
+  function formatAmount(amount, currency){
+    if (amount == null || amount === '') return '';
+    let num = Number(amount);
+    if (!isFinite(num)) return String(amount);
+    if (Math.abs(num) > 1000) num = num / 100;
+    return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  }
+
+  function formatDate(iso){
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2,'0');
+    const min = String(d.getMinutes()).padStart(2,'0');
+    return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+  }
+
+  function statusIconFor(s){
+    const map = {
+      'succeeded': '✔️',
+      'failed': '❌',
+      'processing': '⏳',
+      'requires_payment_method': '⚠️',
+      'canceled': '⛔'
+    };
+    return map[s] || '';
+  }
+
+  function renderMetaButton(meta){
+    try {
+      const j = typeof meta === 'string' && meta ? meta : (meta && typeof meta === 'object' ? JSON.stringify(meta) : '');
+      if (!j) return '';
+      return `<button class="view-meta" data-meta='${escapeHtml(j)}'>View</button>`;
+    } catch (e) { return ''; }
+  }
+
+  function renderBookingMetaButton(meta, bookingId, paymentIntentId){
+    try {
+      const j = typeof meta === 'string' && meta ? meta : (meta && typeof meta === 'object' ? JSON.stringify(meta) : '');
+      const dataMeta = escapeHtml(j);
+      const dataB = escapeHtml(String(bookingId || ''));
+      const dataPi = escapeHtml(String(paymentIntentId || ''));
+      return `<button class="view-booking" data-meta='${dataMeta}' data-booking='${dataB}' data-pi='${dataPi}'>View</button>`;
+    } catch (e) { return ''; }
+  }
+
+  document.addEventListener('click', (e) => {
+    if (e.target && e.target.classList) {
+      if (e.target.classList.contains('view-meta')) {
+        const m = e.target.getAttribute('data-meta') || '';
+        showMetadataModal(m);
+      } else if (e.target.classList.contains('view-booking')) {
+        const m = e.target.getAttribute('data-meta') || '';
+        const bid = e.target.getAttribute('data-booking') || '';
+        const pi = e.target.getAttribute('data-pi') || '';
+        showMetadataModal(m, bid, pi);
+      }
+    }
+  });
+
+  const modalBackdrop = document.createElement('div'); modalBackdrop.className = 'modal-backdrop';
+  modalBackdrop.innerHTML = `
+    <div class="modal">
+      <button id="closeModal" style="float:right">Close</button>
+      <h3>Metadata</h3>
+      <pre id="modalPre"></pre>
+      <div style="margin-top:12px">
+        <button id="refundBtn" style="background:#dc3545;color:#fff;margin-right:8px">Refund</button>
+        <button id="cancelBtn" style="background:#6c757d;color:#fff">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modalBackdrop);
+  document.getElementById('closeModal').addEventListener('click', () => { modalBackdrop.style.display = 'none'; clearModalState(); });
+  async function showMetadataModal(text, bookingId, paymentIntentId){
+    const pre = document.getElementById('modalPre');
+    if (bookingId) {
+      try {
+        const res = await fetch('/api/bookings/' + encodeURIComponent(bookingId));
+        if (res.ok) {
+          const b = await res.json();
+          const parts = [];
+          parts.push('ID: ' + (b.id || ''));
+          parts.push('Status: ' + (b.status || ''));
+          parts.push('PaymentIntent: ' + (b.payment_intent_id || ''));
+          parts.push('Event: ' + (b.event_id || ''));
+          parts.push('Name: ' + (b.user_name || ''));
+          parts.push('Email: ' + (b.user_email || ''));
+          parts.push('Trip: ' + (b.trip_id || ''));
+          parts.push('Seats: ' + (b.seats || ''));
+          parts.push('Price: ' + (formatAmount(b.price_cents || 0, b.currency || 'eur')));
+          parts.push('Created: ' + (formatDate(b.created_at || '') || ''));
+          parts.push('\nMetadata:\n' + (typeof b.metadata === 'object' ? JSON.stringify(b.metadata, null, 2) : (b.metadata || '')));
+          pre.textContent = parts.join('\n');
+        } else {
+          try { pre.textContent = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { pre.textContent = text; }
+        }
+      } catch (e) {
+        try { pre.textContent = JSON.stringify(JSON.parse(text), null, 2); } catch (err) { pre.textContent = text; }
+      }
+    } else {
+      try { pre.textContent = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { pre.textContent = text; }
+    }
+    modalBackdrop.dataset.booking = bookingId || '';
+    modalBackdrop.dataset.pi = paymentIntentId || '';
+    document.getElementById('refundBtn').disabled = !bookingId;
+    document.getElementById('cancelBtn').disabled = !bookingId;
+    modalBackdrop.style.display = 'flex';
+  }
+
+  function clearModalState(){
+    delete modalBackdrop.dataset.booking;
+    delete modalBackdrop.dataset.pi;
+    document.getElementById('refundBtn').disabled = true;
+    document.getElementById('cancelBtn').disabled = true;
+  }
+
+  document.getElementById('refundBtn').addEventListener('click', async () => {
+    const bookingId = modalBackdrop.dataset.booking;
+    if (!bookingId) return alert('No booking id');
+    if (!confirm('Really refund booking ' + bookingId + '?')) return;
+    try {
+      const res = await fetch(`/admin/bookings/${encodeURIComponent(bookingId)}/refund`, { method: 'POST', headers: { Authorization: basicAuth } });
+      if (!res.ok) throw new Error('Refund failed: ' + res.status);
+      updateBookingRowStatus(bookingId, 'refunded');
+      alert('Refund request accepted');
+      modalBackdrop.style.display = 'none'; clearModalState();
+      fetchBookings();
+    } catch (e) { alert('Refund failed: ' + e); }
+  });
+
+  document.getElementById('cancelBtn').addEventListener('click', async () => {
+    const bookingId = modalBackdrop.dataset.booking;
+    if (!bookingId) return alert('No booking id');
+    if (!confirm('Really cancel booking ' + bookingId + '?')) return;
+    try {
+      const res = await fetch(`/admin/bookings/${encodeURIComponent(bookingId)}/cancel`, { method: 'POST', headers: { Authorization: basicAuth } });
+      if (!res.ok) throw new Error('Cancel failed: ' + res.status);
+      updateBookingRowStatus(bookingId, 'canceled');
+      alert('Booking canceled');
+      modalBackdrop.style.display = 'none'; clearModalState();
+      fetchBookings();
+    } catch (e) { alert('Cancel failed: ' + e); }
+  });
+
+  function updateBookingRowStatus(bookingId, newStatus){
+    const trs = bookingsTbody.querySelectorAll('tr');
+    for (const tr of trs) {
+      const td = tr.querySelector('td');
+      if (!td) continue;
+      if (td.textContent.trim() === bookingId) {
+        const statusCell = tr.querySelectorAll('td')[1];
+        if (statusCell) {
+          statusCell.textContent = newStatus;
+        }
+        return;
+      }
+    }
+  }
+
+  function escapeHtml(s){
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function formatMeta(m){
+    if (!m) return '';
+    try { return typeof m === 'string' ? m : JSON.stringify(m); } catch(e) { return String(m); }
+  }
+
+  // Export payments to CSV with server fallback
+  async function exportPayments_v2(){
+    if(!basicAuth) return;
+    const btn = document.getElementById('exportPayments');
+    btn.disabled = true;
+    btn.textContent = 'Ετοιμάζεται...';
+    try {
+      const params = new URLSearchParams();
+      const status = document.getElementById('filterStatus').value;
+      const from = document.getElementById('filterFrom').value;
+      const to = document.getElementById('filterTo').value;
+      const min = document.getElementById('filterMin').value;
+      const max = document.getElementById('filterMax').value;
+      if (status) params.set('status', status);
+      if (from) params.set('from', from);
+      if (to) params.set('to', to);
+      if (min) params.set('min', Math.round(Number(min)*100));
+      if (max) params.set('max', Math.round(Number(max)*100));
+
+      const url = '/admin/payments.csv?' + params.toString();
+      const res = await fetch(url, { headers: { Authorization: basicAuth } });
+      if (res.ok) {
+        const blob = await res.blob();
+        const a = document.createElement('a');
+        const downloadUrl = URL.createObjectURL(blob);
+        const cd = res.headers.get('Content-Disposition') || '';
+        let filename = 'payments.csv';
+        const m = cd.match(/filename="?([^";]+)"?/);
+        if (m && m[1]) filename = m[1];
+        a.href = downloadUrl; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(downloadUrl);
+      } else {
+        const rows = [];
+        rows.push(['Κωδικός','Κατάσταση','Γεγονός','Ποσό (€)','Νόμισμα','Ημερομηνία','Μεταδεδομένα']);
+        const trs = paymentsTbody.querySelectorAll('tr');
+        trs.forEach(tr => {
+          const cols = Array.from(tr.querySelectorAll('td')).map(td => '"'+td.textContent.replace(/"/g,'""')+'"');
+          rows.push(cols);
+        });
+        const csv = rows.map(r => r.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url2 = URL.createObjectURL(blob);
+        const a2 = document.createElement('a'); a2.href = url2; a2.download = 'payments.csv'; document.body.appendChild(a2); a2.click(); a2.remove(); URL.revokeObjectURL(url2);
+      }
+    } catch (err) {
+      alert('Εξαγωγή απέτυχε: '+err);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Εξαγωγή σε CSV';
+    }
+  }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();

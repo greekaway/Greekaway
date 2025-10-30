@@ -1,0 +1,157 @@
+/* admin-core.css: unified admin base + responsive + tuning */
+
+/* --- admin-base.css --- */
+/* Admin base styles: generic admin layout, typography tweaks limited to admin pages, buttons, panels, modal, and shared utilities.
+   Note: Only admin pages load this file, so it is safe to target base elements like body here. */
+
+/* Basic page skeleton for admin.html */
+body.admin-main {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 20px;
+  background-color: #eef7ff;
+}
+
+body.admin-main label { display: block; margin-top: 8px; }
+body.admin-main input[type=text],
+body.admin-main input[type=password] { width: 300px; padding: 6px; }
+body.admin-main input[type=date],
+body.admin-main input[type=number] { padding: 6px; }
+body.admin-main .btn { margin-top: 8px; }
+
+/* Simple two-column blocks used in admin.html */
+body.admin-main .col { display: inline-block; vertical-align: top; width: 48%; margin-right: 2%; }
+
+/* Card-like white panels inside the admin area */
+body.admin-main #main,
+body.admin-main .col,
+body.admin-main #paymentsContainer,
+body.admin-main #backup { background: #ffffff; padding: 10px; border-radius: 6px; }
+
+/* Sortable header affordance */
+.sortable { cursor: pointer; text-decoration: underline dotted; }
+
+/* Modal for booking/payment metadata (structure only; color as-is) */
+body.admin-main .modal-backdrop { position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+body.admin-main .modal { background: #fff; border-radius: 8px; padding: 16px; max-width: 800px; max-height: 80vh; overflow: auto; box-shadow: 0 6px 24px rgba(0,0,0,0.2); }
+body.admin-main .modal pre { white-space: pre-wrap; background: #f7f9fc; padding: 8px; border-radius: 6px; }
+
+/* --- admin-responsive.css --- */
+/* Admin responsive layout — mobile-first */
+:root {
+  --ga-gap-sm: 8px;
+  --ga-gap-md: 12px;
+  --ga-gap-lg: 16px;
+  --ga-fab-spacing: 56px;
+}
+
+/* Sticky page header and filter bars */
+h2, h3 { position: sticky; top: 0; z-index: 20; }
+#filters, #bookingFilters, header.controls, header .controls { position: sticky; top: 0; z-index: 30; }
+
+/* Containers can scroll horizontally when needed (tablet) */
+#paymentsContainer, #bookingsContainer, body.admin-partners .columns { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+#paymentsContainer { min-height: 120px; }
+
+/* <= 576px: Card view */
+@media (max-width: 576px) {
+  #paymentsTable, #bookingsTable { border-collapse: separate; width: 100%; }
+  #paymentsTable thead, #bookingsTable thead { display: none; }
+  #paymentsTable tbody, #bookingsTable tbody { display: block; }
+  #paymentsTable tbody tr, #bookingsTable tbody tr { display: block; margin: var(--ga-gap-md) 0; border-radius: 8px; }
+  #paymentsTable tbody tr td, #bookingsTable tbody tr td { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: var(--ga-gap-sm); padding: 8px; }
+  #paymentsTable tbody tr td:nth-child(1)::before { content: 'Κωδικός'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(2)::before { content: 'Κατάσταση'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(3)::before { content: 'Γεγονός'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(4)::before { content: 'Ποσό (€)'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(5)::before { content: 'Νόμισμα'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(6)::before { content: 'Ημερομηνία'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(7)::before { content: 'Μεταδεδομένα'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(1),
+  #paymentsTable tbody tr td:nth-child(3),
+  #paymentsTable tbody tr td:nth-child(5),
+  #paymentsTable tbody tr td:nth-child(7) { display: none; }
+  #bookingsTable tbody tr td:nth-child(1)::before { content: 'ID'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(2)::before { content: 'Κατάσταση'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(3)::before { content: 'PaymentIntent'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(4)::before { content: 'Γεγονός'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(5)::before { content: 'Όνομα'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(6)::before { content: 'Email'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(7)::before { content: 'Trip'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(8)::before { content: 'Seats'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(9)::before { content: 'Τιμή'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(10)::before { content: 'Δημιουργήθηκε'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(11)::before { content: 'Payment Type'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(12)::before { content: 'Partner'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(13)::before { content: 'Partner Share (€)'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(14)::before { content: 'Greekaway Comm. (€)'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(15)::before { content: 'Payout Status'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(16)::before { content: 'Payout Date'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(17)::before { content: 'Metadata'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(1),
+  #bookingsTable tbody tr td:nth-child(3),
+  #bookingsTable tbody tr td:nth-child(4),
+  #bookingsTable tbody tr td:nth-child(6),
+  #bookingsTable tbody tr td:nth-child(17) { display: none; }
+  #exportPayments, #exportBookings, #genStripeLink { position: fixed; right: var(--ga-fab-edge, 16px); z-index: 60; }
+  #exportPayments { bottom: var(--ga-fab-edge, 16px); }
+  #exportBookings { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px)); }
+  #genStripeLink { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px) * 2); }
+}
+
+/* 577–768px: two-column cards */
+@media (min-width: 577px) and (max-width: 768px) {
+  #paymentsTable thead, #bookingsTable thead { display: none; }
+  #paymentsTable tbody, #bookingsTable tbody { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ga-gap-lg); }
+  #paymentsTable tbody tr, #bookingsTable tbody tr { display: block; border-radius: 8px; }
+  #paymentsTable tbody tr td, #bookingsTable tbody tr td { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: var(--ga-gap-sm); padding: 8px; }
+  #paymentsTable tbody tr td:nth-child(1),
+  #paymentsTable tbody tr td:nth-child(3),
+  #paymentsTable tbody tr td:nth-child(5),
+  #paymentsTable tbody tr td:nth-child(7) { display: none; }
+  #bookingsTable tbody tr td:nth-child(1),
+  #bookingsTable tbody tr td:nth-child(3),
+  #bookingsTable tbody tr td:nth-child(4),
+  #bookingsTable tbody tr td:nth-child(6),
+  #bookingsTable tbody tr td:nth-child(17) { display: none; }
+  #exportPayments, #exportBookings, #genStripeLink { position: fixed; right: var(--ga-fab-edge, 16px); z-index: 60; }
+  #exportPayments { bottom: var(--ga-fab-edge, 16px); }
+  #exportBookings { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px)); }
+  #genStripeLink { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px) * 2); }
+}
+
+/* 769–1024px: Tablet with horizontal scrolling */
+@media (min-width: 769px) and (max-width: 1024px) {
+  #paymentsTable thead, #bookingsTable thead { display: table-header-group; }
+  #paymentsTable tbody, #bookingsTable tbody { display: table-row-group; }
+  #paymentsTable tbody tr, #bookingsTable tbody tr { display: table-row; }
+  #paymentsTable tbody tr td, #bookingsTable tbody tr td { display: table-cell; padding: 6px; }
+  #paymentsContainer, #bookingsContainer { overflow-x: auto; }
+  #paymentsTable, #bookingsTable { min-width: 900px; }
+  #paymentsTable thead th:nth-child(7), #paymentsTable tbody td:nth-child(7) { display: none; }
+  #bookingsTable thead th:nth-child(17), #bookingsTable tbody td:nth-child(17) { display: none; }
+  #exportPayments, #exportBookings, #genStripeLink { position: static; }
+}
+
+/* >= 1025px: desktop */
+@media (min-width: 1025px) {
+  #exportPayments, #exportBookings, #genStripeLink { position: static; }
+}
+
+/* --- admin-tuning.css --- */
+:root { --ga-fab-edge: 0.8rem; --ga-fab-spacing: 0.5rem; }
+#paymentsTable, #bookingsTable, #paymentsTable tbody tr, #bookingsTable tbody tr { opacity: 1; filter: brightness(1); }
+h2, h3 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+#filters, #bookingFilters { padding: 6px !important; }
+body.admin-main .admin-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0 !important; }
+body.admin-main .btn, body.admin-main button { padding: 8px 12px; border-radius: 8px; font-weight: 600; }
+body.admin-main .admin-card { margin: 10px auto; max-width: 420px; background: #fff; border: 1px solid #e5e8ef; border-radius: 10px; padding: 12px; text-align: center; }
+body.admin-main .admin-card .actions { margin-top: 8px; }
+body.admin-main .payments-controls { display: grid; grid-template-rows: auto auto auto; gap: 8px; margin: 12px 0; }
+body.admin-main .payments-controls .filters-row { justify-content: center; }
+body.admin-main .payments-controls .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+body.admin-main .payments-controls .meta { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+body.admin-main .payments-controls .meta .left-set, body.admin-main .payments-controls .meta .right-set { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 576px) {
+  body.admin-main .payments-controls .meta { flex-direction: column; align-items: stretch; gap: 6px; }
+  body.admin-main .payments-controls .meta .right-set { justify-content: space-between; }
+}
