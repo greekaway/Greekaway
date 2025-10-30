@@ -85,10 +85,13 @@ body.admin-home {
     backdrop-filter: blur(12px);
     border-top: 1px solid rgba(255,255,255,0.1);
     border-bottom: none; box-shadow: 0 -6px 14px rgba(0,0,0,0.35);
+    /* Make sure tabs are visible and accessible even if content is wider */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  .tab { flex: 1 1 auto; justify-content: center; padding: 8px; }
-  .tab .label { display: none; }
-  .tab.active .label { display: inline; }
+  .tab { flex: 1 1 auto; justify-content: center; padding: 6px; font-size: 13px; }
+  /* Show labels for ALL tabs on mobile so they don't look empty next to Home */
+  .tab .label { display: inline; }
 
   .content { padding-bottom: var(--ah-nav-h-mobile); min-height: calc(100vh - var(--ah-nav-h-mobile) - 42px); }
   .view iframe { height: calc(100vh - var(--ah-nav-h-mobile) - 48px); border-radius: 8px 8px 0 0; }
