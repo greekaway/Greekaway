@@ -9,10 +9,10 @@
   <link rel="stylesheet" href="/css/admin-bookings.css">
   <link rel="stylesheet" href="/css/admin-payments.css">
   <link rel="stylesheet" href="/css/admin-partners.css">
+  <!-- Cleanup overrides: structure, spacing, plain colors -->
+  <link rel="stylesheet" href="/css/admin-cleanup.css?v=20251030-1">
 </head>
 <body class="admin-main">
-  <h2>Διαχείριση Greekaway</h2>
-  <p data-i18n="admin.help">Βάλε τα διαπιστευτήρια διαχειριστή για να δεις τις πληρωμές και την κατάσταση αντιγράφων ασφαλείας.</p>
   <form id="auth">
     <label>User <input id="user" type="text" value="admin" /></label>
     <label>Pass <input id="pass" type="password" /></label>
@@ -20,109 +20,13 @@
   </form>
 
   <div id="main" style="display:none">
-    <div class="col admin-section">
-      <h3 data-i18n="admin.backups">Κατάσταση αντιγράφων</h3>
-      <div class="admin-card admin-backup-card">
-        <div class="admin-card-body">
-          <div id="backup" style="margin-top:8px;color:#333;line-height:1.4"></div>
-          <div class="actions" style="margin-top:8px">
-            <button id="refreshBackup" class="btn" data-i18n-value="admin.refresh">Ανανέωση</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col">
-      <h3>Πληρωμές (τελευταίες)</h3>
-      <div class="payments-controls">
-        <div id="filters" class="admin-row filters-row" style="max-width:1100px;border-radius:6px;padding:8px">
-          <label style="display:inline-block;margin-right:8px">Κατάσταση:
-            <select id="filterStatus">
-              <option value="">(any)</option>
-              <option value="succeeded">succeeded</option>
-              <option value="requires_payment_method">requires_payment_method</option>
-              <option value="failed">failed</option>
-              <option value="processing">processing</option>
-              <option value="canceled">canceled</option>
-            </select>
-          </label>
-          <label>Από: <input id="filterFrom" type="date" /></label>
-          <label>Έως: <input id="filterTo" type="date" /></label>
-          <label>Ελάχιστο (€): <input id="filterMin" type="number" step="0.01" placeholder="0.00" /></label>
-          <label>Μέγιστο (€): <input id="filterMax" type="number" step="0.01" placeholder="" /></label>
-        </div>
-        <div class="payments-row actions">
-          <button id="refreshPayments" class="btn">Ανανέωση</button>
-          <button id="exportPayments" class="btn">Εξαγωγή σε CSV</button>
-          <button id="applyFilters" class="btn">Εφαρμογή</button>
-          <button id="clearFilters" class="btn">Επαναφορά</button>
-        </div>
-        <div class="payments-row meta">
-          <div class="left-set">
-            <button id="copyExcel" class="btn">Αντιγραφή στο Excel</button>
-          </div>
-          <div class="right-set">
-            <label style="margin-left:12px">Page size:
-              <select id="pageSize"><option>50</option><option>100</option><option>200</option></select>
-            </label>
-            <button id="prevPage" class="btn">Prev</button>
-            <button id="nextPage" class="btn">Next</button>
-            <label style="margin-left:8px">Ταξινόμηση:
-              <select id="sortField">
-                <option value="">(none)</option>
-                <option value="timestamp">timestamp</option>
-                <option value="amount">amount</option>
-                <option value="status">status</option>
-              </select>
-              <button id="sortDir" class="btn" title="Toggle asc/desc">▲</button>
-            </label>
-            <span id="pageInfo" style="margin-left:8px">Σελίδα: 1</span>
-          </div>
-        </div>
-      </div>
-      <div id="paymentsContainer">
-        <table id="paymentsTable" style="width:100%;border-collapse:collapse">
-          <thead>
-            <tr>
-              <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κωδικός</th>
-              <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κατάσταση</th>
-              <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Γεγονός</th>
-              <th class="sortable" data-sort="amount" style="border-bottom:1px solid #ddd;padding:6px;text-align:right;width:140px">Ποσό (€)</th>
-              <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Νόμισμα</th>
-              <th class="sortable" data-sort="timestamp" style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Ημερομηνία</th>
-              <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Μεταδεδομένα</th>
-            </tr>
-          </thead>
-          <tbody style="font-family:monospace;background:#fff"></tbody>
-        </table>
-        <div id="paymentsMessage" style="margin-top:8px;color:#666"></div>
-      </div>
-    </div>
+    <!-- Payments and backups moved out of this page -->
   </div>
 
-  <!-- Partners panel -->
-  <div id="partnersPanel" style="display:none;margin-top:12px;background:#fff;padding:10px;border-radius:6px">
-    <h3>Partners</h3>
-    <div class="admin-row">
-      <label>Partner Email: <input id="partnerEmail" type="email" placeholder="partner@example.com" style="width:280px;padding:6px"></label>
-      <button id="genStripeLink" class="btn">Generate Stripe Link</button>
-      <span id="genStatus" style="margin-left:8px;color:#666"></span>
-    </div>
-    <div id="onboardingResult" style="margin-top:10px; display:none">
-      <div>
-        <label>Onboarding URL:</label>
-        <input id="onboardingUrl" type="text" readonly style="width:90%; padding:6px" />
-        <button id="copyOnboarding" class="btn">Copy</button>
-      </div>
-      <div style="margin-top:6px;color:#333">
-        Account ID: <span id="onboardingAccount" style="font-family:monospace"></span>
-      </div>
-      <div style="margin-top:6px;color:#777; font-size:12px">Note: Stripe onboarding links are single-use and time-limited. Use promptly.</div>
-    </div>
-  </div>
-  <hr style="margin-top:16px" />
-  <div id="bookingsPanel" style="display:none;margin-top:12px">
-    <h3>Κρατήσεις</h3>
-    <div id="bookingFilters" class="admin-row">
+  <div id="bookingsPanel" style="display:none">
+    <div id="bookingsStickyBar" class="sticky-bar">
+      <h3 style="margin: 0 0 6px 0">Κρατήσεις</h3>
+      <div id="bookingFilters" class="admin-row">
       <label>Payment Type:
         <select id="bfPaymentType">
           <option value="">(any)</option>
@@ -142,6 +46,7 @@
       </label>
       <button id="refreshBookings">Ανανέωση Κρατήσεων</button>
       <button id="exportBookings">Εξαγωγή Κρατήσεων (CSV)</button>
+      </div>
     </div>
     <div id="bookingsContainer">
       <table id="bookingsTable" style="width:100%;border-collapse:collapse">

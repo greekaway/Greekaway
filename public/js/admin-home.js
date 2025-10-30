@@ -138,7 +138,7 @@
       if (tab === 'bookings') {
         view.innerHTML = `<iframe id="tab-bookings" title="Bookings" src="/admin.html?view=bookings&${cb}"></iframe>`;
       } else if (tab === 'payments') {
-        view.innerHTML = `<iframe id="tab-payments" title="Payments" src="/admin.html?view=payments&${cb}"></iframe>`;
+        view.innerHTML = `<iframe id="tab-payments" title="Payments" src="/admin-payments.html?${cb}"></iframe>`;
       } else if (tab === 'partners') {
         const qp = [];
         if (state.creds.user && state.creds.pass) qp.push(`auth=${encodeURIComponent(btoa(state.creds.user + ':' + state.creds.pass))}`);
@@ -160,7 +160,7 @@
       } else if (tab === 'payments') {
         frame = document.createElement('iframe');
         frame.id = 'tab-payments'; frame.title = 'Payments';
-        frame.src = `/admin.html?view=payments&${cb}`;
+        frame.src = `/admin-payments.html?${cb}`;
       } else if (tab === 'partners') {
         frame = document.createElement('iframe');
         frame.id = 'tab-partners'; frame.title = 'Partners';
@@ -172,6 +172,40 @@
       if (frame) view.appendChild(frame);
     }
     return view;
+  }
+
+  // Backups compact box on Home
+  async function fetchBackupHome(){
+    try {
+      const box = document.getElementById('backup');
+      if (!box || !state.authHeader) return;
+      box.textContent = 'Φόρτωση…';
+      const r = await fetch('/admin/backup-status', { headers: { Authorization: state.authHeader } });
+      if (!r.ok) throw new Error('HTTP '+r.status);
+      const j = await r.json();
+      const count = (j && (j.count ?? j.backupsCount ?? j.total)) || 0;
+      const latestObj = j && (j.latestDb || j.latest || j.latestZip || j.latestLog) || null;
+      const latestAt = j && (j.lastRunAt || j.latestAt || j.latestDate || (latestObj && latestObj.mtime) || '');
+      const when = latestAt ? new Date(latestAt) : null;
+      const dd = when ? String(when.getDate()).padStart(2,'0') : '';
+      const mm = when ? String(when.getMonth()+1).padStart(2,'0') : '';
+      const yyyy = when ? when.getFullYear() : '';
+      const hh = when ? String(when.getHours()).padStart(2,'0') : '';
+      const min = when ? String(when.getMinutes()).padStart(2,'0') : '';
+      const whenPretty = when ? `${dd}/${mm}/${yyyy} – ${hh}:${min}` : '—';
+      const size = latestObj && typeof latestObj === 'object' ? latestObj.size : undefined;
+      let sizeStr = '';
+      if (typeof size === 'number') {
+        let n = size; const units = ['B','KB','MB','GB','TB']; let i=0; while(n>=1024 && i<units.length-1){ n/=1024; i++; }
+        sizeStr = Math.round(n) + ' ' + units[i];
+      }
+      const line1 = 'Σύνολο αντιγράφων: ' + String(count || '—');
+      let line2 = 'Τελευταίο αντίγραφο: ' + whenPretty;
+      if (sizeStr) line2 += ' (' + sizeStr + ')';
+      box.innerHTML = '<div>'+line1+'</div><div>'+line2+'</div>';
+    } catch (e) {
+      const box = document.getElementById('backup'); if (box) box.textContent = 'Σφάλμα';
+    }
   }
 
   function tryInjectLogin(frame, mode){
@@ -265,6 +299,8 @@
       // Optional toast in content area
       showToast('Συνδέθηκες επιτυχώς');
     } catch(_){ bar.style.display = 'none'; }
+    // Refresh backups box on Home
+    fetchBackupHome();
   }
 
   function showLoginBar(message){
@@ -315,10 +351,57 @@
     attachLoginBar();
     wireTabs();
     ensureIdleWatcher();
+    wireStripeTools();
     // Bump activity on common user events
     ['mousemove','keydown','touchstart','visibilitychange'].forEach(ev => document.addEventListener(ev, bumpActivity, { passive: true }));
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
+})();
+
+// Stripe Partner Tools moved into Admin Home: reuse same behavior as admin.html
+(function(){
+  function wireStripeTools(){
+    const btnGen = document.getElementById('genStripeLink');
+    const btnCopy = document.getElementById('copyOnboarding');
+    if (btnGen) {
+      btnGen.addEventListener('click', async () => {
+        const emailEl = document.getElementById('partnerEmail');
+        const status = document.getElementById('genStatus');
+        const resultDiv = document.getElementById('onboardingResult');
+        const urlInput = document.getElementById('onboardingUrl');
+        const acctSpan = document.getElementById('onboardingAccount');
+        const email = (emailEl && emailEl.value || '').trim();
+        if (!email) { alert('Please enter an email'); return; }
+        if (status) status.textContent = 'Generating...';
+        if (resultDiv) resultDiv.style.display = 'none';
+        try {
+          const res = await fetch('/api/partners/connect-link?email=' + encodeURIComponent(email));
+          const j = await res.json().catch(() => ({}));
+          if (!res.ok || !j || !j.url) throw new Error(j && j.error ? j.error : ('HTTP ' + res.status));
+          if (urlInput) urlInput.value = j.url;
+          if (acctSpan) acctSpan.textContent = j.accountId || '';
+          if (resultDiv) resultDiv.style.display = 'block';
+          if (status) status.textContent = 'Ready';
+        } catch (e) {
+          if (status) status.textContent = 'Error generating link';
+          alert('Failed to generate Stripe link: ' + e.message);
+        }
+      });
+    }
+    if (btnCopy) {
+      btnCopy.addEventListener('click', async () => {
+        const urlEl = document.getElementById('onboardingUrl');
+        const url = urlEl ? (urlEl.value || '') : '';
+        if (!url) return;
+        try { await navigator.clipboard.writeText(url); alert('Copied!'); }
+        catch (_) {
+          const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); alert('Copied.');
+        }
+      });
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireStripeTools);
+  else wireStripeTools();
 })();

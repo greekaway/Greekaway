@@ -1,0 +1,210 @@
+/* admin-cleanup.css — compact, readable, no effects; focus on structure, spacing, colors */
+
+/* Base theme: dark navy background, white text, gold titles */
+html { background: #0b1a2a; }
+body.admin-main {
+  background: #0b1a2a;
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0 !important; /* eliminate outer white band from body margin collapse */
+  padding: 0 8px 0 8px; /* no top gap; slight side padding for breathing room */
+}
+
+body.admin-main h2,
+body.admin-main h3 {
+  color: #d4af37; /* gold titles */
+  font-weight: 700;
+  margin: 8px 0 6px 0;
+}
+
+/* Sticky helper for section bars (e.g., Bookings title + filters) */
+.sticky-bar {
+  position: sticky;
+  top: 0; /* stick to the top of the scrolling context (iframe or page) */
+  z-index: 120; /* float above sticky table headers */
+  background: #0E1520; /* solid dark backer to avoid see-through */
+  margin: 0;
+  border: 0;
+}
+
+/* Remove any vertical gap before bookings section */
+body.admin-main #bookingsPanel { margin-top: 0 !important; }
+/* Ensure legacy empty panel never shows (it caused a white gap above bookings) */
+body.admin-main #main { display: none !important; }
+
+/* Keep bookings header + filters readable over content while scrolling */
+#bookingsTable thead th {
+  position: sticky;
+  top: var(--bookings-sticky-offset, 0px); /* set by JS to match sticky bar height */
+  z-index: 90; /* below sticky bar but above rows */
+  background: #0E1520; /* solid dark backer */
+  color: #ffffff; /* ensure readability on dark header */
+}
+
+/* Keep tables readable on white background */
+#paymentsContainer table,
+#bookingsContainer table {
+  background: #ffffff;
+  color: #111111;
+}
+
+#paymentsContainer table th,
+#paymentsContainer table td,
+#bookingsContainer table th,
+#bookingsContainer table td {
+  color: #111111;
+}
+
+/* Buttons: smaller, plain, consistent */
+.btn,
+#auth button,
+#refreshBookings,
+#exportBookings {
+  background: #20344d; /* solid, no gradient/shadow */
+  color: #ffffff;
+  border: none;
+  padding: 4px 10px;
+  font-size: 13px;
+  line-height: 1.2;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.btn[disabled] {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* Inputs/selects: compact, readable */
+body.admin-main input,
+body.admin-main select {
+  height: 28px;
+  padding: 2px 6px;
+  font-size: 13px;
+  color: #111111;
+  background: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 2px;
+}
+
+/* Labels inline with controls */
+body.admin-main label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 6px 2px 0;
+  color: #ffffff;
+}
+
+/* Rows of controls: tight alignment and spacing */
+.payments-row,
+.actions,
+.admin-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px; /* 6–8px spacing target */
+  margin: 6px 0;
+}
+
+/* Filters row: compact pill with solid background, no effects */
+.filters-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px;
+  background: #0f2338; /* solid block to separate filters from background */
+  border-radius: 4px; /* minimal rounding, no shadow */
+}
+
+/* Payments meta row: split left/right sets neatly */
+.payments-row.meta {
+  justify-content: space-between;
+}
+.payments-row.meta .left-set,
+.payments-row.meta .right-set {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Backup card: compact with side-by-side text & button */
+.admin-card.admin-backup-card {
+  background: #0f2236;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  max-width: 640px; /* reduce width */
+}
+
+.admin-card.admin-backup-card .admin-card-body {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Override inline margins inside backup card */
+.admin-card.admin-backup-card #backup {
+  margin: 0 !important;
+  color: #ffffff;
+}
+.admin-card.admin-backup-card .actions {
+  margin: 0 !important;
+}
+
+/* Table headers minimal styling; borders already inline */
+.admin-main table thead th {
+  font-weight: 600;
+}
+
+/* Bookings: remove the empty blue header line and start rows immediately */
+#bookingsStickyBar { padding-bottom: 0; }
+#bookingsStickyBar h3 { margin: 0 0 4px 0 !important; }
+#bookingsStickyBar .admin-row { margin-bottom: 0 !important; }
+#bookingsContainer { margin-top: 0 !important; }
+/* Hide the header row entirely so data starts right away */
+#bookingsTable thead { display: none !important; }
+
+/* Status badge readability against white rows */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #eef2f7;
+  color: #111111;
+}
+
+/* Layout helpers for columns/sections */
+.admin-section {
+  margin-bottom: 12px;
+}
+
+/* Auth box at top */
+#auth label { margin-right: 8px; }
+
+/* Responsive adjustments for mobile/tablet */
+@media (max-width: 920px) {
+  .payments-row.meta { gap: 8px; }
+}
+
+@media (max-width: 768px) {
+  .payments-row.meta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .payments-row.meta .right-set {
+    justify-content: flex-start;
+  }
+  .filters-row label {
+    width: 100%;
+  }
+  .admin-card.admin-backup-card {
+    max-width: 100%;
+  }
+}

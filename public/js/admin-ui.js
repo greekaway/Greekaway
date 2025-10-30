@@ -6,12 +6,23 @@
 
 (function(){
   function init(){
+  // Compute sticky offset so table header sticks below the section bar (Κρατήσεις + filters)
+  try {
+    const stickyBar = document.getElementById('bookingsStickyBar');
+    const setOffset = () => {
+      const h = stickyBar ? stickyBar.offsetHeight || 0 : 0;
+      document.documentElement.style.setProperty('--bookings-sticky-offset', h + 'px');
+    };
+    setOffset();
+    window.addEventListener('resize', setOffset);
+  } catch(_) {}
   const authForm = document.getElementById('auth');
   const main = document.getElementById('main');
   const userInput = document.getElementById('user');
   const passInput = document.getElementById('pass');
   const backupDiv = document.getElementById('backup');
-  const paymentsTbody = document.getElementById('paymentsTable').querySelector('tbody');
+  const paymentsTable = document.getElementById('paymentsTable');
+  const paymentsTbody = paymentsTable ? paymentsTable.querySelector('tbody') : null;
   const paymentsMessage = document.getElementById('paymentsMessage');
 
   let basicAuth = null;
@@ -35,46 +46,51 @@
     const p = passInput.value || '';
     basicAuth = 'Basic ' + btoa(u + ':' + p);
     try { console.info('[admin-ui] login submit: starting data loads'); } catch(_){}
-    main.style.display = 'block';
+  // Don't reveal #main: it's an empty legacy panel that creates a white gap above bookings
+  if (main) main.style.display = 'none';
     authForm.style.display = 'none';
-    fetchBackup();
-    fetchPayments();
+  if (backupDiv) fetchBackup();
+  if (paymentsTbody) fetchPayments();
     // show bookings panel and load bookings
-    document.getElementById('bookingsPanel').style.display = 'block';
+  const bookingsPanelEl = document.getElementById('bookingsPanel');
+  if (bookingsPanelEl) bookingsPanelEl.style.display = 'block';
     // show partners panel
-    document.getElementById('partnersPanel').style.display = 'block';
+  const partnersPanelEl = document.getElementById('partnersPanel');
+  if (partnersPanelEl) partnersPanelEl.style.display = 'block';
     // load partners list for autocompletion
     fetchPartnersList();
     // open SSE for realtime payout updates
     openAdminStream(u, p);
     // fallback polling to keep statuses fresh
-    setInterval(() => { if (basicAuth) fetchBookings(); }, 20000);
-    fetchBookings();
+    if (document.getElementById('bookingsTable')) {
+      setInterval(() => { if (basicAuth) fetchBookings(); }, 20000);
+      fetchBookings();
+    }
   });
 
   // Load filters from URL on page load
   (function loadFiltersFromUrl(){
     const params = new URLSearchParams(window.location.search);
-    if (params.has('status')) document.getElementById('filterStatus').value = params.get('status');
-    if (params.has('date_from')) document.getElementById('filterFrom').value = params.get('date_from');
-    if (params.has('date_to')) document.getElementById('filterTo').value = params.get('date_to');
-    if (params.has('min_amount')) document.getElementById('filterMin').value = (Number(params.get('min_amount'))/100).toFixed(2);
-    if (params.has('max_amount')) document.getElementById('filterMax').value = (Number(params.get('max_amount'))/100).toFixed(2);
+    const fStatus = document.getElementById('filterStatus'); if (fStatus && params.has('status')) fStatus.value = params.get('status');
+    const fFrom = document.getElementById('filterFrom'); if (fFrom && params.has('date_from')) fFrom.value = params.get('date_from');
+    const fTo = document.getElementById('filterTo'); if (fTo && params.has('date_to')) fTo.value = params.get('date_to');
+    const fMin = document.getElementById('filterMin'); if (fMin && params.has('min_amount')) fMin.value = (Number(params.get('min_amount'))/100).toFixed(2);
+    const fMax = document.getElementById('filterMax'); if (fMax && params.has('max_amount')) fMax.value = (Number(params.get('max_amount'))/100).toFixed(2);
   })();
 
-  document.getElementById('refreshBackup').addEventListener('click', fetchBackup);
-  document.getElementById('refreshPayments').addEventListener('click', fetchPayments);
-  document.getElementById('exportPayments').addEventListener('click', exportPayments_v2);
-  document.getElementById('applyFilters').addEventListener('click', applyFilters);
-  document.getElementById('clearFilters').addEventListener('click', clearFilters);
-  document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
-  document.getElementById('nextPage').addEventListener('click', () => changePage(1));
-  document.getElementById('pageSize').addEventListener('change', (e) => { currentLimit = parseInt(e.target.value,10) || 50; currentOffset = 0; fetchPayments(); });
-  document.getElementById('sortField').addEventListener('change', (e) => { currentSortField = e.target.value || ''; applyFilters(); });
-  document.getElementById('sortDir').addEventListener('click', (e) => { currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc'; e.target.textContent = currentSortDir === 'asc' ? '▼' : '▲'; applyFilters(); });
+  const btnRefreshBackup = document.getElementById('refreshBackup'); if (btnRefreshBackup) btnRefreshBackup.addEventListener('click', fetchBackup);
+  const btnRefreshPayments = document.getElementById('refreshPayments'); if (btnRefreshPayments) btnRefreshPayments.addEventListener('click', fetchPayments);
+  const btnExportPayments = document.getElementById('exportPayments'); if (btnExportPayments) btnExportPayments.addEventListener('click', exportPayments_v2);
+  const btnApplyFilters = document.getElementById('applyFilters'); if (btnApplyFilters) btnApplyFilters.addEventListener('click', applyFilters);
+  const btnClearFilters = document.getElementById('clearFilters'); if (btnClearFilters) btnClearFilters.addEventListener('click', clearFilters);
+  const btnPrevPage = document.getElementById('prevPage'); if (btnPrevPage) btnPrevPage.addEventListener('click', () => changePage(-1));
+  const btnNextPage = document.getElementById('nextPage'); if (btnNextPage) btnNextPage.addEventListener('click', () => changePage(1));
+  const selPageSize = document.getElementById('pageSize'); if (selPageSize) selPageSize.addEventListener('change', (e) => { currentLimit = parseInt(e.target.value,10) || 50; currentOffset = 0; fetchPayments(); });
+  const selSortField = document.getElementById('sortField'); if (selSortField) selSortField.addEventListener('change', (e) => { currentSortField = e.target.value || ''; applyFilters(); });
+  const btnSortDir = document.getElementById('sortDir'); if (btnSortDir) btnSortDir.addEventListener('click', (e) => { currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc'; e.target.textContent = currentSortDir === 'asc' ? '▼' : '▲'; applyFilters(); });
 
   function fetchBackup(){
-    if(!basicAuth) return;
+    if (!basicAuth || !backupDiv) return;
     backupDiv.textContent = window.t ? window.t('admin.loading') : 'Loading...';
     fetch('/admin/backup-status', { headers: { Authorization: basicAuth } })
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
@@ -103,7 +119,7 @@
 
   function pageInfo(){
     const page = Math.floor(currentOffset / currentLimit) + 1;
-    document.getElementById('pageInfo').textContent = (window.t ? window.t('admin.page') : 'Page: ') + ' ' + page;
+    const pi = document.getElementById('pageInfo'); if (pi) pi.textContent = (window.t ? window.t('admin.page') : 'Page: ') + ' ' + page;
   }
 
   function changePage(dir){
@@ -236,26 +252,29 @@
     if (lastPayments) renderPayments(lastPayments);
   }
 
-  document.querySelectorAll('#paymentsTable thead th.sortable').forEach(th => {
-    th.addEventListener('click', () => {
-      const field = th.getAttribute('data-sort');
-      if (currentSortField === field) currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
-      else currentSortField = field;
-      applyFilters();
+  if (paymentsTable) {
+    paymentsTable.querySelectorAll('thead th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const field = th.getAttribute('data-sort');
+        if (currentSortField === field) currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+        else currentSortField = field;
+        applyFilters();
+      });
     });
-  });
+  }
 
   const bookingsPanel = document.getElementById('bookingsPanel');
-  const bookingsTbody = document.getElementById('bookingsTable').querySelector('tbody');
+  const bookingsTable = document.getElementById('bookingsTable');
+  const bookingsTbody = bookingsTable ? bookingsTable.querySelector('tbody') : null;
   const bookingsMessage = document.getElementById('bookingsMessage');
 
-  document.getElementById('refreshBookings').addEventListener('click', fetchBookings);
-  document.getElementById('exportBookings').addEventListener('click', exportBookings);
-  document.getElementById('bfPaymentType').addEventListener('change', fetchBookings);
-  document.getElementById('bfPartner').addEventListener('change', fetchBookings);
-  document.getElementById('bfPayoutStatus').addEventListener('change', fetchBookings);
+  const btnRefreshBookings = document.getElementById('refreshBookings'); if (btnRefreshBookings) btnRefreshBookings.addEventListener('click', fetchBookings);
+  const btnExportBookings = document.getElementById('exportBookings'); if (btnExportBookings) btnExportBookings.addEventListener('click', exportBookings);
+  const selBfPaymentType = document.getElementById('bfPaymentType'); if (selBfPaymentType) selBfPaymentType.addEventListener('change', fetchBookings);
+  const inpBfPartner = document.getElementById('bfPartner'); if (inpBfPartner) inpBfPartner.addEventListener('change', fetchBookings);
+  const selBfPayoutStatus = document.getElementById('bfPayoutStatus'); if (selBfPayoutStatus) selBfPayoutStatus.addEventListener('change', fetchBookings);
 
-  document.getElementById('genStripeLink').addEventListener('click', async () => {
+  const btnGenStripe = document.getElementById('genStripeLink'); if (btnGenStripe) btnGenStripe.addEventListener('click', async () => {
     const email = (document.getElementById('partnerEmail').value || '').trim();
     const status = document.getElementById('genStatus');
     const resultDiv = document.getElementById('onboardingResult');
@@ -278,7 +297,7 @@
     }
   });
 
-  document.getElementById('copyOnboarding').addEventListener('click', async () => {
+  const btnCopyOnboarding = document.getElementById('copyOnboarding'); if (btnCopyOnboarding) btnCopyOnboarding.addEventListener('click', async () => {
     const url = document.getElementById('onboardingUrl').value || '';
     if (!url) return;
     try { await navigator.clipboard.writeText(url); alert('Copied!'); } catch (_) { /* fallback */
@@ -318,9 +337,9 @@
   }
 
   async function fetchBookings(){
-    if (!basicAuth) return;
+    if (!basicAuth || !bookingsTbody) return;
     bookingsTbody.innerHTML = '';
-    bookingsMessage.textContent = 'Φόρτωση...';
+    if (bookingsMessage) bookingsMessage.textContent = 'Φόρτωση...';
     try {
       const params = new URLSearchParams();
       params.set('limit', '1000');
@@ -338,13 +357,14 @@
       renderBookings(arr || []);
     } catch (e) {
       bookingsTbody.innerHTML = '';
-      bookingsMessage.textContent = 'Σφάλμα φόρτωσης κρατήσεων. Εμφανίζεται δείγμα.';
+      if (bookingsMessage) bookingsMessage.textContent = 'Σφάλμα φόρτωσης κρατήσεων. Εμφανίζεται δείγμα.';
       bookingsDemoForce = true;
       renderBookings([]);
     }
   }
 
   function renderBookings(arr){
+    if (!bookingsTbody) return;
     bookingsTbody.innerHTML = '';
     if (!arr || arr.length === 0 || bookingsDemoForce) {
       if (!bookingsDemoForce) {
@@ -379,7 +399,7 @@
       bookingsDemoForce = false;
       return;
     }
-    bookingsMessage.textContent = '';
+    if (bookingsMessage) bookingsMessage.textContent = '';
     for (const b of arr) {
       const tr = document.createElement('tr');
       const when = formatDate(b.created_at);
@@ -408,7 +428,7 @@
       `;
       bookingsTbody.appendChild(tr);
     }
-    bookingsTbody.querySelectorAll('.editable-partner').forEach(td => {
+  bookingsTbody.querySelectorAll('.editable-partner').forEach(td => {
       td.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter') { ev.preventDefault(); td.blur(); }
       });
@@ -427,14 +447,16 @@
     });
   }
 
-  document.querySelectorAll('#bookingsTable thead th.sortable').forEach(th => {
-    th.addEventListener('click', () => {
-      const field = th.getAttribute('data-sort');
-      if (bookingsSortField === field) bookingsSortDir = bookingsSortDir === 'asc' ? 'desc' : 'asc';
-      else bookingsSortField = field;
-      fetchBookings();
+  if (bookingsTable) {
+    bookingsTable.querySelectorAll('thead th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const field = th.getAttribute('data-sort');
+        if (bookingsSortField === field) bookingsSortDir = bookingsSortDir === 'asc' ? 'desc' : 'asc';
+        else bookingsSortField = field;
+        fetchBookings();
+      });
     });
-  });
+  }
 
   async function exportBookings(){
     if (!basicAuth) return;
@@ -462,6 +484,7 @@
   }
 
   function updatePayoutCells(bookingId, status, dateIso){
+    if (!bookingsTbody) return;
     const rowStatus = bookingsTbody.querySelector(`.payout-status[data-booking="${CSS.escape(bookingId)}"]`);
     const rowDate = bookingsTbody.querySelector(`.payout-date[data-booking="${CSS.escape(bookingId)}"]`);
     if (rowStatus) rowStatus.textContent = status || '';
@@ -652,6 +675,7 @@
   });
 
   function updateBookingRowStatus(bookingId, newStatus){
+    if (!bookingsTbody) return;
     const trs = bookingsTbody.querySelectorAll('tr');
     for (const tr of trs) {
       const td = tr.querySelector('td');

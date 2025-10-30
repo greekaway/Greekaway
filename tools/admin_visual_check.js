@@ -42,9 +42,9 @@ async function loginAdmin(page){
 }
 
 async function checkMobileAdmin(page){
-  const res = { page: 'admin.html', viewport: 'mobile', checks: {} };
+  const res = { page: 'admin-payments.html', viewport: 'mobile', checks: {} };
   await page.setViewport({ width: 375, height: 812, deviceScaleFactor: 2, isMobile: true });
-  await page.goto(BASE + '/admin.html', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '/admin-payments.html', { waitUntil: 'domcontentloaded' });
   await loginAdmin(page);
 
   // Breakpoint: card view => thead hidden
@@ -85,9 +85,9 @@ async function checkMobileAdmin(page){
 }
 
 async function checkTabletAdmin(page){
-  const res = { page: 'admin.html', viewport: 'tablet', checks: {} };
+  const res = { page: 'admin-payments.html', viewport: 'tablet', checks: {} };
   await page.setViewport({ width: 800, height: 1024, deviceScaleFactor: 2 });
-  await page.goto(BASE + '/admin.html', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '/admin-payments.html', { waitUntil: 'domcontentloaded' });
   await loginAdmin(page);
 
   // Breakpoint: tablet layout => thead visible (table-header-group)

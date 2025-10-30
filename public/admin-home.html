@@ -6,6 +6,7 @@
   <title>Admin Home — Greekaway</title>
   <link rel="stylesheet" href="/css/admin-core.css">
   <link rel="stylesheet" href="/css/admin-home.css">
+  <link rel="stylesheet" href="/css/admin-cleanup.css?v=20251030-1">
   <!-- Provide an inline favicon to avoid 404 /favicon.ico in headless checks -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E">
   <script>
@@ -27,6 +28,10 @@
   <script src="/js/admin-home.js?v=20251030-1" defer></script>
 </head>
 <body class="admin-home">
+  <!-- Unified sticky top bar with main title -->
+  <header id="adminTopBar" class="admin-topbar" aria-label="Admin top bar">
+    <div class="title">Διαχείριση Greekaway</div>
+  </header>
   <!-- Top login bar (one-time); used to auto-login admin.html iframes -->
   <div id="adminLoginBar" class="login-bar" aria-label="Admin login">
     <label> User <input id="ahUser" type="text" placeholder="admin" /></label>
@@ -53,6 +58,35 @@
           <div class="kpi"><div class="kpi-title">Σύνολο κρατήσεων</div><div class="kpi-value" id="kpiBookings">—</div></div>
           <div class="kpi"><div class="kpi-title">Σύνολο πληρωμών</div><div class="kpi-value" id="kpiPayments">—</div></div>
           <div class="kpi"><div class="kpi-title">Συνεργάτες</div><div class="kpi-value" id="kpiPartners">—</div></div>
+        </div>
+        <div class="admin-card admin-backup-card" style="margin-top:10px">
+          <h3 style="margin: 0 0 6px 0">Αντίγραφα ασφαλείας</h3>
+          <div class="admin-card-body">
+            <div id="backup" style="line-height:1.4"></div>
+            <div class="actions"><button id="refreshBackup" class="btn">Ανανέωση</button></div>
+          </div>
+        </div>
+        <!-- Moved: Stripe Partner Tools (was in admin.html above bookings) -->
+        <div class="admin-card admin-stripe-tools" style="margin-top:10px">
+          <h3 style="margin: 0 0 6px 0">Stripe Partner Tools</h3>
+          <div class="admin-card-body">
+            <div class="admin-row">
+              <label>Partner Email: <input id="partnerEmail" type="email" placeholder="partner@example.com" style="width:280px;padding:6px"></label>
+              <button id="genStripeLink" class="btn">Generate Stripe Link</button>
+              <span id="genStatus" class="hint" style="margin-left:8px;color:#ccc"></span>
+            </div>
+            <div id="onboardingResult" style="margin-top:10px; display:none">
+              <div>
+                <label>Onboarding URL:</label>
+                <input id="onboardingUrl" type="text" readonly style="width:90%; padding:6px" />
+                <button id="copyOnboarding" class="btn">Copy</button>
+              </div>
+              <div style="margin-top:6px;color:#ddd">
+                Account ID: <span id="onboardingAccount" style="font-family:monospace"></span>
+              </div>
+              <div style="margin-top:6px;color:#aaa; font-size:12px">Note: Stripe onboarding links are single-use and time-limited. Use promptly.</div>
+            </div>
+          </div>
         </div>
         <p class="note">Tip: Κάνε login στη μπάρα επάνω για να ενεργοποιηθούν τα modules χωρίς ξανα-login στα iframes.</p>
       </div>

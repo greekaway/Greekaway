@@ -44,9 +44,8 @@ body.admin-main .modal pre { white-space: pre-wrap; background: #f7f9fc; padding
   --ga-fab-spacing: 56px;
 }
 
-/* Sticky page header and filter bars */
-h2, h3 { position: sticky; top: 0; z-index: 20; }
-#filters, #bookingFilters, header.controls, header .controls { position: sticky; top: 0; z-index: 30; }
+/* Sticky page headers removed: a single unified top bar exists in Admin Home */
+/* h2, h3 and control rows scroll with content now. */
 
 /* Containers can scroll horizontally when needed (tablet) */
 #paymentsContainer, #bookingsContainer, body.admin-partners .columns { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -92,10 +91,10 @@ h2, h3 { position: sticky; top: 0; z-index: 20; }
   #bookingsTable tbody tr td:nth-child(4),
   #bookingsTable tbody tr td:nth-child(6),
   #bookingsTable tbody tr td:nth-child(17) { display: none; }
-  #exportPayments, #exportBookings, #genStripeLink { position: fixed; right: var(--ga-fab-edge, 16px); z-index: 60; }
-  #exportPayments { bottom: var(--ga-fab-edge, 16px); }
-  #exportBookings { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px)); }
-  #genStripeLink { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px) * 2); }
+  body.admin-main #exportPayments, body.admin-main #exportBookings, body.admin-main #genStripeLink { position: fixed; right: var(--ga-fab-edge, 16px); z-index: 60; }
+  body.admin-main #exportPayments { bottom: var(--ga-fab-edge, 16px); }
+  body.admin-main #exportBookings { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px)); }
+  body.admin-main #genStripeLink { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px) * 2); }
 }
 
 /* 577–768px: two-column cards */
@@ -113,10 +112,10 @@ h2, h3 { position: sticky; top: 0; z-index: 20; }
   #bookingsTable tbody tr td:nth-child(4),
   #bookingsTable tbody tr td:nth-child(6),
   #bookingsTable tbody tr td:nth-child(17) { display: none; }
-  #exportPayments, #exportBookings, #genStripeLink { position: fixed; right: var(--ga-fab-edge, 16px); z-index: 60; }
-  #exportPayments { bottom: var(--ga-fab-edge, 16px); }
-  #exportBookings { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px)); }
-  #genStripeLink { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px) * 2); }
+  body.admin-main #exportPayments, body.admin-main #exportBookings, body.admin-main #genStripeLink { position: fixed; right: var(--ga-fab-edge, 16px); z-index: 60; }
+  body.admin-main #exportPayments { bottom: var(--ga-fab-edge, 16px); }
+  body.admin-main #exportBookings { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px)); }
+  body.admin-main #genStripeLink { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px) * 2); }
 }
 
 /* 769–1024px: Tablet with horizontal scrolling */
@@ -129,12 +128,12 @@ h2, h3 { position: sticky; top: 0; z-index: 20; }
   #paymentsTable, #bookingsTable { min-width: 900px; }
   #paymentsTable thead th:nth-child(7), #paymentsTable tbody td:nth-child(7) { display: none; }
   #bookingsTable thead th:nth-child(17), #bookingsTable tbody td:nth-child(17) { display: none; }
-  #exportPayments, #exportBookings, #genStripeLink { position: static; }
+  body.admin-main #exportPayments, body.admin-main #exportBookings, body.admin-main #genStripeLink { position: static; }
 }
 
 /* >= 1025px: desktop */
 @media (min-width: 1025px) {
-  #exportPayments, #exportBookings, #genStripeLink { position: static; }
+  body.admin-main #exportPayments, body.admin-main #exportBookings, body.admin-main #genStripeLink { position: static; }
 }
 
 /* --- admin-tuning.css --- */
