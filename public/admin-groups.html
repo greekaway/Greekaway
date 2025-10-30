@@ -6,25 +6,15 @@
   <title>Admin — Groups</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
+  <!-- Admin CSS (load in this order after style.css) -->
+  <link rel="stylesheet" href="/css/admin-base.css">
+  <link rel="stylesheet" href="/css/admin-bookings.css">
+  <link rel="stylesheet" href="/css/admin-payments.css">
+  <link rel="stylesheet" href="/css/admin-partners.css">
   <link rel="stylesheet" href="/css/admin-responsive.css">
-  <style>
-    body { padding: 80px 16px 100px; max-width: 1000px; margin: 0 auto; }
-    header { position: fixed; top: 0; left: 0; right: 0; background: rgba(14,21,32,0.9); color:#fff; padding: 12px 16px; box-shadow: 0 10px 24px rgba(0,0,0,0.4); z-index: 5; }
-    .controls { display: flex; gap: 12px; align-items: center; }
-    select, input[type=date] { background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:10px; padding:8px 10px; }
-    button { background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:10px; padding:8px 12px; cursor:pointer; font-weight:800; }
-    .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .panel { background: rgba(14,21,32,0.85); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding: 12px; }
-    .list { min-height: 200px; border:1px dashed rgba(255,255,255,0.2); border-radius:10px; padding: 8px; }
-    .trav { background:#142132; border:1px solid rgba(255,255,255,0.16); border-radius:10px; padding:8px; margin:6px 0; cursor: grab; }
-    .trav.dragging { opacity: 0.6; }
-    .group { background:#101a29; border:1px solid rgba(255,255,255,0.16); border-radius:12px; padding:8px; margin-bottom:12px; }
-    .group-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
-    .group-locked { opacity: 0.6; filter: grayscale(0.2); }
-    .meta { font-size: 12px; opacity: .9; display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
-  </style>
+  <link rel="stylesheet" href="/css/admin-tuning.css">
 </head>
-<body class="site-gradient">
+<body class="site-gradient admin-partners">
   <header>
     <div class="controls">
       <label>Trip: <input id="tripId" placeholder="trip_id"></label>

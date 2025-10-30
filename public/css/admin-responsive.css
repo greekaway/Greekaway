@@ -24,7 +24,7 @@ h2, h3 { /* make section headers sticky on small screens */
 }
 
 /* Containers can scroll horizontally when needed (tablet) */
-#paymentsContainer, #bookingsContainer, .columns {
+#paymentsContainer, #bookingsContainer, body.admin-partners .columns {
   overflow-x: auto;
 }
 
@@ -98,12 +98,12 @@ h2, h3 { /* make section headers sticky on small screens */
   /* Action buttons as floating bar (stacked bottom-right). Keep desktop positions otherwise. */
   #exportPayments, #exportBookings, #genStripeLink {
     position: fixed;
-    right: 16px;
+    right: var(--ga-fab-edge, 16px);
     z-index: 60;
   }
-  #exportPayments { bottom: 16px; }
-  #exportBookings { bottom: calc(16px + var(--ga-fab-spacing)); }
-  #genStripeLink { bottom: calc(16px + var(--ga-fab-spacing) * 2); }
+  #exportPayments { bottom: var(--ga-fab-edge, 16px); }
+  #exportBookings { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px)); }
+  #genStripeLink { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px) * 2); }
 }
 
 /* ========================================= */
@@ -141,12 +141,12 @@ h2, h3 { /* make section headers sticky on small screens */
   /* Floating buttons remain visible */
   #exportPayments, #exportBookings, #genStripeLink {
     position: fixed;
-    right: 16px;
+    right: var(--ga-fab-edge, 16px);
     z-index: 60;
   }
-  #exportPayments { bottom: 16px; }
-  #exportBookings { bottom: calc(16px + var(--ga-fab-spacing)); }
-  #genStripeLink { bottom: calc(16px + var(--ga-fab-spacing) * 2); }
+  #exportPayments { bottom: var(--ga-fab-edge, 16px); }
+  #exportBookings { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px)); }
+  #genStripeLink { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px) * 2); }
 }
 
 /* ============================================ */

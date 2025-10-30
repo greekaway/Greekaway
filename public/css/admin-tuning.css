@@ -1,0 +1,15 @@
+/* Admin tuning: small visual tweaks (brightness, spacing, FAB offsets) without changing core layout */
+
+:root {
+  /* Edge offset and spacing for floating action buttons on mobile */
+  --ga-fab-edge: 0.8rem;
+  --ga-fab-spacing: 0.5rem;
+}
+
+/* Ensure tables are fully visible: no dim/low brightness */
+#paymentsTable, #bookingsTable,
+#paymentsTable tbody tr, #bookingsTable tbody tr { opacity: 1; filter: brightness(1); }
+
+/* Tighter headings and filters spacing */
+h2, h3 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+#filters, #bookingFilters { padding: 6px !important; }

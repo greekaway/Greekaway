@@ -6,46 +6,15 @@
   <title>Admin — Greekaway</title>
   <!-- Base site styles -->
   <link rel="stylesheet" href="/css/style.css">
-  <style>
-  body {font-family: Arial, Helvetica, sans-serif; margin:20px; background-color: #eef7ff; }
-    label{display:block;margin-top:8px}
-    input[type=text], input[type=password]{width:300px;padding:6px}
-    input[type=date], input[type=number]{padding:6px}
-    .btn{margin-top:8px}
-    .col{display:inline-block;vertical-align:top;width:48%;margin-right:2%}
-  /* Excel-like table styling */
-    #paymentsTable thead th{background:#f3f6fb;border:1px solid #cfd8e3}
-    #paymentsTable tbody td{border:1px solid #e6edf5;padding:6px}
-    #paymentsTable tbody tr:nth-child(even){background:#fbfcfe}
-    #paymentsTable tbody tr:hover{background:#eef6ff}
-  #paymentsTable td{text-align:left;font-family: Arial, Helvetica, sans-serif}
-  /* Ensure panels remain white for contrast on the blue background */
-  #main, .col, #paymentsContainer, #backup {background: #ffffff; padding: 10px; border-radius:6px}
-    #paymentsTable td.amount{text-align:right;font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif}
-    .status-badge{display:inline-block;padding:4px 8px;border-radius:12px;color:white;font-weight:600;font-size:12px}
-    .status-succeeded{background:#28a745}
-    .status-failed{background:#dc3545}
-    .status-processing{background:#17a2b8}
-    .status-requires_payment_method{background:#ffc107;color:#212529}
-    .status-canceled{background:#6c757d}
-    .status-icon { margin-right:6px; }
-
-    /* Modal for booking metadata */
-    .modal-backdrop{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:1000}
-    .modal {background:#fff;border-radius:8px;padding:16px;max-width:800px;max-height:80vh;overflow:auto;box-shadow:0 6px 24px rgba(0,0,0,0.2)}
-    .modal pre{white-space:pre-wrap;background:#f7f9fc;padding:8px;border-radius:6px}
-    .sortable { cursor: pointer; text-decoration: underline dotted; }
-    /* zebra for bookings too */
-    #bookingsTable thead th{background:#f3f6fb;border:1px solid #cfd8e3;font-weight:700}
-    #bookingsTable tbody td{border:1px solid #e6edf5;padding:6px}
-    #bookingsTable tbody tr:nth-child(even){background:#fbfcfe}
-    #bookingsTable tbody tr:hover{background:#eef6ff}
-    #bookingsTable td{text-align:left;font-family: Arial, Helvetica, sans-serif}
-  </style>
-  <!-- Admin responsive layout (must load after style.css) -->
+  <!-- Admin CSS (load in this order after style.css) -->
+  <link rel="stylesheet" href="/css/admin-base.css">
+  <link rel="stylesheet" href="/css/admin-bookings.css">
+  <link rel="stylesheet" href="/css/admin-payments.css">
+  <link rel="stylesheet" href="/css/admin-partners.css">
   <link rel="stylesheet" href="/css/admin-responsive.css">
+  <link rel="stylesheet" href="/css/admin-tuning.css">
 </head>
-<body>
+<body class="admin-main">
   
   <h2>Διαχείριση Greekaway</h2>
   <p data-i18n="admin.help">Βάλε τα διαπιστευτήρια διαχειριστή για να δεις τις πληρωμές και την κατάσταση αντιγράφων ασφαλείας.</p>

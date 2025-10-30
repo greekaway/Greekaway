@@ -1,0 +1,97 @@
+/* Admin Home panel shell: tabs + responsive container */
+
+:root {
+  --ah-bg: #1B2A3A;
+  --ah-gradient: linear-gradient(180deg, #1B2A3A 0%, #223345 100%);
+  --ah-gold: #D4AF37;
+  --ah-nav-h-desktop: 56px;
+  --ah-nav-h-tablet: 52px;
+  --ah-nav-h-mobile: 64px;
+  --ah-radius: 12px;
+  --ah-gap: 10px;
+}
+
+body.admin-home {
+  margin: 0;
+  background: var(--ah-gradient);
+  color: #ecf0f1;
+  min-height: 100vh;
+}
+
+/* One-time login bar */
+.login-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(6px);
+}
+.login-bar label { display: inline-flex; align-items: center; gap: 6px; }
+.login-bar input { padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.2); color: #fff; }
+.login-bar .hint { opacity: 0.85; font-size: 12px; }
+
+/* Tabs bar */
+.tabs {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; gap: 4px; align-items: stretch;
+  padding: 6px;
+  background: rgba(10,18,28,0.85);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+}
+.tab {
+  appearance: none; border: none; cursor: pointer;
+  background: transparent; color: #fff;
+  padding: 8px 12px; border-radius: 10px;
+  font-weight: 700; display: inline-flex; align-items: center; gap: 8px;
+}
+.tab .label { opacity: 0.95; }
+.tab.active { position: relative; }
+.tab.active::after {
+  content: ""; position: absolute; left: 10px; right: 10px; bottom: 2px;
+  height: 3px; background: var(--ah-gold); border-radius: 999px;
+  box-shadow: 0 0 10px rgba(212,175,55,0.55);
+}
+
+/* Content area */
+.content { position: relative; min-height: calc(100vh - var(--ah-nav-h-desktop) - 42px); }
+.view { display: none; opacity: 0; transform: translateX(8px); transition: opacity 200ms ease, transform 220ms ease; }
+.view.active { display: block; opacity: 1; transform: translateX(0); }
+
+.home-wrap { padding: 16px; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.kpi { background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--ah-radius); padding: 12px; }
+.kpi-title { opacity: 0.85; font-size: 12px; }
+.kpi-value { font-size: 26px; font-weight: 800; margin-top: 6px; }
+.note { opacity: 0.9; }
+
+/* Iframes fill remaining height */
+.view iframe { width: 100%; height: calc(100vh - var(--ah-nav-h-desktop) - 48px); border: none; background: #fff; border-radius: 8px; }
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .content { min-height: calc(100vh - var(--ah-nav-h-tablet) - 42px); }
+  .view iframe { height: calc(100vh - var(--ah-nav-h-tablet) - 48px); }
+}
+
+/* Mobile: Tabs bar becomes a fixed bottom navigation */
+@media (max-width: 768px) {
+  .tabs {
+    position: fixed; bottom: 0; top: auto; left: 0; right: 0;
+    height: var(--ah-nav-h-mobile);
+    display: flex; justify-content: space-around;
+    background: rgba(10,18,28,0.72);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-bottom: none; box-shadow: 0 -6px 14px rgba(0,0,0,0.35);
+  }
+  .tab { flex: 1 1 auto; justify-content: center; padding: 8px; }
+  .tab .label { display: none; }
+  .tab.active .label { display: inline; }
+
+  .content { padding-bottom: var(--ah-nav-h-mobile); min-height: calc(100vh - var(--ah-nav-h-mobile) - 42px); }
+  .view iframe { height: calc(100vh - var(--ah-nav-h-mobile) - 48px); border-radius: 8px 8px 0 0; }
+
+  .kpis { grid-template-columns: 1fr; }
+}

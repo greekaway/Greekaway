@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Home — Greekaway</title>
+  <link rel="stylesheet" href="/css/admin-base.css">
+  <link rel="stylesheet" href="/css/admin-home.css">
+  <link rel="stylesheet" href="/css/admin-tuning.css">
+  <script src="/js/admin-home.js" defer></script>
+</head>
+<body class="admin-home">
+  <!-- Top login bar (one-time); used to auto-login admin.html iframes -->
+  <div id="adminLoginBar" class="login-bar" aria-label="Admin login">
+    <label> User <input id="ahUser" type="text" placeholder="admin" /></label>
+    <label> Pass <input id="ahPass" type="password" /></label>
+    <button id="ahLoginBtn" class="btn">Login</button>
+    <span id="ahLoginStatus" class="hint"></span>
+  </div>
+
+  <!-- Navigation: top on desktop/tablet, bottom on mobile -->
+  <nav id="adminNav" class="tabs" aria-label="Admin modules">
+    <button class="tab active" data-tab="home" title="Home">🏠 <span class="label">Home</span></button>
+    <button class="tab" data-tab="bookings" title="Bookings">📋 <span class="label">Bookings</span></button>
+    <button class="tab" data-tab="payments" title="Payments">💳 <span class="label">Payments</span></button>
+    <button class="tab" data-tab="partners" title="Partners">🤝 <span class="label">Partners</span></button>
+    <button class="tab" data-tab="settings" title="Settings">⚙️ <span class="label">Settings</span></button>
+  </nav>
+
+  <!-- Content area: iframes/sections are created lazily by JS -->
+  <main id="adminContent" class="content" aria-live="polite">
+    <section id="view-home" class="view active" data-tab="home" aria-label="Home">
+      <div class="home-wrap">
+        <h2>Διαχείριση — Home</h2>
+        <div class="kpis">
+          <div class="kpi"><div class="kpi-title">Σύνολο κρατήσεων</div><div class="kpi-value" id="kpiBookings">—</div></div>
+          <div class="kpi"><div class="kpi-title">Σύνολο πληρωμών</div><div class="kpi-value" id="kpiPayments">—</div></div>
+          <div class="kpi"><div class="kpi-title">Συνεργάτες</div><div class="kpi-value" id="kpiPartners">—</div></div>
+        </div>
+        <p class="note">Tip: Κάνε login στη μπάρα επάνω για να ενεργοποιηθούν τα modules χωρίς ξανα-login στα iframes.</p>
+      </div>
+    </section>
+    <!-- Other views (bookings, payments, partners, settings) will be injected on demand -->
+  </main>
+</body>
+</html>
