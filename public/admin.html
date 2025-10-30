@@ -25,14 +25,21 @@
   </form>
 
   <div id="main" style="display:none">
-    <div class="col">
+    <div class="col admin-section">
   <h3 data-i18n="admin.backups">Κατάσταση αντιγράφων</h3>
-  <button id="refreshBackup" data-i18n-value="admin.refresh">Ανανέωση</button>
-  <div id="backup" style="margin-top:8px;color:#333;line-height:1.4"></div>
+  <div class="admin-card admin-backup-card">
+    <div class="admin-card-body">
+      <div id="backup" style="margin-top:8px;color:#333;line-height:1.4"></div>
+      <div class="actions" style="margin-top:8px">
+        <button id="refreshBackup" class="btn" data-i18n-value="admin.refresh">Ανανέωση</button>
+      </div>
+    </div>
+  </div>
     </div>
     <div class="col">
   <h3>Πληρωμές (τελευταίες)</h3>
-      <div id="filters" style="margin:12px auto 8px;max-width:1100px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;border-radius:6px;padding:8px">
+      <div class="payments-controls">
+        <div id="filters" class="admin-row filters-row" style="max-width:1100px;border-radius:6px;padding:8px">
           <label style="display:inline-block;margin-right:8px">Κατάσταση:
             <select id="filterStatus">
               <option value="">(any)</option>
@@ -47,29 +54,36 @@
           <label>Έως: <input id="filterTo" type="date" /></label>
           <label>Ελάχιστο (€): <input id="filterMin" type="number" step="0.01" placeholder="0.00" /></label>
           <label>Μέγιστο (€): <input id="filterMax" type="number" step="0.01" placeholder="" /></label>
+        </div>
+        <div class="payments-row actions">
+          <button id="refreshPayments" class="btn">Ανανέωση</button>
+          <button id="exportPayments" class="btn">Εξαγωγή σε CSV</button>
           <button id="applyFilters" class="btn">Εφαρμογή</button>
           <button id="clearFilters" class="btn">Επαναφορά</button>
         </div>
-        <div style="margin-bottom:8px">
-          <button id="refreshPayments">Ανανέωση</button>
-          <button id="exportPayments">Εξαγωγή σε CSV</button>
-          <button id="copyExcel">Αντιγραφή στο Excel</button>
-          <label style="margin-left:12px">Page size:
-            <select id="pageSize"><option>50</option><option>100</option><option>200</option></select>
-          </label>
-          <button id="prevPage">Prev</button>
-          <button id="nextPage">Next</button>
-          <label style="margin-left:8px">Ταξινόμηση:
-            <select id="sortField">
-              <option value="">(none)</option>
-              <option value="timestamp">timestamp</option>
-              <option value="amount">amount</option>
-              <option value="status">status</option>
-            </select>
-            <button id="sortDir" title="Toggle asc/desc">▲</button>
-          </label>
-          <span id="pageInfo" style="margin-left:8px">Σελίδα: 1</span>
+        <div class="payments-row meta">
+          <div class="left-set">
+            <button id="copyExcel" class="btn">Αντιγραφή στο Excel</button>
+          </div>
+          <div class="right-set">
+            <label style="margin-left:12px">Page size:
+              <select id="pageSize"><option>50</option><option>100</option><option>200</option></select>
+            </label>
+            <button id="prevPage" class="btn">Prev</button>
+            <button id="nextPage" class="btn">Next</button>
+            <label style="margin-left:8px">Ταξινόμηση:
+              <select id="sortField">
+                <option value="">(none)</option>
+                <option value="timestamp">timestamp</option>
+                <option value="amount">amount</option>
+                <option value="status">status</option>
+              </select>
+              <button id="sortDir" class="btn" title="Toggle asc/desc">▲</button>
+            </label>
+            <span id="pageInfo" style="margin-left:8px">Σελίδα: 1</span>
+          </div>
         </div>
+      </div>
         <div id="paymentsContainer">
       <table id="paymentsTable" style="width:100%;border-collapse:collapse">
             <thead>
@@ -93,7 +107,7 @@
   <!-- Partners panel -->
   <div id="partnersPanel" style="display:none;margin-top:12px;background:#fff;padding:10px;border-radius:6px">
     <h3>Partners</h3>
-    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center">
+    <div class="admin-row">
       <label>Partner Email: <input id="partnerEmail" type="email" placeholder="partner@example.com" style="width:280px;padding:6px"></label>
       <button id="genStripeLink" class="btn">Generate Stripe Link</button>
       <span id="genStatus" style="margin-left:8px;color:#666"></span>
@@ -113,7 +127,7 @@
   <hr style="margin-top:16px" />
   <div id="bookingsPanel" style="display:none;margin-top:12px">
     <h3>Κρατήσεις</h3>
-    <div id="bookingFilters" style="margin:12px 0; display:flex; flex-wrap:wrap; gap:10px; align-items:center">
+    <div id="bookingFilters" class="admin-row">
       <label>Payment Type:
         <select id="bfPaymentType">
           <option value="">(any)</option>
@@ -231,11 +245,26 @@
 
     function fetchBackup(){
       if(!basicAuth) return;
-  backupPre.textContent = window.t ? window.t('admin.loading') : 'Loading...';
+      // Show a short loading hint in the UI
+      backupDiv.textContent = window.t ? window.t('admin.loading') : 'Loading...';
       fetch('/admin/backup-status', { headers: { Authorization: basicAuth } })
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
-        .then(j => backupPre.textContent = JSON.stringify(j, null, 2))
-  .catch(err => backupPre.textContent = (window.t ? window.t('admin.error') : 'Error: ') + String(err));
+        .then(j => {
+          // Keep full technical JSON out of the UI; log it for diagnostics
+          try { console.info('[admin] backup-status', j); } catch(_) {}
+          // Render a compact, human-friendly summary
+          const count = (j && (j.count ?? j.backupsCount ?? j.total)) || 0;
+          const latestAt = j && (j.lastRunAt || j.latestAt || j.latestDate || '');
+          const latestName = j && (j.latestDb || j.latestZip || j.latest || '');
+          const when = latestAt ? formatDate(latestAt) : '';
+          const line1 = (window.t ? window.t('admin.backups_count') : 'Σύνολο αντιγράφων') + ': ' + String(count || '—');
+          const line2 = (window.t ? window.t('admin.backups_latest') : 'Τελευταίο') + ': ' + (when || (latestName ? escapeHtml(String(latestName)) : '—'));
+          backupDiv.innerHTML = '<div>'+ line1 +'</div><div>'+ line2 +'</div>';
+        })
+        .catch(err => {
+          // Show a short error message only (no stack/JSON)
+          backupDiv.textContent = (window.t ? window.t('admin.error') : 'Error: ') + String(err);
+        });
     }
 
     function pageInfo(){
