@@ -85,8 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!container) return;
     container.innerHTML = "";
     cats.forEach(cat => {
-      const btn = document.createElement("button");
-      btn.className = "category-btn";
+  const btn = document.createElement("button");
+  btn.className = "category-btn";
+  btn.classList.add('ga-card');
       const catTitle = getLocalized(cat.title) || '';
       btn.innerHTML = `<img src="${cat.image}" alt="${catTitle}"><span class="cat-label">${catTitle}</span>`;
       btn.dataset.cat = cat.id;
@@ -137,8 +138,9 @@ document.addEventListener("DOMContentLoaded", () => {
     allTrips
       .filter(t => t.category === category)
       .forEach(trip => {
-        const card = document.createElement("div");
-        card.className = "trip-card";
+  const card = document.createElement("div");
+  card.className = "trip-card";
+  card.classList.add('ga-card');
         card.dataset.tripId = trip.id;
         // Use unified theme styles for all trips (no per-trip inline overrides)
         if (trip.id === 'olympia' || trip.id === 'lefkas' || trip.id === 'parnassos') card.classList.add('logo-pop');

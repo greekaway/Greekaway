@@ -24,10 +24,7 @@
 /* ============ Category selection (trips.html) ============ */
 /* Flat variant (no PNG), unified navy background and icons */
 body.ga-variant-flat .category-btn {
-  background: var(--ga-card-bg) !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
-  box-shadow: var(--ga-shadow-1) !important;
-  border-radius: var(--ga-radius-md) !important;
+  /* visuals (bg/border/shadow/radius) are unified via .ga-card in cards.css */
   overflow: visible; /* allow under-glow to be visible below tile */
   position: relative;
   display: block;
@@ -147,9 +144,7 @@ body.is-loaded #categories-container .category-btn:nth-child(6){ animation-delay
 /* ============ Trip listing cards (category pages) ============ */
 /* Only on category listing view to avoid affecting other pages */
 body[data-view="category"] #trips-container .trip-card {
-  background: var(--ga-card-bg) !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
-  box-shadow: var(--ga-shadow-1) !important;
+  /* visuals (bg/border/shadow/radius) are unified via .ga-card in cards.css */
   color: var(--ga-gold) !important;
 }
 /* remove iOS blue tap highlight */
@@ -207,37 +202,7 @@ body[data-view="category"] #trips-container .trip-card.is-pressing {
 body[data-view="category"] #trips-container .trip-card.is-pressing::after { opacity: 1; transform: scaleX(1.04); }
 
 /* ============ Global unification across tiles ============ */
-/* Base visuals: same background, border, shadow, radius and gold text */
-/* Unified 3D + white-outline look for all tiles (categories + trips) */
-:is(.category-btn, #trips-container .trip-card) {
-  background: var(--ga-card-bg) !important;
-  /* even more discreet white outline */
-  border: 1px solid rgba(255,255,255,0.50) !important;
-  /* gentle depth: slightly softer inner bevel */
-  box-shadow: var(--ga-shadow-1), inset 0 1px 0 rgba(255,255,255,0.10) !important;
-  border-radius: var(--ga-radius-md) !important;
-  -webkit-tap-highlight-color: transparent;
-}
-/* Motion + interactions: same transitions */
-body.is-loaded :is(.category-btn, #trips-container .trip-card) {
-  transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
-}
-/* unify label color for trip cards' titles and category labels */
-:is(.category-btn .cat-label, #trips-container .trip-card h3) { color: var(--ga-gold) !important; }
-
-/* Hover state: unified lift without extra white flash on trip cards */
-:is(.category-btn, #trips-container .trip-card):hover {
-  transform: translateY(-6px) scale(1.05);
-  /* keep outline and very subtly deepen the 3D effect on hover */
-  box-shadow: var(--ga-shadow-2), inset 0 1px 0 rgba(255,255,255,0.10) !important;
-}
-
-/* Retina hairline: use half-pixel border on high-DPI screens for extra finesse */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  :is(.category-btn, #trips-container .trip-card) {
-    border-width: 0.5px !important;
-  }
-}
+/* Base visuals and interactions moved to cards.css via .ga-card */
 /* Specifically remove any hover filter only for trip cards (keep category look intact) */
 #trips-container .trip-card:hover { filter: none !important; }
 
@@ -249,12 +214,7 @@ body[data-view="category"] #trips-container .trip-card.is-pressing {
   filter: none !important; /* kill white flash on tap */
 }
 
-/* Focus-visible: subtle ring, no big glow, consistent for both */
-:is(.category-btn, #trips-container .trip-card):focus-visible {
-  outline: none;
-  box-shadow: var(--ga-shadow-2), 0 0 0 2px rgba(212,175,55,0.20) !important;
-  filter: none !important;
-}
+/* Focus-visible handled by .ga-card in cards.css */
 
 /* Trip-card under-glow lip: soften intensity so there is no flash on press */
 body[data-view="category"] #trips-container .trip-card::after {

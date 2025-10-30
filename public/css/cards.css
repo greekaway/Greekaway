@@ -1,0 +1,38 @@
+/* Centralized card styling for Greekaway */
+/* Applies to any element with .ga-card (category tiles, trip tiles, future cards) */
+
+.ga-card {
+  background: var(--ga-card-bg) !important;
+  /* subtle white outline */
+  border: 1px solid rgba(255,255,255,0.50) !important;
+  /* gentle depth */
+  box-shadow: var(--ga-shadow-1), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+  border-radius: var(--ga-radius-md) !important;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+}
+
+/* Hover/press/focus interactions (unified) */
+.ga-card:hover {
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: var(--ga-shadow-2), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+}
+.ga-card:active,
+.ga-card.is-pressing {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: var(--ga-shadow-2) !important;
+}
+.ga-card:focus-visible {
+  outline: none;
+  box-shadow: var(--ga-shadow-2), 0 0 0 2px rgba(212,175,55,0.20) !important;
+  filter: none !important;
+}
+
+/* Unify text color for card labels and titles inside cards */
+.ga-card .cat-label,
+.ga-card h3 { color: var(--ga-gold) !important; }
+
+/* Retina hairline: use half-pixel border on high-DPI screens for extra finesse */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .ga-card { border-width: 0.5px !important; }
+}
