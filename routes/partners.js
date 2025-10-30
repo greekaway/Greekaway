@@ -14,6 +14,7 @@ router.use(express.json());
 const STRIPE_SECRET = (process.env.STRIPE_SECRET_KEY || '').toString().trim().replace(/^['"]|['"]$/g, '');
 // Optional: force HTTPS callback base for live-mode Connect (e.g. https://greekaway.com)
 const CONNECT_CALLBACK_BASE = (process.env.CONNECT_CALLBACK_BASE || '').toString().trim().replace(/^['"]|['"]$/g, '');
+try { console.log('partners: CONNECT_CALLBACK_BASE =', CONNECT_CALLBACK_BASE || '(unset)'); } catch(_) {}
 let stripe = null;
 if (STRIPE_SECRET) {
   try { stripe = require('stripe')(STRIPE_SECRET); } catch (e) { console.warn('partners: stripe not initialized (missing dependency?)'); }
@@ -269,6 +270,7 @@ router.get('/connect-link', async (req, res) => {
       });
       url = link.url;
     }
+    try { console.log('partners/connect-link created', { accountId: account.id, returnUrl, refreshUrl, url }); } catch(_) {}
 
     // Persist a record for audit: generated onboarding link (not yet agreed)
     const info = getAgreementInfo();
@@ -309,6 +311,7 @@ router.post('/create-stripe-link', async (req, res) => {
       const link = await stripe.accountLinks.create({ account: account.id, refresh_url: refreshUrl, return_url: returnUrl, type: 'account_onboarding' });
       url = link.url;
     }
+    try { console.log('partners/create-stripe-link created', { accountId: account.id, returnUrl, refreshUrl, url }); } catch(_) {}
     try {
       const info = getAgreementInfo();
       await insertPartnerAgreement({ partner_email: email || null, stripe_account_id: account.id, onboarding_url: url, agreed: false, source: 'create_stripe_link', agreement_hash: info.sha256, agreement_version: info.version });
