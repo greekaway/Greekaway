@@ -287,7 +287,36 @@ router.get('/connect-link', async (req, res) => {
     return res.json({ ok: true, accountId: account.id, url });
   } catch (e) {
     console.error('partners/connect-link error', e && e.message ? e.message : e);
-    return res.status(500).json({ error: 'Failed to create Connect link' });
+    return res.status(500).json({ error: e && e.message ? e.message : 'Failed to create Connect link' });
+  }
+});
+
+// Backwards compatibility: legacy endpoint expected by older UIs
+// Accept POST to /api/partners/create-stripe-link and return { url, accountId }
+router.post('/create-stripe-link', async (req, res) => {
+  if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server' });
+  try {
+    const email = (req.body && req.body.email || '').toString().trim() || undefined;
+    const type = (process.env.PARTNER_ACCOUNT_TYPE || 'express').toLowerCase();
+    const account = await stripe.accounts.create({ type: type === 'standard' ? 'standard' : 'express', email });
+    const returnUrl = absoluteUrl(req, `/api/partners/connect-callback?account=${encodeURIComponent(account.id)}`);
+    const refreshUrl = absoluteUrl(req, `/api/partners/connect-callback?refresh=1&account=${encodeURIComponent(account.id)}`);
+    let url;
+    if (type === 'standard') {
+      const link = await stripe.accounts.createLoginLink(account.id);
+      url = link.url;
+    } else {
+      const link = await stripe.accountLinks.create({ account: account.id, refresh_url: refreshUrl, return_url: returnUrl, type: 'account_onboarding' });
+      url = link.url;
+    }
+    try {
+      const info = getAgreementInfo();
+      await insertPartnerAgreement({ partner_email: email || null, stripe_account_id: account.id, onboarding_url: url, agreed: false, source: 'create_stripe_link', agreement_hash: info.sha256, agreement_version: info.version });
+    } catch(_) {}
+    return res.json({ ok: true, accountId: account.id, url });
+  } catch (e) {
+    console.error('partners/create-stripe-link error', e && e.message ? e.message : e);
+    return res.status(500).json({ error: e && e.message ? e.message : 'Failed to create Connect link' });
   }
 });
 

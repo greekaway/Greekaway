@@ -389,6 +389,8 @@
           if (acctSpan) acctSpan.textContent = j.accountId || '';
           if (resultDiv) resultDiv.style.display = 'block';
           if (status) { status.textContent = 'Ready'; status.style.color = '#7bd88f'; }
+          // Auto-redirect to Stripe onboarding like the previous flow
+          try { window.location.href = j.url; } catch(_) {}
         } catch (e) {
           if (resultDiv) resultDiv.style.display = 'none';
           if (status) {

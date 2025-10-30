@@ -357,6 +357,8 @@
       acctSpan.textContent = j.accountId || '';
       resultDiv.style.display = 'block';
       status.textContent = 'Ready';
+      // Auto-redirect to onboarding URL for consistency
+      try { window.location.href = j.url; } catch(_) {}
     } catch (e) {
       status.textContent = 'Error generating link';
       alert('Failed to generate Stripe link: ' + e.message);
