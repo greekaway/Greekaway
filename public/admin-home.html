@@ -7,7 +7,25 @@
   <link rel="stylesheet" href="/css/admin-base.css">
   <link rel="stylesheet" href="/css/admin-home.css">
   <link rel="stylesheet" href="/css/admin-tuning.css">
-  <script src="/js/admin-home.js" defer></script>
+  <!-- Provide an inline favicon to avoid 404 /favicon.ico in headless checks -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E">
+  <script>
+    // Aggressive SW + cache cleanup to avoid stale admin-home on any device
+    (function(){
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(()=>{});
+      }
+      if (window.caches && caches.keys) {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(()=>{});
+      }
+      try {
+        // Also nuke our own storage in case we cached anything (we only keep session in-memory)
+        sessionStorage.clear(); localStorage.removeItem('ah-cache');
+      } catch(_) {}
+    })();
+  </script>
+  <!-- Pin a version to force reloads across devices; server will also add dev cache-busting in non-production -->
+  <script src="/js/admin-home.js?v=20251030-1" defer></script>
 </head>
 <body class="admin-home">
   <!-- Top login bar (one-time); used to auto-login admin.html iframes -->

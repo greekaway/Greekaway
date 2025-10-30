@@ -1,14 +1,39 @@
 (function(){
+  // Build/version marker for cache verification
+  try { window.__AH_VERSION = '20251030-1'; console.info('Admin Home build', window.__AH_VERSION); } catch(_) {}
   const $ = (sel, root=document) => root.querySelector(sel);
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
   const state = {
     creds: { user: '', pass: '' },
+    authHeader: null,
     loaded: { home: true, bookings: false, payments: false, partners: false, settings: false },
-    active: 'home'
+    active: 'home',
+    lastActivity: Date.now(),
+    idleMs: 15 * 60 * 1000, // 15 minutes
+    idleTimer: null,
+    expired: false
   };
 
   function setStatus(msg){ const el = $('#ahLoginStatus'); if (el) el.textContent = msg || ''; }
+
+  function bumpActivity(){
+    state.lastActivity = Date.now();
+  }
+
+  function ensureIdleWatcher(){
+    if (state.idleTimer) return;
+    state.idleTimer = setInterval(() => {
+      if (!state.authHeader) return; // not logged in
+      if (Date.now() - state.lastActivity > state.idleMs) {
+        // expire session
+        state.expired = true;
+        state.creds = { user: '', pass: '' };
+        state.authHeader = null;
+        showLoginBar('Η συνεδρία έληξε, παρακαλώ συνδεθείτε ξανά');
+      }
+    }, 30000);
+  }
 
   function attachLoginBar(){
     const btn = $('#ahLoginBtn'); if (!btn) return;
@@ -16,11 +41,13 @@
       const u = $('#ahUser').value.trim();
       const p = $('#ahPass').value.trim();
       state.creds.user = u; state.creds.pass = p;
+      state.authHeader = 'Basic ' + btoa(u + ':' + p);
+      bumpActivity();
       // Show loading indication
       setLoading(true, 'Επαλήθευση…');
       // Quick preflight to validate credentials against a protected endpoint
       try {
-        const r = await fetch('/admin/backup-status', { headers: { Authorization: 'Basic ' + btoa(u + ':' + p) } });
+        const r = await fetch('/admin/backup-status', { headers: { Authorization: state.authHeader } });
         if (!r.ok) {
           setStatus('Λάθος διαπιστευτήρια (401)');
           setLoading(false);
@@ -31,6 +58,8 @@
         setLoading(false);
         return;
       }
+      state.expired = false;
+      ensureIdleWatcher();
       // Find iframes that require login (admin.html instances)
       const frames = $$('#adminContent iframe').filter(f => {
         try { return f && f.contentWindow && /\/admin\.html(\?|$)/.test(f.getAttribute('src')||''); } catch(_) { return false; }
@@ -66,6 +95,7 @@
 
   function switchTab(tab){
     if (!tab || state.active === tab) return;
+    bumpActivity();
     // update active tab button
     $$('.tabs .tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     // views
@@ -95,6 +125,12 @@
       }
       state.loaded[tab] = true;
     }
+    // Also attempt immediate re-injection for the now-active iframe (if it already existed)
+    const nowFrame = $(`#view-${tab} iframe`);
+    if (nowFrame && state.authHeader) {
+      const mode = tab === 'bookings' ? 'bookings' : (tab === 'payments' ? 'payments' : 'partners');
+      try { tryInjectLogin(nowFrame, mode); } catch(_) {}
+    }
   }
 
   function ensureView(tab){
@@ -102,14 +138,17 @@
     if (view) return view;
     view = document.createElement('section');
     view.id = `view-${tab}`; view.className = 'view'; view.dataset.tab = tab;
+    const cb = `cb=${Date.now()}`;
     if (tab === 'bookings') {
-      view.innerHTML = `<iframe id="tab-bookings" title="Bookings" src="/admin.html?view=bookings"></iframe>`;
+      view.innerHTML = `<iframe id="tab-bookings" title="Bookings" src="/admin.html?view=bookings&${cb}"></iframe>`;
     } else if (tab === 'payments') {
-      view.innerHTML = `<iframe id="tab-payments" title="Payments" src="/admin.html?view=payments"></iframe>`;
+      view.innerHTML = `<iframe id="tab-payments" title="Payments" src="/admin.html?view=payments&${cb}"></iframe>`;
     } else if (tab === 'partners') {
       // partners iframe supports auth via ?auth=base64(user:pass) for protected admin endpoints
-      const authParam = (state.creds.user && state.creds.pass) ? `?auth=${encodeURIComponent(btoa(state.creds.user + ':' + state.creds.pass))}` : '';
-      view.innerHTML = `<iframe id="tab-partners" title="Partners" src="/admin-groups.html${authParam}"></iframe>`;
+      const qp = [];
+      if (state.creds.user && state.creds.pass) qp.push(`auth=${encodeURIComponent(btoa(state.creds.user + ':' + state.creds.pass))}`);
+      qp.push(cb);
+      view.innerHTML = `<iframe id="tab-partners" title="Partners" src="/admin-groups.html${qp.length ? ('?' + qp.join('&')) : ''}"></iframe>`;
     } else if (tab === 'settings') {
       view.innerHTML = `<div class="settings-wrap"><h2>Settings</h2><p>Coming soon.</p></div>`;
     }
@@ -131,6 +170,7 @@
             if (authForm && user && pass && login) {
               user.value = state.creds.user; pass.value = state.creds.pass;
               login.click();
+              bumpActivity();
             }
             // Partners view uses standalone page without auth form; reload with auth param if needed
             if (!authForm && /admin-groups\.html/.test(frame.src)) {
@@ -166,6 +206,7 @@
                   if (paymentsContainer) paymentsContainer.style.display = 'block';
                 }
               } catch(_) {}
+              bumpActivity();
               clearInterval(timer); return resolve(true);
             }
           } catch(_) {}
@@ -208,6 +249,20 @@
     } catch(_){ bar.style.display = 'none'; }
   }
 
+  function showLoginBar(message){
+    const bar = $('#adminLoginBar');
+    if (!bar) return;
+    // Reset inline styles from fade-out
+    bar.style.display = 'flex';
+    bar.style.opacity = '1';
+    bar.style.height = '';
+    bar.style.margin = '';
+    bar.style.paddingTop = '';
+    bar.style.paddingBottom = '';
+    setLoading(false);
+    setStatus(message || '');
+  }
+
   function showToast(message){
     try {
       const div = document.createElement('div');
@@ -241,6 +296,9 @@
   function init(){
     attachLoginBar();
     wireTabs();
+    ensureIdleWatcher();
+    // Bump activity on common user events
+    ['mousemove','keydown','touchstart','visibilitychange'].forEach(ev => document.addEventListener(ev, bumpActivity, { passive: true }));
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
