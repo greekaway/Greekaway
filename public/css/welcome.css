@@ -31,3 +31,136 @@
 }
 
 /* Keep hero/content above overlay by default (no z-index changes needed) */
+
+/* -------- Welcome hero layout & typography -------- */
+#welcome-section {
+	/* Center the welcome stack vertically in the viewport, accounting for the fixed footer */
+	margin-top: 0;
+	min-height: calc(100vh - 64px);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding-top: env(safe-area-inset-top, 0px);
+	/* fine-tune: previously ~-41px; raise by ~2 more clicks (~16px) for a total ~-56px */
+	transform: translateY(-56px);
+}
+
+/* Welcome panel removed: keep selector harmless in case of stray markup */
+#welcome-section .welcome-inner { background: none !important; padding: 0 !important; border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; display: contents; }
+@media (min-width: 600px) { #welcome-section .welcome-inner { padding: 0 !important; } }
+
+.welcome-title {
+	font-size: 1.6rem;
+	color: #f9d65c;
+	margin-top: 1.2rem;
+}
+
+.welcome-subtitle {
+	font-size: 1rem;
+	color: #ecf0f1;
+	margin-bottom: 1.5rem;
+}
+/* --- Welcome subtitle: always white, bolder and slightly larger --- */
+#welcome-section .welcome-subtitle {
+	color: #ffffff !important; /* force white in both dark and light modes */
+	font-weight: 700;           /* bold */
+	font-size: clamp(1.1rem, 2.4vw, 1.25rem); /* a touch larger, responsive */
+	white-space: pre-line;      /* render \n from locale as line break */
+	line-height: 1.25;          /* comfortable two-line spacing */
+}
+
+/* -------- Logo animation (uses global @keyframes logoFadeIn) -------- */
+.welcome-logo {
+	width: 60%;
+	max-width: 420px;
+	height: auto;
+	border-radius: 25px;
+	/* eliminate shadow to prevent a second darker rectangle */
+	box-shadow: none;
+	opacity: 0;
+	transform: scale(0.85);
+	animation: logoFadeIn 1.5s ease forwards;
+	animation-delay: 0.3s;
+}
+
+/* Tablet sizing parity with prior inline rules */
+@media (min-width: 600px) {
+	.welcome-logo { width: 55%; max-width: 560px; }
+}
+
+/* Safety: remove any pseudo overlays/shadows on the logo container when bg video is active */
+body.has-bg-video .welcome-inner::before,
+body.has-bg-video .welcome-inner::after,
+body.has-bg-video .welcome-logo::before,
+body.has-bg-video .welcome-logo::after {
+	content: none !important;
+	background: none !important;
+	background-image: none !important;
+	box-shadow: none !important;
+}
+/* Ensure no shadow on logo when video background is active */
+body.has-bg-video .welcome-logo { box-shadow: none !important; }
+
+/* Light mode tweak: subtitle as navy with subtle depth if OS prefers light */
+@media (prefers-color-scheme: light) {
+	.welcome-subtitle { color: #1B2A3A !important; text-shadow: 0 1px 2px rgba(0,0,0,0.08) !important; }
+}
+
+/* ===== Welcome page: remove static gradient when video is active ===== */
+/* Ensure only the video + overlay are visible behind content */
+html.has-bg-video,
+body.has-bg-video {
+	background: none !important;
+	background-image: none !important;
+	background-color: transparent !important;
+}
+/* Also neutralize any attribute-based page backgrounds if present */
+html.has-bg-video[data-view],
+body.has-bg-video[data-view],
+html.has-bg-video[data-category],
+body.has-bg-video[data-category] {
+	background: none !important;
+	background-image: none !important;
+	background-color: transparent !important;
+}
+
+/* Remove any intermediate container backgrounds and pseudo overlays on welcome */
+body.has-bg-video #welcome-section,
+body.has-bg-video main,
+body.has-bg-video .welcome-wrapper,
+body.has-bg-video .main-container,
+body.has-bg-video .content,
+body.has-bg-video .content-wrapper,
+body.has-bg-video .page,
+body.has-bg-video .hero,
+body.has-bg-video .hero-bg {
+	background: none !important;
+	background-image: none !important;
+	background-color: transparent !important;
+	box-shadow: none !important;
+}
+/* Kill pseudo-elements that might add tints or gradients */
+body.has-bg-video #welcome-section::before,
+body.has-bg-video #welcome-section::after,
+body.has-bg-video main::before,
+body.has-bg-video main::after,
+body.has-bg-video .welcome-wrapper::before,
+body.has-bg-video .welcome-wrapper::after,
+body.has-bg-video .main-container::before,
+body.has-bg-video .main-container::after,
+body.has-bg-video .content::before,
+body.has-bg-video .content::after,
+body.has-bg-video .content-wrapper::before,
+body.has-bg-video .content-wrapper::after,
+body.has-bg-video .page::before,
+body.has-bg-video .page::after,
+body.has-bg-video .hero::before,
+body.has-bg-video .hero::after,
+body.has-bg-video .hero-bg::before,
+body.has-bg-video .hero-bg::after {
+	content: none !important;
+	background: none !important;
+	background-image: none !important;
+	box-shadow: none !important;
+}
