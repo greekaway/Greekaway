@@ -1,6 +1,17 @@
 /* Welcome page only: background video sizing and layering */
 /* Minimal, additive rules to avoid touching global/site-wide styles */
 
+/* Hide welcome content until i18n applies (avoid brief Greek flash) */
+body.has-bg-video:not(.ready) {
+	opacity: 0;
+	visibility: hidden;
+}
+body.has-bg-video.ready {
+	opacity: 1;
+	visibility: visible;
+	transition: opacity 240ms ease;
+}
+
 .bg-video {
 	position: fixed;
 	inset: 0;
