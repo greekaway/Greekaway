@@ -1,0 +1,33 @@
+/* Welcome page only: background video sizing and layering */
+/* Minimal, additive rules to avoid touching global/site-wide styles */
+
+.bg-video {
+	position: fixed;
+	inset: 0;
+	z-index: -2; /* under overlay and content */
+	overflow: hidden;
+	pointer-events: none; /* never steal taps/clicks */
+}
+
+.bg-video iframe {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	/* Robust cover for 16:9 YouTube iframe across all aspect ratios */
+	width: 100vw;
+	height: 56.25vw;         /* 16:9 relative to width */
+	min-width: 177.78vh;     /* 100 * (16/9) → cover tall viewports */
+	min-height: 100vh;       /* at least full height */
+	border: 0;
+}
+
+.bg-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0,0,0,0.40); /* readability without hiding content */
+	z-index: -1; /* above video, below content */
+	pointer-events: none;
+}
+
+/* Keep hero/content above overlay by default (no z-index changes needed) */
