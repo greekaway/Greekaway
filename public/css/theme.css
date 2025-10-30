@@ -208,10 +208,13 @@ body[data-view="category"] #trips-container .trip-card.is-pressing::after { opac
 
 /* ============ Global unification across tiles ============ */
 /* Base visuals: same background, border, shadow, radius and gold text */
+/* Unified 3D + white-outline look for all tiles (categories + trips) */
 :is(.category-btn, #trips-container .trip-card) {
   background: var(--ga-card-bg) !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
-  box-shadow: var(--ga-shadow-1) !important;
+  /* even more discreet white outline */
+  border: 1px solid rgba(255,255,255,0.50) !important;
+  /* gentle depth: slightly softer inner bevel */
+  box-shadow: var(--ga-shadow-1), inset 0 1px 0 rgba(255,255,255,0.10) !important;
   border-radius: var(--ga-radius-md) !important;
   -webkit-tap-highlight-color: transparent;
 }
@@ -225,7 +228,15 @@ body.is-loaded :is(.category-btn, #trips-container .trip-card) {
 /* Hover state: unified lift without extra white flash on trip cards */
 :is(.category-btn, #trips-container .trip-card):hover {
   transform: translateY(-6px) scale(1.05);
-  box-shadow: var(--ga-shadow-2) !important;
+  /* keep outline and very subtly deepen the 3D effect on hover */
+  box-shadow: var(--ga-shadow-2), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+}
+
+/* Retina hairline: use half-pixel border on high-DPI screens for extra finesse */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  :is(.category-btn, #trips-container .trip-card) {
+    border-width: 0.5px !important;
+  }
 }
 /* Specifically remove any hover filter only for trip cards (keep category look intact) */
 #trips-container .trip-card:hover { filter: none !important; }

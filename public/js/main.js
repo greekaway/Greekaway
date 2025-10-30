@@ -140,15 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const card = document.createElement("div");
         card.className = "trip-card";
         card.dataset.tripId = trip.id;
-        if (trip.id === 'lefkas') {
-          card.style.setProperty('background-color', '#0E1520', 'important');
-          card.style.setProperty('background-image', 'none', 'important');
-          card.style.setProperty('box-shadow', 'inset 0 0 0 1px #0E1520, 0 6px 18px rgba(0,0,0,0.48)', 'important');
-          card.style.setProperty('filter', 'none', 'important');
-          card.style.setProperty('backdrop-filter', 'none', 'important');
-          card.style.setProperty('border', 'none', 'important');
-          card.style.setProperty('outline', 'none', 'important');
-        }
+        // Use unified theme styles for all trips (no per-trip inline overrides)
         if (trip.id === 'olympia' || trip.id === 'lefkas' || trip.id === 'parnassos') card.classList.add('logo-pop');
         card.dataset.cat = trip.category || category;
         card.classList.add(`cat-${trip.category || category}`);
