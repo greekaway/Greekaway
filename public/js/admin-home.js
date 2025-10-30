@@ -101,29 +101,25 @@
     // views
     const prev = state.active; const prevView = $(`#view-${prev}`);
     const nextView = ensureView(tab);
-      // Fully clear previous iframe content when leaving a tab
-      if (prevView) {
-        const oldFrame = prevView.querySelector('iframe');
-        if (oldFrame) {
-          try { oldFrame.src = 'about:blank'; } catch(_) {}
-          oldFrame.remove();
-        }
-        // mark as not loaded to allow lazy reload next time
-        if (state.loaded.hasOwnProperty(prev)) state.loaded[prev] = false;
-        prevView.classList.remove('active');
-      }
+    // Only toggle visibility; keep iframes alive to preserve login/session state
+    if (prevView) {
+      prevView.classList.remove('active');
+    }
     if (nextView) nextView.classList.add('active');
     state.active = tab;
 
     // lazy load content for frames
-    if ((tab === 'bookings' || tab === 'payments' || tab === 'partners') && !state.loaded[tab]) {
-      const frame = $(`#view-${tab} iframe`);
-      if (frame) {
-          const mode = tab === 'bookings' ? 'bookings' : (tab === 'payments' ? 'payments' : 'partners');
-          frame.addEventListener('load', () => tryInjectLogin(frame, mode), { once: true });
-        // src already set in ensureView
+    if ((tab === 'bookings' || tab === 'payments' || tab === 'partners')) {
+      let frame = $(`#view-${tab} iframe`);
+      if (!frame) {
+        // ensure iframe exists if view was created earlier but iframe was missing
+        ensureView(tab); frame = $(`#view-${tab} iframe`);
       }
-      state.loaded[tab] = true;
+      if (frame && !frame.dataset.ahWired) {
+        const mode = tab === 'bookings' ? 'bookings' : (tab === 'payments' ? 'payments' : 'partners');
+        frame.addEventListener('load', () => tryInjectLogin(frame, mode), { once: true });
+        frame.dataset.ahWired = '1';
+      }
     }
     // Also attempt immediate re-injection for the now-active iframe (if it already existed)
     const nowFrame = $(`#view-${tab} iframe`);
@@ -135,24 +131,46 @@
 
   function ensureView(tab){
     let view = $(`#view-${tab}`);
-    if (view) return view;
-    view = document.createElement('section');
-    view.id = `view-${tab}`; view.className = 'view'; view.dataset.tab = tab;
     const cb = `cb=${Date.now()}`;
-    if (tab === 'bookings') {
-      view.innerHTML = `<iframe id="tab-bookings" title="Bookings" src="/admin.html?view=bookings&${cb}"></iframe>`;
-    } else if (tab === 'payments') {
-      view.innerHTML = `<iframe id="tab-payments" title="Payments" src="/admin.html?view=payments&${cb}"></iframe>`;
-    } else if (tab === 'partners') {
-      // partners iframe supports auth via ?auth=base64(user:pass) for protected admin endpoints
-      const qp = [];
-      if (state.creds.user && state.creds.pass) qp.push(`auth=${encodeURIComponent(btoa(state.creds.user + ':' + state.creds.pass))}`);
-      qp.push(cb);
-      view.innerHTML = `<iframe id="tab-partners" title="Partners" src="/admin-groups.html${qp.length ? ('?' + qp.join('&')) : ''}"></iframe>`;
-    } else if (tab === 'settings') {
-      view.innerHTML = `<div class="settings-wrap"><h2>Settings</h2><p>Coming soon.</p></div>`;
+    if (!view) {
+      view = document.createElement('section');
+      view.id = `view-${tab}`; view.className = 'view'; view.dataset.tab = tab;
+      if (tab === 'bookings') {
+        view.innerHTML = `<iframe id="tab-bookings" title="Bookings" src="/admin.html?view=bookings&${cb}"></iframe>`;
+      } else if (tab === 'payments') {
+        view.innerHTML = `<iframe id="tab-payments" title="Payments" src="/admin.html?view=payments&${cb}"></iframe>`;
+      } else if (tab === 'partners') {
+        const qp = [];
+        if (state.creds.user && state.creds.pass) qp.push(`auth=${encodeURIComponent(btoa(state.creds.user + ':' + state.creds.pass))}`);
+        qp.push(cb);
+        view.innerHTML = `<iframe id="tab-partners" title="Partners" src="/admin-groups.html${qp.length ? ('?' + qp.join('&')) : ''}"></iframe>`;
+      } else if (tab === 'settings') {
+        view.innerHTML = `<div class="settings-wrap"><h2>Settings</h2><p>Coming soon.</p></div>`;
+      }
+      $('#adminContent').appendChild(view);
+      return view;
     }
-    $('#adminContent').appendChild(view);
+    // View exists: ensure iframe present
+    let frame = view.querySelector('iframe');
+    if (!frame) {
+      if (tab === 'bookings') {
+        frame = document.createElement('iframe');
+        frame.id = 'tab-bookings'; frame.title = 'Bookings';
+        frame.src = `/admin.html?view=bookings&${cb}`;
+      } else if (tab === 'payments') {
+        frame = document.createElement('iframe');
+        frame.id = 'tab-payments'; frame.title = 'Payments';
+        frame.src = `/admin.html?view=payments&${cb}`;
+      } else if (tab === 'partners') {
+        frame = document.createElement('iframe');
+        frame.id = 'tab-partners'; frame.title = 'Partners';
+        const qp = [];
+        if (state.creds.user && state.creds.pass) qp.push(`auth=${encodeURIComponent(btoa(state.creds.user + ':' + state.creds.pass))}`);
+        qp.push(cb);
+        frame.src = `/admin-groups.html${qp.length ? ('?' + qp.join('&')) : ''}`;
+      }
+      if (frame) view.appendChild(frame);
+    }
     return view;
   }
 
