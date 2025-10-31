@@ -373,9 +373,31 @@
     $$('.tabs .tab').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
   }
 
+  function wireNavTouchGuard(){
+    const nav = document.getElementById('adminNav');
+    if (!nav) return;
+    let sx = 0, sy = 0;
+    nav.addEventListener('touchstart', (e) => {
+      const t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
+      if (!t) return;
+      sx = t.clientX; sy = t.clientY;
+    }, { passive: true });
+    nav.addEventListener('touchmove', (e) => {
+      const t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
+      if (!t) return;
+      const dx = Math.abs(t.clientX - sx);
+      const dy = Math.abs(t.clientY - sy);
+      // If gesture tends vertical, prevent starting page scroll from the nav area
+      if (dy > dx && dy > 4) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  }
+
   function init(){
     attachLoginBar();
     wireTabs();
+    wireNavTouchGuard();
     ensureIdleWatcher();
     // Stripe tools are wired by a separate initializer below; avoid calling an out-of-scope symbol here.
     // Also wire Backup refresh button here for convenience.

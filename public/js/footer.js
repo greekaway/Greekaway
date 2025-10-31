@@ -13,6 +13,18 @@
         f.innerHTML = html;
         document.body.appendChild(f);
       }
+      // Mobile-only: prevent starting vertical scroll when dragging on the footer
+      try {
+        const mql = window.matchMedia && window.matchMedia('(max-width: 599px)');
+        if ((mql && mql.matches) || window.innerWidth < 600) {
+          attachFooterTouchGuard(f);
+        }
+        if (mql && mql.addEventListener) {
+          mql.addEventListener('change', (e) => {
+            try { if (e.matches) attachFooterTouchGuard(f); } catch(_){}
+          });
+        }
+      } catch(_){}
       // If we are on a trip page (booking overlay present), switch central button to Booking (bell)
       try {
         const isTripPage = !!document.getElementById('bookingOverlay') || (location.pathname || '').includes('/trips/trip.html');
@@ -45,6 +57,29 @@
         }
       } catch(_) { /* noop */ }
     } catch (e) { /* ignore */ }
+  }
+  function attachFooterTouchGuard(footerEl){
+    if (!footerEl || footerEl.__gaTouchGuard) return;
+    footerEl.__gaTouchGuard = true;
+    let startX = 0, startY = 0, moved = false;
+    const onStart = (e) => {
+      const t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
+      if (!t) return;
+      startX = t.clientX; startY = t.clientY; moved = false;
+    };
+    const onMove = (e) => {
+      const t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
+      if (!t) return;
+      const dx = Math.abs(t.clientX - startX);
+      const dy = Math.abs(t.clientY - startY);
+      // If gesture is predominantly vertical, block it so page doesn't scroll from the footer region
+      if (dy > dx && dy > 6) {
+        moved = true;
+        e.preventDefault();
+      }
+    };
+    footerEl.addEventListener('touchstart', onStart, { passive: true });
+    footerEl.addEventListener('touchmove', onMove, { passive: false });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applySharedFooter);
   else applySharedFooter();

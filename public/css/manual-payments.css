@@ -7,8 +7,15 @@
 
 /* Make sticky header offset behave similar to other admin pages */
 :root { --mp-sticky-offset: 0px; }
-#mpContainer { overflow: auto; height: calc(100vh - (var(--mp-sticky-offset, 0px) + 90px)); }
+#mpContainer {
+	overflow: auto;
+	height: calc(100vh - (var(--mp-sticky-offset, 0px) + 90px));
+	overscroll-behavior-x: contain; /* prevent sideways rubber-band */
+}
 #mpStickyBar { position: sticky; top: 0; z-index: 10; background: #0a121c; padding-bottom: 6px; }
+
+/* Default: hide the top reset button; we'll show it only on tablets */
+#mpResetFiltersTop { display: none; }
 
 /* -- removed filter bar styles to restore original layout -- */
 
@@ -43,19 +50,42 @@
 	#mpStickyBar { padding: 4px 6px !important; }
 	#mpStickyBar h3 { font-size: 0.85rem; margin: 0 0 3px 0 !important; }
 
+	/* Shrink filters and action buttons by ~20% on phones */
+	#mpFilters label.small,
+	#mpFilters input,
+	#mpFilters select,
+	#mpStickyBar .btn { font-size: 80% !important; }
+	#mpStickyBar .btn { padding: 4px 8px; }
+
+	/* Reduce the visible input box size further (~20% more) */
+	#mpFilters input[type="date"],
+	#mpFilters input[type="text"] {
+		padding: 2px 6px;
+		min-width: 0;
+		width: 60%;
+		max-width: 150px;
+		height: 28px;
+	}
+	#mpFilters label.small { flex: 0 0 auto; }
+
 	/* Container: predictable height and smoother scroll without rubber-banding */
 	#mpContainer {
 		height: calc(100vh - (var(--mp-sticky-offset, 0px) + 90px));
 		overflow-x: auto;
 		overflow-y: auto;
 		padding-bottom: 8px; /* small bottom breathing */
+		overflow-anchor: none;
+		overscroll-behavior: contain; /* stabilize scroll */
+		scroll-snap-type: x proximity; /* gentle snap back to leading edge */
 	}
 	@supports (padding: max(0px)) {
 		#mpContainer { padding-bottom: max(env(safe-area-inset-bottom, 8px), 8px); }
 	}
 
 	/* Slightly smaller fonts and paddings for dense rows */
-	#mpTable { min-width: 860px; }
+	#mpTable { min-width: 920px; }
+	#mpTable thead { position: sticky; top: var(--mp-sticky-offset, 0px); z-index: 90; }
+	#mpTable thead, #mpTable tbody { scroll-snap-align: start; }
 	#mpTable thead th,
 	#mpTable tbody td { font-size: 12px; padding: 4px 6px; }
 
@@ -73,6 +103,22 @@
 
 /* Tablet tweaks (iPad/iPad mini): prevent IBAN wrapping and slightly reduce font-size */
 @media (min-width: 600px) and (max-width: 1024px) {
+	/* Unite header under filters and keep it pinned; header scrolls only horizontally with the table */
+	#mpTable thead { position: sticky; top: var(--mp-sticky-offset, 0px); z-index: 90; }
+	#mpContainer { overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; }
+	#mpTable { min-width: 1024px; }
+	/* Show Reset next to Export; hide the one in filter row */
+	#mpResetFiltersTop { display: inline-flex !important; align-items: center; }
+	#mpFilters #mpResetFilters { display: none !important; }
+
+	/* Tighter header area to reduce wrapping and keep height stable */
+	#mpStickyBar { padding: 6px 10px !important; }
+	#mpStickyBar .admin-row { gap: 6px !important; }
+	#mpFilters { margin-top: 6px; }
+	#mpFilters label.small { font-size: 0.9rem; }
+	#mpFilters input,
+	#mpFilters select { height: 28px; }
+
 	/* Keep horizontal scroll available */
 	#mpContainer { overflow-x: auto; }
 	/* Slightly smaller text to fit more columns */
@@ -83,5 +129,10 @@
 	#mpTable tbody td:nth-child(5) {
 		white-space: nowrap;
 	}
+	/* Keep header/body columns stable: avoid wrapping except trip title */
+	#mpTable thead th,
+	#mpTable tbody td { white-space: nowrap; }
+	#mpTable thead th:nth-child(2),
+	#mpTable tbody td:nth-child(2) { white-space: normal; }
  
 }

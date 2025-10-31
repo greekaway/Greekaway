@@ -7,6 +7,13 @@
   let sortField = '';
   let sortDir = 'desc';
   let isDemoMode = false;
+  // Filters state
+  const filters = {
+    dateFrom: null, // number (ms) start-of-day
+    dateTo: null,   // number (ms) end-of-day
+    partnerQuery: '',
+    status: '' // '', 'paid', 'unpaid'
+  };
 
   // Build about 32 demo items (deterministic) for showcasing when API is empty/unavailable
   function buildDemoItems(){
@@ -132,9 +139,10 @@
     }
   }
 
-  function sortItems(){
-    if (!sortField) return items.slice();
-    const out = items.slice();
+  function sortItems(arr){
+    const base = Array.isArray(arr) ? arr : items;
+    if (!sortField) return base.slice();
+    const out = base.slice();
     out.sort((a,b) => {
       const av = getField(a, sortField);
       const bv = getField(b, sortField);
@@ -152,12 +160,50 @@
     return out;
   }
 
+  function isPaidStatus(status){
+    if (!status) return false;
+    return /paid|πληρώθηκε|settled|success/i.test(String(status));
+  }
+
+  function filterItems(arr){
+    const src = Array.isArray(arr) ? arr : items;
+    const q = (filters.partnerQuery || '').trim().toLowerCase();
+    const hasQ = q.length > 0;
+    const hasFrom = typeof filters.dateFrom === 'number';
+    const hasTo = typeof filters.dateTo === 'number';
+    const st = filters.status; // '', 'paid', 'unpaid'
+    if (!hasQ && !hasFrom && !hasTo && !st) return src.slice();
+    return src.filter(row => {
+      // date filter
+      if (hasFrom || hasTo) {
+        const iso = getField(row,'date');
+        const t = iso ? new Date(iso).getTime() : NaN;
+        if (isNaN(t)) return false;
+        if (hasFrom && t < filters.dateFrom) return false;
+        if (hasTo && t > filters.dateTo) return false;
+      }
+      // partner/trip query
+      if (hasQ) {
+        const partner = String(getField(row,'partner')||'').toLowerCase();
+        const trip = String(getField(row,'trip')||'').toLowerCase();
+        if (!(partner.includes(q) || trip.includes(q))) return false;
+      }
+      // status filter
+      if (st) {
+        const paid = isPaidStatus(getField(row,'status'));
+        if (st === 'paid' && !paid) return false;
+        if (st === 'unpaid' && paid) return false;
+      }
+      return true;
+    });
+  }
+
   
 
   function render(){
     const tbody = $('#mpTable tbody'); if (!tbody) return;
     tbody.innerHTML = '';
-  const data = sortItems();
+  const data = sortItems(filterItems(items));
   if (!data.length) { $('#mpMessage').textContent = 'Δεν υπάρχουν εγγραφές.'; return; }
   $('#mpMessage').textContent = '';
     for (const row of data) {
@@ -266,6 +312,45 @@
         render();
       });
     });
+    // Filters events
+    const dateFromEl = document.getElementById('mpDateFrom');
+    const dateToEl = document.getElementById('mpDateTo');
+    const partnerEl = document.getElementById('mpPartnerQuery');
+    const statusEl = document.getElementById('mpStatusFilter');
+  const resetEl = document.getElementById('mpResetFilters');
+  const resetTopEl = document.getElementById('mpResetFiltersTop');
+
+    function toStartOfDayMs(v){
+      // Expect v as 'YYYY-MM-DD'
+      try { const d = new Date(v + 'T00:00:00'); return isNaN(d) ? null : d.getTime(); } catch(_) { return null; }
+    }
+    function toEndOfDayMs(v){
+      try { const d = new Date(v + 'T23:59:59.999'); return isNaN(d) ? null : d.getTime(); } catch(_) { return null; }
+    }
+    function applyFiltersFromUI(){
+      filters.partnerQuery = partnerEl && partnerEl.value ? partnerEl.value : '';
+      const vf = dateFromEl && dateFromEl.value ? toStartOfDayMs(dateFromEl.value) : null;
+      const vt = dateToEl && dateToEl.value ? toEndOfDayMs(dateToEl.value) : null;
+      filters.dateFrom = typeof vf === 'number' ? vf : null;
+      filters.dateTo = typeof vt === 'number' ? vt : null;
+      const st = statusEl && statusEl.value ? statusEl.value : '';
+      filters.status = st === 'paid' || st === 'unpaid' ? st : '';
+      render();
+    }
+    if (dateFromEl) dateFromEl.addEventListener('change', applyFiltersFromUI);
+    if (dateToEl) dateToEl.addEventListener('change', applyFiltersFromUI);
+    if (partnerEl) partnerEl.addEventListener('input', applyFiltersFromUI);
+    if (statusEl) statusEl.addEventListener('change', applyFiltersFromUI);
+    function resetFilters(){
+      if (dateFromEl) dateFromEl.value = '';
+      if (dateToEl) dateToEl.value = '';
+      if (partnerEl) partnerEl.value = '';
+      if (statusEl) statusEl.value = '';
+      filters.dateFrom = null; filters.dateTo = null; filters.partnerQuery=''; filters.status='';
+      render();
+    }
+    if (resetEl) resetEl.addEventListener('click', resetFilters);
+    if (resetTopEl) resetTopEl.addEventListener('click', resetFilters);
     
     // Delegate mark-paid
     document.addEventListener('click', (e) => {
@@ -279,7 +364,7 @@
   function exportCsv(){
     const rows = [];
     rows.push(['Όνομα συνεργάτη','Τίτλος εκδρομής','Ημερομηνία','Ποσό (€)','IBAN','Κατάσταση','Υπόλοιπο συνεργάτη']);
-  const data = sortItems();
+  const data = sortItems(filterItems(items));
     data.forEach(row => {
       const vals = [
         getField(row,'partner'),

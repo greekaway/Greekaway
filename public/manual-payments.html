@@ -24,7 +24,32 @@
       <div class="admin-row" style="gap:8px;flex-wrap:wrap">
         <button id="mpRefresh" class="btn">Ανανέωση</button>
         <button id="mpExport" class="btn">Εξαγωγή σε CSV</button>
+        <button id="mpResetFiltersTop" class="btn btn-light" style="display:none">Επαναφορά Φίλτρων</button>
         <span id="mpStatus" class="hint" style="color:#aaa"></span>
+      </div>
+      <!-- Filters -->
+      <div id="mpFilters" class="admin-row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px">
+        <label class="small">
+          Από:
+          <input type="date" id="mpDateFrom" />
+        </label>
+        <label class="small">
+          Έως:
+          <input type="date" id="mpDateTo" />
+        </label>
+        <label class="small" style="min-width:260px;flex:1">
+          Συνεργάτης:
+          <input type="text" id="mpPartnerQuery" placeholder="Αναζήτηση συνεργάτη ή εκδρομής" />
+        </label>
+        <label class="small">
+          Κατάσταση:
+          <select id="mpStatusFilter">
+            <option value="">Όλα</option>
+            <option value="unpaid">Απλήρωτο</option>
+            <option value="paid">Πληρώθηκε</option>
+          </select>
+        </label>
+        <button id="mpResetFilters" class="btn btn-light">Επαναφορά Φίλτρων</button>
       </div>
       
     </div>

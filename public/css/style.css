@@ -76,6 +76,7 @@ footer {
   border-radius: 20px 20px 0 0;
   z-index: 12000; /* above overlay (which is z-index: 10000) */
   box-shadow: 0 -2px 12px rgba(0,0,0,0.4);
+  /* baseline behavior; advanced mobile guards handled in admin UI CSS/JS */
 }
 footer a {
   color: #ecf0f1;
@@ -650,7 +651,13 @@ body.rtl footer {
 }
 
 /* Global enforcement: consistent footer height and vertical padding across all pages */
-footer { height: 64px !important; padding: 8px 0 !important; }
+footer { height: 64px !important; padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)) !important; }
+
+/* Mobile stability: reduce rubber-band overscroll that can "pull" the footer */
+@media (max-width: 599px) {
+  html, body { overscroll-behavior-y: none; overscroll-behavior: contain; }
+  body { touch-action: manipulation; }
+}
 
 
 /* ===== Category page panel (as in screenshot) ===== */
