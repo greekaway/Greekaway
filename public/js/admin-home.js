@@ -373,12 +373,28 @@
         const urlInput = document.getElementById('onboardingUrl');
         const acctSpan = document.getElementById('onboardingAccount');
         const email = (emailEl && emailEl.value || '').trim();
-        if (!email) { if (status) { status.textContent = 'Please enter an email'; status.style.color = '#ff6b6b'; } return; }
+        if (!email) {
+          if (status) {
+            status.textContent = '❌ Παρακαλώ εισάγετε email συνεργάτη';
+            status.style.color = '#ff6b6b';
+            // Show feedback under the button
+            status.style.flexBasis = '100%';
+            status.style.display = 'block';
+            status.style.marginTop = '4px';
+            status.style.marginLeft = '0px';
+          }
+          return;
+        }
         if (status) {
           status.textContent = 'Generating...';
           status.style.color = '#ccc';
           status.setAttribute('role','status');
           status.setAttribute('aria-live','polite');
+          // Place feedback under the button consistently
+          status.style.flexBasis = '100%';
+          status.style.display = 'block';
+          status.style.marginTop = '4px';
+          status.style.marginLeft = '0px';
         }
         if (resultDiv) resultDiv.style.display = 'none';
         try {
@@ -388,14 +404,38 @@
           if (urlInput) urlInput.value = j.url;
           if (acctSpan) acctSpan.textContent = j.accountId || '';
           if (resultDiv) resultDiv.style.display = 'block';
-          if (status) { status.textContent = 'Ready'; status.style.color = '#7bd88f'; }
-          // Auto-redirect to Stripe onboarding like the previous flow
+          if (status) {
+            status.textContent = '✅ Το link δημιουργήθηκε και στάλθηκε στο email του συνεργάτη.';
+            status.style.color = '#7bd88f';
+          }
+          // If we navigate to Stripe onboarding, the message will disappear with the page.
+          // Keep it visible for ~3.5s when navigation does not occur (mobile or blockers).
+          let cleared = false;
+          const clearLater = setTimeout(() => {
+            if (!cleared && status) status.textContent = '';
+          }, 3500);
+          const visHandler = () => {
+            try {
+              if (document.visibilityState === 'hidden') {
+                cleared = true;
+                if (status) status.textContent = '';
+                clearTimeout(clearLater);
+                document.removeEventListener('visibilitychange', visHandler, true);
+              }
+            } catch(_) {}
+          };
+          document.addEventListener('visibilitychange', visHandler, true);
           try { window.location.href = j.url; } catch(_) {}
         } catch (e) {
           if (resultDiv) resultDiv.style.display = 'none';
           if (status) {
-            status.textContent = 'Error: ' + (e && e.message ? e.message : 'Failed to generate Stripe link');
+            status.textContent = '❌ Αποτυχία δημιουργίας link: ' + (e && e.message ? e.message : 'Unknown error');
             status.style.color = '#ff6b6b';
+            // Ensure error appears under the button
+            status.style.flexBasis = '100%';
+            status.style.display = 'block';
+            status.style.marginTop = '4px';
+            status.style.marginLeft = '0px';
           }
         }
       });

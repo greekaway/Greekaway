@@ -107,6 +107,14 @@ body.admin-main select {
   border-radius: 2px;
 }
 
+/* Phones: avoid iOS auto-zoom on focus by using >=16px font-size; shorten width ~10% */
+@media (max-width: 576px) {
+  body.admin-main input,
+  body.admin-main select { font-size: 16px; }
+  body.admin-main input[type=text],
+  body.admin-main input[type=password] { width: 270px; }
+}
+
 /* Labels inline with controls */
 body.admin-main label {
   display: inline-flex;
@@ -333,6 +341,13 @@ body.admin-main label {
   #paymentsColumnsHint { display: none; }
   /* For payments on mobile, hide table header to reduce vertical clutter */
   #paymentsTable thead { display: none; }
+
+  /* Payments mobile cards: keep field titles (labels) on the left */
+  #paymentsTable tbody tr td { text-align: left; }
+  #paymentsTable tbody tr td::before { justify-self: start; text-align: left; }
+  /* Amount value remains right-aligned, but its label stays left */
+  #paymentsTable tbody tr td.amount { text-align: right !important; }
+  #paymentsTable tbody tr td.amount::before { justify-self: start; text-align: left; }
   .payments-row.meta {
     flex-direction: column;
     align-items: stretch;
@@ -346,4 +361,108 @@ body.admin-main label {
   .admin-card.admin-backup-card {
     max-width: 100%;
   }
+}
+
+/* Phones only: shrink sticky titles and filter controls by ~30% (not tablets/desktop) */
+@media (max-width: 576px) {
+  /* Compact sticky bar padding */
+  #bookingsStickyBar,
+  #paymentsStickyBar {
+    padding: 4px 6px !important; /* 6x8 -> ~4x6 */
+  }
+
+  /* Section titles on blue sticky background */
+  #bookingsStickyBar h3,
+  #paymentsStickyBar h3 {
+    font-size: 0.7rem; /* ~30% smaller than default */
+    margin: 0 0 3px 0 !important;
+  }
+
+  /* Bookings: filters row in sticky bar */
+  #bookingsStickyBar .admin-row label {
+    font-size: 10px; /* 13 -> ~10 */
+    gap: 4px;
+    margin: 1px 4px 1px 0;
+  }
+  #bookingsStickyBar .admin-row input,
+  #bookingsStickyBar .admin-row select {
+    height: 20px; /* 28 -> ~20 */
+    padding: 1px 4px;
+    font-size: 10px;
+  }
+  #bookingsStickyBar button {
+    font-size: 10px;
+    padding: 2px 7px;
+    line-height: 1.1;
+    border-radius: 2px;
+  }
+
+  /* Payments: filters row and actions in sticky bar */
+  #paymentsStickyBar #filters {
+    padding: 4px !important; /* 7-8 -> 4 */
+  }
+  #paymentsStickyBar .filters-row { gap: 6px; }
+  /* Override the generic mobile rule: keep payments filter labels inline on phones */
+  #paymentsStickyBar .filters-row label { width: auto !important; }
+  #paymentsStickyBar .filters-row label {
+    font-size: 10px; /* 13.75 -> ~10 */
+    gap: 4px;
+    margin: 1px 4px 1px 0;
+  }
+  #paymentsStickyBar .filters-row input,
+  #paymentsStickyBar .filters-row select {
+    height: 20px; /* 29 -> ~20 */
+    padding: 1px 4px;
+    font-size: 10px;
+  }
+  #paymentsStickyBar .actions .btn,
+  #paymentsStickyBar .actions button {
+    font-size: 9.5px; /* a touch smaller to fit */
+    padding: 2px 7px;
+    line-height: 1.1;
+    border-radius: 2px;
+  }
+
+  /* Inline column-hint lines within sticky area */
+  #bookingsColumnsHint,
+  #paymentsColumnsHint {
+    font-size: 9px; /* 12 -> ~9 */
+    line-height: 1.25;
+  }
+
+  /* Further reductions as requested */
+  /* Bookings: minus extra ~10% */
+  #bookingsStickyBar h3 { font-size: 0.63rem !important; margin: 0 0 2px 0 !important; }
+  #bookingsStickyBar .admin-row label { font-size: 9px; gap: 3px; margin: 1px 3px 1px 0; }
+  #bookingsStickyBar .admin-row input,
+  #bookingsStickyBar .admin-row select { height: 18px; padding: 1px 3px; font-size: 9px; }
+  #bookingsStickyBar button { font-size: 9px; padding: 2px 6px; line-height: 1.1; border-radius: 2px; }
+
+  /* Payments: minus extra ~25% */
+  #paymentsStickyBar h3 { font-size: 0.525rem !important; margin: 0 0 2px 0 !important; }
+  #paymentsStickyBar #filters { padding: 3px !important; }
+  #paymentsStickyBar .filters-row { gap: 5px; }
+  #paymentsStickyBar .filters-row label { font-size: 7.5px; gap: 3px; margin: 1px 3px 1px 0; }
+  #paymentsStickyBar .filters-row input,
+  #paymentsStickyBar .filters-row select { height: 15px; padding: 1px 3px; font-size: 7.5px; }
+  #paymentsStickyBar .actions .btn,
+  #paymentsStickyBar .actions button { font-size: 7px; padding: 1.5px 5px; line-height: 1.1; border-radius: 2px; }
+
+  /* Shrink the "Page: 1" info text by 50% on phones */
+  #paymentsStickyBar #pageInfo {
+    font-size: 50%;
+  }
+
+  /* Phones only: shrink Prev/Next buttons by ~30% in the filters area */
+  #paymentsStickyBar #filters #prevPage,
+  #paymentsStickyBar #filters #nextPage {
+    font-size: 9px; /* ~30% smaller than base 13px */
+    padding: 2px 7px; /* 4x10 -> ~2x7 */
+    line-height: 1.1;
+    border-radius: 2px;
+  }
+
+  /* Bookings mobile cards: keep field titles (labels) on the left */
+  #bookingsTable tbody tr td { text-align: left; }
+  #bookingsTable tbody tr td::before { justify-self: start; text-align: left; }
 }

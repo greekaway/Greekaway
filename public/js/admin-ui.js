@@ -105,6 +105,76 @@
   const selSortField = document.getElementById('sortField'); if (selSortField) selSortField.addEventListener('change', (e) => { currentSortField = e.target.value || ''; applyFilters(); });
   const btnSortDir = document.getElementById('sortDir'); if (btnSortDir) btnSortDir.addEventListener('click', (e) => { currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc'; e.target.textContent = currentSortDir === 'asc' ? '▼' : '▲'; applyFilters(); });
 
+  // Payments (mobile-only): move Min/Max next to Page size on the right; restore on larger screens
+  (function setupPaymentsMobileLayout(){
+    const payBar = document.getElementById('paymentsStickyBar');
+    if (!payBar) return;
+    const left = document.querySelector('#filters .filters-left');
+    const right = document.querySelector('#filters .filters-meta-right');
+    if (!left || !right) return;
+    const minInput = document.getElementById('filterMin');
+    const maxInput = document.getElementById('filterMax');
+    const pageSize = document.getElementById('pageSize');
+    const minLabel = minInput ? minInput.closest('label') : null;
+    const maxLabel = maxInput ? maxInput.closest('label') : null;
+    const pageSizeLabel = pageSize ? pageSize.closest('label') : null;
+    if (!minLabel || !maxLabel) return;
+
+    // Remember original positions to restore on >576px
+    if (!minLabel.__gaOrigParent) {
+      minLabel.__gaOrigParent = minLabel.parentElement;
+      minLabel.__gaOrigNext = minLabel.nextSibling;
+    }
+    if (!maxLabel.__gaOrigParent) {
+      maxLabel.__gaOrigParent = maxLabel.parentElement;
+      maxLabel.__gaOrigNext = maxLabel.nextSibling;
+    }
+
+    const moveForMobile = () => {
+      const isPhone = window.innerWidth <= 576;
+      if (isPhone) {
+        // Insert Min/Max just before Page size on the right side
+        if (right && minLabel.parentElement !== right) {
+          if (pageSizeLabel && pageSizeLabel.parentElement === right) {
+            right.insertBefore(minLabel, pageSizeLabel);
+          } else {
+            right.insertBefore(minLabel, right.firstChild);
+          }
+        }
+        if (right && maxLabel.parentElement !== right) {
+          if (pageSizeLabel && pageSizeLabel.parentElement === right) {
+            // after minLabel and before pageSizeLabel
+            right.insertBefore(maxLabel, pageSizeLabel);
+          } else if (minLabel.parentElement === right) {
+            right.insertBefore(maxLabel, minLabel.nextSibling);
+          } else {
+            right.insertBefore(maxLabel, right.firstChild);
+          }
+        }
+      } else {
+        // Restore original order on tablet/desktop
+        if (minLabel.__gaOrigParent && minLabel.parentElement !== minLabel.__gaOrigParent) {
+          if (minLabel.__gaOrigNext && minLabel.__gaOrigNext.parentNode === minLabel.__gaOrigParent) {
+            minLabel.__gaOrigParent.insertBefore(minLabel, minLabel.__gaOrigNext);
+          } else {
+            minLabel.__gaOrigParent.appendChild(minLabel);
+          }
+        }
+        if (maxLabel.__gaOrigParent && maxLabel.parentElement !== maxLabel.__gaOrigParent) {
+          if (maxLabel.__gaOrigNext && maxLabel.__gaOrigNext.parentNode === maxLabel.__gaOrigParent) {
+            maxLabel.__gaOrigParent.insertBefore(maxLabel, maxLabel.__gaOrigNext);
+          } else {
+            maxLabel.__gaOrigParent.appendChild(maxLabel);
+          }
+        }
+      }
+    };
+
+    // Initial and on-resize
+    moveForMobile();
+    window.addEventListener('resize', moveForMobile);
+  })();
+
   function fetchBackup(){
     if (!basicAuth || !backupDiv) return;
     backupDiv.textContent = window.t ? window.t('admin.loading') : 'Loading...';
@@ -341,27 +411,72 @@
   const selBfPayoutStatus = document.getElementById('bfPayoutStatus'); if (selBfPayoutStatus) selBfPayoutStatus.addEventListener('change', fetchBookings);
 
   const btnGenStripe = document.getElementById('genStripeLink'); if (btnGenStripe) btnGenStripe.addEventListener('click', async () => {
-    const email = (document.getElementById('partnerEmail').value || '').trim();
+    const emailEl = document.getElementById('partnerEmail');
+    const email = (emailEl && emailEl.value || '').trim();
     const status = document.getElementById('genStatus');
     const resultDiv = document.getElementById('onboardingResult');
     const urlInput = document.getElementById('onboardingUrl');
     const acctSpan = document.getElementById('onboardingAccount');
-    if (!email) { alert('Please enter an email'); return; }
-    status.textContent = 'Generating...';
-    resultDiv.style.display = 'none';
+    if (!email) {
+      if (status) {
+        status.textContent = '❌ Παρακαλώ εισάγετε email συνεργάτη';
+        status.style.color = '#ff6b6b';
+        status.style.flexBasis = '100%';
+        status.style.display = 'block';
+        status.style.marginTop = '4px';
+        status.style.marginLeft = '0px';
+      }
+      return;
+    }
+    if (status) {
+      status.textContent = 'Generating...';
+      status.style.color = '#ccc';
+      status.setAttribute('role','status');
+      status.setAttribute('aria-live','polite');
+      status.style.flexBasis = '100%';
+      status.style.display = 'block';
+      status.style.marginTop = '4px';
+      status.style.marginLeft = '0px';
+    }
+    if (resultDiv) resultDiv.style.display = 'none';
     try {
       const res = await fetch('/api/partners/connect-link?email=' + encodeURIComponent(email));
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j || !j.url) throw new Error(j && j.error ? j.error : ('HTTP ' + res.status));
-      urlInput.value = j.url;
-      acctSpan.textContent = j.accountId || '';
-      resultDiv.style.display = 'block';
-      status.textContent = 'Ready';
+      if (urlInput) urlInput.value = j.url;
+      if (acctSpan) acctSpan.textContent = j.accountId || '';
+      if (resultDiv) resultDiv.style.display = 'block';
+      if (status) {
+        status.textContent = '✅ Το link δημιουργήθηκε και στάλθηκε στο email του συνεργάτη.';
+        status.style.color = '#7bd88f';
+      }
+      let cleared = false;
+      const clearLater = setTimeout(() => { if (!cleared && status) status.textContent = ''; }, 3500);
+      const visHandler = () => {
+        try {
+          if (document.visibilityState === 'hidden') {
+            cleared = true;
+            if (status) status.textContent = '';
+            clearTimeout(clearLater);
+            document.removeEventListener('visibilitychange', visHandler, true);
+          }
+        } catch(_) {}
+      };
+      document.addEventListener('visibilitychange', visHandler, true);
       // Auto-redirect to onboarding URL for consistency
       try { window.location.href = j.url; } catch(_) {}
     } catch (e) {
-      status.textContent = 'Error generating link';
-      alert('Failed to generate Stripe link: ' + e.message);
+      if (resultDiv) resultDiv.style.display = 'none';
+      if (status) {
+        status.textContent = '❌ Αποτυχία δημιουργίας link: ' + (e && e.message ? e.message : 'Unknown error');
+        status.style.color = '#ff6b6b';
+        status.style.flexBasis = '100%';
+        status.style.display = 'block';
+        status.style.marginTop = '4px';
+        status.style.marginLeft = '0px';
+      } else {
+        alert('Failed to generate Stripe link: ' + (e && e.message ? e.message : 'Unknown error'));
+      }
     }
   });
 

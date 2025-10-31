@@ -37,6 +37,23 @@ body.admin-home {
 .login-bar input { padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.2); color: #fff; }
 .login-bar .hint { opacity: 0.85; font-size: 12px; }
 
+/* Phones: prevent iOS zoom on focus */
+@media (max-width: 576px) {
+  .login-bar input { font-size: 16px; }
+  /* Shrink the whole login bar by ~20% visually without breaking iOS no-zoom rule */
+  .login-bar {
+    transform: scale(0.8);
+    transform-origin: top right;
+    /* Keep it fully within the viewport on narrow phones */
+    right: 8px;
+    max-width: calc(100vw - 16px);
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  /* Move status hint on a new line to avoid horizontal overflow */
+  .login-bar .hint { flex-basis: 100%; text-align: right; margin-top: 2px; }
+}
+
 /* Tabs bar */
 .tabs {
   /* Permanently visible bottom navigation across all viewports */
