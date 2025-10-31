@@ -10,6 +10,8 @@
 #mpContainer { overflow: auto; height: calc(100vh - (var(--mp-sticky-offset, 0px) + 90px)); }
 #mpStickyBar { position: sticky; top: 0; z-index: 10; background: #0a121c; padding-bottom: 6px; }
 
+/* -- removed filter bar styles to restore original layout -- */
+
 /* Match readable colors from other admin tables (white rows, dark text) */
 #mpContainer table { background: #ffffff; color: #111111; }
 #mpContainer table th,
@@ -81,4 +83,5 @@
 	#mpTable tbody td:nth-child(5) {
 		white-space: nowrap;
 	}
+ 
 }

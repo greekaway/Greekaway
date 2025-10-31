@@ -6,15 +6,57 @@
   let items = [];
   let sortField = '';
   let sortDir = 'desc';
+  let isDemoMode = false;
+
+  // Build about 32 demo items (deterministic) for showcasing when API is empty/unavailable
+  function buildDemoItems(){
+    const partners = [
+      'Nikos Tours','Athens Daily Trips','Santorini Blue','Crete Adventures',
+      'Rhodes Sailing','Parnassos Ski','Thessaloniki Food Walk','Meteora Shuttle',
+      'Mykonos Riders','Corfu Experience','Zakynthos Cruises','Pelion Trails'
+    ];
+    const trips = [
+      'Sunset Cruise Lefkada','Acropolis Guided Tour','Volcano & Hot Springs','Samaria Gorge Hike',
+      'Lindos Day Trip','Ski Pass Package','Street Food Experience','Meteora Monasteries',
+      'Delos Half-Day','Old Town Walk','Shipwreck Beach Boat','Centaur Path Trek'
+    ];
+    const ibans = [
+      'GR1601101250000000012300695','GR0602600000001234567890123','GR5502600000000098765432100',
+      'GR7801100000000001234500000','GR0201400000000002012345678','GR7002600000000011223344556',
+      'GR4601100000000009876001234'
+    ];
+    const out = [];
+    for (let i=1;i<=32;i++){
+      const partner = partners[(i-1)%partners.length];
+      const trip = trips[(i-1)%trips.length];
+      const iban = ibans[(i-1)%ibans.length];
+      const day = ((i-1)%28)+1; // keep within month
+      const hour = 8 + ((i*3)%10); // 8..17
+      const min = (i*7)%60;
+      const amount = 3000 + ((i*700)%25000); // 30.00€ .. ~280.00€
+      const paid = (i%3===0); // 1/3 paid
+      out.push({
+        id: 'demo-'+i,
+        partner_name: partner,
+        trip_title: trip,
+        date: `2025-10-${String(day).padStart(2,'0')}T${String(hour).padStart(2,'0')}:${String(min).padStart(2,'0')}:00Z`,
+        amount_cents: amount,
+        iban,
+        status: paid ? 'πληρώθηκε' : 'εκκρεμεί',
+        partner_balance_cents: paid ? 0 : (50000 + (i*900)%150000)
+      });
+    }
+    return out;
+  }
 
   function escapeHtml(s){ if (s==null) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
-  function formatAmount(amount){
-    if (amount == null || amount === '') return '';
-    let num = Number(amount);
-    if (!isFinite(num)) return String(amount);
-    // Heuristic: large values are in cents
-    if (Math.abs(num) > 1000) num = num / 100;
-    return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\u00A0€';
+  // Format a value expressed in cents to euros with 2 decimals
+  function formatAmount(amountCents){
+    if (amountCents == null || amountCents === '') return '';
+    let cents = Number(amountCents);
+    if (!isFinite(cents)) return String(amountCents);
+    const euros = cents / 100;
+    return euros.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\u00A0€';
   }
   function formatDate(iso){
     if (!iso) return '';
@@ -56,14 +98,25 @@
       const res = await fetch('/api/manual-payments', { headers: { Authorization: basicAuth }});
       if (!res.ok) throw new Error('HTTP '+res.status);
       const arr = await res.json();
-      items = Array.isArray(arr) ? arr : [];
+      if (Array.isArray(arr) && arr.length > 0) {
+        items = arr; isDemoMode = false;
+        $('#mpMessage').textContent = '';
+      } else {
+        items = buildDemoItems(); isDemoMode = true;
+        $('#mpMessage').textContent = 'Εμφάνιση demo εγγραφών (το API δεν επέστρεψε δεδομένα).';
+      }
       render();
       setStatus('');
     } catch (e) {
-      $('#mpMessage').textContent = 'Σφάλμα φόρτωσης. Δοκιμάστε ξανά.';
+      // Fallback to demo data on error
+      items = buildDemoItems(); isDemoMode = true;
+      render();
+      $('#mpMessage').textContent = 'Εμφάνιση demo εγγραφών (σφάλμα φόρτωσης).';
       setStatus('' , '#aaa');
     }
   }
+
+  
 
   function getField(row, key){
     switch(key){
@@ -99,12 +152,14 @@
     return out;
   }
 
+  
+
   function render(){
     const tbody = $('#mpTable tbody'); if (!tbody) return;
     tbody.innerHTML = '';
-    const data = sortItems();
-    if (!data.length) { $('#mpMessage').textContent = 'Δεν υπάρχουν εγγραφές.'; return; }
-    $('#mpMessage').textContent = '';
+  const data = sortItems();
+  if (!data.length) { $('#mpMessage').textContent = 'Δεν υπάρχουν εγγραφές.'; return; }
+  $('#mpMessage').textContent = '';
     for (const row of data) {
       const tr = document.createElement('tr');
       const id = getField(row,'id');
@@ -135,6 +190,29 @@
 
   async function onMarkPaid(id, btn){
     if (!id) return;
+    // If in demo mode, simulate success locally
+    if (isDemoMode) {
+      const cell = document.querySelector(`.mp-status[data-id="${CSS.escape(id)}"]`);
+      if (cell) cell.textContent = 'πληρώθηκε';
+      try {
+        const tr = btn.closest('tr');
+        const balTd = tr ? tr.querySelector('td:nth-child(7)') : null;
+        if (balTd) balTd.textContent = formatAmount(0);
+      } catch(_) {}
+      btn.textContent = 'Πληρώθηκε';
+      btn.classList.remove('is-pending');
+      btn.classList.add('is-paid');
+      btn.disabled = true;
+      // Update in-memory item
+      const idx = items.findIndex(it => (getField(it,'id')+'')===id+'');
+      if (idx>=0) {
+        if (items[idx]) {
+          items[idx].status = 'πληρώθηκε';
+          if ('partner_balance_cents' in items[idx]) items[idx].partner_balance_cents = 0;
+        }
+      }
+      return;
+    }
     try {
       btn.disabled = true; btn.textContent = 'Αποστολή...';
       const res = await fetch('/api/manual-payments/mark-paid', {
@@ -143,21 +221,31 @@
         body: JSON.stringify({ id })
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      // Update UI optimistically
+      const data = await res.json().catch(() => null);
+      const item = data && data.item ? data.item : null;
+      // Update UI from server response (fallback to optimistic values)
       const cell = document.querySelector(`.mp-status[data-id="${CSS.escape(id)}"]`);
       if (cell) cell.textContent = 'πληρώθηκε';
       btn.textContent = 'Πληρώθηκε';
       btn.classList.remove('is-pending');
       btn.classList.add('is-paid');
       btn.disabled = true;
-      // Zero the partner balance cell (7th column)
+      // Reset partner balance cell (7th column) to zero as requested
       try {
         const tr = btn.closest('tr');
         const balTd = tr ? tr.querySelector('td:nth-child(7)') : null;
         if (balTd) balTd.textContent = formatAmount(0);
       } catch(_) {}
+      // Update in-memory item for consistency (status + zero balance)
+      const idx = items.findIndex(it => (getField(it,'id')+'')===id+'');
+      if (idx>=0) {
+        if (items[idx]) {
+          items[idx].status = 'πληρώθηκε';
+          if ('partner_balance_cents' in items[idx]) items[idx].partner_balance_cents = 0;
+        }
+      }
     } catch (e) {
-      btn.disabled = false; btn.textContent = 'Πληρώθηκε';
+      btn.disabled = false; btn.textContent = 'Απλήρωτο';
       alert('Αποτυχία ενημέρωσης: ' + (e && e.message ? e.message : e));
     }
   }
@@ -178,6 +266,7 @@
         render();
       });
     });
+    
     // Delegate mark-paid
     document.addEventListener('click', (e) => {
       const btn = e.target && e.target.closest && e.target.closest('.mp-mark');
@@ -190,7 +279,7 @@
   function exportCsv(){
     const rows = [];
     rows.push(['Όνομα συνεργάτη','Τίτλος εκδρομής','Ημερομηνία','Ποσό (€)','IBAN','Κατάσταση','Υπόλοιπο συνεργάτη']);
-    const data = sortItems();
+  const data = sortItems();
     data.forEach(row => {
       const vals = [
         getField(row,'partner'),

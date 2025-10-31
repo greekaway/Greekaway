@@ -72,11 +72,15 @@ router.get('/', (req, res) => {
       partner_name: r.partner_name,
       trip_title: r.trip_title || r.trip_id,
       date: r.date,
+      // Expose explicit cents fields
+      amount_cents: typeof r.amount_cents === 'number' ? r.amount_cents : null,
+      partner_balance_cents: typeof r.partner_balance_cents === 'number' ? r.partner_balance_cents : null,
+      // Back-compat aliases
       amount: typeof r.amount_cents === 'number' ? r.amount_cents : null,
+      partner_balance: typeof r.partner_balance_cents === 'number' ? r.partner_balance_cents : null,
       currency: r.currency || 'eur',
       iban: r.iban || '',
-      status: r.status || 'pending',
-      partner_balance: typeof r.partner_balance_cents === 'number' ? r.partner_balance_cents : null
+      status: r.status || 'pending'
     }));
     return res.json(out);
   } catch (e) {
