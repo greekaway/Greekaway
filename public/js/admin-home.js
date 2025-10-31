@@ -4,6 +4,19 @@
   const $ = (sel, root=document) => root.querySelector(sel);
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (ch) => {
+      switch (ch) {
+        case '&': return '&amp;';
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '"': return '&quot;';
+        case "'": return '&#39;';
+        default: return ch;
+      }
+    });
+  }
+
   const state = {
     creds: { user: '', pass: '' },
     authHeader: null,
@@ -192,17 +205,24 @@
       const yyyy = when ? when.getFullYear() : '';
       const hh = when ? String(when.getHours()).padStart(2,'0') : '';
       const min = when ? String(when.getMinutes()).padStart(2,'0') : '';
-      const whenPretty = when ? `${dd}/${mm}/${yyyy} – ${hh}:${min}` : '—';
+      const whenPretty = (when && !isNaN(when.getTime())) ? `${dd}/${mm}/${yyyy} – ${hh}:${min}` : '—';
       const size = latestObj && typeof latestObj === 'object' ? latestObj.size : undefined;
       let sizeStr = '';
       if (typeof size === 'number') {
         let n = size; const units = ['B','KB','MB','GB','TB']; let i=0; while(n>=1024 && i<units.length-1){ n/=1024; i++; }
         sizeStr = Math.round(n) + ' ' + units[i];
       }
+      const dir = (j && j.backupsDir) ? String(j.backupsDir) : '';
       const line1 = 'Σύνολο αντιγράφων: ' + String(count || '—');
       let line2 = 'Τελευταίο αντίγραφο: ' + whenPretty;
       if (sizeStr) line2 += ' (' + sizeStr + ')';
-      box.innerHTML = '<div>'+line1+'</div><div>'+line2+'</div>';
+      let line3 = '';
+      if (count === 0) {
+        line3 = '<div style="opacity:0.85;font-size:12px">Δεν βρέθηκαν αντίγραφα στον φάκελο: ' + (dir ? '<code>'+escapeHtml(dir)+'</code>' : '—') + '</div>';
+      } else if (dir) {
+        line3 = '<div style="opacity:0.7;font-size:12px">Φάκελος: <code>'+escapeHtml(dir)+'</code></div>';
+      }
+      box.innerHTML = '<div>'+line1+'</div><div>'+line2+'</div>' + line3;
     } catch (e) {
       const box = document.getElementById('backup'); if (box) box.textContent = 'Σφάλμα';
     }

@@ -2041,7 +2041,15 @@ app.get('/admin/backup-status', async (req, res) => {
     return res.status(401).send('Unauthorized');
   }
   try {
-    const backupDir = process.env.BACKUP_DIR || path.join(require('os').homedir(), 'greekaway_backups');
+    const os = require('os');
+    const candidates = [];
+    if (process.env.BACKUP_DIR) candidates.push(process.env.BACKUP_DIR);
+    candidates.push(path.join(os.homedir(), 'greekaway_backups'));
+    // Common persistent locations on PaaS
+    candidates.push('/var/data/greekaway_backups');
+    candidates.push('/data/greekaway_backups');
+    candidates.push('/opt/render/project/.data/greekaway_backups');
+    const backupDir = candidates.find(p => { try { return p && fs.existsSync(p); } catch(_) { return false; } }) || (process.env.BACKUP_DIR || path.join(os.homedir(), 'greekaway_backups'));
     if (!fs.existsSync(backupDir)) return res.json({ backupsDir: backupDir, count: 0, latestDb: null, latestLog: null });
     const files = fs.readdirSync(backupDir).map(f => ({ name: f, path: path.join(backupDir, f) }));
     const dbFiles = files.filter(f => f.name.startsWith('db.sqlite3') && f.name.endsWith('.gz'));
