@@ -20,7 +20,7 @@
   const state = {
     creds: { user: '', pass: '' },
     authHeader: null,
-    loaded: { home: true, bookings: false, payments: false, partners: false, settings: false },
+    loaded: { home: true, bookings: false, payments: false, partners: false, manual: false, settings: false },
     active: 'home',
     lastActivity: Date.now(),
     idleMs: 15 * 60 * 1000, // 15 minutes
@@ -122,14 +122,14 @@
     state.active = tab;
 
     // lazy load content for frames
-    if ((tab === 'bookings' || tab === 'payments' || tab === 'partners')) {
+    if ((tab === 'bookings' || tab === 'payments' || tab === 'partners' || tab === 'manual')) {
       let frame = $(`#view-${tab} iframe`);
       if (!frame) {
         // ensure iframe exists if view was created earlier but iframe was missing
         ensureView(tab); frame = $(`#view-${tab} iframe`);
       }
       if (frame && !frame.dataset.ahWired) {
-        const mode = tab === 'bookings' ? 'bookings' : (tab === 'payments' ? 'payments' : 'partners');
+        const mode = tab === 'bookings' ? 'bookings' : (tab === 'payments' ? 'payments' : (tab === 'partners' ? 'partners' : 'manual'));
         frame.addEventListener('load', () => tryInjectLogin(frame, mode), { once: true });
         frame.dataset.ahWired = '1';
       }
@@ -137,7 +137,7 @@
     // Also attempt immediate re-injection for the now-active iframe (if it already existed)
     const nowFrame = $(`#view-${tab} iframe`);
     if (nowFrame && state.authHeader) {
-      const mode = tab === 'bookings' ? 'bookings' : (tab === 'payments' ? 'payments' : 'partners');
+      const mode = tab === 'bookings' ? 'bookings' : (tab === 'payments' ? 'payments' : (tab === 'partners' ? 'partners' : 'manual'));
       try { tryInjectLogin(nowFrame, mode); } catch(_) {}
     }
   }
@@ -157,6 +157,8 @@
         if (state.creds.user && state.creds.pass) qp.push(`auth=${encodeURIComponent(btoa(state.creds.user + ':' + state.creds.pass))}`);
         qp.push(cb);
         view.innerHTML = `<iframe id="tab-partners" title="Partners" src="/admin-groups.html${qp.length ? ('?' + qp.join('&')) : ''}"></iframe>`;
+      } else if (tab === 'manual') {
+        view.innerHTML = `<iframe id="tab-manual" title="Manual Payments" src="/manual-payments.html?${cb}"></iframe>`;
       } else if (tab === 'settings') {
         view.innerHTML = `<div class="settings-wrap"><h2>Settings</h2><p>Coming soon.</p></div>`;
       }
@@ -181,6 +183,10 @@
         if (state.creds.user && state.creds.pass) qp.push(`auth=${encodeURIComponent(btoa(state.creds.user + ':' + state.creds.pass))}`);
         qp.push(cb);
         frame.src = `/admin-groups.html${qp.length ? ('?' + qp.join('&')) : ''}`;
+      } else if (tab === 'manual') {
+        frame = document.createElement('iframe');
+        frame.id = 'tab-manual'; frame.title = 'Manual Payments';
+        frame.src = `/manual-payments.html?${cb}`;
       }
       if (frame) view.appendChild(frame);
     }

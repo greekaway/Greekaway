@@ -1,0 +1,84 @@
+/* Manual Payments table — match Bookings visuals */
+#mpTable thead th { background: #f3f6fb; border: 1px solid #cfd8e3; font-weight: 700; }
+#mpTable tbody td { border: 1px solid #e6edf5; padding: 6px; }
+#mpTable tbody tr:nth-child(even) { background: #fbfcfe; }
+#mpTable tbody tr:hover { background: #eef6ff; }
+#mpTable td { text-align: left; font-family: Arial, Helvetica, sans-serif; }
+
+/* Make sticky header offset behave similar to other admin pages */
+:root { --mp-sticky-offset: 0px; }
+#mpContainer { overflow: auto; height: calc(100vh - (var(--mp-sticky-offset, 0px) + 90px)); }
+#mpStickyBar { position: sticky; top: 0; z-index: 10; background: #0a121c; padding-bottom: 6px; }
+
+/* Match readable colors from other admin tables (white rows, dark text) */
+#mpContainer table { background: #ffffff; color: #111111; }
+#mpContainer table th,
+#mpContainer table td { color: #111111; }
+
+/* Optional: keep manual payments header cells readable below sticky bar */
+#mpTable thead th {
+	position: sticky;
+	top: var(--mp-sticky-offset, 0px);
+	z-index: 90;
+	background: #0E1520;
+	color: #ffffff;
+}
+
+/* State-specific button styles for actions */
+.mp-mark.is-pending {
+  background: #c62828 !important; /* red */
+  color: #ffffff !important;
+}
+.mp-mark.is-paid {
+  background: #2e7d32 !important; /* green */
+  color: #ffffff !important;
+}
+.mp-mark.is-paid[disabled] { opacity: 1 !important; }
+
+/* Phones: tighten spacing, stabilize scroll, and keep IBAN readable without wrapping */
+@media (max-width: 576px) {
+	/* Compact sticky bar */
+	#mpStickyBar { padding: 4px 6px !important; }
+	#mpStickyBar h3 { font-size: 0.85rem; margin: 0 0 3px 0 !important; }
+
+	/* Container: predictable height and smoother scroll without rubber-banding */
+	#mpContainer {
+		height: calc(100vh - (var(--mp-sticky-offset, 0px) + 90px));
+		overflow-x: auto;
+		overflow-y: auto;
+		padding-bottom: 8px; /* small bottom breathing */
+	}
+	@supports (padding: max(0px)) {
+		#mpContainer { padding-bottom: max(env(safe-area-inset-bottom, 8px), 8px); }
+	}
+
+	/* Slightly smaller fonts and paddings for dense rows */
+	#mpTable { min-width: 860px; }
+	#mpTable thead th,
+	#mpTable tbody td { font-size: 12px; padding: 4px 6px; }
+
+	/* IBAN column (5th): keep single line and even smaller font */
+	#mpTable thead th:nth-child(5),
+	#mpTable tbody td:nth-child(5) {
+		white-space: nowrap;
+		font-size: 11px;
+		min-width: 220px;
+	}
+
+	/* Action buttons: compact */
+	.mp-mark { font-size: 10px; padding: 2px 7px; border-radius: 3px; }
+}
+
+/* Tablet tweaks (iPad/iPad mini): prevent IBAN wrapping and slightly reduce font-size */
+@media (min-width: 600px) and (max-width: 1024px) {
+	/* Keep horizontal scroll available */
+	#mpContainer { overflow-x: auto; }
+	/* Slightly smaller text to fit more columns */
+	#mpTable thead th,
+	#mpTable tbody td { font-size: 12px; }
+	/* IBAN column (5th) stays on a single line */
+	#mpTable thead th:nth-child(5),
+	#mpTable tbody td:nth-child(5) {
+		white-space: nowrap;
+	}
+}

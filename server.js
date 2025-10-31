@@ -1661,6 +1661,14 @@ try {
   console.warn('partners: failed to mount', err && err.message ? err.message : err);
 }
 
+// Manual payments (demo) — lists manual partner deposits and allows marking as paid
+try {
+  app.use('/api/manual-payments', require('./routes/manual-payments'));
+  console.log('manual-payments: routes mounted at /api/manual-payments');
+} catch (err) {
+  console.warn('manual-payments: failed to mount', err && err.message ? err.message : err);
+}
+
 // Global error handlers to prevent process exit on unexpected errors
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err && err.stack ? err.stack : err);

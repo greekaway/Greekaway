@@ -544,6 +544,69 @@ router.post('/create-payment-intent', async (req, res) => {
         commission_cents: split.commission_cents,
         payout_status: (mapping && mapping.partner && mapping.partner.stripe_account_id) ? 'pending' : 'pending',
       });
+
+      // If partner has no Stripe account, create/update a manual_payments row for admin tracking
+      try {
+        if (!(mapping && mapping.partner && mapping.partner.stripe_account_id)) {
+          const db = getDb();
+          // Fetch booking for extra fields (date, trip_id)
+          const b = getBookingById(booking_id);
+          const now = new Date().toISOString();
+          // Optional: get trip title (fallback to trip_id)
+          let trip_title = null;
+          try {
+            const tripData = require('../live/tripData');
+            const trip = b && b.trip_id ? tripData.readTripJsonById(b.trip_id) : null;
+            if (trip) {
+              const t = tripData.getLocalized(trip.title || {}, 'el');
+              trip_title = t || (trip.title && (trip.title.el || trip.title.en)) || null;
+            }
+          } catch(_) {}
+          // Ensure manual_payments table exists (in case router was not loaded yet)
+          try { db.exec(`CREATE TABLE IF NOT EXISTS manual_payments (
+            id TEXT PRIMARY KEY,
+            booking_id TEXT,
+            partner_id TEXT,
+            partner_name TEXT,
+            trip_id TEXT,
+            trip_title TEXT,
+            date TEXT,
+            amount_cents INTEGER,
+            currency TEXT,
+            iban TEXT,
+            status TEXT,
+            partner_balance_cents INTEGER,
+            created_at TEXT,
+            updated_at TEXT
+          )`); } catch(_) {}
+          const exists = db.prepare('SELECT id FROM manual_payments WHERE booking_id = ?').get(booking_id);
+          const id = exists && exists.id ? exists.id : ('mp_' + booking_id);
+          const row = {
+            id,
+            booking_id: booking_id,
+            partner_id: (mapping && mapping.partner && mapping.partner.id) || null,
+            partner_name: (mapping && mapping.partner && mapping.partner.partner_name) || null,
+            trip_id: b && b.trip_id || null,
+            trip_title: trip_title || (b && b.trip_id) || null,
+            date: b && b.date || new Date().toISOString().slice(0,10),
+            amount_cents: split.partner_share_cents || 0,
+            currency: currency || 'eur',
+            iban: (mapping && mapping.partner && mapping.partner.iban) || '',
+            status: 'pending',
+            partner_balance_cents: split.partner_share_cents || 0,
+            created_at: now,
+            updated_at: now
+          };
+          if (exists && exists.id) {
+            db.prepare(`UPDATE manual_payments SET partner_id=@partner_id, partner_name=@partner_name, trip_id=@trip_id, trip_title=@trip_title, date=@date, amount_cents=@amount_cents, currency=@currency, iban=@iban, status=@status, partner_balance_cents=@partner_balance_cents, updated_at=@updated_at WHERE id=@id`).run(row);
+          } else {
+            db.prepare(`INSERT INTO manual_payments (id, booking_id, partner_id, partner_name, trip_id, trip_title, date, amount_cents, currency, iban, status, partner_balance_cents, created_at, updated_at) VALUES (@id,@booking_id,@partner_id,@partner_name,@trip_id,@trip_title,@date,@amount_cents,@currency,@iban,@status,@partner_balance_cents,@created_at,@updated_at)`).run(row);
+          }
+          db.close();
+        }
+      } catch (e) {
+        try { console.warn('partners: manual_payments insert failed', e && e.message ? e.message : e); } catch(_) {}
+      }
     }
 
     return res.json({ clientSecret: pi.client_secret, paymentIntentId: pi.id, idempotencyKey, bookingId: booking_id || null });

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Manual Payments — Greekaway</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/admin-core.css">
+  <link rel="stylesheet" href="/css/admin-bookings.css">
+  <link rel="stylesheet" href="/css/manual-payments.css">
+  <link rel="stylesheet" href="/css/admin-cleanup.css?v=20251030-1">
+</head>
+<body class="admin-main">
+  <!-- Auth form (for auto-login injection from Admin Home) -->
+  <form id="auth">
+    <label>User <input id="user" type="text" value="admin" /></label>
+    <label>Pass <input id="pass" type="password" /></label>
+    <button id="login">Login</button>
+  </form>
+
+  <div id="main" style="display:none">
+    <div id="mpStickyBar" class="sticky-bar">
+      <h3 style="margin: 0 0 6px 0">Manual Payments</h3>
+      <div class="admin-row" style="gap:8px;flex-wrap:wrap">
+        <button id="mpRefresh" class="btn">Ανανέωση</button>
+        <button id="mpExport" class="btn">Εξαγωγή σε CSV</button>
+        <span id="mpStatus" class="hint" style="color:#aaa"></span>
+      </div>
+      
+    </div>
+    <div id="mpContainer">
+      <table id="mpTable" style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Όνομα συνεργάτη</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Τίτλος εκδρομής</th>
+            <th class="sortable" data-sort="date" style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Ημερομηνία</th>
+            <th class="sortable" data-sort="amount" style="border-bottom:1px solid #ddd;padding:6px;text-align:right;width:140px">Ποσό (€)</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">IBAN</th>
+            <th class="sortable" data-sort="status" style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κατάσταση</th>
+            <th class="sortable" data-sort="balance" style="border-bottom:1px solid #ddd;padding:6px;text-align:right;width:160px">Υπόλοιπο συνεργάτη</th>
+            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:center">Ενέργειες</th>
+          </tr>
+        </thead>
+        <tbody style="font-family:monospace;background:#fff"></tbody>
+      </table>
+      <div id="mpMessage" style="margin-top:8px;color:#666"></div>
+    </div>
+  </div>
+
+  <script src="/js/manual-payments.js" defer></script>
+</body>
+</html>
