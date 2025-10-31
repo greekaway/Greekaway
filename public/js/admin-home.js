@@ -1,6 +1,6 @@
 (function(){
   // Build/version marker for cache verification
-  try { window.__AH_VERSION = '20251030-1'; console.info('Admin Home build', window.__AH_VERSION); } catch(_) {}
+  try { window.__AH_VERSION = '20251031-1'; console.info('Admin Home build', window.__AH_VERSION); } catch(_) {}
   const $ = (sel, root=document) => root.querySelector(sel);
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
@@ -351,7 +351,10 @@
     attachLoginBar();
     wireTabs();
     ensureIdleWatcher();
-    wireStripeTools();
+    // Stripe tools are wired by a separate initializer below; avoid calling an out-of-scope symbol here.
+    // Also wire Backup refresh button here for convenience.
+    const rb = document.getElementById('refreshBackup');
+    if (rb) rb.addEventListener('click', fetchBackupHome);
     // Bump activity on common user events
     ['mousemove','keydown','touchstart','visibilitychange'].forEach(ev => document.addEventListener(ev, bumpActivity, { passive: true }));
   }
