@@ -2,3 +2,5 @@
 :root{--driver-accent:#d4af37}
 .card h3{margin:6px 0;color:#fff}
 hr{border:0;border-top:1px solid rgba(255,255,255,.08);margin:8px 0}
+/* Light override: headings in cards should be dark for contrast */
+[data-theme="light"] .card h3{color:#1B2A3A}

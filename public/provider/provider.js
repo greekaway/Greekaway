@@ -124,23 +124,25 @@ window.ProviderUI = {
     try {
       const r = await ProviderAPI.authed('/api/bookings');
       const bookings = (r && r.bookings) || [];
-      container.innerHTML = bookings.map(b => `<div class="card booking-item" data-status="${b.status}">
-        <div class="booking">
-          <div>
-            <div><b>${b.trip_title || b.booking_id}</b> <small class="muted">#${b.booking_id.slice(0,6)}</small></div>
-            <div class="meta">${b.date} • ${b.pickup_point} (${b.pickup_time})</div>
-            <div class="meta"><a href="tel:${b.customer_phone||''}" style="color:#cfe3ef">${b.customer_name || ''}</a></div>
-            ${b.map_link ? `<div class="meta"><a href="${b.map_link}" target="_blank" rel="noopener">Χάρτης</a></div>` : ''}
+      container.innerHTML = bookings.map(b => `
+        <div class="card booking-item" data-status="${b.status}">
+          <div class="booking">
+            <div>
+              <div><b>${b.trip_title || b.booking_id}</b> <small class="muted">#${b.booking_id.slice(0,6)}</small></div>
+              <div class="meta">${b.date} • ${b.pickup_point} (${b.pickup_time})</div>
+              <div class="meta">Πελάτης: ${b.customer_name || ''}</div>
+              ${b.map_link ? `<div class="meta"><a href="${b.map_link}" target="_blank" rel="noopener">Χάρτης</a></div>` : ''}
+            </div>
+            <div><span class="badge ${b.status==='completed'?'success':b.status==='declined'?'error':'info'}">${b.status}</span></div>
           </div>
-          <div><span class="badge ${b.status==='completed'?'success':b.status==='declined'?'error':'info'}">${b.status}</span></div>
-        </div>
-        <div class="actions" data-id="${b.booking_id}">
-          <button class="btn" data-action="accept">Αποδοχή</button>
-          <button class="btn ghost" data-action="decline">Άρνηση</button>
-          <button class="btn ghost" data-action="picked">Παραλαβή</button>
-          <button class="btn" data-action="completed">Ολοκλήρωση</button>
-        </div>
-      </div>`).join('');
+          <div class="actions" data-id="${b.booking_id}">
+            ${b.customer_phone ? ('<a href="tel:' + (b.customer_phone) + '" class="btn call" aria-label="Κλήση στον/στην ' + (b.customer_name || '') + '"><span class="phone-icon">📞</span> Κλήση</a>') : ''}
+            <button class="btn" data-action="accept">Αποδοχή</button>
+            <button class="btn ghost" data-action="decline">Άρνηση</button>
+            <button class="btn ghost" data-action="picked">Παραλαβή</button>
+            <button class="btn" data-action="completed">Ολοκλήρωση</button>
+          </div>
+        </div>`).join('');
       // Client-side filters
       const bar = document.getElementById('filters');
       if (bar) {
@@ -177,7 +179,7 @@ window.ProviderUI = {
       container.innerHTML = `<div class="card">Σφάλμα φόρτωσης</div>`;
     }
   },
-  async initPayments(){ footerNav(); document.getElementById('content').innerHTML = '<div class="card">Σύντομα διαθέσιμο — θα βλέπετε εκκαθαρίσεις.</div>'; },
+  async initPayments(){ Theme.init(); footerNav(); document.getElementById('content').innerHTML = '<div class="card">Σύντομα διαθέσιμο — θα βλέπετε εκκαθαρίσεις.</div>'; },
   async initProfile(){
     Theme.init();
     footerNav();

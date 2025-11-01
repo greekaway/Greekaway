@@ -214,9 +214,10 @@ router.post('/api/bookings/:id/action', authMiddleware, async (req, res) => {
         try { db.prepare('UPDATE bookings SET status=?, updated_at=? WHERE id=? AND partner_id=?').run(newStatus, now, id, pid); } finally { db.close(); }
       }
     }
-    // also append to dispatch_log with response_text action
-    await appendActionLog(id, pid, action);
-    return res.json({ ok:true, status: newStatus || 'ok' });
+  // also append to dispatch_log with response_text action (fire-and-forget)
+  // temporarily disabled to avoid non-critical logging errors affecting client response
+  // try { appendActionLog(id, pid, action); } catch(_) {}
+  return res.json({ ok:true, status: newStatus || 'ok' });
   } catch (e) { console.error('provider action error', e && e.message ? e.message : e); return res.status(500).json({ error: 'Server error' }); }
 });
 
@@ -232,19 +233,21 @@ async function appendActionLog(bookingId, partnerId, action){
     const upsert = require('../services/dispatchService').__upsert || null; // not exposed; ignore
   } catch(_) {}
   // fallback: use DB directly
-  if (hasPostgres()){
-    await withPg(async (c) => {
-      await c.query(`INSERT INTO dispatch_log (id, booking_id, partner_id, sent_at, sent_by, status, response_text, payload_json, retry_count, created_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, now())`, [require('crypto').randomUUID(), bookingId, partnerId, null, 'provider', 'info', `action:${action}`, JSON.stringify({ booking_id: bookingId, action }), 0]);
-    });
-  } else {
-    const db = getSqlite();
-    try {
-      db.prepare(`INSERT INTO dispatch_log (id, booking_id, partner_id, sent_at, sent_by, status, response_text, payload_json, retry_count, created_at)
-        VALUES (@id,@booking_id,@partner_id,@sent_at,@sent_by,@status,@response_text,@payload_json,@retry_count, datetime('now'))`)
-        .run({ id: require('crypto').randomUUID(), booking_id: bookingId, partner_id: partnerId, sent_at: null, sent_by: 'provider', status: 'info', response_text: `action:${action}`, payload_json: JSON.stringify({ booking_id: bookingId, action }), retry_count: 0 });
-    } finally { db.close(); }
-  }
+  try {
+    if (hasPostgres){
+      await withPg(async (c) => {
+        await c.query(`INSERT INTO dispatch_log (id, booking_id, partner_id, sent_at, sent_by, status, response_text, payload_json, retry_count, created_at)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, now())`, [require('crypto').randomUUID(), bookingId, partnerId, null, 'provider', 'info', `action:${action}`, JSON.stringify({ booking_id: bookingId, action }), 0]);
+      });
+    } else {
+      const db = getSqlite();
+      try {
+        db.prepare(`INSERT INTO dispatch_log (id, booking_id, partner_id, sent_at, sent_by, status, response_text, payload_json, retry_count, created_at)
+          VALUES (@id,@booking_id,@partner_id,@sent_at,@sent_by,@status,@response_text,@payload_json,@retry_count, datetime('now'))`)
+          .run({ id: require('crypto').randomUUID(), booking_id: bookingId, partner_id: partnerId, sent_at: null, sent_by: 'provider', status: 'info', response_text: `action:${action}`, payload_json: JSON.stringify({ booking_id: bookingId, action }), retry_count: 0 });
+      } finally { db.close(); }
+    }
+  } catch(_) { /* non-fatal if dispatch_log table not present */ }
 }
 
 module.exports = router;
