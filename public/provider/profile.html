@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Προφίλ — Greekaway</title>
   <link rel="stylesheet" href="/provider/provider.css">
+  <link rel="stylesheet" href="/provider/provider-footer.css">
   <link rel="stylesheet" href="/provider/theme-driver.css">
 </head>
 <body>
@@ -15,5 +16,11 @@
   </main>
   <script src="/provider/provider.js"></script>
   <script>window.ProviderUI.initProfile();</script>
+  <div id="footer-placeholder"></div>
+  <script>
+    fetch('/provider/footer/footer-profile.html')
+      .then(res => res.text())
+      .then(html => { const ph = document.getElementById('footer-placeholder'); if (ph) ph.innerHTML = html; });
+  </script>
 </body>
 </html>

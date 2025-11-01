@@ -1,0 +1,13 @@
+:root{--ga-navy:#1F2F40;--ga-gold:#D4AF37;--ga-text:#eaf2f6;--ga-bg:#0A1218;--muted:#a9c0cf;}
+/* Base footer styles (dark as default) */
+.footer-nav{position:fixed;bottom:0;left:0;right:0;height:56px;display:grid;grid-template-columns:repeat(4,1fr);align-items:center;justify-content:center;gap:0;background:linear-gradient(180deg,#0b1a2a,#000);border-top:1px solid rgba(255,255,255,.08);z-index:10}
+.footer-nav a{color:#cfe3ef;text-decoration:none;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;height:100%}
+.footer-nav a.active{color:var(--ga-gold);font-weight:700}
+.footer-nav a:hover{color:#fff}
+.footer-nav .icon{width:18px;height:18px;border-radius:50%;background:var(--ga-gold);display:inline-block}
+.footer-spacer{height:56px}
+
+/* Light theme overrides */
+[data-theme="light"] .footer-nav{background:linear-gradient(180deg,#f3f6f9,#ffffff);border-top:1px solid rgba(0,0,0,.06)}
+[data-theme="light"] .footer-nav a{color:#2a475f}
+[data-theme="light"] .footer-nav a.active{color:#D4AF37}

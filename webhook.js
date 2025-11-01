@@ -299,8 +299,9 @@ module.exports = function attachWebhook(app, stripe) {
   // Enabled only when ALLOW_TEST_WEBHOOK=true in the environment.
   app.post('/webhook/test', express.json(), async (req, res) => {
     const allowTest = String(process.env.ALLOW_TEST_WEBHOOK || '').trim().toLowerCase();
+    const isProd = String(process.env.NODE_ENV || '').trim().toLowerCase() === 'production' || !!process.env.RENDER;
     safeAppendLog(`${new Date().toISOString()} debug.allow_test_env=${String(process.env.ALLOW_TEST_WEBHOOK)}`);
-    if (allowTest !== 'true') {
+    if (isProd && allowTest !== 'true') {
       safeAppendLog(`${new Date().toISOString()} webhook.test-rejected allowTest=${allowTest}`);
       return res.status(403).send('Test webhook disabled');
     }

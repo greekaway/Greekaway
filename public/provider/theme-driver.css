@@ -1,5 +1,4 @@
 /* Minor visual tweaks for driver panel */
 :root{--driver-accent:#d4af37}
-.footer-nav a.active{font-weight:700}
 .card h3{margin:6px 0;color:#fff}
 hr{border:0;border-top:1px solid rgba(255,255,255,.08);margin:8px 0}

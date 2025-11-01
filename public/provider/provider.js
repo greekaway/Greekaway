@@ -1,3 +1,38 @@
+// Theme handling (light/dark with system default)
+const Theme = (function(){
+  const KEY = 'ga_provider_theme';
+  function getStored(){ try { return localStorage.getItem(KEY); } catch(_) { return null; } }
+  function system(){ try { return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; } catch(_) { return 'dark'; } }
+  function current(){ return getStored() || system(); }
+  function apply(t){
+    try { document.documentElement.setAttribute('data-theme', t); } catch(_){}
+    try { localStorage.setItem(KEY, t); } catch(_){}
+    updateButton(t);
+  }
+  function ensure(){ apply(current()); }
+  function toggle(){ const t = current() === 'dark' ? 'light' : 'dark'; apply(t); }
+  function mountButton(){
+    const header = document.querySelector('header');
+    if (!header) return;
+    let btn = header.querySelector('.theme-toggle');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.className = 'theme-toggle';
+      btn.type = 'button';
+      btn.addEventListener('click', toggle);
+      header.appendChild(btn);
+    }
+    updateButton(current());
+  }
+  function updateButton(t){
+    const btn = document.querySelector('header .theme-toggle');
+    if (!btn) return;
+    btn.textContent = t === 'dark' ? '☀️' : '🌙';
+    btn.title = t === 'dark' ? 'Light mode' : 'Dark mode';
+  }
+  return { init(){ ensure(); mountButton(); }, apply, toggle };
+})();
+
 // Simple provider panel helper
 const ProviderAPI = (function(){
   const base = '/provider';
@@ -19,6 +54,8 @@ const ProviderAPI = (function(){
 })();
 
 function footerNav(){
+  // If modular footer placeholder exists, skip legacy injection to avoid duplicates
+  if (document.getElementById('footer-placeholder')) return;
   const links = [
     { href: '/provider/dashboard.html', label:'Αρχική' },
     { href: '/provider/bookings.html', label:'Κρατήσεις' },
@@ -36,6 +73,7 @@ function showError(el, msg){ el.textContent = msg; el.style.color = '#ffd7d7'; }
 
 window.ProviderUI = {
   initLogin(){
+    Theme.init();
     footerNav();
     const form = document.getElementById('loginForm');
     const out = document.getElementById('loginResult');
@@ -52,6 +90,7 @@ window.ProviderUI = {
     });
   },
   async initDashboard(){
+    Theme.init();
     footerNav();
     const grid = document.getElementById('kpis');
     const list = document.getElementById('latest');
@@ -79,12 +118,13 @@ window.ProviderUI = {
     }
   },
   async initBookings(){
+    Theme.init();
     footerNav();
     const container = document.getElementById('bookings');
     try {
       const r = await ProviderAPI.authed('/api/bookings');
       const bookings = (r && r.bookings) || [];
-      container.innerHTML = bookings.map(b => `<div class="card">
+      container.innerHTML = bookings.map(b => `<div class="card booking-item" data-status="${b.status}">
         <div class="booking">
           <div>
             <div><b>${b.trip_title || b.booking_id}</b> <small class="muted">#${b.booking_id.slice(0,6)}</small></div>
@@ -101,6 +141,27 @@ window.ProviderUI = {
           <button class="btn" data-action="completed">Ολοκλήρωση</button>
         </div>
       </div>`).join('');
+      // Client-side filters
+      const bar = document.getElementById('filters');
+      if (bar) {
+        bar.addEventListener('click', (e) => {
+          const btn = e.target.closest('.filter-btn');
+          if (!btn) return;
+          bar.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          const mode = btn.getAttribute('data-filter');
+          const items = container.querySelectorAll('.booking-item');
+          items.forEach(it => {
+            const st = (it.getAttribute('data-status')||'').toLowerCase();
+            let show = true;
+            if (mode === 'new') show = (st === 'dispatched');
+            else if (mode === 'progress') show = (st === 'accepted' || st === 'picked');
+            else if (mode === 'completed') show = (st === 'completed');
+            else show = true; // all
+            it.style.display = show ? '' : 'none';
+          });
+        });
+      }
       container.addEventListener('click', async (e) => {
         const btn = e.target.closest('button[data-action]'); if (!btn) return;
         const card = btn.closest('.actions');
@@ -118,6 +179,7 @@ window.ProviderUI = {
   },
   async initPayments(){ footerNav(); document.getElementById('content').innerHTML = '<div class="card">Σύντομα διαθέσιμο — θα βλέπετε εκκαθαρίσεις.</div>'; },
   async initProfile(){
+    Theme.init();
     footerNav();
     const out = document.getElementById('profile');
     out.innerHTML = `<div class="card"><div><b>Email:</b> —</div><div><b>Τελευταία σύνδεση:</b> —</div><button class="btn ghost" id="logout">Έξοδος</button></div>`;
