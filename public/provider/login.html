@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Σύνδεση Παρόχου — Greekaway</title>
   <link rel="stylesheet" href="/provider/provider.css">
+  <link rel="stylesheet" href="/provider/provider-footer.css">
   <link rel="stylesheet" href="/provider/theme-driver.css">
 </head>
 <body>
@@ -20,7 +21,15 @@
       <small class="muted">Για δοκιμή: χρησιμοποιήστε τα διαπιστευτήρια που σας έστειλε η ομάδα Greekaway.</small>
     </form>
     <div class="footer-spacer"></div>
+    <div id="footer-placeholder"></div>
   </main>
+  <script>
+    // Load responsive footer nav; presence of #footer-placeholder prevents legacy injection
+    fetch('/provider/footer/footer-home.html')
+      .then(r => r.text())
+      .then(html => { const ph = document.getElementById('footer-placeholder'); if (ph) ph.innerHTML = html; })
+      .catch(() => {});
+  </script>
   <script src="/provider/provider.js"></script>
   <script>window.ProviderUI.initLogin();</script>
 </body>

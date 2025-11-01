@@ -22,6 +22,12 @@ small.muted{color:var(--muted)}
 .badge.info{background:#243a55;color:#b9d0f1}
 .actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 
+/* Mobile: slightly smaller action buttons (~15%) for bookings */
+@media (max-width: 600px){
+	.booking-item .actions .btn{font-size:.85em;padding:8px 12px;border-radius:9px}
+	.booking-item .actions .btn.call{padding:5px 9px}
+}
+
 /* Filters toolbar */
 .filters{display:flex;gap:8px;align-items:center;margin:6px 0 10px 0;flex-wrap:wrap}
 .filter-btn{padding:8px 12px;border-radius:999px;border:1px solid var(--ga-blue);background:transparent;color:inherit;cursor:pointer}
