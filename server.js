@@ -1677,6 +1677,10 @@ try {
   console.warn('provider-availability: failed to mount', err && err.message ? err.message : err);
 }
 
+// Provider and partner-dispatch routes (required by #14)
+app.use('/provider', require('./routes/provider'));
+app.use('/partner-dispatch', require('./routes/partner-dispatch'));
+
 // Global error handlers to prevent process exit on unexpected errors
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err && err.stack ? err.stack : err);

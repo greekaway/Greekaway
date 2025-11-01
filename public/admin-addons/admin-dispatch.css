@@ -1,0 +1,7 @@
+.dispatch-badge{display:inline-block;padding:2px 6px;border-radius:8px;font-size:12px}
+.dispatch-badge.success{background:#0b5132;color:#bff1d6}
+.dispatch-badge.error{background:#571717;color:#ffd7d7}
+.dispatch-badge.pending{background:#5b4c12;color:#ffe9b1}
+.dispatch-cell{white-space:nowrap}
+.dispatch-cell button{font:inherit;font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #cfd8e3;background:#f7fafc;cursor:pointer}
+.dispatch-cell button:hover{background:#eef6ff}

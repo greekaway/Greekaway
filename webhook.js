@@ -135,6 +135,8 @@ async function savePayments(payments) {
   }
 }
 
+const dispatchService = require('./services/dispatchService');
+
 module.exports = function attachWebhook(app, stripe) {
   function upsertTravelerFromMetadata(meta) {
     try {
@@ -219,6 +221,7 @@ module.exports = function attachWebhook(app, stripe) {
                 const now = new Date().toISOString();
                 const stmt = bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?');
                 stmt.run('confirmed', event.id || null, now, bookingId);
+                try { await dispatchService.queue(bookingId); } catch(_) {}
                 try {
                   // If this booking used Stripe Connect transfer_data (set at PI creation time), mark payout as sent
                   const ext = bookingsDb.prepare('SELECT payment_type, partner_id FROM bookings WHERE id = ?').get(bookingId) || {};
@@ -270,6 +273,7 @@ module.exports = function attachWebhook(app, stripe) {
                     const all = Array.from(new Set([b.user_email, ...others].map(e => (e||'').trim()).filter(Boolean)));
                     updateCoTravel(all, b.trip_id, b.date);
                   } catch (e) { /* ignore */ }
+                  try { await dispatchService.queue(b.id); } catch(_) {}
                 }
                 bookingsDb.close();
               } catch (e) { /* non-fatal */ }

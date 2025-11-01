@@ -322,3 +322,19 @@
 2025-10-30T16:19:42.623Z event.test-received id=evt_bf_1761841182619 type=payment_intent.succeeded
 2025-10-30T16:19:42.625Z payment.recorded id=pi_3SNyZeAty3m3IbJ51myBXIfH
 2025-10-30T16:19:42.626Z booking.confirmed id=d64eae86-d993-4123-8799-6db85291f841 for_pi=pi_3SNyZeAty3m3IbJ51myBXIfH
+2025-11-01T03:23:11.195Z debug.allow_test_env=undefined
+2025-11-01T03:23:11.195Z webhook.test-rejected allowTest=
+2025-11-01T03:23:11.204Z debug.allow_test_env=undefined
+2025-11-01T03:23:11.204Z webhook.test-rejected allowTest=
+2025-11-01T03:23:13.477Z debug.allow_test_env=undefined
+2025-11-01T03:23:13.480Z webhook.test-rejected allowTest=
+2025-11-01T03:23:15.102Z debug.allow_test_env=undefined
+2025-11-01T03:23:15.102Z webhook.test-rejected allowTest=
+2025-11-01T03:24:13.503Z debug.allow_test_env=undefined
+2025-11-01T03:24:13.504Z webhook.test-rejected allowTest=
+2025-11-01T03:24:15.140Z debug.allow_test_env=undefined
+2025-11-01T03:24:15.141Z webhook.test-rejected allowTest=
+2025-11-01T03:24:16.385Z debug.allow_test_env=undefined
+2025-11-01T03:24:16.386Z webhook.test-rejected allowTest=
+2025-11-01T03:24:16.397Z debug.allow_test_env=undefined
+2025-11-01T03:24:16.398Z webhook.test-rejected allowTest=

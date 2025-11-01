@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Σύνδεση Παρόχου — Greekaway</title>
+  <link rel="stylesheet" href="/provider/provider.css">
+  <link rel="stylesheet" href="/provider/theme-driver.css">
+</head>
+<body>
+  <header><h1>Σύνδεση Παρόχου</h1></header>
+  <main>
+    <form id="loginForm" class="card">
+      <label>Email</label>
+      <input id="email" type="email" required placeholder="name@example.com">
+      <label>Κωδικός</label>
+      <input id="password" type="password" required placeholder="••••••••">
+      <div style="margin-top:10px"><button class="btn" type="submit">Σύνδεση</button></div>
+      <div id="loginResult" style="margin-top:8px" class="small muted"></div>
+      <small class="muted">Για δοκιμή: χρησιμοποιήστε τα διαπιστευτήρια που σας έστειλε η ομάδα Greekaway.</small>
+    </form>
+    <div class="footer-spacer"></div>
+  </main>
+  <script src="/provider/provider.js"></script>
+  <script>window.ProviderUI.initLogin();</script>
+</body>
+</html>
