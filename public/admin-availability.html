@@ -5,8 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin — Διαθεσιμότητα Παρόχων</title>
   <link rel="stylesheet" href="/css/admin-core.css">
-  <link rel="stylesheet" href="/css/admin-availability.css?v=20251101-2">
+  <link rel="stylesheet" href="/css/admin-availability.css?v=20251101-9">
   <link rel="stylesheet" href="/css/admin-cleanup.css?v=20251030-1">
+  <style>
+    /* Excel-style table appearance for tablet (iPad, iPad Mini) and desktop only */
+    @media (min-width: 768px) {
+      /* Header: black background with white text */
+      #availabilityTable.grid thead th {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+      }
+
+      /* Body cells: white background with black text */
+      #availabilityTable.grid tbody td {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+      }
+    }
+
+    /* Reduce font scale by 20% ONLY on iPad / iPad Mini (tablet touch devices) */
+    @media (hover: none) and (pointer: coarse) and (min-width: 744px) and (max-width: 1366px) and (min-height: 600px) {
+      /* Scale down the entire table's text (including headers) */
+      #availabilityTable {
+        font-size: 80% !important;
+      }
+
+      /* Scale down the top title */
+      #availabilityStickyBar h3 {
+        font-size: 80% !important;
+      }
+    }
+  </style>
 </head>
 <body class="admin-availability">
   <form id="auth">
@@ -18,11 +47,20 @@
   <div id="main" style="display:none">
     <div id="availabilityStickyBar" class="sticky-bar">
       <h3 style="margin:0 0 6px 0">Διαθεσιμότητα Παρόχων</h3>
-      <div class="admin-row filters">
+  <button id="availabilityToggle" class="toggle" aria-expanded="true" aria-controls="availabilityFilters" title="Ελαχιστοποίηση/Εμφάνιση φίλτρων">▾</button>
+  <div class="admin-row filters" id="availabilityFilters">
         <label>Ημερομηνία: <input id="fDate" type="date"></label>
         <label>Πάροχος (ID): <input id="fProvider" type="text" placeholder="partner id"></label>
         <label>Από: <input id="fFrom" type="date"></label>
         <label>Έως: <input id="fTo" type="date"></label>
+        <label>Δραστηριότητα:
+          <select id="fActivity" aria-label="Φίλτρο δραστηριότητας παρόχων">
+            <option value="all" selected>⚪ Όλοι</option>
+            <option value="active">🟢 Ενεργός (≤3 ημέρες)</option>
+            <option value="idle">🟡 Αδρανής (3–7 ημέρες)</option>
+            <option value="inactive">🔴 Ανενεργός (>7 ημέρες)</option>
+          </select>
+        </label>
         <button id="btnRefresh" class="btn">Ανανέωση</button>
         <button id="btnExport" class="btn">Εξαγωγή σε CSV</button>
       </div>
@@ -75,6 +113,6 @@
     </div>
   </div>
 
-  <script src="/js/admin-availability.js?v=20251101-1" defer></script>
+  <script src="/js/admin-availability.js?v=20251101-3" defer></script>
 </body>
 </html>

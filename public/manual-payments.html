@@ -20,7 +20,13 @@
 
   <div id="main" style="display:none">
     <div id="mpStickyBar" class="sticky-bar">
-      <h3 style="margin: 0 0 6px 0">Manual Payments</h3>
+      <div class="mp-sticky-toprow" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+        <h3 style="margin:0">Manual Payments</h3>
+        <!-- Mobile-only filters collapse toggle -->
+        <button id="mpFiltersToggle" class="btn btn-light" aria-label="Προβολή/Απόκρυψη φίλτρων" aria-expanded="true" style="display:none">
+          <span class="mp-toggle-icon" aria-hidden="true">▾</span>
+        </button>
+      </div>
       <div class="admin-row" style="gap:8px;flex-wrap:wrap">
         <button id="mpRefresh" class="btn">Ανανέωση</button>
         <button id="mpExport" class="btn">Εξαγωγή σε CSV</button>

@@ -24,10 +24,12 @@
 #mpContainer table th,
 #mpContainer table td { color: #111111; }
 
-/* Optional: keep manual payments header cells readable below sticky bar */
+/* Optional: keep manual payments header cells readable below sticky bar
+   NOTE: #mpTable lives inside #mpContainer which scrolls. So sticky top:0 keeps
+   the header exactly at the top of the scroll container, right under #mpStickyBar. */
 #mpTable thead th {
 	position: sticky;
-	top: var(--mp-sticky-offset, 0px);
+	top: 0; /* stick to the top of #mpContainer, not viewport */
 	z-index: 90;
 	background: #0E1520;
 	color: #ffffff;
@@ -48,7 +50,16 @@
 @media (max-width: 576px) {
 	/* Compact sticky bar */
 	#mpStickyBar { padding: 4px 6px !important; }
-	#mpStickyBar h3 { font-size: 0.85rem; margin: 0 0 3px 0 !important; }
+	#mpStickyBar h3 { font-size: 0.95rem; margin: 0 0 0 0 !important; }
+
+	/* Show the mobile-only toggle button */
+	#mpFiltersToggle { display: inline-flex !important; align-items: center; gap: 6px; padding: 4px 8px; }
+	#mpFiltersToggle .mp-toggle-icon { display: inline-block; transition: transform 160ms ease; }
+
+	/* Collapsible filters: smooth collapse without shifting title */
+	#mpFilters { overflow: hidden; transition: max-height 220ms ease, margin-top 220ms ease, opacity 180ms ease; max-height: 400px; }
+	#mpStickyBar.mp-filters-collapsed #mpFilters { max-height: 0; margin-top: 0 !important; opacity: 0.0; }
+	#mpStickyBar.mp-filters-collapsed #mpFiltersToggle .mp-toggle-icon { transform: rotate(-90deg); }
 
 	/* Shrink filters and action buttons by ~20% on phones */
 	#mpFilters label.small,
@@ -84,7 +95,7 @@
 
 	/* Slightly smaller fonts and paddings for dense rows */
 	#mpTable { min-width: 920px; }
-	#mpTable thead { position: sticky; top: var(--mp-sticky-offset, 0px); z-index: 90; }
+	#mpTable thead { position: sticky; top: 0; z-index: 90; }
 	#mpTable thead, #mpTable tbody { scroll-snap-align: start; }
 	#mpTable thead th,
 	#mpTable tbody td { font-size: 12px; padding: 4px 6px; }
@@ -104,7 +115,7 @@
 /* Tablet tweaks (iPad/iPad mini): prevent IBAN wrapping and slightly reduce font-size */
 @media (min-width: 600px) and (max-width: 1024px) {
 	/* Unite header under filters and keep it pinned; header scrolls only horizontally with the table */
-	#mpTable thead { position: sticky; top: var(--mp-sticky-offset, 0px); z-index: 90; }
+	#mpTable thead { position: sticky; top: 0; z-index: 90; }
 	#mpContainer { overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; }
 	#mpTable { min-width: 1024px; }
 	/* Show Reset next to Export; hide the one in filter row */

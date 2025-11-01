@@ -2,6 +2,8 @@
   const $ = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   let auth = null;
+  // Keep the full dataset in memory to allow instant client-side filtering.
+  let allRows = [];
 
   function setAuth(u, p){ auth = 'Basic ' + btoa((u||'') + ':' + (p||'')); }
 
@@ -37,8 +39,8 @@
       const r = await fetch(url, { headers: { Authorization: auth } });
       const j = await r.json().catch(()=>({}));
       if (!r.ok || !j || !Array.isArray(j.rows)) throw new Error(j && j.error ? j.error : ('HTTP '+r.status));
-      renderRows(j.rows);
-      if (msg) msg.textContent = j.rows.length ? '' : 'Δεν υπάρχουν εγγραφές.';
+      allRows = j.rows || [];
+      applyFilters();
     } catch (e) {
       if (msg) msg.textContent = 'Σφάλμα: ' + (e && e.message ? e.message : '—');
     }
@@ -71,6 +73,25 @@
   }
 
   function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // Map updated_at to an activity bucket: active (<=3d), idle (3-7d), inactive (>7d)
+  function rowActivity(updated){
+    const d = daysSince(updated || '');
+    if (d <= 3) return 'active';
+    if (d <= 7) return 'idle';
+    return 'inactive';
+  }
+
+  function applyFilters(){
+    const msg = $('#availabilityMessage');
+    const activity = ($('#fActivity') && $('#fActivity').value) || 'all';
+    let rows = allRows || [];
+    if (activity !== 'all') {
+      rows = rows.filter(r => rowActivity(r.updated_at) === activity);
+    }
+    renderRows(rows);
+    if (msg) msg.textContent = rows.length ? '' : 'Δεν υπάρχουν εγγραφές για το επιλεγμένο φίλτρο.';
+  }
 
   function openModal(mode, row){
     const m = $('#modal'); const title = $('#modalTitle'); const del = $('#modalDelete');
@@ -179,6 +200,29 @@
     $('#modalClose').addEventListener('click', closeModal);
     $('#modalSave').addEventListener('click', (e) => { e.preventDefault(); saveModal(); });
     $('#modalDelete').addEventListener('click', (e) => { e.preventDefault(); deleteCurrent(); });
+
+    // Activity filter: instant client-side filtering, no reload
+    const fActivity = $('#fActivity');
+    if (fActivity) {
+      fActivity.addEventListener('change', () => applyFilters());
+    }
+
+    // Mobile: collapse/expand filters + table via toggle button
+    const toggle = document.getElementById('availabilityToggle');
+    if (toggle) {
+      const updateToggleIcon = () => {
+        const collapsed = document.body.classList.contains('availability-collapsed');
+        toggle.setAttribute('aria-expanded', String(!collapsed));
+        toggle.textContent = collapsed ? '▸' : '▾';
+      };
+      toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.body.classList.toggle('availability-collapsed');
+        updateToggleIcon();
+        setStickyOffset();
+      });
+      updateToggleIcon();
+    }
     // Row actions (edit/delete)
     $('#availabilityTable').addEventListener('click', (e) => {
       const btn = e.target.closest('button'); if (!btn) return;

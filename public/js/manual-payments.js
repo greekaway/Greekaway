@@ -301,6 +301,7 @@
     const loginBtn = $('#login'); if (loginBtn) loginBtn.addEventListener('click', loginSubmit);
     const refresh = $('#mpRefresh'); if (refresh) refresh.addEventListener('click', fetchItems);
     const exportBtn = $('#mpExport'); if (exportBtn) exportBtn.addEventListener('click', exportCsv);
+    const toggleBtn = document.getElementById('mpFiltersToggle');
     // Compute sticky header offset now and on resize
     setStickyOffset();
     window.addEventListener('resize', setStickyOffset);
@@ -351,6 +352,18 @@
     }
     if (resetEl) resetEl.addEventListener('click', resetFilters);
     if (resetTopEl) resetTopEl.addEventListener('click', resetFilters);
+    // Mobile-only: collapse/expand filters while keeping title+thead fixed
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const bar = document.getElementById('mpStickyBar');
+        const collapsed = bar.classList.toggle('mp-filters-collapsed');
+        toggleBtn.setAttribute('aria-expanded', String(!collapsed));
+        // Recompute offset after transition to stabilize container height
+        setStickyOffset();
+        // Also after CSS transition completes
+        setTimeout(setStickyOffset, 260);
+      });
+    }
     
     // Delegate mark-paid
     document.addEventListener('click', (e) => {
