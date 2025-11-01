@@ -603,6 +603,10 @@ router.post('/create-payment-intent', async (req, res) => {
             db.prepare(`INSERT INTO manual_payments (id, booking_id, partner_id, partner_name, trip_id, trip_title, date, amount_cents, currency, iban, status, partner_balance_cents, created_at, updated_at) VALUES (@id,@booking_id,@partner_id,@partner_name,@trip_id,@trip_title,@date,@amount_cents,@currency,@iban,@status,@partner_balance_cents,@created_at,@updated_at)`).run(row);
           }
           db.close();
+          try {
+            adminSse.broadcast({ type: 'manual_payment_upsert', item: row });
+            try { console.log('manual-payments: upsert broadcast', row.id, row.booking_id || null); } catch(_) {}
+          } catch(_) {}
         }
       } catch (e) {
         try { console.warn('partners: manual_payments insert failed', e && e.message ? e.message : e); } catch(_) {}
@@ -617,7 +621,7 @@ router.post('/create-payment-intent', async (req, res) => {
 });
 
 // Background payout scheduler: periodically attempt payouts for manual partners when funds available
-const SSE_CLIENTS = new Set();
+const adminSse = require('../services/adminSse');
 async function tryPayoutForBooking(bookingId) {
   try {
     if (!stripe) return { ok: false, reason: 'stripe-not-configured' };
@@ -673,9 +677,9 @@ async function tryPayoutForBooking(bookingId) {
     db.prepare('INSERT OR REPLACE INTO payouts (id, booking_id, partner_id, amount_cents, currency, type, status, provider_id, created_at, updated_at, payout_date) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
       .run(transfer.id, b.id, partner.id, amount, currency || 'eur', 'manual', 'sent', transfer.id, now, now, now);
     db.prepare('UPDATE bookings SET payout_status = ?, payout_date = ?, updated_at = ? WHERE id = ?').run('sent', now, now, b.id);
-    db.close();
-    // Notify SSE listeners
-    broadcastSse({ type: 'payout_sent', booking_id: b.id, payout_date: now, status: 'sent' });
+  db.close();
+  // Notify SSE listeners
+  try { adminSse.broadcast({ type: 'payout_sent', booking_id: b.id, payout_date: now, status: 'sent' }); } catch(_) {}
     return { ok: true, transfer_id: transfer.id };
   } catch (e) {
     try {
@@ -684,17 +688,10 @@ async function tryPayoutForBooking(bookingId) {
       db.prepare('INSERT OR REPLACE INTO payouts (id, booking_id, partner_id, amount_cents, currency, type, status, failure_reason, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
         .run(crypto.randomUUID(), String(bookingId), null, null, 'eur', 'manual', 'failed', (e && e.message) || 'error', now, now);
       db.prepare('UPDATE bookings SET payout_status = ?, updated_at = ? WHERE id = ?').run('failed', now, String(bookingId));
-      db.close();
-      broadcastSse({ type: 'payout_failed', booking_id: String(bookingId), status: 'failed' });
+  db.close();
+  try { adminSse.broadcast({ type: 'payout_failed', booking_id: String(bookingId), status: 'failed' }); } catch(_) {}
     } catch(_) {}
     return { ok: false, error: e && e.message ? e.message : e };
-  }
-}
-
-function broadcastSse(payload) {
-  const data = `data: ${JSON.stringify(payload)}\n\n`;
-  for (const res of Array.from(SSE_CLIENTS)) {
-    try { res.write(data); } catch (_) { SSE_CLIENTS.delete(res); }
   }
 }
 
@@ -721,8 +718,8 @@ router.get('/admin/stream', (req, res) => {
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders && res.flushHeaders();
   res.write('\n');
-  SSE_CLIENTS.add(res);
-  req.on('close', () => { SSE_CLIENTS.delete(res); try { res.end(); } catch(_){} });
+  adminSse.addClient(res);
+  req.on('close', () => { adminSse.removeClient(res); try { res.end(); } catch(_){} });
 });
 
 // Admin: bookings listing with new columns and filters

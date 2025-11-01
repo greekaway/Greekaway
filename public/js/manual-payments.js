@@ -3,6 +3,8 @@
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
   let basicAuth = null;
+  let adminUser = null;
+  let adminPass = null;
   let items = [];
   let sortField = '';
   let sortDir = 'desc';
@@ -92,9 +94,11 @@
     if (e) e.preventDefault();
     const u = $('#user').value || '';
     const p = $('#pass').value || '';
+    adminUser = u; adminPass = p;
     basicAuth = 'Basic ' + btoa(u + ':' + p);
     $('#auth').style.display = 'none';
     $('#main').style.display = 'block';
+    openAdminStream();
     await fetchItems();
   }
 
@@ -121,6 +125,57 @@
       $('#mpMessage').textContent = 'Εμφάνιση demo εγγραφών (σφάλμα φόρτωσης).';
       setStatus('' , '#aaa');
     }
+  }
+
+  function upsertItemFromServer(item){
+    if (!item) return;
+    // Normalize server row to UI item shape
+    const id = item.id || item.manual_payment_id || item.booking_id || ('mp_' + Math.random().toString(36).slice(2,8));
+    const idx = items.findIndex(it => (getField(it,'id')+'') === (id+''));
+    const normalized = {
+      id,
+      booking_id: item.booking_id || null,
+      partner_id: item.partner_id || null,
+      partner_name: item.partner_name || item.partner || '',
+      trip_title: item.trip_title || item.trip || item.trip_id || '',
+      date: item.date || item.created_at || new Date().toISOString(),
+      amount_cents: typeof item.amount_cents === 'number' ? item.amount_cents : (item.amount || 0),
+      iban: item.iban || '',
+      status: item.status || 'pending',
+      partner_balance_cents: typeof item.partner_balance_cents === 'number' ? item.partner_balance_cents : (item.partner_balance || 0),
+      created_at: item.created_at || new Date().toISOString()
+    };
+    if (idx >= 0) items[idx] = { ...items[idx], ...normalized }; else items.unshift(normalized);
+  }
+
+  function markItemPaidLocal(id){
+    const idx = items.findIndex(it => (getField(it,'id')+'') === (id+''));
+    if (idx >= 0) {
+      items[idx].status = 'πληρώθηκε';
+      if ('partner_balance_cents' in items[idx]) items[idx].partner_balance_cents = 0;
+    }
+  }
+
+  function openAdminStream(){
+    try {
+      if (!adminUser) return;
+      const auth = btoa(String(adminUser||'')+':'+String(adminPass||''));
+      const es = new EventSource('/api/partners/admin/stream?auth='+encodeURIComponent(auth));
+      es.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data || '{}');
+          if (!msg || !msg.type) return;
+          if (msg.type === 'manual_payment_upsert' && msg.item) {
+            upsertItemFromServer(msg.item);
+            render();
+          } else if (msg.type === 'manual_payment_paid') {
+            if (msg.item) upsertItemFromServer(msg.item);
+            else if (msg.id) markItemPaidLocal(msg.id);
+            render();
+          }
+        } catch(_){}
+      };
+    } catch (_) { /* ignore */ }
   }
 
   

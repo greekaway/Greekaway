@@ -15,3 +15,27 @@ partners/connect-link error You can only create new accounts if you've signed up
 partners/connect-link error You must complete your platform profile to use Connect and create live connected accounts. Visit your dashboard at https://dashboard.stripe.com/connect/accounts/overview to answer the questionnaire.
 partners/connect-link error You must complete your platform profile to use Connect and create live connected accounts. Visit your dashboard at https://dashboard.stripe.com/connect/accounts/overview to answer the questionnaire.
 partners/connect-link error You must complete your platform profile to use Connect and create live connected accounts. Visit your dashboard at https://dashboard.stripe.com/connect/accounts/overview to answer the questionnaire.
+server: compression enabled
+live-data: module loaded
+trip-data: module loaded
+server: bookings table ready
+assistant: knowledge loaded
+webhook: using better-sqlite3 for persistence
+partners: CONNECT_CALLBACK_BASE = https://www.greekaway.com
+partners: routes mounted at /api/partners
+manual-payments: routes mounted at /api/manual-payments
+provider-availability: routes mounted at /api/provider-availability
+Server running at http://0.0.0.0:3000
+news: refreshed 5 headlines from 2 feed(s) (initial)
+server: compression enabled
+live-data: module loaded
+trip-data: module loaded
+server: bookings table ready
+assistant: knowledge loaded
+webhook: using better-sqlite3 for persistence
+partners: CONNECT_CALLBACK_BASE = https://www.greekaway.com
+partners: routes mounted at /api/partners
+manual-payments: routes mounted at /api/manual-payments
+provider-availability: routes mounted at /api/provider-availability
+Server running at http://0.0.0.0:3000
+news: refreshed 5 headlines from 2 feed(s) (initial)
