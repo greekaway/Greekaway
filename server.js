@@ -1669,6 +1669,14 @@ try {
   console.warn('manual-payments: failed to mount', err && err.message ? err.message : err);
 }
 
+// Provider availability (admin CRUD for partners' available slots)
+try {
+  app.use('/api/provider-availability', require('./routes/provider-availability'));
+  console.log('provider-availability: routes mounted at /api/provider-availability');
+} catch (err) {
+  console.warn('provider-availability: failed to mount', err && err.message ? err.message : err);
+}
+
 // Global error handlers to prevent process exit on unexpected errors
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err && err.stack ? err.stack : err);

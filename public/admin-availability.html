@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Διαθεσιμότητα Παρόχων</title>
+  <link rel="stylesheet" href="/css/admin-core.css">
+  <link rel="stylesheet" href="/css/admin-availability.css?v=20251101-2">
+  <link rel="stylesheet" href="/css/admin-cleanup.css?v=20251030-1">
+</head>
+<body class="admin-availability">
+  <form id="auth">
+    <label> User <input id="user" type="text" value="admin" /></label>
+    <label> Pass <input id="pass" type="password" /></label>
+    <button id="login" type="button">Login</button>
+  </form>
+
+  <div id="main" style="display:none">
+    <div id="availabilityStickyBar" class="sticky-bar">
+      <h3 style="margin:0 0 6px 0">Διαθεσιμότητα Παρόχων</h3>
+      <div class="admin-row filters">
+        <label>Ημερομηνία: <input id="fDate" type="date"></label>
+        <label>Πάροχος (ID): <input id="fProvider" type="text" placeholder="partner id"></label>
+        <label>Από: <input id="fFrom" type="date"></label>
+        <label>Έως: <input id="fTo" type="date"></label>
+        <button id="btnRefresh" class="btn">Ανανέωση</button>
+        <button id="btnExport" class="btn">Εξαγωγή σε CSV</button>
+      </div>
+      <div class="admin-row actions">
+        <button id="btnAdd" class="btn primary">➕ Προσθήκη νέας διαθεσιμότητας</button>
+      </div>
+    </div>
+
+    <div id="availabilityContainer">
+      <table id="availabilityTable" class="grid">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Πάροχος</th>
+            <th>Ημερομηνία</th>
+            <th>Έναρξη</th>
+            <th>Λήξη</th>
+            <th>Σχόλια</th>
+            <th>Τελευταία ενημέρωση</th>
+            <th>Χρήστης</th>
+            <th>Ενέργειες</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="availabilityMessage" class="hint"></div>
+    </div>
+  </div>
+
+  <!-- Simple modal for add/edit -->
+  <div id="modal" class="modal" style="display:none">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h4 id="modalTitle">Νέα Διαθεσιμότητα</h4>
+        <button id="modalClose" class="icon">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row"><label>Πάροχος (ID)<input id="mProvider" type="text" required></label></div>
+        <div class="form-row"><label>Ημερομηνία<input id="mDate" type="date" required></label></div>
+        <div class="form-row two">
+          <label>Έναρξη<input id="mStart" type="time" required></label>
+          <label>Λήξη<input id="mEnd" type="time" required></label>
+        </div>
+        <div class="form-row"><label>Σχόλια<textarea id="mNotes" rows="3"></textarea></label></div>
+      </div>
+      <div class="modal-footer">
+        <button id="modalDelete" class="btn danger" style="display:none">🗑️ Διαγραφή</button>
+        <button id="modalSave" class="btn primary">Αποθήκευση</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/admin-availability.js?v=20251101-1" defer></script>
+</body>
+</html>

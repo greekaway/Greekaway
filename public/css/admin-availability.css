@@ -1,0 +1,66 @@
+/* Minimal scoped styles for the Availability panel; keep overrides light */
+.admin-availability .sticky-bar{position:sticky;top:0;background:#0a121c;color:#fff;padding:10px;border-bottom:1px solid rgba(255,255,255,0.08);z-index:20}
+.admin-availability .admin-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.admin-availability .admin-row.filters label{color:#ddd}
+.admin-availability .admin-row label{display:flex;gap:6px;align-items:center}
+.admin-availability .admin-row input[type="text"],
+.admin-availability .admin-row input[type="date"],
+.admin-availability .admin-row input[type="time"]{padding:6px;border:1px solid #334;border-radius:6px;background:#0e1722;color:#fff}
+.admin-availability .btn{background:#113244;color:#fff;border:1px solid rgba(255,255,255,0.12);padding:8px 10px;border-radius:8px;cursor:pointer}
+.admin-availability .btn.primary{background:#0a7}
+.admin-availability .btn.danger{background:#b23b3b}
+.admin-availability .btn:disabled{opacity:0.6;cursor:default}
+
+.admin-availability #availabilityContainer{padding:10px}
+.admin-availability table.grid{width:100%;border-collapse:collapse;background:#0c1520;color:#eee}
+.admin-availability table.grid th, .admin-availability table.grid td{border-bottom:1px solid rgba(255,255,255,0.06);padding:8px;text-align:left}
+.admin-availability table.grid thead th{position:sticky;top:var(--availability-sticky-offset,56px);background:#0a121c;z-index:5}
+.admin-availability td .actions{display:flex;gap:6px}
+.admin-availability .hint{margin-top:8px;color:#9ab}
+
+/* Activity dot */
+.admin-availability .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.admin-availability .dot.green{background:#27d17f}
+.admin-availability .dot.yellow{background:#ffd95a}
+.admin-availability .dot.red{background:#ff6b6b}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center}
+.modal-dialog{width:min(640px,94vw);background:#0c1520;border:1px solid rgba(255,255,255,0.08);border-radius:12px;box-shadow:0 12px 38px rgba(0,0,0,0.45);overflow:hidden}
+.modal-header,.modal-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#0a121c;border-bottom:1px solid rgba(255,255,255,0.06)}
+.modal-footer{border-top:1px solid rgba(255,255,255,0.06);border-bottom:0}
+.modal-header h4{margin:0;color:#fff}
+.modal-body{padding:12px}
+.modal .form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.modal .form-row.two{flex-direction:row}
+.modal .form-row.two label{flex:1}
+.modal input, .modal textarea{padding:8px;border:1px solid #334;border-radius:8px;background:#0e1722;color:#fff}
+.modal .icon{background:transparent;color:#eee;border:0;cursor:pointer;font-size:16px}
+
+/* Responsive tweaks */
+@media (max-width: 720px){
+  /* Prevent whole-page horizontal panning; we will allow only the table area to scroll horizontally */
+  body.admin-availability{overflow-x:hidden}
+
+  /* Keep the sticky bar fully spanning the viewport on mobile */
+  .admin-availability .sticky-bar{left:0;right:0;z-index:120}
+
+  .admin-availability .admin-row.filters label{flex:1 1 48%}
+
+  /* Make the table horizontally scrollable like a carousel, without affecting desktop/tablet */
+  .admin-availability #availabilityContainer{position:relative;overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  .admin-availability table.grid{min-width:920px}
+
+  /* Keep header titles readable (white text) without changing the theme background; keep header above rows */
+  .admin-availability table.grid thead{position:sticky;top:var(--availability-sticky-offset,56px);z-index:110;background:#0a121c}
+  .admin-availability table.grid thead th{position:sticky;top:var(--availability-sticky-offset,56px);color:#fff;background:#0a121c;z-index:110}
+
+  /* Reduce font size ~10% for table header and body cells */
+  .admin-availability table.grid,
+  .admin-availability table.grid th,
+  .admin-availability table.grid td{font-size:90%}
+
+  .admin-availability table.grid th:nth-child(1),
+  .admin-availability table.grid td:nth-child(1){display:none}
+  .modal .form-row.two{flex-direction:column}
+}
