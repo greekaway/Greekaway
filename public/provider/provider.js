@@ -59,6 +59,7 @@ function footerNav(){
   const links = [
     { href: '/provider/dashboard.html', label:'Αρχική' },
     { href: '/provider/bookings.html', label:'Κρατήσεις' },
+  { href: '/provider/availability.html', label:'Διαθεσιμότητα' },
     { href: '/provider/payments.html', label:'Πληρωμές' },
     { href: '/provider/profile.html', label:'Προφίλ' },
   ];

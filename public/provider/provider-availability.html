@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Provider • Διαθεσιμότητα</title>
+  <link rel="stylesheet" href="/provider/provider.css" />
+  <link rel="stylesheet" href="/provider/provider-footer.css" />
+  <!-- FullCalendar CSS first -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+  <!-- Our overrides after FC CSS -->
+  <link rel="stylesheet" href="/provider/provider-availability.css" />
+</head>
+<body>
+  <header>
+    <h1>Διαθεσιμότητα</h1>
+  </header>
+  <main>
+    <div class="card toolbar" id="toolbar">
+      <div class="left">
+        <button class="btn" id="btnToday">Σήμερα</button>
+        <button class="btn" id="btnRefresh">Ανανέωση</button>
+      </div>
+      <div class="right legend">
+        <span class="dot green"></span> Διαθέσιμες
+        <span class="dot yellow"></span> Μερικώς γεμάτες
+        <span class="dot red"></span> Πλήρεις
+      </div>
+    </div>
+    <div class="card" id="calendarWrap">
+      <div id="calendar"></div>
+    </div>
+  </main>
+  <div class="footer-spacer"></div>
+  <div id="footer-placeholder"></div>
+  <script>
+    fetch('/provider/footer/footer-availability.html')
+      .then(res => res.text())
+      .then(html => { const ph = document.getElementById('footer-placeholder'); if (ph) ph.innerHTML = html; });
+  </script>
+
+  <!-- Modal: create/edit availability -->
+  <div class="modal" id="avModal" aria-hidden="true" role="dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Διαθεσιμότητα</h3>
+        <button class="close" id="modalClose" aria-label="Κλείσιμο">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid">
+          <label>Ημερομηνία
+            <input type="date" id="mDate" />
+          </label>
+          <label>Ώρα έναρξης
+            <input type="time" id="mStart" />
+          </label>
+          <label>Ώρα λήξης
+            <input type="time" id="mEnd" />
+          </label>
+          <label>Πλήθος διαθέσιμων (capacity)
+            <input type="number" id="mCapacity" min="0" step="1" />
+          </label>
+          <label>Σχόλιο (προαιρετικό)
+            <textarea id="mNotes" rows="2" placeholder="Σημειώσεις…"></textarea>
+          </label>
+        </div>
+        <div class="muted" id="mInfo"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="modalSave">Αποθήκευση</button>
+        <button class="btn ghost" id="modalDelete">Διαγραφή</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <script src="/provider/provider.js"></script>
+  <script src="/provider/provider-availability.js"></script>
+</body>
+</html>

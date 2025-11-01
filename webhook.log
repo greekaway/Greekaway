@@ -362,3 +362,24 @@
 2025-11-01T04:52:03.820Z webhook.test-rejected allowTest=
 2025-11-01T04:52:03.832Z debug.allow_test_env=undefined
 2025-11-01T04:52:03.832Z webhook.test-rejected allowTest=
+2025-11-01T06:33:23.180Z debug.allow_test_env=true
+2025-11-01T06:33:23.183Z event.test-received id=evt_jest_replay_1761978803178 type=payment_intent.succeeded
+2025-11-01T06:33:23.186Z payment.recorded id=pi_jest_replay_1761978803178
+2025-11-01T06:33:23.189Z debug.allow_test_env=true
+2025-11-01T06:33:23.190Z event.test-received id=evt_jest_replay_1761978803178 type=payment_intent.succeeded
+2025-11-01T06:33:23.190Z event.ignored id=evt_jest_replay_1761978803178 reason=duplicate_event
+2025-11-01T06:33:24.888Z debug.allow_test_env=true
+2025-11-01T06:33:24.889Z event.test-received id=evt_bf_1761978804885 type=payment_intent.succeeded
+2025-11-01T06:33:24.891Z payment.recorded id=pi_3SOYNMAty3m3IbJ50cJC87U7
+2025-11-01T06:33:24.893Z booking.confirmed id=324abb4d-e200-44d6-a8f6-a4ec6b71317d for_pi=pi_3SOYNMAty3m3IbJ50cJC87U7
+2025-11-01T06:33:26.140Z debug.allow_test_env=true
+2025-11-01T06:33:26.141Z event.test-received id=evt_sca_1761978806125_created type=payment_intent.created
+2025-11-01T06:33:26.150Z debug.allow_test_env=true
+2025-11-01T06:33:26.150Z event.test-received id=evt_sca_1761978806125_succeeded type=payment_intent.succeeded
+2025-11-01T06:33:26.152Z payment.recorded id=pi_sca_1761978806125
+2025-11-01T06:33:26.158Z debug.allow_test_env=true
+2025-11-01T06:33:26.158Z event.test-received id=evt_fail_1761978806157 type=payment_intent.payment_failed
+2025-11-01T06:33:26.159Z payment.failed id=pi_fail_1761978806157
+2025-11-01T06:33:26.161Z debug.allow_test_env=true
+2025-11-01T06:33:26.161Z event.test-received id=evt_succ_1761978806157 type=payment_intent.succeeded
+2025-11-01T06:33:26.161Z payment.recorded id=pi_fail_1761978806157

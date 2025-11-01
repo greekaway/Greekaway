@@ -1,0 +1,79 @@
+:root{--ga-blue:#2f80ff;--ga-green:#1faa4a;--ga-yellow:#d4af37;--ga-red:#d94b4b}
+#calendarWrap{padding:6px}
+#calendar{--fc-border-color: rgba(255,255,255,.1); min-height: 360px}
+@media (min-width: 768px){
+	#calendar{min-height: 480px}
+}
+/* Empty state */
+.empty-state{padding:12px 10px;color:#c8dae5;font-size:14px}
+@media (min-width:768px){.empty-state{padding:16px 12px}}
+[data-theme="light"] .empty-state{color:#1B2A3A}
+/* FullCalendar theme tweaks for dark */
+.fc{--fc-page-bg-color: transparent; --fc-neutral-bg-color: rgba(255,255,255,.03); --fc-list-event-hover-bg-color: rgba(255,255,255,.05);}
+.fc .fc-toolbar-title{font-size:16px}
+.fc .fc-button{background:transparent;border:1px solid rgba(255,255,255,.15);color:#fff;opacity:.9}
+.fc .fc-button-primary:not(:disabled).fc-button-active, .fc .fc-button-primary:not(:disabled):active{background:var(--ga-blue);border-color:var(--ga-blue)}
+.fc .fc-col-header-cell{background:rgba(255,255,255,.03)}
+.fc .fc-daygrid-day-number{color:#cfe2f7}
+
+/* Legend */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.legend{display:flex;align-items:center;gap:10px;color:#c8dae5}
+.legend .dot{display:inline-block;width:10px;height:10px;border-radius:50%}
+.legend .dot.green{background:#1faa4a}
+.legend .dot.yellow{background:#d4af37}
+.legend .dot.red{background:#d94b4b}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:20}
+.modal.show{display:flex}
+.modal-content{background:#0e1920;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:12px;max-width:520px;width:92%;box-shadow:0 0 20px rgba(0,0,0,.45)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.modal-body{padding:12px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;padding:10px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.modal .close{background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer}
+.modal .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal .grid label{display:flex;flex-direction:column;gap:6px;color:#c8dae5}
+.modal input, .modal textarea{background:#0c151b;border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:10px}
+.modal textarea{resize:vertical}
+@media (max-width:560px){.modal .grid{grid-template-columns:1fr}}
+
+/* Event colors */
+.fc-event.available{background:#0d2e11;border-color:#1faa4a}
+.fc-event.partial{background:#2a260c;border-color:#d4af37}
+.fc-event.full{background:#3a1515;border-color:#d94b4b}
+
+/* Light theme overrides for FullCalendar */
+[data-theme="light"] .fc{--fc-page-bg-color: transparent; --fc-neutral-bg-color: #f7f9fc; --fc-list-event-hover-bg-color: #eef3fb}
+[data-theme="light"] .fc{--fc-border-color: rgba(0,0,0,.45) !important}
+[data-theme="light"] .fc .fc-col-header-cell{background:#f5f7fa}
+[data-theme="light"] .fc .fc-daygrid-day-number{color:#1B2A3A}
+[data-theme="light"] .fc .fc-button{background:#fff;border:1px solid rgba(0,0,0,.15);color:#1B2A3A}
+[data-theme="light"] .fc .fc-button-primary:not(:disabled).fc-button-active,
+[data-theme="light"] .fc .fc-button-primary:not(:disabled):active{background:var(--ga-blue);border-color:var(--ga-blue);color:#fff}
+/* Force visible borders for day cells and outer grid in light mode */
+[data-theme="light"] .fc .fc-theme-standard td,
+[data-theme="light"] .fc .fc-theme-standard th{border-color: rgba(0,0,0,.45) !important}
+[data-theme="light"] .fc .fc-scrollgrid{border-color: rgba(0,0,0,.45) !important; border-style: solid !important}
+[data-theme="light"] .fc .fc-scrollgrid table{border-color: rgba(0,0,0,.45) !important}
+/* TimeGrid view lines */
+[data-theme="light"] .fc .fc-timegrid-slot{border-bottom-color: rgba(0,0,0,.25) !important}
+[data-theme="light"] .fc .fc-timegrid-axis,
+[data-theme="light"] .fc .fc-timegrid-slot-label{border-color: rgba(0,0,0,.35) !important}
+/* Legend text in light mode should be dark for readability */
+[data-theme="light"] .legend{color:#1B2A3A}
+
+/* Light theme event colors with good contrast */
+[data-theme="light"] .fc-event.available{background:#E8F5E9;border-color:#1faa4a;color:#0b3d1b}
+[data-theme="light"] .fc-event.partial{background:#FFF6E0;border-color:#d4af37;color:#5b4c12}
+[data-theme="light"] .fc-event.full{background:#FDEAEA;border-color:#d94b4b;color:#571717}
+/* Ensure event inner text (time/title/notes) inherits the dark color */
+[data-theme="light"] .fc-event.available *,
+[data-theme="light"] .fc-event.partial *,
+[data-theme="light"] .fc-event.full *{color:inherit}
+
+/* Make the Refresh button primary blue */
+#toolbar #btnRefresh.btn{background:linear-gradient(90deg,#1e5bd8,#2f80ff);color:#fff;border:0}
+
+/* Footer grid should adapt to item count */
+.footer-nav{display:grid;grid-auto-flow:column;grid-auto-columns:1fr}

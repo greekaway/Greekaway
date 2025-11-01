@@ -14,6 +14,8 @@ router.get('/dashboard', (req, res) => { res.sendFile(path.join(__dirname, '../p
 router.get('/bookings', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'bookings.html')); });
 router.get('/payments', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'payments.html')); });
 router.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'profile.html')); });
+// Availability (HTML route)
+router.get('/availability', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'provider-availability.html')); });
 
 // CORS: allow specific origins only
 const DEV_LOCAL_IP = (process.env.DEV_LOCAL_IP || '').trim();
@@ -249,5 +251,223 @@ async function appendActionLog(bookingId, partnerId, action){
     }
   } catch(_) { /* non-fatal if dispatch_log table not present */ }
 }
+
+// ---------------- Provider Availability API ----------------
+// Schema: provider_availability(id, provider_id, date, start_time, end_time, capacity, notes, updated_at)
+// Backward-compat: support legacy column available_date by mirroring into date when present.
+
+function nowIso(){ return new Date().toISOString(); }
+
+function ensureAvailabilitySqlite(db){
+  db.exec(`CREATE TABLE IF NOT EXISTS provider_availability (
+    id TEXT PRIMARY KEY,
+    provider_id TEXT,
+    date TEXT,
+    available_date TEXT,
+    start_time TEXT,
+    end_time TEXT,
+    capacity INTEGER,
+    notes TEXT,
+    updated_at TEXT
+  )`);
+  try {
+    const cols = db.prepare("PRAGMA table_info('provider_availability')").all();
+    const names = new Set(cols.map(c => c.name));
+    if (!names.has('available_date')) {
+      db.prepare('ALTER TABLE provider_availability ADD COLUMN available_date TEXT').run();
+    }
+    if (!names.has('capacity')) {
+      db.prepare('ALTER TABLE provider_availability ADD COLUMN capacity INTEGER DEFAULT 0').run();
+    }
+    if (!names.has('date')) {
+      db.prepare('ALTER TABLE provider_availability ADD COLUMN date TEXT').run();
+    }
+    if (!names.has('available_date')) {
+      // nothing
+    } else if (names.has('date')) {
+      // backfill date from available_date if empty
+      try { db.prepare('UPDATE provider_availability SET date = COALESCE(date, available_date) WHERE date IS NULL OR date = \"\"').run(); } catch(_) {}
+    }
+  } catch(_) {}
+}
+
+async function ensureAvailabilityPg(client){
+  await client.query(`CREATE TABLE IF NOT EXISTS provider_availability (
+    id TEXT PRIMARY KEY,
+    provider_id TEXT,
+    date TEXT,
+    available_date TEXT,
+    start_time TEXT,
+    end_time TEXT,
+    capacity INTEGER,
+    notes TEXT,
+    updated_at TEXT
+  )`);
+  // Safe ALTERs
+  await client.query('ALTER TABLE provider_availability ADD COLUMN IF NOT EXISTS capacity INTEGER');
+  await client.query('ALTER TABLE provider_availability ADD COLUMN IF NOT EXISTS date TEXT');
+  await client.query('ALTER TABLE provider_availability ADD COLUMN IF NOT EXISTS available_date TEXT');
+  // Mirror legacy available_date -> date when applicable (best-effort)
+  try { await client.query("UPDATE provider_availability SET date = COALESCE(date, available_date) WHERE date IS NULL OR date = ''"); } catch(_) {}
+}
+
+async function sumReservedForDates(pid, dates){
+  // returns Map(date=>reservedSeats)
+  const map = new Map();
+  if (!dates || dates.length === 0) return map;
+  if (hasPostgres) {
+    await withPg(async (c) => {
+      const params = [pid, dates];
+      const { rows } = await c.query(
+        `SELECT date, COALESCE(SUM(seats),0) AS reserved
+         FROM bookings
+         WHERE partner_id = $1 AND date = ANY($2) AND COALESCE(status,'') NOT IN ('declined','cancelled')
+         GROUP BY date`, params);
+      (rows||[]).forEach(r => map.set(r.date, parseInt(r.reserved,10)||0));
+    });
+  } else {
+    const db = getSqlite();
+    try {
+      const placeholders = dates.map(()=>'?').join(',');
+      const rows = db.prepare(`SELECT date, COALESCE(SUM(seats),0) AS reserved FROM bookings WHERE partner_id = ? AND date IN (${placeholders}) AND COALESCE(status,'') NOT IN ('declined','cancelled') GROUP BY date`).all(pid, ...dates);
+      (rows||[]).forEach(r => map.set(r.date, parseInt(r.reserved,10)||0));
+    } finally { db.close(); }
+  }
+  return map;
+}
+
+router.get('/api/availability', authMiddleware, async (req, res) => {
+  const pid = req.user && (req.user.partner_id || req.user.id) || null;
+  if (!pid) return res.status(401).json({ error: 'Unauthorized' });
+  const from = String(req.query.from || '').trim() || null;
+  const to = String(req.query.to || '').trim() || null;
+  try {
+    let rows = [];
+    if (hasPostgres) {
+      rows = await withPg(async (c) => {
+        await ensureAvailabilityPg(c);
+        const where = ['provider_id = $1'];
+        const params = [pid];
+        if (from) { params.push(from); where.push(`date >= $${params.length}`); }
+        if (to) { params.push(to); where.push(`date <= $${params.length}`); }
+        const { rows } = await c.query(`SELECT id, provider_id, COALESCE(date, available_date) AS date, start_time, end_time, COALESCE(capacity,0) AS capacity, notes, updated_at FROM provider_availability WHERE ${where.join(' AND ')} ORDER BY date ASC, start_time ASC LIMIT 2000`, params);
+        return rows || [];
+      });
+    } else {
+      const db = getSqlite();
+      try {
+        ensureAvailabilitySqlite(db);
+        const all = db.prepare(`SELECT id, provider_id, COALESCE(date, available_date) AS date, start_time, end_time, COALESCE(capacity,0) AS capacity, notes, updated_at FROM provider_availability WHERE provider_id = ? ORDER BY COALESCE(date, available_date) ASC, start_time ASC`).all(pid);
+        rows = all.filter(r => (!from || String(r.date) >= from) && (!to || String(r.date) <= to));
+      } finally { db.close(); }
+    }
+    const dates = Array.from(new Set(rows.map(r => r.date).filter(Boolean)));
+    const reservedMap = await sumReservedForDates(pid, dates);
+    const enriched = rows.map(r => {
+      const reserved = reservedMap.get(r.date) || 0;
+      let status = 'available';
+      if ((r.capacity|0) <= 0) status = 'full';
+      else if (reserved > 0 && reserved < (r.capacity|0)) status = 'partial';
+      else if (reserved >= (r.capacity|0)) status = 'full';
+      return { ...r, reserved, status };
+    });
+    return res.json({ ok: true, rows: enriched });
+  } catch (e) {
+    console.error('provider/api/availability list error', e && e.message ? e.message : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.post('/api/availability', authMiddleware, async (req, res) => {
+  const pid = req.user && (req.user.partner_id || req.user.id) || null;
+  if (!pid) return res.status(401).json({ error: 'Unauthorized' });
+  const body = req.body || {};
+  const id = require('crypto').randomUUID();
+  const date = String(body.date || body.available_date || '').trim();
+  const start_time = String(body.start_time || '').trim();
+  const end_time = String(body.end_time || '').trim();
+  const capacity = Number.isFinite(+body.capacity) ? parseInt(body.capacity,10) : 0;
+  const notes = String(body.notes || '');
+  const updated_at = nowIso();
+  if (!date || !start_time || !end_time) return res.status(400).json({ error: 'Missing required fields' });
+  try {
+    if (hasPostgres) {
+      await withPg(async (c) => {
+        await ensureAvailabilityPg(c);
+        await c.query(`INSERT INTO provider_availability (id, provider_id, date, available_date, start_time, end_time, capacity, notes, updated_at) VALUES ($1,$2,$3,$3,$4,$5,$6,$7,$8)`,
+          [id, pid, date, start_time, end_time, capacity, notes, updated_at]);
+      });
+    } else {
+      const db = getSqlite();
+      try {
+        ensureAvailabilitySqlite(db);
+  db.prepare(`INSERT INTO provider_availability (id, provider_id, date, available_date, start_time, end_time, capacity, notes, updated_at) VALUES (@id,@provider_id,@date,@date,@start_time,@end_time,@capacity,@notes,@updated_at)`).run({ id, provider_id: pid, date, start_time, end_time, capacity, notes, updated_at });
+      } finally { db.close(); }
+    }
+    return res.json({ ok: true, id });
+  } catch (e) {
+    console.error('provider/api/availability create error', e && e.message ? e.message : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.put('/api/availability/:id', authMiddleware, async (req, res) => {
+  const pid = req.user && (req.user.partner_id || req.user.id) || null;
+  if (!pid) return res.status(401).json({ error: 'Unauthorized' });
+  const aid = String(req.params.id || '').trim();
+  if (!aid) return res.status(400).json({ error: 'Missing id' });
+  const body = req.body || {};
+  const date = String(body.date || body.available_date || '').trim();
+  const start_time = String(body.start_time || '').trim();
+  const end_time = String(body.end_time || '').trim();
+  const capacity = Number.isFinite(+body.capacity) ? parseInt(body.capacity,10) : 0;
+  const notes = String(body.notes || '');
+  const updated_at = nowIso();
+  try {
+    if (hasPostgres) {
+      await withPg(async (c) => {
+        await ensureAvailabilityPg(c);
+        await c.query(`UPDATE provider_availability SET date=$1, available_date=$1, start_time=$2, end_time=$3, capacity=$4, notes=$5, updated_at=$6 WHERE id=$7 AND provider_id=$8`,
+          [date, start_time, end_time, capacity, notes, updated_at, aid, pid]);
+      });
+    } else {
+      const db = getSqlite();
+      try {
+        ensureAvailabilitySqlite(db);
+        db.prepare(`UPDATE provider_availability SET date=@date, available_date=@date, start_time=@start_time, end_time=@end_time, capacity=@capacity, notes=@notes, updated_at=@updated_at WHERE id=@id AND provider_id=@provider_id`)
+          .run({ id: aid, provider_id: pid, date, start_time, end_time, capacity, notes, updated_at });
+      } finally { db.close(); }
+    }
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('provider/api/availability update error', e && e.message ? e.message : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.delete('/api/availability/:id', authMiddleware, async (req, res) => {
+  const pid = req.user && (req.user.partner_id || req.user.id) || null;
+  if (!pid) return res.status(401).json({ error: 'Unauthorized' });
+  const aid = String(req.params.id || '').trim();
+  if (!aid) return res.status(400).json({ error: 'Missing id' });
+  try {
+    if (hasPostgres) {
+      await withPg(async (c) => {
+        await ensureAvailabilityPg(c);
+        await c.query('DELETE FROM provider_availability WHERE id=$1 AND provider_id=$2', [aid, pid]);
+      });
+    } else {
+      const db = getSqlite();
+      try {
+        ensureAvailabilitySqlite(db);
+        db.prepare('DELETE FROM provider_availability WHERE id = ? AND provider_id = ?').run(aid, pid);
+      } finally { db.close(); }
+    }
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('provider/api/availability delete error', e && e.message ? e.message : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
 
 module.exports = router;

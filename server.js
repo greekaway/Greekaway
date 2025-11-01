@@ -1589,8 +1589,38 @@ app.post('/api/bookings', express.json(), (req, res) => {
     if (!date) {
       date = new Date().toISOString().slice(0,10);
     }
-    // capacity check (if capacities table has an entry for trip/date)
+    // Determine booking date (default to today if missing)
     try {
+      // Provider-based availability enforcement (capacity per provider/date)
+      if (bookingsDb && trip_id) {
+        let providerId = null;
+        try {
+          const map = bookingsDb.prepare('SELECT partner_id FROM partner_mappings WHERE trip_id = ?').get(trip_id);
+          providerId = map && map.partner_id ? map.partner_id : null;
+        } catch(_) { /* mapping table may not exist yet */ }
+
+        if (providerId) {
+          // Sum capacity across all availability rows for that provider/date
+          let capSum = 0, rowCount = 0;
+          try {
+            const r = bookingsDb.prepare('SELECT COALESCE(SUM(COALESCE(capacity,0)),0) AS cap, COUNT(1) AS cnt FROM provider_availability WHERE provider_id = ? AND (date = ? OR available_date = ?)').get(providerId, date, date) || { cap: 0, cnt: 0 };
+            capSum = (typeof r.cap === 'number') ? r.cap : 0;
+            rowCount = (typeof r.cnt === 'number') ? r.cnt : 0;
+          } catch(_) { /* provider_availability table might not exist; skip */ }
+
+          if (rowCount > 0) {
+            // Count all non-canceled bookings for that provider/date (pending counts towards capacity)
+            const takenRow = bookingsDb.prepare("SELECT COALESCE(SUM(seats),0) as s FROM bookings WHERE partner_id = ? AND date = ? AND status != 'canceled'").get(providerId, date) || { s: 0 };
+            const taken = takenRow.s || 0;
+            const requested = seats || 1;
+            if ((taken + requested) > capSum || capSum <= 0) {
+              return res.status(409).json({ error: 'No availability for selected date' });
+            }
+          }
+        }
+      }
+
+      // Legacy per-trip capacity check (capacities table)
       if (bookingsDb) {
         const capRow = bookingsDb.prepare('SELECT capacity FROM capacities WHERE trip_id = ? AND date = ?').get(trip_id, date);
         if (capRow && typeof capRow.capacity === 'number') {
@@ -1603,8 +1633,21 @@ app.post('/api/bookings', express.json(), (req, res) => {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     if (bookingsDb) {
-      const insert = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-      insert.run(id, 'pending', date, null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now);
+      // Try to persist partner_id on booking for downstream provider features
+      let providerId = null;
+      try { const m = bookingsDb.prepare('SELECT partner_id FROM partner_mappings WHERE trip_id = ?').get(trip_id); providerId = m && m.partner_id ? m.partner_id : null; } catch(_) {}
+      let inserted = false;
+      if (providerId) {
+        try {
+          const insertWithPartner = bookingsDb.prepare('INSERT INTO bookings (id,status,date,partner_id,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+          insertWithPartner.run(id, 'pending', date, providerId, null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now);
+          inserted = true;
+        } catch(_) { /* column may not exist in some environments; fallback below */ }
+      }
+      if (!inserted) {
+        const insert = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+        insert.run(id, 'pending', date, null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now);
+      }
       return res.json({ bookingId: id, status: 'pending' });
     }
     return res.status(500).json({ error: 'Bookings DB not available' });
