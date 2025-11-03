@@ -12,5 +12,26 @@
     "amount": 1500,
     "currency": "eur",
     "timestamp": "2025-10-10T18:19:49.037Z"
+  },
+  "pi_sca_1762203322041": {
+    "status": "succeeded",
+    "eventId": "evt_sca_1762203322041_succeeded",
+    "amount": 2500,
+    "currency": "eur",
+    "timestamp": "2025-11-03T20:55:22.064Z"
+  },
+  "pi_fail_1762203322083": {
+    "status": "failed",
+    "eventId": "evt_fail_1762203322083",
+    "amount": 1800,
+    "currency": "eur",
+    "timestamp": "2025-11-03T20:55:22.084Z"
+  },
+  "pi_jest_replay_1762203326107": {
+    "status": "succeeded",
+    "eventId": "evt_jest_replay_1762203326107",
+    "amount": 1234,
+    "currency": "eur",
+    "timestamp": "2025-11-03T20:55:26.114Z"
   }
 }

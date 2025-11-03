@@ -1704,6 +1704,14 @@ try {
   console.warn('partners: failed to mount', err && err.message ? err.message : err);
 }
 
+// Admin suppliers (aggregated suppliers list + details)
+try {
+  app.use('/api/admin/suppliers', require('./routes/admin-suppliers'));
+  console.log('admin-suppliers: routes mounted at /api/admin/suppliers');
+} catch (err) {
+  console.warn('admin-suppliers: failed to mount', err && err.message ? err.message : err);
+}
+
 // Manual payments (demo) — lists manual partner deposits and allows marking as paid
 try {
   app.use('/api/manual-payments', require('./routes/manual-payments'));

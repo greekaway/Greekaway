@@ -10,7 +10,8 @@
     "test": "jest --runInBand",
     "test:admin-smoke": "node tools/admin_functional_smoke.js",
     "build:logo-webp": "node tools/convert_logo_to_webp.js",
-    "migrate:dispatch": "node tools/run_dispatch_migration.js"
+    "migrate:dispatch": "node tools/run_dispatch_migration.js",
+    "seed:suppliers-demo": "node tools/seed_suppliers_demo.js"
   },
   "repository": {
     "type": "git",
@@ -24,7 +25,7 @@
   },
   "homepage": "https://github.com/greekaway/Greekaway#readme",
   "dependencies": {
-    "better-sqlite3": "^8.4.0",
+    "better-sqlite3": "^9.5.0",
     "@aws-sdk/client-s3": "^3.352.0",
     "cookie": "^1.0.2",
     "dotenv": "^16.6.1",
@@ -40,7 +41,7 @@
     "nodemailer": "^6.9.15"
   }
   ,"engines": {
-    "node": "18.x"
+    "node": ">=18"
   }
   ,"devDependencies": {
     "puppeteer": "^24.23.0",

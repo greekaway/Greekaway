@@ -404,3 +404,17 @@
 2025-11-01T08:35:26.743Z debug.allow_test_env=true
 2025-11-01T08:35:26.743Z event.test-received id=evt_succ_1761986126737 type=payment_intent.succeeded
 2025-11-01T08:35:26.744Z payment.recorded id=pi_fail_1761986126737
+2025-11-03T20:55:22.057Z debug.allow_test_env=undefined
+2025-11-03T20:55:22.058Z event.test-received id=evt_sca_1762203322041_created type=payment_intent.created
+2025-11-03T20:55:22.063Z debug.allow_test_env=undefined
+2025-11-03T20:55:22.064Z event.test-received id=evt_sca_1762203322041_succeeded type=payment_intent.succeeded
+2025-11-03T20:55:22.068Z payment.recorded id=pi_sca_1762203322041
+2025-11-03T20:55:22.084Z debug.allow_test_env=undefined
+2025-11-03T20:55:22.084Z event.test-received id=evt_fail_1762203322083 type=payment_intent.payment_failed
+2025-11-03T20:55:22.084Z payment.failed id=pi_fail_1762203322083
+2025-11-03T20:55:26.109Z debug.allow_test_env=undefined
+2025-11-03T20:55:26.113Z event.test-received id=evt_jest_replay_1762203326107 type=payment_intent.succeeded
+2025-11-03T20:55:26.114Z payment.recorded id=pi_jest_replay_1762203326107
+2025-11-03T20:55:26.117Z debug.allow_test_env=undefined
+2025-11-03T20:55:26.117Z event.test-received id=evt_jest_replay_1762203326107 type=payment_intent.succeeded
+2025-11-03T20:55:26.117Z event.ignored id=evt_jest_replay_1762203326107 reason=duplicate_event

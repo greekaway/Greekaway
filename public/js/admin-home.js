@@ -156,7 +156,8 @@
         const qp = [];
         if (state.creds.user && state.creds.pass) qp.push(`auth=${encodeURIComponent(btoa(state.creds.user + ':' + state.creds.pass))}`);
         qp.push(cb);
-        view.innerHTML = `<iframe id="tab-partners" title="Partners" src="/admin-groups.html${qp.length ? ('?' + qp.join('&')) : ''}"></iframe>`;
+        // Route Partners tab to the new Suppliers page (admin/suppliers.html)
+        view.innerHTML = `<iframe id="tab-partners" title="Partners" src="/admin/suppliers.html${qp.length ? ('?' + qp.join('&')) : ''}"></iframe>`;
       } else if (tab === 'availability') {
         view.innerHTML = `<iframe id="tab-availability" title="Availability" src="/admin-availability.html?${cb}"></iframe>`;
       } else if (tab === 'manual') {
@@ -184,7 +185,7 @@
         const qp = [];
         if (state.creds.user && state.creds.pass) qp.push(`auth=${encodeURIComponent(btoa(state.creds.user + ':' + state.creds.pass))}`);
         qp.push(cb);
-        frame.src = `/admin-groups.html${qp.length ? ('?' + qp.join('&')) : ''}`;
+        frame.src = `/admin/suppliers.html${qp.length ? ('?' + qp.join('&')) : ''}`;
       } else if (tab === 'availability') {
         frame = document.createElement('iframe');
         frame.id = 'tab-availability'; frame.title = 'Availability';

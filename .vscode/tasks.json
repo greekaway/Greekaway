@@ -46,6 +46,28 @@
 			"command": "node tools/booking_smoke_test_multi.js",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "Quick API check: suppliers stripe",
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"-lc",
+				"curl -s -u admin:pass \"http://127.0.0.1:3000/api/admin/suppliers?limit=5&payoutStatus=stripe\" | head -c 300 | sed -n '1,10p'"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "API check suppliers stripe",
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"-lc",
+				"curl -s -u admin:pass \"http://127.0.0.1:3000/api/admin/suppliers?limit=2&payoutStatus=stripe\" | sed -n '1,40p'"
+			],
+			"isBackground": false,
+			"problemMatcher": []
 		}
 	]
 }
