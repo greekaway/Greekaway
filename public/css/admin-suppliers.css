@@ -31,8 +31,10 @@ body.admin-suppliers-page { color: var(--text); background: linear-gradient(180d
 .table-wrap { position: relative; overflow-x: auto; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; -webkit-overflow-scrolling: touch; }
 
 /* Grid table resembling Excel */
-.grid { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1100px; table-layout: fixed; }
-.grid thead th { position: sticky; top: 0; z-index: 20; background: var(--navy); color: var(--gold); border-bottom: 1px solid var(--border); text-align: left; padding: 12px 10px; line-height: 1.6; white-space: nowrap; }
+.grid { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1200px; table-layout: auto; }
+.grid thead th { background: var(--navy); color: var(--gold); border-bottom: 1px solid var(--border); text-align: left; padding: 8px 6px; line-height: 1.6; white-space: nowrap; }
+.grid thead tr { background: var(--navy); }
+.grid th, .grid td { box-sizing: border-box; }
 .grid tbody td { background: #ffffff; color: #111; padding: 10px; border-bottom: 1px solid #e6e6e6; }
 .grid tbody tr:hover td { background: #f7f7f7; }
 .grid th[data-align="right"], .grid td.num { text-align: right; }
@@ -41,16 +43,16 @@ body.admin-suppliers-page { color: var(--text); background: linear-gradient(180d
 .sortable::after { content: '\25B4\25BE'; font-size: 10px; opacity: .5; margin-left: 6px; }
 
 /* Column widths for better readability (desktop and up) */
-.grid thead th:nth-child(1), .grid tbody td:nth-child(1) { min-width: 90px; }   /* ID */
-.grid thead th:nth-child(2), .grid tbody td:nth-child(2) { min-width: 240px; }  /* Name */
-.grid thead th:nth-child(3), .grid tbody td:nth-child(3) { min-width: 140px; }  /* Type */
-.grid thead th:nth-child(4), .grid tbody td:nth-child(4) { min-width: 160px; }  /* Trips */
-.grid thead th:nth-child(5), .grid tbody td:nth-child(5) { min-width: 180px; }  /* Revenue */
-.grid thead th:nth-child(6), .grid tbody td:nth-child(6) { min-width: 200px; }  /* Commission */
-.grid thead th:nth-child(7), .grid tbody td:nth-child(7) { min-width: 160px; }  /* Payments */
-.grid thead th:nth-child(8), .grid tbody td:nth-child(8) { min-width: 160px; }  /* First seen */
-.grid thead th:nth-child(9), .grid tbody td:nth-child(9) { min-width: 180px; }  /* Last active */
-.grid thead th:nth-child(10), .grid tbody td:nth-child(10) { min-width: 120px; }/* Actions */
+.grid thead th:nth-child(1), .grid tbody td:nth-child(1) { min-width: 100px; }   /* ID */
+.grid thead th:nth-child(2), .grid tbody td:nth-child(2) { min-width: 300px; }  /* Name */
+.grid thead th:nth-child(3), .grid tbody td:nth-child(3) { min-width: 160px; }  /* Type */
+.grid thead th:nth-child(4), .grid tbody td:nth-child(4) { min-width: 180px; }  /* Trips */
+.grid thead th:nth-child(5), .grid tbody td:nth-child(5) { min-width: 200px; }  /* Revenue */
+.grid thead th:nth-child(6), .grid tbody td:nth-child(6) { min-width: 220px; }  /* Commission */
+.grid thead th:nth-child(7), .grid tbody td:nth-child(7) { min-width: 220px; }  /* Payments */
+.grid thead th:nth-child(8), .grid tbody td:nth-child(8) { min-width: 180px; }  /* First seen */
+.grid thead th:nth-child(9), .grid tbody td:nth-child(9) { min-width: 200px; }  /* Last active */
+.grid thead th:nth-child(10), .grid tbody td:nth-child(10) { min-width: 130px; }/* Actions */
 
 .empty { padding: 16px; text-align: center; color: var(--muted); }
 
@@ -73,10 +75,7 @@ body.admin-suppliers-page { color: var(--text); background: linear-gradient(180d
 @media (min-width: 577px) and (max-width: 1024px){
   .grid { min-width: 1100px; }
 }
-@media (min-width: 1025px){
-  /* Desktop: header must align exactly at top of table content */
-  .grid thead th { top: var(--filters-h, 0px); }
-}
+/* (no sticky header) */
 
 /* Loading overlay */
 .table-wrap .loading-overlay { position: absolute; inset: 0; background: rgba(10,18,28,0.45); display: none; align-items: center; justify-content: center; z-index: 4; }

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Κρατήσεις</title>
+  <link rel="stylesheet" href="/css/admin-core.css">
+  <link rel="stylesheet" href="/css/admin-bookings-theme.css">
+  <!-- Optional icon font for small icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>/* Keep the login form legible over dark background */ body.admin-bookings-page #auth { max-width: 360px; margin: 20px auto; background:#ffffff; padding:12px; border-radius:8px; }
+  body.admin-bookings-page #auth label{display:block;margin-top:8px} body.admin-bookings-page #auth input{width:100%;padding:6px}
+  body.admin-bookings-page #auth button{margin-top:10px;padding:8px 12px;border-radius:8px}
+  </style>
+  <script>
+    // Tiny helper so Enter on inputs submits the login form
+    document.addEventListener('DOMContentLoaded', () => {
+      const f = document.getElementById('auth'); if (!f) return;
+      f.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); f.requestSubmit(); } });
+    });
+  </script>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+</head>
+<body class="admin-bookings-page site-gradient">
+  <!-- Simple Basic Auth form (same contract as admin.html for admin-ui.js) -->
+  <form id="auth">
+    <label>Χρήστης <input id="user" type="text" value="admin" autocomplete="username" /></label>
+    <label>Κωδικός <input id="pass" type="password" autocomplete="current-password" /></label>
+    <button id="login">Είσοδος</button>
+  </form>
+
+  <!-- Standalone Bookings Panel (mirrors suppliers layout/style) -->
+  <div id="bookingsPanel" style="display:none">
+    <header id="bookingsStickyBar" class="sticky-bar" aria-label="Κρατήσεις — Φίλτρα">
+      <div class="bar-inner">
+        <div class="title">Κρατήσεις</div>
+        <!-- Optional toggle like suppliers: hidden on desktop by CSS -->
+        <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φίλτρων" aria-expanded="true">
+          <i class="fa fa-chevron-up"></i>
+        </button>
+        <!-- Filters block – IDs must match admin-ui.js expectations -->
+        <div id="bookingFilters" class="filters" role="region" aria-label="Φίλτρα κρατήσεων">
+          <label>Payment Type
+            <select id="bfPaymentType">
+              <option value="">(any)</option>
+              <option value="stripe">Stripe</option>
+              <option value="manual">Manual</option>
+            </select>
+          </label>
+          <label>Partner
+            <input id="bfPartner" type="text" placeholder="name or id" list="partnersList" />
+            <datalist id="partnersList"></datalist>
+          </label>
+          <label>Payout Status
+            <select id="bfPayoutStatus">
+              <option value="">(any)</option>
+              <option value="pending">Pending</option>
+              <option value="sent">Sent</option>
+              <option value="failed">Failed</option>
+            </select>
+          </label>
+          <button id="refreshBookings" class="btn">Ανανέωση</button>
+          <button id="exportBookings" class="btn secondary">Export CSV</button>
+        </div>
+      </div>
+      <!-- Scroll-synced columns hint (built by admin-ui.js) -->
+      <div id="bookingsColumnsHint" aria-hidden="true" class="hint">ID | Κατάσταση | PaymentIntent | Γεγονός | Όνομα | Email | Εκδρομή | Θέσεις | Τιμή | Ημερομηνία | Payment Type | Partner | Partner Share | Comm. | Payout Status | Payout Date | Μεταδεδομένα</div>
+    </header>
+
+    <main id="content" class="content-wrap">
+      <div id="bookingsContainer" class="table-wrap">
+        <table id="bookingsTable" class="grid" role="grid" aria-label="Πίνακας κρατήσεων">
+          <thead>
+            <tr class="snap-row">
+              <th>ID</th>
+              <th>Κατάσταση</th>
+              <th>PaymentIntent</th>
+              <th>Γεγονός</th>
+              <th>Όνομα</th>
+              <th>Email</th>
+              <th>Trip</th>
+              <th data-align="right">Seats</th>
+              <th class="sortable" data-sort="price_cents" data-align="right">Τιμή</th>
+              <th class="sortable" data-sort="created_at">Δημιουργήθηκε</th>
+              <th>Payment Type</th>
+              <th>Partner</th>
+              <th data-align="right">Partner Share (€)</th>
+              <th data-align="right">Greekaway Comm. (€)</th>
+              <th>Payout Status</th>
+              <th>Payout Date</th>
+              <th>Metadata</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div id="bookingsMessage" class="hint" style="padding:8px 0"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/i18n.js" defer></script>
+  <script>
+    // Pre-populate with mock demo rows before login, matching admin-ui.js demo layout
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const tbody = document.querySelector('#bookingsTable tbody');
+        const hint = document.getElementById('bookingsColumnsHint');
+        if (!tbody) return;
+        if (tbody.children.length > 0) return;
+        const demo = document.createElement('tr');
+        const d = new Date();
+        const two = (n) => String(n).padStart(2,'0');
+        const when = `${two(d.getDate())}/${two(d.getMonth()+1)}/${d.getFullYear()} ${two(d.getHours())}:${two(d.getMinutes())}`;
+        const price = '320.00\u00A0€';
+        const partnerShare = '256.00\u00A0€';
+        const commission = '64.00\u00A0€';
+        demo.innerHTML = `
+          <td>bk_demo_1</td>
+          <td>confirmed</td>
+          <td></td>
+          <td></td>
+          <td>John Demo</td>
+          <td></td>
+          <td>Lefkada Experience</td>
+          <td style="text-align:right">2</td>
+          <td style="text-align:right">${price}</td>
+          <td>${when}</td>
+          <td>stripe</td>
+          <td class="editable-partner" contenteditable data-trip="" data-partnerid="">BlueWave Cruises</td>
+          <td style="text-align:right">${partnerShare}</td>
+          <td style="text-align:right">${commission}</td>
+          <td class="payout-status" data-booking="bk_demo_1">sent</td>
+          <td class="payout-date" data-booking="bk_demo_1">${when}</td>
+          <td></td>`;
+        tbody.appendChild(demo);
+        if (hint) hint.style.display = 'block';
+      } catch(_) {}
+    });
+  </script>
+  <script src="/js/admin-ui.js?v=20251030-1" defer></script>
+</body>
+</html>

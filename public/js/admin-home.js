@@ -377,7 +377,15 @@
   }
 
   function wireTabs(){
-    $$('.tabs .tab').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+    $$('.tabs .tab').forEach(b => b.addEventListener('click', (e) => {
+      const link = b.dataset.link;
+      if (link) {
+        e.preventDefault();
+        try { window.location.assign(link); } catch(_) { window.location.href = link; }
+        return;
+      }
+      switchTab(b.dataset.tab);
+    }));
   }
 
   function wireNavTouchGuard(){

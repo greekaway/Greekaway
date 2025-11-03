@@ -169,12 +169,7 @@
       });
     });
 
-    // Sticky header offset based on filters bar height
-    function setStickyOffset(){
-      try { const bar = document.getElementById('suppliersStickyBar'); if(!bar) return; const h = Math.round(bar.getBoundingClientRect().height)||0; document.documentElement.style.setProperty('--filters-h', h+'px'); } catch(_){ /* noop */ }
-    }
-    setStickyOffset();
-    window.addEventListener('resize', setStickyOffset);
+    // (no sticky header offset required)
 
     // Filters: auto-apply with debounce
     const debouncedApply = debounce(() => { state.offset = 0; refresh(); }, 350);
@@ -230,7 +225,6 @@
       filters.style.display = visible ? 'none' : 'flex';
       toggle.setAttribute('aria-expanded', String(!visible));
       toggle.innerHTML = visible ? '<i class="fa fa-chevron-down"></i>' : '<i class="fa fa-chevron-up"></i>';
-      setTimeout(setStickyOffset, 50);
     });
 
     // Horizontal scroll sync hook (header/body share the same scroller currently)
