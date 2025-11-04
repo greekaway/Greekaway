@@ -1,0 +1,100 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Greekaway Admin – Providers</title><link rel="stylesheet" href="/css/admin-common.css"><link rel="stylesheet" href="/css/admin-providers.css"><link rel="stylesheet" href="/css/admin-tables.css"></head><body>
+
+<header class="sticky-bar" aria-label="Συνεργάτες — Φίλτρα" data-collapsed="false">
+  <div class="bar-inner">
+    <div class="title">Συνεργάτες</div>
+    <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φίλτρων" aria-expanded="true">▲</button>
+    <!-- Global onboarding actions (above filters) -->
+    <div class="actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
+      <button id="provStripeOnboarding" class="btn" type="button">Generate Stripe Partner Link</button>
+      <button id="provManualOnboarding" class="btn secondary" type="button">Generate Manual Onboarding Link</button>
+    </div>
+    <form id="filters" class="filters" onsubmit="return false;">
+      <label>Αναζήτηση
+        <input type="text" id="q" placeholder="Όνομα / Email">
+      </label>
+      <label>Τύπος πληρωμής
+        <select id="ptype">
+          <option value="">(όλοι)</option>
+          <option value="stripe">Stripe</option>
+          <option value="manual">Manual</option>
+        </select>
+      </label>
+      <label>Κατάσταση
+        <select id="status">
+          <option value="">(όλες)</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </label>
+      <label>Κατηγορία Παρόχου
+        <select id="category">
+          <option value="">Όλες</option>
+          <option value="Vans">Vans</option>
+          <option value="Tours">Tours</option>
+          <option value="Boats">Boats</option>
+          <option value="Hotels">Hotels</option>
+        </select>
+      </label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn secondary" id="resetFilters" type="button">Μηδενισμός φίλτρων</button>
+      </div>
+    </form>
+  </div>
+</header>
+ 
+
+<main class="content-wrap">
+  <div class="table-wrap">
+    <table class="table" aria-label="Πίνακας συνεργατών"><thead><tr>
+      <th>Όνομα</th>
+      <th>Τηλέφωνο</th>
+      <th>Email</th>
+      <th>IBAN/Stripe</th>
+      <th>Τύπος</th>
+      <th>Κατηγορία</th>
+      <th>Τελευταία ενημέρωση</th>
+      <th>Ενέργειες</th>
+      <th>Σχόλια</th>
+    </tr></thead><tbody id="prov-rows"></tbody></table>
+  </div>
+ </main>
+ <nav class="bottom-nav">
+   <a href="/admin-home.html">Home</a>
+   <a href="/admin-bookings.html">Bookings</a>
+   <a href="/admin-payments.html">Payments</a>
+   <a href="/admin-manual.html">Manual</a>
+   <a href="/admin-providers.html" class="active">Providers</a>
+  <a href="/admin-availability.html">Availability</a>
+ </nav>
+ <footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
+<script src="/js/admin-seeds.js"></script>
+<script src="/js/admin-providers.js"></script>
+<script>
+fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){document.getElementById('ga-version').textContent=v.version||'—'} })
+document.addEventListener('DOMContentLoaded',()=>{
+  const header=document.querySelector('header.sticky-bar');
+  const btn=document.getElementById('toggleFilters');
+  if(header&&btn){
+    btn.addEventListener('click',()=>{
+      const cur=header.getAttribute('data-collapsed')==='true';
+      header.setAttribute('data-collapsed',cur? 'false':'true');
+      btn.setAttribute('aria-expanded',cur? 'true':'false');
+      btn.textContent = (cur? '▲':'▼');
+    });
+  }
+  // Wire onboarding buttons: simple redirects (no data changes)
+  try {
+    const stripeBtn = document.getElementById('provStripeOnboarding');
+    if (stripeBtn) stripeBtn.addEventListener('click', () => { window.location.href = '/partner-stripe-onboarding'; });
+    const manualBtn = document.getElementById('provManualOnboarding');
+    if (manualBtn) manualBtn.addEventListener('click', () => { window.location.href = '/partner-manual-onboarding'; });
+  } catch(_){}
+});
+</script>
+<script>
+  if (location.hash === '#availability') {
+    location.replace('/admin-availability.html');
+  }
+</script>
+</body></html>

@@ -1,111 +1,157 @@
-<!doctype html>
-<html lang="el">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Home — Greekaway</title>
-  <link rel="stylesheet" href="/css/admin-core.css">
-  <link rel="stylesheet" href="/css/admin-home.css">
-  <link rel="stylesheet" href="/css/admin-cleanup.css?v=20251030-1">
-  <link rel="stylesheet" href="/css/admin-footer.css">
-  <!-- Provide an inline favicon to avoid 404 /favicon.ico in headless checks -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E">
-  <script>
-    // Aggressive SW + cache cleanup to avoid stale admin-home on any device
-    (function(){
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(()=>{});
-      }
-      if (window.caches && caches.keys) {
-        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(()=>{});
-      }
-      try {
-        // Also nuke our own storage in case we cached anything (we only keep session in-memory)
-        sessionStorage.clear(); localStorage.removeItem('ah-cache');
-      } catch(_) {}
-    })();
-  </script>
-  <!-- Pin a version to force reloads across devices; server will also add dev cache-busting in non-production -->
-  <script src="/js/admin-home.js?v=20251031-2" defer></script>
-</head>
-<body class="admin-home">
-  <!-- Unified sticky top bar with main title -->
-  <header id="adminTopBar" class="admin-topbar" aria-label="Admin top bar">
-    <div class="title">Διαχείριση Greekaway</div>
-  </header>
-  <!-- Top login bar (one-time); used to auto-login admin.html iframes -->
-  <div id="adminLoginBar" class="login-bar" aria-label="Admin login">
-    <label> User <input id="ahUser" type="text" placeholder="admin" /></label>
-    <label> Pass <input id="ahPass" type="password" /></label>
-    <button id="ahLoginBtn" class="btn">Login</button>
-    <span id="ahLoginStatus" class="hint"></span>
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Greekaway Admin – Home</title><link rel="stylesheet" href="/css/admin-common.css"><link rel="stylesheet" href="/css/admin-home.css">
+<style>
+/* Subtle vertical tweak for desktop/tablet only; keep mobile unchanged */
+@media (min-width: 768px) {
+  #homeLoginBtn { position: relative; top: 2px; }
+}
+</style>
+</head><body>
+<main class="container">
+  <div id="homeTopBar" style="display:none;display:flex;gap:10px;align-items:center;justify-content:flex-end;margin:6px 0 12px">
+    <button id="homeLogoutBtn" class="btn secondary" type="button">Logout</button>
   </div>
-
-  <!-- Navigation: top on desktop/tablet, bottom on mobile -->
-  <nav id="adminNav" class="tabs" aria-label="Admin modules">
-    <button class="tab active" data-tab="home" title="Home"><span class="label">Home</span></button>
-  <button class="tab" data-tab="bookings" data-link="/admin/bookings.html" title="Bookings"><span class="label">Bookings</span></button>
-    <button class="tab" data-tab="payments" title="Payments"><span class="label">Payments</span></button>
-    <button class="tab" data-tab="partners" title="Partners"><span class="label">Partners</span></button>
-    <button class="tab" data-tab="manual" title="Manual Payments"><span class="label">Manual Payments</span></button>
-    <button class="tab" data-tab="availability" title="Availability"><span class="label">Availability</span></button>
-    <button class="tab" data-tab="settings" title="Settings"><span class="label">Settings</span></button>
-  </nav>
-
-  <!-- Content area: iframes/sections are created lazily by JS -->
-  <main id="adminContent" class="content" aria-live="polite">
-    <section id="view-home" class="view active" data-tab="home" aria-label="Home">
-      <div class="home-wrap">
-        <h2>Διαχείριση — Home</h2>
-        <div class="kpis">
-          <div class="kpi"><div class="kpi-title">Σύνολο κρατήσεων</div><div class="kpi-value" id="kpiBookings">—</div></div>
-          <div class="kpi"><div class="kpi-title">Σύνολο πληρωμών</div><div class="kpi-value" id="kpiPayments">—</div></div>
-          <div class="kpi"><div class="kpi-title">Συνεργάτες</div><div class="kpi-value" id="kpiPartners">—</div></div>
-        </div>
-        <div class="admin-card admin-backup-card" style="margin-top:10px">
-          <h3 style="margin: 0 0 6px 0">Αντίγραφα ασφαλείας</h3>
-          <div class="admin-card-body">
-            <div id="backup" style="line-height:1.4"></div>
-            <div class="actions"><button id="refreshBackup" class="btn">Ανανέωση</button></div>
-          </div>
-        </div>
-        <!-- Moved: Stripe Partner Tools (was in admin.html above bookings) -->
-        <div class="admin-card admin-stripe-tools" style="margin-top:10px">
-          <h3 style="margin: 0 0 6px 0">Stripe Partner Tools</h3>
-          <div class="admin-card-body">
-            <div class="admin-row">
-              <label>Partner Email: <input id="partnerEmail" type="email" placeholder="partner@example.com" style="width:280px;padding:6px"></label>
-              <button id="genStripeLink" class="btn">Generate Stripe Link</button>
-              <span id="genStatus" class="hint" style="margin-left:8px;color:#ccc"></span>
-            </div>
-            <div id="onboardingResult" style="margin-top:10px; display:none">
-              <div>
-                <label>Onboarding URL:</label>
-                <input id="onboardingUrl" type="text" readonly style="width:90%; padding:6px" />
-                <button id="copyOnboarding" class="btn">Copy</button>
-              </div>
-              <div style="margin-top:6px;color:#ddd">
-                Account ID: <span id="onboardingAccount" style="font-family:monospace"></span>
-              </div>
-              <div style="margin-top:6px;color:#aaa; font-size:12px">Note: Stripe onboarding links are single-use and time-limited. Use promptly.</div>
-            </div>
-            <div class="admin-row" style="margin-top:10px">
-              <a href="/partner-manual-onboarding" class="btn" style="text-decoration:none">Δημιούργησε λογαριασμό Manual</a>
-            </div>
-          </div>
-        </div>
-        
+  <!-- Πάνω μέρος: Ενσωματωμένο login (λειτουργικό) -->
+  <section class="panel" id="loginSection" aria-label="Login">
+    <h1 class="h1">Login</h1>
+    <!-- Error now appears above inputs to keep the Login button position stable -->
+    <div id="homeLoginErr" class="hint" style="min-height:1.25em;color:#ff8888;margin:0 0 4px 0"></div>
+    <form id="homeLoginForm" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));align-items:end" method="POST" action="/admin-login" novalidate>
+      <label style="display:flex;flex-direction:column;gap:6px">User
+        <input id="homeUser" name="username" class="input" type="text" placeholder="admin" autocomplete="username" required>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px">Pass
+        <input id="homePass" name="password" class="input" type="password" autocomplete="current-password" required>
+      </label>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button id="homeLoginBtn" class="btn" type="submit">Login</button>
       </div>
-    </section>
-    <!-- Other views (bookings, payments, partners, settings) will be injected on demand -->
-  </main>
-  <footer class="admin-footer" aria-label="Admin navigation footer">
-    <nav>
-      <a href="/admin/admin-home.html" aria-current="page">Home</a>
-      <a href="/admin/bookings.html">Bookings</a>
-      <a href="/admin/suppliers.html">Suppliers</a>
-      <a href="/admin-payments.html">Payments</a>
-    </nav>
-  </footer>
-</body>
-</html>
+    </form>
+  </section>
+
+  <!-- Κεντρικό: σύνολα -->
+  <section class="tiles" aria-label="Σύνολα">
+    <div class="tile">
+      <h3>Σύνολο κρατήσεων</h3>
+      <div class="h1" style="margin:6px 0 0">—</div>
+    </div>
+    <div class="tile">
+      <h3>Σύνολο πληρωμών</h3>
+      <div class="h1" style="margin:6px 0 0">—</div>
+    </div>
+    <div class="tile">
+      <h3>Συνεργάτες</h3>
+      <div class="h1" style="margin:6px 0 0">—</div>
+    </div>
+  </section>
+
+  <!-- Κάτω: Stripe Partner Tools -->
+  <section class="panel" aria-label="Stripe Partner Tools" style="margin-top:16px">
+    <h2 class="h1" style="font-size:20px">Stripe Partner Tools</h2>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:end">
+      <label style="display:flex;flex-direction:column;gap:6px">Partner Email
+        <input class="input" type="email" placeholder="partner@example.com">
+      </label>
+      <button id="btnStripeOnboarding" class="btn" type="button">Generate Stripe Partner Link</button>
+      <button id="btnManualOnboarding" class="btn secondary" type="button">Generate Manual Onboarding Link</button>
+    </div>
+  </section>
+ </main>
+ <nav class="bottom-nav">
+   <a href="/admin-home.html" class="active">Home</a>
+   <a href="/admin-bookings.html">Bookings</a>
+   <a href="/admin-payments.html">Payments</a>
+   <a href="/admin-manual.html">Manual</a>
+   <a href="/admin-providers.html">Providers</a>
+   <a href="/admin-availability.html">Availability</a>
+ </nav>
+ <footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
+  <script>
+  // Version label
+  fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){document.getElementById('ga-version').textContent=v.version||'—'} })
+
+  function setLoginEnabled(enabled){
+    try {
+      const btn = document.getElementById('homeLoginBtn');
+      const u = document.getElementById('homeUser');
+      const p = document.getElementById('homePass');
+      if (btn) btn.disabled = !enabled;
+      if (u) u.disabled = !enabled;
+      if (p) p.disabled = !enabled;
+    } catch(_) {}
+  }
+
+  async function checkSessionAndToggle(){
+    try {
+      // Lightweight protected endpoint to test cookie session
+      const r = await fetch('/admin/backup-status', { credentials: 'same-origin' });
+      const hasSession = r && r.ok;
+      const sec = document.getElementById('loginSection');
+      if (sec) sec.style.display = hasSession ? 'none' : '';
+      const top = document.getElementById('homeTopBar'); if (top) top.style.display = hasSession ? 'flex' : 'none';
+    } catch(_) {
+      const sec = document.getElementById('loginSection');
+      if (sec) sec.style.display = '';
+      const top = document.getElementById('homeTopBar'); if (top) top.style.display = 'none';
+    }
+  }
+
+  function showLoginError(msg){
+    const el = document.getElementById('homeLoginErr');
+    if (el) el.textContent = msg || '';
+  }
+
+  function wireHomeLogin(){
+    const form = document.getElementById('homeLoginForm');
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showLoginError('');
+      setLoginEnabled(false);
+      try {
+        const user = (document.getElementById('homeUser').value||'').trim();
+        const pass = (document.getElementById('homePass').value||'').trim();
+        const body = new URLSearchParams({ username: user, password: pass, next: '/admin-home.html' });
+        // Use form-encoded POST to existing /admin-login route; allow redirect in fetch, keep page here
+        const res = await fetch('/admin-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
+          credentials: 'same-origin',
+          redirect: 'follow'
+        });
+        if (!res.ok) {
+          showLoginError('Λάθος διαπιστευτήρια.');
+          setLoginEnabled(true);
+          return;
+        }
+        // Cookie should now be set; verify and hide form
+        await checkSessionAndToggle();
+      } catch (err) {
+        showLoginError('Σφάλμα σύνδεσης.');
+      } finally {
+        setLoginEnabled(true);
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    wireHomeLogin();
+    try {
+      const btn = document.getElementById('homeLogoutBtn');
+      if (btn) btn.addEventListener('click', async () => {
+        try { await fetch('/admin-logout', { credentials: 'same-origin' }); } catch(_){ }
+        // Reload page to reflect logged-out state
+        location.replace('/admin-home.html');
+      });
+    } catch(_){ }
+    // Wire onboarding buttons: simple redirects (no data changes)
+    try {
+      const stripeBtn = document.getElementById('btnStripeOnboarding');
+      if (stripeBtn) stripeBtn.addEventListener('click', () => { window.location.href = '/partner-stripe-onboarding'; });
+      const manualBtn = document.getElementById('btnManualOnboarding');
+      if (manualBtn) manualBtn.addEventListener('click', () => { window.location.href = '/partner-manual-onboarding'; });
+    } catch(_){ }
+    checkSessionAndToggle();
+  });
+  </script>
+</body></html>
