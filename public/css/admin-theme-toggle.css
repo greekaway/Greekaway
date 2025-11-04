@@ -25,13 +25,13 @@ html[data-theme="dark"] {
 
 html[data-theme="light"] {
   /* Requested palette */
-  --theme-background: #F6EFD2; /* soft vanilla */
+  --theme-background: #FAF6E8; /* softer vanilla-white */
   --theme-text: #1B2A3A;
   --theme-accent: #D4AF37;
 
   /* Map to existing admin variables */
   --ga-bg: var(--theme-background);
-  --ga-bg-2: #EFE3B8; /* gentle secondary */
+  --ga-bg-2: #F2EDDB; /* gentle secondary */
   --ga-text: var(--theme-text);
   --ga-gold: var(--theme-accent);
   --ga-navy-deep: #E7DCAA; /* header/footer surface */
@@ -82,4 +82,19 @@ html[data-theme="light"] .theme-toggle-btn .icon { transform: rotate(180deg); }
 html, body {
   background: linear-gradient(180deg, var(--ga-bg) 0%, var(--ga-bg-2) 100%);
   color: var(--ga-text);
+}
+
+/* Responsive positioning and sizing for tablets and phones */
+@media (max-width: 1024px) {
+  .theme-toggle-btn {
+    left: 15px;
+    right: auto;
+    top: 15px;
+    width: 34px;  /* ~20% smaller than 42px */
+    height: 34px;
+  }
+  .theme-toggle-btn .icon { font-size: 16px; }
+
+  /* When header is collapsed on mobile, hide the toggle as well */
+  header.sticky-bar[data-collapsed="true"] ~ .theme-toggle-btn { display: none; }
 }
