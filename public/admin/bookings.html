@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin — Κρατήσεις</title>
   <link rel="stylesheet" href="/css/admin-core.css">
+  <link rel="stylesheet" href="/css/admin-footer.css">
   <link rel="stylesheet" href="/css/admin-bookings-theme.css">
   <!-- Optional icon font for small icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -33,7 +34,8 @@
   <div id="bookingsPanel" style="display:none">
     <header id="bookingsStickyBar" class="sticky-bar" aria-label="Κρατήσεις — Φίλτρα">
       <div class="bar-inner">
-        <div class="title">Κρατήσεις</div>
+  <div class="title">Κρατήσεις</div>
+  <button id="adminLogout" class="btn secondary" style="margin-left:auto" title="Logout">Logout</button>
         <!-- Optional toggle like suppliers: hidden on desktop by CSS -->
         <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φίλτρων" aria-expanded="true">
           <i class="fa fa-chevron-up"></i>
@@ -138,5 +140,15 @@
     });
   </script>
   <script src="/js/admin-ui.js?v=20251030-1" defer></script>
+  <footer class="admin-footer" aria-label="Admin navigation footer">
+    <nav>
+      <a href="/admin/admin-home.html">Home</a>
+      <a href="/admin/bookings.html" aria-current="page">Bookings</a>
+      <a href="/admin/suppliers.html">Suppliers</a>
+      <a href="/admin/payments.html">Payments</a>
+      <a href="/admin/manual-payments.html">Manual Payments</a>
+      <a href="/admin/availability.html">Availability</a>
+    </nav>
+  </footer>
 </body>
 </html>

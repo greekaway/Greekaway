@@ -183,16 +183,38 @@
     setStickyOffset();
     window.addEventListener('resize', setStickyOffset);
 
-    // Login form
-    const form = $('#auth'); if (!form) return;
-    form.addEventListener('submit', (e) => e.preventDefault());
-    $('#login').addEventListener('click', () => {
-      const u = $('#user').value.trim(); const p = $('#pass').value.trim();
-      setAuth(u, p);
-      hide($('#auth')); show($('#main'));
-      setStickyOffset();
-      fetchList();
-    });
+    // Shared token: if present, auto-login and show content
+    try {
+      const token = localStorage.getItem('adminAuthToken');
+      const logoutBtn = document.getElementById('adminLogout');
+      if (logoutBtn && !logoutBtn.__gaBound) {
+        logoutBtn.addEventListener('click', () => { try { localStorage.removeItem('adminAuthToken'); } catch(_){} window.location.reload(); });
+        logoutBtn.__gaBound = true;
+      }
+      if (token) {
+        auth = 'Basic ' + token;
+        const f = $('#auth'); if (f) f.style.display = 'none';
+        const m = $('#main'); if (m) m.style.display = '';
+        setStickyOffset();
+        fetchList();
+        // Skip manual login wiring when token present
+      } else {
+        // Wire manual login
+        const form = $('#auth'); if (form) form.addEventListener('submit', (e) => e.preventDefault());
+        const loginBtn = $('#login');
+        if (loginBtn) loginBtn.addEventListener('click', () => {
+          const u = $('#user').value.trim(); const p = $('#pass').value.trim();
+          try { localStorage.setItem('adminAuthToken', btoa(u + ':' + p)); } catch(_){}
+          setAuth(u, p);
+          const f2 = $('#auth'); if (f2) f2.style.display = 'none';
+          const m2 = $('#main'); if (m2) m2.style.display = '';
+          setStickyOffset();
+          fetchList();
+        });
+      }
+    } catch(_) {}
+    // If no token and login not yet handled, ensure UI is in login state
+    if (!auth) { show($('#auth')); hide($('#main')); }
     // Buttons
     $('#btnRefresh').addEventListener('click', (e) => { e.preventDefault(); fetchList(); });
     $('#btnExport').addEventListener('click', (e) => { e.preventDefault(); exportCsv(); });

@@ -40,7 +40,15 @@
   function fmtDate(s){ if(!s) return '—'; try{ const d=new Date(s); if(isNaN(d.getTime())) return s; return d.toISOString().slice(0,10);}catch(_){return s;} }
 
   function adminHeader(){
-    try{ const u = new URL(window.location.href); const a = u.searchParams.get('auth'); return a ? { 'X-Forward-Admin-Auth': a } : {}; }catch(_){ return {}; }
+    // Prefer shared localStorage token → Basic Authorization; fallback to URL ?auth param
+    try {
+      let token = null;
+      try { token = localStorage.getItem('adminAuthToken'); } catch(_) {}
+      if (token) return { Authorization: 'Basic ' + token };
+      const u = new URL(window.location.href);
+      const a = u.searchParams.get('auth');
+      return a ? { 'X-Forward-Admin-Auth': a } : {};
+    } catch(_) { return {}; }
   }
 
   // --- Data fetching ---

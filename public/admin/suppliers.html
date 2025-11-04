@@ -5,14 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin — Προμηθευτές</title>
   <link rel="stylesheet" href="/css/admin-core.css">
-  <link rel="stylesheet" href="/css/admin-suppliers.css?v=20251103-3">
+  <link rel="stylesheet" href="/css/admin-suppliers-theme.css?v=20251103-3">
+  <link rel="stylesheet" href="/css/admin-footer.css">
   <!-- Optional icon font for small icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    /* Small login card like other admin pages */
+    body.admin-suppliers-page #auth { max-width: 360px; margin: 16px auto; background:#ffffff; padding:12px; border-radius:8px; color:#111; }
+    body.admin-suppliers-page #auth label{display:block;margin-top:8px}
+    body.admin-suppliers-page #auth input{width:100%;padding:6px}
+    body.admin-suppliers-page #auth button{margin-top:10px;padding:8px 12px;border-radius:8px}
+  </style>
 </head>
 <body class="admin-suppliers-page site-gradient">
+  <!-- Lightweight auth form shown when no shared token exists -->
+  <form id="auth" style="display:none">
+    <label>Χρήστης <input id="user" type="text" value="admin" autocomplete="username" /></label>
+    <label>Κωδικός <input id="pass" type="password" autocomplete="current-password" /></label>
+    <button id="login" type="submit">Είσοδος</button>
+  </form>
   <header id="suppliersStickyBar" class="sticky-bar" aria-label="Προμηθευτές — Φίλτρα">
     <div class="bar-inner">
       <div class="title">Προμηθευτές</div>
+      <button id="adminLogout" class="btn secondary" style="margin-left:auto" title="Logout">Logout</button>
       <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φίλτρων" aria-expanded="true">
         <i class="fa fa-chevron-up"></i>
       </button>
@@ -117,6 +132,44 @@
     </tr>
   </template>
 
+  <script>
+    // Shared auth bootstrap: auto-use token if present; else show login form and store token
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const token = localStorage.getItem('adminAuthToken');
+        const authForm = document.getElementById('auth');
+        const logoutBtn = document.getElementById('adminLogout');
+        if (logoutBtn && !logoutBtn.__gaBound) {
+          logoutBtn.addEventListener('click', () => { try { localStorage.removeItem('adminAuthToken'); } catch(_) {} window.location.reload(); });
+          logoutBtn.__gaBound = true;
+        }
+        if (token) {
+          // nothing else needed; admin-suppliers.js will read token via localStorage
+          if (authForm) authForm.style.display = 'none';
+        } else if (authForm) {
+          authForm.style.display = 'block';
+          authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const u = (document.getElementById('user')?.value || '').trim();
+            const p = (document.getElementById('pass')?.value || '').trim();
+            if (!u || !p) return;
+            try { localStorage.setItem('adminAuthToken', btoa(u + ':' + p)); } catch(_) {}
+            window.location.reload();
+          });
+        }
+      } catch(_) {}
+    });
+  </script>
   <script src="/js/admin-suppliers.js?v=20251103-1" defer></script>
+  <footer class="admin-footer" aria-label="Admin navigation footer">
+    <nav>
+      <a href="/admin/admin-home.html">Home</a>
+      <a href="/admin/bookings.html">Bookings</a>
+      <a href="/admin/suppliers.html" aria-current="page">Suppliers</a>
+      <a href="/admin/payments.html">Payments</a>
+      <a href="/admin/manual-payments.html">Manual Payments</a>
+      <a href="/admin/availability.html">Availability</a>
+    </nav>
+  </footer>
 </body>
 </html>

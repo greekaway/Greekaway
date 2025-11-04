@@ -6,6 +6,9 @@
 
 (function(){
   function init(){
+  // Shared admin auth: auto-use stored token if available
+  let storedToken = null;
+  try { storedToken = localStorage.getItem('adminAuthToken'); } catch(_) {}
   // Compute sticky offset so table header sticks below the section bar (Κρατήσεις + filters)
   try {
     const stickyBar = document.getElementById('bookingsStickyBar');
@@ -50,11 +53,55 @@
 
   if (!authForm) { console.error('[admin-ui] auth form not found'); return; }
 
+  // Logout wiring (if a logout button exists in the top bar)
+  try {
+    const logoutBtn = document.getElementById('adminLogout');
+    if (logoutBtn && !logoutBtn.__gaBound) {
+      logoutBtn.addEventListener('click', () => {
+        try { localStorage.removeItem('adminAuthToken'); } catch(_) {}
+        window.location.reload();
+      });
+      logoutBtn.__gaBound = true;
+    }
+  } catch(_) {}
+
+  // If we already have a stored token, auto-authenticate
+  if (storedToken) {
+    basicAuth = 'Basic ' + storedToken;
+    try { authForm.style.display = 'none'; } catch(_){ }
+    try {
+      const bookingsPanelEl = document.getElementById('bookingsPanel');
+      if (bookingsPanelEl) {
+        bookingsPanelEl.style.display = 'block';
+        if (main) main.style.display = 'none';
+      } else if (main) {
+        main.style.display = 'block';
+      }
+      // Fetch partners list for autocompletion
+      fetchPartnersList();
+      // Try to open SSE using decoded creds from token
+      try {
+        const decoded = atob(storedToken || '');
+        const idx = decoded.indexOf(':');
+        const u = idx >= 0 ? decoded.slice(0, idx) : '';
+        const p = idx >= 0 ? decoded.slice(idx+1) : '';
+        if (u || p) openAdminStream(u, p);
+      } catch(_) {}
+      // Start polling + first load if bookings table exists
+      if (document.getElementById('bookingsTable')) {
+        setInterval(() => { if (basicAuth) fetchBookings(); }, 20000);
+        fetchBookings();
+      }
+    } catch(_) {}
+    return; // skip normal submit-based login flow
+  }
+
   authForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const u = userInput.value || '';
     const p = passInput.value || '';
     basicAuth = 'Basic ' + btoa(u + ':' + p);
+    try { localStorage.setItem('adminAuthToken', btoa(u + ':' + p)); } catch(_) {}
     try { console.info('[admin-ui] login submit: starting data loads'); } catch(_){}
     // Decide visibility of #main depending on the page:
     // - On admin.html (bookings view), #main is a legacy empty panel: keep it hidden

@@ -1,0 +1,21 @@
+/* Shared admin footer navigation */
+.admin-footer { margin: 16px 0 24px; padding: 12px; border-top: 1px solid var(--border, rgba(0,0,0,0.12)); text-align: center; background: rgba(10,18,28,0.04); }
+.admin-footer nav { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.admin-footer a { display: inline-block; text-decoration: none; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border, rgba(0,0,0,0.15)); color: var(--text, #222); background: rgba(255,255,255,0.7); transition: background .15s ease, color .15s ease, border-color .15s ease; }
+.admin-footer a:hover { background: rgba(255,255,255,0.9); }
+/* Active/highlighted link (current page) */
+.admin-footer a[aria-current="page"],
+.admin-footer a.active { background: rgba(212,175,55,0.18); color: var(--gold, #d4af37); border-color: rgba(212,175,55,0.35); }
+
+/* Dark theme harmony if CSS variables exist */
+body.site-gradient .admin-footer { background: rgba(10,18,28,0.08); }
+body.site-gradient .admin-footer a { color: var(--text, #eaeaea); background: rgba(255,255,255,0.08); border-color: var(--border, rgba(255,255,255,0.12)); }
+body.site-gradient .admin-footer a:hover { background: rgba(255,255,255,0.16); }
+body.site-gradient .admin-footer a[aria-current="page"],
+body.site-gradient .admin-footer a.active { background: rgba(212,175,55,0.22); color: var(--gold, #d4af37); border-color: rgba(212,175,55,0.45); }
+
+/* Mobile responsiveness */
+@media (max-width: 576px){
+	.admin-footer nav { flex-direction: column; align-items: stretch; }
+	.admin-footer a { text-align: center; }
+}

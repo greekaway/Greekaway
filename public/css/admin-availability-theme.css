@@ -1,0 +1,12 @@
+/* Admin Availability theme: navy/gold */
+body.admin-availability-page, #availabilityStickyBar { --navy:#0a121c; --navy-2:#0f1b29; --gold:#d4af37; --gold-2:#b9962b; --text:#eee; --muted:#a9b3c3; --border:rgba(255,255,255,0.12); }
+body.admin-availability-page { color: var(--text); background: linear-gradient(180deg,#0a121c,#0f1b29 60%); }
+#availabilityStickyBar.sticky-bar { position: sticky; top: 0; z-index: 20; background: var(--navy); border-bottom: 1px solid var(--border); box-shadow: 0 6px 16px rgba(0,0,0,0.35); }
+#availabilityStickyBar h3 { color: var(--gold); }
+#availabilityStickyBar .btn { background: var(--gold); color: #111; border: 0; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+#availabilityStickyBar input, #availabilityStickyBar select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--navy-2); color: var(--text); }
+#availabilityContainer { padding: 12px; overflow-x: auto; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; -webkit-overflow-scrolling: touch; }
+#availabilityTable { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1000px; }
+#availabilityTable thead th { background: var(--navy); color: var(--gold); border-bottom: 1px solid var(--border); text-align: left; padding: 8px 6px; white-space: nowrap; }
+#availabilityTable tbody td { background: #ffffff; color: #111; padding: 10px; border-bottom: 1px solid #e6e6e6; }
+#availabilityTable tbody tr:hover td { background: #f7f7f7; }

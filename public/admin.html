@@ -28,7 +28,10 @@
 
   <div id="bookingsPanel" style="display:none">
     <div id="bookingsStickyBar" class="sticky-bar">
-      <h3 style="margin: 0 0 6px 0">Κρατήσεις</h3>
+      <div style="display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap">
+        <h3 style="margin: 0 0 6px 0;color:#d4af37">Κρατήσεις</h3>
+        <button id="adminLogout" class="btn secondary" title="Logout">Logout</button>
+      </div>
       <div id="bookingFilters" class="admin-row">
       <label>Payment Type:
         <select id="bfPaymentType">

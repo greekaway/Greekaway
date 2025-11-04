@@ -50,11 +50,25 @@
 
   function attachLoginBar(){
     const btn = $('#ahLoginBtn'); if (!btn) return;
+    // Auto-use shared token if available
+    try {
+      const stored = localStorage.getItem('adminAuthToken');
+      if (stored) {
+        state.authHeader = 'Basic ' + stored;
+        const dec = atob(stored || '');
+        const idx = dec.indexOf(':');
+        state.creds.user = idx >= 0 ? dec.slice(0, idx) : '';
+        state.creds.pass = idx >= 0 ? dec.slice(idx+1) : '';
+        onLoginSuccess();
+        fetchBackupHome();
+      }
+    } catch(_) {}
     btn.addEventListener('click', async () => {
       const u = $('#ahUser').value.trim();
       const p = $('#ahPass').value.trim();
       state.creds.user = u; state.creds.pass = p;
       state.authHeader = 'Basic ' + btoa(u + ':' + p);
+      try { localStorage.setItem('adminAuthToken', btoa(u + ':' + p)); } catch(_) {}
       bumpActivity();
       // Show loading indication
       setLoading(true, 'Επαλήθευση…');
@@ -411,6 +425,17 @@
 
   function init(){
     attachLoginBar();
+    // Wire logout on Admin Home top bar if present
+    try {
+      const topbar = document.getElementById('adminTopBar');
+      if (topbar && !document.getElementById('ahLogoutBtn')) {
+        const btn = document.createElement('button');
+        btn.id = 'ahLogoutBtn'; btn.className = 'btn secondary'; btn.textContent = 'Logout';
+        btn.style.marginLeft = 'auto';
+        btn.addEventListener('click', () => { try { localStorage.removeItem('adminAuthToken'); } catch(_) {} window.location.reload(); });
+        topbar.appendChild(btn);
+      }
+    } catch(_) {}
     wireTabs();
     wireNavTouchGuard();
     ensureIdleWatcher();

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Manual Payments</title>
+  <link rel="stylesheet" href="/css/admin-core.css">
+  <link rel="stylesheet" href="/css/admin-footer.css">
+  <link rel="stylesheet" href="/css/admin-manual-theme.css">
+</head>
+<body class="admin-manual-page site-gradient">
+  <form id="auth">
+    <label>User <input id="user" type="text" value="admin" /></label>
+    <label>Pass <input id="pass" type="password" /></label>
+    <button id="login">Login</button>
+  </form>
+
+  <div id="main" style="display:none">
+    <div id="mpStickyBar" class="sticky-bar">
+      <div style="display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap">
+        <h3 style="margin:0">Manual Payments</h3>
+        <button id="adminLogout" class="btn secondary" title="Logout">Logout</button>
+      </div>
+      <div class="admin-row" style="gap:8px;flex-wrap:wrap">
+        <button id="mpRefresh" class="btn">Ανανέωση</button>
+        <button id="mpExport" class="btn">Εξαγωγή σε CSV</button>
+        <button id="mpResetFiltersTop" class="btn btn-light" style="display:none">Επαναφορά Φίλτρων</button>
+        <span id="mpStatus" class="hint" style="color:#aaa"></span>
+      </div>
+      <div id="mpFilters" class="admin-row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px">
+        <label class="small">Από:<input type="date" id="mpDateFrom" /></label>
+        <label class="small">Έως:<input type="date" id="mpDateTo" /></label>
+        <label class="small" style="min-width:260px;flex:1">Συνεργάτης:<input type="text" id="mpPartnerQuery" placeholder="Αναζήτηση συνεργάτη ή εκδρομής" /></label>
+        <label class="small">Κατάσταση:
+          <select id="mpStatusFilter">
+            <option value="">Όλα</option>
+            <option value="unpaid">Απλήρωτο</option>
+            <option value="paid">Πληρώθηκε</option>
+          </select>
+        </label>
+        <button id="mpResetFilters" class="btn btn-light">Επαναφορά Φίλτρων</button>
+      </div>
+    </div>
+    <div id="mpContainer">
+      <div class="mp-scroll">
+        <table id="mpTable" class="grid">
+          <thead>
+            <tr>
+              <th>Όνομα συνεργάτη</th>
+              <th>Τίτλος εκδρομής</th>
+              <th class="sortable" data-sort="date">Ημερομηνία</th>
+              <th class="sortable" data-sort="amount" data-align="right">Ποσό (€)</th>
+              <th>IBAN</th>
+              <th class="sortable" data-sort="status">Κατάσταση</th>
+              <th class="sortable" data-sort="balance" data-align="right">Υπόλοιπο συνεργάτη</th>
+              <th style="text-align:center">Ενέργειες</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="mpMessage" class="hint" style="padding:8px 0"></div>
+    </div>
+  </div>
+
+  <script src="/js/i18n.js" defer></script>
+  <script src="/js/admin-ui.js?v=20251030-1" defer></script>
+  <script src="/js/manual-payments.js" defer></script>
+  <footer class="admin-footer" aria-label="Admin navigation footer">
+    <nav>
+      <a href="/admin/admin-home.html">Home</a>
+      <a href="/admin/bookings.html">Bookings</a>
+      <a href="/admin/suppliers.html">Suppliers</a>
+      <a href="/admin/payments.html">Payments</a>
+      <a href="/admin/manual-payments.html" aria-current="page">Manual Payments</a>
+      <a href="/admin/availability.html">Availability</a>
+    </nav>
+  </footer>
+</body>
+</html>

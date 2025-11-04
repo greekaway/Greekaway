@@ -96,10 +96,27 @@
     const p = $('#pass').value || '';
     adminUser = u; adminPass = p;
     basicAuth = 'Basic ' + btoa(u + ':' + p);
+    try { localStorage.setItem('adminAuthToken', btoa(u + ':' + p)); } catch(_) {}
     $('#auth').style.display = 'none';
     $('#main').style.display = 'block';
     openAdminStream();
     await fetchItems();
+  
+  function autoAuthFromStorage(){
+    try {
+      const token = localStorage.getItem('adminAuthToken');
+      if (!token) return false;
+      basicAuth = 'Basic ' + token;
+      const dec = atob(token||'');
+      const i = dec.indexOf(':');
+      adminUser = i>=0 ? dec.slice(0,i) : '';
+      adminPass = i>=0 ? dec.slice(i+1) : '';
+      const f = $('#auth'); if (f) f.style.display = 'none';
+      const m = $('#main'); if (m) m.style.display = 'block';
+      const lo = $('#adminLogout'); if (lo && !lo.__gaBound) { lo.addEventListener('click', () => { try { localStorage.removeItem('adminAuthToken'); } catch(_){} window.location.reload(); }); lo.__gaBound = true; }
+      return true;
+    } catch(_) { return false; }
+  }
   }
 
   async function fetchItems(){
@@ -360,6 +377,8 @@
     // Compute sticky header offset now and on resize
     setStickyOffset();
     window.addEventListener('resize', setStickyOffset);
+    const authed = autoAuthFromStorage();
+    if (authed) { openAdminStream(); fetchItems(); }
     // Sorting
     $$('#mpTable thead th.sortable').forEach(th => {
       th.addEventListener('click', () => {
