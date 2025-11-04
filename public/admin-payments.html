@@ -1,106 +1,75 @@
-<!doctype html>
-<html lang="el">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin Payments — Greekaway</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/admin-core.css">
-  <link rel="stylesheet" href="/css/admin-payments.css">
-  <link rel="stylesheet" href="/css/admin-cleanup.css?v=20251030-1">
-</head>
-<body class="admin-main">
-  <form id="auth">
-    <label>User <input id="user" type="text" value="admin" /></label>
-    <label>Pass <input id="pass" type="password" /></label>
-    <button id="login">Login</button>
-  </form>
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Greekaway Admin – Payments</title><link rel="stylesheet" href="/css/admin-common.css"><link rel="stylesheet" href="/css/admin-payments.css"><link rel="stylesheet" href="/css/admin-tables.css"></head><body>
 
-  <div id="main" style="display:none">
-    <!-- Sticky header area to mirror Bookings: title + filters + actions/meta -->
-    <div id="paymentsStickyBar" class="sticky-bar">
-      <h3 style="margin: 0 0 6px 0">Πληρωμές</h3>
-      <div id="filters" class="admin-row filters-row" style="max-width:1100px;border-radius:6px;padding:8px">
-        <div class="filters-left">
-          <label>Κατάσταση:
-            <select id="filterStatus">
-              <option value="">(any)</option>
-              <option value="succeeded">succeeded</option>
-              <option value="requires_payment_method">requires_payment_method</option>
-              <option value="failed">failed</option>
-              <option value="processing">processing</option>
-              <option value="canceled">canceled</option>
-            </select>
-          </label>
-          <label>Από: <input id="filterFrom" type="date" /></label>
-          <label>Έως: <input id="filterTo" type="date" /></label>
-          <label>Ελάχιστο (€): <input id="filterMin" type="number" step="0.01" placeholder="0.00" /></label>
-          <label>Μέγιστο (€): <input id="filterMax" type="number" step="0.01" placeholder="" /></label>
-        </div>
-        <div class="filters-meta-right">
-          <label>Page size:
-            <select id="pageSize"><option>50</option><option>100</option><option>200</option></select>
-          </label>
-          <button id="prevPage" class="btn">Prev</button>
-          <button id="nextPage" class="btn">Next</button>
-          <label>Ταξινόμηση:
-            <select id="sortField">
-              <option value="">(none)</option>
-              <option value="timestamp">timestamp</option>
-              <option value="amount">amount</option>
-              <option value="status">status</option>
-            </select>
-            <button id="sortDir" class="btn" title="Toggle asc/desc">▲</button>
-          </label>
-          <span id="pageInfo">Σελίδα: 1</span>
-        </div>
+<header class="sticky-bar" aria-label="Πληρωμές — Φίλτρα" data-collapsed="false">
+  <div class="bar-inner">
+    <div class="title">Πληρωμές</div>
+    <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φίλτρων" aria-expanded="true">▲</button>
+  <form id="filters" class="filters" onsubmit="return false;">
+      <label>Αναζήτηση
+        <input type="text" id="q" placeholder="Partner / Payment ID">
+      </label>
+      <label>Από
+        <input type="date" id="from">
+      </label>
+      <label>Έως
+        <input type="date" id="to">
+      </label>
+      <label>Τύπος
+        <select id="ptype">
+          <option value="">(όλα)</option>
+          <option value="stripe">Stripe</option>
+          <option value="manual">Manual</option>
+        </select>
+      </label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn secondary" id="btn-export" type="button">Export</button>
+        <button class="btn secondary" id="resetFilters" type="button">Μηδενισμός φίλτρων</button>
       </div>
-      <div class="payments-row actions" style="margin: 4px 0 0 0">
-        <button id="refreshPayments" class="btn">Ανανέωση</button>
-        <button id="exportPayments" class="btn">Εξαγωγή σε CSV</button>
-        <button id="applyFilters" class="btn">Εφαρμογή</button>
-        <button id="clearFilters" class="btn">Επαναφορά</button>
-      </div>
-      <!-- meta row removed; controls moved to the right of filters -->
-      <!-- Static inline hint for payments column titles, unified with sticky filters bar -->
-      <div id="paymentsColumnsHint" aria-hidden="true">
-        <div class="hint-scroll" id="paymentsHintScroller">
-          <table id="paymentsHintTable" aria-hidden="true">
-            <thead>
-              <tr>
-                <th>Κωδικός</th>
-                <th>Κατάσταση</th>
-                <th>Γεγονός</th>
-                <th>Ποσό (€)</th>
-                <th>Νόμισμα</th>
-                <th>Ημερομηνία</th>
-                <th>Μεταδεδομένα</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-      </div>
-    </div>
-    <div id="paymentsContainer">
-      <table id="paymentsTable" style="width:100%;border-collapse:collapse">
-        <thead>
-          <tr>
-            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κωδικός</th>
-            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Κατάσταση</th>
-            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Γεγονός</th>
-            <th class="sortable" data-sort="amount" style="border-bottom:1px solid #ddd;padding:6px;text-align:right;width:140px">Ποσό (€)</th>
-            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Νόμισμα</th>
-            <th class="sortable" data-sort="timestamp" style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Ημερομηνία</th>
-            <th style="border-bottom:1px solid #ddd;padding:6px;text-align:left">Μεταδεδομένα</th>
-          </tr>
-        </thead>
-        <tbody style="font-family:monospace;background:#fff"></tbody>
-      </table>
-      <div id="paymentsMessage" style="margin-top:8px;color:#666"></div>
-    </div>
+    </form>
   </div>
+</header>
 
-  <script src="/js/i18n.js" defer></script>
-  <script src="/js/admin-ui.js?v=20251030-1" defer></script>
-</body>
-</html>
+<main class="content-wrap">
+  <div class="table-wrap">
+    <table class="table" aria-label="Πίνακας πληρωμών"><thead><tr>
+      <th>Ημ/νία</th>
+      <th>Συνεργάτης</th>
+      <th class="col-trip">Trip</th>
+      <th class="col-bookingid">Booking ID</th>
+      <th>Ποσό</th>
+      <th>Τύπος</th>
+      <th>Κατάσταση</th>
+      <th>Σχόλια</th>
+    </tr></thead><tbody id="pay-rows"></tbody></table>
+  </div>
+ </main>
+ <nav class="bottom-nav">
+   <a href="/admin-home.html">Home</a>
+   <a href="/admin-bookings.html">Bookings</a>
+   <a href="/admin-payments.html" class="active">Payments</a>
+   <a href="/admin-manual.html">Manual</a>
+   <a href="/admin-providers.html">Providers</a>
+    <a href="/admin-availability.html">Availability</a>
+ </nav>
+ <footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
+<script src="/js/admin-seeds.js"></script>
+<script src="/js/admin-payments.js"></script>
+<script>
+// Version badge
+fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){document.getElementById('ga-version').textContent=v.version||'—'} })
+// Mobile filters toggle
+document.addEventListener('DOMContentLoaded',()=>{
+  const header=document.querySelector('header.sticky-bar');
+  const btn=document.getElementById('toggleFilters');
+  if(header&&btn){
+    btn.addEventListener('click',()=>{
+      const cur=header.getAttribute('data-collapsed')==='true';
+      header.setAttribute('data-collapsed',cur? 'false':'true');
+      btn.setAttribute('aria-expanded',cur? 'true':'false');
+      btn.textContent = (cur? '▲':'▼');
+    });
+  }
+});
+// TODO: Κράτησε ζωντανές τις 2 ροές (Stripe Partner Link + Manual Onboarding) με τα υπάρχοντα endpoints. Δεν αλλάζουμε backend.
+</script>
+</body></html>

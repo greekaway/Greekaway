@@ -4,11 +4,6 @@
   <div class="bar-inner">
     <div class="title">Συνεργάτες</div>
     <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φίλτρων" aria-expanded="true">▲</button>
-    <!-- Global onboarding actions (above filters) -->
-    <div class="actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
-      <button id="provStripeOnboarding" class="btn" type="button">Generate Stripe Partner Link</button>
-      <button id="provManualOnboarding" class="btn secondary" type="button">Generate Manual Onboarding Link</button>
-    </div>
     <form id="filters" class="filters" onsubmit="return false;">
       <label>Αναζήτηση
         <input type="text" id="q" placeholder="Όνομα / Email">
@@ -83,13 +78,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       btn.textContent = (cur? '▲':'▼');
     });
   }
-  // Wire onboarding buttons: simple redirects (no data changes)
-  try {
-    const stripeBtn = document.getElementById('provStripeOnboarding');
-    if (stripeBtn) stripeBtn.addEventListener('click', () => { window.location.href = '/partner-stripe-onboarding'; });
-    const manualBtn = document.getElementById('provManualOnboarding');
-    if (manualBtn) manualBtn.addEventListener('click', () => { window.location.href = '/partner-manual-onboarding'; });
-  } catch(_){}
 });
 </script>
 <script>

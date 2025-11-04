@@ -10,6 +10,9 @@ const { TextDecoder } = require('util');
 try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installed */ }
 
 const app = express();
+// Parse URL-encoded bodies for simple form logins
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 // App version from package.json
 let APP_VERSION = '0.0.0';
 try { APP_VERSION = require('./package.json').version || APP_VERSION; } catch (_) {}
@@ -38,6 +41,21 @@ const IS_DEV = (process.env.NODE_ENV !== 'production') && !IS_RENDER;
 // Enable gzip compression if available to reduce payload size
 if (compression) {
   try { app.use(compression()); console.log('server: compression enabled'); } catch(e) { /* ignore */ }
+}
+// Sessions for admin auth (cookie-based, no Basic popups)
+let session = null;
+try { session = require('express-session'); } catch(_) { session = null; }
+const SESSION_SECRET = (process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || crypto.randomBytes(24).toString('hex')).trim();
+if (session) {
+  const sessName = 'ga.sid';
+  app.set('session-cookie-name', sessName);
+  app.use(session({
+    name: sessName,
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { sameSite: 'lax', secure: process.env.NODE_ENV === 'production' }
+  }));
 }
 // Bind explicitly to 0.0.0.0:3000 for LAN access
 const HOST = '0.0.0.0';
@@ -515,6 +533,26 @@ app.get('/checkout.html', (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(out);
   });
+});
+
+// Admin HTML guard: redirect to /admin-login if no session cookie
+app.use((req, res, next) => {
+  try {
+    const p = req.path || '';
+    if (p === '/admin-login' || p === '/admin-logout') return next();
+    const isAdminHtml = (
+      p === '/admin' ||
+      /\/admin\/.+\.html$/i.test(p) ||
+      /^\/admin-[^\/]+\.html$/i.test(p)
+    );
+    if (!isAdminHtml) return next();
+    if (hasAdminSession(req)) return next();
+    // Allow Admin Home to load even without session (embedded login is on-page)
+    if (p === '/admin-home.html') return next();
+    const nextUrl = encodeURIComponent(req.originalUrl || p);
+    // Redirect unauthenticated admin pages to Admin Home (embedded login)
+    return res.redirect(`/admin-home.html?next=${nextUrl}`);
+  } catch(_) { return next(); }
 });
 
 // 1️⃣ Σε DEV: Σερβίρουμε ΠΑΝΤΑ φρέσκα HTML/JS/CSS για να αποφεύγουμε stale cache σε άλλες συσκευές
@@ -1688,12 +1726,172 @@ app.get('/api/bookings/:id', (req, res) => {
 }
 });
 
+// Admin-protected bookings listing with pagination and filters used by admin-bookings.html
+// GET /api/bookings?limit=50&page=1&status=&partner_id=&search=&date_from=&date_to=
+app.get('/api/bookings', (req, res) => {
+  // Admin-only; avoid Basic Auth popups → no 401/WWW-Authenticate
+  if (!checkAdminAuth(req)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  try {
+    if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
+    const limit = Math.max(1, Math.min(1000, parseInt(req.query.limit || '50', 10) || 50));
+    const page = Math.max(1, parseInt(req.query.page || '1', 10) || 1);
+    const offset = (page - 1) * limit;
+    const status = (req.query.status || '').trim();
+    const partner_id = (req.query.partner_id || '').trim();
+    const search = (req.query.search || '').trim();
+    // allow both date_range=YYYY-MM-DD..YYYY-MM-DD and explicit date_from/date_to
+    let date_from = (req.query.date_from || '').trim();
+    let date_to = (req.query.date_to || '').trim();
+    const date_range = (req.query.date_range || '').trim();
+    if (!date_from && !date_to && date_range && /\d{4}-\d{2}-\d{2}\.{2}\d{4}-\d{2}-\d{2}/.test(date_range)) {
+      const [f, t] = date_range.split('..');
+      date_from = f; date_to = t;
+    }
+
+    const where = [];
+    const params = [];
+    if (status) { where.push('status = ?'); params.push(status); }
+    if (partner_id) { where.push('partner_id = ?'); params.push(partner_id); }
+    if (date_from) { where.push('(date >= ? OR created_at >= ?)'); params.push(date_from, date_from); }
+    if (date_to) { where.push('(date <= ? OR created_at <= ?)'); params.push(date_to, date_to + ' 23:59:59'); }
+    if (search) {
+      where.push('(id LIKE ? OR user_name LIKE ? OR user_email LIKE ? OR trip_id LIKE ?)');
+      const s = `%${search}%`;
+      params.push(s, s, s, s);
+    }
+    const whereSql = where.length ? ('WHERE ' + where.join(' AND ')) : '';
+    // Default order newest first; client can re-sort locally
+    const rows = bookingsDb.prepare(`SELECT * FROM bookings ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
+
+    // Optional enrichment: derive trip_title from public data if available
+    let enriched = rows.map(r => ({ ...r }));
+    try {
+      const tripModule = require('./live/tripData');
+      enriched = rows.map(r => {
+        const id = r && r.trip_id ? String(r.trip_id) : null;
+        let trip_title = '';
+        if (id && tripModule && typeof tripModule.readTripJsonById === 'function') {
+          try {
+            const t = tripModule.readTripJsonById(id);
+            const summary = t && tripModule.buildTripSummary ? tripModule.buildTripSummary(t, 'el') : null;
+            trip_title = (summary && summary.title) || (t && (t.title && (t.title.el || t.title.en))) || id;
+          } catch (_) { trip_title = id; }
+        }
+        // parse metadata JSON string for client convenience
+        let metadata = r && r.metadata;
+        if (metadata && typeof metadata === 'string') { try { metadata = JSON.parse(metadata); } catch(_){} }
+        return {
+          id: r.id,
+          date: r.date || r.created_at || null,
+          trip_id: r.trip_id || null,
+          trip_title,
+          pax: typeof r.seats === 'number' ? r.seats : (r.seats ? Number(r.seats) : null),
+          total_cents: typeof r.price_cents === 'number' ? r.price_cents : (r.price_cents ? Number(r.price_cents) : null),
+          currency: r.currency || 'eur',
+          status: r.status || '',
+          partner_id: r.partner_id || null,
+          created_at: r.created_at || null,
+          metadata
+        };
+      });
+    } catch (e) { /* if enrichment fails, return basic mapping */
+      enriched = rows.map(r => ({
+        id: r.id,
+        date: r.date || r.created_at || null,
+        trip_id: r.trip_id || null,
+        trip_title: r.trip_id || '',
+        pax: typeof r.seats === 'number' ? r.seats : (r.seats ? Number(r.seats) : null),
+        total_cents: typeof r.price_cents === 'number' ? r.price_cents : (r.price_cents ? Number(r.price_cents) : null),
+        currency: r.currency || 'eur',
+        status: r.status || '',
+        partner_id: r.partner_id || null,
+        created_at: r.created_at || null
+      }));
+    }
+    return res.json({ ok: true, page, limit, items: enriched });
+  } catch (e) {
+    console.error('api/bookings error', e && e.stack ? e.stack : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Attach webhook handler from module
 try {
   require('./webhook')(app, stripe);
 } catch (err) {
   console.warn('Could not attach webhook module:', err && err.message ? err.message : err);
 }
+
+// Friendly Stripe partner onboarding endpoints (HTML redirect + result page)
+// These wrap the existing /api/partners Connect flow with a simple user-facing experience.
+// Note: We intentionally keep /api/partners endpoints intact and do not modify DB here.
+app.get('/partner-stripe-onboarding', async (req, res) => {
+  try {
+    if (!stripe) {
+      res.status(500).send('<!doctype html><html><body><h2>Stripe onboarding failed, please retry</h2><p>Stripe is not configured on the server.</p></body></html>');
+      return;
+    }
+    const email = (req.query && req.query.email ? String(req.query.email).trim() : '') || undefined;
+    const type = String(process.env.PARTNER_ACCOUNT_TYPE || 'express').toLowerCase();
+    const account = await stripe.accounts.create({ type: type === 'standard' ? 'standard' : 'express', email });
+    const base = `${req.protocol}://${req.get('host')}`;
+    const returnUrl = `${base}/partner-stripe-onboarding/callback?account=${encodeURIComponent(account.id)}`;
+    const refreshUrl = `${base}/partner-stripe-onboarding/callback?refresh=1&account=${encodeURIComponent(account.id)}`;
+    let url;
+    if (type === 'standard') {
+      const link = await stripe.accounts.createLoginLink(account.id);
+      url = link && link.url;
+    } else {
+      const link = await stripe.accountLinks.create({ account: account.id, refresh_url: refreshUrl, return_url: returnUrl, type: 'account_onboarding' });
+      url = link && link.url;
+    }
+    if (!url) throw new Error('No onboarding URL created');
+    return res.redirect(url);
+  } catch (e) {
+    const msg = (e && e.message) ? e.message : 'Unexpected error';
+    res.status(500).send(`<!doctype html><html><body><h2>Stripe onboarding failed, please retry</h2><p>${msg}</p></body></html>`);
+  }
+});
+
+app.get('/partner-stripe-onboarding/callback', async (req, res) => {
+  try {
+    if (!stripe) {
+      res.status(500).send('<!doctype html><html><body><h2>Stripe onboarding failed, please retry</h2><p>Stripe is not configured on the server.</p></body></html>');
+      return;
+    }
+    const accountId = String((req.query && req.query.account) || '').trim();
+    if (!accountId) {
+      res.status(400).send('<!doctype html><html><body><h2>Stripe onboarding failed, please retry</h2><p>Missing account id.</p></body></html>');
+      return;
+    }
+    // Best-effort verification of account to determine success
+    try { await stripe.accounts.retrieve(accountId); } catch (e) {
+      const msg = (e && e.message) ? e.message : 'Failed to verify account';
+      res.status(500).send(`<!doctype html><html><body><h2>Stripe onboarding failed, please retry</h2><p>${msg}</p></body></html>`);
+      return;
+    }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.status(200).send('<!doctype html><html><body><h2>Stripe connection successful</h2><p>You can close this tab and return to the admin.</p></body></html>');
+  } catch (e) {
+    const msg = (e && e.message) ? e.message : 'Unexpected error';
+    res.status(500).send(`<!doctype html><html><body><h2>Stripe onboarding failed, please retry</h2><p>${msg}</p></body></html>`);
+  }
+});
+
+// If the browser hits the JSON callback, redirect to the friendly HTML callback
+app.get('/api/partners/connect-callback', (req, res, next) => {
+  try {
+    const accept = String(req.headers && req.headers.accept || '');
+    if (/text\/html/i.test(accept)) {
+      const qsIndex = req.url.indexOf('?');
+      const qs = qsIndex >= 0 ? req.url.slice(qsIndex) : '';
+      return res.redirect('/partner-stripe-onboarding/callback' + qs);
+    }
+  } catch (_) {}
+  next();
+});
 
 // Partners module (Stripe Connect + manual onboarding + legal pages)
 // Keep server.js light: just mount the router
@@ -1759,7 +1957,26 @@ let ADMIN_USER = process.env.ADMIN_USER || null;
 let ADMIN_PASS = process.env.ADMIN_PASS || null;
 if (typeof ADMIN_USER === 'string') ADMIN_USER = ADMIN_USER.trim().replace(/^['"]|['"]$/g, '');
 if (typeof ADMIN_PASS === 'string') ADMIN_PASS = ADMIN_PASS.trim().replace(/^['"]|['"]$/g, '');
+function getCookies(req){
+  try {
+    const h = req.headers.cookie || '';
+    if (!h) return {};
+    return h.split(';').reduce((acc, part) => {
+      const i = part.indexOf('=');
+      if (i === -1) return acc;
+      const k = part.slice(0,i).trim();
+      const v = decodeURIComponent(part.slice(i+1).trim());
+      acc[k] = v; return acc;
+    }, {});
+  } catch(_) { return {}; }
+}
+function hasAdminSession(req){
+  try { if (req && req.session && req.session.admin === true) return true; } catch(_){ }
+  const c = getCookies(req);
+  return c.adminSession === 'true' || c.adminSession === '1' || c.adminSession === 'yes';
+}
 function checkAdminAuth(req) {
+  if (hasAdminSession(req)) return true;
   if (!ADMIN_USER || !ADMIN_PASS) return false;
   const auth = req.headers.authorization || '';
   if (!auth.startsWith('Basic ')) return false;
@@ -1768,10 +1985,65 @@ function checkAdminAuth(req) {
   return user === ADMIN_USER && pass === ADMIN_PASS;
 }
 
+// Simple admin login/logout
+app.get('/admin-login', (req, res) => {
+  try {
+    // Serve a minimal HTML login page
+    const nextUrl = (req.query && req.query.next) ? String(req.query.next) : '/admin';
+    const html = `<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Admin Login</title>
+      <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0b1b2b;color:#fff}
+      .card{background:#11263a;padding:20px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:360px;width:90%}
+      h1{font-size:18px;margin:0 0 10px}
+      label{display:block;margin:10px 0 4px}
+      input{width:100%;padding:8px;border-radius:8px;border:1px solid #223a51;background:#0e2032;color:#fff}
+      button{margin-top:12px;width:100%;padding:10px;border-radius:8px;border:none;background:#2a7ade;color:#fff;font-weight:600}
+      .hint{font-size:12px;color:#a8c0d8;margin-top:8px;text-align:center}
+      </style></head><body>
+      <form class="card" method="POST" action="/admin-login">
+        <h1>Greekaway – Admin Login</h1>
+        <input type="hidden" name="next" value="${nextUrl.replace(/"/g,'&quot;')}">
+        <label for="user">Username</label>
+        <input id="user" name="username" autocomplete="username" required />
+        <label for="pass">Password</label>
+        <input id="pass" type="password" name="password" autocomplete="current-password" required />
+        <button type="submit">Login</button>
+        <div class="hint">Credentials from server .env (ADMIN_USER / ADMIN_PASS)</div>
+      </form></body></html>`;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(html);
+  } catch (e) { return res.status(500).send('Server error'); }
+});
+
+app.post('/admin-login', (req, res) => {
+  try {
+    const u = (req.body && req.body.username) ? String(req.body.username) : '';
+    const p = (req.body && req.body.password) ? String(req.body.password) : '';
+    const nextUrl = (req.body && req.body.next) ? String(req.body.next) : '/admin';
+    if (!ADMIN_USER || !ADMIN_PASS) return res.status(500).send('Admin credentials not configured');
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+      // establish server session
+      try { if (req.session) { req.session.admin = true; req.session.user = u; } } catch(_){ }
+      // legacy compatibility cookie (optional, non-authoritative)
+      try { res.setHeader('Set-Cookie', `adminSession=yes; Path=/; HttpOnly; SameSite=Lax${process.env.NODE_ENV==='production' ? '; Secure' : ''}`); } catch(_){ }
+      return res.redirect(nextUrl || '/admin');
+    }
+    return res.status(403).send('Invalid credentials');
+  } catch (e) { return res.status(500).send('Server error'); }
+});
+
+app.get('/admin-logout', (req, res) => {
+  try {
+    const sidName = app.get('session-cookie-name') || 'connect.sid';
+    try { if (req.session) { req.session.destroy(()=>{}); } } catch(_){ }
+    try { res.clearCookie(sidName, { path: '/' }); } catch(_){ }
+    try { res.clearCookie('adminSession', { path: '/' }); } catch(_){ }
+    return res.redirect('/admin-home.html');
+  } catch (e) { return res.status(500).send('Server error'); }
+});
+
 app.get('/admin/payments', async (req, res) => {
   if (!checkAdminAuth(req)) {
-    res.set('WWW-Authenticate', 'Basic realm="Admin"');
-    return res.status(401).send('Unauthorized');
+    return res.status(403).send('Forbidden');
   }
   // Try Postgres/SQLite/JSON via the same logic as webhook.js
   try {
@@ -1817,8 +2089,7 @@ app.get('/admin/payments', async (req, res) => {
 // Admin bookings list (JSON) - protected by same basic auth
 app.get('/admin/bookings', (req, res) => {
   if (!checkAdminAuth(req)) {
-    res.set('WWW-Authenticate', 'Basic realm="Admin"');
-    return res.status(401).send('Unauthorized');
+    return res.status(403).send('Forbidden');
   }
   try {
     const limit = Math.min(10000, Math.abs(parseInt(req.query.limit || '200', 10) || 200));
@@ -1874,7 +2145,7 @@ app.get('/admin/bookings', (req, res) => {
 
 // Admin: list travelers (for stats/exports)
 app.get('/admin/travelers', (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
     const rows = bookingsDb.prepare('SELECT email,name,language,age_group,traveler_type,interest,sociality,children_ages,average_rating,updated_at FROM travelers ORDER BY updated_at DESC').all();
@@ -1886,7 +2157,7 @@ app.get('/admin/travelers', (req, res) => {
 
 // Suggest pairs for a trip/date using simple similarity + co_travel boost
 app.get('/admin/suggest-pairs', (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
     const trip_id = req.query.trip_id || null;
@@ -1960,7 +2231,7 @@ app.post('/api/feedback', express.json(), (req, res) => {
 
 // Admin: list feedback
 app.get('/admin/feedback', (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
     const rows = bookingsDb.prepare('SELECT id,trip_id,traveler_email,rating,comment,created_at FROM feedback ORDER BY created_at DESC').all();
@@ -1970,7 +2241,7 @@ app.get('/admin/feedback', (req, res) => {
 
 // Admin: groups page data
 app.get('/admin/groups', (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
     const trip_id = req.query.trip_id || null;
@@ -1996,7 +2267,7 @@ app.get('/admin/groups', (req, res) => {
 
 // Admin: create/update groups
 app.post('/admin/groups', express.json(), (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
     const { op, id, trip_id, date, travelers, lock } = req.body || {};
@@ -2032,8 +2303,7 @@ app.post('/admin/groups', express.json(), (req, res) => {
 // Admin bookings CSV export
 app.get('/admin/bookings.csv', (req, res) => {
   if (!checkAdminAuth(req)) {
-    res.set('WWW-Authenticate', 'Basic realm="Admin"');
-    return res.status(401).send('Unauthorized');
+    return res.status(403).send('Forbidden');
   }
   try {
     const limit = Math.min(100000, Math.abs(parseInt(req.query.limit || '10000', 10) || 10000));
@@ -2108,8 +2378,7 @@ app.get('/admin/bookings.csv', (req, res) => {
 // Admin backup status endpoint
 app.get('/admin/backup-status', async (req, res) => {
   if (!checkAdminAuth(req)) {
-    res.set('WWW-Authenticate', 'Basic realm="Admin"');
-    return res.status(401).send('Unauthorized');
+    return res.status(403).send('Forbidden');
   }
   try {
     const os = require('os');
@@ -2142,9 +2411,207 @@ app.get('/admin/backup-status', async (req, res) => {
   }
 });
 
+// POST /api/backup/export — on-demand DB backup (gzipped copy)
+app.post('/api/backup/export', async (req, res) => {
+  if (!checkAdminAuth(req)) { return res.status(403).json({ error: 'Forbidden' }); }
+  try {
+    const zlib = require('zlib');
+    const os = require('os');
+    const backupDirCandidates = [
+      process.env.BACKUP_DIR,
+      path.join(os.homedir(), 'greekaway_backups'),
+      path.join(__dirname, 'data', 'db-backups')
+    ].filter(Boolean);
+    const backupDir = backupDirCandidates.find(p => { try { fs.mkdirSync(p, { recursive: true }); return true; } catch(_) { return false; } }) || path.join(__dirname, 'data', 'db-backups');
+    try { fs.mkdirSync(backupDir, { recursive: true }); } catch(_){ }
+    const ts = new Date().toISOString().replace(/[:.]/g,'').replace(/T/,'_').replace(/Z/,'Z');
+    const src = path.join(__dirname, 'data', 'db.sqlite3');
+    const dst = path.join(backupDir, `db.sqlite3.${ts}.gz`);
+    if (!fs.existsSync(src)) return res.status(404).json({ error: 'DB not found' });
+    const gzip = zlib.createGzip();
+    const inp = fs.createReadStream(src);
+    const out = fs.createWriteStream(dst);
+    await new Promise((resolve, reject) => { inp.pipe(gzip).pipe(out).on('finish', resolve).on('error', reject); });
+    return res.json({ ok: true, file: dst, note: 'Use /admin/backup-status to locate backups' });
+  } catch (e) {
+    console.error('backup/export error', e && e.stack ? e.stack : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Helpers for seeding and cleanup
+function ensureSeedColumns(db) {
+  try { db.exec('ALTER TABLE bookings ADD COLUMN "__test_seed" INTEGER DEFAULT 0'); } catch(_){}
+  try { db.exec('ALTER TABLE bookings ADD COLUMN seed_source TEXT'); } catch(_){}
+  try { db.exec('ALTER TABLE payments ADD COLUMN "__test_seed" INTEGER DEFAULT 0'); } catch(_){}
+  try { db.exec('ALTER TABLE payments ADD COLUMN seed_source TEXT'); } catch(_){}
+  try { db.exec('ALTER TABLE manual_payments ADD COLUMN "__test_seed" INTEGER DEFAULT 0'); } catch(_){}
+  try { db.exec('ALTER TABLE manual_payments ADD COLUMN seed_source TEXT'); } catch(_){}
+  try { db.exec('ALTER TABLE partner_agreements ADD COLUMN "__test_seed" INTEGER DEFAULT 0'); } catch(_){}
+  try { db.exec('ALTER TABLE partner_agreements ADD COLUMN seed_source TEXT'); } catch(_){}
+}
+
+// POST /api/admin/seed — bulk insert seed data in a transaction
+app.post('/api/admin/seed', express.json({ limit: '5mb' }), async (req, res) => {
+  if (!checkAdminAuth(req)) { return res.status(403).json({ error: 'Forbidden' }); }
+  try {
+    const payload = req.body && Object.keys(req.body).length ? req.body : null;
+    // If no body posted, try to load default seed file from repo
+    let seed = payload;
+    if (!seed) {
+      try {
+        const p = path.join(__dirname, 'data', 'test-seeds', 'seed-admin-2025-11-04.json');
+        seed = JSON.parse(fs.readFileSync(p, 'utf8'));
+      } catch(_) { /* ignore */ }
+    }
+    if (!seed || typeof seed !== 'object') return res.status(400).json({ error: 'Missing seed JSON' });
+
+    const Database = require('better-sqlite3');
+    const db = bookingsDb || new Database(path.join(__dirname, 'data', 'db.sqlite3'));
+    ensureSeedColumns(db);
+    // basic schema ensures for tables possibly missing
+    try { db.exec(`CREATE TABLE IF NOT EXISTS payments (id TEXT PRIMARY KEY, status TEXT, event_id TEXT, amount INTEGER, currency TEXT, timestamp TEXT)`); } catch(_){}
+    try { db.exec(`CREATE TABLE IF NOT EXISTS manual_payments (id TEXT PRIMARY KEY, booking_id TEXT, partner_id TEXT, partner_name TEXT, trip_id TEXT, trip_title TEXT, date TEXT, amount_cents INTEGER, currency TEXT, iban TEXT, status TEXT, partner_balance_cents INTEGER, created_at TEXT, updated_at TEXT)`); } catch(_){}
+    try { db.exec(`CREATE TABLE IF NOT EXISTS partner_agreements (id TEXT PRIMARY KEY, partner_name TEXT, partner_email TEXT, stripe_account_id TEXT, onboarding_url TEXT, iban TEXT, vat_number TEXT, agreed INTEGER, ip TEXT, timestamp TEXT, source TEXT, agreement_hash TEXT, agreement_version TEXT)`); } catch(_){}
+
+    // snapshot before inserts
+    try {
+      const os = require('os');
+      const backupDir = path.join(os.homedir(), 'greekaway_backups');
+      try { fs.mkdirSync(backupDir, { recursive: true }); } catch(_){}
+      const ts = new Date().toISOString().replace(/[:.]/g,'');
+      const src = path.join(__dirname, 'data', 'db.sqlite3');
+      const dst = path.join(backupDir, `db.sqlite3.${ts}`);
+      if (fs.existsSync(src)) { fs.copyFileSync(src, dst); }
+    } catch(_){}
+
+    const nowIso = new Date().toISOString();
+    const tx = db.transaction((s) => {
+      const seedSource = s.seed_source || 'admin_rewire_20251104';
+      // partners (partner_agreements)
+      if (Array.isArray(s.partners)) {
+        const ins = db.prepare(`INSERT OR REPLACE INTO partner_agreements (id,partner_name,partner_email,stripe_account_id,onboarding_url,iban,vat_number,agreed,ip,timestamp,source,agreement_hash,agreement_version, "__test_seed", seed_source) VALUES (@id,@partner_name,@partner_email,@stripe_account_id,@onboarding_url,@iban,@vat_number,@agreed,@ip,@timestamp,@source,@agreement_hash,@agreement_version,@__test_seed,@seed_source)`);
+        for (const p of s.partners) {
+          const row = {
+            id: p.id || crypto.randomUUID(),
+            partner_name: p.partner_name || p.name || null,
+            partner_email: p.partner_email || p.email || null,
+            stripe_account_id: p.stripe_account_id || null,
+            onboarding_url: p.onboarding_url || null,
+            iban: p.iban || null,
+            vat_number: p.vat_number || null,
+            agreed: p.agreed ? 1 : 0,
+            ip: p.ip || null,
+            timestamp: p.timestamp || nowIso,
+            source: p.source || 'seed',
+            agreement_hash: p.agreement_hash || null,
+            agreement_version: p.agreement_version || null,
+            __test_seed: 1,
+            seed_source: p.seed_source || seedSource
+          };
+          ins.run(row);
+        }
+      }
+      // bookings
+      if (Array.isArray(s.bookings)) {
+        const ins = db.prepare(`INSERT OR REPLACE INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,partner_id, "__test_seed", seed_source) VALUES (@id,@status,@date,@payment_intent_id,@event_id,@user_name,@user_email,@trip_id,@seats,@price_cents,@currency,@metadata,@created_at,@updated_at,@partner_id,@__test_seed,@seed_source)`);
+        for (const b of s.bookings) {
+          const meta = b.metadata && typeof b.metadata === 'object' ? { ...b.metadata, __test_seed: true, seed_source: b.seed_source || seedSource } : { __test_seed: true, seed_source: b.seed_source || seedSource };
+          const row = {
+            id: b.id || crypto.randomUUID(),
+            status: b.status || 'confirmed',
+            date: b.date || null,
+            payment_intent_id: b.payment_intent_id || null,
+            event_id: b.event_id || null,
+            user_name: b.user_name || null,
+            user_email: b.user_email || null,
+            trip_id: b.trip_id || null,
+            seats: typeof b.pax === 'number' ? b.pax : (b.seats || 1),
+            price_cents: (typeof b.total_cents === 'number') ? b.total_cents : (b.price_cents || 0),
+            currency: b.currency || 'eur',
+            metadata: JSON.stringify(meta),
+            created_at: b.created_at || nowIso,
+            updated_at: b.updated_at || nowIso,
+            partner_id: b.partner_id || null,
+            __test_seed: 1,
+            seed_source: b.seed_source || seedSource
+          };
+          ins.run(row);
+        }
+      }
+      // payments
+      if (Array.isArray(s.payments)) {
+        const ins = db.prepare(`INSERT OR REPLACE INTO payments (id,status,event_id,amount,currency,timestamp, "__test_seed", seed_source) VALUES (@id,@status,@event_id,@amount,@currency,@timestamp,@__test_seed,@seed_source)`);
+        for (const p of s.payments) {
+          ins.run({
+            id: p.id || crypto.randomUUID(),
+            status: p.status || 'succeeded',
+            event_id: p.event_id || null,
+            amount: (typeof p.amount === 'number') ? p.amount : (typeof p.amount_cents === 'number' ? p.amount_cents : null),
+            currency: p.currency || 'eur',
+            timestamp: p.timestamp || nowIso,
+            __test_seed: 1,
+            seed_source: p.seed_source || seedSource
+          });
+        }
+      }
+      // manual_payments
+      if (Array.isArray(s.manual_payments)) {
+        const ins = db.prepare(`INSERT OR REPLACE INTO manual_payments (id,booking_id,partner_id,partner_name,trip_id,trip_title,date,amount_cents,currency,iban,status,partner_balance_cents,created_at,updated_at, "__test_seed", seed_source) VALUES (@id,@booking_id,@partner_id,@partner_name,@trip_id,@trip_title,@date,@amount_cents,@currency,@iban,@status,@partner_balance_cents,@created_at,@updated_at,@__test_seed,@seed_source)`);
+        for (const m of s.manual_payments) {
+          ins.run({
+            id: m.id || crypto.randomUUID(),
+            booking_id: m.booking_id || null,
+            partner_id: m.partner_id || null,
+            partner_name: m.partner_name || null,
+            trip_id: m.trip_id || null,
+            trip_title: m.trip_title || null,
+            date: m.date || nowIso.slice(0,10),
+            amount_cents: (typeof m.amount_cents === 'number') ? m.amount_cents : (typeof m.amount === 'number' ? m.amount : 0),
+            currency: m.currency || 'eur',
+            iban: m.iban || null,
+            status: m.status || 'pending',
+            partner_balance_cents: (typeof m.partner_balance_cents === 'number') ? m.partner_balance_cents : (typeof m.partner_balance === 'number' ? m.partner_balance : 0),
+            created_at: m.created_at || nowIso,
+            updated_at: m.updated_at || nowIso,
+            __test_seed: 1,
+            seed_source: m.seed_source || seedSource
+          });
+        }
+      }
+    });
+    tx(seed);
+    if (!bookingsDb) db.close();
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('admin/seed error', e && e.stack ? e.stack : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /api/admin/cleanup-test-seeds?source=admin_rewire_20251104
+app.delete('/api/admin/cleanup-test-seeds', (req, res) => {
+  if (!checkAdminAuth(req)) { return res.status(403).json({ error: 'Forbidden' }); }
+  try {
+    const source = (req.query.source || 'admin_rewire_20251104').toString();
+    const Database = require('better-sqlite3');
+    const db = bookingsDb || new Database(path.join(__dirname, 'data', 'db.sqlite3'));
+    ensureSeedColumns(db);
+    const delTables = ['bookings','payments','manual_payments','partner_agreements'];
+    for (const t of delTables) {
+      try { db.prepare(`DELETE FROM ${t} WHERE "__test_seed" = 1 OR seed_source = ?`).run(source); } catch (e) { /* ignore */ }
+    }
+    if (!bookingsDb) db.close();
+    return res.json({ ok: true, source });
+  } catch (e) {
+    console.error('cleanup-test-seeds error', e && e.stack ? e.stack : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Admin action: cancel booking (sets status to 'canceled')
 app.post('/admin/bookings/:id/cancel', express.json(), (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     const id = req.params.id;
     if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
@@ -2157,7 +2624,7 @@ app.post('/admin/bookings/:id/cancel', express.json(), (req, res) => {
 
 // Admin action: refund booking (attempt Stripe refund then mark refunded)
 app.post('/admin/bookings/:id/refund', express.json(), async (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     const id = req.params.id;
     if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
@@ -2190,8 +2657,7 @@ app.get('/admin', (req, res) => {
 // Server-side CSV export of payments with optional filters via query params.
 app.get('/admin/payments.csv', async (req, res) => {
   if (!checkAdminAuth(req)) {
-    res.set('WWW-Authenticate', 'Basic realm="Admin"');
-    return res.status(401).send('Unauthorized');
+    return res.status(403).send('Forbidden');
   }
   try {
     const { status, from, to, min, max, limit } = req.query || {};
