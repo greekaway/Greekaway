@@ -47,9 +47,10 @@
   <!-- Κάτω: Stripe Partner Tools -->
   <section class="panel" aria-label="Stripe Partner Tools" style="margin-top:16px">
     <h2 class="h1" style="font-size:20px">Stripe Partner Tools</h2>
+    <div id="stripeAlert" style="display:none;margin:8px 0 12px;padding:10px 12px;border-radius:8px;font-size:14px;line-height:1.3"></div>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:end">
       <label style="display:flex;flex-direction:column;gap:6px">Partner Email
-        <input class="input" type="email" placeholder="partner@example.com">
+        <input id="homePartnerEmail" class="input" type="email" placeholder="partner@example.com">
       </label>
       <button id="btnStripeOnboarding" class="btn" type="button">Generate Stripe Partner Link</button>
       <button id="btnManualOnboarding" class="btn secondary" type="button">Generate Manual Onboarding Link</button>
@@ -146,8 +147,52 @@
     } catch(_){ }
     // Wire onboarding buttons: simple redirects (no data changes)
     try {
+      // Helper to show alert bars (auto-hide with fadeout)
+      const alertBox = document.getElementById('stripeAlert');
+      function showStripeAlert(kind, text) {
+        if (!alertBox) return;
+        alertBox.textContent = text || '';
+        alertBox.style.display = 'block';
+        alertBox.style.opacity = '1';
+        alertBox.style.transition = 'opacity 300ms ease';
+        if (kind === 'ok') {
+          alertBox.style.background = '#e9f9ef';
+          alertBox.style.color = '#16784f';
+          alertBox.style.border = '1px solid #b8ebcd';
+        } else {
+          alertBox.style.background = '#fdecea';
+          alertBox.style.color = '#b42318';
+          alertBox.style.border = '1px solid #f5c2c0';
+        }
+        // Auto-hide after ~3s
+        setTimeout(() => {
+          try {
+            alertBox.style.opacity = '0';
+            setTimeout(() => { alertBox.style.display = 'none'; }, 320);
+          } catch(_) {}
+        }, 3000);
+      }
+
       const stripeBtn = document.getElementById('btnStripeOnboarding');
-      if (stripeBtn) stripeBtn.addEventListener('click', () => { window.location.href = '/partner-stripe-onboarding'; });
+      if (stripeBtn) stripeBtn.addEventListener('click', async () => {
+        const emailEl = document.getElementById('homePartnerEmail');
+        const email = (emailEl && emailEl.value || '').trim();
+        if (!email) {
+          showStripeAlert('err', '❌ Παρακαλώ εισάγετε email προμηθευτή.');
+          return;
+        }
+        try {
+          // Reuse existing backend flow to create an onboarding link
+          const res = await fetch('/api/partners/connect-link?email=' + encodeURIComponent(email));
+          const j = await res.json().catch(() => ({}));
+          if (!res.ok || !j || !j.url) throw new Error(j && j.error ? j.error : ('HTTP ' + res.status));
+          showStripeAlert('ok', '✅ Επιτυχής σύνδεση με Stripe.');
+          // Navigate to Stripe onboarding URL after a tiny delay so the alert flashes briefly
+          setTimeout(() => { try { window.location.href = j.url; } catch(_) {} }, 200);
+        } catch (e) {
+          showStripeAlert('err', '❌ Αποτυχία σύνδεσης με Stripe. Παρακαλώ δοκιμάστε ξανά.');
+        }
+      });
       const manualBtn = document.getElementById('btnManualOnboarding');
       if (manualBtn) manualBtn.addEventListener('click', () => { window.location.href = '/partner-manual-onboarding'; });
     } catch(_){ }
