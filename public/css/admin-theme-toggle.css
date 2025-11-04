@@ -59,8 +59,26 @@ html[data-theme="light"] #btnStripeOnboarding {
   background: #D4AF37 !important; color: #111 !important; border: 0 !important;
 }
 html[data-theme="light"] #btnManualOnboarding {
-  background: transparent !important; color: #f5f5f5 !important; border: 1px solid rgba(212,175,55,.25) !important;
+  background: #0E1520 !important; /* dark blue */
+  color: #ffffff !important; /* white text */
+  border: 1px solid rgba(212,175,55,.25) !important; /* subtle gold border for consistency */
 }
+
+/* 2a) Login section on Home stays Night */
+html[data-theme="light"] #loginSection.panel {
+  background: #162432 !important;
+  color: #f5f5f5 !important;
+  border: 1px solid rgba(212,175,55,.25) !important;
+}
+html[data-theme="light"] #loginSection .input,
+html[data-theme="light"] #loginSection input[type="text"],
+html[data-theme="light"] #loginSection input[type="password"],
+html[data-theme="light"] #loginSection input[type="email"]{
+  background: #0F1C29 !important;
+  color: #f5f5f5 !important;
+  border: 1px solid rgba(212,175,55,.25) !important;
+}
+html[data-theme="light"] #loginSection .hint { color: #A6B2C2 !important; }
 
 /* 3) Filter sections (sticky bars + controls) always Night */
 html[data-theme="light"] header.sticky-bar {
@@ -88,6 +106,27 @@ html[data-theme="light"] .grid thead th {
   background: #0E1520 !important;
   color: #D4AF37 !important;
   border-bottom-color: rgba(212,175,55,.25) !important;
+}
+
+/* 5) All admin modals (ga-modal) stay Night */
+html[data-theme="light"] .ga-modal-backdrop { background: rgba(0,0,0,.6) !important; }
+html[data-theme="light"] .ga-modal-dialog {
+  background: #0F1C29 !important;
+  color: #f5f5f5 !important;
+  border: 1px solid rgba(212,175,55,.25) !important;
+}
+html[data-theme="light"] .ga-modal-header {
+  background: #0E1520 !important;
+  color: #f5f5f5 !important;
+  border-bottom: 1px solid rgba(212,175,55,.25) !important;
+}
+html[data-theme="light"] .ga-modal-footer {
+  border-top: 1px solid rgba(212,175,55,.25) !important;
+}
+html[data-theme="light"] .ga-modal-close {
+  background: transparent !important;
+  color: #f5f5f5 !important;
+  border: 1px solid rgba(212,175,55,.25) !important;
 }
 
 /* Smooth transition for common surfaces */

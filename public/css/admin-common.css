@@ -27,11 +27,14 @@ footer{margin-top:24px;padding:20px;border-top:1px solid var(--ga-border);color:
 .bottom-nav{
   position:fixed; bottom:0; left:0; right:0;
   height:64px; display:flex; justify-content:space-around; align-items:center;
-  background:var(--ga-navy-deep); border-top:1px solid var(--ga-border); z-index:100;
+  /* Lock footer to night theme regardless of global day/night */
+  background:#0E1520 !important; /* var(--ga-navy-deep) */
+  border-top:1px solid rgba(212,175,55,.25) !important; /* var(--ga-border) */
+  z-index:100;
   padding:0 6px;
 }
 .bottom-nav a{
-  flex:1; text-align:center; color:var(--ga-gold); text-decoration:none;
+  flex:1; text-align:center; color:#D4AF37 !important; /* var(--ga-gold) */ text-decoration:none;
   font-size:clamp(12px, 2.6vw, 15px); /* μικραίνει σωστά στο κινητό */
   font-weight:600; padding:8px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   border-radius:8px;
