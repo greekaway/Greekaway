@@ -136,6 +136,14 @@ async function hasSuccessfulLog(bookingId, partnerId){
 }
 
 async function upsertLog(log){
+  // Ensure required named parameters exist for better-sqlite3 named bindings
+  log = {
+    sent_at: log && Object.prototype.hasOwnProperty.call(log, 'sent_at') ? log.sent_at : null,
+    sent_by: log && Object.prototype.hasOwnProperty.call(log, 'sent_by') ? log.sent_by : null,
+    response_text: log && Object.prototype.hasOwnProperty.call(log, 'response_text') ? log.response_text : null,
+    retry_count: log && Object.prototype.hasOwnProperty.call(log, 'retry_count') ? log.retry_count : 0,
+    ...log
+  };
   // if id present, update; else insert
   if (hasPostgres()){
     return withPg(async (client) => {

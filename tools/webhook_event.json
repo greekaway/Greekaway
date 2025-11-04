@@ -1,0 +1,17 @@
+{
+  "id": "evt_test_1762269400",
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "id": "pi_test_1762269400",
+      "amount": 54000,
+      "currency": "eur",
+      "metadata": {
+        "booking_id": "e5261c75-21c3-46ba-92cf-be6f6bb69963",
+        "user_email": "test.user.e2e@example.com",
+        "user_name": "Test User",
+        "trip_title": "Delphi Day Trip"
+      }
+    }
+  }
+}
