@@ -41,14 +41,12 @@ html[data-theme="light"] {
 
 /* —————————————————————————————————————— */
 /* Light mode: Keep specific areas in Night */
-/* 1) Footers across admin pages */
-html[data-theme="light"] footer,
+/* 1) Version footer (bottom bar with version) stays Night */
 html[data-theme="light"] footer.version {
   background: #0E1520 !important;
   color: #f5f5f5 !important;
   border-color: rgba(212,175,55,.25) !important;
 }
-html[data-theme="light"] footer a,
 html[data-theme="light"] footer.version a { color: #D4AF37 !important; }
 
 /* 2) Home summary cards and onboarding buttons remain Night style */
