@@ -1,0 +1,70 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Greekaway Admin – Bookings</title><link rel="stylesheet" href="/css/admin-common.css"><link rel="stylesheet" href="/css/admin-bookings.css"><link rel="stylesheet" href="/css/admin-tables.css"></head><body>
+
+<header class="sticky-bar" aria-label="Κρατήσεις — Φίλτρα" data-collapsed="false">
+  <div class="bar-inner">
+    <div class="title">Κρατήσεις</div>
+    <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φίλτρων" aria-expanded="true">▲</button>
+    <form id="filters" class="filters" onsubmit="return false;">
+      <label>Αναζήτηση
+        <input type="text" id="q" placeholder="ID / Όνομα / Email / Trip">
+      </label>
+      <label>Από
+        <input type="date" id="from">
+      </label>
+      <label>Έως
+        <input type="date" id="to">
+      </label>
+      <label>Κατάσταση
+        <select id="status">
+          <option value="">(όλες)</option>
+          <option value="confirmed">Επιβεβαιωμένη</option>
+          <option value="pending">Σε εκκρεμότητα</option>
+          <option value="refunded">Επιστροφή χρημάτων</option>
+          <option value="canceled">Ακυρώθηκε</option>
+        </select>
+      </label>
+      <label>Συνεργάτης
+        <select id="partner"><option value="">(όλοι)</option></select>
+      </label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn secondary" id="exportBookings" type="button">Export CSV (κρατήσεις)</button>
+        <button class="btn secondary" id="resetFilters" type="button">Μηδενισμός φίλτρων</button>
+      </div>
+    </form>
+  </div>
+  </header>
+
+<main class="content-wrap">
+  <div class="table-wrap">
+    <table class="table" aria-label="Πίνακας κρατήσεων"><thead><tr>
+      <th class="sortable" data-sort="id">ID</th>
+      <th class="sortable" data-sort="date">Ημερομηνία</th>
+      <th>Εκδρομή</th>
+      <th class="col-email">Email</th>
+      <th class="sortable" data-sort="pax">Pax</th>
+      <th class="sortable" data-sort="total_cents">Ποσό (cents)</th>
+      <th>Νόμισμα</th>
+      <th>Κατάσταση</th>
+      <th class="col-pickup">Pickup</th>
+      <th class="col-dropoff">Drop-off</th>
+      <th>Partner</th>
+    </tr></thead><tbody id="bk-rows"></tbody></table>
+    <div id="bk-loading" style="padding:8px;color:#666;display:none">Φόρτωση...</div>
+    <div id="bk-error" style="padding:8px;display:none;color:#c00">
+      Σφάλμα φόρτωσης.
+      <button id="bk-retry" class="btn secondary" type="button">Προσπάθησε ξανά</button>
+    </div>
+    <button id="bk-loadmore" class="btn" type="button" style="margin:12px auto;display:none">Φόρτωσε περισσότερα</button>
+  </div>
+ </main>
+ <nav class="bottom-nav">
+   <a href="/admin-home.html">Home</a>
+   <a href="/admin-bookings.html" class="active">Bookings</a>
+   <a href="/admin-payments.html">Payments</a>
+   <a href="/admin-manual.html">Manual</a>
+   <a href="/admin-providers.html">Providers</a>
+    <a href="/admin-availability.html">Availability</a>
+ </nav>
+ <footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
+<script src="/js/admin-bookings.js"></script>
+</body></html>

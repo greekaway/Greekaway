@@ -16,6 +16,15 @@ let ADMIN_PASS = process.env.ADMIN_PASS || null;
 if (typeof ADMIN_USER === 'string') ADMIN_USER = ADMIN_USER.trim().replace(/^['"]|['"]$/g, '');
 if (typeof ADMIN_PASS === 'string') ADMIN_PASS = ADMIN_PASS.trim().replace(/^['"]|['"]$/g, '');
 function checkAdminAuth(req) {
+  try { if (req && req.session && req.session.admin === true) return true; } catch(_){ }
+  // Accept cookie session from /admin-login
+  try {
+    const h = req.headers.cookie || '';
+    if (h) {
+      const cookies = h.split(';').reduce((acc, part) => { const i=part.indexOf('='); if(i!==-1){ acc[part.slice(0,i).trim()] = decodeURIComponent(part.slice(i+1).trim()); } return acc; }, {});
+      if (cookies.adminSession === 'true' || cookies.adminSession === '1' || cookies.adminSession === 'yes') return true;
+    }
+  } catch(_){ }
   if (!ADMIN_USER || !ADMIN_PASS) return false;
   const auth = req.headers.authorization || '';
   if (!auth.startsWith('Basic ')) return false;
@@ -79,7 +88,7 @@ try { ensureSchema(); } catch (_e) {}
 
 // GET /api/manual-payments — list demo manual deposits
 router.get('/', (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).json({ error: 'Unauthorized' }); }
+  if (!checkAdminAuth(req)) { return res.status(403).json({ error: 'Forbidden' }); }
   try {
     const db = getDb();
     const limit = Math.min(1000, Math.abs(parseInt(req.query.limit || '500', 10) || 500));
@@ -112,7 +121,7 @@ router.get('/', (req, res) => {
 
 // POST /api/manual-payments/mark-paid — mark an entry as paid (in-memory)
 router.post('/mark-paid', (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).json({ error: 'Unauthorized' }); }
+  if (!checkAdminAuth(req)) { return res.status(403).json({ error: 'Forbidden' }); }
   try {
     const id = (req.body && req.body.id) ? String(req.body.id) : '';
     if (!id) return res.status(400).json({ error: 'Missing id' });

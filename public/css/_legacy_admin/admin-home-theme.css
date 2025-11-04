@@ -1,0 +1,4 @@
+/* Admin Home theme (navy/gold), scoped to body.admin-home */
+body.admin-home { --navy:#0a121c; --navy-2:#0f1b29; --gold:#d4af37; --gold-2:#b9962b; --text:#eee; --muted:#a9b3c3; --border:rgba(255,255,255,0.12); color:var(--text); background:linear-gradient(180deg,#0a121c,#0f1b29 60%); }
+body.admin-home .admin-topbar { background: var(--navy); color: var(--gold); border-bottom: 1px solid var(--border); box-shadow: 0 6px 16px rgba(0,0,0,0.35); }
+body.admin-home .admin-topbar .title { padding: 10px 12px; font-weight: 600; }

@@ -1,0 +1,98 @@
+/* Admin Suppliers: navy/gold theme, sticky header with filters, responsive table */
+:root {
+  --navy: #0a121c;
+  --navy-2: #0f1b29;
+  --gold: #d4af37;
+  --gold-2: #b9962b;
+  --text: #eee;
+  --muted: #a9b3c3;
+  --card: rgba(10,18,28,0.72);
+  --border: rgba(255,255,255,0.12);
+}
+
+body.admin-suppliers-page { color: var(--text); background: linear-gradient(180deg, #0a121c, #0f1b29 60%); }
+
+.sticky-bar { position: sticky; top: 0; z-index: 20; background: var(--navy); border-bottom: 1px solid var(--border); box-shadow: 0 6px 16px rgba(0,0,0,0.35); }
+.sticky-bar .bar-inner { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.sticky-bar .title { font-weight: 600; color: var(--gold); letter-spacing: .2px; }
+.filters-toggle { margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 8px; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-left: auto; }
+.filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.filters input, .filters select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--navy-2); color: var(--text); min-width: 160px; }
+.btn { background: var(--gold); color: #111; border: 0; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+.btn:hover { background: var(--gold-2); }
+.btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.btn.small { padding: 6px 10px; font-size: 12px; }
+.hint { color: var(--muted); font-size: 12px; }
+
+/* removed duplicate header hint under filters */
+
+.content-wrap { padding: 12px; }
+.table-wrap { position: relative; overflow-x: auto; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; -webkit-overflow-scrolling: touch; }
+
+/* Grid table resembling Excel */
+.grid { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1200px; table-layout: auto; }
+.grid thead th { background: var(--navy); color: var(--gold); border-bottom: 1px solid var(--border); text-align: left; padding: 8px 6px; line-height: 1.6; white-space: nowrap; }
+.grid thead tr { background: var(--navy); }
+.grid th, .grid td { box-sizing: border-box; }
+.grid tbody td { background: #ffffff; color: #111; padding: 10px; border-bottom: 1px solid #e6e6e6; }
+.grid tbody tr:hover td { background: #f7f7f7; }
+.grid th[data-align="right"], .grid td.num { text-align: right; }
+.grid td.mono, .grid th.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+.sortable { cursor: pointer; }
+.sortable::after { content: '\\25B4\\25BE'; font-size: 10px; opacity: .5; margin-left: 6px; }
+
+/* Column widths for better readability (desktop and up) */
+.grid thead th:nth-child(1), .grid tbody td:nth-child(1) { min-width: 100px; }   /* ID */
+.grid thead th:nth-child(2), .grid tbody td:nth-child(2) { min-width: 300px; }  /* Name */
+.grid thead th:nth-child(3), .grid tbody td:nth-child(3) { min-width: 160px; }  /* Type */
+.grid thead th:nth-child(4), .grid tbody td:nth-child(4) { min-width: 180px; }  /* Trips */
+.grid thead th:nth-child(5), .grid tbody td:nth-child(5) { min-width: 200px; }  /* Revenue */
+.grid thead th:nth-child(6), .grid tbody td:nth-child(6) { min-width: 220px; }  /* Commission */
+.grid thead th:nth-child(7), .grid tbody td:nth-child(7) { min-width: 220px; }  /* Payments */
+.grid thead th:nth-child(8), .grid tbody td:nth-child(8) { min-width: 180px; }  /* First seen */
+.grid thead th:nth-child(9), .grid tbody td:nth-child(9) { min-width: 200px; }  /* Last active */
+.grid thead th:nth-child(10), .grid tbody td:nth-child(10) { min-width: 130px; }/* Actions */
+
+.empty { padding: 16px; text-align: center; color: var(--muted); }
+
+.pager { display: flex; align-items: center; gap: 10px; justify-content: center; padding: 12px; }
+
+/* Details */
+.details-row td { background: #0f1b29; color: var(--text); }
+.details-box { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: rgba(10,18,28,0.6); }
+.details-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.section h4 { margin: 0 0 6px 0; color: var(--gold); }
+.section .mini-table { font-size: 13px; line-height: 1.3; background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: #dfe7f1; }
+.admin-notes { width: 100%; min-height: 80px; border-radius: 8px; border: 1px solid var(--border); background: #0a121c; color: #fff; padding: 8px; }
+.section .actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+
+/* Unified horizontal scroll: header and body move together inside table-wrap */
+@media (max-width: 576px){
+  .grid { min-width: 1100px; }
+  .grid thead th, .grid tbody td { padding: 8px; }
+}
+@media (min-width: 577px) and (max-width: 1024px){
+  .grid { min-width: 1100px; }
+}
+/* (no sticky header) */
+
+/* Loading overlay */
+.table-wrap .loading-overlay { position: absolute; inset: 0; background: rgba(10,18,28,0.45); display: none; align-items: center; justify-content: center; z-index: 4; }
+.table-wrap .loading-overlay .spinner { width: 28px; height: 28px; border: 3px solid rgba(255,255,255,0.25); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Filters: hide Apply button, add badge styling */
+#applyFilters { display: none !important; }
+.filters .reset-btn { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.filters .reset-btn:hover { background: rgba(255,255,255,0.06); }
+.filters .filters-badge { margin-left: 8px; padding: 4px 8px; border-radius: 12px; background: rgba(212,175,55,0.18); color: var(--gold); font-size: 12px; line-height: 1; vertical-align: middle; }
+
+/* Filters toggle (mobile only) */
+@media (max-width: 767px){
+  .filters { width: 100%; margin-top: 8px; }
+  .filters-toggle { display: inline-flex; }
+}
+@media (min-width: 768px){
+  .filters-toggle { display: none; }
+}

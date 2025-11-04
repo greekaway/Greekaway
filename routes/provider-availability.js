@@ -26,6 +26,16 @@ function parseBasicUser(req) {
 }
 
 function checkAdminAuth(req) {
+  // Prefer express-session
+  try { if (req && req.session && req.session.admin === true) return true; } catch(_){ }
+  // Accept cookie-based session (legacy)
+  try {
+    const h = req.headers.cookie || '';
+    if (h) {
+      const cookies = h.split(';').reduce((acc, part) => { const i=part.indexOf('='); if(i!==-1){ acc[part.slice(0,i).trim()] = decodeURIComponent(part.slice(i+1).trim()); } return acc; }, {});
+      if (cookies.adminSession === 'true' || cookies.adminSession === '1' || cookies.adminSession === 'yes') return true;
+    }
+  } catch(_){ }
   if (!ADMIN_USER || !ADMIN_PASS) return false;
   const auth = req.headers.authorization || '';
   if (!auth.startsWith('Basic ')) return false;
@@ -37,7 +47,7 @@ function checkAdminAuth(req) {
 }
 
 router.use((req, res, next) => {
-  if (!checkAdminAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
   next();
 });
 

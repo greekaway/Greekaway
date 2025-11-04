@@ -1,0 +1,87 @@
+/* Admin tuning: small visual tweaks (brightness, spacing, FAB offsets) without changing core layout */
+
+:root {
+  /* Edge offset and spacing for floating action buttons on mobile */
+  --ga-fab-edge: 0.8rem;
+  --ga-fab-spacing: 0.5rem;
+}
+
+/* Ensure tables are fully visible: no dim/low brightness */
+#paymentsTable, #bookingsTable,
+#paymentsTable tbody tr, #bookingsTable tbody tr { opacity: 1; filter: brightness(1); }
+
+/* Tighter headings and filters spacing */
+h2, h3 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+#filters, #bookingFilters { padding: 6px !important; }
+
+/* Unified admin row spacing and alignment */
+body.admin-main .admin-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 12px 0 !important;
+}
+
+/* Slightly larger, consistent buttons for readability */
+body.admin-main .btn,
+body.admin-main button {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Centered card for Backups summary */
+body.admin-main .admin-card {
+  margin: 10px auto;
+  max-width: 420px;
+  background: #fff;
+  border: 1px solid #e5e8ef;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+body.admin-main .admin-card .actions { margin-top: 8px; }
+
+/* Payments controls: filters first row, main actions second row, meta controls third */
+body.admin-main .payments-controls {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 8px;
+  margin: 12px 0;
+}
+body.admin-main .payments-controls .filters-row {
+  justify-content: center;
+}
+body.admin-main .payments-controls .actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+body.admin-main .payments-controls .meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+body.admin-main .payments-controls .meta .left-set,
+body.admin-main .payments-controls .meta .right-set {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Mobile stacking adjustments */
+@media (max-width: 576px) {
+  body.admin-main .payments-controls .meta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  body.admin-main .payments-controls .meta .right-set {
+    justify-content: space-between;
+  }
+}

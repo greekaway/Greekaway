@@ -1,0 +1,184 @@
+/* Admin responsive layout — mobile-first
+   IMPORTANT: Do not change colors, backgrounds, or fonts. Only layout/responsiveness.
+   Targets admin pages (admin.html, admin-groups.html) by using specific IDs/classes present there.
+*/
+
+/* Resets limited to layout only */
+:root {
+  --ga-gap-sm: 8px;
+  --ga-gap-md: 12px;
+  --ga-gap-lg: 16px;
+  --ga-fab-spacing: 56px;
+}
+
+/* Sticky page header and filter bars without color changes */
+h2, h3 { /* make section headers sticky on small screens */
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+#filters, #bookingFilters, header.controls, header .controls {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+/* Containers can scroll horizontally when needed (tablet) */
+#paymentsContainer, #bookingsContainer, body.admin-partners .columns {
+  overflow-x: auto;
+}
+
+/* ================================ */
+/* <= 576px: Card view (one per row) */
+/* ================================ */
+@media (max-width: 576px) {
+  /* Tables become cards */
+  #paymentsTable, #bookingsTable {
+    border-collapse: separate; /* prevent cell borders collapsing oddly */
+    width: 100%;
+  }
+  #paymentsTable thead, #bookingsTable thead { display: none; }
+  #paymentsTable tbody, #bookingsTable tbody { display: block; }
+  #paymentsTable tbody tr, #bookingsTable tbody tr {
+    display: block;
+    margin: var(--ga-gap-md) 0;
+    border-radius: 8px; /* radius only, no color change */
+  }
+  #paymentsTable tbody tr td, #bookingsTable tbody tr td {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: var(--ga-gap-sm);
+    padding: 8px;
+  }
+  /* Add field labels using nth-child so markup stays the same */
+  /* Payments: [1]Κωδικός [2]Κατάσταση [3]Γεγονός [4]Ποσό [5]Νόμισμα [6]Ημερομηνία [7]Μεταδεδομένα */
+  #paymentsTable tbody tr td:nth-child(1)::before { content: 'Κωδικός'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(2)::before { content: 'Κατάσταση'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(3)::before { content: 'Γεγονός'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(4)::before { content: 'Ποσό (€)'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(5)::before { content: 'Νόμισμα'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(6)::before { content: 'Ημερομηνία'; font-weight: 600; }
+  #paymentsTable tbody tr td:nth-child(7)::before { content: 'Μεταδεδομένα'; font-weight: 600; }
+
+  /* Bookings columns mapping */
+  /* [1]ID [2]Κατάσταση [3]PaymentIntent [4]Γεγονός [5]Όνομα [6]Email [7]Trip [8]Seats [9]Τιμή [10]Δημιουργήθηκε [11]Payment Type [12]Partner [13]Partner Share [14]Greekaway Comm. [15]Payout Status [16]Payout Date [17]Metadata */
+  #bookingsTable tbody tr td:nth-child(1)::before { content: 'ID'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(2)::before { content: 'Κατάσταση'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(3)::before { content: 'PaymentIntent'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(4)::before { content: 'Γεγονός'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(5)::before { content: 'Όνομα'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(6)::before { content: 'Email'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(7)::before { content: 'Trip'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(8)::before { content: 'Seats'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(9)::before { content: 'Τιμή'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(10)::before { content: 'Δημιουργήθηκε'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(11)::before { content: 'Payment Type'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(12)::before { content: 'Partner'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(13)::before { content: 'Partner Share (€)'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(14)::before { content: 'Greekaway Comm. (€)'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(15)::before { content: 'Payout Status'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(16)::before { content: 'Payout Date'; font-weight: 600; }
+  #bookingsTable tbody tr td:nth-child(17)::before { content: 'Metadata'; font-weight: 600; }
+
+  /* Hide non-essential technical columns on small (IDs, JSON, etc.) */
+  /* Payments: hide 1 (Κωδικός), 3 (Γεγονός), 5 (Νόμισμα), 7 (Μεταδεδομένα) */
+  #paymentsTable tbody tr td:nth-child(1),
+  #paymentsTable tbody tr td:nth-child(3),
+  #paymentsTable tbody tr td:nth-child(5),
+  #paymentsTable tbody tr td:nth-child(7) { display: none; }
+
+  /* Bookings: hide 1(ID), 3(PaymentIntent), 4(Γεγονός), 6(Email), 17(Metadata) */
+  #bookingsTable tbody tr td:nth-child(1),
+  #bookingsTable tbody tr td:nth-child(3),
+  #bookingsTable tbody tr td:nth-child(4),
+  #bookingsTable tbody tr td:nth-child(6),
+  #bookingsTable tbody tr td:nth-child(17) { display: none; }
+
+  /* Action buttons as floating bar (stacked bottom-right). Keep desktop positions otherwise. */
+  #exportPayments, #exportBookings, #genStripeLink {
+    position: fixed;
+    right: var(--ga-fab-edge, 16px);
+    z-index: 60;
+  }
+  #exportPayments { bottom: var(--ga-fab-edge, 16px); }
+  #exportBookings { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px)); }
+  #genStripeLink { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px) * 2); }
+}
+
+/* ========================================= */
+/* 577–768px: Compact two-column card layout */
+/* ========================================= */
+@media (min-width: 577px) and (max-width: 768px) {
+  #paymentsTable thead, #bookingsTable thead { display: none; }
+  #paymentsTable tbody, #bookingsTable tbody {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--ga-gap-lg);
+  }
+  #paymentsTable tbody tr, #bookingsTable tbody tr {
+    display: block;
+    border-radius: 8px;
+  }
+  #paymentsTable tbody tr td, #bookingsTable tbody tr td {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: var(--ga-gap-sm);
+    padding: 8px;
+  }
+  /* Keep small-screen hidden columns hidden in this range as well */
+  #paymentsTable tbody tr td:nth-child(1),
+  #paymentsTable tbody tr td:nth-child(3),
+  #paymentsTable tbody tr td:nth-child(5),
+  #paymentsTable tbody tr td:nth-child(7) { display: none; }
+  #bookingsTable tbody tr td:nth-child(1),
+  #bookingsTable tbody tr td:nth-child(3),
+  #bookingsTable tbody tr td:nth-child(4),
+  #bookingsTable tbody tr td:nth-child(6),
+  #bookingsTable tbody tr td:nth-child(17) { display: none; }
+
+  /* Floating buttons remain visible */
+  #exportPayments, #exportBookings, #genStripeLink {
+    position: fixed;
+    right: var(--ga-fab-edge, 16px);
+    z-index: 60;
+  }
+  #exportPayments { bottom: var(--ga-fab-edge, 16px); }
+  #exportBookings { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px)); }
+  #genStripeLink { bottom: calc(var(--ga-fab-edge, 16px) + var(--ga-fab-spacing, 56px) * 2); }
+}
+
+/* ============================================ */
+/* 769–1024px: Tablet with horizontal scrolling */
+/* ============================================ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Revert to table layout and enable horizontal scroll */
+  #paymentsTable thead, #bookingsTable thead { display: table-header-group; }
+  #paymentsTable tbody, #bookingsTable tbody { display: table-row-group; }
+  #paymentsTable tbody tr, #bookingsTable tbody tr { display: table-row; }
+  #paymentsTable tbody tr td, #bookingsTable tbody tr td { display: table-cell; padding: 6px; }
+
+  #paymentsContainer, #bookingsContainer { overflow-x: auto; }
+  #paymentsTable, #bookingsTable { min-width: 900px; }
+
+  /* Hide only the most technical columns to keep things readable */
+  /* Payments: hide Μεταδεδομένα on tablet if too cramped */
+  #paymentsTable thead th:nth-child(7),
+  #paymentsTable tbody td:nth-child(7) { display: none; }
+
+  /* Bookings: hide Metadata column on tablet */
+  #bookingsTable thead th:nth-child(17),
+  #bookingsTable tbody td:nth-child(17) { display: none; }
+
+  /* Buttons go back to normal flow on tablet */
+  #exportPayments, #exportBookings, #genStripeLink { position: static; }
+}
+
+/* ============================= */
+/* >= 1025px: Keep desktop shape */
+/* ============================= */
+@media (min-width: 1025px) {
+  /* No layout changes; ensure buttons normal */
+  #exportPayments, #exportBookings, #genStripeLink { position: static; }
+}

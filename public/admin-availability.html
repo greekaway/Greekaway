@@ -1,118 +1,76 @@
 <!doctype html>
 <html lang="el">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin — Διαθεσιμότητα Παρόχων</title>
-  <link rel="stylesheet" href="/css/admin-core.css">
-  <link rel="stylesheet" href="/css/admin-availability.css?v=20251101-9">
-  <link rel="stylesheet" href="/css/admin-cleanup.css?v=20251030-1">
-  <style>
-    /* Excel-style table appearance for tablet (iPad, iPad Mini) and desktop only */
-    @media (min-width: 768px) {
-      /* Header: black background with white text */
-      #availabilityTable.grid thead th {
-        background-color: #000000 !important;
-        color: #ffffff !important;
-      }
-
-      /* Body cells: white background with black text */
-      #availabilityTable.grid tbody td {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-      }
-    }
-
-    /* Reduce font scale by 20% ONLY on iPad / iPad Mini (tablet touch devices) */
-    @media (hover: none) and (pointer: coarse) and (min-width: 744px) and (max-width: 1366px) and (min-height: 600px) {
-      /* Scale down the entire table's text (including headers) */
-      #availabilityTable {
-        font-size: 80% !important;
-      }
-
-      /* Scale down the top title */
-      #availabilityStickyBar h3 {
-        font-size: 80% !important;
-      }
-    }
-  </style>
-</head>
-<body class="admin-availability">
-  <form id="auth">
-    <label> User <input id="user" type="text" value="admin" /></label>
-    <label> Pass <input id="pass" type="password" /></label>
-    <button id="login" type="button">Login</button>
-  </form>
-
-  <div id="main" style="display:none">
-    <div id="availabilityStickyBar" class="sticky-bar">
-      <h3 style="margin:0 0 6px 0">Διαθεσιμότητα Παρόχων</h3>
-  <button id="availabilityToggle" class="toggle" aria-expanded="true" aria-controls="availabilityFilters" title="Ελαχιστοποίηση/Εμφάνιση φίλτρων">▾</button>
-  <div class="admin-row filters" id="availabilityFilters">
-        <label>Ημερομηνία: <input id="fDate" type="date"></label>
-        <label>Πάροχος (ID): <input id="fProvider" type="text" placeholder="partner id"></label>
-        <label>Από: <input id="fFrom" type="date"></label>
-        <label>Έως: <input id="fTo" type="date"></label>
-        <label>Δραστηριότητα:
-          <select id="fActivity" aria-label="Φίλτρο δραστηριότητας παρόχων">
-            <option value="all" selected>⚪ Όλοι</option>
-            <option value="active">🟢 Ενεργός (≤3 ημέρες)</option>
-            <option value="idle">🟡 Αδρανής (3–7 ημέρες)</option>
-            <option value="inactive">🔴 Ανενεργός (>7 ημέρες)</option>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Greekaway Admin – Availability</title>
+  <link rel="stylesheet" href="/css/admin-common.css">
+  <link rel="stylesheet" href="/css/admin-availability.css">
+  <link rel="stylesheet" href="/css/admin-tables.css">
+  </head>
+<body>
+  <header class="sticky-bar" aria-label="Availability — Φίλτρα" data-collapsed="false">
+    <div class="bar-inner">
+      <div class="title">Availability</div>
+      <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φίλτρων" aria-expanded="true">▲</button>
+  <form id="filters" class="filters" onsubmit="return false;">
+        <label>Από
+          <input type="date" id="from">
+        </label>
+        <label>Έως
+          <input type="date" id="to">
+        </label>
+        <label>Trip
+          <input type="text" id="trip" placeholder="Όνομα Trip">
+        </label>
+        <label>Status
+          <select id="statusFilter">
+            <option value="all">Όλοι</option>
+            <option value="green">🟢 Πράσινοι</option>
+            <option value="orange">🟠 Πορτοκαλί</option>
+            <option value="red">🔴 Κόκκινοι</option>
           </select>
         </label>
-        <button id="btnRefresh" class="btn">Ανανέωση</button>
-        <button id="btnExport" class="btn">Εξαγωγή σε CSV</button>
-      </div>
-      <div class="admin-row actions">
-        <button id="btnAdd" class="btn primary">➕ Προσθήκη νέας διαθεσιμότητας</button>
-      </div>
-    </div>
-
-    <div id="availabilityContainer">
-      <table id="availabilityTable" class="grid">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Πάροχος</th>
-            <th>Ημερομηνία</th>
-            <th>Έναρξη</th>
-            <th>Λήξη</th>
-            <th>Σχόλια</th>
-            <th>Τελευταία ενημέρωση</th>
-            <th>Χρήστης</th>
-            <th>Ενέργειες</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div id="availabilityMessage" class="hint"></div>
-    </div>
-  </div>
-
-  <!-- Simple modal for add/edit -->
-  <div id="modal" class="modal" style="display:none">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <h4 id="modalTitle">Νέα Διαθεσιμότητα</h4>
-        <button id="modalClose" class="icon">✖</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row"><label>Πάροχος (ID)<input id="mProvider" type="text" required></label></div>
-        <div class="form-row"><label>Ημερομηνία<input id="mDate" type="date" required></label></div>
-        <div class="form-row two">
-          <label>Έναρξη<input id="mStart" type="time" required></label>
-          <label>Λήξη<input id="mEnd" type="time" required></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn secondary" id="resetFilters" type="button">Μηδενισμός φίλτρων</button>
         </div>
-        <div class="form-row"><label>Σχόλια<textarea id="mNotes" rows="3"></textarea></label></div>
-      </div>
-      <div class="modal-footer">
-        <button id="modalDelete" class="btn danger" style="display:none">🗑️ Διαγραφή</button>
-        <button id="modalSave" class="btn primary">Αποθήκευση</button>
-      </div>
+      </form>
+      
     </div>
-  </div>
+  </header>
+  
 
-  <script src="/js/admin-availability.js?v=20251101-3" defer></script>
+  <main class="content-wrap">
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="/admin-home.html">Home</a>
+    <a href="/admin-bookings.html">Bookings</a>
+    <a href="/admin-payments.html">Payments</a>
+    <a href="/admin-manual.html">Manual</a>
+    <a href="/admin-providers.html">Providers</a>
+    <a href="/admin-availability.html" class="active">Availability</a>
+  </nav>
+  <footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
+  <script src="/js/admin-seeds.js"></script>
+  <script src="/js/admin-availability.js"></script>
+
+  <script>
+    fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{
+      if(v){ document.getElementById('ga-version').textContent = v.version || '—' }
+    });
+    document.addEventListener('DOMContentLoaded',()=>{
+      const header=document.querySelector('header.sticky-bar');
+      const btn=document.getElementById('toggleFilters');
+      if(header&&btn){
+        btn.addEventListener('click',()=>{
+          const cur=header.getAttribute('data-collapsed')==='true';
+          header.setAttribute('data-collapsed',cur? 'false':'true');
+          btn.setAttribute('aria-expanded',cur? 'true':'false');
+          btn.textContent = (cur? '▲':'▼');
+        });
+      }
+    });
+  </script>
 </body>
 </html>

@@ -8,6 +8,15 @@ let ADMIN_PASS = process.env.ADMIN_PASS || null;
 if (typeof ADMIN_USER === 'string') ADMIN_USER = ADMIN_USER.trim().replace(/^['"]|['"]$/g, '');
 if (typeof ADMIN_PASS === 'string') ADMIN_PASS = ADMIN_PASS.trim().replace(/^['"]|['"]$/g, '');
 function checkAdminAuth(req) {
+  try { if (req && req.session && req.session.admin === true) return true; } catch(_){ }
+  // Accept cookie session from /admin-login
+  try {
+    const h = req.headers.cookie || '';
+    if (h) {
+      const cookies = h.split(';').reduce((acc, part) => { const i=part.indexOf('='); if(i!==-1){ acc[part.slice(0,i).trim()] = decodeURIComponent(part.slice(i+1).trim()); } return acc; }, {});
+      if (cookies.adminSession === 'true' || cookies.adminSession === '1' || cookies.adminSession === 'yes') return true;
+    }
+  } catch(_){ }
   if (!ADMIN_USER || !ADMIN_PASS) return false;
   const auth = req.headers.authorization || '';
   if (!auth.startsWith('Basic ')) return false;
@@ -20,7 +29,7 @@ const dispatchService = require('../services/dispatchService');
 
 // Admin resend endpoint
 router.post('/admin/resend', async (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     const booking_id = (req.body && req.body.booking_id) || (req.query && req.query.booking_id);
     if (!booking_id) return res.status(400).json({ error: 'Missing booking_id' });
@@ -34,7 +43,7 @@ router.post('/admin/resend', async (req, res) => {
 
 // Admin status lookup for many bookings: POST { booking_ids: [] } or GET ?ids=comma
 router.post('/admin/status', async (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     const ids = Array.isArray(req.body && req.body.booking_ids) ? req.body.booking_ids.map(String) : [];
     const map = await dispatchService.latestStatusForBookings(ids);
@@ -43,7 +52,7 @@ router.post('/admin/status', async (req, res) => {
 });
 
 router.get('/admin/status', async (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     const ids = (req.query.ids || '').toString().split(',').map(s => s.trim()).filter(Boolean);
     const map = await dispatchService.latestStatusForBookings(ids);

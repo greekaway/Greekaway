@@ -1,0 +1,41 @@
+{
+  "seed_source": "admin_rewire_20251104",
+  "partners": [
+    {"id":"p_athens_tours","partner_name":"Athens Tours","partner_email":"athens@partners.test","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"p_delphi_guides","partner_name":"Delphi Guides","partner_email":"delphi@partners.test","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"p_bluewave","partner_name":"BlueWave Cruises","partner_email":"bluewave@partners.test","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"p_santorini_sun","partner_name":"Santorini Sun","partner_email":"santorini@partners.test","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"p_crete_trails","partner_name":"Crete Trails","partner_email":"crete@partners.test","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"p_meteora_views","partner_name":"Meteora Views","partner_email":"meteora@partners.test","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"p_ionian_waves","partner_name":"Ionian Waves","partner_email":"ionian@partners.test","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"p_rhodes_escape","partner_name":"Rhodes Escape","partner_email":"rhodes@partners.test","__test_seed":true,"seed_source":"admin_rewire_20251104"}
+  ],
+  "bookings": [
+    {"id":"bk_seed_001","status":"confirmed","date":"2025-10-03","user_name":"John Demo","user_email":"john@example.com","trip_id":"lefkas","pax":2,"total_cents":32000,"currency":"eur","partner_id":"p_bluewave","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"bk_seed_002","status":"pending","date":"2025-11-05","user_name":"Maria Pap","user_email":"maria@example.com","trip_id":"delphi","pax":3,"total_cents":45000,"currency":"eur","partner_id":"p_delphi_guides","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"bk_seed_003","status":"canceled","date":"2025-09-20","user_name":"Alex K","user_email":"alex@example.com","trip_id":"athens","pax":1,"total_cents":12000,"currency":"eur","partner_id":"p_athens_tours","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"bk_seed_004","status":"confirmed","date":"2025-11-10","user_name":"Nina","user_email":"nina@example.com","trip_id":"santorini","pax":2,"total_cents":99000,"currency":"eur","partner_id":"p_santorini_sun","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"bk_seed_005","status":"confirmed","date":"2025-11-02","user_name":"Chris","user_email":"chris@example.com","trip_id":"meteora","pax":4,"total_cents":76000,"currency":"eur","partner_id":"p_meteora_views","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"bk_seed_006","status":"confirmed","date":"2025-08-15","user_name":"Irene","user_email":"irene@example.com","trip_id":"crete","pax":2,"total_cents":54000,"currency":"eur","partner_id":"p_crete_trails","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"bk_seed_007","status":"pending","date":"2025-11-06","user_name":"Peter","user_email":"peter@example.com","trip_id":"lefkas","pax":1,"total_cents":16000,"currency":"eur","partner_id":"p_ionian_waves","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"bk_seed_008","status":"confirmed","date":"2025-10-28","user_name":"Olga","user_email":"olga@example.com","trip_id":"rhodes","pax":5,"total_cents":125000,"currency":"eur","partner_id":"p_rhodes_escape","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"bk_seed_009","status":"refunded","date":"2025-10-01","user_name":"Dimitris","user_email":"dimitris@example.com","trip_id":"athens","pax":2,"total_cents":24000,"currency":"eur","partner_id":"p_athens_tours","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"bk_seed_010","status":"confirmed","date":"2025-11-03","user_name":"Eva","user_email":"eva@example.com","trip_id":"delphi","pax":3,"total_cents":54000,"currency":"eur","partner_id":"p_delphi_guides","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"bk_seed_011","status":"pending","date":"2025-11-08","user_name":"Giorgos","user_email":"giorgos@example.com","trip_id":"lefkas","pax":2,"total_cents":32000,"currency":"eur","partner_id":"p_bluewave","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"bk_seed_012","status":"confirmed","date":"2025-07-22","user_name":"Helena","user_email":"helena@example.com","trip_id":"meteora","pax":1,"total_cents":19000,"currency":"eur","partner_id":"p_meteora_views","__test_seed":true,"seed_source":"admin_rewire_20251104"}
+  ],
+  "payments": [
+    {"id":"pay_seed_001","status":"succeeded","event_id":"evt_seed_001","amount":32000,"currency":"eur","timestamp":"2025-10-03T10:00:00Z","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"pay_seed_002","status":"succeeded","event_id":"evt_seed_002","amount":45000,"currency":"eur","timestamp":"2025-11-05T11:00:00Z","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"pay_seed_003","status":"failed","event_id":"evt_seed_003","amount":12000,"currency":"eur","timestamp":"2025-09-20T09:00:00Z","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"pay_seed_004","status":"succeeded","event_id":"evt_seed_004","amount":99000,"currency":"eur","timestamp":"2025-11-10T08:30:00Z","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"pay_seed_005","status":"succeeded","event_id":"evt_seed_005","amount":76000,"currency":"eur","timestamp":"2025-11-02T12:00:00Z","__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"pay_seed_006","status":"succeeded","event_id":"evt_seed_006","amount":54000,"currency":"eur","timestamp":"2025-08-15T14:00:00Z","__test_seed":true,"seed_source":"admin_rewire_20251104"}
+  ],
+  "manual_payments": [
+    {"id":"mp_seed_001","booking_id":"bk_seed_001","partner_id":"p_bluewave","partner_name":"BlueWave Cruises","trip_id":"lefkas","trip_title":"Lefkada Experience","date":"2025-10-04","amount_cents":25600,"currency":"eur","iban":"GR11 0000 0000 0000","status":"pending","partner_balance_cents":25600,"__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"mp_seed_002","booking_id":"bk_seed_005","partner_id":"p_meteora_views","partner_name":"Meteora Views","trip_id":"meteora","trip_title":"Meteora Day Trip","date":"2025-11-03","amount_cents":60800,"currency":"eur","iban":"GR22 0000 0000 0000","status":"pending","partner_balance_cents":60800,"__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"mp_seed_003","booking_id":"bk_seed_004","partner_id":"p_santorini_sun","partner_name":"Santorini Sun","trip_id":"santorini","trip_title":"Santorini Highlights","date":"2025-11-11","amount_cents":79200,"currency":"eur","iban":"GR33 0000 0000 0000","status":"pending","partner_balance_cents":79200,"__test_seed":true,"seed_source":"admin_rewire_20251104"},
+    {"id":"mp_seed_004","booking_id":"bk_seed_010","partner_id":"p_delphi_guides","partner_name":"Delphi Guides","trip_id":"delphi","trip_title":"Delphi Tour","date":"2025-11-04","amount_cents":43200,"currency":"eur","iban":"GR44 0000 0000 0000","status":"pending","partner_balance_cents":43200,"__test_seed":true,"seed_source":"admin_rewire_20251104"}
+  ]
+}

@@ -1,0 +1,8 @@
+/* Admin bookings styles: tables, zebra rows, and cell alignment for bookings */
+
+/* Bookings table (admin.html) */
+#bookingsTable thead th { background: #f3f6fb; border: 1px solid #cfd8e3; font-weight: 700; }
+#bookingsTable tbody td { border: 1px solid #e6edf5; padding: 6px; }
+#bookingsTable tbody tr:nth-child(even) { background: #fbfcfe; }
+#bookingsTable tbody tr:hover { background: #eef6ff; }
+#bookingsTable td { text-align: left; font-family: Arial, Helvetica, sans-serif; }

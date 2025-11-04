@@ -1,0 +1,74 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Greekaway Admin – Manual</title><link rel="stylesheet" href="/css/admin-common.css"><link rel="stylesheet" href="/css/admin-manual.css"><link rel="stylesheet" href="/css/admin-tables.css"></head><body>
+<header class="sticky-bar" aria-label="Manual — Φίλτρα" data-collapsed="false">
+  <div class="bar-inner">
+    <div class="title">Manual</div>
+    <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φίλτρων" aria-expanded="true">▲</button>
+    <form id="filters" class="filters" onsubmit="return false;">
+      <label>Τύπος
+        <select id="mType">
+          <option value="">All</option>
+          <option value="payout">payout</option>
+          <option value="refund">refund</option>
+          <option value="adjustment">adjustment</option>
+        </select>
+      </label>
+      <label>Από
+        <input type="date" id="mFrom">
+      </label>
+      <label>Έως
+        <input type="date" id="mTo">
+      </label>
+      <label>Αναζήτηση σημείωσης
+        <input type="text" id="mQ" placeholder="Κείμενο σημείωσης...">
+      </label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn secondary" id="resetFilters" type="button">Μηδενισμός φίλτρων</button>
+      </div>
+    </form>
+  </div>
+</header>
+<main class="content-wrap">
+  <div class="table-wrap" style="margin-top:12px">
+    <table class="table" aria-label="Manual entries">
+      <thead><tr>
+        <th>Ημ/νία</th>
+        <th>Τύπος</th>
+        <th class="col-bookingid">Booking ID</th>
+        <th class="col-provider">Συνεργάτης</th>
+        <th>Σημείωση</th>
+        <th data-align="right">Ποσό</th>
+        <th>Ενέργειες</th>
+      </tr></thead>
+      <tbody id="manual-rows"></tbody>
+    </table>
+  </div>
+ </main>
+ <nav class="bottom-nav">
+   <a href="/admin-home.html">Home</a>
+   <a href="/admin-bookings.html">Bookings</a>
+   <a href="/admin-payments.html">Payments</a>
+   <a href="/admin-manual.html" class="active">Manual</a>
+   <a href="/admin-providers.html">Providers</a>
+    <a href="/admin-availability.html">Availability</a>
+ </nav>
+ <footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
+<script src="/js/admin-seeds.js"></script>
+<script src="/js/admin-manual.js"></script>
+<script>
+// Version badge
+fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){document.getElementById('ga-version').textContent=v.version||'—'} })
+// Mobile filters toggle
+document.addEventListener('DOMContentLoaded',()=>{
+  const header=document.querySelector('header.sticky-bar');
+  const btn=document.getElementById('toggleFilters');
+  if(header&&btn){
+    btn.addEventListener('click',()=>{
+      const cur=header.getAttribute('data-collapsed')==='true';
+      header.setAttribute('data-collapsed',cur? 'false':'true');
+      btn.setAttribute('aria-expanded',cur? 'true':'false');
+      btn.textContent = (cur? '▲':'▼');
+    });
+  }
+});
+</script>
+</body></html>

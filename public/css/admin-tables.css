@@ -1,0 +1,42 @@
+/* Admin tables polish: adaptive widths and wrapping */
+
+/* Πλάτη και αναδίπλωση */
+.col-email { min-width: 280px; }
+.col-pickup, .col-dropoff { min-width: 340px; }
+.col-trip, .col-bookingid { min-width: 260px; }
+.col-provider { min-width: 220px; }
+
+/* Default table cell behavior: single-line with ellipsis for compact layout */
+td, th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* Allow wrapping on long-text columns (only data cells, not headers) */
+td.col-email, td.col-pickup, td.col-dropoff {
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+/* Responsive συμπεριφορά */
+@media (max-width: 768px){
+  .col-email, .col-pickup, .col-dropoff, .col-trip, .col-bookingid, .col-provider {
+    min-width: auto;
+  }
+  /* Keep mobile headers readable: prevent vertical stacking for these labels */
+  th.col-pickup, th.col-dropoff { white-space: nowrap !important; }
+}
+
+/* Desktop/iMac: full-width tables, no internal horizontal scroll */
+@media (min-width: 1025px) {
+  /* Expand the content area so the table can use the full window width */
+  .content-wrap { max-width: none; }
+
+  /* Remove the inner scroll on desktop */
+  .table-wrap { overflow-x: visible; }
+
+  /* Let the table stretch to the available width */
+  table.table { width: 100%; table-layout: auto; min-width: 0; }
+}

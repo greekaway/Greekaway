@@ -25,7 +25,26 @@ let ADMIN_USER = process.env.ADMIN_USER || null;
 let ADMIN_PASS = process.env.ADMIN_PASS || null;
 if (typeof ADMIN_USER === 'string') ADMIN_USER = ADMIN_USER.trim().replace(/^['"]|['"]$/g, '');
 if (typeof ADMIN_PASS === 'string') ADMIN_PASS = ADMIN_PASS.trim().replace(/^['"]|['"]$/g, '');
+function getCookies(req){
+  try {
+    const h = req.headers.cookie || '';
+    if (!h) return {};
+    return h.split(';').reduce((acc, part) => {
+      const i = part.indexOf('=');
+      if (i === -1) return acc;
+      const k = part.slice(0,i).trim();
+      const v = decodeURIComponent(part.slice(i+1).trim());
+      acc[k] = v; return acc;
+    }, {});
+  } catch(_) { return {}; }
+}
+function hasAdminSession(req){
+  try { if (req && req.session && req.session.admin === true) return true; } catch(_){ }
+  const c = getCookies(req);
+  return c.adminSession === 'true' || c.adminSession === '1' || c.adminSession === 'yes';
+}
 function checkAdminAuth(req) {
+  if (hasAdminSession(req)) return true;
   if (!ADMIN_USER || !ADMIN_PASS) return false;
   const auth = req.headers.authorization || '';
   if (!auth.startsWith('Basic ')) return false;
@@ -151,6 +170,18 @@ async function insertPartnerAgreement(record) {
     agreement_hash: record.agreement_hash || null,
     agreement_version: record.agreement_version || null
   };
+
+  // Admin: list partners for filters (id + label)
+  router.get('/list', (req, res) => {
+    if (!checkAdminAuth(req)) { return res.status(403).json({ error: 'Forbidden' }); }
+    try {
+      const db = getDb();
+      const rows = db.prepare('SELECT id, partner_name, partner_email FROM partner_agreements ORDER BY partner_name ASC').all();
+      db.close();
+      const out = rows.map(r => ({ id: r.id, partner_name: r.partner_name || null, partner_email: r.partner_email || null }));
+      return res.json(out);
+    } catch (e) { return res.status(500).json({ error: 'Server error' }); }
+  });
 
   if (hasPostgres()) {
     const { Client } = require('pg');
@@ -442,8 +473,7 @@ router.get('/agreement', (req, res) => {
 // 6) Admin: list partner records
 router.get('/list', async (req, res) => {
   if (!checkAdminAuth(req)) {
-    res.set('WWW-Authenticate', 'Basic realm="Admin"');
-    return res.status(401).send('Unauthorized');
+    return res.status(403).send('Forbidden');
   }
   try {
     const limit = Math.min(10000, Math.abs(parseInt(req.query.limit || '500', 10) || 500));
@@ -710,8 +740,7 @@ router.get('/admin/stream', (req, res) => {
     }
   }
   if (!authed) {
-    res.set('WWW-Authenticate', 'Basic realm="Admin"');
-    return res.status(401).end();
+    return res.status(403).end();
   }
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -724,7 +753,7 @@ router.get('/admin/stream', (req, res) => {
 
 // Admin: bookings listing with new columns and filters
 router.get('/admin/bookings', (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     const db = getDb();
     const limit = Math.min(10000, Math.abs(parseInt(req.query.limit || '500', 10) || 500));
@@ -747,7 +776,7 @@ router.get('/admin/bookings', (req, res) => {
 
 // Admin: CSV export for bookings with new columns
 router.get('/admin/bookings.csv', (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     const db = getDb();
     const payment_type = req.query.payment_type || null;
@@ -782,7 +811,7 @@ router.get('/admin/bookings.csv', (req, res) => {
 
 // Admin: inline updates for mapping trip -> partner and share
 router.post('/admin/mapping', (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   try {
     const { trip_id, partner_id, share_percent } = req.body || {};
     if (!trip_id) return res.status(400).json({ error: 'Missing trip_id' });
@@ -796,7 +825,7 @@ router.post('/admin/mapping', (req, res) => {
 
 // Admin: trigger payout for a booking id (manual flow)
 router.post('/admin/bookings/:id/payout', async (req, res) => {
-  if (!checkAdminAuth(req)) { res.set('WWW-Authenticate', 'Basic realm="Admin"'); return res.status(401).send('Unauthorized'); }
+  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
   const id = req.params.id;
   const out = await tryPayoutForBooking(id);
   return res.json(out);

@@ -13,6 +13,16 @@ if (typeof ADMIN_USER === 'string') ADMIN_USER = ADMIN_USER.trim().replace(/^['"
 if (typeof ADMIN_PASS === 'string') ADMIN_PASS = ADMIN_PASS.trim().replace(/^['"]|['"]$/g, '');
 
 function checkAdminAuth(req){
+  // Prefer server session
+  try { if (req && req.session && req.session.admin === true) return true; } catch(_){ }
+  // Accept session cookie set by /admin-login
+  try {
+    const h = req.headers.cookie || '';
+    if (h) {
+      const cookies = h.split(';').reduce((acc, part) => { const i=part.indexOf('='); if(i!==-1){ acc[part.slice(0,i).trim()] = decodeURIComponent(part.slice(i+1).trim()); } return acc; }, {});
+      if (cookies.adminSession === 'true' || cookies.adminSession === '1' || cookies.adminSession === 'yes') return true;
+    }
+  } catch(_){ }
   // Allow forwarding via X-Forward-Admin-Auth with base64 user:pass (from admin-home iframe)
   const fwd = (req.headers['x-forward-admin-auth'] || '').toString();
   if (fwd) {
@@ -26,7 +36,7 @@ function checkAdminAuth(req){
   return user === ADMIN_USER && pass === ADMIN_PASS;
 }
 
-router.use((req,res,next)=>{ if (!checkAdminAuth(req)) { res.set('WWW-Authenticate','Basic realm="Admin"'); return res.status(401).json({ error:'Unauthorized' }); } next(); });
+router.use((req,res,next)=>{ if (!checkAdminAuth(req)) { return res.status(403).json({ error:'Forbidden' }); } next(); });
 
 // ---- DB helpers ----
 const DB_PATH = path.join(__dirname, '..', 'data', 'db.sqlite3');
