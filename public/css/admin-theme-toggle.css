@@ -1,0 +1,85 @@
+/* Admin Theme Toggle (dark/light)
+   - Fixed round button top-right
+   - Smooth theme transitions via CSS variables
+   - Default: dark mode
+*/
+
+/* Theme variables mapping
+   We override the base variables used across admin CSS to ensure
+   tables, buttons, and the gold accent remain consistent. */
+html[data-theme="dark"] {
+  /* Requested palette */
+  --theme-background: #0E1520;
+  --theme-text: #f5f5f5;
+  --theme-accent: #D4AF37;
+
+  /* Map to existing admin variables */
+  --ga-bg: var(--theme-background);
+  --ga-bg-2: #162432; /* subtle depth for gradient */
+  --ga-text: var(--theme-text);
+  --ga-gold: var(--theme-accent);
+  --ga-navy-deep: #0E1520;
+  --ga-card: #162432;
+  --ga-border: rgba(212,175,55,.25);
+}
+
+html[data-theme="light"] {
+  /* Requested palette */
+  --theme-background: #F6EFD2; /* soft vanilla */
+  --theme-text: #1B2A3A;
+  --theme-accent: #D4AF37;
+
+  /* Map to existing admin variables */
+  --ga-bg: var(--theme-background);
+  --ga-bg-2: #EFE3B8; /* gentle secondary */
+  --ga-text: var(--theme-text);
+  --ga-gold: var(--theme-accent);
+  --ga-navy-deep: #E7DCAA; /* header/footer surface */
+  --ga-card: rgba(255,255,255,0.78);
+  --ga-border: rgba(27,42,58,.25);
+}
+
+/* Smooth transition for common surfaces */
+html, body,
+header, footer,
+.panel,
+.table th, .table td,
+.bottom-nav,
+.btn,
+.nav a,
+.sticky-bar,
+.table-wrap {
+  transition: background-color .4s ease, color .4s ease, border-color .4s ease;
+}
+
+/* Fixed round toggle button */
+.theme-toggle-btn {
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: var(--ga-card);
+  color: var(--ga-text);
+  border: 1px solid var(--ga-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1200; /* above sticky headers */
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  backdrop-filter: saturate(1.1) blur(6px);
+}
+.theme-toggle-btn:hover { border-color: var(--ga-gold); }
+.theme-toggle-btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(212,175,55,0.32); }
+.theme-toggle-btn .icon { display: block; font-size: 18px; line-height: 1; transition: transform .35s ease; }
+
+/* Rotate icon when theme flips */
+html[data-theme="light"] .theme-toggle-btn .icon { transform: rotate(180deg); }
+
+/* Ensure page background uses current variables (some admin CSS already does) */
+html, body {
+  background: linear-gradient(180deg, var(--ga-bg) 0%, var(--ga-bg-2) 100%);
+  color: var(--ga-text);
+}

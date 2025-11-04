@@ -1,4 +1,4 @@
-<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Greekaway Admin – Payments</title><link rel="stylesheet" href="/css/admin-common.css"><link rel="stylesheet" href="/css/admin-payments.css"><link rel="stylesheet" href="/css/admin-tables.css"></head><body>
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Greekaway Admin – Payments</title><link rel="stylesheet" href="/css/admin-common.css"><link rel="stylesheet" href="/css/admin-payments.css"><link rel="stylesheet" href="/css/admin-tables.css"><link rel="stylesheet" href="/css/admin-theme-toggle.css"></head><body>
 
 <header class="sticky-bar" aria-label="Πληρωμές — Φίλτρα" data-collapsed="false">
   <div class="bar-inner">
@@ -54,6 +54,7 @@
  <footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
 <script src="/js/admin-seeds.js"></script>
 <script src="/js/admin-payments.js"></script>
+<script src="/js/admin-theme-toggle.js"></script>
 <script>
 // Version badge
 fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){document.getElementById('ga-version').textContent=v.version||'—'} })
