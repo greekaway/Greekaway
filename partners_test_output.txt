@@ -1,2 +1,0 @@
-STATUS 500
-{"error":"Failed to create Connect link"}

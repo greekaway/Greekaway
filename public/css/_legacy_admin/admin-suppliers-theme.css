@@ -1,3 +1,0 @@
-/* Suppliers theme wrapper to align naming; reuse existing suppliers CSS */
-@import url('/css/admin-suppliers.css');
-body.admin-suppliers-page { color: var(--text); background: linear-gradient(180deg, #0a121c, #0f1b29 60%); }
