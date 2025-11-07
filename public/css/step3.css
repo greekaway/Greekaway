@@ -46,3 +46,11 @@ body { margin: 0; background-image: var(--site-gradient); background-color: var(
 /* Emphasize cost row with money-green color */
 .s3-row.emph .s3-label,
 .s3-row.emph .s3-value { color: #2ecc71; }
+
+/* Required highlights for missing traveler profile fields */
+.s3-row.required .s3-label::after { content:" *"; color:#e53935; font-weight:700; }
+.s3-row.required .s3-value { color:#e53935; }
+
+/* Inline error message at top */
+#s3Error { position: fixed; left: 50%; transform: translateX(-50%); top: calc(var(--panel-top) + 8px); width: min(780px, calc(100vw - 56px)); color:#e53935; font-weight:800; background: rgba(229,57,53,0.12); border:1px solid rgba(229,57,53,0.35); border-radius:12px; padding:8px 12px; z-index:20; }
+#s3Error[hidden] { display:none; }

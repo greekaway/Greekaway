@@ -95,6 +95,8 @@
 
   // Google Places Autocomplete via dynamic key extraction
   let googleReady = false;
+  // Strict pickup validation: when Google Places is available we require a place_id.
+  function strictPickupActive(){ return googleReady && !!acService && !!placesService; }
   function loadGoogleMapsPlaces(){
     return new Promise((resolve, reject)=>{
       if (window.google && window.google.maps && window.google.maps.places) { googleReady=true; return resolve(); }
@@ -133,7 +135,8 @@
   // Autocomplete state
   let acService = null; let placesService = null; let chosenPlace = null; let mapInstance = null; let mapMarker = null;
 
-  function setNextEnabled(on){ try { const b = $('#s2Next'); if (b) { b.disabled = !on; b.classList.toggle('disabled', !on); } } catch(_){ } }
+  function setNextEnabled(on){ try { const b = $('#s2Next'); if (b) { b.disabled = false; // keep enabled for click validation
+      b.classList.toggle('disabled', !on); } } catch(_){ } }
 
   function showToast(msg){
     let el = $('#s2Toast');
@@ -166,8 +169,7 @@
       // Drop-off same
       persist.set('gw_dropoff_same', 'true');
       persist.set('gw_dropoff_address', input.value);
-      // Enable Next
-      setNextEnabled(!!chosenPlace.place_id);
+      updateNextVisualState();
     };
 
     function ensureServices(cb){
@@ -177,6 +179,8 @@
         acService = new google.maps.places.AutocompleteService();
         const dummyMap = document.createElement('div');
         placesService = new google.maps.places.PlacesService(dummyMap);
+        // Once services are ready, re-evaluate Next button state under strict rules
+        try { updateNextVisualState(); } catch(_){ }
         cb();
       } catch(_){ }
     }
@@ -255,7 +259,35 @@
       });
     }, 480);
 
-    input.addEventListener('input', () => { chosenPlace=null; persist.set('gw_pickup_place_id',''); setNextEnabled(false); doSearch(); });
+    function updateNextVisualState(){
+      const val = (input.value||'').trim();
+      if (strictPickupActive()) {
+        // Require a selected prediction (place_id)
+        setNextEnabled(!!chosenPlace?.place_id);
+      } else {
+        // Fallback: allow any non-empty manual value (for localhost / blocked API)
+        setNextEnabled(val.length>0);
+      }
+    }
+
+    input.addEventListener('input', () => {
+      chosenPlace=null; persist.set('gw_pickup_place_id','');
+      const val = (input.value||'').trim();
+      if (val.length){
+        // Clear visual error state
+        input.classList.remove('error');
+        $('#pickupLabel')?.classList.remove('required');
+        $('#pickupError')?.setAttribute('hidden','');
+        // Restore normal placeholder from i18n key
+        const origPhKey = input.getAttribute('data-i18n-placeholder');
+        if (origPhKey) {
+          const ph = t(origPhKey, '');
+          if (ph) input.setAttribute('placeholder', ph);
+        }
+      }
+      updateNextVisualState();
+      doSearch();
+    });
     input.addEventListener('focus', () => { if (dropdown.childElementCount>0) dropdown.hidden=false; });
     document.addEventListener('click', (ev)=>{ if (!dropdown.contains(ev.target) && ev.target !== input) dropdown.hidden=true; }, { passive: true });
 
@@ -285,7 +317,9 @@
     if (savedAddr) input.value = savedAddr;
     if (savedPid) {
       chosenPlace = { place_id: savedPid, formatted_address: savedAddr || '', lat: savedLat?Number(savedLat):null, lng: savedLng?Number(savedLng):null };
-      setNextEnabled(true);
+      updateNextVisualState();
+    } else {
+      updateNextVisualState();
     }
   }
 
@@ -306,18 +340,68 @@
   function guardNext(){
     const btn = $('#s2Next'); if (!btn) return;
     btn.addEventListener('click', (ev)=>{
-      const placeId = persist.get('gw_pickup_place_id');
-      if (!placeId) {
+      const input = $('#pickupInput');
+      const val = (input && input.value || '').trim();
+      // validate age group & traveler type inline on Step 2
+      const ageCode = persist.get('gw_age_group') || '';
+      const travCode = persist.get('gw_traveler_type') || '';
+      let block = false;
+      const ageRowTitle = document.querySelector('#ageGroupRow .s2-labels .title');
+      const travRowTitle = document.querySelector('#travTypeRow .s2-labels .title');
+      const ageErr = document.getElementById('ageGroupError');
+      const travErr = document.getElementById('travTypeError');
+      const ageBtn = document.getElementById('ageSelectBtn');
+      const travBtn = document.getElementById('travTypeSelectBtn');
+      if (!ageCode) { block = true; ageRowTitle && ageRowTitle.classList.add('required'); ageErr && ageErr.removeAttribute('hidden'); }
+      else { ageRowTitle && ageRowTitle.classList.remove('required'); ageErr && ageErr.setAttribute('hidden',''); }
+      // Apply red border on dropdown trigger when missing
+      if (!ageCode) { ageBtn && ageBtn.classList.add('error'); } else { ageBtn && ageBtn.classList.remove('error'); }
+      if (!travCode) { block = true; travRowTitle && travRowTitle.classList.add('required'); travErr && travErr.removeAttribute('hidden'); }
+      else { travRowTitle && travRowTitle.classList.remove('required'); travErr && travErr.setAttribute('hidden',''); }
+      if (!travCode) { travBtn && travBtn.classList.add('error'); } else { travBtn && travBtn.classList.remove('error'); }
+      if (block) {
         ev.preventDefault(); ev.stopPropagation();
-        showToast(t('booking.error_select_address','Select an address from the list'));
-        setNextEnabled(false);
+        try { document.getElementById('ageGroupRow').scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_){ }
         return false;
       }
-      // Ensure we persist current language and dropoff same
+      if (!val) {
+        ev.preventDefault(); ev.stopPropagation();
+        // visual cues per spec (inline inside field placeholder + below label area)
+        if (input) {
+          input.classList.add('error');
+          const errPlaceholder = input.getAttribute('data-error-placeholder') || t('booking.pickup_required_msg','Please enter your pick-up address before continuing.');
+          input.setAttribute('placeholder', errPlaceholder);
+          if (!input.value) input.value=''; // ensure placeholder shows
+        }
+        const label = $('#pickupLabel'); if (label) label.classList.add('required');
+        const err = $('#pickupError'); if (err) { err.removeAttribute('hidden'); }
+        // Scroll into view if needed
+        try { input.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_){ }
+        return false;
+      }
+      // Strict mode: require Google place selection (place_id)
+      if (strictPickupActive() && !chosenPlace?.place_id) {
+        ev.preventDefault(); ev.stopPropagation();
+        if (input) {
+          input.classList.add('error');
+          const selectMsg = t('booking.error_select_address','Επιλέξτε διεύθυνση από τη λίστα');
+          input.setAttribute('placeholder', selectMsg);
+        }
+        const label = $('#pickupLabel'); if (label) label.classList.add('required');
+        const err = $('#pickupError'); if (err) { err.removeAttribute('hidden'); err.textContent = t('booking.error_select_address','Επιλέξτε διεύθυνση από τη λίστα'); }
+        try { input.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_){ }
+        return false;
+      }
+  // Persist manual value if user didn't pick from dropdown
+      persist.set('gw_pickup_address', val);
+      if (!persist.get('gw_pickup_place_id')) {
+        // ensure dropoff mirrors manual pickup
+        persist.set('gw_dropoff_same','true');
+        persist.set('gw_dropoff_address', val);
+      }
       assignPreferredLanguage();
-      persist.set('gw_dropoff_same','true');
       return true;
-    }, true); // capture to run before other handlers
+    }, true);
   }
 
   // Init on DOM ready

@@ -149,9 +149,11 @@ body {
 .s2-right { display: flex; align-items: center; gap: 10px; }
 .lang-select { background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:12px; padding:8px 12px; font-weight:800; display:flex; align-items:center; gap:8px; cursor:pointer; box-shadow:0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06); min-width: 140px; }
 .lang-select .caret { opacity:0.8; }
+.lang-select.error { border:1.5px solid #e53935 !important; }
 .lang-select .flag.placeholder { opacity: 0; }
 .lang-menu { position:absolute; right:16px; top: calc(100% + 8px); background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:12px; padding:8px; z-index:21000; box-shadow:0 16px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04); min-width:200px; }
 .lang-menu[hidden]{ display:none; }
+.lang-menu.error { border:1.5px solid #e53935 !important; }
 .lang-menu.dropup { top: auto; bottom: calc(100% + 8px); }
 .lang-menu button { width:100%; text-align:left; background:#142132; color:#fff; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:8px 10px; margin:4px 0; font-weight:800; display:flex; align-items:center; gap:10px; cursor:pointer; }
 .lang-menu button:hover { background:#1B2B42; }
@@ -221,3 +223,15 @@ body {
 /* Tiny toast */
 .s2-toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(120px + env(safe-area-inset-bottom)); background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius: 10px; padding: 10px 14px; font-weight: 800; opacity: 0; transition: opacity 160ms ease; z-index: 24000; }
 .s2-toast.show { opacity: 1; }
+
+/* Pickup location required state */
+#pickupRow .s2-input.error { border:1.5px solid #e53935; }
+.age-menu-error, .travtype-menu-error { border:1.5px solid #e53935 !important; }
+#pickupRow .s2-input.error::placeholder { color:#e53935; opacity: 1; }
+#pickupRow label.required::after, .s2-labels .title.required::after { content:" *"; color:#e53935; font-weight:600; }
+#pickupError { color:#e53935; font-size:0.78rem; font-weight:700; margin:4px 4px 0 4px; letter-spacing:0.3px; }
+#pickupError[hidden] { display:none; }
+
+/* Inline field errors for Step 2 selectors (Age/Traveler Type) */
+.field-inline-error { color:#e53935; font-size:0.78rem; font-weight:700; margin-top:4px; opacity:0.95; }
+.field-inline-error[hidden] { display:none; }

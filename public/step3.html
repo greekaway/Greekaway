@@ -20,6 +20,7 @@
     <div class="step3-card"></div>
   </div>
 
+  <div id="s3Error" hidden data-i18n="booking.traveler_profile_incomplete">Please complete your traveler profile before continuing.</div>
   <div class="s3-summary">
     <div class="s3-card">
   <div class="s3-row"><div class="s3-label" data-i18n="booking.adults">Ενήλικες</div><div class="s3-value" id="vAdults">–</div></div>
@@ -28,6 +29,7 @@
   <div class="s3-row"><div class="s3-label" data-i18n="booking.bags_large">Βαλίτσες (Μεγάλες)</div><div class="s3-value" id="vBagsLarge">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.bags_small">Βαλίτσες (Μικρές)</div><div class="s3-value" id="vBagsSmall">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.preferred_language">Γλώσσα επικοινωνίας</div><div class="s3-value" id="vLang">–</div></div>
+  <div class="s3-row"><div class="s3-label" data-i18n="booking.pickup_location">Σημείο Παραλαβής</div><div class="s3-value" id="vPickup">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.age_group">Ηλικιακή ομάδα</div><div class="s3-value" id="vAgeGroup">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.traveler_type">Τύπος ταξιδιώτη</div><div class="s3-value" id="vTravelerType">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.interests">Ενδιαφέροντα</div><div class="s3-value" id="vInterest">–</div></div>
@@ -38,7 +40,7 @@
 
   <div class="s3-actions">
     <button id="s3Back" class="btn" data-i18n="ui.back">Πίσω</button>
-    <button id="s3Finish" class="btn" data-i18n="ui.finish">Ολοκλήρωση</button>
+    <button id="s3ProceedPay" class="btn" data-i18n="booking.proceed_payment">Πληρωμή</button>
   </div>
 
   <!-- Overlays: About, AI, Profile for consistent footer actions -->
@@ -172,6 +174,7 @@
         const langLabel = tSafe('booking.preferred_language_options.' + langC, (langFallbackLabels[langC] || langC.toUpperCase()));
         const langFlag = langFlags[langC] || '';
         document.getElementById('vLang').textContent = langLabel ? (langFlag ? `${langFlag} ${langLabel}` : langLabel) : '—';
+        document.getElementById('vPickup').textContent = (get('gw_pickup_address','') || '—');
         document.getElementById('vAgeGroup').textContent = ageG || '—';
         const travLabel = travT ? tSafe('booking.traveler_type_options.' + travT, (travTypeFallback[travT] || '—')) : '—';
         const intLabel = interest ? tSafe('booking.interests_options.' + interest, (interestFallback[interest] || '—')) : '—';
@@ -240,9 +243,25 @@
   try { translateTripCostLabel(); } catch(_){}
 
       document.getElementById('s3Back')?.addEventListener('click', ()=> history.back());
-      document.getElementById('s3Finish')?.addEventListener('click', async (ev)=>{
+
+      function validateProfile(){
+        const ageG = get('gw_age_group','').trim();
+        const travT = get('gw_traveler_type','').trim();
+        const errBox = document.getElementById('s3Error');
+        const ageRow = document.querySelector('#vAgeGroup')?.closest('.s3-row');
+        const travRow = document.querySelector('#vTravelerType')?.closest('.s3-row');
+        let ok = true;
+        if (!ageG){ ok = false; ageRow?.classList.add('required'); } else { ageRow?.classList.remove('required'); }
+        if (!travT){ ok = false; travRow?.classList.add('required'); } else { travRow?.classList.remove('required'); }
+        if (!ok) { errBox?.removeAttribute('hidden'); }
+        else { errBox?.setAttribute('hidden',''); }
+        return ok;
+      }
+
+      document.getElementById('s3ProceedPay')?.addEventListener('click', async (ev)=>{
         try { ev.preventDefault(); } catch(_){ }
-        const btn = document.getElementById('s3Finish'); if (btn) btn.disabled = true;
+        const btn = document.getElementById('s3ProceedPay'); if (btn) btn.disabled = true;
+        if (!validateProfile()) { if (btn) btn.disabled=false; return; }
         try {
           // Build booking payload using stored selections and loaded trip
           const tripId = (sessionStorage.getItem('gw_trip_id') || '').trim();
@@ -270,7 +289,19 @@
             travelStyle: (sessionStorage.getItem('gw_interest') || ''),
             preferredLanguage: (sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || ''),
             travelTempo: (sessionStorage.getItem('gw_sociality') || ''),
-            children_ages: (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]'); } catch(_){ return []; } })()
+            children_ages: (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]'); } catch(_){ return []; } })(),
+            metadata: {
+              age_group: (sessionStorage.getItem('gw_age_group') || ''),
+              traveler_type: (sessionStorage.getItem('gw_traveler_type') || ''),
+              interest: (sessionStorage.getItem('gw_interest') || ''),
+              sociality: (sessionStorage.getItem('gw_sociality') || ''),
+              children_ages: (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]'); } catch(_){ return []; } })(),
+              pickup_address: (sessionStorage.getItem('gw_pickup_address') || ''),
+              pickup_place_id: (sessionStorage.getItem('gw_pickup_place_id') || ''),
+              pickup_lat: (sessionStorage.getItem('gw_pickup_lat') || ''),
+              pickup_lng: (sessionStorage.getItem('gw_pickup_lng') || ''),
+              notes: (sessionStorage.getItem('gw_notes') || '')
+            }
           };
           let bookingId = '';
           try {
@@ -289,6 +320,7 @@
           if (btn) btn.disabled = false;
         }
       });
+      try { window.addEventListener('i18n:changed', () => { validateProfile(); }); } catch(_){ }
 
       // Ensure labels translate after i18n is ready and on future language changes
   try { if (window.currentI18n && window.setLanguage) { window.setLanguage(window.currentI18n.lang); translateTripCostLabel(); } } catch(_){ }
