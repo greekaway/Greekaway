@@ -73,7 +73,7 @@
           <i class="fa-solid fa-map-pin icon" aria-hidden="true"></i>
         </button>
       </div>
-  <div class="field-error" id="pickupError" role="alert" aria-live="polite" hidden data-i18n="booking.pickup_required_msg">*Please enter your pick-up address before continuing.</div>
+  <div class="field-inline-error" id="pickupError" role="alert" aria-live="polite" hidden data-i18n="booking.pickup_required_msg">*Παρακαλώ συμπληρώστε τη διεύθυνση παραλαβής πριν συνεχίσετε.</div>
       <div class="places-dropdown" id="pickupSuggest" hidden></div>
     </div>
 
@@ -475,6 +475,8 @@
             document.getElementById('ageGroupError')?.setAttribute('hidden','');
             document.getElementById('ageSelectBtn')?.classList.remove('error');
           } catch(_){ }
+          // Notify shared logic to update Next button visual state
+          try { document.dispatchEvent(new CustomEvent('gw:step2:fieldsChanged')); } catch(_){ }
         });
       });
       document.addEventListener('click', (e)=>{
@@ -511,6 +513,8 @@
             document.getElementById('travTypeError')?.setAttribute('hidden','');
             document.getElementById('travTypeSelectBtn')?.classList.remove('error');
           } catch(_){ }
+          // Notify shared logic to update Next button visual state
+          try { document.dispatchEvent(new CustomEvent('gw:step2:fieldsChanged')); } catch(_){ }
         });
       });
       document.addEventListener('click', (e)=>{

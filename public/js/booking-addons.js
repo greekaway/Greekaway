@@ -55,9 +55,14 @@
     }
     const total = (luggageState.small + luggageState.medium + luggageState.large) || 0;
     const cntEl = $('#suitcasesCount'); if (cntEl) cntEl.textContent = String(total);
-    // Persist array form: [{type,count}]
+    // Persist array form: [{type,count}] and individual counts for Step 3 summary compatibility
     const arr = ['small','medium','large'].filter(t=>luggageState[t]>0).map(type => ({ type, count: luggageState[type] }));
     persist.setJSON('gw_luggage', arr);
+    try {
+      persist.set('gw_bags_small', String(luggageState.small||0));
+      persist.set('gw_bags_medium', String(luggageState.medium||0));
+      persist.set('gw_bags_large', String(luggageState.large||0));
+    } catch(_){ }
   }
   function openSuitcasePopup(){ const el = $('#suitcasePopup'); if (!el) return; syncPopupCounts(); el.hidden=false; disableScroll(true); }
   function closeSuitcasePopup(){ const el = $('#suitcasePopup'); if (!el) return; el.hidden=true; disableScroll(false); updateSuitcaseSummary(); }
@@ -136,7 +141,14 @@
   let acService = null; let placesService = null; let chosenPlace = null; let mapInstance = null; let mapMarker = null;
 
   function setNextEnabled(on){ try { const b = $('#s2Next'); if (b) { b.disabled = false; // keep enabled for click validation
-      b.classList.toggle('disabled', !on); } } catch(_){ } }
+      b.classList.toggle('disabled', !on);
+      // Restore normal visual color when valid (remove .invalid-color) else add it
+      if (on) {
+        b.classList.remove('invalid-color');
+      } else {
+        b.classList.add('invalid-color');
+      }
+    } } catch(_){ } }
 
   function showToast(msg){
     let el = $('#s2Toast');
@@ -261,13 +273,15 @@
 
     function updateNextVisualState(){
       const val = (input.value||'').trim();
+      const ageOk = !!(persist.get('gw_age_group')||'');
+      const travOk = !!(persist.get('gw_traveler_type')||'');
+      let pickupOk = false;
       if (strictPickupActive()) {
-        // Require a selected prediction (place_id)
-        setNextEnabled(!!chosenPlace?.place_id);
+        pickupOk = !!chosenPlace?.place_id;
       } else {
-        // Fallback: allow any non-empty manual value (for localhost / blocked API)
-        setNextEnabled(val.length>0);
+        pickupOk = val.length>0;
       }
+      setNextEnabled(!!(pickupOk && ageOk && travOk));
     }
 
     input.addEventListener('input', () => {
@@ -321,6 +335,11 @@
     } else {
       updateNextVisualState();
     }
+
+    // Listen for field changes from other scripts (age/traveler selections) to refresh Next button visual state
+    try {
+      document.addEventListener('gw:step2:fieldsChanged', () => { try { updateNextVisualState(); } catch(_){ } });
+    } catch(_){ }
   }
 
   // Special Requests auto-resize + persist
