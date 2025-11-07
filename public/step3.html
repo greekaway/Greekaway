@@ -170,7 +170,16 @@
         document.getElementById('vAdults').textContent = adults;
         document.getElementById('vChildren').textContent = children;
         document.getElementById('vChildrenAges').textContent = ages.length? ages.join(', '): '—';
-  document.getElementById('vBags').textContent = totalBags ? String(totalBags) : '—';
+        if (totalBags) {
+          const parts = [];
+          if (bagsS) parts.push(`${bagsS}S`);
+          if (bagsM) parts.push(`${bagsM}M`);
+          if (bagsL) parts.push(`${bagsL}L`);
+          const detail = parts.join(' · ');
+          document.getElementById('vBags').textContent = detail ? `${totalBags} (${detail})` : String(totalBags);
+        } else {
+          document.getElementById('vBags').textContent = '—';
+        }
         const langLabel = tSafe('booking.preferred_language_options.' + langC, (langFallbackLabels[langC] || langC.toUpperCase()));
         const langFlag = langFlags[langC] || '';
         document.getElementById('vLang').textContent = langLabel ? (langFlag ? `${langFlag} ${langLabel}` : langLabel) : '—';
