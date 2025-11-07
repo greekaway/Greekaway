@@ -29,6 +29,7 @@
   <div class="s3-row"><div class="s3-label" data-i18n="booking.suitcases">Αποσκευές</div><div class="s3-value" id="vBags">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.preferred_language">Γλώσσα επικοινωνίας</div><div class="s3-value" id="vLang">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.pickup_location">Σημείο Παραλαβής</div><div class="s3-value" id="vPickup">–</div></div>
+  <div class="s3-row" id="vNotesInfoRow" hidden><div class="s3-label"></div><div class="s3-value" id="vNotesInfo">—</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.age_group">Ηλικιακή ομάδα</div><div class="s3-value" id="vAgeGroup">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.traveler_type">Τύπος ταξιδιώτη</div><div class="s3-value" id="vTravelerType">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.interests">Ενδιαφέροντα</div><div class="s3-value" id="vInterest">–</div></div>
@@ -191,6 +192,17 @@
         document.getElementById('vTravelerType').textContent = travLabel;
         document.getElementById('vInterest').textContent = intLabel;
         document.getElementById('vSocial').textContent = socLabel;
+        // Show privacy-preserving message if special requests exist
+        try {
+          const notes = (get('gw_notes','') || '').trim();
+          const row = document.getElementById('vNotesInfoRow');
+          const el = document.getElementById('vNotesInfo');
+          if (notes && row && el) {
+            const msg = tSafe('booking.special_requests_added','✅ Ειδικές οδηγίες προστέθηκαν και θα σταλούν στον οδηγό.');
+            el.textContent = msg;
+            row.hidden = false;
+          } else if (row) { row.hidden = true; }
+        } catch(_){}
         try { renderTripCost(); } catch(_){}
       }
 
@@ -309,7 +321,24 @@
               pickup_place_id: (sessionStorage.getItem('gw_pickup_place_id') || ''),
               pickup_lat: (sessionStorage.getItem('gw_pickup_lat') || ''),
               pickup_lng: (sessionStorage.getItem('gw_pickup_lng') || ''),
-              notes: (sessionStorage.getItem('gw_notes') || '')
+              // Duplicate pickup_address under legacy keys so provider panel & dispatch emails display it
+              pickup: (sessionStorage.getItem('gw_pickup_address') || ''),
+              pickup_point: (sessionStorage.getItem('gw_pickup_address') || ''),
+              // Luggage summary (S/M/L) for provider visibility & email
+              luggage: (function(){
+                const s = parseInt(sessionStorage.getItem('gw_bags_small')||'0',10)||0;
+                const m = parseInt(sessionStorage.getItem('gw_bags_medium')||'0',10)||0;
+                const l = parseInt(sessionStorage.getItem('gw_bags_large')||'0',10)||0;
+                const total = s+m+l;
+                if (!total) return '';
+                const parts = [];
+                if (s) parts.push(s+'S');
+                if (m) parts.push(m+'M');
+                if (l) parts.push(l+'L');
+                return total + (parts.length? ' ('+parts.join(' · ')+')' : '');
+              })(),
+              notes: (sessionStorage.getItem('gw_notes') || ''),
+              special_requests: (sessionStorage.getItem('gw_notes') || '')
             }
           };
           let bookingId = '';

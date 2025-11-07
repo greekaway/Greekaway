@@ -132,7 +132,9 @@ window.ProviderUI = {
               <div><b>${b.trip_title || b.booking_id}</b> <small class="muted">#${b.booking_id.slice(0,6)}</small></div>
               <div class="meta">${b.date} • ${b.pickup_point} (${b.pickup_time})</div>
               <div class="meta">Πελάτης: ${b.customer_name || ''}</div>
-              ${b.map_link ? `<div class="meta"><a href="${b.map_link}" target="_blank" rel="noopener">Χάρτης</a></div>` : ''}
+              ${b.luggage ? (`<div class=\"meta\">Αποσκευές: ${b.luggage}</div>`) : ''}
+              ${b.special_requests ? (`<div class=\"meta\">Σχόλια: ${b.special_requests}</div>`) : ''}
+              ${b.map_link ? `<div class=\"meta\"><a href=\"${b.map_link}\" target=\"_blank\" rel=\"noopener\">Χάρτης</a></div>` : ''}
             </div>
             <div><span class="badge ${b.status==='completed'?'success':b.status==='declined'?'error':'info'}">${b.status}</span></div>
           </div>
