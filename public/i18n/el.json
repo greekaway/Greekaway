@@ -218,7 +218,23 @@
       "night": "Βραδινός τύπος",
       "talkative": "Ομιλητικός",
       "reserved": "Κλειστός χαρακτήρας"
-    }
+    },
+    "suitcases": "Αποσκευές",
+    "suitcase_small": "Μικρή – Χειραποσκευή (55 cm ≈ 10 kg)",
+    "suitcase_medium": "Μεσαία – Βαλίτσα 20 kg (65 cm)",
+    "suitcase_large": "Μεγάλη – Βαλίτσα 40 kg (80 cm)",
+    "suitcase_small_short": "Μικρή",
+    "suitcase_medium_short": "Μεσαία",
+    "suitcase_large_short": "Μεγάλη",
+    "pickup_location": "Σημείο Παραλαβής",
+    "pickup_placeholder": "Αρχίστε να πληκτρολογείτε διεύθυνση",
+    "map_btn_title": "Χάρτης",
+    "pickup_map_preview": "Προεπισκόπηση χάρτη",
+    "confirm": "Επιβεβαίωση",
+    "change": "Αλλαγή",
+    "error_select_address": "Επιλέξτε διεύθυνση από τη λίστα",
+    "special_requests": "Ειδικές Οδηγίες",
+    "special_requests_placeholder": "Ειδικές οδηγίες ή παρατηρήσεις (προαιρετικά)"
   },
   "aboutPage": {
     "title": "Σχετικά με εμάς – Greekaway",

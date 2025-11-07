@@ -49,64 +49,45 @@
       <div class="age-picker" id="agePicker" hidden></div>
     </div>
 
-    <!-- Luggage: Large -->
-    <div class="s2-row">
+    <!-- Suitcases (single field with popup) -->
+    <div class="s2-row" id="suitcasesRow">
       <div class="s2-labels">
-        <div class="title" data-i18n="booking.bags_large">Βαλίτσες (Μεγάλες)</div>
+        <div class="title" data-i18n="booking.suitcases">Αποσκευές</div>
+        <div class="sub" id="suitcaseSummary">—</div>
       </div>
-      <div class="s2-ages" id="largeBagsText"></div>
       <div class="s2-counter">
-        <button class="btn-round" id="largeBagsDec" data-i18n-aria="booking.decrease_bags_large">−</button>
-        <div class="count" id="largeBagsCount">0</div>
-        <button class="btn-round" id="largeBagsInc" data-i18n-aria="booking.increase_bags_large">+</button>
+        <button class="btn-round" id="suitcasesDec" aria-label="−">−</button>
+        <div class="count" id="suitcasesCount">0</div>
+        <button class="btn-round" id="suitcasesInc" aria-label="+">+</button>
       </div>
     </div>
 
-    <!-- Luggage: Small -->
-    <div class="s2-row">
+    <!-- Pick-up Location with Google Places autocomplete -->
+    <div class="s2-row" id="pickupRow">
       <div class="s2-labels">
-        <div class="title" data-i18n="booking.bags_small">Βαλίτσες (Μικρές)</div>
+        <div class="title" data-i18n="booking.pickup_location">Σημείο Παραλαβής</div>
       </div>
-      <div class="s2-ages" id="smallBagsText"></div>
-      <div class="s2-counter">
-        <button class="btn-round" id="smallBagsDec" data-i18n-aria="booking.decrease_bags_small">−</button>
-        <div class="count" id="smallBagsCount">0</div>
-        <button class="btn-round" id="smallBagsInc" data-i18n-aria="booking.increase_bags_small">+</button>
+      <div class="s2-input-group">
+        <input type="text" id="pickupInput" class="s2-input" data-i18n-placeholder="booking.pickup_placeholder" placeholder="Αρχίστε να πληκτρολογείτε διεύθυνση" autocomplete="off" />
+        <button type="button" id="pickupMapBtn" class="s2-map-btn" title="Χάρτης" data-i18n-title="booking.map_btn_title">🗺️</button>
+      </div>
+      <div class="places-dropdown" id="pickupSuggest" hidden></div>
+    </div>
+
+    <!-- Special Requests (instead of Preferred language) -->
+    <div class="s2-row" id="specialRequestsRow">
+      <div class="s2-labels">
+        <div class="title" data-i18n="booking.special_requests">Ειδικές Οδηγίες</div>
+      </div>
+      <div class="s2-input-group">
+        <textarea id="specialRequests" class="s2-textarea" rows="1" data-i18n-placeholder="booking.special_requests_placeholder" placeholder="Ειδικές οδηγίες ή παρατηρήσεις (προαιρετικά)"></textarea>
       </div>
     </div>
 
-    <!-- Traveler Profile: Language -->
-    <div class="s2-row" id="travelerLanguageRow">
-      <div class="s2-labels">
-        <div class="title" data-i18n="booking.preferred_language">Γλώσσα επικοινωνίας</div>
-      </div>
-      <div class="s2-ages"></div>
-      <div class="s2-right">
-        <button type="button" class="lang-select" id="langSelectBtn">
-          <span class="flag">🇬🇷</span>
-          <span class="label">Ελληνικά</span>
-          <span class="caret">▾</span>
-        </button>
-      </div>
-      <div class="lang-menu" id="langMenu" hidden>
-        <button type="button" data-code="el"><span>🇬🇷</span><span data-i18n="booking.preferred_language_options.el">Ελληνικά</span></button>
-        <button type="button" data-code="en"><span>🇬🇧</span><span data-i18n="booking.preferred_language_options.en">English</span></button>
-        <button type="button" data-code="fr"><span>🇫🇷</span><span data-i18n="booking.preferred_language_options.fr">Français</span></button>
-        <button type="button" data-code="de"><span>🇩🇪</span><span data-i18n="booking.preferred_language_options.de">Deutsch</span></button>
-        <button type="button" data-code="it"><span>🇮🇹</span><span data-i18n="booking.preferred_language_options.it">Italiano</span></button>
-        <button type="button" data-code="es"><span>🇪🇸</span><span data-i18n="booking.preferred_language_options.es">Español</span></button>
-        <button type="button" data-code="zh"><span>🇨🇳</span><span data-i18n="booking.preferred_language_options.zh">中文</span></button>
-        <button type="button" data-code="he"><span>🇮🇱</span><span data-i18n="booking.preferred_language_options.he">עברית</span></button>
-        <button type="button" data-code="nl"><span>🇳🇱</span><span data-i18n="booking.preferred_language_options.nl">Nederlands</span></button>
-        <button type="button" data-code="sv"><span>🇸🇪</span><span data-i18n="booking.preferred_language_options.sv">Svenska</span></button>
-        <button type="button" data-code="ko"><span>🇰🇷</span><span data-i18n="booking.preferred_language_options.ko">한국어</span></button>
-        <button type="button" data-code="pt"><span>🇵🇹</span><span data-i18n="booking.preferred_language_options.pt">Português</span></button>
-        <button type="button" data-code="ru"><span>🇷🇺</span><span data-i18n="booking.preferred_language_options.ru">Русский</span></button>
-      </div>
-    </div>
+    
 
     <!-- Age Group -->
-    <div class="s2-row" id="ageGroupRow">
+  <div class="s2-row" id="ageGroupRow">
       <div class="s2-labels">
         <div class="title" data-i18n="booking.age_group">Ηλικιακή ομάδα</div>
       </div>
@@ -127,7 +108,7 @@
     </div>
 
     <!-- Traveler Type -->
-    <div class="s2-row" id="travTypeRow">
+  <div class="s2-row" id="travTypeRow">
       <div class="s2-labels">
         <div class="title" data-i18n="booking.traveler_type">Τύπος ταξιδιώτη</div>
       </div>
@@ -148,7 +129,7 @@
     </div>
 
     <!-- Interests -->
-    <div class="s2-row" id="interestsRow">
+  <div class="s2-row" id="interestsRow">
       <div class="s2-labels">
         <div class="title" data-i18n="booking.interests">Ενδιαφέροντα</div>
       </div>
@@ -170,7 +151,7 @@
     </div>
 
     <!-- Sociality -->
-    <div class="s2-row" id="socialityRow">
+  <div class="s2-row" id="socialityRow">
       <div class="s2-labels">
         <div class="title" data-i18n="booking.sociality">Κοινωνικότητα</div>
       </div>
@@ -192,7 +173,7 @@
   <!-- Bottom actions like Step 1 -->
   <div class="s2-actions">
     <button id="s2Back" class="btn" data-i18n="ui.back">Πίσω</button>
-    <button id="s2Next" class="btn" data-i18n="booking.next">Επόμενο</button>
+    <button id="s2Next" class="btn" data-i18n="booking.next" disabled>Επόμενο</button>
   </div>
 
   <!-- Overlays: About, AI Assistant, Profile -->
@@ -248,10 +229,60 @@
     </a>
   </footer>
   <!-- Optional: overlays can be added later if needed -->
+  <!-- Modals / Popups -->
+  <div id="suitcasePopup" class="suitcase-popup" role="dialog" aria-modal="true" hidden>
+    <div class="suitcase-dialog">
+      <div class="suitcase-title" data-i18n="booking.suitcases">Αποσκευές</div>
+      <div class="suitcase-options">
+        <div class="suitcase-item" data-type="small">
+          <div class="si-label" data-i18n="booking.suitcase_small">Small – Hand luggage (55 cm ≈ 10 kg)</div>
+          <div class="si-ctrls">
+            <button class="btn-round si-dec">−</button>
+            <div class="count si-count">0</div>
+            <button class="btn-round si-inc">+</button>
+          </div>
+        </div>
+        <div class="suitcase-item" data-type="medium">
+          <div class="si-label" data-i18n="booking.suitcase_medium">Medium – 20 kg Suitcase (65 cm)</div>
+          <div class="si-ctrls">
+            <button class="btn-round si-dec">−</button>
+            <div class="count si-count">0</div>
+            <button class="btn-round si-inc">+</button>
+          </div>
+        </div>
+        <div class="suitcase-item" data-type="large">
+          <div class="si-label" data-i18n="booking.suitcase_large">Large – 40 kg Suitcase (80 cm)</div>
+          <div class="si-ctrls">
+            <button class="btn-round si-dec">−</button>
+            <div class="count si-count">0</div>
+            <button class="btn-round si-inc">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="suitcase-actions">
+        <button type="button" class="btn" id="suitcaseConfirm" data-i18n="booking.confirm">Επιβεβαίωση</button>
+        <button type="button" class="btn btn-secondary" id="suitcaseCancel" data-i18n="ui.cancel">Άκυρο</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pickupMapModal" class="map-modal" role="dialog" aria-modal="true" hidden>
+    <div class="map-dialog">
+      <div class="map-title" data-i18n="booking.pickup_map_preview">Προεπισκόπηση χάρτη</div>
+      <div id="pickupMap" class="map-area"></div>
+      <div class="map-actions">
+        <button type="button" class="btn" id="mapConfirm" data-i18n="booking.confirm">Επιβεβαίωση</button>
+        <button type="button" class="btn btn-secondary" id="mapChange" data-i18n="booking.change">Αλλαγή</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Load i18n first so translations are ready before other logic; add cache-busting -->
   <script src="/js/i18n.js?v=20251022" defer></script>
   <script src="/js/overlay-manager.js?v=2" defer></script>
   <script src="/js/assistant.js?v=2" defer></script>
+  <!-- Step 2 addons: suitcases popup, pickup autocomplete, special requests, validation -->
+  <script src="/js/booking-addons.js?v=1" defer></script>
   <script>
     // Optional: lightweight behaviour — Πίσω γυρίζει στην προηγούμενη σελίδα
     try { document.getElementById('s2Back').addEventListener('click', () => history.back()); } catch(_){ }
@@ -411,57 +442,7 @@
       });
       renderAges();
 
-      // Luggage counters (0..10 each)
-      const largeBagsCount = document.getElementById('largeBagsCount');
-      const smallBagsCount = document.getElementById('smallBagsCount');
-      const largeBagsText = document.getElementById('largeBagsText');
-      const smallBagsText = document.getElementById('smallBagsText');
-      const renderBags = () => {
-        if (largeBagsText) largeBagsText.textContent = getN(largeBagsCount) ? '' : '';
-        if (smallBagsText) smallBagsText.textContent = getN(smallBagsCount) ? '' : '';
-      };
-      document.getElementById('largeBagsDec')?.addEventListener('click', ()=>{ const n=clamp(getN(largeBagsCount)-1,0,10); setN(largeBagsCount,n); renderBags(); });
-      document.getElementById('largeBagsInc')?.addEventListener('click', ()=>{ const n=clamp(getN(largeBagsCount)+1,0,10); setN(largeBagsCount,n); renderBags(); });
-      document.getElementById('smallBagsDec')?.addEventListener('click', ()=>{ const n=clamp(getN(smallBagsCount)-1,0,10); setN(smallBagsCount,n); renderBags(); });
-      document.getElementById('smallBagsInc')?.addEventListener('click', ()=>{ const n=clamp(getN(smallBagsCount)+1,0,10); setN(smallBagsCount,n); renderBags(); });
-
-      // Language selector
-      const langBtn = document.getElementById('langSelectBtn');
-      const langMenu = document.getElementById('langMenu');
-      // Set ONLY the preferred communication language (do NOT change global UI)
-      const setLang = (code, label, flag) => {
-        langBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
-        langBtn?.querySelector('.flag')?.replaceChildren(document.createTextNode(flag));
-        // Persist under gw_pref_lang so it won't affect global UI language
-        try { sessionStorage.setItem('gw_pref_lang', code); } catch(_){ }
-        try { localStorage.setItem('gw_pref_lang', code); } catch(_){ }
-      };
-      // Initial preferred value: previously chosen preference, or fall back to current UI language
-      const defaultLang = (()=>{ 
-        try {
-          return sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_lang') || sessionStorage.getItem('gw_lang') || 'el';
-        } catch(_){ return 'el'; }
-      })();
-  const langFlags = { el:'🇬🇷', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', es:'🇪🇸', zh:'🇨🇳', he:'🇮🇱', nl:'🇳🇱', sv:'🇸🇪', ko:'🇰🇷', pt:'🇵🇹', ru:'🇷🇺' };
-  const langFallbackLabels = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', zh:'中文', he:'עברית', nl:'Nederlands', sv:'Svenska', ko:'한국어', pt:'Português', ru:'Русский' };
-      {
-    const label = tSafe('booking.preferred_language_options.' + defaultLang, (langFallbackLabels[defaultLang] || defaultLang.toUpperCase()));
-        const flag = langFlags[defaultLang] || '';
-        setLang(defaultLang, label, flag);
-      }
-  langBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); if (langMenu) { langMenu.hidden = !langMenu.hidden; if (!langMenu.hidden) { const row = langMenu.closest('.s2-row'); if (row) { const rect = row.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom; langMenu.classList.toggle('dropup', spaceBelow < 220); } } try { applyTranslationsToStep2(); } catch(_){} } });
-      langMenu?.querySelectorAll('button')?.forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const code = btn.getAttribute('data-code') || 'el';
-          const label = tSafe('booking.preferred_language_options.' + code, (langFallbackLabels[code] || code.toUpperCase()));
-          const flag = langFlags[code] || '';
-          setLang(code, label, flag);
-          if (langMenu) langMenu.hidden = true;
-        });
-      });
-      document.addEventListener('click', (e)=>{
-        if (langMenu && !langMenu.hidden && !langMenu.contains(e.target) && e.target !== langBtn) langMenu.hidden = true;
-      });
+      // Suitcases field: handled in booking-addons.js
 
       // Age group selector
       const ageBtn = document.getElementById('ageSelectBtn');
@@ -583,9 +564,8 @@
           sessionStorage.setItem('gw_adults', String(getN(adultsCount)));
           // children ages
           sessionStorage.setItem('gw_children_ages', JSON.stringify(ages));
-          // bags
-          sessionStorage.setItem('gw_bags_large', String(getN(document.getElementById('largeBagsCount'))));
-          sessionStorage.setItem('gw_bags_small', String(getN(document.getElementById('smallBagsCount'))));
+          // dropoff same as pickup by default
+          sessionStorage.setItem('gw_dropoff_same', 'true');
         } catch(_){}
         try {
           const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
@@ -597,14 +577,7 @@
       // Re-apply selected labels when language changes
       try {
       window.addEventListener('i18n:changed', () => {
-          try {
-            // Keep showing the chosen communication language, but translate its label in current UI language
-            const curPref = (sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || defaultLang);
-            const label = (window.t ? window.t('booking.preferred_language_options.' + curPref) : (langFallbackLabels[curPref] || curPref.toUpperCase()));
-            const flag = langFlags[curPref] || '';
-            langBtn?.querySelector('.label')?.replaceChildren(document.createTextNode(label));
-            langBtn?.querySelector('.flag')?.replaceChildren(document.createTextNode(flag));
-          } catch(_){ }
+          // Preferred language is now auto-assigned from current locale (no dropdown)
 
           try {
             const curTrav = sessionStorage.getItem('gw_traveler_type') || '';

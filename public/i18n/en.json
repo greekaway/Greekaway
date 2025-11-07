@@ -218,7 +218,23 @@
       "night": "Night type",
       "talkative": "Talkative",
       "reserved": "Reserved"
-    }
+    },
+    "suitcases": "Suitcases",
+    "suitcase_small": "Small – Hand luggage (55 cm ≈ 10 kg)",
+    "suitcase_medium": "Medium – 20 kg Suitcase (65 cm)",
+    "suitcase_large": "Large – 40 kg Suitcase (80 cm)",
+    "suitcase_small_short": "Small",
+    "suitcase_medium_short": "Medium",
+    "suitcase_large_short": "Large",
+    "pickup_location": "Pick-up Location",
+    "pickup_placeholder": "Start typing an address",
+    "map_btn_title": "Map",
+    "pickup_map_preview": "Map preview",
+    "confirm": "Confirm",
+    "change": "Change",
+    "error_select_address": "Select an address from the list",
+    "special_requests": "Special Requests",
+    "special_requests_placeholder": "Special instructions or notes (optional)"
   },
   "aboutPage": {
     "title": "About Us – Greekaway",
