@@ -104,7 +104,21 @@
         .then(html => {
           const m = html.match(/maps\.googleapis\.com\/maps\/api\/js\?key=([^"&]+)/i);
           const key = m && m[1];
-          if (!key || key === 'YOUR_GOOGLE_MAPS_API_KEY') throw new Error('no-key');
+          if (!key || key === 'YOUR_GOOGLE_MAPS_API_KEY') {
+            // Fallback: call lightweight endpoint to get key
+            return fetch('/api/maps-key', { cache: 'no-cache' })
+              .then(r => r.ok ? r.json() : Promise.reject(new Error('api-maps-key')))
+              .then(obj => {
+                const apiKey = obj && obj.key;
+                if (!apiKey) throw new Error('no-key');
+                const s = document.createElement('script');
+                s.async = true; s.defer = true;
+                s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places`;
+                s.onload = () => { googleReady=true; resolve(); };
+                s.onerror = () => reject(new Error('maps-load-failed'));
+                document.head.appendChild(s);
+              });
+          }
           const s = document.createElement('script');
           s.async = true; s.defer = true;
           s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places`;

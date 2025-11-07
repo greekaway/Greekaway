@@ -510,6 +510,19 @@ app.get('/trips/trip.html', (req, res) => {
   });
 });
 
+// Lightweight endpoint to expose the public Google Maps key to the client when dynamic extraction fails.
+// This is safe because the Maps JavaScript API key is meant to be embedded on public pages.
+// We still avoid returning the placeholder string so the client can decide on fallback behaviour.
+app.get('/api/maps-key', (req, res) => {
+  try {
+    const key = MAP_KEY && MAP_KEY !== 'YOUR_GOOGLE_MAPS_API_KEY' ? MAP_KEY : null;
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ key });
+  } catch (e) {
+    res.status(500).json({ key: null, error: 'maps-key-error' });
+  }
+});
+
 // Serve checkout.html and inject Stripe publishable key placeholder
 app.get('/checkout.html', (req, res) => {
   const filePath = path.join(__dirname, 'public', 'checkout.html');
