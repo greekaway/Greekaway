@@ -203,12 +203,15 @@
       dropdown.hidden = false;
     };
 
+    // Debounced search for Google Places predictions (adjusted to ~480ms per requirement)
     const doSearch = debounce(() => {
       const q = String(input.value || '').trim();
       if (q.length < 3) { dropdown.hidden = true; dropdown.innerHTML=''; setNextEnabled(false); return; }
       ensureServices(() => {
         try {
           acService.getPlacePredictions({ input: q, types: ['geocode'] }, (preds, status)=>{
+            // Always log status to console for monitoring (OK / ZERO_RESULTS / REQUEST_DENIED / etc.)
+            try { console.log('[pickup-autocomplete] status:', status, 'query:"'+q+'"', 'results:', preds ? preds.length : 0); } catch(_){}
             if (status !== google.maps.places.PlacesServiceStatus.OK) {
               console.warn('places: prediction status', status);
               let msg = null;
@@ -224,7 +227,7 @@
           });
         } catch(_){ }
       });
-    }, 280);
+    }, 480);
 
     input.addEventListener('input', () => { chosenPlace=null; persist.set('gw_pickup_place_id',''); setNextEnabled(false); doSearch(); });
     input.addEventListener('focus', () => { if (dropdown.childElementCount>0) dropdown.hidden=false; });
