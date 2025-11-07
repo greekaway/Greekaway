@@ -178,7 +178,26 @@
       "night": "Night type",
       "talkative": "Talkative",
       "reserved": "Reserved"
-    }
+    },
+    "choose_category": "Välj kategori",
+    "suitcases": "Bagage",
+    "suitcase_small": "Liten – Handbagage (55 cm ≈ 10 kg)",
+    "suitcase_medium": "Mellan – Resväska 20 kg (65 cm)",
+    "suitcase_large": "Stor – Resväska 40 kg (80 cm)",
+    "suitcase_small_short": "Liten",
+    "suitcase_medium_short": "Mellan",
+    "suitcase_large_short": "Stor",
+    "pickup_location": "Upphämtningsplats",
+    "pickup_placeholder": "Börja skriva en adress",
+    "map_btn_title": "Karta",
+    "pickup_map_preview": "Kartförhandsvisning",
+    "confirm": "Bekräftа",
+    "change": "Ändra",
+    "error_select_address": "Välj en adress från listan",
+    "special_requests": "Särskilda önskemål",
+  "special_requests_placeholder": "Särskilda instruktioner eller anteckningar (valfritt)",
+  "traveler_profile_incomplete": "Fyll i din reseprofil innan du fortsätter.",
+  "proceed_payment": "Fortsätt till betalning"
   }
   ,
   "aboutPage": {

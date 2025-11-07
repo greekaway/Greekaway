@@ -178,7 +178,26 @@
       "night": "Night type",
       "talkative": "Talkative",
       "reserved": "Reserved"
-    }
+    },
+    "choose_category": "Escolha a categoria",
+    "suitcases": "Bagagens",
+    "suitcase_small": "Pequena – Bagagem de mão (55 cm ≈ 10 kg)",
+    "suitcase_medium": "Média – Mala 20 kg (65 cm)",
+    "suitcase_large": "Grande – Mala 40 kg (80 cm)",
+    "suitcase_small_short": "Pequena",
+    "suitcase_medium_short": "Média",
+    "suitcase_large_short": "Grande",
+    "pickup_location": "Local de recolha",
+    "pickup_placeholder": "Comece a digitar um endereço",
+    "map_btn_title": "Mapa",
+    "pickup_map_preview": "Pré‑visualização do mapa",
+    "confirm": "Confirmar",
+    "change": "Alterar",
+    "error_select_address": "Selecione um endereço da lista",
+    "special_requests": "Instruções especiais",
+  "special_requests_placeholder": "Instruções ou notas (opcional)",
+  "traveler_profile_incomplete": "Complete seu perfil de viajante antes de continuar.",
+  "proceed_payment": "Prosseguir para pagamento"
   }
   ,
   "aboutPage": {

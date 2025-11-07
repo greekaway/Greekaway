@@ -178,7 +178,26 @@
       "night": "Night type",
       "talkative": "Talkative",
       "reserved": "Reserved"
-    }
+    },
+    "choose_category": "Kies een categorie",
+    "suitcases": "Bagage",
+    "suitcase_small": "Klein – Handbagage (55 cm ≈ 10 kg)",
+    "suitcase_medium": "Middel – Koffer 20 kg (65 cm)",
+    "suitcase_large": "Groot – Koffer 40 kg (80 cm)",
+    "suitcase_small_short": "Klein",
+    "suitcase_medium_short": "Middel",
+    "suitcase_large_short": "Groot",
+    "pickup_location": "Ophaallocatie",
+    "pickup_placeholder": "Begin met het typen van een adres",
+    "map_btn_title": "Kaart",
+    "pickup_map_preview": "Kaartvoorbeeld",
+    "confirm": "Bevestigen",
+    "change": "Wijzigen",
+    "error_select_address": "Kies een adres uit de lijst",
+    "special_requests": "Speciale instructies",
+  "special_requests_placeholder": "Bijzondere instructies of notities (optioneel)",
+  "traveler_profile_incomplete": "Voltooi je reizigersprofiel voordat je verdergaat.",
+  "proceed_payment": "Doorgaan naar betaling"
   }
   ,
   "aboutPage": {

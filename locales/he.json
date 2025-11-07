@@ -170,7 +170,26 @@
       "night": "אוהב לילה",
       "talkative": "פטפטן",
       "reserved": "מופנם"
-    }
+    },
+    "choose_category": "בחרו קטגוריה",
+    "suitcases": "מטען",
+    "suitcase_small": "קטן – תיק יד (55 ס\"מ ≈ 10 ק\"ג)",
+    "suitcase_medium": "בינוני – מזוודה 20 ק\"ג (65 ס\"מ)",
+    "suitcase_large": "גדול – מזוודה 40 ק\"ג (80 ס\"מ)",
+    "suitcase_small_short": "קטן",
+    "suitcase_medium_short": "בינוני",
+    "suitcase_large_short": "גדול",
+    "pickup_location": "נקודת איסוף",
+    "pickup_placeholder": "התחל להקליד כתובת",
+    "map_btn_title": "מפה",
+    "pickup_map_preview": "תצוגת מפה",
+    "confirm": "אישור",
+    "change": "שינוי",
+    "error_select_address": "בחרו כתובת מהרשימה",
+    "special_requests": "בקשות מיוחדות",
+  "special_requests_placeholder": "הוראות או הערות (לא חובה)",
+  "traveler_profile_incomplete": "אנא השלימו את פרופיל המטייל לפני ההמשך.",
+  "proceed_payment": "להמשיך לתשלום"
   }
   ,
   "aboutPage": {

@@ -170,7 +170,26 @@
       "night": "Nachtmensch",
       "talkative": "Gesprächig",
       "reserved": "Zurückhaltend"
-    }
+    },
+    "choose_category": "Kategorie wählen",
+    "suitcases": "Gepäck",
+    "suitcase_small": "Klein – Handgepäck (55 cm ≈ 10 kg)",
+    "suitcase_medium": "Mittel – Koffer 20 kg (65 cm)",
+    "suitcase_large": "Groß – Koffer 40 kg (80 cm)",
+    "suitcase_small_short": "Klein",
+    "suitcase_medium_short": "Mittel",
+    "suitcase_large_short": "Groß",
+    "pickup_location": "Abholort",
+    "pickup_placeholder": "Adresse eingeben",
+    "map_btn_title": "Karte",
+    "pickup_map_preview": "Kartenansicht",
+    "confirm": "Bestätigen",
+    "change": "Ändern",
+    "error_select_address": "Wählen Sie eine Adresse aus der Liste",
+    "special_requests": "Besondere Wünsche",
+  "special_requests_placeholder": "Besondere Hinweise oder Notizen (optional)",
+  "traveler_profile_incomplete": "Bitte vervollständigen Sie Ihr Reiseprofil, bevor Sie fortfahren.",
+  "proceed_payment": "Weiter zur Zahlung"
   }
   ,
   "aboutPage": {

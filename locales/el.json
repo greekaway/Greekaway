@@ -118,8 +118,7 @@
   "increase_bags_large": "Αύξηση μεγάλων βαλιτσών",
   "decrease_bags_large": "Μείωση μεγάλων βαλιτσών",
   "increase_bags_small": "Αύξηση μικρών βαλιτσών",
-  "pickup_location": "Σημείο Παραλαβής",
-  "pickup_placeholder": "Αρχίστε να πληκτρολογείτε διεύθυνση",
+  
   "pickup_required_msg": "*Παρακαλώ συμπληρώστε τη διεύθυνση παραλαβής πριν συνεχίσετε.",
   "traveler_profile_incomplete": "Παρακαλώ ολοκληρώστε το προφίλ ταξιδιώτη πριν συνεχίσετε.",
   "proceed_payment": "Συνέχεια στην Πληρωμή",
@@ -196,7 +195,24 @@
       "night": "Βραδινός τύπος",
       "talkative": "Ομιλητικός",
       "reserved": "Κλειστός χαρακτήρας"
-    }
+    },
+    "choose_category": "Επιλέξτε κατηγορία",
+    "suitcases": "Αποσκευές",
+    "suitcase_small": "Μικρή – Χειραποσκευή (55 cm ≈ 10 kg)",
+    "suitcase_medium": "Μεσαία – Βαλίτσα 20 kg (65 cm)",
+    "suitcase_large": "Μεγάλη – Βαλίτσα 40 kg (80 cm)",
+    "suitcase_small_short": "Μικρή",
+    "suitcase_medium_short": "Μεσαία",
+    "suitcase_large_short": "Μεγάλη",
+    "pickup_location": "Σημείο Παραλαβής",
+    "pickup_placeholder": "Αρχίστε να πληκτρολογείτε διεύθυνση",
+    "map_btn_title": "Χάρτης",
+    "pickup_map_preview": "Προεπισκόπηση χάρτη",
+    "confirm": "Επιβεβαίωση",
+    "change": "Αλλαγή",
+    "error_select_address": "Επιλέξτε διεύθυνση από τη λίστα",
+    "special_requests": "Ειδικές Οδηγίες",
+    "special_requests_placeholder": "Ειδικές οδηγίες ή παρατηρήσεις (προαιρετικά)"
   }
   ,
   "aboutPage": {

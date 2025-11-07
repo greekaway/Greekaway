@@ -170,7 +170,26 @@
       "night": "Noctambule",
       "talkative": "Bavard",
       "reserved": "Réservé"
-    }
+    },
+    "choose_category": "Choisissez une catégorie",
+    "suitcases": "Bagages",
+    "suitcase_small": "Petit – Bagage cabine (55 cm ≈ 10 kg)",
+    "suitcase_medium": "Moyen – Valise 20 kg (65 cm)",
+    "suitcase_large": "Grand – Valise 40 kg (80 cm)",
+    "suitcase_small_short": "Petit",
+    "suitcase_medium_short": "Moyen",
+    "suitcase_large_short": "Grand",
+    "pickup_location": "Point de prise en charge",
+    "pickup_placeholder": "Commencez à saisir une adresse",
+    "map_btn_title": "Carte",
+    "pickup_map_preview": "Aperçu de la carte",
+    "confirm": "Confirmer",
+    "change": "Changer",
+    "error_select_address": "Sélectionnez une adresse dans la liste",
+    "special_requests": "Instructions spéciales",
+  "special_requests_placeholder": "Instructions ou notes (optionnel)",
+  "traveler_profile_incomplete": "Veuillez compléter votre profil voyageur avant de continuer.",
+  "proceed_payment": "Procéder au paiement"
   }
   ,
   "aboutPage": {

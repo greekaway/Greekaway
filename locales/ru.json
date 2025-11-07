@@ -179,7 +179,26 @@
       "night": "Night type",
       "talkative": "Talkative",
       "reserved": "Reserved"
-    }
+    },
+    "choose_category": "Выберите категорию",
+    "suitcases": "Багаж",
+    "suitcase_small": "Маленький – Ручная кладь (55 см ≈ 10 кг)",
+    "suitcase_medium": "Средний – Чемодан 20 кг (65 см)",
+    "suitcase_large": "Большой – Чемодан 40 кг (80 см)",
+    "suitcase_small_short": "Мал.",
+    "suitcase_medium_short": "Ср.",
+    "suitcase_large_short": "Больш.",
+    "pickup_location": "Место отправления",
+    "pickup_placeholder": "Начните вводить адрес",
+    "map_btn_title": "Карта",
+    "pickup_map_preview": "Предпросмотр карты",
+    "confirm": "Подтвердить",
+    "change": "Изменить",
+    "error_select_address": "Выберите адрес из списка",
+    "special_requests": "Особые пожелания",
+  "special_requests_placeholder": "Особые инструкции или заметки (по желанию)",
+  "traveler_profile_incomplete": "Пожалуйста, заполните профиль путешественника перед продолжением.",
+  "proceed_payment": "Перейти к оплате"
   }
   ,
   "aboutPage": {
