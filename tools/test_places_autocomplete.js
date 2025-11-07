@@ -23,8 +23,8 @@ const puppeteer = require('puppeteer');
     await page.focus('#pickupInput');
     await page.type('#pickupInput', 'Athens', { delay: 80 });
 
-    // Wait enough time for debounce + network + render
-    await page.waitForTimeout(2000);
+  // Wait enough time for debounce + network + render
+  await new Promise(r => setTimeout(r, 500));
 
     // Inspect dropdown for suggestions
     const state = await page.evaluate(() => {

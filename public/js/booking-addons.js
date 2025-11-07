@@ -209,6 +209,29 @@
       if (q.length < 3) { dropdown.hidden = true; dropdown.innerHTML=''; setNextEnabled(false); return; }
       ensureServices(() => {
         try {
+          // Simple 60s memoization layer to avoid repeated identical queries hitting Google Places.
+          // Cache stores the raw predictions array (or null) keyed by query string.
+          const now = Date.now();
+          window.__gwPlacesCache = window.__gwPlacesCache || Object.create(null);
+          const cacheEntry = window.__gwPlacesCache[q];
+          if (cacheEntry && (now - cacheEntry.t) < 60_000) {
+            const { preds: cachedPreds, status: cachedStatus } = cacheEntry;
+            try { console.log('[pickup-autocomplete] cache-hit query:"'+q+'" status:', cachedStatus, 'results:', cachedPreds ? cachedPreds.length : 0); } catch(_){}
+            if (cachedStatus === google.maps.places.PlacesServiceStatus.OK) {
+              renderPreds(cachedPreds || []);
+            } else {
+              // Reuse same status handling path
+              let msg = null;
+              if (cachedStatus === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) msg = t('booking.no_addresses','Δεν βρέθηκαν διευθύνσεις');
+              else if (cachedStatus === google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) msg = t('booking.rate_limit','Προσωρινό όριο – δοκίμασε ξανά');
+              else if (cachedStatus === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) msg = t('booking.api_denied','Το API κλειδωμένο – έλεγξε το κλειδί');
+              else if (cachedStatus === google.maps.places.PlacesServiceStatus.INVALID_REQUEST) msg = t('booking.invalid_request','Μη έγκυρο αίτημα');
+              else msg = t('booking.error_generic','Σφάλμα προτάσεων');
+              renderPreds([], msg);
+            }
+            return; // served from cache
+          }
+
           acService.getPlacePredictions({ input: q, types: ['geocode'] }, (preds, status)=>{
             // Always log status to console for monitoring (OK / ZERO_RESULTS / REQUEST_DENIED / etc.)
             try { console.log('[pickup-autocomplete] status:', status, 'query:"'+q+'"', 'results:', preds ? preds.length : 0); } catch(_){}
@@ -221,9 +244,12 @@
               else if (status === google.maps.places.PlacesServiceStatus.INVALID_REQUEST) msg = t('booking.invalid_request','Μη έγκυρο αίτημα');
               else msg = t('booking.error_generic','Σφάλμα προτάσεων');
               renderPreds([], msg);
+              // Cache negative status too to avoid hammering on invalid key
+              window.__gwPlacesCache[q] = { preds: null, status, t: Date.now() };
               return;
             }
             renderPreds(preds || []);
+            window.__gwPlacesCache[q] = { preds: (preds||[]), status, t: Date.now() };
           });
         } catch(_){ }
       });
