@@ -1,0 +1,172 @@
+/* Stage 1: surface tokens to break blue monotony safely */
+:root {
+  --panel-top: 5vh;
+  --s2-offset-under-header: 36px;
+  /* Surfaces */
+  --surface-band-top: rgba(84, 122, 176, 0.38);   /* lighter blue */
+  --surface-band-bot: rgba(54, 86, 136, 0.30);
+  --surface-card-top: rgba(58, 78, 102, 0.98);    /* slightly different than before */
+  --surface-card-bot: rgba(36, 50, 68, 0.98);
+}
+/* Keep page absolutely minimal and clean */
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background-image: var(--site-gradient);
+  background-color: var(--site-bg-color);
+}
+/* Middle band (same sizing/placement as step1 calendar band) */
+.step2-band {
+  position: fixed; /* anchor to viewport like an overlay */
+  top: var(--panel-top);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(780px, calc(100vw - 56px));
+  bottom: -80px; /* extend under the footer (~64px) so it goes behind it */
+  margin: 0; padding: 0;
+  overflow: hidden;
+  /* subtle lighter blue layer to separate from site bg */
+  background: linear-gradient(180deg, var(--surface-band-top) 0%, var(--surface-band-bot) 100%);
+  border-radius: 18px;
+  pointer-events: none; /* purely decorative container for now */
+}
+/* The actual dark card panel (mirrors step1 .flatpickr-calendar look) */
+.step2-card {
+  position: absolute;
+  inset: 0;
+  /* Slightly darker than band for depth */
+  background: linear-gradient(180deg, var(--surface-card-top) 0%, var(--surface-card-bot) 100%);
+  border-radius: 16px;
+  /* Refined shadow for clearer elevation without heavy spread */
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.055),
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 14px 28px -12px rgba(0,0,0,0.55),
+    0 36px 80px -24px rgba(0,0,0,0.60);
+  will-change: transform, box-shadow;
+}
+@media (max-width: 599px) {
+  .step2-band { width: calc(100vw - 40px); }
+}
+/* Optional center marker to verify blank page visually; kept hidden by default */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,1px,1px); white-space: nowrap; border: 0; }
+
+/* Step 2 action bar — same placement/look as Step 1 */
+.s2-actions {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom) + 32px);
+  display: flex;
+  justify-content: center; /* κεντραρισμένα */
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+  gap: 18px; /* πιο κοντά μεταξύ τους */
+  z-index: 13001; /* above global footer (z-index ~12000) */
+  max-width: 520px;
+  margin: 0 auto;
+}
+@media (max-width: 599px) {
+  .s2-actions { padding: 0 16px; bottom: calc(64px + env(safe-area-inset-bottom) + 34px); max-width: 440px; gap: 16px; }
+}
+.s2-actions .btn {
+  background: #0E1520; /* official dark navy */
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 16px;
+  padding: 12px 18px; /* ένα ακόμη κλικ πιο αδύνατα */
+  font-size: 1.03rem; /* ελαφρώς μικρότερα */
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  min-width: 114px; /* ελάχιστη μείωση */
+  box-shadow:
+    0 10px 18px rgba(0,0,0,0.35),
+    0 4px 10px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.28);
+  transition: transform 140ms ease, box-shadow 160ms ease, background 160ms ease;
+  cursor: pointer;
+}
+.s2-actions .btn:hover { background: #122033; box-shadow: 0 12px 22px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.3); }
+.s2-actions .btn:active { transform: translateY(1px); box-shadow: 0 6px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3); }
+
+/* Title + description header above the panel */
+.step2-header {
+  position: fixed;
+  top: 0px; /* another +3 clicks (~12px) */
+  left: 0; right: 0;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px;
+  color: var(--color-text, #e8edf2);
+  z-index: 5;
+  padding: 0 16px;
+  text-align: center;
+}
+.step2-header .trip-title {
+  font-weight: 800;
+  /* ~+20% συνολικά από το αρχικό */
+  font-size: clamp(1.44rem, 2.88vw + 0.96rem, 2.28rem);
+  letter-spacing: 0.4px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.35);
+}
+.step2-header .trip-desc { display: none; }
+
+/* Inline fields under the header inside the top of the panel */
+.s2-fields {
+  position: fixed;
+  left: 50%; transform: translateX(-50%);
+  top: calc(var(--panel-top) + var(--s2-offset-under-header));
+  width: min(780px, calc(100vw - 56px));
+  z-index: 20000; /* above footer/actions to keep dropdowns on top */
+  color: #fff;
+  font-weight: 800; /* white bold text as requested */
+}
+@media (max-width: 599px) {
+  .s2-fields { width: calc(100vw - 40px); }
+  :root { --s2-offset-under-header: 32px; }
+}
+.s2-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; position: relative; }
+.s2-row + .s2-row {
+  border-top: 1px solid rgba(0,0,0,0.45); /* darker hairline */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); /* subtle top highlight for 3D ridge */
+}
+.s2-labels { display: flex; flex-direction: column; gap: 4px; }
+.s2-labels .title { color: #fff; font-weight: 800; }
+.s2-labels .sub { color: #fff; font-weight: 800; opacity: 0.92; font-size: 0.95rem; }
+/* Center ages display between label and minus */
+.s2-ages { flex: 1; text-align: center; color: #fff; font-weight: 800; opacity: 0.95; }
+.s2-ages .hint { opacity: 0.7; font-weight: 700; }
+.s2-counter { display: flex; align-items: center; gap: 10px; }
+.s2-counter .btn-round {
+  width: 36px; height: 36px; border-radius: 10px; /* rounded square */
+  background: #0E1520; color: #fff; border: 1px solid rgba(255,255,255,0.16);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 800; cursor: pointer;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: transform 140ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+.s2-counter .btn-round:active { transform: translateY(1px); box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05); }
+.s2-counter .count { min-width: 28px; text-align: center; font-size: 1.05rem; font-weight: 800; color: #fff; }
+
+/* Popover grid for choosing child age 1..17 */
+.age-picker { position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 8px);
+  background: #0E1520; color: #fff; border: 1px solid rgba(255,255,255,0.16); border-radius: 12px; padding: 12px; z-index: 21000;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+  display: grid; grid-template-columns: repeat(6, 36px); gap: 8px; pointer-events: auto;
+}
+.age-picker.dropup { top: auto; bottom: calc(100% + 8px); }
+.age-picker button { width: 36px; height: 36px; border-radius: 8px; background: #142132; color: #fff; border: 1px solid rgba(255,255,255,0.16); font-weight: 800; cursor: pointer; }
+.age-picker button:hover { background: #1B2B42; }
+.age-picker[hidden] { display: none; }
+
+/* Language selector on the right */
+.s2-right { display: flex; align-items: center; gap: 10px; }
+.lang-select { background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:12px; padding:8px 12px; font-weight:800; display:flex; align-items:center; gap:8px; cursor:pointer; box-shadow:0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06); min-width: 140px; }
+.lang-select .caret { opacity:0.8; }
+.lang-select .flag.placeholder { opacity: 0; }
+.lang-menu { position:absolute; right:16px; top: calc(100% + 8px); background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:12px; padding:8px; z-index:21000; box-shadow:0 16px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04); min-width:200px; }
+.lang-menu[hidden]{ display:none; }
+.lang-menu.dropup { top: auto; bottom: calc(100% + 8px); }
+.lang-menu button { width:100%; text-align:left; background:#142132; color:#fff; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:8px 10px; margin:4px 0; font-weight:800; display:flex; align-items:center; gap:10px; cursor:pointer; }
+.lang-menu button:hover { background:#1B2B42; }

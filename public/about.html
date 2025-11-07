@@ -6,48 +6,8 @@
   <title>About Us – Greekaway</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
-  <style>
-    /* About page specific styles */
-    .about-hero {
-      padding: clamp(32px, 8vh, 72px) 16px 8px;
-      background: var(--color-background-gradient);
-      color: #fff;
-      text-align: center;
-    }
-    .about-hero h1 {
-      color: var(--color-gold);
-      letter-spacing: 0.2px;
-      font-size: clamp(1.6rem, 2.6vw + 1rem, 2.4rem);
-      margin: 0 0 10px;
-    }
-    /* In light (day) mode, use white for the hero title so it stands out on the blue background */
-    @media (prefers-color-scheme: light) {
-      .about-hero h1 { color: #FFFFFF !important; }
-    }
-    .about-hero p.lead { color: #f0f4f8; opacity: 0.92; margin: 0 auto; max-width: 60ch; }
-
-    .about-wrap { max-width: 980px; margin: 0 auto; padding: 8px 16px 64px; text-align: left; }
-    .about-section { margin: 24px auto; padding: 16px 14px; background: rgba(10,18,28,0.35); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; box-shadow: 0 6px 22px rgba(0,0,0,0.35); }
-    .about-section h2 { color: var(--color-gold); margin: 0 0 8px; font-size: clamp(1.1rem, 1.6vw + 0.9rem, 1.6rem); }
-    .about-section p { color: #fff; line-height: 1.6; margin: 0; opacity: 0.96; }
-
-    /* Fade-in on reveal */
-    .fade-reveal { opacity: 0; transform: translateY(12px); transition: opacity 500ms ease, transform 500ms ease; }
-    .fade-reveal.visible { opacity: 1; transform: translateY(0); }
-
-    /* Version footer */
-    .about-version { margin: 28px auto 92px; text-align: center; color: #FFFFFF; opacity: 0.9; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; }
-    .about-version strong { color: var(--color-gold); font-weight: 600; }
-
-    /* Day/night color for version footer (About page only) */
-    @media (prefers-color-scheme: light) {
-      .about-version { color: #000000 !important; }
-    }
-
-    @media (min-width: 720px) {
-      .about-section { padding: 18px 20px; }
-    }
-  </style>
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/about.css">
 </head>
 <body>
   <!-- Language selector intentionally hidden on About page (kept on the home page only) -->

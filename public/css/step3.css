@@ -1,0 +1,53 @@
+:root {
+  --panel-top: 5vh;
+  /* Reuse step2 surfaces for consistent look */
+  --surface-band-top: rgba(84, 122, 176, 0.38);
+  --surface-band-bot: rgba(54, 86, 136, 0.30);
+  --surface-card-top: rgba(58, 78, 102, 0.98);
+  --surface-card-bot: rgba(36, 50, 68, 0.98);
+}
+html, body { height: 100%; }
+body { margin: 0; background-image: var(--site-gradient); background-color: var(--site-bg-color); }
+
+/* Middle band (same palette as step2) */
+.step3-band {
+  position: fixed; top: var(--panel-top); left: 50%; transform: translateX(-50%);
+  width: min(780px, calc(100vw - 56px)); bottom: -80px; margin: 0; padding: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, var(--surface-band-top) 0%, var(--surface-band-bot) 100%);
+  border-radius: 18px;
+}
+@media (max-width: 599px) { .step3-band { width: calc(100vw - 40px); } }
+
+/* Foreground card panel (like step2) */
+.step3-card {
+  position: absolute; inset: 0; border-radius: 16px;
+  background: linear-gradient(180deg, var(--surface-card-top) 0%, var(--surface-card-bot) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.055),
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 14px 28px -12px rgba(0,0,0,0.55),
+    0 36px 80px -24px rgba(0,0,0,0.60);
+}
+
+/* Header */
+.step3-header { position: fixed; top: 0; left: 0; right: 0; display:flex; flex-direction:column; align-items:center; gap:6px; z-index:5; color:#e8edf2; padding: 8px 16px 0; text-align:center; }
+.step3-header .trip-title { font-weight: 800; font-size: clamp(1.44rem, 2.88vw + 0.96rem, 2.28rem); letter-spacing: 0.4px; text-shadow: 0 2px 16px rgba(0,0,0,0.35); }
+
+/* Summary fields */
+.s3-summary { position: fixed; left: 50%; transform: translateX(-50%); top: calc(var(--panel-top) + 36px); width: min(780px, calc(100vw - 56px)); z-index: 10; color: #0b1220; font-weight: 800; }
+@media (max-width: 599px) { .s3-summary { width: calc(100vw - 40px); } }
+.s3-card { margin: 12px; padding: 8px 6px; border-radius: 14px; background: transparent; color: #fff; }
+.s3-row { display:flex; align-items:center; justify-content:space-between; padding: 12px 16px; }
+.s3-row + .s3-row { border-top: 1px solid rgba(0,0,0,0.45); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
+.s3-label { color:#fff; font-weight:800; }
+.s3-value { color:#fff; opacity:0.95; font-weight:800; text-align:right; }
+
+/* Actions (like step2) */
+.s3-actions { position: fixed; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom) + 32px); display:flex; justify-content:center; align-items:center; padding: 0 20px; gap:18px; z-index: 13001; max-width:520px; margin:0 auto; }
+@media (max-width: 599px) { .s3-actions { padding: 0 16px; bottom: calc(64px + env(safe-area-inset-bottom) + 34px); max-width: 440px; gap: 16px; } }
+.s3-actions .btn { background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:16px; padding:12px 18px; font-size:1.03rem; font-weight:800; letter-spacing:0.02em; min-width: 140px; box-shadow:0 10px 18px rgba(0,0,0,0.35), 0 4px 10px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.28); cursor:pointer; }
+
+/* Emphasize cost row with money-green color */
+.s3-row.emph .s3-label,
+.s3-row.emph .s3-value { color: #2ecc71; }
