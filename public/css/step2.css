@@ -229,9 +229,9 @@ body {
 .age-menu-error, .travtype-menu-error { border:1.5px solid #e53935 !important; }
 #pickupRow .s2-input.error::placeholder { color:#e53935; opacity: 1; }
 #pickupRow label.required::after, .s2-labels .title.required::after { content:" *"; color:#e53935; font-weight:600; }
-#pickupError { color:#e53935; font-size:0.78rem; font-weight:700; margin:4px 4px 0 4px; letter-spacing:0.3px; }
+#pickupError { color:#e53935; font-size:0.66rem; font-weight:700; margin:4px 4px 0 4px; letter-spacing:0.3px; }
 #pickupError[hidden] { display:none; }
 
 /* Inline field errors for Step 2 selectors (Age/Traveler Type) */
-.field-inline-error { color:#e53935; font-size:0.78rem; font-weight:700; margin-top:4px; opacity:0.95; }
+.field-inline-error { color:#e53935; font-size:0.66rem; font-weight:700; margin-top:4px; opacity:0.95; }
 .field-inline-error[hidden] { display:none; }

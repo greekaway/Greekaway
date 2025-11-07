@@ -26,8 +26,7 @@
   <div class="s3-row"><div class="s3-label" data-i18n="booking.adults">Ενήλικες</div><div class="s3-value" id="vAdults">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.children">Παιδιά</div><div class="s3-value" id="vChildren">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.children_ages">Ηλικίες παιδιών</div><div class="s3-value" id="vChildrenAges">–</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.bags_large">Βαλίτσες (Μεγάλες)</div><div class="s3-value" id="vBagsLarge">–</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.bags_small">Βαλίτσες (Μικρές)</div><div class="s3-value" id="vBagsSmall">–</div></div>
+  <div class="s3-row"><div class="s3-label" data-i18n="booking.suitcases">Αποσκευές</div><div class="s3-value" id="vBags">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.preferred_language">Γλώσσα επικοινωνίας</div><div class="s3-value" id="vLang">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.pickup_location">Σημείο Παραλαβής</div><div class="s3-value" id="vPickup">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.age_group">Ηλικιακή ομάδα</div><div class="s3-value" id="vAgeGroup">–</div></div>
@@ -156,8 +155,10 @@
       const adults = get('gw_adults','2');
       const ages = (()=>{ try { return JSON.parse(get('gw_children_ages','[]')); } catch(_){ return []; } })();
       const children = String(ages.length);
-      const bagsL = get('gw_bags_large','0');
-      const bagsS = get('gw_bags_small','0');
+  const bagsL = parseInt(get('gw_bags_large','0'),10)||0;
+  const bagsM = parseInt(get('gw_bags_medium','0'),10)||0;
+  const bagsS = parseInt(get('gw_bags_small','0'),10)||0;
+  const totalBags = bagsL + bagsM + bagsS;
   // Communication preference: prefer explicit booking preference, fallback to global UI language
   const langC = (() => { const v = get('gw_pref_lang',''); return v || get('gw_lang','el'); })();
       const ageG = get('gw_age_group','');
@@ -169,8 +170,7 @@
         document.getElementById('vAdults').textContent = adults;
         document.getElementById('vChildren').textContent = children;
         document.getElementById('vChildrenAges').textContent = ages.length? ages.join(', '): '—';
-        document.getElementById('vBagsLarge').textContent = bagsL;
-        document.getElementById('vBagsSmall').textContent = bagsS;
+  document.getElementById('vBags').textContent = totalBags ? String(totalBags) : '—';
         const langLabel = tSafe('booking.preferred_language_options.' + langC, (langFallbackLabels[langC] || langC.toUpperCase()));
         const langFlag = langFlags[langC] || '';
         document.getElementById('vLang').textContent = langLabel ? (langFlag ? `${langFlag} ${langLabel}` : langLabel) : '—';

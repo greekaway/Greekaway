@@ -288,16 +288,9 @@
       chosenPlace=null; persist.set('gw_pickup_place_id','');
       const val = (input.value||'').trim();
       if (val.length){
-        // Clear visual error state
+        // Clear label required only (we keep static helper below label)
         input.classList.remove('error');
         $('#pickupLabel')?.classList.remove('required');
-        $('#pickupError')?.setAttribute('hidden','');
-        // Restore normal placeholder from i18n key
-        const origPhKey = input.getAttribute('data-i18n-placeholder');
-        if (origPhKey) {
-          const ph = t(origPhKey, '');
-          if (ph) input.setAttribute('placeholder', ph);
-        }
       }
       updateNextVisualState();
       doSearch();
@@ -385,15 +378,8 @@
       }
       if (!val) {
         ev.preventDefault(); ev.stopPropagation();
-        // visual cues per spec (inline inside field placeholder + below label area)
-        if (input) {
-          input.classList.add('error');
-          const errPlaceholder = input.getAttribute('data-error-placeholder') || t('booking.pickup_required_msg','Please enter your pick-up address before continuing.');
-          input.setAttribute('placeholder', errPlaceholder);
-          if (!input.value) input.value=''; // ensure placeholder shows
-        }
+        if (input) { input.classList.add('error'); }
         const label = $('#pickupLabel'); if (label) label.classList.add('required');
-        const err = $('#pickupError'); if (err) { err.removeAttribute('hidden'); }
         // Scroll into view if needed
         try { input.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_){ }
         return false;
@@ -401,13 +387,8 @@
       // Strict mode: require Google place selection (place_id)
       if (strictPickupActive() && !chosenPlace?.place_id) {
         ev.preventDefault(); ev.stopPropagation();
-        if (input) {
-          input.classList.add('error');
-          const selectMsg = t('booking.error_select_address','Επιλέξτε διεύθυνση από τη λίστα');
-          input.setAttribute('placeholder', selectMsg);
-        }
+        if (input) { input.classList.add('error'); }
         const label = $('#pickupLabel'); if (label) label.classList.add('required');
-        const err = $('#pickupError'); if (err) { err.removeAttribute('hidden'); err.textContent = t('booking.error_select_address','Επιλέξτε διεύθυνση από τη λίστα'); }
         try { input.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_){ }
         return false;
       }
