@@ -1,12 +1,6 @@
 /* Stage 1: surface tokens to break blue monotony safely */
 :root {
-  --panel-top: 5vh;
-  --s2-offset-under-header: 36px;
-  /* Surfaces */
-  --surface-band-top: rgba(84, 122, 176, 0.38);   /* lighter blue */
-  --surface-band-bot: rgba(54, 86, 136, 0.30);
-  --surface-card-top: rgba(58, 78, 102, 0.98);    /* slightly different than before */
-  --surface-card-bot: rgba(36, 50, 68, 0.98);
+  --s2-offset-under-header: 36px; /* page-specific offset only; shared surfaces now in style.css */
 }
 /* Keep page absolutely minimal and clean */
 html, body { height: 100%; }
@@ -71,22 +65,8 @@ body {
   .s2-actions { padding: 0 16px; bottom: calc(64px + env(safe-area-inset-bottom) + 34px); max-width: 440px; gap: 16px; }
 }
 .s2-actions .btn {
-  background: #0E1520; /* official dark navy */
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.16);
-  border-radius: 16px;
-  padding: 12px 18px; /* ένα ακόμη κλικ πιο αδύνατα */
-  font-size: 1.03rem; /* ελαφρώς μικρότερα */
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  min-width: 114px; /* ελάχιστη μείωση */
-  box-shadow:
-    0 10px 18px rgba(0,0,0,0.35),
-    0 4px 10px rgba(0,0,0,0.25),
-    inset 0 1px 0 rgba(255,255,255,0.06),
-    inset 0 -1px 0 rgba(0,0,0,0.28);
-  transition: transform 140ms ease, box-shadow 160ms ease, background 160ms ease;
-  cursor: pointer;
+  /* Base button styling centralized in style.css; keep only size/font overrides */
+  font-size: 1.03rem;
 }
 .s2-actions .btn:hover { background: #122033; box-shadow: 0 12px 22px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.3); }
 .s2-actions .btn:active { transform: translateY(1px); box-shadow: 0 6px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3); }

@@ -14,6 +14,13 @@
   --culture-1: 243,156,18;
   --culture-2: 214,160,52;
 
+  /* Shared step flow & surface tokens (used by step2 / step3 pages) */
+  --panel-top: 5vh; /* vertical anchor for middle bands */
+  --surface-band-top: rgba(84, 122, 176, 0.38);
+  --surface-band-bot: rgba(54, 86, 136, 0.30);
+  --surface-card-top: rgba(58, 78, 102, 0.98);
+  --surface-card-bot: rgba(36, 50, 68, 0.98);
+
   /* 🎨 Greekaway Color Palette v1 (official) */
   /* Keep these as the canonical names used in discussions/docs */
   --color-background: var(--site-bg-color); /* κύριο φόντο */
@@ -25,6 +32,33 @@
   --ga-text: #FFFFFF;
   --ga-heading: #FFFFFF;
 }
+
+/* =============================================
+   Shared action buttons (Booking Step1 / Step2 / Step3)
+   Centralized to eliminate duplicate declarations across
+   booking.css, step2.css and step3.css. Keep page files
+   only for size/font overrides. Do NOT change HTML.
+   ============================================= */
+#bookingOverlay #step1 .booking-actions .btn,
+.s2-actions .btn,
+.s3-actions .btn {
+  background: #0E1520; /* unified dark navy */
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 16px;
+  padding: 12px 18px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  min-width: 114px; /* smallest base; larger sizes override locally */
+  box-shadow:
+    0 10px 18px rgba(0,0,0,0.35),
+    0 4px 10px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.28);
+  transition: transform 140ms ease, box-shadow 160ms ease, background 160ms ease;
+  cursor: pointer;
+}
+
 
 /* -------- Βασικά -------- */
 body {

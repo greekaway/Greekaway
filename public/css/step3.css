@@ -1,11 +1,4 @@
-:root {
-  --panel-top: 5vh;
-  /* Reuse step2 surfaces for consistent look */
-  --surface-band-top: rgba(84, 122, 176, 0.38);
-  --surface-band-bot: rgba(54, 86, 136, 0.30);
-  --surface-card-top: rgba(58, 78, 102, 0.98);
-  --surface-card-bot: rgba(36, 50, 68, 0.98);
-}
+/* Shared surface variables moved to global :root in style.css */
 html, body { height: 100%; }
 body { margin: 0; background-image: var(--site-gradient); background-color: var(--site-bg-color); }
 
@@ -47,6 +40,8 @@ body { margin: 0; background-image: var(--site-gradient); background-color: var(
 .s3-actions { position: fixed; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom) + 32px); display:flex; justify-content:center; align-items:center; padding: 0 20px; gap:18px; z-index: 13001; max-width:520px; margin:0 auto; }
 @media (max-width: 599px) { .s3-actions { padding: 0 16px; bottom: calc(64px + env(safe-area-inset-bottom) + 34px); max-width: 440px; gap: 16px; } }
 .s3-actions .btn { background:#0E1520; color:#fff; border:1px solid rgba(255,255,255,0.16); border-radius:16px; padding:12px 18px; font-size:1.03rem; font-weight:800; letter-spacing:0.02em; min-width: 140px; box-shadow:0 10px 18px rgba(0,0,0,0.35), 0 4px 10px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.28); cursor:pointer; }
+/* Base .s3-actions .btn visuals centralized in style.css; retain unique width/font adjustments */
+.s3-actions .btn { min-width:140px; font-size:1.03rem; }
 
 /* Emphasize cost row with money-green color */
 .s3-row.emph .s3-label,

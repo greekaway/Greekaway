@@ -203,8 +203,7 @@ html[data-view="trip"], body[data-view="trip"] {
 .overlay.active .overlay-inner { transform: translateY(0); opacity:1; }
 
 /* When overlay is open, lock background scrolling and prevent horizontal shift */
-body.overlay-open { overflow: hidden; touch-action: none; }
-html.overlay-open { overflow: hidden; }
+/* Overlay-open locking is handled globally in style.css */
 
 /* Ensure overlay-inner is centered and fits viewport on mobile (no horizontal scroll) */
 .overlay .overlay-inner { width: calc(100vw - 32px); max-width: 920px; margin: 5vh auto; box-sizing: border-box; }
@@ -473,86 +472,20 @@ body[data-view="trip"] .trip-card h3 {
   position: relative;
 }
 
-/* Footer */
-/* Footer sizing/layout is governed globally in style.css to ensure consistency */
-
-footer a {
-  color: #ecf0f1;
-  text-decoration: none;
-  font-size: 0.85rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-footer a i {
-  font-size: 1.4rem;
-  margin-bottom: 3px;
-}
-
-/* Overlays */
-
-.overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0; /* cover footer fully */
-  background: #07121a; /* fully opaque dark background */
-  color: #ecf0f1;
-  z-index: 10000; /* above footer/nav */
-  overflow-y: auto;
-  overflow-x: hidden; /* prevent right gutter / horizontal scroll */
-  -webkit-overflow-scrolling: touch;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 220ms ease, visibility 220ms ease;
-}
-
-.overlay.active { opacity:1; visibility:visible; pointer-events:auto; }
-
-.overlay .overlay-inner {
-  width: 100%;
-  max-width: 920px;
-  margin: 4vh auto;
-  box-sizing: border-box;
-  background: rgba(12,22,30,1);
-  padding: 1rem;
-  border-radius: 14px;
-  transform: translateY(-6px);
-  transition: transform 220ms ease;
-}
-
-.overlay.active .overlay-inner { transform: translateY(0); }
+/* Footer & overlay base styles are globally defined in style.css.
+   Removed duplicate footer anchor and generic .overlay blocks to avoid divergence.
+   Trip-specific overlay adjustments remain (e.g. booking overlay rules below). */
 
 /* When the booking overlay is active, remove transforms and width constraints to avoid distorting the middle-band calendar */
 #bookingOverlay .overlay-inner { transform: none !important; transition: none !important; max-width: none !important; margin: 0 !important; padding: 0 !important; border-radius: 0 !important; background: transparent !important; }
 
-.overlay button,
-.overlay form button {
-  background: #004080;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 16px;
-  cursor: pointer;
-}
-
-.overlay button:hover,
-.overlay form button:hover { background:#0066cc; }
-
-.overlay input,
-.overlay select,
-.overlay textarea { width:100%; padding:10px; margin:0.4rem 0; border-radius:8px; border:1px solid #ccc; }
-
-.overlay .close-overlay { position:absolute; top:12px; right:12px; background:transparent; color:#fff; border:none; font-size:1.6rem; padding:8px; border-radius:8px; cursor:pointer; z-index:2050; }
-.overlay .close-overlay:hover { background: rgba(255,255,255,0.04); }
-
 @media (max-width:599px) {
-  .overlay .overlay-inner {
+  /* retain only mobile padding adjustment if needed for booking overlay context */
+  #bookingOverlay .overlay-inner {
     margin: 0;
     border-radius: 0;
     padding: 16px;
     min-height: 100vh;
-    /* reserve space for any bottom action bar and safe-area */
     padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
   }
 }
