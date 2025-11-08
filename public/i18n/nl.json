@@ -84,6 +84,9 @@
   "trips_ui": {
     "backToCategories": "Back to categories"
   },
+  "notifications": {
+    "trip_viewers_now": "Andere gebruikers bekijken deze reis nu 👀"
+  },
   "profile": {
     "info": "Hier zie je je eerdere reizen en boekingen."
   },
@@ -225,6 +228,8 @@
   "error_select_address": "Kies een adres uit de lijst",
   "special_requests": "Speciale instructies",
   "special_requests_placeholder": "Bijzondere instructies of notities (optioneel)"
+  ,"driver_message": "Bericht aan de bestuurder"
+  ,"driver_message_placeholder": "Bericht aan de bestuurder (optioneel)"
   },
   "aboutPage": {
     "title": "Over ons – Greekaway",

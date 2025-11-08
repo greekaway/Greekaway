@@ -58,6 +58,9 @@
   "trips": { "selectCategory": "Selecciona categoría", "noneFound": "No se encontraron excursiones en esta categoría." },
   "ui": { "close": "Cerrar", "cancel": "Cancelar", "back": "Atrás", "finish": "Finalizar", "choose": "Elegir" },
   "trips_ui": { "backToCategories": "Back to categories" },
+  "notifications": {
+    "trip_viewers_now": "Otros usuarios están viendo esta excursión ahora 👀"
+  },
   "profile": { "info": "Here you'll see your past trips and bookings." },
   "assistant": {
     "title": "AI Assistant",
@@ -114,7 +117,6 @@
   "daily_rhythm": "Ritmo diario",
   "interests": "Intereses",
   "sociality": "Sociabilidad",
-  "children_ages": "Edades de los niños",
   "children_age_range": "0 – 17 años",
   "pick_ages": "Seleccionar edades",
     "step2_of3": "Paso 2 de 3",
@@ -192,8 +194,8 @@
     "confirm": "Confirmar",
     "change": "Cambiar",
     "error_select_address": "Seleccione una dirección de la lista",
-    "special_requests": "Mensaje para el conductor",
-  "special_requests_placeholder": "Mensaje para el conductor (opcional)",
+    "driver_message": "Mensaje para el conductor",
+  "driver_message_placeholder": "Mensaje para el conductor (opcional)",
   "driver_message_updated": "✅ mensaje al conductor actualizado",
   "traveler_profile_incomplete": "Completa tu perfil de viajero antes de continuar.",
   "proceed_payment": "Proceder al pago"

@@ -58,6 +58,9 @@
   "trips": { "selectCategory": "选择类别", "noneFound": "该类别中未找到行程。" },
   "ui": { "close": "关闭", "cancel": "取消", "back": "返回", "finish": "完成", "choose": "选择" },
   "trips_ui": { "backToCategories": "Back to categories" },
+  "notifications": {
+    "trip_viewers_now": "其他用户正在查看此行程 👀"
+  },
   "profile": { "info": "Here you'll see your past trips and bookings." },
   "assistant": {
     "title": "AI Assistant",
@@ -115,7 +118,6 @@
   "daily_rhythm": "作息节奏",
   "interests": "兴趣",
   "sociality": "社交性",
-  "children_ages": "儿童年龄",
   "children_age_range": "0 – 17 岁",
   "pick_ages": "选择年龄",
     "step2_of3": "第二步 / 共三步",
@@ -192,8 +194,8 @@
     "confirm": "确认",
     "change": "更改",
     "error_select_address": "请从列表中选择地址",
-    "special_requests": "给司机的留言",
-  "special_requests_placeholder": "给司机的留言（可选）",
+    "driver_message": "给司机的留言",
+  "driver_message_placeholder": "给司机的留言（可选）",
   "driver_message_updated": "✅ 给司机的留言已更新",
   "traveler_profile_incomplete": "请先完善您的旅客资料再继续。",
   "proceed_payment": "继续支付"

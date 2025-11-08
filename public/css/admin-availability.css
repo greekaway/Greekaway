@@ -1,1 +1,24 @@
-/* προσωρινά κενό, απλά για μελλοντικές ρυθμίσεις */
+/* Availability table: spinner for capacity */
+.table input.capacity-input{
+	width: 70px;
+	max-width: 80px;
+	min-width: 60px;
+	text-align: right;
+	padding: 4px 6px;
+	box-sizing: border-box;
+}
+
+/* Ensure vertical alignment inside table cells */
+td.num input.capacity-input{ vertical-align: middle; }
+
+/* Respect themes by inheriting colors and backgrounds */
+input.capacity-input{
+	background: var(--input-bg, inherit);
+	color: inherit;
+	border: 1px solid var(--border-color, rgba(0,0,0,0.2));
+	border-radius: 4px;
+}
+
+@media (max-width: 600px){
+	.table input.capacity-input{ width: 64px; }
+}

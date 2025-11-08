@@ -80,6 +80,9 @@
   "trips_ui": {
     "backToCategories": "Πίσω στις κατηγορίες"
   },
+  "notifications": {
+    "trip_viewers_now": "Άλλοι χρήστες κοιτούν αυτή την εκδρομή τώρα 👀"
+  },
   "profile": {
     "info": "Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας."
   },
@@ -236,6 +239,8 @@
     "error_select_address": "Επιλέξτε διεύθυνση από τη λίστα",
     "special_requests": "Ειδικές Οδηγίες",
     "special_requests_placeholder": "Ειδικές οδηγίες ή παρατηρήσεις (προαιρετικά)"
+    ,"driver_message": "Μήνυμα στον οδηγό"
+    ,"driver_message_placeholder": "Μήνυμα προς τον οδηγό (προαιρετικά)"
   },
   "aboutPage": {
     "title": "Σχετικά με εμάς – Greekaway",

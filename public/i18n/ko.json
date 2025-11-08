@@ -84,6 +84,9 @@
   "trips_ui": {
     "backToCategories": "Back to categories"
   },
+  "notifications": {
+    "trip_viewers_now": "다른 사용자가 지금 이 여행을 보고 있어요 👀"
+  },
   "profile": {
     "info": "여기에서 이전 여행과 예약을 확인할 수 있습니다."
   },
@@ -225,6 +228,8 @@
   "error_select_address": "목록에서 주소를 선택하세요",
   "special_requests": "특별 요청",
   "special_requests_placeholder": "특별 지시사항 또는 메모 (선택 사항)"
+  ,"driver_message": "기사에게 메시지"
+  ,"driver_message_placeholder": "기사에게 메시지 (선택 사항)"
   },
   "aboutPage": {
     "title": "회사 소개 – Greekaway",

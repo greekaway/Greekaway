@@ -51,6 +51,9 @@
   "trips": { "selectCategory": "Kategorie wählen", "noneFound": "Keine Ausflüge in dieser Kategorie gefunden." },
   "ui": { "close": "Schließen", "cancel": "Abbrechen", "back": "Zurück", "finish": "Fertig", "choose": "Wählen" },
   "trips_ui": { "backToCategories": "Zurück zu den Kategorien" },
+  "notifications": {
+    "trip_viewers_now": "Andere Nutzer sehen sich diese Tour gerade an 👀"
+  },
   "assistant": {
     "title": "AI Assistent",
     "close": "Schließen",
@@ -108,7 +111,6 @@
   "daily_rhythm": "Tagesrhythmus",
     "interests": "Interessen",
     "sociality": "Sozialität",
-    "children_ages": "Kinderalter",
     "children_age_range": "0 – 17 Jahre",
     "pick_ages": "Alter auswählen",
     "step2_of3": "Schritt 2 von 3",
@@ -186,8 +188,8 @@
     "confirm": "Bestätigen",
     "change": "Ändern",
     "error_select_address": "Wählen Sie eine Adresse aus der Liste",
-    "special_requests": "Nachricht an den Fahrer",
-  "special_requests_placeholder": "Nachricht an den Fahrer (optional)",
+    "driver_message": "Nachricht an den Fahrer",
+  "driver_message_placeholder": "Nachricht an den Fahrer (optional)",
   "driver_message_updated": "✅ Fahrernachricht aktualisiert",
   "traveler_profile_incomplete": "Bitte vervollständigen Sie Ihr Reiseprofil, bevor Sie fortfahren.",
   "proceed_payment": "Weiter zur Zahlung"

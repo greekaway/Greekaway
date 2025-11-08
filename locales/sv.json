@@ -58,6 +58,9 @@
   "trips": { "selectCategory": "Välj kategori", "noneFound": "Inga resor hittades i denna kategori." },
   "ui": { "close": "Stäng", "cancel": "Avbryt", "back": "Tillbaka", "finish": "Slutför", "choose": "Välj" },
   "trips_ui": { "backToCategories": "Back to categories" },
+  "notifications": {
+    "trip_viewers_now": "Andra användare tittar på den här utflykten nu 👀"
+  },
   "profile": { "info": "Här ser du dina tidigare resor och bokningar." },
   "assistant": {
     "title": "AI-assistent",
@@ -116,7 +119,6 @@
   "daily_rhythm": "Dagsrytm",
     "interests": "Intressen",
     "sociality": "Socialitet",
-    "children_ages": "Barnens åldrar",
     "children_age_range": "0–17 år",
     "pick_ages": "Välj åldrar",
     "step2_of3": "Steg 2 av 3",
@@ -194,8 +196,8 @@
     "confirm": "Bekräftа",
     "change": "Ändra",
     "error_select_address": "Välj en adress från listan",
-    "special_requests": "Meddelande till föraren",
-  "special_requests_placeholder": "Meddelande till föraren (valfritt)",
+    "driver_message": "Meddelande till föraren",
+  "driver_message_placeholder": "Meddelande till föraren (valfritt)",
   "driver_message_updated": "✅ förarmeddelandet uppdaterat",
   "traveler_profile_incomplete": "Fyll i din reseprofil innan du fortsätter.",
   "proceed_payment": "Fortsätt till betalning"

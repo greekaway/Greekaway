@@ -79,6 +79,9 @@
   "trips_ui": {
     "backToCategories": "חזרה לקטגוריות"
   },
+  "notifications": {
+    "trip_viewers_now": "משתמשים אחרים צופים בסיור הזה עכשיו 👀"
+  },
   "assistant": {
     "title": "עוזר AI",
     "close": "סגור",
@@ -217,6 +220,8 @@
   "error_select_address": "בחרו כתובת מהרשימה",
   "special_requests": "בקשות מיוחדות",
   "special_requests_placeholder": "הוראות או הערות (לא חובה)"
+  ,"driver_message": "הודעה לנהג"
+  ,"driver_message_placeholder": "הודעה לנהג (אופציונלי)"
   },
   "aboutPage": {
     "title": "עלינו – Greekaway",

@@ -84,6 +84,9 @@
   "trips_ui": {
     "backToCategories": "Back to categories"
   },
+  "notifications": {
+    "trip_viewers_now": "Outros utilizadores estão a ver esta excursão agora 👀"
+  },
   "profile": {
     "info": "Aqui você verá suas viagens e reservas anteriores."
   },
@@ -225,6 +228,8 @@
   "error_select_address": "Selecione um endereço da lista",
   "special_requests": "Instruções especiais",
   "special_requests_placeholder": "Instruções ou notas (opcional)"
+  ,"driver_message": "Mensagem para o motorista"
+  ,"driver_message_placeholder": "Mensagem para o motorista (opcional)"
   },
   "aboutPage": {
     "title": "Sobre nós – Greekaway",

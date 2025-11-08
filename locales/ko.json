@@ -58,6 +58,9 @@
   "trips": { "selectCategory": "카테고리 선택", "noneFound": "이 카테고리에 해당하는 여행이 없습니다." },
   "ui": { "close": "닫기", "cancel": "취소", "back": "뒤로", "finish": "완료", "choose": "선택" },
   "trips_ui": { "backToCategories": "Back to categories" },
+  "notifications": {
+    "trip_viewers_now": "다른 사용자가 지금 이 여행을 보고 있어요 👀"
+  },
   "profile": { "info": "여기에서 이전 여행과 예약을 확인할 수 있습니다." },
   "assistant": {
     "title": "AI 도우미",
@@ -116,7 +119,6 @@
   "daily_rhythm": "일상 리듬",
   "interests": "관심사",
   "sociality": "사교성",
-  "children_ages": "어린이 나이",
   "children_age_range": "0 – 17세",
   "pick_ages": "나이 선택",
     "step2_of3": "2단계 / 3단계",
@@ -194,8 +196,8 @@
     "confirm": "확인",
     "change": "변경",
     "error_select_address": "목록에서 주소를 선택하세요",
-    "special_requests": "기사에게 메시지",
-  "special_requests_placeholder": "기사에게 보낼 메시지 (선택 사항)",
+    "driver_message": "기사에게 메시지",
+  "driver_message_placeholder": "기사에게 보낼 메시지 (선택 사항)",
   "driver_message_updated": "✅ 기사 메시지가 업데이트되었습니다",
   "traveler_profile_incomplete": "계속하기 전에 여행자 프로필을 완료해주세요.",
   "proceed_payment": "결제 진행하기"

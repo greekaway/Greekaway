@@ -103,7 +103,7 @@
     const from = document.getElementById('from')?.value || '';
     const to = document.getElementById('to')?.value || '';
     const tripQ = (document.getElementById('trip')?.value || '').trim().toLowerCase();
-    const rows = (window.ADMIN_SEEDS && window.ADMIN_SEEDS.availability) || [];
+  const rows = (window.ADMIN_SEEDS && window.ADMIN_SEEDS.availability) || [];
     const providers = (window.ADMIN_SEEDS && window.ADMIN_SEEDS.providers) || [];
     const provById = Object.fromEntries(providers.map(p=>[p.id, p]));
     tbody.innerHTML = '';
@@ -128,12 +128,38 @@
         '<td>'+escapeHtml(provider.email||'-')+'</td>'+
         '<td>'+escapeHtml(r.trip_name || r.trip || '-')+'</td>'+
         '<td class="mono">'+escapeHtml(r.date||'-')+'</td>'+
-        '<td class="num">'+escapeHtml(r.capacity)+'</td>'+
+        // Spinner input for capacity
+        '<td class="num"><input type="number" class="capacity-input" min="1" max="10" step="1" value="'+escapeHtml(r.capacity)+'" data-field="capacity" data-row-index="'+rows.indexOf(r)+'" /></td>'+
         '<td class="num">'+escapeHtml(r.booked)+'</td>'+
         '<td class="num">'+escapeHtml(remaining)+'</td>'+
         '<td class="mono">'+escapeHtml(r.last_update||'-')+'</td>'+
         '<td><button class="btn small" data-act="notify">Notify Provider / Ειδοποίηση Πάροχου</button></td>';
       tbody.appendChild(tr);
+      // Wire change handler for capacity spinner
+      const capInput = tr.querySelector('input.capacity-input');
+      if (capInput){
+        capInput.addEventListener('change', (e) => {
+          let v = parseInt(e.target.value,10);
+          if (!Number.isFinite(v) || v < 1) v = 1; if (v > 10) v = 10; e.target.value = String(v);
+          const idx = parseInt(e.target.getAttribute('data-row-index'),10);
+          if (Number.isFinite(idx) && rows[idx]){
+            const row = rows[idx];
+            row.capacity = v;
+            const booked = Number(rows[idx].booked)||0;
+            const remainingCell = tr.children[7]; // after capacity (5), booked (6)
+            if (remainingCell){ remainingCell.textContent = String(Math.max(0, v - booked)); }
+            // Persist only for non-demo rows if admin API is available
+            if (row && row.is_demo){
+              if (window.DEMO) window.DEMO.openModal('Demo', 'Η αλλαγή capacity ισχύει μόνο οπτικά στο demo.');
+              if (window.console) console.log('[admin-availability] capacity updated (demo only)', { idx, newCapacity: v });
+            } else if (row && row.id) {
+              updateCapacityAdmin(row.id, v).catch(err => {
+                console.error('Failed to update capacity', err);
+              });
+            }
+          }
+        });
+      }
     });
     tbody.querySelectorAll('button[data-act="notify"]').forEach(btn => btn.addEventListener('click', (e) => {
       const tr = e.currentTarget.closest('tr'); const provider = tr ? tr.children[0].textContent.trim() : 'Provider';
@@ -149,6 +175,20 @@ Greekaway Admin`+
       '</div>';
       if (window.DEMO) window.DEMO.openModal('Notify Provider / Ειδοποίηση: '+escapeHtml(provider), body);
     }));
+  }
+  async function updateCapacityAdmin(id, capacity){
+    try {
+      const token = localStorage.getItem('adminAuthToken') || null;
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = 'Basic ' + token;
+      const r = await fetch('/api/provider-availability/update/'+encodeURIComponent(id), {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ capacity })
+      });
+      if (!r.ok){ throw new Error('HTTP '+r.status); }
+      return true;
+    } catch (e) { throw e; }
   }
   function wireLite(){
     buildTable(); render();

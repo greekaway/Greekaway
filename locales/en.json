@@ -58,6 +58,9 @@
   "trips": { "selectCategory": "Select Category", "noneFound": "No trips found in this category." },
   "ui": { "close": "Close", "cancel": "Cancel", "back": "Back", "finish": "Finish", "choose": "Choose" },
   "trips_ui": { "backToCategories": "Back to categories" },
+  "notifications": {
+    "trip_viewers_now": "Other users are viewing this trip now 👀"
+  },
   "profile": { "info": "Here you'll see your past trips and bookings." },
   "assistant": {
     "title": "AI Assistant",
@@ -134,7 +137,6 @@
   "daily_rhythm": "Daily rhythm",
     "interests": "Interests",
     "sociality": "Sociality",
-    "children_ages": "Children ages",
     "children_age_range": "0 – 17 years",
     "pick_ages": "Pick ages",
     "step2_of3": "Step 2 of 3",
@@ -212,8 +214,8 @@
     "confirm": "Confirm",
     "change": "Change",
     "error_select_address": "Select an address from the list",
-  "special_requests": "Message to driver",
-  "special_requests_placeholder": "Message to the driver (optional)",
+  "driver_message": "Message to driver",
+  "driver_message_placeholder": "Message to the driver (optional)",
   "driver_message_updated": "✅ Driver message updated"
   }
     ,

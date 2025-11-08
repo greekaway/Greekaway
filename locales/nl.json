@@ -58,6 +58,9 @@
   "trips": { "selectCategory": "Categorie kiezen", "noneFound": "Geen reizen gevonden in deze categorie." },
   "ui": { "close": "Sluiten", "cancel": "Annuleren", "back": "Terug", "finish": "Voltooien", "choose": "Kies" },
   "trips_ui": { "backToCategories": "Back to categories" },
+  "notifications": {
+    "trip_viewers_now": "Andere gebruikers bekijken deze reis nu 👀"
+  },
   "profile": { "info": "Hier zie je je eerdere reizen en boekingen." },
   "assistant": {
     "title": "AI-assistent",
@@ -116,7 +119,6 @@
   "daily_rhythm": "Dagritme",
   "interests": "Interesses",
   "sociality": "Socialiteit",
-  "children_ages": "Leeftijden van kinderen",
   "children_age_range": "0 – 17 jaar",
   "pick_ages": "Leeftijden kiezen",
     "step2_of3": "Stap 2 van 3",
@@ -194,8 +196,8 @@
     "confirm": "Bevestigen",
     "change": "Wijzigen",
     "error_select_address": "Kies een adres uit de lijst",
-    "special_requests": "Bericht voor de chauffeur",
-  "special_requests_placeholder": "Bericht voor de chauffeur (optioneel)",
+    "driver_message": "Bericht voor de chauffeur",
+  "driver_message_placeholder": "Bericht voor de chauffeur (optioneel)",
   "driver_message_updated": "✅ bericht voor de chauffeur bijgewerkt",
   "traveler_profile_incomplete": "Voltooi je reizigersprofiel voordat je verdergaat.",
   "proceed_payment": "Doorgaan naar betaling"

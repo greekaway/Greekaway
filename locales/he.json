@@ -51,6 +51,9 @@
   "trips": { "selectCategory": "בחר קטגוריה", "noneFound": "לא נמצאו טיולים בקטגוריה זו." },
   "ui": { "close": "סגור", "cancel": "בטל", "back": "חזרה", "finish": "סיום", "choose": "בחר" },
   "trips_ui": { "backToCategories": "חזרה לקטגוריות" },
+  "notifications": {
+    "trip_viewers_now": "משתמשים אחרים צופים בסיור הזה עכשיו 👀"
+  },
   "assistant": {
     "title": "עוזר AI",
     "close": "סגור",
@@ -108,7 +111,6 @@
   "daily_rhythm": "קצב יומי",
     "interests": "תחומי עניין",
     "sociality": "חברתיות",
-    "children_ages": "גילאי ילדים",
     "children_age_range": "0 – 17",
     "pick_ages": "בחר גילאים",
     "step2_of3": "שלב 2 מתוך 3",
@@ -186,8 +188,8 @@
     "confirm": "אישור",
     "change": "שינוי",
     "error_select_address": "בחרו כתובת מהרשימה",
-    "special_requests": "הודעה לנהג",
-  "special_requests_placeholder": "הודעה לנהג (לא חובה)",
+    "driver_message": "הודעה לנהג",
+  "driver_message_placeholder": "הודעה לנהג (לא חובה)",
   "driver_message_updated": "✅ הודעת הנהג עודכנה",
   "traveler_profile_incomplete": "אנא השלימו את פרופיל המטייל לפני ההמשך.",
   "proceed_payment": "להמשיך לתשלום"

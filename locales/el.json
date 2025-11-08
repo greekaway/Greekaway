@@ -57,6 +57,9 @@
   "trips": { "selectCategory": "Επιλέξτε Κατηγορία", "noneFound": "Δεν βρέθηκαν εκδρομές σε αυτή την κατηγορία." },
   "ui": { "close": "Κλείσιμο", "cancel": "Άκυρο", "back": "Πίσω", "finish": "Ολοκλήρωση", "choose": "Επιλέξτε" },
   "trips_ui": { "backToCategories": "Πίσω στις κατηγορίες" },
+  "notifications": {
+    "trip_viewers_now": "Άλλοι χρήστες κοιτούν αυτή την εκδρομή τώρα 👀"
+  },
   "profile": { "info": "Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας." },
   "assistant": {
     "title": "Βοηθός",
@@ -133,7 +136,6 @@
   "daily_rhythm": "Ρυθμός ημέρας",
     "interests": "Ενδιαφέροντα",
     "sociality": "Κοινωνικότητα",
-    "children_ages": "Ηλικίες παιδιών",
     "children_age_range": "0 – 17 ετών",
     "pick_ages": "Επιλέξτε ηλικίες",
     "step2_of3": "Βήμα 2 από 3",
@@ -211,8 +213,8 @@
     "confirm": "Επιβεβαίωση",
     "change": "Αλλαγή",
     "error_select_address": "Επιλέξτε διεύθυνση από τη λίστα",
-  "special_requests": "Μήνυμα στον οδηγό",
-  "special_requests_placeholder": "Μήνυμα προς τον οδηγό (προαιρετικά)",
+  "driver_message": "Μήνυμα στον οδηγό",
+  "driver_message_placeholder": "Μήνυμα προς τον οδηγό (προαιρετικά)",
   "driver_message_updated": "✅ μήνυμα του οδηγού ενημερώθηκε"
   }
   ,

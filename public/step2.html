@@ -62,28 +62,27 @@
       </div>
     </div>
 
-    <!-- Pick-up Location with Google Places autocomplete -->
+    <!-- Pick-up Location reordered: title then map pin (left) then address input (right) -->
     <div class="s2-row pickup-required" id="pickupRow">
       <div class="s2-labels">
         <label for="pickupInput" id="pickupLabel" class="title" data-i18n="booking.pickup_location">Σημείο Παραλαβής</label>
       </div>
-      <div class="s2-input-group">
-  <input type="text" id="pickupInput" class="s2-input" data-i18n-placeholder="booking.pickup_placeholder" placeholder="Αρχίστε να πληκτρολογείτε διεύθυνση" autocomplete="off" />
-        <button type="button" id="pickupMapBtn" class="s2-map-btn" title="Χάρτης" data-i18n-title="booking.map_btn_title">
+      <div class="s2-input-group pickup-reordered">
+        <button type="button" id="pickupMapBtn" class="s2-map-btn" title="Χάρτης" data-i18n-title="booking.map_btn_title" aria-label="Χάρτης">
           <i class="fa-solid fa-map-pin icon" aria-hidden="true"></i>
         </button>
+        <input type="text" id="pickupInput" class="s2-input" data-i18n-placeholder="booking.pickup_placeholder" placeholder="Αρχίστε να πληκτρολογείτε διεύθυνση" autocomplete="off" />
       </div>
-  
       <div class="places-dropdown" id="pickupSuggest" hidden></div>
     </div>
 
     <!-- Message to Driver (instead of Preferred language) -->
     <div class="s2-row" id="specialRequestsRow">
       <div class="s2-labels">
-        <div class="title" data-i18n="booking.special_requests">Μήνυμα στον οδηγό</div>
+  <div class="title" data-i18n="booking.driver_message">Μήνυμα στον οδηγό</div>
       </div>
       <div class="s2-input-group">
-        <textarea id="specialRequests" class="s2-textarea" rows="1" data-i18n-placeholder="booking.special_requests_placeholder" placeholder="Μήνυμα προς τον οδηγό (προαιρετικά)"></textarea>
+  <textarea id="specialRequests" class="s2-textarea" rows="1" data-i18n-placeholder="booking.driver_message_placeholder" placeholder="Μήνυμα προς τον οδηγό (προαιρετικά)"></textarea>
       </div>
     </div>
 

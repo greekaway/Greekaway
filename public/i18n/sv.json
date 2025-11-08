@@ -84,6 +84,9 @@
   "trips_ui": {
     "backToCategories": "Back to categories"
   },
+  "notifications": {
+    "trip_viewers_now": "Andra användare tittar på den här utflykten nu 👀"
+  },
   "profile": {
     "info": "Här ser du dina tidigare resor och bokningar."
   },
@@ -225,6 +228,8 @@
   "error_select_address": "Välj en adress från listan",
   "special_requests": "Särskilda önskemål",
   "special_requests_placeholder": "Särskilda instruktioner eller anteckningar (valfritt)"
+  ,"driver_message": "Meddelande till föraren"
+  ,"driver_message_placeholder": "Meddelande till föraren (valfritt)"
   },
   "aboutPage": {
     "title": "Om oss – Greekaway",

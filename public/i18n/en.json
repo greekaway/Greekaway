@@ -84,6 +84,9 @@
   "trips_ui": {
     "backToCategories": "Back to categories"
   },
+  "notifications": {
+    "trip_viewers_now": "Other users are viewing this trip now 👀"
+  },
   "profile": {
     "info": "Here you'll see your past trips and bookings."
   },
@@ -236,6 +239,8 @@
     "error_select_address": "Select an address from the list",
     "special_requests": "Special Requests",
     "special_requests_placeholder": "Special instructions or notes (optional)"
+    ,"driver_message": "Message to driver"
+    ,"driver_message_placeholder": "Message to the driver (optional)"
   },
   "aboutPage": {
     "title": "About Us – Greekaway",

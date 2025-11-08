@@ -79,6 +79,9 @@
   "trips_ui": {
     "backToCategories": "Retour aux catégories"
   },
+  "notifications": {
+    "trip_viewers_now": "D'autres utilisateurs consultent cette excursion en ce moment 👀"
+  },
   "assistant": {
     "title": "Assistant AI",
     "close": "Fermer",
@@ -217,6 +220,8 @@
   "error_select_address": "Sélectionnez une adresse dans la liste",
   "special_requests": "Instructions spéciales",
   "special_requests_placeholder": "Instructions ou notes (optionnel)"
+  ,"driver_message": "Message au conducteur"
+  ,"driver_message_placeholder": "Message au conducteur (optionnel)"
   },
   "aboutPage": {
     "title": "À propos de nous – Greekaway",

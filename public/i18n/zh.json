@@ -84,6 +84,9 @@
   "trips_ui": {
     "backToCategories": "Back to categories"
   },
+  "notifications": {
+    "trip_viewers_now": "其他用户正在查看此行程 👀"
+  },
   "profile": {
     "info": "Here you'll see your past trips and bookings."
   },
@@ -225,6 +228,8 @@
   "error_select_address": "请从列表中选择地址",
   "special_requests": "特殊要求",
   "special_requests_placeholder": "特殊说明或备注（可选）"
+  ,"driver_message": "给司机的留言"
+  ,"driver_message_placeholder": "给司机的留言（可选）"
   },
   "aboutPage": {
     "title": "关于我们 – Greekaway",
