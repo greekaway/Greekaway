@@ -194,8 +194,9 @@
     "confirm": "Bekräftа",
     "change": "Ändra",
     "error_select_address": "Välj en adress från listan",
-    "special_requests": "Särskilda önskemål",
-  "special_requests_placeholder": "Särskilda instruktioner eller anteckningar (valfritt)",
+    "special_requests": "Meddelande till föraren",
+  "special_requests_placeholder": "Meddelande till föraren (valfritt)",
+  "driver_message_updated": "✅ förarmeddelandet uppdaterat",
   "traveler_profile_incomplete": "Fyll i din reseprofil innan du fortsätter.",
   "proceed_payment": "Fortsätt till betalning"
   }

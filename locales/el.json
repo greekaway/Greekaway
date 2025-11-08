@@ -211,8 +211,9 @@
     "confirm": "Επιβεβαίωση",
     "change": "Αλλαγή",
     "error_select_address": "Επιλέξτε διεύθυνση από τη λίστα",
-    "special_requests": "Ειδικές Οδηγίες",
-    "special_requests_placeholder": "Ειδικές οδηγίες ή παρατηρήσεις (προαιρετικά)"
+  "special_requests": "Μήνυμα στον οδηγό",
+  "special_requests_placeholder": "Μήνυμα προς τον οδηγό (προαιρετικά)",
+  "driver_message_updated": "✅ μήνυμα του οδηγού ενημερώθηκε"
   }
   ,
   "aboutPage": {

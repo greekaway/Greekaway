@@ -186,8 +186,9 @@
     "confirm": "Confirmer",
     "change": "Changer",
     "error_select_address": "Sélectionnez une adresse dans la liste",
-    "special_requests": "Instructions spéciales",
-  "special_requests_placeholder": "Instructions ou notes (optionnel)",
+    "special_requests": "Message au chauffeur",
+  "special_requests_placeholder": "Message au chauffeur (optionnel)",
+  "driver_message_updated": "✅ message au chauffeur mis à jour",
   "traveler_profile_incomplete": "Veuillez compléter votre profil voyageur avant de continuer.",
   "proceed_payment": "Procéder au paiement"
   }

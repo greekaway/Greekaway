@@ -186,8 +186,9 @@
     "confirm": "Bestätigen",
     "change": "Ändern",
     "error_select_address": "Wählen Sie eine Adresse aus der Liste",
-    "special_requests": "Besondere Wünsche",
-  "special_requests_placeholder": "Besondere Hinweise oder Notizen (optional)",
+    "special_requests": "Nachricht an den Fahrer",
+  "special_requests_placeholder": "Nachricht an den Fahrer (optional)",
+  "driver_message_updated": "✅ Fahrernachricht aktualisiert",
   "traveler_profile_incomplete": "Bitte vervollständigen Sie Ihr Reiseprofil, bevor Sie fortfahren.",
   "proceed_payment": "Weiter zur Zahlung"
   }

@@ -192,8 +192,9 @@
     "confirm": "Conferma",
     "change": "Cambia",
     "error_select_address": "Seleziona un indirizzo dall'elenco",
-    "special_requests": "Istruzioni speciali",
-  "special_requests_placeholder": "Istruzioni o note (opzionale)",
+    "special_requests": "Messaggio per l'autista",
+  "special_requests_placeholder": "Messaggio per l'autista (opzionale)",
+  "driver_message_updated": "✅ messaggio all'autista aggiornato",
   "traveler_profile_incomplete": "Completa il profilo viaggiatore prima di continuare.",
   "proceed_payment": "Procedi al pagamento"
   }

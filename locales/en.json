@@ -212,8 +212,9 @@
     "confirm": "Confirm",
     "change": "Change",
     "error_select_address": "Select an address from the list",
-    "special_requests": "Special Requests",
-    "special_requests_placeholder": "Special instructions or notes (optional)"
+  "special_requests": "Message to driver",
+  "special_requests_placeholder": "Message to the driver (optional)",
+  "driver_message_updated": "✅ Driver message updated"
   }
     ,
     "aboutPage": {

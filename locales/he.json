@@ -186,8 +186,9 @@
     "confirm": "אישור",
     "change": "שינוי",
     "error_select_address": "בחרו כתובת מהרשימה",
-    "special_requests": "בקשות מיוחדות",
-  "special_requests_placeholder": "הוראות או הערות (לא חובה)",
+    "special_requests": "הודעה לנהג",
+  "special_requests_placeholder": "הודעה לנהג (לא חובה)",
+  "driver_message_updated": "✅ הודעת הנהג עודכנה",
   "traveler_profile_incomplete": "אנא השלימו את פרופיל המטייל לפני ההמשך.",
   "proceed_payment": "להמשיך לתשלום"
   }

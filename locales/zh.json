@@ -192,8 +192,9 @@
     "confirm": "确认",
     "change": "更改",
     "error_select_address": "请从列表中选择地址",
-    "special_requests": "特殊要求",
-  "special_requests_placeholder": "特殊说明或备注（可选）",
+    "special_requests": "给司机的留言",
+  "special_requests_placeholder": "给司机的留言（可选）",
+  "driver_message_updated": "✅ 给司机的留言已更新",
   "traveler_profile_incomplete": "请先完善您的旅客资料再继续。",
   "proceed_payment": "继续支付"
   }

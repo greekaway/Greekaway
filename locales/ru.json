@@ -195,8 +195,9 @@
     "confirm": "Подтвердить",
     "change": "Изменить",
     "error_select_address": "Выберите адрес из списка",
-    "special_requests": "Особые пожелания",
-  "special_requests_placeholder": "Особые инструкции или заметки (по желанию)",
+    "special_requests": "Сообщение для водителя",
+  "special_requests_placeholder": "Сообщение для водителя (необязательно)",
+  "driver_message_updated": "✅ сообщение для водителя обновлено",
   "traveler_profile_incomplete": "Пожалуйста, заполните профиль путешественника перед продолжением.",
   "proceed_payment": "Перейти к оплате"
   }

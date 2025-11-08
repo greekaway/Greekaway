@@ -192,8 +192,9 @@
     "confirm": "Confirmar",
     "change": "Cambiar",
     "error_select_address": "Seleccione una dirección de la lista",
-    "special_requests": "Indicaciones especiales",
-  "special_requests_placeholder": "Instrucciones o notas (opcional)",
+    "special_requests": "Mensaje para el conductor",
+  "special_requests_placeholder": "Mensaje para el conductor (opcional)",
+  "driver_message_updated": "✅ mensaje al conductor actualizado",
   "traveler_profile_incomplete": "Completa tu perfil de viajero antes de continuar.",
   "proceed_payment": "Proceder al pago"
   }

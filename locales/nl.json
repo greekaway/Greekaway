@@ -194,8 +194,9 @@
     "confirm": "Bevestigen",
     "change": "Wijzigen",
     "error_select_address": "Kies een adres uit de lijst",
-    "special_requests": "Speciale instructies",
-  "special_requests_placeholder": "Bijzondere instructies of notities (optioneel)",
+    "special_requests": "Bericht voor de chauffeur",
+  "special_requests_placeholder": "Bericht voor de chauffeur (optioneel)",
+  "driver_message_updated": "✅ bericht voor de chauffeur bijgewerkt",
   "traveler_profile_incomplete": "Voltooi je reizigersprofiel voordat je verdergaat.",
   "proceed_payment": "Doorgaan naar betaling"
   }

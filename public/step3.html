@@ -25,7 +25,6 @@
     <div class="s3-card">
   <div class="s3-row"><div class="s3-label" data-i18n="booking.adults">Ενήλικες</div><div class="s3-value" id="vAdults">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.children">Παιδιά</div><div class="s3-value" id="vChildren">–</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.children_ages">Ηλικίες παιδιών</div><div class="s3-value" id="vChildrenAges">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.suitcases">Αποσκευές</div><div class="s3-value" id="vBags">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.preferred_language">Γλώσσα επικοινωνίας</div><div class="s3-value" id="vLang">–</div></div>
   <div class="s3-row"><div class="s3-label" data-i18n="booking.pickup_location">Σημείο Παραλαβής</div><div class="s3-value" id="vPickup">–</div></div>
@@ -154,8 +153,8 @@
   const langFallbackLabels = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', zh:'中文', he:'עברית', nl:'Nederlands', sv:'Svenska', ko:'한국어', pt:'Português', ru:'Русский' };
 
       const adults = get('gw_adults','2');
-      const ages = (()=>{ try { return JSON.parse(get('gw_children_ages','[]')); } catch(_){ return []; } })();
-      const children = String(ages.length);
+  const ages = (()=>{ try { return JSON.parse(get('gw_children_ages','[]')); } catch(_){ return []; } })();
+  const children = String(ages.length);
   const bagsL = parseInt(get('gw_bags_large','0'),10)||0;
   const bagsM = parseInt(get('gw_bags_medium','0'),10)||0;
   const bagsS = parseInt(get('gw_bags_small','0'),10)||0;
@@ -168,9 +167,9 @@
       const social = get('gw_sociality','');
 
       function renderValues(){
-        document.getElementById('vAdults').textContent = adults;
-        document.getElementById('vChildren').textContent = children;
-        document.getElementById('vChildrenAges').textContent = ages.length? ages.join(', '): '—';
+  document.getElementById('vAdults').textContent = adults;
+  // Display children as "N (a-b-c)" when ages exist, otherwise dash
+  document.getElementById('vChildren').textContent = ages.length ? (children + ' (' + ages.join('-') + ')') : '—';
         if (totalBags) {
           const parts = [];
           if (bagsS) parts.push(`${bagsS}S`);
@@ -198,7 +197,7 @@
           const row = document.getElementById('vNotesInfoRow');
           const el = document.getElementById('vNotesInfo');
           if (notes && row && el) {
-            const msg = tSafe('booking.special_requests_added','✅ Ειδικές οδηγίες προστέθηκαν και θα σταλούν στον οδηγό.');
+            const msg = tSafe('booking.driver_message_updated','✅ μήνυμα του οδηγού ενημερώθηκε');
             el.textContent = msg;
             row.hidden = false;
           } else if (row) { row.hidden = true; }
