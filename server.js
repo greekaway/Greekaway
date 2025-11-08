@@ -2014,6 +2014,13 @@ try {
   console.warn('driver: failed to mount', e && e.message ? e.message : e);
 }
 
+// Start pickup notifications (T-24h freeze + notify)
+try {
+  const pickup = require('./services/pickupNotifications');
+  const ctrl = pickup.start();
+  if (ctrl && ctrl.enabled) console.log('pickup-notify: enabled');
+} catch(e){ console.warn('pickup-notify: failed to start', e && e.message ? e.message : e); }
+
 // Global error handlers to prevent process exit on unexpected errors
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err && err.stack ? err.stack : err);

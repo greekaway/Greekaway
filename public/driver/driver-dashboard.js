@@ -83,5 +83,6 @@
       });
     });
   }
-  window.DriverDashboard = { init(){ DriverAuth.requireSync(); if (DriverCommon) DriverCommon.footerNav(); load(); } };
+  window.DriverDashboard = { init(){ DriverAuth.requireSync(); if (DriverCommon) DriverCommon.footerNav(); load(); try{ if (!window.__driverDashInterval){ window.__driverDashInterval = setInterval(load, 30000); } }catch(_){} }, load };
 })();
+// Auto-refresh handled from init() via setInterval(load, 30000)

@@ -18,15 +18,17 @@
       if (!b){ header.innerHTML = '<div class="card">Δεν βρέθηκε η διαδρομή.</div>'; return; }
       header.innerHTML = `<div><b>${b.trip_title || b.id}</b></div><div class="meta">${b.date||''} • ${b.pickup_time||''}</div>`;
       if (!b.stops || !b.stops.length){ stopsEl.innerHTML = '<div class="card">Δεν υπάρχουν στάσεις</div>'; return; }
-      stopsEl.innerHTML = b.stops.map((s,i)=>`
-        <div class="card stop">
+      stopsEl.innerHTML = b.stops.map((s,i)=>{
+        const eta = s.eta_local || s.time || '--:--';
+        const dist = s.distance_text ? ` • ${s.distance_text}` : '';
+        return `<div class="card stop">
           <div>
             <div><b>Στάση ${i+1}</b> — ${s.name||'-'}</div>
-            <div class="meta">🚐 ${s.time||'--:--'} • ${s.address||'—'}</div>
+            <div class="meta">🚐 ${eta} • ${s.address||'—'}${dist}</div>
           </div>
           <div><a class="btn" href="${mapsLink(s)}" target="_blank" rel="noopener noreferrer">Πλοήγηση</a></div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     } catch(e){ header.innerHTML = '<div class="card">Σφάλμα φόρτωσης</div>'; }
   }
   // Future: distance matrix estimation (stub)
@@ -37,4 +39,6 @@
   // }
   function init(){ DriverAuth.requireSync(); if (DriverCommon) DriverCommon.footerNav(); load(); }
   window.DriverRoute = { init };
+  // Auto-refresh every 30s to pick up ETA changes or ordering updates
+  setInterval(load, 30000);
 })();

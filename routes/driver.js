@@ -251,20 +251,95 @@ router.get('/api/bookings/:id', authMiddleware, async (req, res) => {
     if (!row) return res.status(404).json({ error: 'Not found' });
     let meta = {}; try { meta = row.metadata ? (typeof row.metadata==='object'?row.metadata:JSON.parse(row.metadata)) : {}; } catch(_) {}
     // Derive stops; if no structured stops present, build one from pickup_location and customer name
-    let stops = [];
+    let rawStops = [];
     if (Array.isArray(meta.stops) && meta.stops.length){
-      stops = meta.stops.map((s,i)=>({
+      rawStops = meta.stops.map((s,i)=>({
         idx:i,
         name: s.name || s.customer || 'Στάση '+(i+1),
         address: s.address || s.pickup || s.location || '—',
         lat: s.lat || s.latitude || null,
         lng: s.lng || s.longitude || null,
+        time: s.time || null,
       }));
     } else {
-      stops = [{ idx:0, name: row.user_name || 'Πελάτης', address: row.pickup_location || '—', lat: row.pickup_lat || null, lng: row.pickup_lng || null }];
+      rawStops = [{ idx:0, name: row.user_name || 'Πελάτης', address: row.pickup_location || '—', lat: row.pickup_lat || null, lng: row.pickup_lng || null, time: meta.pickup_time||meta.time||null }];
     }
-  // include time per stop if available (s.time)
-  return res.json({ ok:true, booking: { id: row.id, trip_title: row.trip_id, date: row.date, pickup_time: (meta.pickup_time||meta.time||null), stops } });
+    // Distance Matrix enrichment & ordering (greedy nearest-neighbor). Purely advisory; persisted as metadata.stops_sorted.
+    async function enrich(stops){
+      if (stops.length < 2) return stops;
+      const key = (process.env.GOOGLE_MAPS_API_KEY || '').trim();
+      if (!key){ return stops; }
+      // Build address/latlng list
+      const encodeItem = (s) => {
+        if (s.lat && s.lng) return `${s.lat},${s.lng}`;
+        return encodeURIComponent(String(s.address||'').replace(/\s+/g,'+'));
+      };
+      const origins = stops.map(encodeItem).join('|');
+      const destinations = origins; // symmetric matrix
+      let matrix = null;
+      try {
+        const url = `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${origins}&destinations=${destinations}&key=${key}`;
+        const resp = await fetch(url);
+        matrix = await resp.json();
+      } catch(e){ /* ignore API errors */ }
+      if (!matrix || !Array.isArray(matrix.rows)) return stops;
+      // distances[i][j] = meters from i->j
+      const distances = matrix.rows.map(r => (r.elements||[]).map(el => (el && el.distance && el.distance.value) || null));
+      const durations = matrix.rows.map(r => (r.elements||[]).map(el => (el && el.duration && el.duration.value) || null));
+      // Greedy ordering starting from first
+      const used = new Set([0]);
+      const order = [0];
+      while (order.length < stops.length){
+        const last = order[order.length-1];
+        let bestIdx = null; let bestDist = Infinity;
+        for (let i=0;i<stops.length;i++){
+          if (used.has(i)) continue;
+          const d = distances[last] && distances[last][i] != null ? distances[last][i] : Infinity;
+          if (d < bestDist){ bestDist = d; bestIdx = i; }
+        }
+        if (bestIdx == null){ break; }
+        used.add(bestIdx); order.push(bestIdx);
+      }
+      // Compute ETAs relative to now (simple forward accumulation)
+      const now = new Date();
+      let t = now.getTime();
+      const enriched = order.map((origPos, seq) => {
+        const s = stops[origPos];
+        const travelSec = seq===0 ? 0 : (durations[order[seq-1]] && durations[order[seq-1]][origPos]) || 0;
+        t += travelSec * 1000;
+        const etaDate = new Date(t);
+        const hh = String(etaDate.getHours()).padStart(2,'0');
+        const mm = String(etaDate.getMinutes()).padStart(2,'0');
+        return {
+          ...s,
+          sequence: seq+1,
+          original_index: origPos,
+            distance_meters: seq===0 ? 0 : (distances[order[seq-1]] && distances[order[seq-1]][origPos]) || null,
+            distance_text: seq===0 ? '0 m' : ((distances[order[seq-1]] && distances[order[seq-1]][origPos]) ? ((distances[order[seq-1]][origPos]/1000).toFixed(1) + ' km') : null),
+            duration_seconds: travelSec,
+            eta_local: hh+':'+mm
+        };
+      });
+      // Persist ordering hint if possible
+      try {
+        meta.stops_sorted = enriched.map(s => ({ original_index: s.original_index, sequence: s.sequence }));
+        if (hasPostgres){
+          await withPg(async (c) => {
+            await ensureBookingsAssignedPg(c);
+            await c.query('UPDATE bookings SET metadata=$1, updated_at=now() WHERE id=$2', [JSON.stringify(meta), row.id]);
+          });
+        } else {
+          const db2 = getSqlite();
+          try {
+            ensureBookingsAssignedSqlite(db2);
+            db2.prepare('UPDATE bookings SET metadata=?, updated_at=? WHERE id=?').run(JSON.stringify(meta), new Date().toISOString(), row.id);
+          } finally { db2.close(); }
+        }
+      } catch(e){ /* ignore persistence errors */ }
+      return enriched;
+    }
+    const stops = await enrich(rawStops);
+    return res.json({ ok:true, booking: { id: row.id, trip_title: row.trip_id, date: row.date, pickup_time: (meta.pickup_time||meta.time||null), stops } });
   } catch(e){
     console.error('driver/api/bookings/:id error', e && e.message ? e.message : e);
     return res.status(500).json({ error:'Server error' });
