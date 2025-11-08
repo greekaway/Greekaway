@@ -3,6 +3,8 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const crypto = require('crypto');
+let nodemailer = null; try { nodemailer = require('nodemailer'); } catch(_) {}
 
 const router = express.Router();
 // Accept both JSON and form-urlencoded bodies for robustness
@@ -91,6 +93,65 @@ function authMiddleware(req, res, next){
   } catch (e) { return res.status(401).json({ error: 'Invalid token' }); }
 }
 
+// ---------------- Drivers helper (DB schema + utility) ----------------
+function ensureDriversSqlite(db){
+  db.exec(`CREATE TABLE IF NOT EXISTS drivers (
+    id TEXT PRIMARY KEY,
+    provider_id TEXT,
+    name TEXT,
+    email TEXT,
+    phone TEXT,
+    vehicle_plate TEXT,
+    notes TEXT,
+    status TEXT,
+    invite_token TEXT,
+    invite_sent_at TEXT,
+    activated_at TEXT,
+    password_hash TEXT,
+    created_at TEXT
+  )`);
+}
+
+async function ensureDriversPg(client){
+  await client.query(`CREATE TABLE IF NOT EXISTS drivers (
+    id TEXT PRIMARY KEY,
+    provider_id TEXT,
+    name TEXT,
+    email TEXT,
+    phone TEXT,
+    vehicle_plate TEXT,
+    notes TEXT,
+    status TEXT,
+    invite_token TEXT,
+    invite_sent_at TEXT,
+    activated_at TEXT,
+    password_hash TEXT,
+    created_at TEXT
+  )`);
+}
+
+function buildTransport(){
+  if (!nodemailer) return null;
+  const host = process.env.MAIL_HOST;
+  const port = parseInt(process.env.MAIL_PORT || '587',10);
+  const auth = (process.env.MAIL_USER && process.env.MAIL_PASS) ? { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS } : null;
+  const secure = port === 465;
+  return nodemailer.createTransport({ host, port, secure, auth });
+}
+
+async function sendInviteEmail(to, providerName, link){
+  const transporter = buildTransport();
+  if (!transporter || !to){ console.log('invite: email skipped', to); return 'skipped'; }
+  const from = process.env.MAIL_FROM || 'panel@greekaway.com';
+  const subject = `[Greekaway] Πρόσκληση Οδηγού από ${providerName}`;
+  const text = `Σας προσκάλεσαν στο δίκτυο του ${providerName} στο Greekaway. Ανοίξτε το ${link} για να ενεργοποιήσετε τον λογαριασμό σας.`;
+  const html = `<p>Σας προσκάλεσαν στο δίκτυο του <b>${providerName}</b> στο Greekaway.</p><p><a href="${link}">Ενεργοποίηση Λογαριασμού</a></p>`;
+  try {
+    const info = await transporter.sendMail({ from, to, subject, text, html });
+    return info && info.messageId ? `sent:${info.messageId}` : 'sent';
+  } catch(e){ console.warn('invite email error', e && e.message ? e.message : e); return 'error'; }
+}
+
 router.post('/auth/login', async (req, res) => {
   try {
     const email = (req.body && req.body.email || '').toString().trim().toLowerCase();
@@ -130,6 +191,152 @@ router.post('/auth/login', async (req, res) => {
   }
 });
 
+// Lightweight token verification endpoint (used by front-end guard for optional remote validation)
+router.get('/auth/verify', authMiddleware, async (req, res) => {
+  try {
+    const user = req.user || {};
+    // Fetch partner basic data (email, last_seen) when available
+    let partner = null;
+    const pid = user.partner_id || user.id || null;
+    if (pid) {
+      if (hasPostgres) {
+        partner = await withPg(async (client) => {
+          const { rows } = await client.query('SELECT id, name, email, last_seen FROM partners WHERE id = $1 LIMIT 1', [pid]);
+          return rows && rows[0] ? rows[0] : null;
+        });
+      } else {
+        const db = getSqlite();
+        try { partner = db.prepare('SELECT id, name, email, last_seen FROM partners WHERE id = ? LIMIT 1').get(pid); } finally { db.close(); }
+      }
+    }
+    return res.json({ ok: true, partner: partner || null });
+  } catch (e) {
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ---------------- Drivers API ----------------
+router.get('/api/drivers', authMiddleware, async (req, res) => {
+  const pid = req.user && (req.user.partner_id || req.user.id) || null;
+  if (!pid) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    let rows = [];
+    if (hasPostgres) {
+      rows = await withPg(async (c) => {
+        await ensureDriversPg(c);
+        const { rows } = await c.query('SELECT id, name, email, phone, vehicle_plate, notes, status, invite_token, activated_at FROM drivers WHERE provider_id = $1 ORDER BY created_at DESC LIMIT 500', [pid]);
+        return rows || [];
+      });
+    } else {
+      const db = getSqlite();
+      try {
+        ensureDriversSqlite(db);
+        rows = db.prepare('SELECT id, name, email, phone, vehicle_plate, notes, status, invite_token, activated_at FROM drivers WHERE provider_id = ? ORDER BY created_at DESC LIMIT 500').all(pid);
+      } finally { db.close(); }
+    }
+    const mapped = rows.map(r => ({
+      id: r.id,
+      name: r.name,
+      contact: r.email || r.phone || '',
+      vehicle_plate: r.vehicle_plate || null,
+      notes: r.notes || null,
+      status: r.status || (r.activated_at ? 'active' : 'pending')
+    }));
+    return res.json({ ok:true, drivers: mapped });
+  } catch(e){ console.error('drivers list error', e && e.message ? e.message : e); return res.status(500).json({ error:'Server error' }); }
+});
+
+router.post('/api/drivers', authMiddleware, async (req, res) => {
+  const pid = req.user && (req.user.partner_id || req.user.id) || null;
+  if (!pid) return res.status(401).json({ error: 'Unauthorized' });
+  const body = req.body || {};
+  const name = String(body.name || '').trim();
+  const contact = String(body.contact || '').trim();
+  const plate = String(body.plate || '').trim();
+  const notes = String(body.notes || '').trim();
+  if (!name || !contact || !plate) return res.status(400).json({ error:'Missing required fields' });
+  const id = crypto.randomUUID();
+  const invite_token = crypto.randomBytes(16).toString('hex');
+  const invite_sent_at = new Date().toISOString();
+  const created_at = invite_sent_at;
+  // Determine email vs phone
+  const email = /@/.test(contact) ? contact.toLowerCase() : null;
+  const phone = email ? null : contact;
+  try {
+    if (hasPostgres) {
+      await withPg(async (c) => {
+        await ensureDriversPg(c);
+        // Prevent duplicates per provider (email or phone)
+        const { rows: dup } = await c.query('SELECT id FROM drivers WHERE provider_id=$1 AND (lower(email)=lower($2) OR phone=$3) LIMIT 1', [pid, email||'', phone||'']);
+        if (dup && dup.length) throw new Error('duplicate_contact');
+        await c.query(`INSERT INTO drivers (id, provider_id, name, email, phone, vehicle_plate, notes, status, invite_token, invite_sent_at, activated_at, password_hash, created_at)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`, [id, pid, name, email, phone, plate, notes||null, 'pending', invite_token, invite_sent_at, null, null, created_at]);
+      });
+    } else {
+      const db = getSqlite();
+      try {
+        ensureDriversSqlite(db);
+        const dup = db.prepare('SELECT id FROM drivers WHERE provider_id = ? AND (lower(email)=lower(?) OR phone=?) LIMIT 1').get(pid, email||'', phone||'');
+        if (dup) throw new Error('duplicate_contact');
+        db.prepare(`INSERT INTO drivers (id, provider_id, name, email, phone, vehicle_plate, notes, status, invite_token, invite_sent_at, activated_at, password_hash, created_at)
+          VALUES (@id,@provider_id,@name,@email,@phone,@vehicle_plate,@notes,@status,@invite_token,@invite_sent_at,@activated_at,@password_hash,@created_at)`).run({ id, provider_id: pid, name, email, phone, vehicle_plate: plate, notes: notes||null, status:'pending', invite_token, invite_sent_at, activated_at:null, password_hash:null, created_at });
+      } finally { db.close(); }
+    }
+    // Fetch provider name for invite
+    let providerName = 'Provider';
+    try {
+      if (hasPostgres) {
+        const row = await withPg(async (c) => { const { rows } = await c.query('SELECT name FROM partners WHERE id=$1 LIMIT 1',[pid]); return rows && rows[0]; });
+        if (row && row.name) providerName = row.name;
+      } else {
+        const db = getSqlite(); try { const row = db.prepare('SELECT name FROM partners WHERE id=? LIMIT 1').get(pid); if (row && row.name) providerName = row.name; } finally { db.close(); }
+      }
+    } catch(_) {}
+    const base = process.env.BASE_URL || (req.protocol + '://' + req.get('host'));
+    const link = `${base}/provider/driver-activate.html?token=${invite_token}`;
+    if (email) { await sendInviteEmail(email, providerName, link); }
+    // TODO: implement SMS sending (placeholder)
+    return res.json({ ok:true, id, invite_token });
+  } catch(e){
+    if (String(e && e.message) === 'duplicate_contact') return res.status(409).json({ error:'Duplicate driver contact' });
+    console.error('driver create error', e && e.message ? e.message : e);
+    return res.status(500).json({ error:'Server error' });
+  }
+});
+
+router.post('/driver/activate', async (req, res) => {
+  const token = String(req.body && req.body.token || '').trim();
+  const password = String(req.body && req.body.password || '').trim();
+  if (!token || !password) return res.status(400).json({ error:'Missing fields' });
+  try {
+    let driver = null;
+    if (hasPostgres) {
+      await withPg(async (c) => {
+        await ensureDriversPg(c);
+        const { rows } = await c.query('SELECT id, provider_id, status FROM drivers WHERE invite_token=$1 LIMIT 1', [token]);
+        driver = rows && rows[0] ? rows[0] : null;
+        if (!driver || driver.status !== 'pending') throw new Error('not_found_or_active');
+        const hash = await bcrypt.hash(password, 10);
+        await c.query('UPDATE drivers SET status=$1, activated_at=now(), invite_token=NULL, password_hash=$2 WHERE id=$3', ['active', hash, driver.id]);
+      });
+    } else {
+      const db = getSqlite();
+      try {
+        ensureDriversSqlite(db);
+        driver = db.prepare('SELECT id, provider_id, status FROM drivers WHERE invite_token = ? LIMIT 1').get(token);
+        if (!driver || driver.status !== 'pending') throw new Error('not_found_or_active');
+        const hash = await bcrypt.hash(password, 10);
+        db.prepare('UPDATE drivers SET status=?, activated_at=?, invite_token=NULL, password_hash=? WHERE id=?').run('active', new Date().toISOString(), hash, driver.id);
+      } finally { db.close(); }
+    }
+    return res.json({ ok:true });
+  } catch(e){
+    if (String(e && e.message) === 'not_found_or_active') return res.status(404).json({ error:'Invalid or used token' });
+    console.error('driver activate error', e && e.message ? e.message : e);
+    return res.status(500).json({ error:'Server error' });
+  }
+});
+
 // Helper to map admin/internal statuses to provider-friendly badges
 function badgeStatus(s){
   const x = String(s || '').toLowerCase();
@@ -142,12 +349,26 @@ function badgeStatus(s){
 }
 
 // Provider API — use /provider/api/* to avoid conflicts with HTML routes above
+async function ensureBookingsAssignedPg(client){
+  try { await client.query('ALTER TABLE bookings ADD COLUMN IF NOT EXISTS assigned_driver_id TEXT'); } catch(_) {}
+}
+function ensureBookingsAssignedSqlite(db){
+  try {
+    const cols = db.prepare("PRAGMA table_info('bookings')").all();
+    const names = new Set(cols.map(c => c.name));
+    if (!names.has('assigned_driver_id')) {
+      db.prepare('ALTER TABLE bookings ADD COLUMN assigned_driver_id TEXT').run();
+    }
+  } catch(_) {}
+}
+
 router.get('/api/bookings', authMiddleware, async (req, res) => {
   const pid = req.user && (req.user.partner_id || req.user.id) || null;
   if (!pid) return res.status(401).json({ error: 'Unauthorized' });
   try {
     if (hasPostgres) {
       const out = await withPg(async (client) => {
+        await ensureBookingsAssignedPg(client);
         const { rows } = await client.query(`SELECT b.* FROM bookings b WHERE b.partner_id = $1 AND b.status IN ('confirmed','accepted','picked','completed','declined') ORDER BY b.created_at DESC LIMIT 200`, [pid]);
         return rows || [];
       });
@@ -167,11 +388,13 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
         special_requests: b.special_requests || null,
         status: badgeStatus(b.status),
         dispatch: dispatch[b.id] || null,
+        assigned_driver_id: b.assigned_driver_id || null,
       }));
       return res.json({ ok: true, bookings: data });
     } else {
       const db = getSqlite();
       try {
+        ensureBookingsAssignedSqlite(db);
         const rows = db.prepare(`SELECT * FROM bookings WHERE partner_id = ? AND status IN ('confirmed','accepted','picked','completed','declined') ORDER BY created_at DESC LIMIT 200`).all(pid);
         const ids = rows.map(r => r.id);
         const dispatch = await require('../services/dispatchService').latestStatusForBookings(ids);
@@ -189,6 +412,7 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
           map_link: null,
           status: badgeStatus(b.status),
           dispatch: dispatch[b.id] || null,
+          assigned_driver_id: b.assigned_driver_id || null,
         }));
         return res.json({ ok: true, bookings: data });
       } finally { db.close(); }
@@ -244,6 +468,45 @@ router.post('/api/bookings/:id/action', authMiddleware, async (req, res) => {
   // try { appendActionLog(id, pid, action); } catch(_) {}
   return res.json({ ok:true, status: newStatus || 'ok' });
   } catch (e) { console.error('provider action error', e && e.message ? e.message : e); return res.status(500).json({ error: 'Server error' }); }
+});
+
+// Assign driver to a booking — only within same provider
+router.post('/api/assign-driver', authMiddleware, async (req, res) => {
+  const pid = req.user && (req.user.partner_id || req.user.id) || null;
+  if (!pid) return res.status(401).json({ error: 'Unauthorized' });
+  const bookingId = String((req.body && req.body.booking_id) || '').trim();
+  const driverId = String((req.body && req.body.driver_id) || '').trim();
+  if (!bookingId || !driverId) return res.status(400).json({ error: 'Missing fields' });
+  try {
+    if (hasPostgres) {
+      await withPg(async (c) => {
+        await ensureBookingsAssignedPg(c);
+        // Verify ownership and driver activeness
+        const { rows: b } = await c.query('SELECT id FROM bookings WHERE id=$1 AND partner_id=$2 LIMIT 1', [bookingId, pid]);
+        if (!b || !b.length) throw new Error('booking_not_found');
+        const { rows: d } = await c.query('SELECT id FROM drivers WHERE id=$1 AND provider_id=$2 AND status=$3 LIMIT 1', [driverId, pid, 'active']);
+        if (!d || !d.length) throw new Error('driver_invalid');
+        await c.query('UPDATE bookings SET assigned_driver_id=$1, updated_at=now() WHERE id=$2 AND partner_id=$3', [driverId, bookingId, pid]);
+      });
+    } else {
+      const db = getSqlite();
+      try {
+        ensureBookingsAssignedSqlite(db);
+        const b = db.prepare('SELECT id FROM bookings WHERE id = ? AND partner_id = ? LIMIT 1').get(bookingId, pid);
+        if (!b) throw new Error('booking_not_found');
+        const d = db.prepare('SELECT id FROM drivers WHERE id = ? AND provider_id = ? AND status = ? LIMIT 1').get(driverId, pid, 'active');
+        if (!d) throw new Error('driver_invalid');
+        db.prepare('UPDATE bookings SET assigned_driver_id = ?, updated_at = ? WHERE id = ? AND partner_id = ?').run(driverId, new Date().toISOString(), bookingId, pid);
+      } finally { db.close(); }
+    }
+    return res.json({ ok:true });
+  } catch(e){
+    const msg = String(e && e.message || 'error');
+    if (msg === 'booking_not_found') return res.status(404).json({ error:'Booking not found' });
+    if (msg === 'driver_invalid') return res.status(400).json({ error:'Invalid driver' });
+    console.error('assign-driver error', e && e.message ? e.message : e);
+    return res.status(500).json({ error:'Server error' });
+  }
 });
 
 async function appendActionLog(bookingId, partnerId, action){

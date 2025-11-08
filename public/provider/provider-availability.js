@@ -1,4 +1,6 @@
 (function(){
+  // Auth guard: ensure logged in before any UI setup
+  if (window.ProviderAuth) { window.ProviderAuth.requireSync(); }
   function getCalendarCtor(){
     if (window.FullCalendar && window.FullCalendar.Calendar) return window.FullCalendar.Calendar;
     if (window.Calendar) return window.Calendar;
@@ -88,6 +90,7 @@
   }
 
   async function init(){
+    if (window.ProviderAuth) { window.ProviderAuth.requireSync(); }
     Theme.init();
     footerNav();
     // Ensure calendar container exists

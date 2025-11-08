@@ -1,0 +1,4 @@
+/* Provider Profile Module
+	Keep legacy dark theme card styling from provider.css (do not override .card).
+	Only add minor spacing adjustments specific to profile page. */
+#profile .btn.ghost { margin-top:12px; }

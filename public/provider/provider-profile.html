@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Provider • Προφίλ</title>
+  <link rel="stylesheet" href="/provider/provider.css" />
+  <link rel="stylesheet" href="/provider/provider-footer.css" />
+  <link rel="stylesheet" href="/provider/theme-driver.css" />
+  <link rel="stylesheet" href="/provider/provider-profile.css" />
+</head>
+<body>
+  <header><h1>Προφίλ</h1></header>
+  <main>
+    <div id="profile"></div>
+    <div class="footer-spacer"></div>
+  </main>
+  <script src="/provider/provider.js"></script>
+  <script src="/provider/provider-profile.js"></script>
+  <div id="footer-placeholder"></div>
+  <script>
+    fetch('/provider/footer/footer-profile.html')
+      .then(r => r.text())
+      .then(html => { const ph = document.getElementById('footer-placeholder'); if (ph) ph.innerHTML = html; });
+  </script>
+</body>
+</html>

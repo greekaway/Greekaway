@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Provider • Οδηγοί</title>
+  <link rel="stylesheet" href="/provider/provider.css" />
+  <link rel="stylesheet" href="/provider/provider-footer.css" />
+  <link rel="stylesheet" href="/provider/provider-drivers.css" />
+</head>
+<body>
+  <header>
+    <h1>Οδηγοί</h1>
+    <div class="actions"><button class="btn" id="btnAdd">➕ Προσθήκη Οδηγού</button></div>
+  </header>
+  <main>
+    <div id="driversList" class="list"></div>
+    <div class="footer-spacer"></div>
+  </main>
+  <!-- Modal for add driver -->
+  <div class="modal" id="driverModal" aria-hidden="true" role="dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Νέος Οδηγός</h3>
+        <button class="close" id="modalClose" aria-label="Κλείσιμο">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="driverForm">
+          <label>Όνομα Οδηγού
+            <input type="text" id="dName" required />
+          </label>
+          <label>Email ή Τηλέφωνο
+            <input type="text" id="dContact" required placeholder="email@example.com ή +3069…" />
+          </label>
+          <label>Πινακίδα Οχήματος (υποχρεωτικό)
+            <input type="text" id="dPlate" required />
+          </label>
+          <label>Σχόλιο (προαιρετικό)
+            <textarea id="dNotes" rows="2"></textarea>
+          </label>
+          <div id="formResult" class="small muted" style="margin-top:4px"></div>
+          <div style="margin-top:10px"><button class="btn" type="submit">Αποθήκευση</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="/provider/provider.js"></script>
+  <script src="/provider/provider-drivers.js"></script>
+  <div id="footer-placeholder"></div>
+  <script>
+    fetch('/provider/footer/footer-drivers.html')
+      .then(r => r.text())
+      .then(html => { const ph = document.getElementById('footer-placeholder'); if (ph) ph.innerHTML = html; });
+  </script>
+</body>
+</html>

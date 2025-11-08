@@ -1,0 +1,3 @@
+/* Profile specifics */
+#profileWrap .card{display:flex;flex-direction:column;gap:6px}
+#profileWrap .meta{font-size:13px;color:#c8dae5}

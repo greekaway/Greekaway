@@ -1,0 +1,10 @@
+#routeHeader{display:flex;flex-direction:column;gap:6px}
+#routeHeader .meta{font-size:13px;color:#c8dae5}
+#routeStops{display:grid;gap:10px}
+#routeStops .stop{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;position:relative}
+#routeStops .stop .meta{font-size:13px;color:#c8dae5}
+#routeStops .stop:after{content:"";position:absolute;left:10px;right:10px;bottom:-5px;height:1px;background:rgba(255,255,255,.2)}
+#routeStops .stop:last-child:after{display:none}
+@media (min-width: 820px){
+	#routeStops{grid-template-columns:1fr 1fr;}
+}

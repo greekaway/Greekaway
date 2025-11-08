@@ -1,0 +1,25 @@
+/* Provider Bookings Module
+	Note: Visuals for filters and booking modal are controlled by provider.css
+	to preserve legacy appearance. Keep this file minimal for page-only tweaks. */
+#bookings .actions .btn.call{background:linear-gradient(90deg,#087b35,#0aa94b);color:#fff;}
+#bookings .actions .btn.call:hover{filter:brightness(1.08);}
+[data-theme="light"] #bookings .actions .btn.call{color:#fff;}
+/* Top-right status badge within booking grid */
+.booking .status-top{display:flex;align-items:flex-start;justify-content:flex-end}
+/* Unified actions row + assignment controls */
+.booking-item .actions{align-items:center}
+.booking-item .actions .assign-row{display:flex}
+.btn.assigned{background:linear-gradient(90deg,#353c49,#4b5464);color:#c8dae5;cursor:default}
+.btn.disabled{background:linear-gradient(90deg,#353535,#4b4b4b);color:#c8c8c8;cursor:not-allowed}
+.assign-select{padding:10px 14px;border-radius:10px;background:#0c151b;color:#fff;border:1px solid rgba(255,255,255,.25);font-weight:600;}
+.assign-select:focus{outline:2px solid var(--ga-blue)}
+/* Pair assign button + select inline */
+.booking-item .actions .assign-row{gap:8px;align-items:center}
+.booking-item .actions .assign-row .assign-select{min-width:130px}
+@media (max-width:600px){
+	.booking-item .actions .assign-row{flex-wrap:nowrap}
+	.booking-item .actions .assign-row .assign-select{min-width:110px}
+}
+@media (max-width: 600px){
+	.booking-item .actions .assign-select{padding:8px 12px;border-radius:9px;font-size:.85em}
+}

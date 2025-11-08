@@ -50,3 +50,25 @@ small.muted{color:var(--muted)}
 .btn.call{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-weight:600}
 .btn.call .phone-icon{font-size:14px}
 [data-theme="light"] .btn.call{color:#fff}
+
+/* Booking details modal */
+body.no-scroll{overflow:hidden}
+#booking-modal-wrapper{position:fixed;inset:0;display:none;z-index:40}
+#booking-modal-wrapper.show .modal{animation:fadeIn .22s ease-out}
+.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);}
+.modal{position:relative;max-width:520px;margin:80px auto 40px auto;background:var(--ga-navy);border:1px solid rgba(212,175,55,.35);border-radius:18px;padding:20px 22px;box-shadow:0 8px 32px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.4);color:#fff;display:flex;flex-direction:column}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px 0}
+.modal-header h2{font-size:20px;margin:0;color:var(--ga-gold);text-shadow:0 0 8px rgba(212,175,55,.4)}
+.close-btn{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:16px}
+.modal-body{font-size:14px;line-height:1.45;max-height:60vh;overflow-y:auto;padding-right:4px}
+.details-grid{display:flex;flex-direction:column;gap:6px}
+.details-grid .row{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.04)}
+.details-grid .row .label{font-weight:600;color:var(--ga-gold)}
+.details-grid .row .value{word-break:break-word}
+.details-grid a.phone-link{color:#fff;text-decoration:underline}
+@media (max-width:600px){
+	.modal{margin:40px 14px;padding:18px 18px;max-width:none}
+	.details-grid .row{grid-template-columns:90px 1fr}
+	.modal-header h2{font-size:18px}
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}

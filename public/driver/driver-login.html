@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Greekaway • Driver Login</title>
+  <link rel="stylesheet" href="/driver/driver.css" />
+  <style> .center { max-width: 420px; margin: 40px auto; } .brand { color:#D4AF37 } </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Greekaway Driver</div>
+  </header>
+  <div class="container center">
+    <div class="card">
+      <h2 style="margin:0 0 8px 0;">Σύνδεση Οδηγού</h2>
+      <form id="loginForm">
+        <label for="identifier">Email ή Τηλέφωνο</label>
+        <input id="identifier" class="input" type="text" placeholder="example@domain.com ή 6900000000" autocomplete="username" required />
+        <label for="password">Κωδικός</label>
+        <input id="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password" required />
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button type="submit" class="btn">Σύνδεση</button>
+        </div>
+        <div id="loginResult" class="meta" style="margin-top:8px; color:#A8B3C2;"></div>
+      </form>
+    </div>
+    <div class="card" style="font-size:13px; color:#A8B3C2;">
+      Συμβουλή: Αν λάβατε πρόσκληση, πρώτα ολοκληρώστε την ενεργοποίηση του λογαριασμού σας από το email/SMS.
+    </div>
+  </div>
+  <script src="/driver/driver-common.js"></script>
+  <script src="/driver/driver.js"></script>
+  <script> window.DriverUI.initLogin(); </script>
+</body>
+</html>

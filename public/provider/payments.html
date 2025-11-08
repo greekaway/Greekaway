@@ -1,26 +1,13 @@
 <!doctype html>
 <html lang="el">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Πληρωμές — Greekaway</title>
-  <link rel="stylesheet" href="/provider/provider.css">
-  <link rel="stylesheet" href="/provider/provider-footer.css">
-  <link rel="stylesheet" href="/provider/theme-driver.css">
+  <meta charset="utf-8" />
+  <meta http-equiv="refresh" content="0; url=/provider/provider-payments.html" />
+  <title>Πληρωμές — Μεταφορά</title>
+  <style>body{font-family:sans-serif;padding:24px;} a{color:#004aad;}</style>
 </head>
 <body>
-  <header><h1>Πληρωμές</h1></header>
-  <main>
-    <div id="content"></div>
-    <div class="footer-spacer"></div>
-  </main>
-  <script src="/provider/provider.js"></script>
-  <script>window.ProviderUI.initPayments();</script>
-  <div id="footer-placeholder"></div>
-  <script>
-    fetch('/provider/footer/footer-payments.html')
-      .then(res => res.text())
-      .then(html => { const ph = document.getElementById('footer-placeholder'); if (ph) ph.innerHTML = html; });
-  </script>
+  Ανακατεύθυνση στην νέα σελίδα πληρωμών…
+  <p><a href="/provider/provider-payments.html">Άνοιγμα τώρα</a></p>
 </body>
 </html>

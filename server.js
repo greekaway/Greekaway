@@ -2006,6 +2006,13 @@ try {
 // Provider and partner-dispatch routes (required by #14)
 app.use('/provider', require('./routes/provider'));
 app.use('/partner-dispatch', require('./routes/partner-dispatch'));
+// Driver panel & API routes (new lightweight driver workflow)
+try {
+  app.use('/driver', require('./routes/driver'));
+  console.log('driver: routes mounted at /driver');
+} catch (e) {
+  console.warn('driver: failed to mount', e && e.message ? e.message : e);
+}
 
 // Global error handlers to prevent process exit on unexpected errors
 process.on('uncaughtException', (err) => {

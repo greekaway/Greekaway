@@ -1,32 +1,13 @@
 <!doctype html>
 <html lang="el">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Κρατήσεις — Greekaway</title>
-  <link rel="stylesheet" href="/provider/provider.css">
-  <link rel="stylesheet" href="/provider/provider-footer.css">
-  <link rel="stylesheet" href="/provider/theme-driver.css">
+  <meta charset="utf-8" />
+  <meta http-equiv="refresh" content="0; url=/provider/provider-bookings.html" />
+  <title>Κρατήσεις — Μεταφορά</title>
+  <style>body{font-family:sans-serif;padding:24px;} a{color:#004aad;}</style>
 </head>
 <body>
-  <header><h1>Κρατήσεις</h1></header>
-  <main>
-    <div class="filters" id="filters">
-      <button class="filter-btn active" data-filter="all">Όλες</button>
-      <button class="filter-btn" data-filter="new">Νέες</button>
-      <button class="filter-btn" data-filter="progress">Σε εξέλιξη</button>
-      <button class="filter-btn" data-filter="completed">Ολοκληρωμένες</button>
-    </div>
-    <div id="bookings" class="list"></div>
-    <div class="footer-spacer"></div>
-  </main>
-  <script src="/provider/provider.js"></script>
-  <script>window.ProviderUI.initBookings();</script>
-  <div id="footer-placeholder"></div>
-  <script>
-    fetch('/provider/footer/footer-bookings.html')
-      .then(res => res.text())
-      .then(html => { const ph = document.getElementById('footer-placeholder'); if (ph) ph.innerHTML = html; });
-  </script>
+  Ανακατεύθυνση στην νέα σελίδα κρατήσεων…
+  <p><a href="/provider/provider-bookings.html">Άνοιγμα τώρα</a></p>
 </body>
 </html>

@@ -1,0 +1,3 @@
+/* Provider Payments Module
+	Preserve legacy dark theme card styling from provider.css by not overriding .card.
+	(Add payment-specific selectors here when real data tables arrive.) */

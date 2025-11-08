@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Provider • Κρατήσεις</title>
+  <!-- Shared base styles -->
+  <link rel="stylesheet" href="/provider/provider.css" />
+  <link rel="stylesheet" href="/provider/provider-footer.css" />
+  <link rel="stylesheet" href="/provider/theme-driver.css" />
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="/provider/provider-bookings.css" />
+</head>
+<body>
+  <header><h1>Κρατήσεις</h1></header>
+  <main>
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-filter="all">Όλες</button>
+      <button class="filter-btn" data-filter="new">Νέες</button>
+      <button class="filter-btn" data-filter="progress">Σε εξέλιξη</button>
+      <button class="filter-btn" data-filter="completed">Ολοκληρωμένες</button>
+    </div>
+    <div id="bookings" class="list"></div>
+    <div class="footer-spacer"></div>
+  </main>
+  <!-- Shared logic -->
+  <script src="/provider/provider.js"></script>
+  <!-- Page-specific logic -->
+  <script src="/provider/provider-bookings.js"></script>
+  <div id="footer-placeholder"></div>
+  <script>
+    fetch('/provider/footer/footer-bookings.html')
+      .then(r => r.text())
+      .then(html => { const ph = document.getElementById('footer-placeholder'); if (ph) ph.innerHTML = html; });
+  </script>
+</body>
+</html>

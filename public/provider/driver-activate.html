@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ενεργοποίηση Οδηγού</title>
+  <link rel="stylesheet" href="/provider/provider.css" />
+  <style>
+    main { max-width:480px; margin:40px auto; }
+    form.card { display:flex; flex-direction:column; gap:8px; }
+  </style>
+</head>
+<body>
+  <header><h1>Ενεργοποίηση Οδηγού</h1></header>
+  <main>
+    <form id="activateForm" class="card">
+      <div id="stepInfo" class="small muted">Ορίστε κωδικό πρόσβασης για να ενεργοποιήσετε τον λογαριασμό σας.</div>
+      <label>Νέος Κωδικός
+        <input type="password" id="password" required minlength="6" />
+      </label>
+      <div style="margin-top:10px"><button class="btn" type="submit">Ενεργοποίηση</button></div>
+      <div id="result" class="small muted" style="margin-top:6px"></div>
+    </form>
+  </main>
+  <script>
+    (function(){
+      function getToken(){ const u=new URL(location.href); return u.searchParams.get('token'); }
+      const inviteToken = getToken();
+      const form = document.getElementById('activateForm');
+      const out = document.getElementById('result');
+      if (!inviteToken){ out.textContent = 'Λείπει κωδικός πρόσκλησης.'; form.querySelector('button').disabled = true; return; }
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        out.textContent = 'Αποστολή…';
+        try {
+          const pass = document.getElementById('password').value;
+          const r = await fetch('/provider/driver/activate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token: inviteToken, password: pass }) });
+          const j = await r.json().catch(()=>({}));
+          if (!r.ok || !j.ok) { throw new Error(j && j.error || ('http_'+r.status)); }
+          out.textContent = 'Ενεργοποιήθηκε. Μπορείτε να κλείσετε τη σελίδα.';
+          form.reset();
+        } catch(err){ out.textContent = 'Αποτυχία: ' + (err && err.message || 'Σφάλμα'); }
+      });
+    })();
+  </script>
+</body>
+</html>
