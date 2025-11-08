@@ -5,7 +5,9 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 
 const router = express.Router();
+// Accept both JSON and form-urlencoded bodies for robustness
 router.use(express.json());
+router.use(express.urlencoded({ extended: true }));
 
 // Serve provider panel HTML pages at clean URLs (extensionless)
 router.get('/', (req, res) => { res.redirect('/provider/login'); });
@@ -26,11 +28,29 @@ const allowed = new Set([
   'https://www.greekaway.com',
   DEV_LOCAL_IP ? `http://${DEV_LOCAL_IP}:3000` : null,
 ].filter(Boolean));
+
+function isPrivateLanOrigin(origin){
+  try {
+    const u = new URL(origin);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+    const h = u.hostname || '';
+    // localhost/loopback
+    if (h === 'localhost' || h === '127.0.0.1') return true;
+    // Private IPv4 ranges
+    if (/^192\.168\./.test(h)) return true;
+    if (/^10\./.test(h)) return true;
+    const m = h.match(/^172\.(\d{1,2})\./); if (m){ const n = parseInt(m[1],10); if (n>=16 && n<=31) return true; }
+    return false;
+  } catch(_) { return false; }
+}
+
+const allowDevAnyLan = (process.env.NODE_ENV !== 'production');
 router.use(cors({ origin: (origin, cb) => {
-  if (!origin) return cb(null, true); // allow same-origin / curl
+  if (!origin) return cb(null, true); // allow same-origin / curl / mobile apps
   try {
     const o = origin.replace(/\/$/, '');
     if (allowed.has(o)) return cb(null, true);
+    if (allowDevAnyLan && isPrivateLanOrigin(o)) return cb(null, true);
   } catch(_) {}
   return cb(new Error('Not allowed by CORS'));
 }, credentials: false }));

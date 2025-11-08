@@ -41,7 +41,9 @@ const ProviderAPI = (function(){
   function getToken(){ return token || localStorage.getItem('ga_provider_token'); }
   async function login(email, password){
     const r = await fetch(base + '/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) });
-    const j = await r.json(); if (!r.ok) throw new Error(j && j.error || 'login_failed');
+    const raw = await r.text();
+    let j = null; try { j = raw ? JSON.parse(raw) : null; } catch(e){ throw new Error('invalid_json_response'); }
+    if (!r.ok || !j || !j.ok) { const msg = (j && j.error) ? j.error : (!r.ok ? ('http_'+r.status) : 'login_failed'); throw new Error(msg); }
     setToken(j.token); return j;
   }
   async function authed(path, opts){
@@ -83,11 +85,19 @@ window.ProviderUI = {
       const email = document.getElementById('email').value.trim();
       const pass = document.getElementById('password').value;
       out.textContent = 'Σύνδεση…';
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) { btn.disabled = true; btn.textContent = '…'; }
       try {
         const r = await ProviderAPI.login(email, pass);
         out.textContent = 'Επιτυχής σύνδεση';
         setTimeout(() => location.href = '/provider/dashboard.html', 300);
-      } catch (e) { showError(out, 'Αποτυχία σύνδεσης'); }
+      } catch (e) {
+        // Surface specific error cause if available
+        const msg = String(e && e.message || 'Αποτυχία σύνδεσης');
+        showError(out, 'Αποτυχία: ' + msg.replace(/^invalid_json_response$/,'Μη έγκυρη απάντηση server'));
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Σύνδεση'; }
+      }
     });
   },
   async initDashboard(){
