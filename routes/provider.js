@@ -137,12 +137,14 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
       const data = out.map(b => ({
         id: b.id,
         booking_id: b.id,
-        trip_title: (b.metadata && b.metadata.trip_title) || b.trip_id,
+        trip_title: b.trip_id,
         date: b.date,
-        pickup_point: (b.metadata && (b.metadata.pickup_point || b.metadata.pickup)) || 'N/A',
+        pickup_point: (b.pickup_location && b.pickup_location.trim()) || 'N/A',
         pickup_time: (b.metadata && (b.metadata.pickup_time || b.metadata.time)) || 'N/A',
-        customer_name: (b.metadata && b.metadata.customer_name) || b.user_name,
+        customer_name: b.user_name,
         customer_phone: (b.metadata && b.metadata.customer_phone) || null,
+        luggage: (() => { try { const arr = b.suitcases_json ? JSON.parse(b.suitcases_json) : []; return Array.isArray(arr) ? arr.join(', ') : (arr ? String(arr) : null); } catch(_) { return null; } })(),
+        special_requests: b.special_requests || null,
         status: badgeStatus(b.status),
         dispatch: dispatch[b.id] || null,
       }));
@@ -153,24 +155,21 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
         const rows = db.prepare(`SELECT * FROM bookings WHERE partner_id = ? AND status IN ('confirmed','accepted','picked','completed','declined') ORDER BY created_at DESC LIMIT 200`).all(pid);
         const ids = rows.map(r => r.id);
         const dispatch = await require('../services/dispatchService').latestStatusForBookings(ids);
-        const data = rows.map(b => {
-          let meta = {}; try { meta = b.metadata ? JSON.parse(b.metadata) : {}; } catch(_) {}
-          return {
-            id: b.id,
-            booking_id: b.id,
-            trip_title: meta.trip_title || b.trip_id,
-            date: b.date,
-            pickup_point: meta.pickup_point || meta.pickup || meta.pickup_address || 'N/A',
-            pickup_time: meta.pickup_time || meta.time || 'N/A',
-            customer_name: meta.customer_name || b.user_name,
-            customer_phone: meta.customer_phone || null,
-            luggage: meta.luggage || null,
-            special_requests: meta.special_requests || meta.notes || null,
-            map_link: (meta.map_link || (meta.pickup_place_id && meta.pickup_lat && meta.pickup_lng ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meta.pickup_lat+','+meta.pickup_lng)}&query_place_id=${encodeURIComponent(meta.pickup_place_id)}` : (meta.pickup_address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meta.pickup_address)}` : null))),
-            status: badgeStatus(b.status),
-            dispatch: dispatch[b.id] || null,
-          };
-        });
+        const data = rows.map(b => ({
+          id: b.id,
+          booking_id: b.id,
+          trip_title: b.trip_id,
+          date: b.date,
+          pickup_point: b.pickup_location || 'N/A',
+          pickup_time: (()=>{ let meta={}; try{ meta=b.metadata?JSON.parse(b.metadata):{} }catch(_){} return meta.pickup_time || meta.time || 'N/A'; })(),
+          customer_name: b.user_name,
+          customer_phone: (()=>{ let meta={}; try{ meta=b.metadata?JSON.parse(b.metadata):{} }catch(_){} return meta.customer_phone || null; })(),
+          luggage: (()=>{ try { const arr = b.suitcases_json ? JSON.parse(b.suitcases_json) : []; return Array.isArray(arr) ? arr.join(', ') : (arr ? String(arr) : null); } catch(_) { return null; } })(),
+          special_requests: b.special_requests || null,
+          map_link: null,
+          status: badgeStatus(b.status),
+          dispatch: dispatch[b.id] || null,
+        }));
         return res.json({ ok: true, bookings: data });
       } finally { db.close(); }
     }
@@ -195,6 +194,7 @@ router.get('/api/bookings/:id', authMiddleware, async (req, res) => {
         const row = db.prepare('SELECT * FROM bookings WHERE id = ? AND partner_id = ? LIMIT 1').get(id, pid);
         if (!row) return res.status(404).json({ error: 'Not found' });
         if (row.metadata) { try { row.metadata = JSON.parse(row.metadata); } catch(_){} }
+        if (row.suitcases_json && !row.suitcases) { try { row.suitcases = JSON.parse(row.suitcases_json); } catch(_) { row.suitcases = []; } }
         return res.json({ ok:true, booking: row });
       } finally { db.close(); }
     }

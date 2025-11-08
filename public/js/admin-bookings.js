@@ -88,6 +88,10 @@ function renderRows(){
     const email = r.email || r.customer_email || r.user_email || r.contact_email || '';
     const pickup = r.pickup || r.pickup_location || r.from || r.start_location || '';
     const dropoff = r.dropoff || r.dropoff_location || r.to || r.end_location || '';
+    // New structured fields (no metadata fallback — API provides them)
+    const pickup_location = r.pickup_location || '';
+    const luggage = r.luggage_text || (Array.isArray(r.suitcases) ? r.suitcases.join(', ') : (r.suitcases ? String(r.suitcases) : ''));
+    const special_requests = r.special_requests || '';
     tr.innerHTML = `
       <td>${escapeHtml(r.id||'')}</td>
       <td>${escapeHtml(formatDate(r.date||r.created_at||''))}</td>
@@ -99,6 +103,9 @@ function renderRows(){
       <td>${escapeHtml(r.status||'')}</td>
       <td class="col-pickup">${escapeHtml(pickup)}</td>
       <td class="col-dropoff">${escapeHtml(dropoff)}</td>
+      <td class="col-pickuploc">${escapeHtml(pickup_location)}</td>
+      <td class="col-luggage">${escapeHtml(luggage)}</td>
+      <td class="col-requests">${escapeHtml(special_requests)}</td>
       <td>${escapeHtml(r.partner_id||'')}</td>`;
     tbody.appendChild(tr);
   }

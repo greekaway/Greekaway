@@ -126,7 +126,6 @@ try {
   bookingsDb.exec(`CREATE TABLE IF NOT EXISTS bookings (
     id TEXT PRIMARY KEY,
     status TEXT,
-    date TEXT,
     payment_intent_id TEXT UNIQUE,
     event_id TEXT,
     user_name TEXT,
@@ -139,6 +138,7 @@ try {
     created_at TEXT,
     updated_at TEXT
   )`);
+  // Ensure date column is present (legacy compatibility) and any new structured columns; re-ordering not feasible via ALTER, so we reference columns explicitly in INSERT.
   // Ensure legacy databases get a date column if missing
   try {
     const info = bookingsDb.prepare("PRAGMA table_info('bookings')").all();
@@ -147,6 +147,13 @@ try {
       bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN date TEXT').run();
       console.log('server: added date column to bookings table');
     }
+    // Ensure new pickup/suitcase/notes columns exist
+    const names = new Set(info.map(i => i.name));
+    if (!names.has('pickup_location')) { try { bookingsDb.prepare("ALTER TABLE bookings ADD COLUMN pickup_location TEXT DEFAULT ''").run(); console.log('server: added pickup_location'); } catch(_){} }
+    if (!names.has('pickup_lat')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_lat REAL').run(); console.log('server: added pickup_lat'); } catch(_){} }
+    if (!names.has('pickup_lng')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_lng REAL').run(); console.log('server: added pickup_lng'); } catch(_){} }
+    if (!names.has('suitcases_json')) { try { bookingsDb.prepare("ALTER TABLE bookings ADD COLUMN suitcases_json TEXT DEFAULT '[]'").run(); console.log('server: added suitcases_json'); } catch(_){} }
+    if (!names.has('special_requests')) { try { bookingsDb.prepare("ALTER TABLE bookings ADD COLUMN special_requests TEXT DEFAULT ''").run(); console.log('server: added special_requests'); } catch(_){} }
   } catch (e) { /* ignore migration errors */ }
 
   // capacities table to track per-trip per-date seat limits (optional admin seed)
@@ -1687,18 +1694,60 @@ app.post('/api/bookings', express.json(), (req, res) => {
       // Try to persist partner_id on booking for downstream provider features
       let providerId = null;
       try { const m = bookingsDb.prepare('SELECT partner_id FROM partner_mappings WHERE trip_id = ?').get(trip_id); providerId = m && m.partner_id ? m.partner_id : null; } catch(_) {}
+
+      // Derive new structured columns from body/metadata
+      const body = req.body || {};
+      const metaObj = (() => { try { return metadata && typeof metadata === 'object' ? metadata : (metadata ? JSON.parse(String(metadata)) : {}); } catch(_) { return {}; } })();
+      const pickStr = (...arr) => { const v = arr.find(x => x != null && String(x).trim() !== ''); return v == null ? '' : String(v); };
+      const toNum = (v) => { if (v == null || v === '') return null; const n = Number(v); return Number.isFinite(n) ? n : null; };
+      const pickup_location = pickStr(body.pickup_location, body.pickup_point, body.pickup_address, body.pickup, body.from, body.start_location, metaObj.pickup_location, metaObj.pickup_point, metaObj.pickup_address, metaObj.pickup, metaObj.from, metaObj.start_location);
+      const pickup_lat = toNum(body.pickup_lat ?? metaObj.pickup_lat);
+      const pickup_lng = toNum(body.pickup_lng ?? metaObj.pickup_lng);
+      const suitcases_raw = (body.suitcases ?? metaObj.suitcases ?? metaObj.luggage);
+      const suitcases_json = Array.isArray(suitcases_raw) ? JSON.stringify(suitcases_raw) : (suitcases_raw && typeof suitcases_raw === 'object' ? JSON.stringify(suitcases_raw) : JSON.stringify(suitcases_raw == null || suitcases_raw === '' ? [] : [String(suitcases_raw)]));
+      const special_requests = pickStr(body.special_requests, body.notes, metaObj.special_requests, metaObj.notes);
+      try {
+        console.log('bookings: debug body', { b_pickup_location: body.pickup_location, b_pickup_lat: body.pickup_lat, b_pickup_lng: body.pickup_lng, b_suitcases: body.suitcases, b_special_requests: body.special_requests, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests });
+      } catch(_){ }
       let inserted = false;
       if (providerId) {
         try {
-          const insertWithPartner = bookingsDb.prepare('INSERT INTO bookings (id,status,date,partner_id,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insertWithPartner.run(id, 'pending', date, providerId, null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now);
+          // Prefer insert including new columns when available
+          console.log('bookings: attempting partner insert with new fields', {
+            id,
+            providerId,
+            pickup_location,
+            pickup_lat,
+            pickup_lng,
+            suitcases_json,
+            special_requests
+          });
+          // Column order mismatch historically caused silent fallback; use explicit column list matching schema.
+          const insertWithPartner = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+          insertWithPartner.run(id, 'pending', null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now, date, 0, null, providerId, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
           inserted = true;
+          console.log('bookings: inserted (partner) with new fields id=' + id);
         } catch(_) { /* column may not exist in some environments; fallback below */ }
       }
       if (!inserted) {
-        const insert = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-        insert.run(id, 'pending', date, null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now);
+        // Try without partner but with new columns
+        try {
+          const insert2 = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+          insert2.run(id, 'pending', null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now, date, 0, null, null, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
+          console.log('bookings: inserted with new fields (no-partner) id=' + id);
+        } catch(_e) {
+          console.warn('bookings: insert with new fields failed; falling back to legacy. id=' + id + ' err=' + (_e && _e.message ? _e.message : _e));
+          // Final fallback to legacy columns only
+          const insertLegacy = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+          insertLegacy.run(id, 'pending', date, null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now);
+          console.log('bookings: inserted using legacy fields id=' + id);
+        }
       }
+      // Ensure structured fields are populated regardless of insert path
+      try {
+        bookingsDb.prepare('UPDATE bookings SET pickup_location = ?, pickup_lat = ?, pickup_lng = ?, suitcases_json = ?, special_requests = ? WHERE id = ?')
+          .run(pickup_location || '', pickup_lat, pickup_lng, suitcases_json || '[]', special_requests || '', id);
+      } catch (e) { console.warn('bookings: post-insert update for structured fields failed id=' + id + ' err=' + (e && e.message ? e.message : e)); }
       return res.json({ bookingId: id, status: 'pending' });
     }
     return res.status(500).json({ error: 'Bookings DB not available' });
@@ -1733,6 +1782,10 @@ app.get('/api/bookings/:id', (req, res) => {
     // parse metadata
     if (row.metadata) {
       try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
+    }
+    // Parse suitcases_json for client convenience
+    if (row && typeof row.suitcases_json === 'string') {
+      try { row.suitcases = JSON.parse(row.suitcases_json); } catch(_) { row.suitcases = []; }
     }
     return res.json(row);
   } catch (e) { console.error('Get booking error', e && e.stack ? e.stack : e); return res.status(500).json({ error: 'Server error' });
@@ -1775,8 +1828,8 @@ app.get('/api/bookings', (req, res) => {
       params.push(s, s, s, s);
     }
     const whereSql = where.length ? ('WHERE ' + where.join(' AND ')) : '';
-    // Default order newest first; client can re-sort locally
-    const rows = bookingsDb.prepare(`SELECT * FROM bookings ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
+  // Default order newest first; client can re-sort locally
+  const rows = bookingsDb.prepare(`SELECT * FROM bookings ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
 
     // Optional enrichment: derive trip_title from public data if available
     let enriched = rows.map(r => ({ ...r }));
@@ -1792,9 +1845,14 @@ app.get('/api/bookings', (req, res) => {
             trip_title = (summary && summary.title) || (t && (t.title && (t.title.el || t.title.en))) || id;
           } catch (_) { trip_title = id; }
         }
-        // parse metadata JSON string for client convenience
-        let metadata = r && r.metadata;
-        if (metadata && typeof metadata === 'string') { try { metadata = JSON.parse(metadata); } catch(_){} }
+        // Do not rely on metadata for these fields anymore; only add parsed metadata for legacy debugging if needed
+        let metadata = undefined;
+        const luggage_text = (() => { try {
+          const arr = r && r.suitcases_json ? JSON.parse(r.suitcases_json) : [];
+          if (Array.isArray(arr)) return arr.join(', ');
+          if (arr && typeof arr === 'object') return Object.values(arr).join(', ');
+          return arr ? String(arr) : '';
+        } catch(_) { return ''; } })();
         return {
           id: r.id,
           date: r.date || r.created_at || null,
@@ -1806,7 +1864,10 @@ app.get('/api/bookings', (req, res) => {
           status: r.status || '',
           partner_id: r.partner_id || null,
           created_at: r.created_at || null,
-          metadata
+          metadata,
+          pickup_location: r.pickup_location || '',
+          special_requests: r.special_requests || '',
+          luggage_text
         };
       });
     } catch (e) { /* if enrichment fails, return basic mapping */
@@ -1820,7 +1881,10 @@ app.get('/api/bookings', (req, res) => {
         currency: r.currency || 'eur',
         status: r.status || '',
         partner_id: r.partner_id || null,
-        created_at: r.created_at || null
+        created_at: r.created_at || null,
+        pickup_location: r.pickup_location || '',
+        special_requests: r.special_requests || '',
+        luggage_text: (() => { try { const arr = r && r.suitcases_json ? JSON.parse(r.suitcases_json) : []; return Array.isArray(arr) ? arr.join(', ') : (arr ? String(arr) : ''); } catch(_) { return ''; } })()
       }));
     }
     return res.json({ ok: true, page, limit, items: enriched });
