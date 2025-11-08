@@ -1,6 +1,6 @@
 # Greekaway Technical Status – v4
 
-Date: 2025-11-01
+Date: 2025-11-08
 
 This v4 snapshot summarizes the current technical and visual state of Greekaway after a fresh scan of the repository (server, public UI, data, tools, and tests). It supersedes v3 and updates the prior v4 with the latest test and feature status.
 
@@ -57,6 +57,7 @@ This v4 snapshot summarizes the current technical and visual state of Greekaway 
 - Services
   - `services/dispatchService.js`: Email-based dispatch queuing with retries and success tracking; controlled by `DISPATCH_ENABLED` and mail env vars.
   - `services/adminSse.js`: Lightweight SSE broadcaster for admin dashboards and real-time updates.
+  - `services/pickupNotifications.js`: Computes and freezes final pickup sequence/times ~24h before trip using Google Distance Matrix (when key present), persists into booking metadata, and sends optional email notifications; scheduled every 5 minutes (disabled under tests).
 
 ## Frontend (under `public/`)
 
@@ -99,9 +100,13 @@ This v4 snapshot summarizes the current technical and visual state of Greekaway 
 
 - Build: N/A (Node server + static assets; no bundler).
 - Lint/Typecheck: Not configured (no ESLint/Prettier/TS in repo).
-- Unit/Integration tests (Jest): PASS (4 suites)
-  - booking_flow, idempotency, provider_panel, sca_and_failures all pass locally.
-- Smoke tests (Puppeteer): PASS — “Run booking smoke test (mobile screenshots)” completed after starting the local server; screenshots saved in repo root.
+- Unit/Integration tests (Jest): FAIL currently (env mismatch) — 4 failed, 1 passed
+  - Passing: pickup_notifications.test.js
+  - Failing: booking_flow, idempotency, provider_panel, sca_and_failures
+  - Root cause: `.env` sets `PORT=3101`, so the spawned server in tests listens on 3101 while tests call `http://localhost:3000`; connection attempts fail. Quick fixes:
+    - Clear/override `PORT` for test runs (e.g., set `PORT=3000` in the spawned env), or
+    - Make `server.js` default to 3000 when `NODE_ENV=test` regardless of `PORT`.
+- Smoke tests (Puppeteer): Not re-run in this pass. Multi-viewport screenshots from prior runs exist at repo root (iphone-13/14/16, pixel-7, etc.). Re-run requires local server on the expected port.
 - i18n check: Tool available; recommended to run before releases.
 
 ## Status summary
