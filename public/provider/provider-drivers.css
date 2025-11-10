@@ -20,3 +20,60 @@ header .theme-toggle { position:absolute; right:12px; top:10px; transform:none; 
 label { display:block; margin:8px 0; }
 label input, label textarea { width:100%; }
 .actions .btn { white-space:nowrap; }
+
+/* Κοινό στυλ για driver cards — τα ίδια με .card της αρχικής (χρώματα + 3D σκιές) */
+.driver-card {
+	background: #0e1920;
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	border-radius: 14px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3), 0 0 6px rgba(212, 175, 55, 0.3);
+	backdrop-filter: blur(3px);
+	padding: 12px;
+	margin: 8px 0;
+	transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+/* Hover effect: ίδιο scale με την αρχική */
+.driver-card:hover { transform: scale(1.01); }
+
+/* Κείμενα μέσα στην κάρτα */
+.driver-card h3 {
+	color: #fff;
+	font-weight: 600;
+	margin: 0 0 4px;
+}
+
+.driver-card p { color: #9bb0c5; margin: 0; font-size: 0.9rem; }
+
+/* Badge κατάστασης (Ενεργός) */
+.driver-status {
+	background: rgba(212, 175, 55, 0.15);
+	color: #D4AF37;
+	border: 1px solid rgba(212, 175, 55, 0.35);
+	border-radius: 6px;
+	padding: 2px 6px;
+	font-size: 0.8rem;
+	white-space: nowrap;
+}
+
+/* Προαιρετικά: απόχρωση για "Σε αναμονή" */
+.driver-status.pending {
+	background: rgba(47, 128, 255, 0.12);
+	color: #8fbaff;
+}
+
+/* Light theme: ίδια συμπεριφορά με .card της αρχικής */
+[data-theme="light"] .driver-card{
+	background:#fff;
+	color:#1B2A3A;
+	border:1px solid rgba(0,0,0,.06);
+	box-shadow:0 0 10px rgba(0,0,0,.15);
+	backdrop-filter:none;
+}
+[data-theme="light"] .driver-card h3{ color:#1B2A3A; }
+[data-theme="light"] .driver-card p{ color:#54697d; }
+[data-theme="light"] .driver-status{
+	background:#fff5dc;
+	color:#b38304;
+	border:1px solid rgba(179,131,4,.4);
+}

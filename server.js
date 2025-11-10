@@ -645,6 +645,22 @@ app.use('/locales', express.static(LOCALES_DIR, {
     }
   }
 }));
+// Serve legal/marketing PDF documents under /docs (tabbed About & Legal page)
+const DOCS_DIR = path.join(__dirname, 'docs');
+try { fs.mkdirSync(DOCS_DIR, { recursive: true }); } catch(e){}
+app.use('/docs', express.static(DOCS_DIR, {
+  etag: !IS_DEV,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    if (IS_DEV) { res.setHeader('Cache-Control', 'no-store'); return; }
+    // Allow moderate caching for PDFs (1 day); shorter for other doc assets
+    if (filePath.endsWith('.pdf')) {
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // 24h
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=300'); // 5m for ancillary files
+    }
+  }
+}));
 function computeLocalesVersion() {
   try {
     const entries = fs.readdirSync(LOCALES_DIR, { withFileTypes: true });

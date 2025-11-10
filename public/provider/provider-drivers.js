@@ -15,7 +15,19 @@
     const wrap = qs('driversList');
     if (!wrap) return;
     if (!list.length){ wrap.innerHTML = '<div class="card">Δεν υπάρχουν οδηγοί</div>'; return; }
-    wrap.innerHTML = list.map(d => `<div class="driver" data-id="${escapeHtml(d.id)}"><div><b>${escapeHtml(d.name||'—')}</b><div class="meta">${escapeHtml(d.contact||'—')}</div></div><div><span class="badge ${d.status==='active'?'success':'info'}">${d.status==='active'?'Ενεργός':'Σε αναμονή'}</span></div></div>`).join('');
+    wrap.innerHTML = list.map(d => `
+      <div class="driver-card" data-id="${escapeHtml(d.id)}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div>
+            <h3>${escapeHtml(d.name||'—')}</h3>
+            <p class="meta">${escapeHtml(d.contact||'—')}</p>
+          </div>
+          <div>
+            <span class="driver-status${d.status==='active'?'':' pending'}">${d.status==='active'?'Ενεργός':'Σε αναμονή'}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
   }
   async function refresh(){ const data = await fetchDrivers(); render(data); }
   async function submitForm(e){

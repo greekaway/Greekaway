@@ -24,16 +24,16 @@
       list.innerHTML = bookings.map(b => {
         const actions = computeNextButtons(b.status);
         const btns = actions.map(a => `<button class="btn act" data-action="${a}" data-id="${b.id}">${a==='accepted'?'Αποδοχή':a==='picked'?'Παραλαβή':'Ολοκλήρωση'}</button>`).join('');
-        return `<div class="card booking ${statusClass(b.status)}" data-id="${b.id}">
-          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-            <div>
-              <div><b>${b.trip_title || b.booking_id}</b></div>
-              <div class="meta">${b.date || ''} • ${b.pickup_point || ''} (${b.pickup_time || ''})</div>
-              <div class="meta">${b.customer_name || ''}${b.customer_phone ? ' • ' + b.customer_phone : ''}</div>
-            </div>
-            <div><span class="badge ${b.status==='completed'?'ok':b.status==='accepted'?'gold':'warn'}">${b.status||'pending'}</span></div>
+        const statusLabel = (b.status||'pending');
+        return `<div class="assignment-card booking ${statusClass(b.status)}" data-id="${b.id}">
+          <div class="assignment-header">
+            <div class="assignment-title">${b.trip_title || b.booking_id}</div>
+            <div class="assignment-status" data-status="${statusLabel}">${statusLabel}</div>
           </div>
-          <div class="actions" style="margin-top:8px;">${btns || ''}<button class="btn ghost view-route" data-id="${b.id}">Δείτε Διαδρομή</button></div>
+          <div class="assignment-meta">${b.date || ''} • ${b.pickup_time || ''}</div>
+          <div class="assignment-meta">${b.pickup_point || ''}</div>
+          <div class="assignment-meta">${b.customer_name || ''}${b.customer_phone ? ' • ' + b.customer_phone : ''}</div>
+          <div class="assignment-actions actions">${btns || ''}<button class="btn ghost view-route" data-id="${b.id}">Δείτε Διαδρομή</button></div>
         </div>`;
       }).join('');
       bindActions(list);
@@ -51,9 +51,13 @@
           if (card){
             card.classList.remove('state-accepted','state-picked','state-completed');
             card.classList.add(statusClass(status),'fade-update');
-            const badge = card.querySelector('.badge'); if (badge) badge.textContent = status; if (badge){ badge.className = 'badge ' + (status==='completed'?'ok':status==='accepted'?'gold':'warn'); }
+            const statusEl = card.querySelector('.assignment-status');
+            if (statusEl){
+              statusEl.textContent = status;
+              statusEl.setAttribute('data-status', status);
+            }
             // Re-render buttons for new status
-            const actionsWrap = card.querySelector('.actions');
+            const actionsWrap = card.querySelector('.assignment-actions');
             if (actionsWrap){
               const actions = computeNextButtons(status);
               actionsWrap.querySelectorAll('button.act').forEach(b=>b.remove());

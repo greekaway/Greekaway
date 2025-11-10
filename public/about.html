@@ -2,88 +2,17 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=/about/">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About Us – Greekaway</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css">
+  <title>Redirecting…</title>
   <link rel="stylesheet" href="/css/theme.css">
-  <link rel="stylesheet" href="/css/about.css">
+  <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:#0E1520;color:#fff;display:grid;place-items:center;height:100vh;margin:0}.box{padding:24px 20px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.05);max-width:520px;text-align:center}</style>
 </head>
 <body>
-  <!-- Language selector intentionally hidden on About page (kept on the home page only) -->
-
-  <header class="about-hero">
-    <h1 data-i18n="aboutPage.title">About Us – Greekaway</h1>
-    <p class="lead" data-i18n="aboutPage.lead"></p>
-  </header>
-
-  <main class="about-wrap">
-    <section class="about-section fade-reveal">
-      <h2 data-i18n="aboutPage.s1.title">SECTION 1 – The Idea Behind Greekaway</h2>
-      <p data-i18n="aboutPage.s1.body">Greekaway was created from something simple yet rare: the wish to make travel in Greece feel real again.\nWe are not a tour operator — we are a connection between travelers and people who live here.\nEvery route you see on Greekaway is designed, tested, and guided by locals who know the roads, the stories, and the soul of each place.\nWe built Greekaway because we believe that travel should be personal, fair, and deeply human.</p>
-    </section>
-
-    <section class="about-section fade-reveal">
-      <h2 data-i18n="aboutPage.s2.title">SECTION 2 – Small Groups. Real Journeys.</h2>
-      <p data-i18n="aboutPage.s2.body">Our experiences are made for small groups of 5–7 travelers — just enough for company, but still personal.\nEvery trip runs on fixed dates to keep costs low and quality high.\nWhether it’s a drive through mountain villages, a night by the sea, or a visit to an ancient site, each moment is planned with care, balance, and respect for the land and the people who host you.</p>
-    </section>
-
-    <section class="about-section fade-reveal">
-      <h2 data-i18n="aboutPage.s3.title">SECTION 3 – Partners, Not Providers</h2>
-      <p data-i18n="aboutPage.s3.body">Behind every Greekaway experience there’s a partner — not a vendor.\nDrivers, hotels, and local operators are part of the same system, treated fairly and paid transparently through our automated dual-payment network.\nThis balance keeps our ecosystem sustainable, honest, and focused on long-term value, not short-term profit.</p>
-    </section>
-
-    <section class="about-section fade-reveal">
-      <h2 data-i18n="aboutPage.s4.title">SECTION 4 – The Technology Behind the Human Touch</h2>
-      <p data-i18n="aboutPage.s4.body">Greekaway uses technology quietly — to make things smoother, not colder.\nOur AI assistant answers travelers live, shows real availability, updates weather and news, and ensures that each group forms naturally through a matching algorithm that blends traveler profiles, ages, and languages.\nThe result is something rare in tourism: human journeys, enhanced — not replaced — by technology.</p>
-    </section>
-
-    <section class="about-section fade-reveal">
-      <h2 data-i18n="aboutPage.s5.title">SECTION 5 – Transparency, Simplicity, Evolution</h2>
-      <p data-i18n="aboutPage.s5.body">We believe progress comes from clarity.\nEvery payment, every cancellation, every policy is open, structured, and fair.\nWe keep evolving, line by line, update by update, always with one goal: to keep Greekaway human, transparent, and beautifully alive.</p>
-    </section>
-
-    <div class="about-version" id="aboutVersion">
-      Greekaway <strong>v1.0.0</strong>  October 2025
-    </div>
-  </main>
-
-  <!-- Shared footer (injected) -->
-  <footer></footer>
-
-  <!-- Scripts: i18n first -->
-  <script src="/js/i18n.js" defer></script>
-  <script src="/js/overlay-manager.js" defer></script>
-  <script src="/js/footer.js" defer></script>
-  <script src="/js/assistant.js" defer></script>
-
-  <script>
-    // Reveal sections on scroll
-    (function(){
-      const els = Array.from(document.querySelectorAll('.fade-reveal'));
-      if (!('IntersectionObserver' in window)) { els.forEach(e => e.classList.add('visible')); return; }
-      const io = new IntersectionObserver((entries) => {
-        for (const en of entries) {
-          if (en.isIntersecting) { en.target.classList.add('visible'); io.unobserve(en.target); }
-        }
-      }, { root: null, rootMargin: '0px', threshold: 0.15 });
-      els.forEach(e => io.observe(e));
-    })();
-
-    // Version footer: read from /version (version + build timestamp + optional build number/commit)
-    (async function(){
-      try {
-        const el = document.getElementById('aboutVersion');
-        const r = await fetch('/version', { cache: 'no-cache' });
-        if (!r.ok) return;
-        const j = await r.json();
-        const v = (j && j.version) ? String(j.version) : '1.0.0';
-        const ts = (j && j.build) ? String(j.build) : '';
-        const bn = (j && typeof j.buildNumber !== 'undefined' && j.buildNumber !== null) ? ` • b${j.buildNumber}` : '';
-        const c = (j && j.commit) ? ` • ${j.commit}` : '';
-        el.innerHTML = `Greekaway <strong>v${v}</strong> – build ${ts}${bn}${c}`;
-      } catch(_) {}
-    })();
-  </script>
+  <div class="box">
+    <p>Μεταφορά στη νέα σελίδα <strong>About & Legal</strong>…</p>
+    <p><a href="/about/" style="color:var(--color-gold)">Πατήστε εδώ αν δεν μεταφερθήκατε.</a></p>
+  </div>
+  <script>setTimeout(function(){ try{ if(location.pathname.endsWith('/about.html')) location.replace('/about/'); }catch(_){} }, 60);</script>
 </body>
 </html>

@@ -21,7 +21,6 @@ label{display:block;margin:8px 0 4px 0;color:#c8dae5}
 .btn{display:inline-block;background:linear-gradient(90deg,#1e5bd8,#2f80ff);color:#fff;font-weight:700;padding:10px 14px;border:0;border-radius:10px;cursor:pointer}
 .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.2);color:#fff}
 .actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-.booking{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
 .booking .meta{font-size:12px;color:#c8dae5;margin-top:2px}
 .badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:12px}
 .badge.ok{background:#0b5132;color:#bff1d6}
@@ -59,3 +58,28 @@ label{display:block;margin:8px 0 4px 0;color:#c8dae5}
 /* Fade animation for status transitions */
 .booking.fade-update{animation:fadeStatus .28s ease-in-out}
 @keyframes fadeStatus{0%{opacity:0;transform:scale(.98)}100%{opacity:1;transform:scale(1)}}
+
+/* Assignment card layout — align title, meta and status nicely */
+.assignment-card{background:#0E1520;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px;margin:12px 0;display:flex;flex-direction:column;gap:6px}
+.assignment-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.assignment-title{font-weight:600;font-size:1.05rem;color:#fff}
+.assignment-meta{font-size:.9rem;color:#9bb0c5}
+.assignment-status{background:rgba(212,175,55,0.15);color:#D4AF37;border-radius:6px;padding:2px 6px;font-size:.8rem;white-space:nowrap}
+.assignment-actions{padding-top:4px}
+
+/* Variant hues per state for readability (optional) */
+.assignment-card.state-picked .assignment-status{background:rgba(47,128,255,0.15);color:#8fbaff}
+.assignment-card.state-completed .assignment-status{background:rgba(49,196,141,0.15);color:#6fe0b5}
+/* State border accents */
+.assignment-card.state-accepted{border-color:rgba(212,175,55,.45);box-shadow:0 0 0 1px rgba(212,175,55,.35)}
+.assignment-card.state-picked{border-color:rgba(47,128,255,.5);box-shadow:0 0 0 1px rgba(47,128,255,.35)}
+.assignment-card.state-completed{border-color:rgba(49,196,141,.55);opacity:.95}
+
+/* Ensure comfortable horizontal breathing room already via card padding */
+
+/* Mobile tweaks */
+@media (max-width: 600px){
+  .assignment-header{flex-wrap:wrap;align-items:flex-start}
+  .assignment-status{margin-left:auto}
+  .assignment-actions{flex-wrap:wrap}
+}

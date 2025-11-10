@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About & Legal – Greekaway</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/about.css">
+  <style>
+    /* Local page tweaks for the sticky tabs layout (kept small; main rules live in /css/about.css) */
+    body { background-color: #1B2A3A; }
+  </style>
+</head>
+<body>
+  <!-- Sticky compact header: tabs + dynamic title -->
+  <div class="about-sticky">
+    <nav class="about-tabs" role="tablist" aria-label="About and Legal">
+      <button class="about-tab is-active" role="tab" aria-selected="true" aria-controls="panel-about" id="tab-about">
+        <span data-i18n="aboutLegal.tabs.about">About Us</span>
+      </button>
+      <button class="about-tab" role="tab" aria-selected="false" aria-controls="panel-terms-customers" id="tab-terms-customers">
+        <span data-i18n="aboutLegal.tabs.termsCustomers">Όροι Χρήσης Επιβατών</span>
+      </button>
+      <button class="about-tab" role="tab" aria-selected="false" aria-controls="panel-terms-providers" id="tab-terms-providers">
+        <span data-i18n="aboutLegal.tabs.termsProviders">Όροι Χρήσης Παρόχων</span>
+      </button>
+      <button class="about-tab" role="tab" aria-selected="false" aria-controls="panel-charges" id="tab-charges">
+        <span data-i18n="aboutLegal.tabs.chargesPolicy">Πολιτική Χρεώσεων</span>
+      </button>
+    </nav>
+  <h2 class="about-title" id="activeTitle">About Us</h2>
+  </div>
+
+  <main class="about-wrap">
+    <!-- Panel: About Us (full content) -->
+    <section id="panel-about" class="tab-panel is-active cinematic-panel" role="tabpanel" aria-labelledby="tab-about" tabindex="0">
+      <section class="about-section fade-reveal">
+        <h2 data-i18n="aboutPage.s1.title">SECTION 1 – The Idea Behind Greekaway</h2>
+        <p data-i18n="aboutPage.s1.body">Greekaway was created from something simple yet rare: the wish to make travel in Greece feel real again. We are not a tour operator — we are a connection between travelers and people who live here. Every route you see on Greekaway is designed, tested, and guided by locals who know the roads, the stories, and the soul of each place. We built Greekaway because we believe that travel should be personal, fair, and deeply human.</p>
+      </section>
+
+      <section class="about-section fade-reveal">
+        <h2 data-i18n="aboutPage.s2.title">SECTION 2 – Small Groups. Real Journeys.</h2>
+        <p data-i18n="aboutPage.s2.body">Our experiences are made for small groups of 5–7 travelers — just enough for company, but still personal. Every trip runs on fixed dates to keep costs low and quality high. Whether it’s a drive through mountain villages, a night by the sea, or a visit to an ancient site, each moment is planned with care, balance, and respect for the land and the people who host you.</p>
+      </section>
+
+      <section class="about-section fade-reveal">
+        <h2 data-i18n="aboutPage.s3.title">SECTION 3 – Partners, Not Providers</h2>
+        <p data-i18n="aboutPage.s3.body">Behind every Greekaway experience there’s a partner — not a vendor. Drivers, hotels, and local operators are part of the same system, treated fairly and paid transparently through our automated dual-payment network. This balance keeps our ecosystem sustainable, honest, and focused on long-term value, not short-term profit.</p>
+      </section>
+
+      <section class="about-section fade-reveal">
+        <h2 data-i18n="aboutPage.s4.title">SECTION 4 – The Technology Behind the Human Touch</h2>
+        <p data-i18n="aboutPage.s4.body">Greekaway uses technology quietly — to make things smoother, not colder. Our AI assistant answers travelers live, shows real availability, updates weather and news, and ensures that each group forms naturally through a matching algorithm that blends traveler profiles, ages, and languages. The result is something rare in tourism: human journeys, enhanced — not replaced — by technology.</p>
+      </section>
+
+      <section class="about-section fade-reveal">
+        <h2 data-i18n="aboutPage.s5.title">SECTION 5 – Transparency, Simplicity, Evolution</h2>
+        <p data-i18n="aboutPage.s5.body">We believe progress comes from clarity. Every payment, every cancellation, every policy is open, structured, and fair. We keep evolving, line by line, update by update, always with one goal: to keep Greekaway human, transparent, and beautifully alive.</p>
+      </section>
+
+      <div class="about-version" id="aboutVersion">Greekaway <strong>v1.0.0</strong></div>
+    </section>
+
+    <!-- Panel: Passenger Terms (summary + PDF) -->
+    <section id="panel-terms-customers" class="tab-panel" role="tabpanel" aria-labelledby="tab-terms-customers" tabindex="0" hidden>
+      <article class="about-section">
+        <h2 data-i18n="aboutLegal.termsCustomers.title">Όροι Χρήσης Επιβατών (Σύνοψη)</h2>
+        <p data-i18n="aboutLegal.termsCustomers.summary">
+          Οι παρόντες όροι περιγράφουν τα δικαιώματα και τις υποχρεώσεις των επιβατών κατά τη χρήση της πλατφόρμας Greekaway. Περιλαμβάνουν ζητήματα κρατήσεων, πληρωμών, ακυρώσεων, ασφαλούς συμπεριφοράς, προστασίας δεδομένων και επικοινωνίας. Η παρούσα σύνοψη δεν αντικαθιστά το πλήρες νομικό κείμενο. Για δεσμευτική πληροφόρηση, ανατρέξτε στο πλήρες έγγραφο PDF.
+        </p>
+        <ul>
+          <li data-i18n="aboutLegal.termsCustomers.bullets.b1">Κρατήσεις και επιβεβαίωση θέσεων</li>
+          <li data-i18n="aboutLegal.termsCustomers.bullets.b2">Πολιτική ακύρωσης και επιστροφών</li>
+          <li data-i18n="aboutLegal.termsCustomers.bullets.b3">Συμπεριφορά εντός οχήματος και σε δραστηριότητες</li>
+          <li data-i18n="aboutLegal.termsCustomers.bullets.b4">Προστασία προσωπικών δεδομένων</li>
+          <li data-i18n="aboutLegal.termsCustomers.bullets.b5">Επικοινωνία με υποστήριξη</li>
+        </ul>
+        <div class="pdf-cta">
+          <a class="ga-btn ga-btn-gold" href="/docs/terms-customers.pdf" target="_blank" rel="noopener">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span data-i18n="aboutLegal.cta">Δες αναλυτικά το πλήρες έγγραφο (PDF)</span>
+          </a>
+        </div>
+      </article>
+    </section>
+
+    <!-- Panel: Provider Terms (summary + PDF) -->
+    <section id="panel-terms-providers" class="tab-panel" role="tabpanel" aria-labelledby="tab-terms-providers" tabindex="0" hidden>
+      <article class="about-section">
+        <h2 data-i18n="aboutLegal.termsProviders.title">Όροι Χρήσης Παρόχων (Σύνοψη)</h2>
+        <p data-i18n="aboutLegal.termsProviders.summary">
+          Οι συνεργάτες/πάροχοι της Greekaway (οδηγοί, καταλύματα, τοπικοί operators) λειτουργούν με διαφάνεια και σαφείς υποχρεώσεις. Οι όροι καλύπτουν θέματα πληρωμών, ποιότητας υπηρεσίας, ασφάλειας, συμμόρφωσης με τοπική νομοθεσία και προστασίας δεδομένων. Η παρούσα σύνοψη δεν αντικαθιστά το πλήρες νομικό κείμενο. Για δεσμευτική πληροφόρηση, ανατρέξτε στο πλήρες έγγραφο PDF.
+        </p>
+        <ul>
+          <li data-i18n="aboutLegal.termsProviders.bullets.b1">Χρονοδιαγράμματα πληρωμών και αποδείξεις</li>
+          <li data-i18n="aboutLegal.termsProviders.bullets.b2">Πρότυπα ποιότητας και εμπειρίας</li>
+          <li data-i18n="aboutLegal.termsProviders.bullets.b3">Ασφάλεια και ευθύνη</li>
+          <li data-i18n="aboutLegal.termsProviders.bullets.b4">Συμμόρφωση με κανονισμούς</li>
+          <li data-i18n="aboutLegal.termsProviders.bullets.b5">Διαχείριση προσωπικών δεδομένων</li>
+        </ul>
+        <div class="pdf-cta">
+          <a class="ga-btn ga-btn-gold" href="/docs/terms-providers.pdf" target="_blank" rel="noopener">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span data-i18n="aboutLegal.cta">Δες αναλυτικά το πλήρες έγγραφο (PDF)</span>
+          </a>
+        </div>
+      </article>
+    </section>
+
+    <!-- Panel: Charge Policy (summary + PDF) -->
+    <section id="panel-charges" class="tab-panel" role="tabpanel" aria-labelledby="tab-charges" tabindex="0" hidden>
+      <article class="about-section">
+        <h2 data-i18n="aboutLegal.chargesPolicy.title">Πολιτική Χρεώσεων (Σύνοψη)</h2>
+        <p data-i18n="aboutLegal.chargesPolicy.summary">
+          Η πολιτική χρεώσεων περιγράφει πώς υπολογίζονται οι τιμές, τα τέλη υπηρεσίας, οι εκπτώσεις, καθώς και οι ρήτρες σε περιπτώσεις αλλαγών ή ακυρώσεων. Η παρούσα σύνοψη δεν αντικαθιστά το πλήρες νομικό κείμενο. Για δεσμευτική πληροφόρηση, ανατρέξτε στο πλήρες έγγραφο PDF.
+        </p>
+        <ul>
+          <li data-i18n="aboutLegal.chargesPolicy.bullets.b1">Δομή τιμολόγησης και εκπτώσεις</li>
+          <li data-i18n="aboutLegal.chargesPolicy.bullets.b2">Τέλη υπηρεσίας</li>
+          <li data-i18n="aboutLegal.chargesPolicy.bullets.b3">Αλλαγές κράτησης και επανεκδόσεις</li>
+          <li data-i18n="aboutLegal.chargesPolicy.bullets.b4">Ακυρώσεις και επιστροφές</li>
+          <li data-i18n="aboutLegal.chargesPolicy.bullets.b5">Τρόποι πληρωμής και ασφάλεια</li>
+        </ul>
+        <div class="pdf-cta">
+          <a class="ga-btn ga-btn-gold" href="/docs/charge-policy.pdf" target="_blank" rel="noopener">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span data-i18n="aboutLegal.cta">Δες αναλυτικά το πλήρες έγγραφο (PDF)</span>
+          </a>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <!-- Shared footer (injected) -->
+  <footer></footer>
+
+  <!-- Scripts: i18n first -->
+  <script src="/js/i18n.js" defer></script>
+  <script src="/js/overlay-manager.js" defer></script>
+  <script src="/js/footer.js" defer></script>
+  <script src="/js/assistant.js" defer></script>
+
+  <script>
+    // Sticky tabs logic with ARIA and cinematic transitions
+    (function(){
+      const tabs = Array.from(document.querySelectorAll('.about-tab'));
+      const panels = Array.from(document.querySelectorAll('.tab-panel'));
+
+      function setActive(id){
+        tabs.forEach(t => {
+          const active = (t.id === 'tab-' + id);
+          t.classList.toggle('is-active', active);
+          t.setAttribute('aria-selected', active ? 'true' : 'false');
+          if (active) t.focus({ preventScroll: true });
+        });
+        panels.forEach(p => {
+          const show = (p.id === 'panel-' + id);
+          p.classList.toggle('is-active', show);
+          p.toggleAttribute('hidden', !show);
+          if (show) {
+            p.classList.remove('anim-enter');
+            // trigger reflow then add enter class to animate
+            requestAnimationFrame(() => { p.classList.add('anim-enter'); });
+          }
+        });
+        // Update sticky title under tabs
+        const titleEl = document.getElementById('activeTitle');
+        const activeBtn = document.getElementById('tab-' + id);
+        if (titleEl && activeBtn) {
+          const text = activeBtn.querySelector('span')?.textContent || '';
+          titleEl.textContent = text;
+        }
+      }
+
+      tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.id.replace(/^tab-/, '');
+          setActive(target);
+        });
+        // Keyboard support
+        btn.addEventListener('keydown', (e) => {
+          const idx = tabs.indexOf(btn);
+          if (e.key === 'ArrowRight') { e.preventDefault(); tabs[(idx+1)%tabs.length].click(); }
+          if (e.key === 'ArrowLeft') { e.preventDefault(); tabs[(idx-1+tabs.length)%tabs.length].click(); }
+          if (e.key === 'Home') { e.preventDefault(); tabs[0].click(); }
+          if (e.key === 'End') { e.preventDefault(); tabs[tabs.length-1].click(); }
+        });
+      });
+
+      // Reveal-on-scroll for About sections
+      const reveal = Array.from(document.querySelectorAll('.fade-reveal'));
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+          for (const en of entries) { if (en.isIntersecting) { en.target.classList.add('visible'); io.unobserve(en.target); } }
+        }, { threshold: 0.15 });
+        reveal.forEach(e => io.observe(e));
+      } else {
+        reveal.forEach(e => e.classList.add('visible'));
+      }
+
+      // Version footer
+      // Keep sticky title in sync with language changes
+      window.addEventListener('i18n:changed', () => {
+        try {
+          const activeBtn = document.querySelector('.about-tab.is-active');
+          const titleEl = document.getElementById('activeTitle');
+          if (activeBtn && titleEl) {
+            const txt = activeBtn.querySelector('span')?.textContent || '';
+            titleEl.textContent = txt;
+          }
+        } catch(_) {}
+      });
+
+      // Initialize title from the currently active tab (after DOM ready)
+      (function(){
+        const activeBtn = document.querySelector('.about-tab.is-active');
+        const titleEl = document.getElementById('activeTitle');
+        if (activeBtn && titleEl) {
+          const txt = activeBtn.querySelector('span')?.textContent || '';
+          titleEl.textContent = txt || titleEl.textContent;
+        }
+      })();
+
+      // Version footer
+      (async function(){
+        try {
+          const el = document.getElementById('aboutVersion');
+          const r = await fetch('/version', { cache: 'no-cache' });
+          if (!r.ok) return;
+          const j = await r.json();
+          const v = (j && j.version) ? String(j.version) : '1.0.0';
+          const ts = (j && j.build) ? String(j.build) : '';
+          const bn = (j && typeof j.buildNumber !== 'undefined' && j.buildNumber !== null) ? ` • b${j.buildNumber}` : '';
+          const c = (j && j.commit) ? ` • ${j.commit}` : '';
+          if (el) el.innerHTML = `Greekaway <strong>v${v}</strong> – build ${ts}${bn}${c}`;
+        } catch(_) {}
+      })();
+    })();
+  </script>
+</body>
+</html>

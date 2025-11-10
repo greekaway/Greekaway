@@ -12,9 +12,10 @@
   font-size: clamp(1.6rem, 2.6vw + 1rem, 2.4rem);
   margin: 0 0 10px;
 }
-/* Day (light) mode override: hero title emphasized */
+/* Day (light) mode overrides: adjust hero title and about-section colors for "day mode" */
 @media (prefers-color-scheme: light) {
-  .about-hero h1 { color: #FFFFFF !important; }
+  /* Hero title: use the site's classic dark blue in day mode */
+  .about-hero h1 { color: #004080 !important; }
 }
 .about-hero p.lead {
   color: #f0f4f8;
@@ -71,8 +72,123 @@
   .about-version { color: #000000 !important; }
 }
 
+/* Day-mode: make section body text black and section headings dark blue */
+@media (prefers-color-scheme: light) {
+  /* Body text inside about panels */
+  .about-section p,
+  .about-section li,
+  .about-hero p.lead,
+  .pdf-cta a,
+  .about-wrap,
+  .about-section .ga-btn,
+  .ga-btn { color: #000000 !important; }
+
+  /* Section headings: switch from gold to classic dark blue used across the site */
+  .about-section h2,
+  .about-hero h1,
+  .about-title { color: #004080 !important; }
+
+  /* Ensure link/buttons with gold background keep readable text color when body is dark */
+  .ga-btn-gold { color: #111 !important; }
+}
+
 @media (min-width: 720px) {
   .about-section { padding: 18px 20px; }
 }
 
 /* End of about.css */
+
+/* --- Tabs Layout for unified About & Legal page --- */
+:root {
+  --ga-bg: #1B2A3A;
+  --ga-tabs: #0E1520;
+  --ga-gold: var(--color-gold, #D4AF37);
+  --ga-text: #eaeaea;
+}
+
+/* Stabilize sticky header: prevent layout shift on activation, reserve space */
+.about-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--ga-tabs);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+  will-change: transform; /* hint for smoother scroll */
+}
+/* Tabs grid: enforce fixed height to avoid jumping when active state changes font metrics */
+.about-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 10px 6px;
+  margin: 0;
+  min-height: 64px; /* reserve space */
+}
+/*.about-tab: maintain consistent vertical metrics to stop top/bottom movement */
+.about-tab {
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.06);
+  color: var(--ga-text);
+  font-weight: 600;
+  padding: 12px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: box-shadow .18s ease, color .2s ease, background .2s ease, border-color .2s ease;
+  outline: none;
+  line-height: 1.2; /* lock line-height */
+  height: 56px; /* fixed height (~2 lines) to avoid shift */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Clamp tab label to 2 lines to keep constant height */
+.about-tab span {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.about-tab:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+/* Active state without altering height/line-height */
+.about-tab.is-active {
+  color: #111;
+  background: linear-gradient(135deg, rgba(212,175,55,1), rgba(184,134,11,0.92));
+  border-color: rgba(212,175,55,0.9);
+  text-shadow: none;
+}
+.about-tab.is-active span { filter: none; }
+
+/* Sticky secondary title: reserve height to prevent push when text changes */
+.about-title {
+  margin: 0;
+  padding: 8px 12px 12px;
+  color: var(--ga-text);
+  text-align: center;
+  font-size: clamp(1.05rem, 1.3vw + .85rem, 1.35rem);
+  font-weight: 700;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tab panels */
+.tab-panel { 
+  display: block; 
+}
+.tab-panel[hidden] { display: none; }
+.tab-panel.is-active {
+  animation: cinematicEntrance 820ms cubic-bezier(.22,.9,.32,1) both; 
+}
+
+.pdf-cta { margin-top: 14px; }
+.ga-btn { display: inline-flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; text-decoration: none; font-weight: 600; }
+.ga-btn-gold { color: #111; background: linear-gradient(135deg, rgba(212,175,55,1), rgba(184,134,11,0.92)); }
+.ga-btn-gold:hover { filter: brightness(1.04); }
+
+/* Keep 2x2 layout across breakpoints (desktop/tablet/mobile) */
+@media (min-width: 1200px) { .about-tabs { max-width: 980px; margin: 0 auto; } }
+

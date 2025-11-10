@@ -1,6 +1,8 @@
 {
   "meta": { "languageName": "English" },
   "siteTitle": "Greekaway",
+  
+  
   "nav": {
     "home": "Home",
     "trips": "Trips",
@@ -86,6 +88,49 @@
     "missing": "This information hasn’t been added yet for this trip."
   }
   ,
+  "aboutLegal": {
+    "tabs": {
+      "about": "About Us",
+      "termsCustomers": "Passenger Terms of Use",
+      "termsProviders": "Provider Terms of Use",
+      "chargesPolicy": "Charge Policy"
+    },
+    "cta": "See the full document (PDF)",
+    "termsCustomers": {
+      "title": "Passenger Terms of Use (Summary)",
+      "summary": "These terms describe the rights and obligations of passengers when using the Greekaway platform. They cover bookings, payments, cancellations, safe conduct, data protection, and communication. This summary does not replace the full legal document. For binding information, please refer to the full PDF.",
+      "bullets": {
+        "b1": "Bookings and seat confirmation",
+        "b2": "Cancellation and refund policy",
+        "b3": "Conduct within vehicle and activities",
+        "b4": "Personal data protection",
+        "b5": "Support communication"
+      }
+    },
+    "termsProviders": {
+      "title": "Provider Terms of Use (Summary)",
+      "summary": "Greekaway partners/providers (drivers, accommodations, local operators) operate with transparency and clear obligations. Terms cover payments, service quality, safety, compliance with local laws, and data protection. This summary does not replace the full legal document. For binding information, please refer to the full PDF.",
+      "bullets": {
+        "b1": "Payment schedules and receipts",
+        "b2": "Quality and experience standards",
+        "b3": "Safety and liability",
+        "b4": "Regulatory compliance",
+        "b5": "Personal data management"
+      }
+    },
+    "chargesPolicy": {
+      "title": "Charge Policy (Summary)",
+      "summary": "The charge policy describes how prices are calculated, service fees, discounts, as well as clauses for changes or cancellations. This summary does not replace the full legal document. For binding information, please refer to the full PDF.",
+      "bullets": {
+        "b1": "Pricing structure and discounts",
+        "b2": "Service fees",
+        "b3": "Booking changes and reissues",
+        "b4": "Cancellations and refunds",
+        "b5": "Payment methods and security"
+      }
+    }
+  },
+  
   "feedback": {
     "title": "How was your experience?",
     "subtitle": "Help us match groups better.",
