@@ -127,7 +127,15 @@ function buildTripSummary(trip, lang) {
     if (!duration && /day\s+trip|μονοημερη|μονοήμερη|1\s*day/.test(d)) duration = isGreek ? '1 μέρα' : '1 day';
   }
   const priceCents = typeof trip.price_cents === 'number' ? trip.price_cents : null;
-  return { title, description, stops, includes, unavailable, duration, priceCents };
+  // New departure info (optional)
+  let departureTime = null;
+  let departurePlace = null;
+  if (trip && trip.departure) {
+    if (trip.departure.departure_time) departureTime = String(trip.departure.departure_time);
+    const rpName = trip.departure.reference_point && trip.departure.reference_point.name;
+    if (rpName) departurePlace = String(rpName);
+  }
+  return { title, description, stops, includes, unavailable, duration, priceCents, departureTime, departurePlace };
 }
 
 module.exports = {

@@ -56,7 +56,11 @@
     "culture": { "title": "Culture Trips" }
   },
   "stop": { "label": "Stop {n}" },
-  "trip": { "experienceTitle": "Experience" },
+  "trip": {
+    "experienceTitle": "Experience",
+    "departure_time_label": "Departure",
+    "departure_place_label": "From"
+  },
   "trips": { "selectCategory": "Select Category", "noneFound": "No trips found in this category." },
   "ui": { "close": "Close", "cancel": "Cancel", "back": "Back", "finish": "Finish", "choose": "Choose" },
   "trips_ui": { "backToCategories": "Back to categories" },
@@ -80,6 +84,10 @@
     "title": "Trip: {title}",
     "duration": "Duration: {duration}",
     "price": "Price: €{price}",
+    "departure_time": "Departure time: {time}",
+    "departure_place": "Departure point: {place}",
+    "departure_time_missing": "The departure time hasn't been added yet for this trip.",
+    "departure_place_missing": "The departure point hasn't been added yet for this trip.",
     "description": "Description: {text}",
     "stops": "Stops",
     "includes": "Includes",

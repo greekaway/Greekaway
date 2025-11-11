@@ -218,8 +218,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (h === tripId) document.body.classList.add('highlight-trip');
       } catch (e) {}
 
-      const titleEl = document.getElementById("trip-title");
-      const descEl = document.getElementById("trip-description");
+  const titleEl = document.getElementById("trip-title");
+  const descEl = document.getElementById("trip-description");
+  const metaWrap = document.getElementById('trip-meta');
+  const metaPriceEl = document.getElementById('trip-meta-price');
+  const metaTimeEl = document.getElementById('trip-meta-time');
+  const metaPlaceEl = document.getElementById('trip-meta-place');
       // set page category so background and styles match
         if (trip.category) {
           document.body.dataset.category = trip.category;
@@ -245,20 +249,56 @@ document.addEventListener("DOMContentLoaded", () => {
         if (titleEl) titleEl.textContent = getLocalized(t.title) || "";
         // Render base price badge under title if available
         try {
-          const priceEl = document.getElementById('trip-price');
-          if (priceEl) {
+          // New trip meta row: price • time • place
+          if (metaWrap && metaPriceEl) {
+            let hasAny = false;
+            // Price
             if (t.price_cents) {
               const base = Math.max(0, parseInt(t.price_cents, 10)) / 100;
               const cur = (t.currency || 'EUR').toUpperCase();
-              priceEl.textContent = base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur });
-              priceEl.style.display = '';
-              // gentle flash when language changes or trip switches
-              priceEl.classList.remove('animate');
-              void priceEl.offsetWidth; // reflow
-              priceEl.classList.add('animate');
-              setTimeout(() => { priceEl.classList.remove('animate'); }, 600);
+              metaPriceEl.textContent = base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur });
+              hasAny = true;
             } else {
-              priceEl.style.display = 'none';
+              metaPriceEl.textContent = '';
+            }
+            // Departure time
+            if (t.departure && t.departure.departure_time) {
+              metaTimeEl.textContent = (window.t ? window.t('trip.departure_time_label','Αναχώρηση') : 'Αναχώρηση') + ' ' + t.departure.departure_time;
+              metaTimeEl.style.display = '';
+              hasAny = true;
+            } else if (metaTimeEl) {
+              metaTimeEl.style.display = 'none';
+              metaTimeEl.textContent = '';
+            }
+            // Departure place (reference point name)
+            const depName = t && t.departure && t.departure.reference_point && t.departure.reference_point.name;
+            if (depName) {
+              // If the name includes a long prefix like "Αθήνα – ", optionally show a shorter form after the separator per spec
+              const shortName = depName.replace(/^Αθήνα\s*[–-]\s*/,'');
+              const placeLabel = (window.t ? window.t('trip.departure_place_label','Από') : 'Από');
+              metaPlaceEl.textContent = placeLabel + ' ' + (shortName || depName);
+              metaPlaceEl.style.display = '';
+              hasAny = true;
+            } else if (metaPlaceEl) {
+              metaPlaceEl.style.display = 'none';
+              metaPlaceEl.textContent = '';
+            }
+            metaWrap.style.display = hasAny ? '' : 'none';
+          }
+          // Keep legacy price badge updated for backward compatibility
+          const legacyPriceEl = document.getElementById('trip-price');
+          if (legacyPriceEl) {
+            if (t.price_cents) {
+              const base = Math.max(0, parseInt(t.price_cents, 10)) / 100;
+              const cur = (t.currency || 'EUR').toUpperCase();
+              legacyPriceEl.textContent = base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur });
+              legacyPriceEl.style.display = (metaWrap ? 'none' : ''); // hide if new meta is shown
+              legacyPriceEl.classList.remove('animate');
+              void legacyPriceEl.offsetWidth; // reflow
+              legacyPriceEl.classList.add('animate');
+              setTimeout(() => { legacyPriceEl.classList.remove('animate'); }, 600);
+            } else {
+              legacyPriceEl.style.display = 'none';
             }
           }
         } catch(_) {}
@@ -1477,7 +1517,8 @@ function ensureGoogleMaps(cb) {
       cb();
     } else if (Date.now() - t0 > maxWaitMs) {
       clearInterval(timer);
-  G.error("Google Maps δεν φορτώθηκε εγκαίρως.");
+      G.error("Google Maps δεν φορτώθηκε εγκαίρως.");
+      try { console.warn('Google Maps init timeout — using fallback center.'); } catch(_) {}
     }
   }, 120);
 }
@@ -1489,11 +1530,21 @@ function renderRoute(mapData) {
   if (!mapEl) return;
 
   // Create the map centered on the provided coordinates
-  map = new google.maps.Map(mapEl, {
-    center: mapData.center || { lat: 38.0, lng: 23.7 },
-    zoom: mapData.zoom || 7,
-    mapTypeId: "roadmap",
-  });
+  try {
+    // Safety: validate coordinates object shape
+    const validCenter = (mapData && mapData.center && typeof mapData.center.lat === 'number' && typeof mapData.center.lng === 'number')
+      ? mapData.center
+      : { lat: 38.0, lng: 23.7 };
+    map = new google.maps.Map(mapEl, {
+      center: validCenter,
+      zoom: mapData.zoom || 7,
+      mapTypeId: "roadmap",
+    });
+  } catch (e) {
+    console.error('Google Maps init failed:', e && e.message ? e.message : e);
+    map = null;
+    return;
+  }
 
   // default map appearance (no initial styled dark theme)
 
@@ -1501,9 +1552,9 @@ function renderRoute(mapData) {
   // Use default markers so origin/destination pins are visible to the user
   directionsRenderer = new google.maps.DirectionsRenderer({ map });
 
-  const wps = mapData.waypoints;
-  const origin = wps[0];
-  const destination = wps[wps.length - 1];
+  const wps = Array.isArray(mapData.waypoints) && mapData.waypoints.length ? mapData.waypoints : [];
+  const origin = wps[0] || (map && map.getCenter ? map.getCenter() : { lat: 38.0, lng: 23.7 });
+  const destination = wps.length ? wps[wps.length - 1] : origin;
   const midStops = wps
     .slice(1, wps.length - 1)
     .map((loc) => ({ location: loc, stopover: true }));
@@ -1521,6 +1572,7 @@ function renderRoute(mapData) {
       directionsRenderer.setDirections(res);
     } else {
       G.error("Σφάλμα διαδρομής:", status);
+      try { console.warn('Google Maps route failed:', status); } catch(_) {}
     }
   });
 }

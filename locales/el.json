@@ -53,7 +53,11 @@
     "culture": { "title": "Εκδρομές Πολιτισμού" }
   },
   "stop": { "label": "Στάση {n}" },
-  "trip": { "experienceTitle": "Εμπειρία" },
+  "trip": {
+    "experienceTitle": "Εμπειρία",
+    "departure_time_label": "Αναχώρηση",
+    "departure_place_label": "Από"
+  },
   "trips": { "selectCategory": "Επιλέξτε Κατηγορία", "noneFound": "Δεν βρέθηκαν εκδρομές σε αυτή την κατηγορία." },
   "ui": { "close": "Κλείσιμο", "cancel": "Άκυρο", "back": "Πίσω", "finish": "Ολοκλήρωση", "choose": "Επιλέξτε" },
   "trips_ui": { "backToCategories": "Πίσω στις κατηγορίες" },
@@ -76,6 +80,10 @@
     "title": "Εκδρομή: {title}",
     "duration": "Διάρκεια: {duration}",
     "price": "Τιμή: €{price}",
+    "departure_time": "Ώρα αναχώρησης: {time}",
+    "departure_place": "Σημείο αναχώρησης: {place}",
+    "departure_time_missing": "Δεν έχει καταχωρηθεί ακόμη η ώρα αναχώρησης για αυτή την εκδρομή.",
+    "departure_place_missing": "Δεν έχει καταχωρηθεί ακόμη το σημείο αναχώρησης για αυτή την εκδρομή.",
     "description": "Περιγραφή: {text}",
     "stops": "Στάσεις",
     "includes": "Περιλαμβάνει",

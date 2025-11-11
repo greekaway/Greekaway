@@ -248,6 +248,16 @@
     ]
   },
   
+  "departure": {
+    "reference_point": {
+      "name": "Αθήνα – Πλατεία Συντάγματος",
+      "lat": 37.9755,
+      "lng": 23.7348
+    },
+    "departure_time": "08:00",
+    "departure_timezone": "Europe/Athens"
+  },
+  
   "price_cents": 34000,
   "currency": "EUR",
   "duration_days": 2,

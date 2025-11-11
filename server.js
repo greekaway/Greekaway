@@ -838,7 +838,7 @@ function t(lang, key, vars){
 // Intent detectors for focused Q&A (duration, stops, price, includes, availability)
 function parseTripIntent(message, lang) {
   const m = String(message || '').toLowerCase();
-  const el = (lang || '').toLowerCase().startsWith('el');
+    const el = (lang || '').toLowerCase().startsWith('el'); // Check if the language is Greek
   const askDuration = el
     ? /(πόσες\s+μέρες|πόση\s+διάρκεια|διάρκεια|διαρκεί|μέρες|ημέρες)/i.test(m)
     : /(how\s+many\s+days|duration|how\s+long|lasts?)/i.test(m);
@@ -855,7 +855,14 @@ function parseTripIntent(message, lang) {
   const askAvailability = el
     ? /(διαθεσιμότητα|διαθέσιμες|διαθέσιμο|ημερομηνίες)/i.test(m)
     : /(availability|available|dates?)/i.test(m);
-  return { askDuration, askStops, askIncludes, askPrice, askAvailability };
+  // New intent: departure time/place
+  const askDepartureTime = el
+    ? /(τι\s+ώρα\s+ξεκινά|ώρα\s+ξεκινά|αναχώρηση\s+ώρα|τι\s+ώρα)/i.test(m)
+    : /(what\s+time\s+does\s+it\s+start|what\s+time\s+start|start\s+time|departure\s+time|what\s+time)/i.test(m);
+  const askDeparturePlace = el
+    ? /(από\s+πού\s+φεύγει|πού\s+φεύγει|σημείο\s+αναχώρησης|από\s+πού\s+είναι\s+η\s+αναχώρηση|από\s+πού\s+ξεκινά)/i.test(m)
+    : /(where\s+does\s+it\s+leave|departure\s+point|where\s+is\s+departure|where\s+does\s+it\s+start|from\s+where\s+does\s+it\s+start)/i.test(m);
+  return { askDuration, askStops, askIncludes, askPrice, askAvailability, askDepartureTime, askDeparturePlace };
 }
 
 function priceAvailabilityNote(lang) {
@@ -1033,7 +1040,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
           let tripId = tripData.detectTripIdFromMessage(message);
           // If none detected, try fallback to previous context for follow-ups (duration, stops, etc.)
           const intent = parseTripIntent(message, userLang);
-          if (!tripId && sessionContext.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
+          if (!tripId && sessionContext.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability || intent.askDepartureTime || intent.askDeparturePlace)) {
             tripId = sessionContext.lastTripId;
           }
           if (tripId) {
@@ -1050,6 +1057,12 @@ app.post('/api/assistant', express.json(), async (req, res) => {
                 } else {
                   parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
                 }
+              }
+              if (intent.askDepartureTime) {
+                parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime || t(userLang, 'assistant_trip.missing') }));
+              }
+              if (intent.askDeparturePlace) {
+                parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace || t(userLang, 'assistant_trip.missing') }));
               }
               if (intent.askPrice && summary.priceCents != null) {
                 const euros = (summary.priceCents/100).toFixed(0);
@@ -1157,7 +1170,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
       if (tripData) {
         let tripId = tripData.detectTripIdFromMessage(message);
         const intent = parseTripIntent(message, userLang);
-        if (!tripId && sessionContext2.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
+        if (!tripId && sessionContext2.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability || intent.askDepartureTime || intent.askDeparturePlace)) {
           tripId = sessionContext2.lastTripId;
         }
         if (tripId) {
@@ -1165,7 +1178,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
           const trip = tripData.readTripJsonById(tripId);
           if (trip) {
             const summary = tripData.buildTripSummary(trip, userLang);
-            const intent = parseTripIntent(message, userLang);
+                const intent = parseTripIntent(message, userLang);
             const parts = [];
             parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
             // Focused answers if user asked specific things
@@ -1176,6 +1189,12 @@ app.post('/api/assistant', express.json(), async (req, res) => {
                 parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
               }
             }
+                if (intent.askDepartureTime) {
+                  parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime || t(userLang, 'assistant_trip.missing') }));
+                }
+                if (intent.askDeparturePlace) {
+                  parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace || t(userLang, 'assistant_trip.missing') }));
+                }
             if (intent.askPrice && summary.priceCents != null) {
               const euros = (summary.priceCents/100).toFixed(0);
               parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
@@ -1207,6 +1226,9 @@ app.post('/api/assistant', express.json(), async (req, res) => {
             }
             // If no specific intent detected, fall back to concise summary
             if (!(intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
+              // Include departure info in general summary if available
+              if (summary.departureTime) parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime }));
+              if (summary.departurePlace) parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace }));
               if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
               if (summary.priceCents != null) {
                 const euros = (summary.priceCents/100).toFixed(0);
@@ -1267,7 +1289,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
           try {
             const raw = fs.readFileSync(TRIPINDEX_PATH, 'utf8');
             const arr = JSON.parse(raw);
-            const norm = (s)=> String(s||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}+/gu,'');
+              const intent = parseTripIntent(message, userLang);
             const pn = norm(p);
             for (const t of arr) {
               if (t && t.id && norm(t.id) === pn) return t.id;
@@ -1277,6 +1299,12 @@ app.post('/api/assistant', express.json(), async (req, res) => {
             // contains match as last resort
             for (const t of arr) {
               const title = t && t.title ? t.title : {};
+                if (intent.askDepartureTime) {
+                  parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime || t(userLang, 'assistant_trip.missing') }));
+                }
+                if (intent.askDeparturePlace) {
+                  parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace || t(userLang, 'assistant_trip.missing') }));
+                }
               for (const v of Object.values(title)) { if (v && norm(String(v)).includes(pn)) return t.id; }
             }
           } catch(_) {}
@@ -1412,7 +1440,7 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
         if (tripData) {
           let tripId = tripData.detectTripIdFromMessage(message);
           const intent = parseTripIntent(message, userLang);
-          if (!tripId && sessionContext.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
+          if (!tripId && sessionContext.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability || intent.askDepartureTime || intent.askDeparturePlace)) {
             tripId = sessionContext.lastTripId;
           }
           if (tripId) {
@@ -1429,6 +1457,12 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
                 } else {
                   parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
                 }
+              }
+              if (intent.askDepartureTime) {
+                parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime || t(userLang, 'assistant_trip.missing') }));
+              }
+              if (intent.askDeparturePlace) {
+                parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace || t(userLang, 'assistant_trip.missing') }));
               }
               if (intent.askPrice && summary.priceCents != null) {
                 const euros = (summary.priceCents/100).toFixed(0);
@@ -1460,6 +1494,8 @@ app.post('/api/assistant/stream', express.json(), async (req, res) => {
                 parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
               }
               if (!(intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
+                if (summary.departureTime) parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime }));
+                if (summary.departurePlace) parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace }));
                 if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
                 if (summary.priceCents != null) {
                   const euros = (summary.priceCents/100).toFixed(0);
