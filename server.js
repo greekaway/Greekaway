@@ -496,6 +496,26 @@ try {
   console.warn('assistant: failed to register routes', e && e.message ? e.message : e);
 }
 
+// Phase 5: Bookings routes moved to modules
+try {
+  const { registerBookings } = require('./src/server/routes/bookings');
+  registerBookings(app, { express, bookingsDb, crypto });
+  console.log('bookings: public routes registered');
+} catch (e) { console.warn('bookings: failed to register public routes', e && e.message ? e.message : e); }
+try {
+  const { registerAdminBookings } = require('./src/server/routes/adminBookings');
+  registerAdminBookings(app, { bookingsDb, checkAdminAuth: (req) => checkAdminAuth(req) });
+  console.log('bookings: admin routes registered');
+} catch (e) { console.warn('bookings: failed to register admin routes', e && e.message ? e.message : e); }
+
+// Re-attach webhook routes (payment intents succeeded/failed + test endpoint)
+try {
+  require('./webhook')(app, stripe);
+  console.log('webhook: routes attached');
+} catch (e) {
+  console.warn('webhook: failed to attach', e && e.message ? e.message : e);
+}
+
 // Public live weather endpoint for quick UI/tests: /api/live/weather?place=Lefkada&lang=en
 app.get('/api/live/weather', async (req, res) => {
   if (!liveData) return res.status(501).json({ error: 'live-data module unavailable' });
@@ -510,223 +530,7 @@ app.get('/api/live/weather', async (req, res) => {
   }
 });
 
-// Public live news endpoint (only active when NEWS_RSS_URL configured)
-app.get('/api/live/news', async (req, res) => {
-  try {
-    if (!NEWS_RSS_URLS || NEWS_RSS_URLS.length === 0) return res.status(501).json({ error: 'NEWS_RSS_URL not configured' });
-    if (!isNewsCacheFresh() || !Array.isArray(NEWS_CACHE.headlines) || NEWS_CACHE.headlines.length === 0) {
-      await refreshNewsFeed('on-demand');
-    }
-    return res.json({ ok: true, sources: NEWS_RSS_URLS.length, headlines: NEWS_CACHE.headlines || [], updatedAt: NEWS_CACHE.updatedAt, lastUpdated: NEWS_CACHE.updatedAt });
-  } catch (e) {
-    return res.status(500).json({ error: e && e.message ? e.message : 'Failed' });
-  }
-});
-
-// Simple status endpoint to check assistant mode/model (local only convenience)
-app.get('/api/assistant/status', (req, res) => {
-  const mode = OPENAI_API_KEY ? 'openai' : 'mock';
-  // Keep in sync with the hardcoded model used above
-  res.json({ mode, model: 'gpt-4o-mini', live: { rssSources: (NEWS_RSS_URLS||[]).length, weatherBase: (process.env.WEATHER_API_URL||'open-meteo'), aggressive: ASSISTANT_LIVE_ALWAYS } });
-});
-
-// Bookings API: create and read bookings
-app.post('/api/bookings', express.json(), (req, res) => {
-  try {
-    const { user_name, user_email, trip_id, seats, price_cents, currency } = req.body || {};
-    // Traveler profile fields from step2 (optional)
-    // Normalize alternative field names coming from overlay booking form
-    const mapTravelerType = (v) => {
-      if (!v) return null;
-      const x = String(v).toLowerCase();
-      if (x === 'explorer') return 'explore';
-      if (x === 'relaxed') return 'relax';
-      return x; // family, solo -> same
-    };
-    const mapInterest = (v) => {
-      if (!v) return null;
-      const x = String(v).toLowerCase();
-      if (x === 'cultural') return 'culture';
-      if (x === 'nature') return 'nature';
-      return x;
-    };
-    const mapSocial = (style, tempo) => {
-      const s = style ? String(style).toLowerCase() : '';
-      const t = tempo ? String(tempo).toLowerCase() : '';
-      if (s === 'sociable' || t === 'talkative') return 'social';
-      if (s === 'quiet' || t === 'reserved') return 'quiet';
-      return null;
-    };
-    const language = req.body.language || req.body.preferredLanguage || null;
-    const traveler_type = req.body.traveler_type || mapTravelerType(req.body.travelerProfile) || null;
-    const interest = req.body.interest || mapInterest(req.body.travelStyle) || null;
-    const sociality = req.body.sociality || mapSocial(req.body.travelStyle, req.body.travelTempo) || null;
-    const childrenAges = Array.isArray(req.body.children_ages) ? req.body.children_ages : (typeof req.body.children_ages === 'string' ? req.body.children_ages : null);
-    const profile = { language, age_group: req.body.age_group || null, traveler_type, interest, sociality, children_ages: childrenAges, user_email, user_name };
-    const metadata = req.body.metadata || profile;
-    if (!user_name || !user_email || !trip_id) return res.status(400).json({ error: 'Missing required fields' });
-    // date support
-    let date = req.body.date || null;
-    if (!date) {
-      date = new Date().toISOString().slice(0,10);
-    }
-    // Determine booking date (default to today if missing)
-    try {
-      // Provider-based availability enforcement (capacity per provider/date)
-      if (bookingsDb && trip_id) {
-        let providerId = null;
-        try {
-          const map = bookingsDb.prepare('SELECT partner_id FROM partner_mappings WHERE trip_id = ?').get(trip_id);
-          providerId = map && map.partner_id ? map.partner_id : null;
-        } catch(_) { /* mapping table may not exist yet */ }
-
-        if (providerId) {
-          // Sum capacity across all availability rows for that provider/date
-          let capSum = 0, rowCount = 0;
-          try {
-            const r = bookingsDb.prepare('SELECT COALESCE(SUM(COALESCE(capacity,0)),0) AS cap, COUNT(1) AS cnt FROM provider_availability WHERE provider_id = ? AND (date = ? OR available_date = ?)').get(providerId, date, date) || { cap: 0, cnt: 0 };
-            capSum = (typeof r.cap === 'number') ? r.cap : 0;
-            rowCount = (typeof r.cnt === 'number') ? r.cnt : 0;
-          } catch(_) { /* provider_availability table might not exist; skip */ }
-
-          if (rowCount > 0) {
-            // Count all non-canceled bookings for that provider/date (pending counts towards capacity)
-            const takenRow = bookingsDb.prepare("SELECT COALESCE(SUM(seats),0) as s FROM bookings WHERE partner_id = ? AND date = ? AND status != 'canceled'").get(providerId, date) || { s: 0 };
-            const taken = takenRow.s || 0;
-            const requested = seats || 1;
-            if ((taken + requested) > capSum || capSum <= 0) {
-              return res.status(409).json({ error: 'No availability for selected date' });
-            }
-          }
-        }
-      }
-
-      // Legacy per-trip capacity check (capacities table)
-      if (bookingsDb) {
-        const capRow = bookingsDb.prepare('SELECT capacity FROM capacities WHERE trip_id = ? AND date = ?').get(trip_id, date);
-        if (capRow && typeof capRow.capacity === 'number') {
-          const capacity = capRow.capacity || 0;
-          const taken = bookingsDb.prepare('SELECT COALESCE(SUM(seats),0) as s FROM bookings WHERE trip_id = ? AND date = ? AND status != ?').get(trip_id, date, 'canceled').s || 0;
-          if ((taken + (seats || 1)) > capacity) return res.status(409).json({ error: 'No availability for selected date' });
-        }
-      }
-    } catch (e) { console.warn('Capacity check failed', e && e.message ? e.message : e); }
-  const id = crypto.randomUUID();
-    const now = new Date().toISOString();
-    if (bookingsDb) {
-      // Try to persist partner_id on booking for downstream provider features
-      let providerId = null;
-      try { const m = bookingsDb.prepare('SELECT partner_id FROM partner_mappings WHERE trip_id = ?').get(trip_id); providerId = m && m.partner_id ? m.partner_id : null; } catch(_) {}
-
-      // Derive new structured columns from body/metadata
-      const body = req.body || {};
-      const metaObj = (() => { try { return metadata && typeof metadata === 'object' ? metadata : (metadata ? JSON.parse(String(metadata)) : {}); } catch(_) { return {}; } })();
-      const pickStr = (...arr) => { const v = arr.find(x => x != null && String(x).trim() !== ''); return v == null ? '' : String(v); };
-      const toNum = (v) => { if (v == null || v === '') return null; const n = Number(v); return Number.isFinite(n) ? n : null; };
-      const pickup_location = pickStr(body.pickup_location, body.pickup_point, body.pickup_address, body.pickup, body.from, body.start_location, metaObj.pickup_location, metaObj.pickup_point, metaObj.pickup_address, metaObj.pickup, metaObj.from, metaObj.start_location);
-      const pickup_lat = toNum(body.pickup_lat ?? metaObj.pickup_lat);
-      const pickup_lng = toNum(body.pickup_lng ?? metaObj.pickup_lng);
-      const suitcases_raw = (body.suitcases ?? metaObj.suitcases ?? metaObj.luggage);
-      const suitcases_json = Array.isArray(suitcases_raw) ? JSON.stringify(suitcases_raw) : (suitcases_raw && typeof suitcases_raw === 'object' ? JSON.stringify(suitcases_raw) : JSON.stringify(suitcases_raw == null || suitcases_raw === '' ? [] : [String(suitcases_raw)]));
-      const special_requests = pickStr(body.special_requests, body.notes, metaObj.special_requests, metaObj.notes);
-      // Demo/source tagging
-      const sourceVal = (typeof body.source === 'string' && body.source.trim()) ? String(body.source).trim() : (metaObj.source && String(metaObj.source).trim()) || null;
-      const looksDemo = (() => {
-        const m = (s) => (s||'').toString().toLowerCase();
-        const hasDemo = (s) => /demo|test|example\.com/.test(m(s));
-        return !!(hasDemo(user_email) || hasDemo(user_name) || hasDemo(sourceVal) || (metaObj && (metaObj.is_demo === true || metaObj.demo === true)));
-      })();
-      const finalSource = sourceVal || (looksDemo ? 'demo' : null);
-      try {
-        console.log('bookings: debug body', { b_pickup_location: body.pickup_location, b_pickup_lat: body.pickup_lat, b_pickup_lng: body.pickup_lng, b_suitcases: body.suitcases, b_special_requests: body.special_requests, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests });
-      } catch(_){ }
-      let inserted = false;
-      if (providerId) {
-        try {
-          // Prefer insert including new columns when available
-          console.log('bookings: attempting partner insert with new fields', {
-            id,
-            providerId,
-            pickup_location,
-            pickup_lat,
-            pickup_lng,
-            suitcases_json,
-            special_requests
-          });
-          // Column order mismatch historically caused silent fallback; use explicit column list matching schema.
-          const insertWithPartner = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insertWithPartner.run(id, 'pending', null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now, date, 0, null, providerId, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
-          inserted = true;
-          console.log('bookings: inserted (partner) with new fields id=' + id);
-        } catch(_) { /* column may not exist in some environments; fallback below */ }
-      }
-      if (!inserted) {
-        // Try without partner but with new columns
-        try {
-          const insert2 = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insert2.run(id, 'pending', null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now, date, 0, null, null, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
-          console.log('bookings: inserted with new fields (no-partner) id=' + id);
-        } catch(_e) {
-          console.warn('bookings: insert with new fields failed; falling back to legacy. id=' + id + ' err=' + (_e && _e.message ? _e.message : _e));
-          // Final fallback to legacy columns only
-          const insertLegacy = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insertLegacy.run(id, 'pending', date, null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now);
-          console.log('bookings: inserted using legacy fields id=' + id);
-        }
-      }
-      // Ensure structured fields are populated regardless of insert path
-      try {
-        bookingsDb.prepare('UPDATE bookings SET pickup_location = ?, pickup_lat = ?, pickup_lng = ?, suitcases_json = ?, special_requests = ? WHERE id = ?')
-          .run(pickup_location || '', pickup_lat, pickup_lng, suitcases_json || '[]', special_requests || '', id);
-      } catch (e) { console.warn('bookings: post-insert update for structured fields failed id=' + id + ' err=' + (e && e.message ? e.message : e)); }
-      // Set demo/source flags when columns exist (best-effort)
-      try {
-        const setDemo = bookingsDb.prepare('UPDATE bookings SET is_demo = COALESCE(is_demo, ?), source = COALESCE(?, source) WHERE id = ?');
-        setDemo.run(looksDemo ? 1 : 0, finalSource, id);
-      } catch(_){ /* older schemas may not have is_demo/source */ }
-      return res.json({ bookingId: id, status: 'pending' });
-    }
-    return res.status(500).json({ error: 'Bookings DB not available' });
-  } catch (e) {
-    console.error('Create booking error', e && e.stack ? e.stack : e);
-    return res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Availability endpoint: returns capacity and taken seats for a trip/date
-app.get('/api/availability', (req, res) => {
-  try {
-    const trip_id = req.query.trip_id;
-    const date = req.query.date || new Date().toISOString().slice(0,10);
-    if (!trip_id) return res.status(400).json({ error: 'Missing trip_id' });
-    if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
-    const capRow = bookingsDb.prepare('SELECT capacity FROM capacities WHERE trip_id = ? AND date = ?').get(trip_id, date) || {};
-    // Default van capacity to 7 when not explicitly set per date
-    const capacity = (typeof capRow.capacity === 'number' && capRow.capacity > 0) ? capRow.capacity : 7;
-    // Count only confirmed bookings toward occupancy
-    const takenRow = bookingsDb.prepare('SELECT COALESCE(SUM(seats),0) as s FROM bookings WHERE trip_id = ? AND date = ? AND status = ?').get(trip_id, date, 'confirmed') || { s: 0 };
-    return res.json({ trip_id, date, capacity, taken: takenRow.s || 0 });
-  } catch (e) { console.error('Availability error', e); return res.status(500).json({ error: 'Server error' }); }
-});
-
-app.get('/api/bookings/:id', (req, res) => {
-  try {
-    const id = req.params.id;
-    if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
-    const row = bookingsDb.prepare('SELECT * FROM bookings WHERE id = ?').get(id);
-    if (!row) return res.status(404).json({ error: 'Not found' });
-    // parse metadata
-    if (row.metadata) {
-      try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
-    }
-    // Parse suitcases_json for client convenience
-    if (row && typeof row.suitcases_json === 'string') {
-      try { row.suitcases = JSON.parse(row.suitcases_json); } catch(_) { row.suitcases = []; }
-    }
-    return res.json(row);
-  } catch (e) { console.error('Get booking error', e && e.stack ? e.stack : e); return res.status(500).json({ error: 'Server error' });
-}
-});
+// (original /api/bookings, /api/availability, /api/bookings/:id handlers removed - now provided by registerBookings module)
 
 // Admin-protected bookings listing with pagination and filters used by admin-bookings.html
 // GET /api/bookings?limit=50&page=1&status=&partner_id=&search=&date_from=&date_to=
@@ -761,103 +565,7 @@ app.get('/api/bookings', (req, res) => {
     if (search) {
       where.push('(id LIKE ? OR user_name LIKE ? OR user_email LIKE ? OR trip_id LIKE ?)');
       const s = `%${search}%`;
-      params.push(s, s, s, s);
-    }
-    const whereSql = where.length ? ('WHERE ' + where.join(' AND ')) : '';
-  // Default order newest first; client can re-sort locally
-  const rows = bookingsDb.prepare(`SELECT * FROM bookings ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
-
-    // Optional enrichment: derive trip_title from public data if available
-    let enriched = rows.map(r => ({ ...r }));
-    try {
-      const tripModule = require('./live/tripData');
-      enriched = rows.map(r => {
-        const id = r && r.trip_id ? String(r.trip_id) : null;
-        let trip_title = '';
-        if (id && tripModule && typeof tripModule.readTripJsonById === 'function') {
-          try {
-            const t = tripModule.readTripJsonById(id);
-            const summary = t && tripModule.buildTripSummary ? tripModule.buildTripSummary(t, 'el') : null;
-            trip_title = (summary && summary.title) || (t && (t.title && (t.title.el || t.title.en))) || id;
-          } catch (_) { trip_title = id; }
-        }
-        // Do not rely on metadata for these fields anymore; only add parsed metadata for legacy debugging if needed
-        let metadata = undefined;
-        const luggage_text = (() => { try {
-          const arr = r && r.suitcases_json ? JSON.parse(r.suitcases_json) : [];
-          if (Array.isArray(arr)) return arr.join(', ');
-          if (arr && typeof arr === 'object') return Object.values(arr).join(', ');
-          return arr ? String(arr) : '';
-        } catch(_) { return ''; } })();
-        return {
-          id: r.id,
-          date: r.date || r.created_at || null,
-          trip_id: r.trip_id || null,
-          trip_title,
-          pax: typeof r.seats === 'number' ? r.seats : (r.seats ? Number(r.seats) : null),
-          total_cents: typeof r.price_cents === 'number' ? r.price_cents : (r.price_cents ? Number(r.price_cents) : null),
-          currency: r.currency || 'eur',
-          status: r.status || '',
-          partner_id: r.partner_id || null,
-          created_at: r.created_at || null,
-          metadata,
-          pickup_location: r.pickup_location || '',
-          special_requests: r.special_requests || '',
-          luggage_text
-        };
-      });
-    } catch (e) { /* if enrichment fails, return basic mapping */
-      enriched = rows.map(r => ({
-        id: r.id,
-        date: r.date || r.created_at || null,
-        trip_id: r.trip_id || null,
-        trip_title: r.trip_id || '',
-        pax: typeof r.seats === 'number' ? r.seats : (r.seats ? Number(r.seats) : null),
-        total_cents: typeof r.price_cents === 'number' ? r.price_cents : (r.price_cents ? Number(r.price_cents) : null),
-        currency: r.currency || 'eur',
-        status: r.status || '',
-        partner_id: r.partner_id || null,
-        created_at: r.created_at || null,
-        pickup_location: r.pickup_location || '',
-        special_requests: r.special_requests || '',
-        luggage_text: (() => { try { const arr = r && r.suitcases_json ? JSON.parse(r.suitcases_json) : []; return Array.isArray(arr) ? arr.join(', ') : (arr ? String(arr) : ''); } catch(_) { return ''; } })()
-      }));
-    }
-    return res.json({ ok: true, page, limit, items: enriched });
-  } catch (e) {
-    console.error('api/bookings error', e && e.stack ? e.stack : e);
-    return res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Attach webhook handler from module
-try {
-  require('./webhook')(app, stripe);
-} catch (err) {
-  console.warn('Could not attach webhook module:', err && err.message ? err.message : err);
-}
-
-// Friendly Stripe partner onboarding endpoints (HTML redirect + result page)
-// These wrap the existing /api/partners Connect flow with a simple user-facing experience.
-// Note: We intentionally keep /api/partners endpoints intact and do not modify DB here.
-app.get('/partner-stripe-onboarding', async (req, res) => {
-  try {
-    if (!stripe) {
-      res.status(500).send('<!doctype html><html><body><h2>Stripe onboarding failed, please retry</h2><p>Stripe is not configured on the server.</p></body></html>');
-      return;
-    }
-    const email = (req.query && req.query.email ? String(req.query.email).trim() : '') || undefined;
-    const type = String(process.env.PARTNER_ACCOUNT_TYPE || 'express').toLowerCase();
-    const account = await stripe.accounts.create({ type: type === 'standard' ? 'standard' : 'express', email });
-    const base = `${req.protocol}://${req.get('host')}`;
-    const returnUrl = `${base}/partner-stripe-onboarding/callback?account=${encodeURIComponent(account.id)}`;
-    const refreshUrl = `${base}/partner-stripe-onboarding/callback?refresh=1&account=${encodeURIComponent(account.id)}`;
-    let url;
-    if (type === 'standard') {
-      const link = await stripe.accounts.createLoginLink(account.id);
-      url = link && link.url;
-    } else {
-      const link = await stripe.accountLinks.create({ account: account.id, refresh_url: refreshUrl, return_url: returnUrl, type: 'account_onboarding' });
+      // (original /admin/bookings handler removed - now in module)
       url = link && link.url;
     }
     if (!url) throw new Error('No onboarding URL created');
@@ -1336,79 +1044,7 @@ app.post('/admin/groups', express.json(), (req, res) => {
 });
 
 // Admin bookings CSV export
-app.get('/admin/bookings.csv', (req, res) => {
-  if (!checkAdminAuth(req)) {
-    return res.status(403).send('Forbidden');
-  }
-  try {
-    const limit = Math.min(100000, Math.abs(parseInt(req.query.limit || '10000', 10) || 10000));
-    const offset = Math.max(0, Math.abs(parseInt(req.query.offset || '0', 10) || 0));
-    const status = req.query.status || null;
-    const user_email = req.query.user_email || null;
-    const trip_id = req.query.trip_id || null;
-    const payment_intent_id = req.query.payment_intent_id || null;
-    const date_from = req.query.date_from || null;
-    const date_to = req.query.date_to || null;
-    const min_amount = req.query.min_amount ? parseInt(req.query.min_amount, 10) : null;
-    const max_amount = req.query.max_amount ? parseInt(req.query.max_amount, 10) : null;
-    const sort = req.query.sort || 'created_at';
-    const dir = (req.query.dir || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
-
-    let rows = [];
-    try {
-      const Database = require('better-sqlite3');
-      const db = bookingsDb || new Database(path.join(__dirname, 'data', 'db.sqlite3'));
-      const where = [];
-      const params = [];
-      if (status) { where.push('status = ?'); params.push(status); }
-      if (user_email) { where.push('user_email = ?'); params.push(user_email); }
-      if (trip_id) { where.push('trip_id = ?'); params.push(trip_id); }
-      if (payment_intent_id) { where.push('payment_intent_id = ?'); params.push(payment_intent_id); }
-      if (date_from) { where.push('created_at >= ?'); params.push(date_from); }
-      if (date_to) { where.push('created_at <= ?'); params.push(date_to + ' 23:59:59'); }
-      if (min_amount !== null && !isNaN(min_amount)) { where.push('price_cents >= ?'); params.push(min_amount); }
-      if (max_amount !== null && !isNaN(max_amount)) { where.push('price_cents <= ?'); params.push(max_amount); }
-      const whereSql = where.length ? ('WHERE ' + where.join(' AND ')) : '';
-      const allowedSort = ['created_at','price_cents','status','user_name'];
-      const sortField = allowedSort.includes(sort) ? sort : 'created_at';
-      const stmt = db.prepare(`SELECT * FROM bookings ${whereSql} ORDER BY ${sortField} ${dir} LIMIT ? OFFSET ?`);
-      rows = stmt.all(...params, limit, offset);
-      if (!bookingsDb) db.close();
-    } catch (e) {
-      return res.status(500).json({ error: 'Bookings DB not available' });
-    }
-    // normalize metadata
-    rows = (rows || []).map(r => {
-      if (r && r.metadata && typeof r.metadata === 'string') {
-        try { r.metadata = JSON.parse(r.metadata); } catch (e) { /* leave as string */ }
-      }
-      return r;
-    });
-
-    // Build CSV headers as union of keys
-    const keys = Array.from(new Set(rows.flatMap(obj => Object.keys(obj || {}))));
-    const escape = (val) => {
-      if (val === null || val === undefined) return '';
-      if (typeof val === 'object') val = JSON.stringify(val);
-      return '"' + String(val).replace(/"/g, '""') + '"';
-    };
-
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  const ts = new Date().toISOString().replace(/[:.]/g,'').replace(/T/,'_').replace(/Z/,'');
-  res.setHeader('Content-Disposition', `attachment; filename="bookings_${ts}.csv"`);
-
-    // write CSV
-    res.write(keys.join(',') + '\n');
-    for (const row of rows) {
-      const vals = keys.map(k => escape(row[k]));
-      res.write(vals.join(',') + '\n');
-    }
-    res.end();
-  } catch (err) {
-    console.error('Admin bookings CSV error:', err && err.stack ? err.stack : err);
-    return res.status(500).send('Server error');
-  }
-});
+// (original /admin/bookings.csv handler removed - now in module)
 
 // Admin backup status endpoint
 app.get('/admin/backup-status', async (req, res) => {

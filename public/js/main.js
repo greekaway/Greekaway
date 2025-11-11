@@ -249,43 +249,34 @@ document.addEventListener("DOMContentLoaded", () => {
         if (titleEl) titleEl.textContent = getLocalized(t.title) || "";
         // Render base price badge under title if available
         try {
-          // New trip meta row: price • time • place
-          if (metaWrap && metaPriceEl) {
-            let hasAny = false;
+          // New trip meta row: build pretty line: price • Αναχώρηση hh:mm • Από place
+          if (metaWrap) {
+            const parts = [];
             // Price
             if (t.price_cents) {
               const base = Math.max(0, parseInt(t.price_cents, 10)) / 100;
               const cur = (t.currency || 'EUR').toUpperCase();
-              // Also expose a simple price_formatted on the object for any template-like usage
               try { t.price_formatted = base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur }); } catch(_) { t.price_formatted = (base.toFixed(2) + ' €'); }
-              metaPriceEl.textContent = t.price_formatted;
-              hasAny = true;
-            } else {
-              metaPriceEl.textContent = '';
+              parts.push(`<span class=\"price\">${t.price_formatted}</span>`);
             }
-            // Departure time
-            if (t.departure && t.departure.departure_time) {
-              metaTimeEl.textContent = (window.t ? window.t('trip.departure_time_label','Αναχώρηση') : 'Αναχώρηση') + ' ' + t.departure.departure_time;
-              metaTimeEl.style.display = '';
-              hasAny = true;
-            } else if (metaTimeEl) {
-              metaTimeEl.style.display = 'none';
-              metaTimeEl.textContent = '';
-            }
-            // Departure place (reference point name)
+            // Time
+            const timeLabel = tSafe('trip.departure_time_label','Αναχώρηση');
+            const timeVal = t && t.departure && t.departure.departure_time;
+            if (timeVal) parts.push(`<span class=\"time\">${timeLabel} ${timeVal}</span>`);
+            // Place
             const depName = t && t.departure && t.departure.reference_point && t.departure.reference_point.name;
             if (depName) {
-              // If the name includes a long prefix like "Αθήνα – ", optionally show a shorter form after the separator per spec
-              const shortName = depName.replace(/^Αθήνα\s*[–-]\s*/,'');
-              const placeLabel = (window.t ? window.t('trip.departure_place_label','Από') : 'Από');
-              metaPlaceEl.textContent = placeLabel + ' ' + (shortName || depName);
-              metaPlaceEl.style.display = '';
-              hasAny = true;
-            } else if (metaPlaceEl) {
-              metaPlaceEl.style.display = 'none';
-              metaPlaceEl.textContent = '';
+              const shortName = String(depName).replace(/^Αθήνα\s*[–-]\s*/,'');
+              const placeLabel = tSafe('trip.departure_place_label','Από');
+              parts.push(`<span class=\"place\">${placeLabel} ${shortName || depName}</span>`);
             }
-            metaWrap.style.display = hasAny ? '' : 'none';
+            if (parts.length) {
+              metaWrap.innerHTML = parts.join(' • ');
+              metaWrap.style.display = '';
+            } else {
+              metaWrap.style.display = 'none';
+              metaWrap.innerHTML = '';
+            }
           }
           // Keep legacy price badge updated for backward compatibility
           const legacyPriceEl = document.getElementById('trip-price');
