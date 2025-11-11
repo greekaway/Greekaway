@@ -3,8 +3,8 @@ const DriverAPI = (function(){
   const base = '/driver';
   function getToken(){ try { return localStorage.getItem('ga_driver_token'); } catch(_) { return null; } }
   function setToken(t){ try { localStorage.setItem('ga_driver_token', t); } catch(_) {} }
-  async function login(identifier, password){
-    const r = await fetch(base + '/api/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ identifier, password }) });
+  async function login(identifier, password, remember){
+    const r = await fetch(base + '/api/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ identifier, password, remember: !!remember }) });
     const j = await r.json().catch(()=>null);
     if (!r.ok || !j || !j.ok) throw new Error((j && j.error) || 'login_failed');
     setToken(j.token);
@@ -43,7 +43,8 @@ window.DriverUI = {
       if (btn) { btn.disabled = true; btn.textContent = '…'; }
       out && (out.textContent = 'Σύνδεση…');
       try {
-        await DriverAPI.login(identifier, password);
+        const remember = document.getElementById('remember')?.checked;
+        await DriverAPI.login(identifier, password, remember);
         out && (out.textContent = 'Επιτυχής σύνδεση');
         setTimeout(() => location.href = '/driver/driver-dashboard.html', 200);
       } catch (e) {

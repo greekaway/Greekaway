@@ -294,9 +294,16 @@ router.post('/api/drivers', authMiddleware, async (req, res) => {
     } catch(_) {}
     const base = process.env.BASE_URL || (req.protocol + '://' + req.get('host'));
     const link = `${base}/provider/driver-activate.html?token=${invite_token}`;
-    if (email) { await sendInviteEmail(email, providerName, link); }
+    if (email) {
+      const mailStatus = await sendInviteEmail(email, providerName, link);
+      if (mailStatus.startsWith('skipped')) {
+        console.log('invite: dev mode link (no SMTP):', link);
+      }
+    }
     // TODO: implement SMS sending (placeholder)
-    return res.json({ ok:true, id, invite_token });
+    // Expose activation link in response for non-production (helps local testing)
+    const includeLink = (process.env.NODE_ENV !== 'production');
+    return res.json({ ok:true, id, invite_token, activation_link: includeLink ? link : undefined });
   } catch(e){
     if (String(e && e.message) === 'duplicate_contact') return res.status(409).json({ error:'Duplicate driver contact' });
     console.error('driver create error', e && e.message ? e.message : e);

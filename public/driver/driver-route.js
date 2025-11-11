@@ -40,8 +40,10 @@
         if (stops.length > 1){
           const origin = toQuery(stops[0]);
           const destination = toQuery(stops[stops.length - 1]);
-          const waypointsRaw = stops.slice(1, -1).map(toQuery).join('|');
-          const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&waypoints=${encodeURIComponent(waypointsRaw)}&travelmode=driving&optimizeWaypoints=true`;
+          const middle = stops.slice(1, -1).map(toQuery);
+          // Build exact order from metadata.stops only (no hidden/extra waypoints, no auto-optimize)
+          const waypointsParam = middle.length ? middle.map(encodeURIComponent).join('|') : '';
+          const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&waypoints=${waypointsParam}&travelmode=driving`;
           navBtn.href = gmapsUrl;
         } else if (stops.length === 1){
           const single = toQuery(stops[0]);
