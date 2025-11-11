@@ -256,7 +256,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (t.price_cents) {
               const base = Math.max(0, parseInt(t.price_cents, 10)) / 100;
               const cur = (t.currency || 'EUR').toUpperCase();
-              metaPriceEl.textContent = base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur });
+              // Also expose a simple price_formatted on the object for any template-like usage
+              try { t.price_formatted = base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur }); } catch(_) { t.price_formatted = (base.toFixed(2) + ' €'); }
+              metaPriceEl.textContent = t.price_formatted;
               hasAny = true;
             } else {
               metaPriceEl.textContent = '';

@@ -1058,16 +1058,23 @@ app.post('/api/assistant', express.json(), async (req, res) => {
                   parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
                 }
               }
-              if (intent.askDepartureTime) {
-                parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime || t(userLang, 'assistant_trip.missing') }));
-              }
-              if (intent.askDeparturePlace) {
-                parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace || t(userLang, 'assistant_trip.missing') }));
-              }
+              // Defer combined departure sentence construction until after price block
               if (intent.askPrice && summary.priceCents != null) {
                 const euros = (summary.priceCents/100).toFixed(0);
                 parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
                 parts.push(priceAvailabilityNote(userLang));
+              }
+              // Combined departure sentence (time/place/price) if any related intent
+              if (intent.askDepartureTime || intent.askDeparturePlace || intent.askPrice) {
+                const time = summary.departureTime || null;
+                const place = summary.departurePlace || null;
+                const priceVal = summary.priceCents != null ? (summary.priceCents/100).toFixed(0) : null;
+                if ((intent.askDepartureTime && !time) || (intent.askPrice && !priceVal)) {
+                  parts.push(t(userLang, 'assistant_trip.missing_any_departure_price', 'Δεν έχει καταχωρηθεί ακόμη η ώρα ή η τιμή αυτής της εκδρομής.'));
+                } else if (time || place) {
+                  const pricePart = (intent.askPrice && priceVal) ? t(userLang, 'assistant_trip.price_part', { price: priceVal }) : '';
+                  parts.push(t(userLang, 'assistant_trip.departure_summary', { title: summary.title, time: time || t(userLang,'assistant_trip.missing'), place: place || t(userLang,'assistant_trip.missing'), pricePart }));
+                }
               }
               if (intent.askStops) {
                 if (summary.stops && summary.stops.length) {
@@ -1080,18 +1087,6 @@ app.post('/api/assistant', express.json(), async (req, res) => {
                   parts.push(t(userLang, 'assistant_trip.stops'));
                   parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
                 }
-              }
-              if (intent.askIncludes) {
-                parts.push(t(userLang, 'assistant_trip.includes'));
-                if (Array.isArray(summary.includes) && summary.includes.length) {
-                  summary.includes.forEach(v => parts.push(`• ${v}`));
-                } else {
-                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
-                }
-              }
-              if (intent.askAvailability && Array.isArray(summary.unavailable) && summary.unavailable.length) {
-                parts.push(t(userLang, 'assistant_trip.availability'));
-                parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
               }
               // If no specific intent detected, fall back to concise summary
               if (!(intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
@@ -1189,12 +1184,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
                 parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
               }
             }
-                if (intent.askDepartureTime) {
-                  parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime || t(userLang, 'assistant_trip.missing') }));
-                }
-                if (intent.askDeparturePlace) {
-                  parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace || t(userLang, 'assistant_trip.missing') }));
-                }
+                // Defer combined departure sentence construction; we handle time/place together later
             if (intent.askPrice && summary.priceCents != null) {
               const euros = (summary.priceCents/100).toFixed(0);
               parts.push(t(userLang, 'assistant_trip.price', { price: euros }));

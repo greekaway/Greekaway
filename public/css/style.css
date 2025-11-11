@@ -324,6 +324,20 @@ footer a.central-btn:hover i {
    create a visible gap when overlays are fixed. */
 html, body { margin: 0; padding: 0; }
 
+/* Trip meta line (price • time • place) under the trip title */
+.trip-meta {
+  font-size: 15px;
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.92;
+  justify-content: center; /* center under title */
+}
+.trip-meta span { color: var(--ga-text, #fff); font-weight: 500; }
+.trip-meta .price { color: var(--color-gold, #D4AF37); font-weight: 600; }
+
 /* Lock background scroll when any overlay is open (applies globally) */
 body.overlay-open { overflow: hidden; touch-action: none; }
 html.overlay-open { overflow: hidden; }

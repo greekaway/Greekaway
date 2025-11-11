@@ -127,6 +127,7 @@ function buildTripSummary(trip, lang) {
     if (!duration && /day\s+trip|μονοημερη|μονοήμερη|1\s*day/.test(d)) duration = isGreek ? '1 μέρα' : '1 day';
   }
   const priceCents = typeof trip.price_cents === 'number' ? trip.price_cents : null;
+  const currency = typeof trip.currency === 'string' ? trip.currency : 'EUR';
   // New departure info (optional)
   let departureTime = null;
   let departurePlace = null;
@@ -135,7 +136,7 @@ function buildTripSummary(trip, lang) {
     const rpName = trip.departure.reference_point && trip.departure.reference_point.name;
     if (rpName) departurePlace = String(rpName);
   }
-  return { title, description, stops, includes, unavailable, duration, priceCents, departureTime, departurePlace };
+  return { title, description, stops, includes, unavailable, duration, priceCents, currency, departureTime, departurePlace };
 }
 
 module.exports = {
