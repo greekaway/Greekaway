@@ -22,6 +22,7 @@ const PROCESS_STARTED_AT = new Date().toISOString();
 // Optional version.json path for build metadata (moved helpers to lib/version.js)
 const VERSION_FILE_PATH = path.join(__dirname, 'version.json');
 const { readVersionFile, formatBuild } = require('./src/server/lib/version');
+const { buildLiveRulesPrompt } = require('./src/server/lib/prompts');
 // Environment detection: treat non-production and non-Render as local dev
 const IS_RENDER = !!process.env.RENDER;
 const IS_DEV = (process.env.NODE_ENV !== 'production') && !IS_RENDER;
@@ -54,53 +55,83 @@ if (STRIPE_SECRET) {
   try { stripe = require('stripe')(STRIPE_SECRET); } catch(e) { console.warn('Stripe not initialized (install package?)'); }
 }
 
-// OpenAI API key from environment (for the Greekaway AI Assistant)
-let OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.OPENAI_API_key || null;
-if (typeof OPENAI_API_KEY === 'string') {
-  OPENAI_API_KEY = OPENAI_API_KEY.trim().replace(/^['"]|['"]$/g, '');
+// ---------------- Assistant env + helper extraction (Phase 4) ----------------
+// Environment key for OpenAI (optional). Empty string becomes null for simpler checks.
+const OPENAI_API_KEY = (process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || '').trim() || null;
+// Force always include live data (weather/news) even if user didn't ask explicitly
+const ASSISTANT_LIVE_ALWAYS = ['1','true','yes','on'].includes(String(process.env.ASSISTANT_LIVE_ALWAYS || '').toLowerCase());
+
+// News RSS sources: support NEWS_RSS_URL (single) and NEWS_RSS_URLS (comma/space-separated list)
+const NEWS_RSS_URLS = (() => {
+  const single = process.env.NEWS_RSS_URL;
+  const multi = process.env.NEWS_RSS_URLS;
+  const arr = [];
+  if (single && single.trim()) arr.push(single.trim());
+  if (multi && multi.trim()) multi.split(/[\s,]+/).forEach(u => { if (u.trim()) arr.push(u.trim()); });
+  return Array.from(new Set(arr));
+})();
+const NEWS_CACHE = { headlines: [], updatedAt: null };
+const NEWS_CACHE_TTL_MS = 3 * 60 * 60 * 1000; // 3h
+function isNewsCacheFresh(){ return !!(NEWS_CACHE.updatedAt && (Date.now() - NEWS_CACHE.updatedAt < NEWS_CACHE_TTL_MS)); }
+async function refreshNewsFeed(reason='manual') {
+  if (!NEWS_RSS_URLS.length) return [];
+  let all = [];
+  const fetch = require('node-fetch');
+  for (const url of NEWS_RSS_URLS) {
+    try {
+      const resp = await fetch(url, { timeout: 8000 });
+      if (!resp.ok) continue;
+      const text = await resp.text();
+      // Naive RSS <title> extraction (skip feed title)
+      const titles = Array.from(text.matchAll(/<title>([^<]{4,120})<\/title>/gi)).map(m => m[1].trim());
+      if (titles.length > 1) all = all.concat(titles.slice(1, 16));
+    } catch (e) { /* ignore per-source */ }
+  }
+  all = all.slice(0, 30);
+  if (all.length) { NEWS_CACHE.headlines = all; NEWS_CACHE.updatedAt = Date.now(); }
+  return NEWS_CACHE.headlines;
+}
+async function getCachedHeadlinesOrRefresh(){ return isNewsCacheFresh() ? NEWS_CACHE.headlines : await refreshNewsFeed('auto'); }
+
+// Assistant intent helpers (these were inline previously; now explicit for module injection)
+function wantsResetTopic(message, lang) {
+  const m = String(message||'').toLowerCase();
+  const isEl = String(lang||'').toLowerCase().startsWith('el');
+  return isEl ? /(αλλαγή\s+θέματος|νέο\s+θέμα|καθαρή\s+συζήτηση|reset|restart)/i.test(m) : /(change\s+topic|new\s+topic|reset|restart|clear\s+context)/i.test(m);
+}
+function wantsWeather(message){ return /weather|forecast|καιρός|βροχή|θερμοκρασία/i.test(String(message||'')); }
+function wantsNews(message){ return /news|headline|ειδήσεις|τοπικές\s+ειδήσεις/i.test(String(message||'')); }
+function wantsStrikesOrTraffic(message){ return /strike|traffic|μποτιλιάρισμα|απεργία|δρόμοι|συγκοινωνίες/i.test(String(message||'')); }
+
+// Heuristic place resolver for weather context
+function resolvePlaceForMessage(message, lang){
+  const text = String(message||'');
+  const lower = text.toLowerCase();
+  const known = ['athens','santorini','mykonos','crete','paros','naxos','thessaloniki','lefkas','lefkada','rhodes','corfu','kefalonia','delphi','meteora'];
+  for (const k of known) {
+    if (lower.includes(k)) {
+      if (k === 'lefkas') return 'Lefkada';
+      return k.charAt(0).toUpperCase() + k.slice(1);
+    }
+  }
+  const m = text.match(/\b([A-Z][a-z]{3,})\b/);
+  return m ? m[1] : null;
 }
 
-// Optional RSS feed for travel-related news (used only when user asks)
-let NEWS_RSS_URL = process.env.NEWS_RSS_URL || null;
-if (typeof NEWS_RSS_URL === 'string') {
-  NEWS_RSS_URL = NEWS_RSS_URL.trim().replace(/^['"]|['"]$/g, '');
-}
-// NEW: support multiple RSS URLs via NEWS_RSS_URL_1 and _2
-const RSS_CANDIDATES = [
-  NEWS_RSS_URL,
-  process.env.NEWS_RSS_URL_1,
-  process.env.NEWS_RSS_URL_2
-].filter(Boolean).map(s => String(s).trim().replace(/^['"]|['"]$/g, '')).filter(u => /^https?:\/\//i.test(u));
-const NEWS_RSS_URLS = Array.from(new Set(RSS_CANDIDATES));
-
-// Server-side override: force include live data when users ask (or always)
-// Set ASSISTANT_LIVE_ALWAYS=1 to aggressively include weather/news when relevant
-const ASSISTANT_LIVE_ALWAYS = /^1|true$/i.test(String(process.env.ASSISTANT_LIVE_ALWAYS || '').trim());
-
-// Live data helpers (weather, optional news) with caching
-let liveData = null;
-try {
-  liveData = require('./live/liveData');
-  console.log('live-data: module loaded');
-} catch (e) {
-  console.warn('live-data: not available', e && e.message ? e.message : e);
+function buildAssistantSystemPrompt(){
+  return 'You are the Greekaway travel assistant. Provide precise, concise answers about trips (title, duration, price per person, departure time/place, stops, inclusions, availability). Use user language (Greek if Greek). Incorporate provided live weather/news context succinctly. Avoid unsupported speculation.';
 }
 
-// Trip data integration module (reads public/data/trips/*.json)
-let tripData = null;
-try {
-  tripData = require('./live/tripData');
-  console.log('trip-data: module loaded');
-} catch (e) {
-  console.warn('trip-data: not available', e && e.message ? e.message : e);
-}
+function norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'').trim(); }
+const TRIPINDEX_PATH = path.join(__dirname, 'public', 'data', 'tripindex.json');
+// -----------------------------------------------------------------------------
 
-// Initialize a simple SQLite bookings table so server endpoints can create bookings
+// SQLite bookings database initialization (restored from backup for tests)
 let bookingsDb = null;
 try {
   const Database = require('better-sqlite3');
   const DB_PATH = path.join(__dirname, 'data', 'db.sqlite3');
-  try { fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true }); } catch (e) {}
+  try { fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true }); } catch(_){ }
   bookingsDb = new Database(DB_PATH);
   bookingsDb.exec(`CREATE TABLE IF NOT EXISTS bookings (
     id TEXT PRIMARY KEY,
@@ -117,43 +148,33 @@ try {
     created_at TEXT,
     updated_at TEXT
   )`);
-  // Ensure date column is present (legacy compatibility) and any new structured columns; re-ordering not feasible via ALTER, so we reference columns explicitly in INSERT.
-  // Ensure legacy databases get a date column if missing
+  // Migrations / additional columns
   try {
     const info = bookingsDb.prepare("PRAGMA table_info('bookings')").all();
-    const hasDate = info && info.some(i => i.name === 'date');
-    if (!hasDate) {
-      bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN date TEXT').run();
-      console.log('server: added date column to bookings table');
-    }
-    // Ensure new pickup/suitcase/notes columns exist
-    const names = new Set(info.map(i => i.name));
-    // Demo/test helpers and source tagging
-    if (!names.has('is_demo')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN is_demo INTEGER DEFAULT 0').run(); console.log('server: added is_demo'); } catch(_){} }
-    if (!names.has('source')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN source TEXT').run(); console.log('server: added source'); } catch(_){} }
-    if (!names.has('pickup_location')) { try { bookingsDb.prepare("ALTER TABLE bookings ADD COLUMN pickup_location TEXT DEFAULT ''").run(); console.log('server: added pickup_location'); } catch(_){} }
-    if (!names.has('pickup_lat')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_lat REAL').run(); console.log('server: added pickup_lat'); } catch(_){} }
-    if (!names.has('pickup_lng')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_lng REAL').run(); console.log('server: added pickup_lng'); } catch(_){} }
-    // New semi-automatic pickup scheduling columns
-    if (!names.has('pickup_order')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_order INTEGER').run(); console.log('server: added pickup_order'); } catch(_){} }
-    if (!names.has('route_id')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN route_id TEXT').run(); console.log('server: added route_id'); } catch(_){} }
-    if (!names.has('pickup_time_estimated')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_time_estimated TEXT').run(); console.log('server: added pickup_time_estimated'); } catch(_){} }
-    if (!names.has('pickup_window_start')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_window_start TEXT').run(); console.log('server: added pickup_window_start'); } catch(_){} }
-    if (!names.has('pickup_window_end')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_window_end TEXT').run(); console.log('server: added pickup_window_end'); } catch(_){} }
-    if (!names.has('pickup_address')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_address TEXT').run(); console.log('server: added pickup_address'); } catch(_){} }
-    if (!names.has('suitcases_json')) { try { bookingsDb.prepare("ALTER TABLE bookings ADD COLUMN suitcases_json TEXT DEFAULT '[]'").run(); console.log('server: added suitcases_json'); } catch(_){} }
-    if (!names.has('special_requests')) { try { bookingsDb.prepare("ALTER TABLE bookings ADD COLUMN special_requests TEXT DEFAULT ''").run(); console.log('server: added special_requests'); } catch(_){} }
-  } catch (e) { /* ignore migration errors */ }
-
-  // capacities table to track per-trip per-date seat limits (optional admin seed)
+    const have = new Set(info.map(i => i.name));
+    const ensureCol = (sql, name) => { if (!have.has(name)) { try { bookingsDb.prepare(sql).run(); console.log('server: added column', name); } catch(_){} } };
+    ensureCol('ALTER TABLE bookings ADD COLUMN date TEXT','date');
+    ensureCol('ALTER TABLE bookings ADD COLUMN grouped INTEGER DEFAULT 0','grouped');
+    ensureCol("ALTER TABLE bookings ADD COLUMN pickup_location TEXT DEFAULT ''",'pickup_location');
+    ensureCol('ALTER TABLE bookings ADD COLUMN pickup_lat REAL','pickup_lat');
+    ensureCol('ALTER TABLE bookings ADD COLUMN pickup_lng REAL','pickup_lng');
+    ensureCol('ALTER TABLE bookings ADD COLUMN pickup_order INTEGER','pickup_order');
+    ensureCol('ALTER TABLE bookings ADD COLUMN route_id TEXT','route_id');
+    ensureCol('ALTER TABLE bookings ADD COLUMN pickup_time_estimated TEXT','pickup_time_estimated');
+    ensureCol('ALTER TABLE bookings ADD COLUMN pickup_window_start TEXT','pickup_window_start');
+    ensureCol('ALTER TABLE bookings ADD COLUMN pickup_window_end TEXT','pickup_window_end');
+    ensureCol('ALTER TABLE bookings ADD COLUMN pickup_address TEXT','pickup_address');
+    ensureCol("ALTER TABLE bookings ADD COLUMN suitcases_json TEXT DEFAULT '[]'",'suitcases_json');
+    ensureCol("ALTER TABLE bookings ADD COLUMN special_requests TEXT DEFAULT ''",'special_requests');
+    ensureCol('ALTER TABLE bookings ADD COLUMN is_demo INTEGER DEFAULT 0','is_demo');
+    ensureCol('ALTER TABLE bookings ADD COLUMN source TEXT','source');
+  } catch(e) { /* ignore */ }
   bookingsDb.exec(`CREATE TABLE IF NOT EXISTS capacities (
     trip_id TEXT,
     date TEXT,
     capacity INTEGER,
     PRIMARY KEY(trip_id, date)
   )`);
-
-  // Travelers table to persist last-known profile per email (for stats/matching)
   bookingsDb.exec(`CREATE TABLE IF NOT EXISTS travelers (
     email TEXT PRIMARY KEY,
     name TEXT,
@@ -163,29 +184,9 @@ try {
     interest TEXT,
     sociality TEXT,
     children_ages TEXT,
-    updated_at TEXT
+    updated_at TEXT,
+    average_rating REAL
   )`);
-  // Add average_rating column if missing
-  try {
-    const info = bookingsDb.prepare("PRAGMA table_info('travelers')").all();
-    const hasAvg = info && info.some(i => i.name === 'average_rating');
-    if (!hasAvg) {
-      bookingsDb.prepare('ALTER TABLE travelers ADD COLUMN average_rating REAL').run();
-      console.log('server: added average_rating to travelers');
-    }
-  } catch (e) { /* ignore migration errors */ }
-
-  // Co-travel stats: how often two emails have been grouped/traveled together (per trip/date)
-  bookingsDb.exec(`CREATE TABLE IF NOT EXISTS co_travel (
-    email_a TEXT,
-    email_b TEXT,
-    trip_id TEXT,
-    date TEXT,
-    times INTEGER,
-    PRIMARY KEY(email_a, email_b, trip_id, date)
-  )`);
-
-  // Feedback table: post-trip ratings
   bookingsDb.exec(`CREATE TABLE IF NOT EXISTS feedback (
     id TEXT PRIMARY KEY,
     trip_id TEXT,
@@ -194,8 +195,6 @@ try {
     comment TEXT,
     created_at TEXT
   )`);
-
-  // Groups table (store each group as a row with JSON array of travelers)
   bookingsDb.exec(`CREATE TABLE IF NOT EXISTS groups (
     id TEXT PRIMARY KEY,
     trip_id TEXT,
@@ -204,362 +203,19 @@ try {
     locked INTEGER DEFAULT 0,
     created_at TEXT
   )`);
-  // Add bookings.grouped flag to avoid duplicate grouping (optional)
-  try {
-    const infoB = bookingsDb.prepare("PRAGMA table_info('bookings')").all();
-    const hasGrouped = infoB && infoB.some(i => i.name === 'grouped');
-    if (!hasGrouped) {
-      bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN grouped INTEGER DEFAULT 0').run();
-      console.log('server: added grouped to bookings');
-    }
-  } catch (e) { /* ignore migration errors */ }
-  console.log('server: bookings table ready');
+  bookingsDb.exec(`CREATE TABLE IF NOT EXISTS co_travel (
+    email_a TEXT,
+    email_b TEXT,
+    trip_id TEXT,
+    date TEXT,
+    times INTEGER,
+    PRIMARY KEY(email_a, email_b, trip_id, date)
+  )`);
+  console.log('server: bookings DB ready');
 } catch (e) {
-  console.warn('server: bookings DB not available', e && e.message ? e.message : e);
+  console.warn('server: bookings DB init failed', e && e.message ? e.message : e);
   bookingsDb = null;
 }
-
-// Ensure pickup_routes table exists (stores route metadata)
-try {
-  const Database = require('better-sqlite3');
-  const DB_PATH = path.join(__dirname, 'data', 'db.sqlite3');
-  const db = new Database(DB_PATH);
-  try {
-    db.exec(`CREATE TABLE IF NOT EXISTS pickup_routes (
-      id TEXT PRIMARY KEY,
-      title TEXT,
-      departure_time TEXT,
-      buffer_minutes INTEGER,
-      locked INTEGER DEFAULT 0,
-      test_mode INTEGER DEFAULT 0,
-      created_at TEXT,
-      updated_at TEXT
-    )`);
-  } finally {
-    db.close();
-  }
-  console.log('server: pickup_routes table ready');
-} catch (e) {
-  console.warn('server: pickup_routes table not available', e && e.message ? e.message : e);
-}
-
-// Load assistant knowledge base (JSON) to enrich the system prompt, with hot-reload
-const KNOWLEDGE_DIR = path.join(__dirname, 'data', 'ai');
-const KNOWLEDGE_PATH = path.join(KNOWLEDGE_DIR, 'knowledge.json');
-let KNOWLEDGE_TEXT = null;
-
-function loadKnowledgeOnce() {
-  try {
-    let txt = fs.readFileSync(KNOWLEDGE_PATH, 'utf8');
-    if (txt && txt.length > 200_000) {
-      console.warn('assistant: knowledge.json seems very large; truncating for prompt');
-      txt = txt.slice(0, 200_000);
-    }
-    KNOWLEDGE_TEXT = txt;
-    return true;
-  } catch (e) {
-    if (e && e.code === 'ENOENT') {
-      KNOWLEDGE_TEXT = null;
-    }
-    return false;
-  }
-}
-
-if (loadKnowledgeOnce()) {
-  console.log('assistant: knowledge loaded');
-} else {
-  console.warn('assistant: knowledge.json not loaded');
-}
-
-let knowledgeReloadTimer = null;
-function scheduleKnowledgeReload() {
-  if (knowledgeReloadTimer) clearTimeout(knowledgeReloadTimer);
-  knowledgeReloadTimer = setTimeout(() => {
-    const ok = loadKnowledgeOnce();
-    if (ok && KNOWLEDGE_TEXT != null) {
-      console.log('assistant: knowledge reloaded');
-    } else if (KNOWLEDGE_TEXT == null) {
-      console.warn('assistant: knowledge file missing; cleared');
-    } else {
-      console.warn('assistant: failed to reload knowledge');
-    }
-  }, 300);
-}
-
-try {
-  // Watch the directory to handle editors that use atomic writes (rename)
-  fs.watch(KNOWLEDGE_DIR, { persistent: true }, (eventType, filename) => {
-    if (!filename) return;
-    if (path.basename(filename) !== 'knowledge.json') return;
-    scheduleKnowledgeReload();
-  });
-} catch (e) {
-  // Fallback to polling if fs.watch is not available or fails
-  try {
-    fs.watchFile(KNOWLEDGE_PATH, { interval: 1000 }, () => scheduleKnowledgeReload());
-    console.warn('assistant: fs.watch fallback to watchFile');
-  } catch (e2) {
-    console.warn('assistant: unable to watch knowledge.json', e2 && e2.message ? e2.message : e2);
-  }
-}
-
-function buildAssistantSystemPrompt() {
-  const base = 'You are the Greekaway travel assistant. Be concise. Focus only on Greek travel planning and Greekaway context. When live data (weather or headlines) is provided, use it to answer succinctly and relate to travel where helpful.';
-  if (!KNOWLEDGE_TEXT) return base;
-  return base + '\n\nGreekaway knowledge base (JSON):\n' + KNOWLEDGE_TEXT + '\n\nUse this knowledge as ground truth when relevant. If a topic is not covered, answer normally.';
-}
-function wantsResetTopic(message, lang) {
-  const m = String(message || '').toLowerCase();
-  // Generic browse/reset queries: "show all trips", "όλες οι εκδρομές", "reset", "start over"
-  return /(all\s+trips|show\s+trips|list\s+trips|όλες\s+οι\s+εκδρομές|όλες\s+τις\s+εκδρομές|όλα\s+τα\s+ταξίδια|reset|ξεκινήσ?ουμε\s+από\s+την\s+αρχή|από\s+την\s+αρχή)/i.test(m);
-}
-
-
-const { buildLiveRulesPrompt } = require('./src/server/lib/prompts');
-
-// -----------------------------
-// Live-data: destination detection and snippets for assistant
-// -----------------------------
-const TRIPINDEX_PATH = path.join(__dirname, 'public', 'data', 'tripindex.json');
-let DEST_NAMES = null; // Set of names in various languages
-let DEST_LOADED_AT = 0;
-function loadDestinationsOnce() {
-  try {
-    const raw = fs.readFileSync(TRIPINDEX_PATH, 'utf8');
-    const arr = JSON.parse(raw);
-    const names = new Set();
-    arr.forEach((t) => {
-      const title = t && t.title ? t.title : {};
-      Object.values(title || {}).forEach((v) => {
-        if (!v) return;
-        // Split combined titles like "Parnassos & Delphi"
-        String(v).split(/\s*[&/,]|\s+και\s+|\s+and\s+/i).forEach((p) => {
-          const s = String(p).trim();
-          if (s) names.add(s.toLowerCase());
-        });
-        names.add(String(v).trim().toLowerCase());
-      });
-      // simple synonyms
-      if (t.id === 'lefkas' || t.id === 'lefkas' || t.id === 'lefkas') {
-        names.add('lefkas');
-        names.add('λευκάδα');
-        names.add('lefka');
-      }
-    });
-    DEST_NAMES = names;
-    DEST_LOADED_AT = Date.now();
-  } catch (e) {
-    DEST_NAMES = new Set(['lefkas','lefka','lefka\u03b4\u03b1','λε\u03c5κάδα','lefka\u03b4a','parnassos','delphi','olympia']);
-  }
-}
-function ensureDestinationsFresh() {
-  if (!DEST_NAMES || (Date.now() - DEST_LOADED_AT > 5 * 60 * 1000)) {
-    loadDestinationsOnce();
-  }
-}
-function detectPlaceFromMessage(message) {
-  ensureDestinationsFresh();
-  const m = String(message || '').toLowerCase();
-  let best = null;
-  for (const name of DEST_NAMES) {
-    if (name && m.includes(name)) { best = name; break; }
-  }
-  // normalize some known variants
-  if (best === 'lefkas') return 'Lefkada';
-  if (best === 'λεφκάδα' || best === 'λευκάδα') return 'Λευκάδα';
-  if (best === 'delphi' || best === 'δελφοί') return 'Delphi';
-  if (best === 'parnassos' || best === 'πάρνασος') return 'Parnassos';
-  if (best === 'olympia' || best === 'ολυμπία') return 'Olympia';
-  if (best === 'santorini' || best === 'σαντορίνη') return 'Santorini';
-  return best ? best : null;
-}
-function wantsWeather(message) {
-  const m = String(message || '').toLowerCase();
-  return /(weather|temperature|forecast|rain|wind|sunny|cloud|\bmeteo\b|\bκαιρ)/i.test(m);
-}
-
-function wantsNews(message) {
-  const m = String(message || '').toLowerCase();
-  // English + Greek + a few EU languages keywords for "news/headlines"
-  return /(news|headline|headlines|updates|\bειδήσ|\bνέα\b|επικαιρότητα|noticias|notizie|nachrichten|actualités|notícias)/i.test(m);
-}
-
-function wantsStrikesOrTraffic(message) {
-  const m = String(message || '').toLowerCase();
-  // Greek strike/traffic-related terms + English fallback
-  return /(\bαπεργία|\bαπεργιες|\bπορεία|\bπορείες|\bμπλοκάρ|\bδρόμοι\b|traffic|strike|protest)/i.test(m);
-}
-
-// Attempt to infer a place from free-form user message using lightweight heuristics + geocoding
-// 1) Try our curated destinations list via detectPlaceFromMessage
-// 2) Otherwise extract candidate phrases (quotes, prepositions, capitalized sequences)
-// 3) Geocode each candidate with Open-Meteo geocoding via liveData.geocodePlace
-// Returns a normalized place name on success, otherwise null
-async function resolvePlaceForMessage(message, lang = 'en') {
-  try {
-    const direct = detectPlaceFromMessage(message);
-    if (direct) return direct;
-    if (!liveData || typeof liveData.geocodePlace !== 'function') return null;
-
-    const text = String(message || '');
-    const candidates = new Set();
-
-    // Quoted phrases: "Αράχοβα", «Αράχοβα», “Delphi” etc.
-    try {
-      const quoteRe = /["“”«»‚‘’„]([^"“”«»‚‘’„]{2,80})["“”«»‚‘’„]/gu;
-      let qm;
-      while ((qm = quoteRe.exec(text))) {
-        const s = (qm[1] || '').trim();
-        if (s) candidates.add(s);
-      }
-    } catch (_) {}
-
-    // Prepositions -> place: σε/στη(ν)/στο(ν)/για/in/at/near/to/for + 1-3 capitalized words (Greek or Latin)
-    try {
-      const prepRe = /\b(?:σε|στη|στην|στο|στον|προς|για|in|at|near|to|for)\s+([A-ZΑ-ΩΆΈΉΊΌΎΏ][\p{L}\-]+(?:\s+[A-ZΑ-ΩΆΈΉΊΌΎΏ][\p{L}\-]+){0,2})/giu;
-      let pm;
-      while ((pm = prepRe.exec(text))) {
-        const s = (pm[1] || '').trim();
-        if (s) candidates.add(s);
-      }
-    } catch (_) {}
-
-    // Standalone capitalized sequences (1-3 words) — last resort
-    try {
-      const capRe = /(?:^|[\s,])([A-ZΑ-ΩΆΈΉΊΌΎΏ][\p{L}\-]{3,}(?:\s+[A-ZΑ-ΩΆΈΉΊΌΎΏ][\p{L}\-]{3,}){0,2})(?=[\s,?.!]|$)/gu;
-      let cm;
-      while ((cm = capRe.exec(text))) {
-        const s = (cm[1] || '').trim();
-        if (s) candidates.add(s);
-      }
-    } catch (_) {}
-
-    // Try up to a handful of candidates to limit latency
-    for (const c of Array.from(candidates).slice(0, 6)) {
-      try {
-        const r = await liveData.geocodePlace(c, lang);
-        if (r && r.name) return r.name;
-      } catch (_) { /* ignore and try next */ }
-    }
-  } catch (_) {}
-  return null;
-}
-
-// -----------------------------
-// Background RSS prefetch (every few hours) so headlines are warm in memory
-// -----------------------------
-const NEWS_CACHE = { headlines: [], updatedAt: null };
-const NEWS_TTL_MS = 3 * 60 * 60 * 1000; // 3 hours
-async function refreshNewsFeed(reason = 'scheduled') {
-  try {
-    if (!liveData || !NEWS_RSS_URLS || NEWS_RSS_URLS.length === 0) return;
-    const all = [];
-    for (const url of NEWS_RSS_URLS) {
-      try {
-        const items = await liveData.getRssHeadlines(url, 5);
-        (items || []).forEach(t => all.push(t));
-      } catch (e) {
-        console.warn('news: fetch failed for', url, e && e.message ? e.message : e);
-      }
-    }
-    // dedupe and cap to 8 headlines total
-    const deduped = Array.from(new Set(all)).slice(0, 8);
-    if (deduped.length) {
-      NEWS_CACHE.headlines = deduped;
-      NEWS_CACHE.updatedAt = new Date().toISOString();
-      console.log(`news: refreshed ${deduped.length} headlines from ${NEWS_RSS_URLS.length} feed(s) (${reason})`);
-    }
-  } catch (e) {
-    console.warn('news: refresh failed', e && e.message ? e.message : e);
-  }
-}
-
-if (NEWS_RSS_URLS && NEWS_RSS_URLS.length) {
-  setTimeout(() => refreshNewsFeed('initial'), 10_000);
-  setInterval(() => refreshNewsFeed('interval'), 3 * 60 * 60 * 1000);
-}
-
-function isNewsCacheFresh() {
-  try {
-    if (!NEWS_CACHE.updatedAt) return false;
-    const t = new Date(NEWS_CACHE.updatedAt).getTime();
-    return isFinite(t) && (Date.now() - t) < NEWS_TTL_MS;
-  } catch (_) { return false; }
-}
-
-async function getCachedHeadlinesOrRefresh() {
-  if (isNewsCacheFresh() && Array.isArray(NEWS_CACHE.headlines) && NEWS_CACHE.headlines.length) {
-    return NEWS_CACHE.headlines;
-  }
-  await refreshNewsFeed('stale-or-empty');
-  return NEWS_CACHE.headlines || [];
-}
-
-// Serve /trips/trip.html with the API key injected from environment.
-// This route is placed before the static middleware so it takes precedence
-// over the on-disk file and avoids writing the key into committed files.
-app.get('/trips/trip.html', (req, res) => {
-  const filePath = path.join(__dirname, 'public', 'trips', 'trip.html');
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) return res.status(500).send('Error reading trip.html');
-    // Replace the placeholder key in the Google Maps script URL.
-    let out = data.replace('key=YOUR_GOOGLE_MAPS_API_KEY', `key=${encodeURIComponent(MAP_KEY)}`);
-    // In dev, also inject a fresh cache-busting param and disable caching completely
-    if (IS_DEV) {
-      try {
-        const t = Date.now();
-        out = out.replace(/(\?v=)\d+/g, `$1${t}`);
-        out = out.replace(/(src=\"\/(?:js)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
-        out = out.replace(/(href=\"\/(?:css)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
-        res.setHeader('Cache-Control', 'no-store');
-      } catch (_) {
-        res.setHeader('Cache-Control', 'no-cache');
-      }
-    } else {
-      res.setHeader('Cache-Control', 'no-cache');
-    }
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(out);
-  });
-});
-
-// Lightweight endpoint to expose the public Google Maps key to the client when dynamic extraction fails.
-// This is safe because the Maps JavaScript API key is meant to be embedded on public pages.
-// We still avoid returning the placeholder string so the client can decide on fallback behaviour.
-app.get('/api/maps-key', (req, res) => {
-  try {
-    const key = MAP_KEY && MAP_KEY !== 'YOUR_GOOGLE_MAPS_API_KEY' ? MAP_KEY : null;
-    res.setHeader('Cache-Control', 'no-store');
-    res.json({ key });
-  } catch (e) {
-    res.status(500).json({ key: null, error: 'maps-key-error' });
-  }
-});
-
-// Serve checkout.html and inject Stripe publishable key placeholder
-app.get('/checkout.html', (req, res) => {
-  const filePath = path.join(__dirname, 'public', 'checkout.html');
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) return res.status(500).send('Error reading checkout.html');
-    const pub = process.env.STRIPE_PUBLISHABLE_KEY || '%STRIPE_PUBLISHABLE_KEY%';
-    let out = data.replace('%STRIPE_PUBLISHABLE_KEY%', pub);
-    if (IS_DEV) {
-      try {
-        const t = Date.now();
-        out = out.replace(/(\?v=)\d+/g, `$1${t}`);
-        out = out.replace(/(src=\"\/(?:js)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
-        out = out.replace(/(href=\"\/(?:css)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
-        res.setHeader('Cache-Control', 'no-store');
-      } catch (_) {
-        res.setHeader('Cache-Control', 'no-cache');
-      }
-    } else {
-      res.setHeader('Cache-Control', 'no-cache');
-    }
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(out);
-  });
-});
 
 // Admin HTML guard: redirect to /admin-login if no session cookie
 app.use((req, res, next) => {
@@ -812,641 +468,33 @@ function mockAssistantReply(message) {
   return `(δοκιμαστική απάντηση) Σε κατάλαβα: "${m}". Πες μου λίγες περισσότερες λεπτομέρειες για να βοηθήσω καλύτερα.`;
 }
 
-// Greekaway AI Assistant — JSON response
-// POST /api/assistant { message: string, history?: [{role,content}] }
-app.post('/api/assistant', express.json(), async (req, res) => {
-  try {
-    const incomingContext = (req.body && req.body.context) || {};
-    const sessionContext = { lastTripId: incomingContext.lastTripId || null, lastTopic: incomingContext.lastTopic || null };
-
-    // If no key, return a friendly mock reply instead of erroring out
-    if (!OPENAI_API_KEY) {
-      const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
-      // Trip data fast-path in mock mode too
-      try {
-        const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
-        const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
-        if (wantsResetTopic(message, userLang)) { sessionContext.lastTripId = null; }
-        let usedTripId = null;
-        if (tripData) {
-          let tripId = tripData.detectTripIdFromMessage(message);
-          // If none detected, try fallback to previous context for follow-ups (duration, stops, etc.)
-          const intent = parseTripIntent(message, userLang);
-          if (!tripId && sessionContext.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability || intent.askDepartureTime || intent.askDeparturePlace)) {
-            tripId = sessionContext.lastTripId;
-          }
-          if (tripId) {
-            usedTripId = tripId;
-            const trip = tripData.readTripJsonById(tripId);
-            if (trip) {
-              const summary = tripData.buildTripSummary(trip, userLang);
-              // Mirror the focused-intent behavior from the non-mock fast-path
-              const parts = [];
-              parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
-              if (intent.askDuration) {
-                if (summary.duration) {
-                  parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
-                } else {
-                  parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
-                }
-              }
-              // Defer combined departure sentence construction until after price block
-              if (intent.askPrice && summary.priceCents != null) {
-                const euros = (summary.priceCents/100).toFixed(0);
-                parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
-                parts.push(priceAvailabilityNote(userLang));
-              }
-              // Combined departure sentence (time/place/price) if any related intent
-              if (intent.askDepartureTime || intent.askDeparturePlace || intent.askPrice) {
-                const time = summary.departureTime || null;
-                const place = summary.departurePlace || null;
-                const priceVal = summary.priceCents != null ? (summary.priceCents/100).toFixed(0) : null;
-                if ((intent.askDepartureTime && !time) || (intent.askPrice && !priceVal)) {
-                  parts.push(t(userLang, 'assistant_trip.missing_any_departure_price', 'Δεν έχει καταχωρηθεί ακόμη η ώρα ή η τιμή αυτής της εκδρομής.'));
-                } else if (time || place) {
-                  const pricePart = (intent.askPrice && priceVal) ? t(userLang, 'assistant_trip.price_part', { price: priceVal }) : '';
-                  parts.push(t(userLang, 'assistant_trip.departure_summary', { title: summary.title, time: time || t(userLang,'assistant_trip.missing'), place: place || t(userLang,'assistant_trip.missing'), pricePart }));
-                }
-              }
-              if (intent.askStops) {
-                if (summary.stops && summary.stops.length) {
-                  parts.push(t(userLang, 'assistant_trip.stops'));
-                  summary.stops.slice(0,6).forEach((s) => {
-                    const name = s.name || t(userLang, 'assistant_trip.missing');
-                    parts.push(`• ${name}`);
-                  });
-                } else {
-                  parts.push(t(userLang, 'assistant_trip.stops'));
-                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
-                }
-              }
-              // If no specific intent detected, fall back to concise summary
-              if (!(intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
-                if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
-                if (summary.priceCents != null) {
-                  const euros = (summary.priceCents/100).toFixed(0);
-                  parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
-                }
-                if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
-                if (summary.stops && summary.stops.length) {
-                  parts.push(t(userLang, 'assistant_trip.stops'));
-                  summary.stops.slice(0,6).forEach((s) => {
-                    const name = s.name || t(userLang, 'assistant_trip.missing');
-                    const desc = s.description ? ` — ${s.description}` : '';
-                    parts.push(`• ${name}${desc}`);
-                  });
-                }
-                parts.push(t(userLang, 'assistant_trip.includes'));
-                if (Array.isArray(summary.includes) && summary.includes.length) {
-                  summary.includes.forEach(v => parts.push(`• ${v}`));
-                } else {
-                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
-                }
-                if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
-                  parts.push(t(userLang, 'assistant_trip.availability'));
-                  parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
-                }
-              }
-              // Update session context with the last used trip
-              if (usedTripId) sessionContext.lastTripId = usedTripId;
-              return res.json({ reply: parts.join('\n'), model: 'mock', context: sessionContext });
-            }
-          }
-        }
-      } catch (_) {}
-      // Enrich mock with live weather snippet if relevant for local testing
-      let extra = '';
-      try {
-        const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
-        const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
-        const place = await resolvePlaceForMessage(message, userLang);
-        const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
-        const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
-        if (liveData && (includeWeather || includeNews)) {
-          let txt = '';
-          if (includeWeather) {
-            const lc = await liveData.buildLiveContext({ place: place || 'Athens', lang: userLang, include: { weather: true, news: false }, rssUrl: null });
-            if (lc && lc.text) txt += lc.text;
-          }
-          if (includeNews) {
-            const headlines = await getCachedHeadlinesOrRefresh();
-            if (headlines && headlines.length) {
-              if (txt) txt += '\n';
-              txt += `Local headlines: ${headlines.slice(0,5).join(' • ')}`;
-            }
-          }
-          if (txt) extra = `\n\n${txt}`;
-        }
-      } catch (_) {}
-      return res.json({ reply: mockAssistantReply(message) + extra, model: 'mock', context: sessionContext });
-    }
-    const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
-    const history = Array.isArray(req.body && req.body.history) ? req.body.history : [];
-    if (!message) return res.status(400).json({ error: 'Missing message' });
-
-    // Live data enrichment (weather/news) — lightweight heuristic
-    const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
-    const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
-
-    // Trip data fast-path: generate structured reply directly when a known trip is mentioned
-    try {
-      const incomingContext2 = (req.body && req.body.context) || {};
-      const sessionContext2 = { lastTripId: incomingContext2.lastTripId || null, lastTopic: incomingContext2.lastTopic || null };
-      if (wantsResetTopic(message, userLang)) { sessionContext2.lastTripId = null; }
-      let usedTripId = null;
-      if (tripData) {
-        let tripId = tripData.detectTripIdFromMessage(message);
-        const intent = parseTripIntent(message, userLang);
-        if (!tripId && sessionContext2.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability || intent.askDepartureTime || intent.askDeparturePlace)) {
-          tripId = sessionContext2.lastTripId;
-        }
-        if (tripId) {
-          usedTripId = tripId;
-          const trip = tripData.readTripJsonById(tripId);
-          if (trip) {
-            const summary = tripData.buildTripSummary(trip, userLang);
-            const intent = parseTripIntent(message, userLang);
-            const parts = [];
-            parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
-            // Focused answers if user asked specific things
-            if (intent.askDuration) {
-              if (summary.duration) {
-                parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
-              } else {
-                parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
-              }
-            }
-            // Defer combined departure sentence construction; we handle time/place together below
-            if (intent.askPrice && summary.priceCents != null) {
-              const euros = (summary.priceCents/100).toFixed(0);
-              parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
-              parts.push(priceAvailabilityNote(userLang));
-            }
-            // Combined departure sentence (time/place/price) if any related intent
-            if (intent.askDepartureTime || intent.askDeparturePlace || intent.askPrice) {
-              const time = summary.departureTime || null;
-              const place = summary.departurePlace || null;
-              const priceVal = summary.priceCents != null ? (summary.priceCents/100).toFixed(0) : null;
-              if ((intent.askDepartureTime && !time) || (intent.askPrice && !priceVal)) {
-                parts.push(t(userLang, 'assistant_trip.missing_any_departure_price', 'Δεν έχει καταχωρηθεί ακόμη η ώρα ή η τιμή αυτής της εκδρομής.'));
-              } else if (time || place) {
-                const pricePart = (intent.askPrice && priceVal) ? t(userLang, 'assistant_trip.price_part', { price: priceVal }) : '';
-                parts.push(t(userLang, 'assistant_trip.departure_summary', { title: summary.title, time: time || t(userLang,'assistant_trip.missing'), place: place || t(userLang,'assistant_trip.missing'), pricePart }));
-              }
-            }
-            if (intent.askStops) {
-              if (summary.stops && summary.stops.length) {
-                parts.push(t(userLang, 'assistant_trip.stops'));
-                summary.stops.slice(0,6).forEach((s) => {
-                  const name = s.name || t(userLang, 'assistant_trip.missing');
-                  parts.push(`• ${name}`);
-                });
-              } else {
-                parts.push(t(userLang, 'assistant_trip.stops'));
-                parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
-              }
-            }
-            if (intent.askIncludes) {
-              parts.push(t(userLang, 'assistant_trip.includes'));
-              if (Array.isArray(summary.includes) && summary.includes.length) {
-                summary.includes.forEach(v => parts.push(`• ${v}`));
-              } else {
-                parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
-              }
-            }
-            if (intent.askAvailability && Array.isArray(summary.unavailable) && summary.unavailable.length) {
-              parts.push(t(userLang, 'assistant_trip.availability'));
-              parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
-            }
-            // If no specific intent detected, fall back to concise summary
-            if (!(intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
-              // Include departure info in general summary if available
-              if (summary.departureTime) parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime }));
-              if (summary.departurePlace) parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace }));
-              if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
-              if (summary.priceCents != null) {
-                const euros = (summary.priceCents/100).toFixed(0);
-                parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
-              }
-              if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
-              if (summary.stops && summary.stops.length) {
-                parts.push(t(userLang, 'assistant_trip.stops'));
-                summary.stops.slice(0,6).forEach((s) => {
-                  const name = s.name || t(userLang, 'assistant_trip.missing');
-                  const desc = s.description ? ` — ${s.description}` : '';
-                  parts.push(`• ${name}${desc}`);
-                });
-              }
-              parts.push(t(userLang, 'assistant_trip.includes'));
-              if (Array.isArray(summary.includes) && summary.includes.length) {
-                summary.includes.forEach(v => parts.push(`• ${v}`));
-              } else {
-                parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
-              }
-              if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
-                parts.push(t(userLang, 'assistant_trip.availability'));
-                parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
-              }
-            }
-            // Optionally append concise live context if weather/news requested
-            let liveContextText = '';
-            const place = await resolvePlaceForMessage(message, userLang);
-            const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
-            const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
-            if (liveData && (includeWeather || includeNews)) {
-              try {
-                if (includeWeather) {
-                  const lc = await liveData.buildLiveContext({ place: place || summary.title, lang: userLang, include: { weather: true, news: false }, rssUrl: null });
-                  if (lc && lc.text) liveContextText += lc.text;
-                }
-                if (includeNews) {
-                  const headlines = await getCachedHeadlinesOrRefresh();
-                  if (headlines && headlines.length) {
-                    if (liveContextText) liveContextText += '\n';
-                    liveContextText += `Local headlines: ${headlines.slice(0,5).join(' • ')}`;
-                  }
-                }
-              } catch(_) {}
-            }
-            const replyText = parts.join('\n') + (liveContextText ? ('\n\n' + liveContextText) : '');
-            if (usedTripId) sessionContext2.lastTripId = usedTripId;
-            return res.json({ reply: replyText, model: 'trip-data', context: sessionContext2 });
-          }
-        }
-      }
-    } catch (_) { /* fallthrough to OpenAI */ }
-    // Fallback: if place is recognized (e.g., "Santorini") but id detection failed, map place name to a trip id via tripindex
-    try {
-      const place = await resolvePlaceForMessage(message, userLang);
-      if (place) {
-        const id = (function findTripIdByPlaceName(p){
-          try {
-            const raw = fs.readFileSync(TRIPINDEX_PATH, 'utf8');
-            const arr = JSON.parse(raw);
-            const pn = norm(p);
-            for (const t of arr) {
-              if (t && t.id && norm(t.id) === pn) return t.id;
-              const title = t && t.title ? t.title : {};
-              for (const v of Object.values(title)) { if (v && norm(String(v)) === pn) return t.id; }
-            }
-            // contains match as last resort
-            for (const t of arr) {
-              const title = t && t.title ? t.title : {};
-              for (const v of Object.values(title)) { if (v && norm(String(v)).includes(pn)) return t.id; }
-            }
-          } catch(_) {}
-          return null;
-        })(place);
-        if (id) {
-          const trip = tripData && tripData.readTripJsonById(id);
-          if (trip) {
-            const summary = tripData.buildTripSummary(trip, userLang);
-            const parts = [];
-            const intent = parseTripIntent(message, userLang);
-            parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
-            if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
-            if (summary.priceCents != null) {
-              const euros = (summary.priceCents/100).toFixed(0);
-              parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
-              if (intent.askPrice) parts.push(priceAvailabilityNote(userLang));
-            }
-            if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
-            if (summary.stops && summary.stops.length) {
-              parts.push(t(userLang, 'assistant_trip.stops'));
-              summary.stops.slice(0,6).forEach((s) => {
-                const name = s.name || t(userLang, 'assistant_trip.missing');
-                const desc = s.description ? ` — ${s.description}` : '';
-                parts.push(`• ${name}${desc}`);
-              });
-            }
-            parts.push(t(userLang, 'assistant_trip.includes'));
-            if (Array.isArray(summary.includes) && summary.includes.length) {
-              summary.includes.forEach(v => parts.push(`• ${v}`));
-            } else {
-              parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
-            }
-            if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
-              parts.push(t(userLang, 'assistant_trip.availability'));
-              parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
-            }
-            return res.json({ reply: parts.join('\n'), model: 'trip-data-fallback' });
-          }
-        }
-      }
-    } catch(_) {}
-    const place = await resolvePlaceForMessage(message, userLang);
-    let liveContextText = '';
-    const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
-    const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
-    if (liveData && (includeWeather || includeNews)) {
-      try {
-        // Weather via liveData
-        if (includeWeather) {
-          const lc = await liveData.buildLiveContext({
-            place: place || 'Athens',
-            lang: userLang,
-            include: { weather: true, news: false },
-            rssUrl: null
-          });
-          if (lc && lc.text) liveContextText += lc.text;
-        }
-        // News via cached headlines (3h TTL)
-        if (includeNews) {
-          const headlines = await getCachedHeadlinesOrRefresh();
-          if (headlines && headlines.length) {
-            if (liveContextText) liveContextText += '\n';
-            liveContextText += `Local headlines: ${headlines.slice(0,5).join(' • ')}`;
-          }
-        }
-      } catch (e) { /* non-fatal */ }
-    }
-
-    // Build messages array (optional short system prompt guiding assistant tone)
-    const messages = [
-      { role: 'system', content: buildAssistantSystemPrompt() },
-      { role: 'system', content: buildLiveRulesPrompt() },
-      ...(liveContextText ? [{ role: 'system', content: `Live data context (refreshed every ~5m):\n${liveContextText}` }] : []),
-      ...history.filter(m => m && m.role && m.content).map(m => ({ role: m.role, content: String(m.content) })),
-      { role: 'user', content: message }
-    ];
-
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages,
-        temperature: 0.2,
-        stream: false
-      })
-    });
-    if (!resp.ok) {
-      const errText = await resp.text().catch(()=> '');
-      return res.status(502).json({ error: 'OpenAI request failed', details: errText.slice(0, 400) });
-    }
-    const data = await resp.json();
-    let reply = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content ? data.choices[0].message.content : '';
-    if (!reply) reply = 'Συγγνώμη, δεν μπόρεσα να συντάξω απάντηση αυτή τη στιγμή.';
-    // In aggressive/live mode (or if the model claimed lack of access), append concise live snippets directly
-    try {
-      const cannot = /cannot\s+provide|no\s+access|δεν\s+μπορώ\s+να\s+παρέχω/i.test(reply || '');
-      if ((ASSISTANT_LIVE_ALWAYS || cannot) && liveContextText) {
-        // Keep it short; append as-is since it's already concise
-        reply = (reply ? reply + '\n\n' : '') + liveContextText;
-      }
-    } catch(_) {}
-    return res.json({ reply, model: 'gpt-4o-mini', context: { lastTripId: null, lastTopic: null } });
-  } catch (e) {
-    console.error('AI Assistant JSON error:', e && e.stack ? e.stack : e);
-    return res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Greekaway AI Assistant — Streaming response (chunked text)
-// POST /api/assistant/stream { message, history? } -> streams plain text tokens
-app.post('/api/assistant/stream', express.json(), async (req, res) => {
-  try {
-    const incomingContext = (req.body && req.body.context) || {};
-    const sessionContext = { lastTripId: incomingContext.lastTripId || null, lastTopic: incomingContext.lastTopic || null };
-    // If no key, stream a quick mock reply so the UI doesn't error
-    if (!OPENAI_API_KEY) {
-      const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.setHeader('Cache-Control', 'no-cache, no-transform');
-      res.setHeader('Connection', 'keep-alive');
-      let txt = mockAssistantReply(message);
-      // Trip data fast-path in mock stream
-      try {
-        const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
-        const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
-        if (wantsResetTopic(message, userLang)) { sessionContext.lastTripId = null; }
-        let usedTripId = null;
-        if (tripData) {
-          let tripId = tripData.detectTripIdFromMessage(message);
-          const intent = parseTripIntent(message, userLang);
-          if (!tripId && sessionContext.lastTripId && (intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability || intent.askDepartureTime || intent.askDeparturePlace)) {
-            tripId = sessionContext.lastTripId;
-          }
-          if (tripId) {
-            usedTripId = tripId;
-            const trip = tripData.readTripJsonById(tripId);
-            if (trip) {
-              const summary = tripData.buildTripSummary(trip, userLang);
-              const intent = parseTripIntent(message, userLang);
-              const parts = [];
-              parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
-              if (intent.askDuration) {
-                if (summary.duration) {
-                  parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
-                } else {
-                  parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
-                }
-              }
-              if (intent.askDepartureTime) {
-                parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime || t(userLang, 'assistant_trip.missing') }));
-              }
-              if (intent.askDeparturePlace) {
-                parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace || t(userLang, 'assistant_trip.missing') }));
-              }
-              if (intent.askPrice && summary.priceCents != null) {
-                const euros = (summary.priceCents/100).toFixed(0);
-                parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
-                parts.push(priceAvailabilityNote(userLang));
-              }
-              if (intent.askStops) {
-                if (summary.stops && summary.stops.length) {
-                  parts.push(t(userLang, 'assistant_trip.stops'));
-                  summary.stops.slice(0,6).forEach((s) => {
-                    const name = s.name || t(userLang, 'assistant_trip.missing');
-                    parts.push(`• ${name}`);
-                  });
-                } else {
-                  parts.push(t(userLang, 'assistant_trip.stops'));
-                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
-                }
-              }
-              if (intent.askIncludes) {
-                parts.push(t(userLang, 'assistant_trip.includes'));
-                if (Array.isArray(summary.includes) && summary.includes.length) {
-                  summary.includes.forEach(v => parts.push(`• ${v}`));
-                } else {
-                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
-                }
-              }
-              if (intent.askAvailability && Array.isArray(summary.unavailable) && summary.unavailable.length) {
-                parts.push(t(userLang, 'assistant_trip.availability'));
-                parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
-              }
-              if (!(intent.askDuration || intent.askStops || intent.askIncludes || intent.askPrice || intent.askAvailability)) {
-                if (summary.departureTime) parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime }));
-                if (summary.departurePlace) parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace }));
-                if (summary.duration) parts.push(t(userLang, 'assistant_trip.duration', { duration: summary.duration }));
-                if (summary.priceCents != null) {
-                  const euros = (summary.priceCents/100).toFixed(0);
-                  parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
-                }
-                if (summary.description) parts.push(t(userLang, 'assistant_trip.description', { text: summary.description }));
-                if (summary.stops && summary.stops.length) {
-                  parts.push(t(userLang, 'assistant_trip.stops'));
-                  summary.stops.slice(0,6).forEach((s) => {
-                    const name = s.name || t(userLang, 'assistant_trip.missing');
-                    const desc = s.description ? ` — ${s.description}` : '';
-                    parts.push(`• ${name}${desc}`);
-                  });
-                }
-                parts.push(t(userLang, 'assistant_trip.includes'));
-                if (Array.isArray(summary.includes) && summary.includes.length) {
-                  summary.includes.forEach(v => parts.push(`• ${v}`));
-                } else {
-                  parts.push(`• ${t(userLang, 'assistant_trip.missing')}`);
-                }
-                if (Array.isArray(summary.unavailable) && summary.unavailable.length) {
-                  parts.push(t(userLang, 'assistant_trip.availability'));
-                  parts.push(t(userLang, 'assistant_trip.unavailable_on', { dates: summary.unavailable.slice(0,6).join(', ') }));
-                }
-              }
-              txt = parts.join('\n');
-              if (usedTripId) sessionContext.lastTripId = usedTripId;
-            }
-          }
-        }
-      } catch(_) {}
-      try { res.setHeader('X-Assistant-Context', JSON.stringify(sessionContext)); } catch(_){ }
-      try {
-        const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
-        const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
-        const place = await resolvePlaceForMessage(message, userLang);
-        const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
-        const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
-        if (liveData && (includeWeather || includeNews)) {
-          let liveTxt = '';
-          if (includeWeather) {
-            const lc = await liveData.buildLiveContext({
-              place: place || 'Athens',
-              lang: userLang,
-              include: { weather: true, news: false },
-              rssUrl: null
-            });
-            if (lc && lc.text) liveTxt += lc.text;
-          }
-          if (includeNews) {
-            const headlines = await getCachedHeadlinesOrRefresh();
-            if (headlines && headlines.length) {
-              if (liveTxt) liveTxt += '\n';
-              liveTxt += `Local headlines: ${headlines.slice(0,5).join(' • ')}`;
-            }
-          }
-          if (liveTxt) txt += `\n\n${liveTxt}`;
-        }
-      } catch (_) {}
-      // Write in a couple of chunks to simulate streaming
-      const parts = txt.match(/.{1,40}/g) || [txt];
-      for (const p of parts) res.write(p);
-      res.end();
-      return;
-    }
-    const message = (req.body && req.body.message ? String(req.body.message) : '').trim();
-    const history = Array.isArray(req.body && req.body.history) ? req.body.history : [];
-    if (!message) { res.status(400).end('Missing message'); return; }
-
-    // Live enrichment
-    const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
-    const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
-    const place = await resolvePlaceForMessage(message, userLang);
-    let liveContextText = '';
-    const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
-    const includeWeather = !!(place || wantsWeather(message) || ASSISTANT_LIVE_ALWAYS);
-    if (liveData && (includeWeather || includeNews)) {
-      if (includeWeather) {
-        const lc = await liveData.buildLiveContext({
-          place: place || 'Athens',
-          lang: userLang,
-          include: { weather: true, news: false },
-          rssUrl: null
-        });
-        if (lc && lc.text) liveContextText += lc.text;
-      }
-      if (includeNews) {
-        const headlines = await getCachedHeadlinesOrRefresh();
-        if (headlines && headlines.length) {
-          if (liveContextText) liveContextText += '\n';
-          liveContextText += `Local headlines: ${headlines.slice(0,5).join(' • ')}`;
-        }
-      }
-    }
-
-    const messages = [
-      { role: 'system', content: buildAssistantSystemPrompt() },
-      { role: 'system', content: buildLiveRulesPrompt() },
-      ...(liveContextText ? [{ role: 'system', content: `Live data context (refreshed every ~5m):\n${liveContextText}` }] : []),
-      ...history.filter(m => m && m.role && m.content).map(m => ({ role: m.role, content: String(m.content) })),
-      { role: 'user', content: message }
-    ];
-
-    // Prepare streaming response
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache, no-transform');
-    res.setHeader('Connection', 'keep-alive');
-  // Include session context header early (no-op for OpenAI flow, but client can keep lastTripId)
-  try { res.setHeader('X-Assistant-Context', JSON.stringify(sessionContext)); } catch(_){ }
-
-  const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages,
-        temperature: 0.2,
-        stream: true
-      })
-    });
-
-    if (!upstream.ok || !upstream.body) {
-      const errText = await upstream.text().catch(()=> '');
-      res.status(upstream.status || 502);
-      res.end(errText || 'Upstream error');
-      return;
-    }
-
-    const reader = upstream.body.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let done = false;
-    while (!done) {
-      const { value, done: d } = await reader.read();
-      done = d;
-      if (value) {
-        const chunk = decoder.decode(value, { stream: true });
-        // OpenAI streams as SSE lines: data: {json}\n\n
-        const lines = chunk.split(/\n/).filter(Boolean);
-        for (const line of lines) {
-          const m = line.match(/^data:\s*(.*)$/);
-          const payload = m ? m[1] : null;
-          if (!payload) continue;
-          if (payload === '[DONE]') { done = true; break; }
-          try {
-            const obj = JSON.parse(payload);
-            const delta = obj && obj.choices && obj.choices[0] && obj.choices[0].delta || {};
-            const content = delta.content || '';
-            if (content) res.write(content);
-          } catch (_e) {
-            // Fallback: if not JSON, attempt to forward raw
-            res.write('');
-          }
-        }
-      }
-    }
-    res.end();
-  } catch (e) {
-    console.error('AI Assistant stream error:', e && e.stack ? e.stack : e);
-    try { res.end(); } catch(_e) {}
-  }
-});
+// Assistant routes moved to module (Phase 4)
+try {
+  const { registerAssistantRoutes } = require('./src/server/assistant/routes');
+  registerAssistantRoutes(app, {
+    express,
+    OPENAI_API_KEY,
+    tripData: (() => { try { return require('./live/tripData'); } catch(_) { return null; } })(),
+    liveData: (() => { try { return require('./live/liveData'); } catch(_) { return null; } })(),
+    wantsResetTopic,
+    parseTripIntent,
+    priceAvailabilityNote,
+    wantsWeather,
+    wantsNews,
+    wantsStrikesOrTraffic,
+    resolvePlaceForMessage,
+    buildAssistantSystemPrompt,
+    buildLiveRulesPrompt,
+    mockAssistantReply,
+    getCachedHeadlinesOrRefresh,
+    NEWS_RSS_URLS,
+    ASSISTANT_LIVE_ALWAYS,
+    t
+  });
+  console.log('assistant: routes registered');
+} catch (e) {
+  console.warn('assistant: failed to register routes', e && e.message ? e.message : e);
+}
 
 // Public live weather endpoint for quick UI/tests: /api/live/weather?place=Lefkada&lang=en
 app.get('/api/live/weather', async (req, res) => {
