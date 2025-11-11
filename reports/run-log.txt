@@ -1,0 +1,30 @@
+2025-11-11T21:27:45Z - Created/checked out branch refactor/split-files/GP-20251111
+2025-11-11T21:28:08Z - Generating reports
+find . -type f \
+  ( -path ./node_modules -o -path ./.git -o -path ./dist -o -path ./build ) -prune -o -print0 \
+  | xargs -0 -I {} sh -c "stat -f %z {} 2>/dev/null | awk -v p=\"{}\" \"{print \"\" bash \"\" p}\"" \
+  | sort -rn | head -n 100 > reports/largest-by-bytes.txt
+2025-11-11T21:31:42Z - Starting reports generation
+2025-11-11T21:31:42Z - Generating largest-by-bytes.txt
+2025-11-11T21:32:30Z - Starting reports generation
+2025-11-11T21:32:30Z - Generating largest-by-bytes.txt
+2025-11-11T21:32:31Z - Generating largest-by-lines.txt
+2025-11-11T21:32:31Z - Generating largest-by-ext.txt
+2025-11-11T21:32:31Z - Generating largest-by-bytes.csv
+2025-11-11T21:32:32Z - Generating largest-by-lines.csv
+2025-11-11T21:32:32Z - Reports generated successfully
+2025-11-11T21:32:37Z - Running npm test (pre-change)
+2025-11-11T21:32:44Z - npm test (pre-change) finished with exit code 0
+2025-11-11T21:33:09Z - Starting reports generation
+2025-11-11T21:33:09Z - Generating largest-by-bytes.txt
+2025-11-11T21:33:09Z - Generating largest-by-lines.txt
+2025-11-11T21:33:09Z - Generating largest-by-ext.txt
+2025-11-11T21:33:10Z - Generating largest-by-bytes.csv
+2025-11-11T21:33:10Z - Generating largest-by-lines.csv
+2025-11-11T21:33:10Z - Reports generated successfully
+2025-11-11T22:16:01Z - PoC split files created and HTML updated
+2025-11-11T22:16:59Z - Staged PoC CSS and HTML changes
+2025-11-11T22:17:06Z - npm test (post-PoC) finished with exit code 0
+2025-11-11T22:18:07Z - Added PoC split CSS files
+2025-11-11T22:20:30Z - Created PoC branch refactor/split-files/GP-poC from refactor/split-files/GP-20251111
+2025-11-11T22:21:11Z - Reverted PoC CSS changes from analysis branch
