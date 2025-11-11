@@ -15,7 +15,8 @@ router.use(express.urlencoded({ extended: true }));
 router.get('/', (req, res) => { res.redirect('/provider/login'); });
 router.get('/login', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'login.html')); });
 router.get('/dashboard', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'dashboard.html')); });
-router.get('/bookings', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'bookings.html')); });
+// Serve the actual bookings page (footer placeholder expected by tests)
+router.get('/bookings', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'provider-bookings.html')); });
 router.get('/payments', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'payments.html')); });
 router.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'profile.html')); });
 // Availability (HTML route)
@@ -244,6 +245,47 @@ router.get('/api/drivers', authMiddleware, async (req, res) => {
     }));
     return res.json({ ok:true, drivers: mapped });
   } catch(e){ console.error('drivers list error', e && e.message ? e.message : e); return res.status(500).json({ error:'Server error' }); }
+});
+
+// Assign a driver to a booking that belongs to this provider
+router.post('/api/assign-driver', authMiddleware, async (req, res) => {
+  const pid = req.user && (req.user.partner_id || req.user.id) || null;
+  if (!pid) return res.status(401).json({ error: 'Unauthorized' });
+  const body = req.body || {};
+  const bookingId = String(body.booking_id || body.id || '').trim();
+  const driverId = String(body.driver_id || '').trim();
+  if (!bookingId || !driverId) return res.status(400).json({ error: 'Missing booking_id or driver_id' });
+  try {
+    if (hasPostgres) {
+      const ok = await withPg(async (c) => {
+        await ensureBookingsAssignedPg(c);
+        // Validate booking belongs to provider
+        const { rows: bRows } = await c.query('SELECT id FROM bookings WHERE id=$1 AND partner_id=$2 LIMIT 1', [bookingId, pid]);
+        if (!bRows || !bRows[0]) return false;
+        // Validate driver belongs to provider and is active
+        const { rows: dRows } = await c.query('SELECT id FROM drivers WHERE id=$1 AND provider_id=$2 AND (status=$3 OR activated_at IS NOT NULL) LIMIT 1', [driverId, pid, 'active']);
+        if (!dRows || !dRows[0]) return false;
+        await c.query('UPDATE bookings SET assigned_driver_id=$1, updated_at=now() WHERE id=$2', [driverId, bookingId]);
+        return true;
+      });
+      if (!ok) return res.status(404).json({ error: 'Not found or not allowed' });
+      return res.json({ ok: true });
+    } else {
+      const db = getSqlite();
+      try {
+        ensureBookingsAssignedSqlite(db);
+        const b = db.prepare('SELECT id FROM bookings WHERE id = ? AND partner_id = ? LIMIT 1').get(bookingId, pid);
+        if (!b) return res.status(404).json({ error: 'Booking not found for this provider' });
+        const d = db.prepare("SELECT id FROM drivers WHERE id = ? AND provider_id = ? AND (status = 'active' OR activated_at IS NOT NULL) LIMIT 1").get(driverId, pid);
+        if (!d) return res.status(404).json({ error: 'Driver not found or inactive' });
+        db.prepare('UPDATE bookings SET assigned_driver_id = ?, updated_at = ? WHERE id = ?').run(driverId, new Date().toISOString(), bookingId);
+        return res.json({ ok: true });
+      } finally { db.close(); }
+    }
+  } catch (e) {
+    console.error('assign-driver error', e && e.message ? e.message : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
 });
 
 router.post('/api/drivers', authMiddleware, async (req, res) => {

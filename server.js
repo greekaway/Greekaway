@@ -59,7 +59,9 @@ if (session) {
 }
 // Bind explicitly to 0.0.0.0:3000 for LAN access
 const HOST = '0.0.0.0';
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+// In test runs (Jest), force port 3000 so tests connect regardless of .env PORT
+const IS_JEST = !!process.env.JEST_WORKER_ID;
+const PORT = ((process.env.NODE_ENV === 'test') || IS_JEST) ? 3000 : (process.env.PORT ? parseInt(process.env.PORT, 10) : 3000);
 // (removed duplicate APP_VERSION declaration)
 
 // Read Maps API key from environment. If not provided, the placeholder remains.
@@ -149,9 +151,19 @@ try {
     }
     // Ensure new pickup/suitcase/notes columns exist
     const names = new Set(info.map(i => i.name));
+    // Demo/test helpers and source tagging
+    if (!names.has('is_demo')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN is_demo INTEGER DEFAULT 0').run(); console.log('server: added is_demo'); } catch(_){} }
+    if (!names.has('source')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN source TEXT').run(); console.log('server: added source'); } catch(_){} }
     if (!names.has('pickup_location')) { try { bookingsDb.prepare("ALTER TABLE bookings ADD COLUMN pickup_location TEXT DEFAULT ''").run(); console.log('server: added pickup_location'); } catch(_){} }
     if (!names.has('pickup_lat')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_lat REAL').run(); console.log('server: added pickup_lat'); } catch(_){} }
     if (!names.has('pickup_lng')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_lng REAL').run(); console.log('server: added pickup_lng'); } catch(_){} }
+    // New semi-automatic pickup scheduling columns
+    if (!names.has('pickup_order')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_order INTEGER').run(); console.log('server: added pickup_order'); } catch(_){} }
+    if (!names.has('route_id')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN route_id TEXT').run(); console.log('server: added route_id'); } catch(_){} }
+    if (!names.has('pickup_time_estimated')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_time_estimated TEXT').run(); console.log('server: added pickup_time_estimated'); } catch(_){} }
+    if (!names.has('pickup_window_start')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_window_start TEXT').run(); console.log('server: added pickup_window_start'); } catch(_){} }
+    if (!names.has('pickup_window_end')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_window_end TEXT').run(); console.log('server: added pickup_window_end'); } catch(_){} }
+    if (!names.has('pickup_address')) { try { bookingsDb.prepare('ALTER TABLE bookings ADD COLUMN pickup_address TEXT').run(); console.log('server: added pickup_address'); } catch(_){} }
     if (!names.has('suitcases_json')) { try { bookingsDb.prepare("ALTER TABLE bookings ADD COLUMN suitcases_json TEXT DEFAULT '[]'").run(); console.log('server: added suitcases_json'); } catch(_){} }
     if (!names.has('special_requests')) { try { bookingsDb.prepare("ALTER TABLE bookings ADD COLUMN special_requests TEXT DEFAULT ''").run(); console.log('server: added special_requests'); } catch(_){} }
   } catch (e) { /* ignore migration errors */ }
@@ -228,6 +240,30 @@ try {
 } catch (e) {
   console.warn('server: bookings DB not available', e && e.message ? e.message : e);
   bookingsDb = null;
+}
+
+// Ensure pickup_routes table exists (stores route metadata)
+try {
+  const Database = require('better-sqlite3');
+  const DB_PATH = path.join(__dirname, 'data', 'db.sqlite3');
+  const db = new Database(DB_PATH);
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS pickup_routes (
+      id TEXT PRIMARY KEY,
+      title TEXT,
+      departure_time TEXT,
+      buffer_minutes INTEGER,
+      locked INTEGER DEFAULT 0,
+      test_mode INTEGER DEFAULT 0,
+      created_at TEXT,
+      updated_at TEXT
+    )`);
+  } finally {
+    db.close();
+  }
+  console.log('server: pickup_routes table ready');
+} catch (e) {
+  console.warn('server: pickup_routes table not available', e && e.message ? e.message : e);
 }
 
 // Load assistant knowledge base (JSON) to enrich the system prompt, with hot-reload
@@ -1704,7 +1740,7 @@ app.post('/api/bookings', express.json(), (req, res) => {
         }
       }
     } catch (e) { console.warn('Capacity check failed', e && e.message ? e.message : e); }
-    const id = crypto.randomUUID();
+  const id = crypto.randomUUID();
     const now = new Date().toISOString();
     if (bookingsDb) {
       // Try to persist partner_id on booking for downstream provider features
@@ -1722,6 +1758,14 @@ app.post('/api/bookings', express.json(), (req, res) => {
       const suitcases_raw = (body.suitcases ?? metaObj.suitcases ?? metaObj.luggage);
       const suitcases_json = Array.isArray(suitcases_raw) ? JSON.stringify(suitcases_raw) : (suitcases_raw && typeof suitcases_raw === 'object' ? JSON.stringify(suitcases_raw) : JSON.stringify(suitcases_raw == null || suitcases_raw === '' ? [] : [String(suitcases_raw)]));
       const special_requests = pickStr(body.special_requests, body.notes, metaObj.special_requests, metaObj.notes);
+      // Demo/source tagging
+      const sourceVal = (typeof body.source === 'string' && body.source.trim()) ? String(body.source).trim() : (metaObj.source && String(metaObj.source).trim()) || null;
+      const looksDemo = (() => {
+        const m = (s) => (s||'').toString().toLowerCase();
+        const hasDemo = (s) => /demo|test|example\.com/.test(m(s));
+        return !!(hasDemo(user_email) || hasDemo(user_name) || hasDemo(sourceVal) || (metaObj && (metaObj.is_demo === true || metaObj.demo === true)));
+      })();
+      const finalSource = sourceVal || (looksDemo ? 'demo' : null);
       try {
         console.log('bookings: debug body', { b_pickup_location: body.pickup_location, b_pickup_lat: body.pickup_lat, b_pickup_lng: body.pickup_lng, b_suitcases: body.suitcases, b_special_requests: body.special_requests, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests });
       } catch(_){ }
@@ -1764,6 +1808,11 @@ app.post('/api/bookings', express.json(), (req, res) => {
         bookingsDb.prepare('UPDATE bookings SET pickup_location = ?, pickup_lat = ?, pickup_lng = ?, suitcases_json = ?, special_requests = ? WHERE id = ?')
           .run(pickup_location || '', pickup_lat, pickup_lng, suitcases_json || '[]', special_requests || '', id);
       } catch (e) { console.warn('bookings: post-insert update for structured fields failed id=' + id + ' err=' + (e && e.message ? e.message : e)); }
+      // Set demo/source flags when columns exist (best-effort)
+      try {
+        const setDemo = bookingsDb.prepare('UPDATE bookings SET is_demo = COALESCE(is_demo, ?), source = COALESCE(?, source) WHERE id = ?');
+        setDemo.run(looksDemo ? 1 : 0, finalSource, id);
+      } catch(_){ /* older schemas may not have is_demo/source */ }
       return res.json({ bookingId: id, status: 'pending' });
     }
     return res.status(500).json({ error: 'Bookings DB not available' });
@@ -2028,6 +2077,14 @@ try {
   console.log('driver: routes mounted at /driver');
 } catch (e) {
   console.warn('driver: failed to mount', e && e.message ? e.message : e);
+}
+
+// Semi-automatic pickup scheduling routes
+try {
+  app.use('/', require('./routes/pickup-route'));
+  console.log('pickup-route: routes mounted at / (admin/route/* and driver/route/*)');
+} catch (e) {
+  console.warn('pickup-route: failed to mount', e && e.message ? e.message : e);
 }
 
 // Start pickup notifications (T-24h freeze + notify)
@@ -2692,6 +2749,32 @@ app.post('/api/admin/seed', express.json({ limit: '5mb' }), async (req, res) => 
     return res.json({ ok: true });
   } catch (e) {
     console.error('admin/seed error', e && e.stack ? e.stack : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /api/admin/cleanup-demo?dry_run=1 or ?confirm=1
+app.delete('/api/admin/cleanup-demo', (req, res) => {
+  if (!checkAdminAuth(req)) { return res.status(403).json({ error: 'Forbidden' }); }
+  try {
+    const dry = String(req.query.dry_run || '').trim() !== '' || String(req.query.confirm || '') === '';
+    const Database = require('better-sqlite3');
+    const db = bookingsDb || new Database(path.join(__dirname, 'data', 'db.sqlite3'));
+    const where = `COALESCE("__test_seed",0)=1 OR LOWER(COALESCE(user_email,'')) LIKE '%@example.com%' OR LOWER(COALESCE(user_email,'')) LIKE '%demo%' OR LOWER(COALESCE(user_name,'')) LIKE '%demo%' OR LOWER(COALESCE(seed_source,'')) LIKE '%demo%' OR COALESCE(is_demo,0)=1`;
+    const cntB = db.prepare(`SELECT COUNT(1) AS c FROM bookings WHERE ${where}`).get().c || 0;
+    const cntD = db.prepare(`SELECT COUNT(1) AS c FROM dispatch_log WHERE booking_id IN (SELECT id FROM bookings WHERE ${where})`).get().c || 0;
+    if (dry) {
+      if (!bookingsDb) db.close();
+      return res.json({ ok: true, dry_run: true, bookings: cntB, dispatch_log: cntD });
+    }
+    const delDisp = db.prepare(`DELETE FROM dispatch_log WHERE booking_id IN (SELECT id FROM bookings WHERE ${where})`);
+    const delBk = db.prepare(`DELETE FROM bookings WHERE ${where}`);
+    const tx = db.transaction(() => { delDisp.run(); delBk.run(); });
+    tx();
+    if (!bookingsDb) db.close();
+    return res.json({ ok: true, deleted: { bookings: cntB, dispatch_log: cntD } });
+  } catch (e) {
+    console.error('cleanup-demo error', e && e.stack ? e.stack : e);
     return res.status(500).json({ error: 'Server error' });
   }
 });

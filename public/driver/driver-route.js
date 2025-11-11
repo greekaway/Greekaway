@@ -12,24 +12,58 @@
     const header = document.getElementById('routeHeader');
     const stopsEl = document.getElementById('routeStops');
     const navBtn = document.querySelector('.btn-navigate');
+    const planner = document.getElementById('pickupPlanner');
+    const picker = document.getElementById('firstPickupSelect');
+    const applyBtn = document.getElementById('applyPickupPlan');
+    const statusEl = document.getElementById('pickupPlanStatus');
+    // Clear any previous status on (re)load so messages don’t stick around
+    if (statusEl) statusEl.textContent = '';
     if (!bid){ header.innerHTML = '<div class="card">Χωρίς αναγνωριστικό κράτησης.</div>'; return; }
     try {
       const r = await DriverAPI.authed('/api/bookings/' + encodeURIComponent(bid));
       const b = r && r.booking;
       if (!b){ header.innerHTML = '<div class="card">Δεν βρέθηκε η διαδρομή.</div>'; return; }
-      header.innerHTML = `<div><b>${b.trip_title || b.id}</b></div><div class="meta">${b.date||''} • ${b.pickup_time||''}</div>`;
+  const calcLabel = (b.calc && b.calc.method) ? (b.calc.method === 'google' ? 'Υπολογισμός: Google' : 'Υπολογισμός: Fallback') : '';
+  const anchorLabel = (b.calc && b.calc.anchor_hhmm) ? ` • Άφιξη πρώτης στάσης: ${b.calc.anchor_hhmm}` : '';
+  header.innerHTML = `<div><b>${b.trip_title || b.id}</b></div><div class="meta">${b.date||''} • ${b.pickup_time||''}${anchorLabel}${calcLabel ? ' • '+calcLabel : ''}</div>`;
       if (!b.stops || !b.stops.length){ stopsEl.innerHTML = '<div class="card">Δεν υπάρχουν στάσεις</div>'; return; }
       stopsEl.innerHTML = b.stops.map((s,i)=>{
-        const eta = s.eta_local || s.time || '--:--';
+        const isPickup = String((s.type||'').toLowerCase()) === 'pickup' || /παραλαβή/i.test(String(s.name||''));
+        const showEta = isPickup || !!s.isFirstTourStop;
+        const eta = showEta ? (s.eta_local || s.time || '--:--') : '';
         const dist = s.distance_text ? ` • ${s.distance_text}` : '';
+        const metaLine = showEta ? `🚐 ${eta} • ${s.address||'—'}${dist}` : `${s.address||'—'}${dist}`;
         return `<div class="card stop">
           <div>
             <div><b>Στάση ${i+1}</b> — ${s.name||'-'}</div>
-            <div class="meta">🚐 ${eta} • ${s.address||'—'}${dist}</div>
+            <div class="meta">${metaLine}</div>
           </div>
           <div><a class="btn" href="${mapsLink(s)}" target="_blank" rel="noopener noreferrer">Πλοήγηση</a></div>
         </div>`;
       }).join('');
+
+      // Build pickup planner options: only pickup stops
+      const pickups = (b.stops||[]).map((s,idx)=>({s,idx,orig: (typeof s.original_index==='number'? s.original_index : idx)})).filter(x=>{
+        const t=String((x.s.type||'').toLowerCase());
+        return t==='pickup' || /παραλαβή/i.test(String(x.s.name||''));
+      });
+      if (pickups.length){
+        planner.style.display = '';
+        picker.innerHTML = pickups.map((p,i)=>`<option value="${p.orig}">${p.s.name || ('Παραλαβή '+(i+1))} — ${p.s.address||''}</option>`).join('');
+        applyBtn.onclick = async () => {
+          applyBtn.disabled = true; statusEl.textContent = 'Αποθήκευση…';
+          try {
+            await DriverAPI.authed('/api/plan-pickups', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ booking_id: bid, first_pickup_original_index: Number(picker.value) }) });
+            statusEl.textContent = 'Το σχέδιο αποθηκεύτηκε. Ενημέρωση…';
+            setTimeout(load, 300);
+            // Auto-hide the success message after a short delay
+            setTimeout(() => { if (statusEl && statusEl.textContent) statusEl.textContent = ''; }, 2500);
+          } catch(e){ statusEl.textContent = 'Σφάλμα αποθήκευσης'; }
+          finally { applyBtn.disabled = false; }
+        };
+      } else {
+        planner.style.display = 'none';
+      }
 
       // Multi-stop Google Maps navigation (driver global button)
       // Builds a single route with all stops (origin -> waypoints -> destination)

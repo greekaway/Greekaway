@@ -11,7 +11,7 @@
     "test:admin-smoke": "node tools/admin_functional_smoke.js",
     "build:logo-webp": "node tools/convert_logo_to_webp.js",
     "migrate:dispatch": "node tools/run_dispatch_migration.js",
-    "seed:suppliers-demo": "node tools/seed_suppliers_demo.js"
+    
   },
   "repository": {
     "type": "git",

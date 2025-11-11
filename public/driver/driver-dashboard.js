@@ -23,7 +23,7 @@
       if (!bookings.length){ list.innerHTML = '<div class="card">Δεν υπάρχουν αναθέσεις ακόμη.</div>'; return; }
       list.innerHTML = bookings.map(b => {
         const actions = computeNextButtons(b.status);
-        const btns = actions.map(a => `<button class="btn act" data-action="${a}" data-id="${b.id}">${a==='accepted'?'Αποδοχή':a==='picked'?'Παραλαβή':'Ολοκλήρωση'}</button>`).join('');
+  const btns = actions.map(a => `<button class="btn act" data-action="${a}" data-id="${b.id}" data-route="${b.route_id||''}">${a==='accepted'?'Αποδοχή':a==='picked'?'Παραλαβή':'Ολοκλήρωση'}</button>`).join('');
         const statusLabel = (b.status||'pending');
         return `<div class="assignment-card booking ${statusClass(b.status)}" data-id="${b.id}">
           <div class="assignment-header">
@@ -43,10 +43,16 @@
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         const status = btn.getAttribute('data-action');
+        const routeId = btn.getAttribute('data-route');
         const card = btn.closest('.booking');
         btn.disabled = true; btn.textContent = '…';
         try {
-          await api.authed('/api/update-status', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ booking_id: id, status }) });
+          if (routeId && (status==='picked' || status==='completed')) {
+            // Use route-specific endpoint to also stamp picked_at/completed_at
+            await api.authed(`/route/${encodeURIComponent(routeId)}/mark-picked`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ booking_id: id, status }) });
+          } else {
+            await api.authed('/api/update-status', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ booking_id: id, status }) });
+          }
           // Optimistic UI: update card before reload
           if (card){
             card.classList.remove('state-accepted','state-picked','state-completed');
@@ -64,7 +70,7 @@
               actions.forEach(a => {
                 const nb = document.createElement('button');
                 nb.className = 'btn act';
-                nb.dataset.action = a; nb.dataset.id = id;
+                nb.dataset.action = a; nb.dataset.id = id; nb.dataset.route = routeId || '';
                 nb.textContent = a==='accepted'?'Αποδοχή':a==='picked'?'Παραλαβή':'Ολοκλήρωση';
                 actionsWrap.insertBefore(nb, actionsWrap.querySelector('.view-route'));
                 attachAction(nb);
@@ -87,6 +93,6 @@
       });
     });
   }
-  window.DriverDashboard = { init(){ DriverAuth.requireSync(); if (DriverCommon) DriverCommon.footerNav(); load(); try{ if (!window.__driverDashInterval){ window.__driverDashInterval = setInterval(load, 30000); } }catch(_){} }, load };
+  window.DriverDashboard = { init(){ DriverAuth.requireSync(); if (DriverCommon) DriverCommon.footerNav(); load(); try{ if (!window.__driverDashInterval){ window.__driverDashInterval = setInterval(load, 15000); } }catch(_){} }, load };
 })();
 // Auto-refresh handled from init() via setInterval(load, 30000)

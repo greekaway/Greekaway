@@ -2,6 +2,12 @@ const path = require('path');
 let nodemailer = null; try { nodemailer = require('nodemailer'); } catch(_) {}
 
 const ENABLED = /^1|true$/i.test(String(process.env.PICKUP_NOTIFY_ENABLED || '1').trim());
+// Allow adjusting freeze window via env for testing (default 1h for faster dev)
+const FREEZE_HOURS = (() => {
+  const s = String(process.env.PICKUP_NOTIFY_FREEZE_HOURS || '1').trim();
+  const n = parseInt(s, 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+})();
 const GOOGLE_KEY = (process.env.GOOGLE_MAPS_API_KEY || '').toString().trim();
 
 function hasPostgres(){ return !!process.env.DATABASE_URL; }
@@ -76,8 +82,8 @@ function shouldFreeze(row){
   const timeStr = (meta.pickup_time||meta.time||'07:00');
   const dt = new Date(`${dateStr}T${timeStr}:00`);
   const diffMs = dt.getTime() - Date.now();
-  const targetMs = 24*60*60*1000; // 24h
-  return diffMs <= targetMs && diffMs > -60*60*1000; // freeze within [-1h,+24h]
+  const targetMs = FREEZE_HOURS*60*60*1000; // e.g. 1h for tests
+  return diffMs <= targetMs && diffMs > -60*60*1000; // freeze within [-1h, +freeze]
 }
 
 async function persistMeta(rowId, meta){

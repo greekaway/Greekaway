@@ -83,7 +83,7 @@
       const drRes = await ProviderAPI.authed('/api/drivers');
       drivers = (drRes && drRes.drivers || []).filter(d => d.status === 'active');
     } catch(_){ drivers = []; }
-    try {
+    async function renderOnce(){
       const r = await ProviderAPI.authed('/api/bookings');
       const bookings = (r && r.bookings) || [];
       container.innerHTML = bookings.map(b => `
@@ -108,6 +108,9 @@
           </div>
           
         </div>`).join('');
+    }
+    try {
+      await renderOnce();
       // Filters
       const bar = document.getElementById('filters');
       if (bar) {
@@ -138,7 +141,7 @@
         if (action === 'view'){ openDetails(id); return; }
         try {
           await ProviderAPI.authed(`/api/bookings/${id}/action`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action }) });
-          btn.textContent = 'OK'; setTimeout(() => location.reload(), 250);
+          btn.textContent = 'OK'; setTimeout(() => renderOnce(), 250);
         } catch(_) { alert('Αποτυχία ενέργειας'); }
       });
 
@@ -158,6 +161,8 @@
     } catch (e) {
       container.innerHTML = `<div class="card">Σφάλμα φόρτωσης</div>`;
     }
+    // Auto-refresh every 15s (lightweight: re-fetch and re-render, preserve event handlers)
+    try { if (!window.__providerBookingsInterval){ window.__providerBookingsInterval = setInterval(() => { renderOnce().catch(()=>{}); }, 15000); } } catch(_){ }
   }
 
   window.ProviderBookings = { init };

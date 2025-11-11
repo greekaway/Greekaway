@@ -22,16 +22,11 @@ Mobile-first UI and API for partners/providers to view and act on assigned booki
 - Mail (only if `DISPATCH_ENABLED=true`):
   - `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS`, `MAIL_FROM`
 
-## Seeding for local dev
+## Local data note
 
-A test provider and 3 confirmed bookings can be seeded:
+Legacy demo/test seeding scripts have been removed from the repository to keep production code clean. For local testing, create bookings through the normal API flows or add minimal fixtures directly to your local SQLite using scripts under `scripts/` (for example, `create_specified_route_booking.js`).
 
-- Provider: id `999`, email `driver@example.com`, password `TestPass123`
-- Bookings: Santorini Tour, Delphi Day Trip, Meteora Adventure (next 3 days)
-
-Run:
-
-- `node tools/seed_provider_test_bookings.js`
+If you previously relied on `tools/seed_provider_test_bookings.js`, set up equivalent data via a short one-off script or use the Admin UI to create sample bookings.
 
 ## Admin add-on
 

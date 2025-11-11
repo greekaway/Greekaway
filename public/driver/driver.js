@@ -68,7 +68,7 @@ window.DriverUI = {
           return;
         }
         list.innerHTML = bookings.map(b => `
-          <div class="card booking" data-id="${b.id}">
+          <div class="card booking" data-id="${b.id}" data-route="${b.route_id||''}">
             <div style="display:flex; justify-content: space-between; gap: 8px; align-items: center;">
               <div>
                 <div><b>${b.trip_title || b.booking_id}</b></div>
@@ -91,10 +91,15 @@ window.DriverUI = {
           buttons.forEach(btn => {
             btn.addEventListener('click', async () => {
               const status = btn.getAttribute('data-action');
+              const routeId = el.getAttribute('data-route');
               btn.disabled = true;
               btn.textContent = '…';
               try {
-                await DriverAPI.authed('/api/update-status', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ booking_id: id, status }) });
+                if (routeId && (status==='picked' || status==='completed')) {
+                  await DriverAPI.authed(`/route/${encodeURIComponent(routeId)}/mark-picked`, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ booking_id: id, status }) });
+                } else {
+                  await DriverAPI.authed('/api/update-status', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ booking_id: id, status }) });
+                }
                 await load(); // refresh immediately after change
               } catch (_) {
                 btn.disabled = false; btn.textContent = btn.getAttribute('data-action') === 'accepted' ? 'Αποδοχή' : (btn.getAttribute('data-action') === 'picked' ? 'Παραλαβή' : 'Ολοκλήρωση');
