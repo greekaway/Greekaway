@@ -504,9 +504,16 @@ try {
 } catch (e) { console.warn('bookings: failed to register public routes', e && e.message ? e.message : e); }
 try {
   const { registerAdminBookings } = require('./src/server/routes/adminBookings');
-  registerAdminBookings(app, { bookingsDb, checkAdminAuth: (req) => checkAdminAuth(req) });
+  registerAdminBookings(app, { bookingsDb, checkAdminAuth: (req) => checkAdminAuth(req), stripe });
   console.log('bookings: admin routes registered');
 } catch (e) { console.warn('bookings: failed to register admin routes', e && e.message ? e.message : e); }
+
+// Phase 7: Admin payments routes
+try {
+  const { registerAdminPayments } = require('./src/server/routes/adminPayments');
+  registerAdminPayments(app, { checkAdminAuth: (r)=>checkAdminAuth(r), stripe });
+  console.log('payments: admin routes registered');
+} catch (e) { console.warn('payments: failed to register admin routes', e && e.message ? e.message : e); }
 
 // Re-attach webhook routes (payment intents succeeded/failed + test endpoint)
 try {
@@ -588,46 +595,16 @@ app.get('/api/bookings', (req, res) => {
   }
 });
 
-app.get('/partner-stripe-onboarding/callback', async (req, res) => {
-  try {
-    if (!stripe) {
-      res.status(500).send('<!doctype html><html><body><h2>Stripe onboarding failed, please retry</h2><p>Stripe is not configured on the server.</p></body></html>');
-      return;
-    }
-    const accountId = String((req.query && req.query.account) || '').trim();
-    if (!accountId) {
-      res.status(400).send('<!doctype html><html><body><h2>Stripe onboarding failed, please retry</h2><p>Missing account id.</p></body></html>');
-      return;
-    }
-    // Best-effort verification of account to determine success
-    try { await stripe.accounts.retrieve(accountId); } catch (e) {
-      const msg = (e && e.message) ? e.message : 'Failed to verify account';
-      res.status(500).send(`<!doctype html><html><body><h2>Stripe onboarding failed, please retry</h2><p>${msg}</p></body></html>`);
-      return;
-    }
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.status(200).send('<!doctype html><html><body><h2>Stripe connection successful</h2><p>You can close this tab and return to the admin.</p></body></html>');
-  } catch (e) {
-    const msg = (e && e.message) ? e.message : 'Unexpected error';
-    res.status(500).send(`<!doctype html><html><body><h2>Stripe onboarding failed, please retry</h2><p>${msg}</p></body></html>`);
-  }
-});
 
-// If the browser hits the JSON callback, redirect to the friendly HTML callback
-app.get('/api/partners/connect-callback', (req, res, next) => {
-  try {
-    const accept = String(req.headers && req.headers.accept || '');
-    if (/text\/html/i.test(accept)) {
-      const qsIndex = req.url.indexOf('?');
-      const qs = qsIndex >= 0 ? req.url.slice(qsIndex) : '';
-      return res.redirect('/partner-stripe-onboarding/callback' + qs);
-    }
-  } catch (_) {}
-  next();
-});
-
-// Partners module (Stripe Connect + manual onboarding + legal pages)
-// Keep server.js light: just mount the router
+// Partner onboarding callbacks (Stripe connect) extracted
+try {
+  const { registerPartnerOnboarding } = require('./src/server/routes/partnerOnboarding');
+  registerPartnerOnboarding(app, { stripe });
+  console.log('partnerOnboarding: registered');
+} catch (err) {
+  console.warn('partnerOnboarding: failed', err && err.message ? err.message : err);
+}
+// Partners router (existing legacy routes)
 try {
   app.use('/api/partners', require('./routes/partners'));
   console.log('partners: routes mounted at /api/partners');
@@ -643,7 +620,7 @@ try {
   console.warn('admin-suppliers: failed to mount', err && err.message ? err.message : err);
 }
 
-// Manual payments (demo) — lists manual partner deposits and allows marking as paid
+// Manual payments (demo) router
 try {
   app.use('/api/manual-payments', require('./routes/manual-payments'));
   console.log('manual-payments: routes mounted at /api/manual-payments');
@@ -706,39 +683,7 @@ app.get("/api/trips", (req, res) => {
   });
 });
 
-// Admin payments endpoint (protected by basic auth)
-// Normalize admin creds: trim and strip surrounding quotes to avoid dotenv/quoting pitfalls
-let ADMIN_USER = process.env.ADMIN_USER || null;
-let ADMIN_PASS = process.env.ADMIN_PASS || null;
-if (typeof ADMIN_USER === 'string') ADMIN_USER = ADMIN_USER.trim().replace(/^['"]|['"]$/g, '');
-if (typeof ADMIN_PASS === 'string') ADMIN_PASS = ADMIN_PASS.trim().replace(/^['"]|['"]$/g, '');
-function getCookies(req){
-  try {
-    const h = req.headers.cookie || '';
-    if (!h) return {};
-    return h.split(';').reduce((acc, part) => {
-      const i = part.indexOf('=');
-      if (i === -1) return acc;
-      const k = part.slice(0,i).trim();
-      const v = decodeURIComponent(part.slice(i+1).trim());
-      acc[k] = v; return acc;
-    }, {});
-  } catch(_) { return {}; }
-}
-function hasAdminSession(req){
-  try { if (req && req.session && req.session.admin === true) return true; } catch(_){ }
-  const c = getCookies(req);
-  return c.adminSession === 'true' || c.adminSession === '1' || c.adminSession === 'yes';
-}
-function checkAdminAuth(req) {
-  if (hasAdminSession(req)) return true;
-  if (!ADMIN_USER || !ADMIN_PASS) return false;
-  const auth = req.headers.authorization || '';
-  if (!auth.startsWith('Basic ')) return false;
-  const creds = Buffer.from(auth.split(' ')[1] || '', 'base64').toString('utf8');
-  const [user, pass] = creds.split(':');
-  return user === ADMIN_USER && pass === ADMIN_PASS;
-}
+// (admin auth helpers remain earlier in file; payments endpoints now extracted)
 
 // Simple admin login/logout
 app.get('/admin-login', (req, res) => {
@@ -796,50 +741,6 @@ app.get('/admin-logout', (req, res) => {
   } catch (e) { return res.status(500).send('Server error'); }
 });
 
-app.get('/admin/payments', async (req, res) => {
-  if (!checkAdminAuth(req)) {
-    return res.status(403).send('Forbidden');
-  }
-  // Try Postgres/SQLite/JSON via the same logic as webhook.js
-  try {
-    // support pagination via query params
-    const limit = Math.min(10000, Math.abs(parseInt(req.query.limit || '200', 10) || 200));
-    const offset = Math.max(0, Math.abs(parseInt(req.query.offset || '0', 10) || 0));
-    // prefer Postgres if configured
-    const DATABASE_URL = process.env.DATABASE_URL || null;
-    if (DATABASE_URL) {
-      const { Client } = require('pg');
-      const client = new Client({ connectionString: DATABASE_URL });
-      await client.connect();
-      const { rows } = await client.query('SELECT id,status,event_id AS "eventId",amount,currency,timestamp FROM payments ORDER BY timestamp DESC LIMIT $1 OFFSET $2', [limit, offset]);
-      await client.end();
-      return res.json(rows);
-    }
-
-    // Check SQLite
-    try {
-      const Database = require('better-sqlite3');
-      const db = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
-      const rows = db.prepare('SELECT id,status,event_id AS eventId,amount,currency,timestamp FROM payments ORDER BY timestamp DESC LIMIT ? OFFSET ?').all(limit, offset);
-      return res.json(rows);
-    } catch (e) {
-      // fallthrough to JSON
-    }
-
-    // JSON fallback
-    const paymentsPath = path.join(__dirname, 'payments.json');
-    if (!fs.existsSync(paymentsPath)) return res.json([]);
-    const raw = fs.readFileSync(paymentsPath, 'utf8');
-    const all = raw ? JSON.parse(raw) : {};
-    // return as array sorted by timestamp desc and apply pagination
-    const arr = Object.keys(all).map(k => ({ id: k, ...all[k] }));
-    arr.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
-    return res.json(arr.slice(offset, offset + limit));
-  } catch (err) {
-    console.error('Admin payments error:', err && err.stack ? err.stack : err);
-    return res.status(500).send('Server error');
-  }
-});
 
 // Admin bookings list (JSON) - protected by same basic auth
 app.get('/admin/bookings', (req, res) => {
@@ -900,175 +801,7 @@ app.get('/admin/bookings', (req, res) => {
 
 
 
-// Admin bookings CSV export
-// (original /admin/bookings.csv handler removed - now in module)
-
-
-// Admin action: cancel booking (sets status to 'canceled')
-app.post('/admin/bookings/:id/cancel', express.json(), (req, res) => {
-  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
-  try {
-    const id = req.params.id;
-    if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
-    const now = new Date().toISOString();
-    const stmt = bookingsDb.prepare('UPDATE bookings SET status = ?, updated_at = ? WHERE id = ?');
-    stmt.run('canceled', now, id);
-    return res.json({ ok: true });
-  } catch (e) { console.error('Cancel booking error', e); return res.status(500).json({ error: 'Server error' }); }
-});
-
-// Admin action: refund booking (attempt Stripe refund then mark refunded)
-app.post('/admin/bookings/:id/refund', express.json(), async (req, res) => {
-  if (!checkAdminAuth(req)) { return res.status(403).send('Forbidden'); }
-  try {
-    const id = req.params.id;
-    if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
-    const row = bookingsDb.prepare('SELECT * FROM bookings WHERE id = ?').get(id);
-    if (!row) return res.status(404).json({ error: 'Not found' });
-    const pi = row.payment_intent_id;
-    if (pi && stripe) {
-      try {
-        // fetch PaymentIntent to find latest charge
-        const paymentIntent = await stripe.paymentIntents.retrieve(pi);
-        const latestCharge = paymentIntent && paymentIntent.latest_charge ? paymentIntent.latest_charge : (paymentIntent.charges && paymentIntent.charges.data && paymentIntent.charges.data[0] && paymentIntent.charges.data[0].id);
-        if (latestCharge) {
-          await stripe.refunds.create({ charge: latestCharge });
-        }
-      } catch (e) {
-        console.warn('Stripe refund failed (continuing):', e && e.message ? e.message : e);
-      }
-    }
-    const now = new Date().toISOString();
-    bookingsDb.prepare('UPDATE bookings SET status = ?, updated_at = ? WHERE id = ?').run('refunded', now, id);
-    return res.json({ ok: true });
-  } catch (e) { console.error('Refund booking error', e); return res.status(500).json({ error: 'Server error' }); }
-});
-
-// Serve the Admin single-page at /admin (so users can visit /admin)
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
-// Server-side CSV export of payments with optional filters via query params.
-app.get('/admin/payments.csv', async (req, res) => {
-  if (!checkAdminAuth(req)) {
-    return res.status(403).send('Forbidden');
-  }
-  try {
-    const { status, from, to, min, max, limit } = req.query || {};
-
-    // Gather rows (Postgres -> SQLite -> JSON fallback)
-    let rows = [];
-    const DATABASE_URL = process.env.DATABASE_URL || null;
-    if (DATABASE_URL) {
-      try {
-        const { Client } = require('pg');
-        const client = new Client({ connectionString: DATABASE_URL });
-        await client.connect();
-        // Fetch with a reasonable limit to avoid accidental huge downloads
-        const lim = parseInt(limit, 10) || 10000;
-        const { rows: pgrows } = await client.query('SELECT id,status,event_id AS "eventId",amount,currency,timestamp,metadata FROM payments ORDER BY timestamp DESC LIMIT $1', [lim]);
-        rows = pgrows;
-        await client.end();
-      } catch (e) {
-        console.warn('Postgres read failed, falling back:', e && e.message ? e.message : e);
-      }
-    }
-
-    if (rows.length === 0) {
-      try {
-        const Database = require('better-sqlite3');
-        const db = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
-        rows = db.prepare('SELECT id,status,event_id AS eventId,amount,currency,timestamp,metadata FROM payments ORDER BY timestamp DESC').all();
-      } catch (e) {
-        // ignore and fallthrough to JSON
-      }
-    }
-
-    if (rows.length === 0) {
-      const paymentsPath = path.join(__dirname, 'payments.json');
-      if (fs.existsSync(paymentsPath)) {
-        const raw = fs.readFileSync(paymentsPath, 'utf8');
-        const all = raw ? JSON.parse(raw) : {};
-        rows = Object.keys(all).map(k => ({ id: k, ...all[k] }));
-      }
-    }
-
-    // Apply filters server-side (same logic as client)
-    const filtered = (rows || []).filter(p => {
-      try {
-        if (status && String(p.status) !== status) return false;
-        if (min) {
-          const m = parseInt(min,10);
-          if (Number(p.amount) < m) return false;
-        }
-        if (max) {
-          const M = parseInt(max,10);
-          if (Number(p.amount) > M) return false;
-        }
-        if (from) {
-          const fromTs = new Date(from + 'T00:00:00Z').getTime();
-          const pt = p.timestamp ? new Date(p.timestamp).getTime() : NaN;
-          if (isFinite(pt) && pt < fromTs) return false;
-        }
-        if (to) {
-          const toTs = new Date(to + 'T23:59:59Z').getTime();
-          const pt = p.timestamp ? new Date(p.timestamp).getTime() : NaN;
-          if (isFinite(pt) && pt > toTs) return false;
-        }
-        return true;
-      } catch (e) { return false; }
-    });
-
-    // Build CSV headers as union of keys
-    const keys = Array.from(new Set(filtered.flatMap(obj => Object.keys(obj || {}))));
-    const escape = (val) => {
-      if (val === null || val === undefined) return '';
-      if (typeof val === 'object') val = JSON.stringify(val);
-      return '"' + String(val).replace(/"/g, '""') + '"';
-    };
-
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    const ts = new Date().toISOString().replace(/[:.]/g,'').replace(/T/,'_').replace(/Z/,'');
-    res.setHeader('Content-Disposition', `attachment; filename="payments_${ts}.csv"`);
-
-    // Stream CSV
-    res.write(keys.join(',') + '\n');
-    for (const row of filtered) {
-      const vals = keys.map(k => escape(row[k]));
-      res.write(vals.join(',') + '\n');
-    }
-    res.end();
-  } catch (err) {
-    console.error('CSV export error', err && err.stack ? err.stack : err);
-    return res.status(500).send('Server error');
-  }
-});
-
-// 3️⃣ Όταν ο χρήστης πάει στο "/", να του δείχνει το index.html
-app.get("/", (req, res) => {
-  const filePath = path.join(__dirname, 'public', 'index.html');
-  fs.readFile(filePath, 'utf8', (err, html) => {
-    if (err) return res.status(500).send('Error reading index.html');
-    if (IS_DEV) {
-      try {
-        const t = Date.now();
-        let out = html.replace(/(\?v=)\d+/g, `$1${t}`);
-        out = out.replace(/(src=\"\/(?:js)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
-        out = out.replace(/(href=\"\/(?:css)\/[^\"?#]+)(\")/g, (m, p1, p2) => p1.includes('?') ? m : `${p1}?dev=${t}${p2}`);
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-store');
-        return res.send(out);
-      } catch (e) {
-        // fallback just disable cache
-        res.setHeader('Cache-Control', 'no-store');
-        return res.send(html);
-      }
-    }
-    res.setHeader('Cache-Control', 'no-cache');
-    return res.send(html);
-  });
-});
+// (admin bookings actions & CSV now provided by adminBookings module)
 
 // Health/readiness endpoint for uptime checks
 app.get('/health', (req, res) => {

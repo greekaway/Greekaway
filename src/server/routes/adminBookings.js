@@ -2,7 +2,7 @@
 // Phase 5: Extract admin bookings endpoints with full filters + CSV export
 
 function registerAdminBookings(app, deps) {
-  const { bookingsDb, checkAdminAuth } = deps;
+  const { bookingsDb, checkAdminAuth, stripe } = deps;
   if (!app) throw new Error('registerAdminBookings: missing app');
 
   // Admin bookings JSON list (filters/pagination)
@@ -111,6 +111,40 @@ function registerAdminBookings(app, deps) {
       console.error('Admin bookings CSV error:', err && err.stack ? err.stack : err);
       return res.status(500).send('Server error');
     }
+  });
+
+  // Cancel booking
+  app.post('/admin/bookings/:id/cancel', express.json(), (req, res) => {
+    if (!checkAdminAuth(req)) return res.status(403).send('Forbidden');
+    try {
+      const id = req.params.id;
+      if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
+      const now = new Date().toISOString();
+      bookingsDb.prepare('UPDATE bookings SET status = ?, updated_at = ? WHERE id = ?').run('canceled', now, id);
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ error: 'Server error' }); }
+  });
+
+  // Refund booking
+  app.post('/admin/bookings/:id/refund', express.json(), async (req, res) => {
+    if (!checkAdminAuth(req)) return res.status(403).send('Forbidden');
+    try {
+      const id = req.params.id;
+      if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
+      const row = bookingsDb.prepare('SELECT * FROM bookings WHERE id = ?').get(id);
+      if (!row) return res.status(404).json({ error: 'Not found' });
+      const pi = row.payment_intent_id;
+      if (pi && stripe) {
+        try {
+          const paymentIntent = await stripe.paymentIntents.retrieve(pi);
+          const latestCharge = paymentIntent && paymentIntent.latest_charge ? paymentIntent.latest_charge : (paymentIntent.charges && paymentIntent.charges.data && paymentIntent.charges.data[0] && paymentIntent.charges.data[0].id);
+          if (latestCharge) { await stripe.refunds.create({ charge: latestCharge }); }
+        } catch (_) { /* non-fatal */ }
+      }
+      const now = new Date().toISOString();
+      bookingsDb.prepare('UPDATE bookings SET status = ?, updated_at = ? WHERE id = ?').run('refunded', now, id);
+      return res.json({ ok: true });
+    } catch (e) { return res.status(500).json({ error: 'Server error' }); }
   });
 }
 
