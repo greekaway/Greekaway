@@ -19,23 +19,9 @@ let APP_VERSION = '0.0.0';
 try { APP_VERSION = require('./package.json').version || APP_VERSION; } catch (_) {}
 // Capture server process start time (ISO). Used as a stable fallback when build info is missing
 const PROCESS_STARTED_AT = new Date().toISOString();
-// Optional version.json path for build metadata
+// Optional version.json path for build metadata (moved helpers to lib/version.js)
 const VERSION_FILE_PATH = path.join(__dirname, 'version.json');
-function readVersionFile() {
-  try {
-    const raw = fs.readFileSync(VERSION_FILE_PATH, 'utf8');
-    const obj = JSON.parse(raw);
-    if (obj && typeof obj === 'object') return obj;
-  } catch (_) {}
-  return null;
-}
-function formatBuild(ts) {
-  try {
-    const d = ts instanceof Date ? ts : new Date(ts);
-    const pad = (n) => (n < 10 ? '0' + n : '' + n);
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  } catch(_) { return null; }
-}
+const { readVersionFile, formatBuild } = require('./src/server/lib/version');
 // Environment detection: treat non-production and non-Render as local dev
 const IS_RENDER = !!process.env.RENDER;
 const IS_DEV = (process.env.NODE_ENV !== 'production') && !IS_RENDER;
@@ -43,27 +29,17 @@ const IS_DEV = (process.env.NODE_ENV !== 'production') && !IS_RENDER;
 if (compression) {
   try { app.use(compression()); console.log('server: compression enabled'); } catch(e) { /* ignore */ }
 }
-// Sessions for admin auth (cookie-based, no Basic popups)
-let session = null;
-try { session = require('express-session'); } catch(_) { session = null; }
-const SESSION_SECRET = (process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || crypto.randomBytes(24).toString('hex')).trim();
-if (session) {
-  const sessName = 'ga.sid';
-  app.set('session-cookie-name', sessName);
-  app.use(session({
-    name: sessName,
-    secret: SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { sameSite: 'lax', secure: process.env.NODE_ENV === 'production' }
-  }));
-}
-// Bind explicitly to 0.0.0.0:3000 for LAN access
+// Bind explicitly to 0.0.0.0:3000 for LAN access and test stability
 const HOST = '0.0.0.0';
 // In test runs (Jest), force port 3000 so tests connect regardless of .env PORT
 const IS_JEST = !!process.env.JEST_WORKER_ID;
 const PORT = ((process.env.NODE_ENV === 'test') || IS_JEST) ? 3000 : (process.env.PORT ? parseInt(process.env.PORT, 10) : 3000);
-// (removed duplicate APP_VERSION declaration)
+// Sessions for admin auth (cookie-based, no Basic popups)
+let session = null;
+try { session = require('express-session'); } catch(_) { session = null; }
+const SESSION_SECRET = (process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || crypto.randomBytes(24).toString('hex')).trim();
+// Moved asset/version scanners to lib/assets.js
+const { computeLocalesVersion, computeDataVersion, computeAssetsVersion } = require('./src/server/lib/assets');
 
 // Read Maps API key from environment. If not provided, the placeholder remains.
 // Trim and strip surrounding quotes if the value was pasted with quotes.
@@ -691,76 +667,7 @@ app.use('/docs', express.static(DOCS_DIR, {
     }
   }
 }));
-function computeLocalesVersion() {
-  try {
-    const entries = fs.readdirSync(LOCALES_DIR, { withFileTypes: true });
-    let maxMtime = 0;
-    for (const e of entries) {
-      if (e.isFile() && e.name.endsWith('.json')) {
-        try {
-          const st = fs.statSync(path.join(LOCALES_DIR, e.name));
-          maxMtime = Math.max(maxMtime, st.mtimeMs || 0);
-        } catch(_) { /* ignore */ }
-      }
-    }
-    // Normalize to integer milliseconds for consistent display across OS (no decimals)
-    return Math.floor(maxMtime || Date.now());
-  } catch(_) {
-    return Math.floor(Date.now());
-  }
-}
-
-function computeDataVersion() {
-  const DATA_DIR = path.join(__dirname, 'public', 'data');
-  try {
-    const entries = fs.readdirSync(DATA_DIR, { withFileTypes: true });
-    let maxMtime = 0;
-    const walk = (dir) => {
-      const items = fs.readdirSync(dir, { withFileTypes: true });
-      for (const it of items) {
-        const p = path.join(dir, it.name);
-        if (it.isDirectory()) walk(p);
-        else if (it.isFile() && it.name.endsWith('.json')) {
-          try {
-            const st = fs.statSync(p);
-            maxMtime = Math.max(maxMtime, st.mtimeMs || 0);
-          } catch(_) {}
-        }
-      }
-    };
-    walk(DATA_DIR);
-    return Math.floor(maxMtime || Date.now());
-  } catch(_) {
-    return Math.floor(Date.now());
-  }
-}
-
-function computeAssetsVersion() {
-  try {
-    const ROOT = path.join(__dirname, 'public');
-    const targets = [path.join(ROOT, 'js'), path.join(ROOT, 'css')];
-    let maxMtime = 0;
-    const walk = (dir) => {
-      try {
-        const items = fs.readdirSync(dir, { withFileTypes: true });
-        for (const it of items) {
-          const p = path.join(dir, it.name);
-          if (it.isDirectory()) walk(p);
-          else if (it.isFile() && (p.endsWith('.js') || p.endsWith('.css'))) {
-            try {
-              const st = fs.statSync(p);
-              maxMtime = Math.max(maxMtime, st.mtimeMs || 0);
-            } catch (_) {}
-          }
-        }
-      } catch (_) {}
-    };
-    targets.forEach(walk);
-    return Math.floor(maxMtime || Date.now());
-  } catch (_) {
-    return Math.floor(Date.now());
-  }
-}
+// (Phase 2 refactor) inline asset version helpers removed; now imported above.
 
 app.get('/locales/index.json', (req, res) => {
   try {
