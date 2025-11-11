@@ -9,6 +9,7 @@ const { TextDecoder } = require('util');
 // Load local .env (if present). Safe to leave out in production where env vars are set
 try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installed */ }
 
+// (Phase 1 refactor note) Removed transient createApp() indirection; restore direct Express init for stability
 const app = express();
 // Parse URL-encoded bodies for simple form logins
 app.use(express.urlencoded({ extended: true }));
@@ -338,14 +339,7 @@ function wantsResetTopic(message, lang) {
 }
 
 
-function buildLiveRulesPrompt() {
-  return [
-    'Live-data usage rules:',
-    '- If a system message titled "Live data context" is present, you MUST use it to answer questions about weather or news.',
-    '- Do not say you lack access to weather or news; use the provided context to answer succinctly.',
-    '- Keep answers short and relevant to Greek travel and Greekaway.',
-  ].join('\n');
-}
+const { buildLiveRulesPrompt } = require('./src/server/lib/prompts');
 
 // -----------------------------
 // Live-data: destination detection and snippets for assistant
@@ -1173,7 +1167,7 @@ app.post('/api/assistant', express.json(), async (req, res) => {
           const trip = tripData.readTripJsonById(tripId);
           if (trip) {
             const summary = tripData.buildTripSummary(trip, userLang);
-                const intent = parseTripIntent(message, userLang);
+            const intent = parseTripIntent(message, userLang);
             const parts = [];
             parts.push(t(userLang, 'assistant_trip.title', { title: summary.title }));
             // Focused answers if user asked specific things
@@ -1184,11 +1178,23 @@ app.post('/api/assistant', express.json(), async (req, res) => {
                 parts.push(t(userLang, 'assistant_trip.duration', { duration: t(userLang, 'assistant_trip.missing') }));
               }
             }
-                // Defer combined departure sentence construction; we handle time/place together later
+            // Defer combined departure sentence construction; we handle time/place together below
             if (intent.askPrice && summary.priceCents != null) {
               const euros = (summary.priceCents/100).toFixed(0);
               parts.push(t(userLang, 'assistant_trip.price', { price: euros }));
               parts.push(priceAvailabilityNote(userLang));
+            }
+            // Combined departure sentence (time/place/price) if any related intent
+            if (intent.askDepartureTime || intent.askDeparturePlace || intent.askPrice) {
+              const time = summary.departureTime || null;
+              const place = summary.departurePlace || null;
+              const priceVal = summary.priceCents != null ? (summary.priceCents/100).toFixed(0) : null;
+              if ((intent.askDepartureTime && !time) || (intent.askPrice && !priceVal)) {
+                parts.push(t(userLang, 'assistant_trip.missing_any_departure_price', 'Δεν έχει καταχωρηθεί ακόμη η ώρα ή η τιμή αυτής της εκδρομής.'));
+              } else if (time || place) {
+                const pricePart = (intent.askPrice && priceVal) ? t(userLang, 'assistant_trip.price_part', { price: priceVal }) : '';
+                parts.push(t(userLang, 'assistant_trip.departure_summary', { title: summary.title, time: time || t(userLang,'assistant_trip.missing'), place: place || t(userLang,'assistant_trip.missing'), pricePart }));
+              }
             }
             if (intent.askStops) {
               if (summary.stops && summary.stops.length) {
@@ -1279,7 +1285,6 @@ app.post('/api/assistant', express.json(), async (req, res) => {
           try {
             const raw = fs.readFileSync(TRIPINDEX_PATH, 'utf8');
             const arr = JSON.parse(raw);
-              const intent = parseTripIntent(message, userLang);
             const pn = norm(p);
             for (const t of arr) {
               if (t && t.id && norm(t.id) === pn) return t.id;
@@ -1289,12 +1294,6 @@ app.post('/api/assistant', express.json(), async (req, res) => {
             // contains match as last resort
             for (const t of arr) {
               const title = t && t.title ? t.title : {};
-                if (intent.askDepartureTime) {
-                  parts.push(t(userLang, 'assistant_trip.departure_time', { time: summary.departureTime || t(userLang, 'assistant_trip.missing') }));
-                }
-                if (intent.askDeparturePlace) {
-                  parts.push(t(userLang, 'assistant_trip.departure_place', { place: summary.departurePlace || t(userLang, 'assistant_trip.missing') }));
-                }
               for (const v of Object.values(title)) { if (v && norm(String(v)).includes(pn)) return t.id; }
             }
           } catch(_) {}
