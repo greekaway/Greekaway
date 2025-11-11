@@ -634,74 +634,16 @@ app.use(express.static(path.join(__dirname, "public"), {
 
 // Serve locales statically and provide an index for auto-discovery
 const LOCALES_DIR = path.join(__dirname, 'locales');
-try { fs.mkdirSync(LOCALES_DIR, { recursive: true }); } catch (e) {}
-app.use('/locales', express.static(LOCALES_DIR, {
-  etag: !IS_DEV,
-  lastModified: true,
-  setHeaders: (res, filePath) => {
-    if (IS_DEV) {
-      res.setHeader('Cache-Control', 'no-store');
-      return;
-    }
-    // Locales rarely change during a session; allow caching
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    if (filePath.endsWith('index.json')) {
-      // keep index relatively fresh to allow new languages to appear
-      res.setHeader('Cache-Control', 'public, max-age=300');
-    }
-  }
-}));
+const { registerLocales } = require('./src/server/routes/locales');
+registerLocales(app, { LOCALES_DIR, IS_DEV, computeLocalesVersion });
 // Serve legal/marketing PDF documents under /docs (tabbed About & Legal page)
 const DOCS_DIR = path.join(__dirname, 'docs');
 try { fs.mkdirSync(DOCS_DIR, { recursive: true }); } catch(e){}
-app.use('/docs', express.static(DOCS_DIR, {
-  etag: !IS_DEV,
-  lastModified: true,
-  setHeaders: (res, filePath) => {
-    if (IS_DEV) { res.setHeader('Cache-Control', 'no-store'); return; }
-    // Allow moderate caching for PDFs (1 day); shorter for other doc assets
-    if (filePath.endsWith('.pdf')) {
-      res.setHeader('Cache-Control', 'public, max-age=86400'); // 24h
-    } else {
-      res.setHeader('Cache-Control', 'public, max-age=300'); // 5m for ancillary files
-    }
-  }
-}));
+const { registerDocs } = require('./src/server/routes/docs');
+registerDocs(app, { DOCS_DIR, IS_DEV, express });
 // (Phase 2 refactor) inline asset version helpers removed; now imported above.
 
-app.get('/locales/index.json', (req, res) => {
-  try {
-    const files = fs.readdirSync(LOCALES_DIR, { withFileTypes: true });
-    const langs = files
-      .filter(f => f.isFile() && f.name.endsWith('.json'))
-      .map(f => f.name.replace(/\.json$/,'').toLowerCase())
-      .filter((v, i, a) => a.indexOf(v) === i)
-      .sort();
-    const version = computeLocalesVersion();
-    // Avoid stale locales discovery. In prod too, instruct all caches to revalidate or not store.
-    if (IS_DEV) {
-      res.set('Cache-Control', 'no-store');
-    } else {
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-      res.set('Pragma', 'no-cache');
-      res.set('Expires', '0');
-      res.set('Surrogate-Control', 'no-store');
-    }
-    res.json({ languages: langs, version });
-  } catch (e) {
-    // Fallback to a sensible default set if directory missing
-    const version = computeLocalesVersion();
-    if (IS_DEV) {
-      res.set('Cache-Control', 'no-store');
-    } else {
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-      res.set('Pragma', 'no-cache');
-      res.set('Expires', '0');
-      res.set('Surrogate-Control', 'no-store');
-    }
-    res.json({ languages: ['el','en','fr','de','he','it','es','zh','nl','sv','ko','pt','ru'], version });
-  }
-});
+// Locales index route moved to registerLocales
 
 // Minimal server-side i18n accessor for assistant replies
 const LOCALE_CACHE = new Map();
@@ -784,67 +726,16 @@ function priceAvailabilityNote(lang) {
 }
 
 // Lightweight version info for quick sanity checks across devices/environments
-app.get('/version.json', (req, res) => {
-  try {
-    const startedAt = PROCESS_STARTED_AT;
-    const vf = readVersionFile();
-    const buildOverride = (process.env.BUILD_DATE_OVERRIDE || '').trim();
-    const build = buildOverride ? buildOverride : (vf && vf.build ? String(vf.build) : formatBuild(startedAt));
-    const ver = (vf && vf.version) ? String(vf.version) : APP_VERSION;
-    const localesVersion = computeLocalesVersion();
-    const dataVersion = computeDataVersion();
-    const assetsVersion = computeAssetsVersion();
-    const appVersion = Math.max(localesVersion || 0, dataVersion || 0, assetsVersion || 0);
-    // Force no caching anywhere (browser, CDN, proxy) to prevent stale version info
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
-    res.set('Surrogate-Control', 'no-store');
-    return res.json({
-      version: ver,
-      build,
-      buildNumber: vf && typeof vf.buildNumber !== 'undefined' ? vf.buildNumber : null,
-      commit: vf && vf.commit ? String(vf.commit) : null,
-      node: process.version,
-      isDev: IS_DEV,
-      isRender: IS_RENDER,
-      startedAt,
-      localesVersion,
-      dataVersion,
-      assetsVersion,
-      appVersion
-    });
-  } catch (e) {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
-    res.set('Surrogate-Control', 'no-store');
-    return res.json({ isDev: IS_DEV, isRender: IS_RENDER });
-  }
-});
-
-// Minimal version endpoint: returns stable version and build timestamp
-app.get('/version', (req, res) => {
-  try {
-    const vf = readVersionFile();
-    const ver = (vf && vf.version) ? String(vf.version) : APP_VERSION;
-    const buildOverride = (process.env.BUILD_DATE_OVERRIDE || '').trim();
-    let build = vf && vf.build ? String(vf.build) : null;
-    if (buildOverride) build = buildOverride;
-    if (!build) build = formatBuild(PROCESS_STARTED_AT);
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
-    res.set('Surrogate-Control', 'no-store');
-    return res.json({ 
-      version: ver, 
-      build,
-      buildNumber: vf && typeof vf.buildNumber !== 'undefined' ? vf.buildNumber : null,
-      commit: vf && vf.commit ? String(vf.commit) : null
-    });
-  } catch (e) {
-    return res.json({ version: APP_VERSION, build: formatBuild(PROCESS_STARTED_AT) });
-  }
+// Version routes moved to module
+const { registerVersionRoutes } = require('./src/server/routes/version');
+registerVersionRoutes(app, {
+  IS_DEV,
+  IS_RENDER,
+  PROCESS_STARTED_AT,
+  APP_VERSION,
+  VERSION_FILE_PATH,
+  LOCALES_DIR,
+  ROOT_DIR: __dirname
 });
 
 // Pretty route for About page -> serve static HTML
