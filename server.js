@@ -291,7 +291,7 @@ app.use((req, res, next) => {
   } catch(_) { return next(); }
 });
 
-// 1️⃣ Σε DEV: Σερβίρουμε ΠΑΝΤΑ φρέσκα HTML/JS/CSS για να αποφεύγουμε stale cache σε άλλες συσκευές
+// 1️⃣ Σε DEV: Σερβίρουμε ΠΑΝΤΑ φρέσκα HTML/JS/CSS και κάνουμε inject το Google Maps key
 if (IS_DEV) {
   app.get(/^\/(?:.*)\.html$/, (req, res, next) => {
     const filePath = path.join(__dirname, 'public', req.path);
@@ -309,8 +309,39 @@ if (IS_DEV) {
         out = out.replace(/(href=\"\/(?:css)\/[^\"?#]+)(\")/g, (m, p1, p2) => {
           return p1.includes('?') ? m : `${p1}?dev=${t}${p2}`;
         });
+        // 4) Inject Google Maps API key placeholder (trip.html etc.)
+        try {
+          const key = (MAP_KEY || '').trim();
+          if (key && key !== 'YOUR_GOOGLE_MAPS_API_KEY') {
+            out = out.replace(/YOUR_GOOGLE_MAPS_API_KEY/g, key);
+          }
+        } catch(_) { }
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.setHeader('Cache-Control', 'no-store');
+        return res.send(out);
+      } catch (e) { return next(); }
+    });
+  });
+}
+
+// 1️⃣β Σε PROD: Κάνουμε inject το Google Maps key στα HTML (χωρίς dev cache-busting)
+if (!IS_DEV) {
+  app.get(/^\/(?:.*)\.html$/, (req, res, next) => {
+    const filePath = path.join(__dirname, 'public', req.path);
+    fs.readFile(filePath, 'utf8', (err, html) => {
+      if (err) return next();
+      try {
+        let out = html;
+        // Inject Google Maps API key placeholder (trip.html κ.ά.)
+        try {
+          const key = (MAP_KEY || '').trim();
+          if (key && key !== 'YOUR_GOOGLE_MAPS_API_KEY') {
+            out = out.replace(/YOUR_GOOGLE_MAPS_API_KEY/g, key);
+          }
+        } catch(_) { }
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        // Avoid caching HTML so key/script stays fresh
+        res.setHeader('Cache-Control', 'no-cache');
         return res.send(out);
       } catch (e) { return next(); }
     });
@@ -354,6 +385,23 @@ registerDocs(app, { DOCS_DIR, IS_DEV, express });
 // (Phase 2 refactor) inline asset version helpers removed; now imported above.
 
 // Locales index route moved to registerLocales
+
+// Lightweight endpoint to expose Google Maps key to frontend (used by booking-addons.js fallback)
+// Returns { key: '...' } only if a non-placeholder key is configured.
+app.get('/api/maps-key', (req, res) => {
+  try {
+    const key = (MAP_KEY || '').trim();
+    if (!key || key === 'YOUR_GOOGLE_MAPS_API_KEY') {
+      return res.status(404).json({ error: 'no-key' });
+    }
+    // Optional: restrict referrer/origin check for extra safety (best effort; not security boundary)
+    // const origin = String(req.headers.origin || '');
+    // if (origin && !/greekaway\.(?:com|gr|net)$/i.test(origin)) { return res.status(403).json({ error: 'forbidden' }); }
+    res.json({ key });
+  } catch (e) {
+    res.status(500).json({ error: 'server-error' });
+  }
+});
 
 // Minimal server-side i18n accessor for assistant replies
 const LOCALE_CACHE = new Map();
