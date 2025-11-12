@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file.
 
+## 2025-11-12 — Dynamic pickups + trip itinerary in Provider/Driver
+
+- Global presentation rule: panels always show customer pickups (from booking metadata) and the trip itinerary (tour stops and times) from the trip JSON files.
+- Provider API:
+  - `/provider/api/bookings/:id` synthesizes `route.full_path` when missing by appending trip JSON stops; augments existing routes with any missing tour stops.
+  - Exposes `trip_info.start_time` from the trip file for UI display.
+  - Added safe `addMinutes()` helper for fallback time spacing in both PG/SQLite paths.
+- Provider UI (`public/provider/provider-bookings.js`):
+  - Displays pickup list with fallback to `metadata.pickups`.
+  - Shows Trip Info block with start time and note.
+- Driver API (`/driver/api/bookings/:id`):
+  - When `policies.presentation.show_full_route_to_panels` is true, composes pickups + trip JSON stops when `full_path` is absent, and computes pickup ETAs to reach the first tour stop on time.
+- Driver UI (`public/driver/driver-route.js`):
+  - Renders per-stop Google Maps links and a multi-stop navigation button; shows ETAs for pickups and scheduled time for the first tour stop.
+- Tools: new script `scripts/create_acropolis_booking.js` creates an Acropolis booking with 3 pickups, seeds mapping/capacity, and ensures demo users.
+
 ## 2025-11-08 — Driver Panel v2 (Auto-Refresh, Distance Matrix, Pickup Notifications)
 
 - Driver Dashboard:

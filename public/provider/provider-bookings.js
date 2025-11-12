@@ -45,6 +45,45 @@
       let meta = bk.metadata || {};
       try { if (typeof meta === 'string') meta = JSON.parse(meta); } catch(_) {}
       const dropoff = meta.dropoff_point || meta.dropoff || meta.to || meta.end_location || '—';
+      // Build pickup points list from either pickup_points_json or metadata.pickup_points
+      const pickupPoints = (() => {
+        if (Array.isArray(bk.pickup_points)) return bk.pickup_points;
+        try {
+          if (bk.pickup_points_json) { const arr = JSON.parse(bk.pickup_points_json); if (Array.isArray(arr)) return arr; }
+        } catch(_){ }
+        if (Array.isArray(meta.pickup_points)) return meta.pickup_points;
+        // Fallback to metadata.pickups (address-only objects)
+        if (Array.isArray(meta.pickups)) return meta.pickups.map(p => ({ address: p.address, pax: p.pax || 1 }));
+        return [];
+      })();
+      // Unified route for provider display (pickups + tour stops with times)
+      const routeArr = (() => {
+        try {
+          if (bk.route && Array.isArray(bk.route.full_path)) return bk.route.full_path;
+          if (meta.route && Array.isArray(meta.route.full_path)) return meta.route.full_path;
+          if (Array.isArray(meta.stops)) {
+            return meta.stops.map((s,i)=>({
+              label: s.label || s.name || `Στάση ${i+1}`,
+              address: s.address || s.pickup || s.location || '',
+              arrival_time: s.arrival_time || s.time || s.scheduled_time || null,
+              departure_time: s.departure_time || null,
+              type: (String(s.type||'').toLowerCase()==='pickup' || /παραλαβή/i.test(String(s.name||''))) ? 'pickup' : 'tour_stop'
+            }));
+          }
+        } catch(_){ }
+        return [];
+      })();
+      const routeHtml = routeArr.length ? (
+        '<ol class="route-list">' + routeArr.map((r,idx)=>{
+          const when = r.arrival_time ? `<span class="muted">(${r.arrival_time}${r.departure_time? ' → '+r.departure_time : ''})</span>` : '';
+          const badge = r.type === 'pickup' ? '<span class="badge info">pickup</span>' : '<span class="badge">stop</span>';
+          const line = `${escapeHtml(r.label)} — ${escapeHtml(r.address||'')}`;
+          return `<li>${badge} ${line} ${when}</li>`;
+        }).join('') + '</ol>'
+      ) : '<div class="muted">—</div>';
+      const pickupsHtml = pickupPoints.length ? (
+        '<ul class="pickups">' + pickupPoints.map((p,i)=> `<li><b>Στάση ${i+1}:</b> ${escapeHtml(String(p.address||'—'))} <span class="muted">(${parseInt(p.pax||1,10)} άτομα)</span></li>`).join('') + '</ul>'
+      ) : '<div class="muted">—</div>';
       let suitcasesText = '';
       if (bk.suitcases_json){
         try { const arr = JSON.parse(bk.suitcases_json); if (Array.isArray(arr)) suitcasesText = arr.join(', '); else if (arr) suitcasesText = String(arr); } catch(_) {}
@@ -56,6 +95,15 @@
       const people = bk.seats || meta.people || meta.seats || '—';
       const customerName = bk.user_name || meta.customer_name || '—';
       const customerPhone = (meta.customer_phone || bk.customer_phone || '') ? `<a href="tel:${meta.customer_phone || bk.customer_phone}" class="phone-link">${meta.customer_phone || bk.customer_phone}</a>` : '—';
+      // Optional trip info (start_time) when provided by API
+      const tripInfo = bk.trip_info || {};
+      const tripInfoHtml = (tripInfo && (tripInfo.start_time)) ? (
+        `<div class="trip-info"><div class="label">Πληροφορίες Εκδρομής</div>
+          <div class="meta">Ώρα εκκίνησης: ${escapeHtml(String(tripInfo.start_time))}</div>
+          <div class="meta">Σημείωση: Οι ώρες παραλαβής ενδέχεται να έχουν ±5’ απόκλιση.</div>
+        </div>`
+      ) : '';
+
       body.innerHTML = `
         <div class="details-grid">
           <div class="row"><div class="label">Pick-up:</div><div class="value">${escapeHtml(pickup)}</div></div>
@@ -66,7 +114,10 @@
           <div class="row"><div class="label">Ειδικές Οδηγίες:</div><div class="value">${escapeHtml(special)}</div></div>
           <div class="row"><div class="label">Πελάτης:</div><div class="value">${escapeHtml(customerName)}</div></div>
           <div class="row"><div class="label">Τηλέφωνο:</div><div class="value">${customerPhone}</div></div>
-        </div>`;
+          <div class="row"><div class="label">Στάσεις παραλαβής:</div><div class="value">${pickupsHtml}</div></div>
+          <div class="row"><div class="label">Διαδρομή:</div><div class="value">${routeHtml}</div></div>
+        </div>
+        ${tripInfoHtml}`;
     } catch (_) {
       body.innerHTML = '<div class="error">Σφάλμα φόρτωσης στοιχείων</div>';
     }
@@ -93,6 +144,7 @@
               <div><b>${b.trip_title || b.booking_id}</b> <small class="muted">#${b.booking_id.slice(0,6)}</small></div>
               <div class="meta">${b.date} • ${b.pickup_point} (${b.pickup_time})</div>
               <div class="meta">Πελάτης: ${b.customer_name || ''}</div>
+              ${b.stops_count ? (`<div class=\"meta\">Στάσεις: ${b.stops_count}</div>`) : ''}
               ${b.luggage ? (`<div class=\"meta\">Αποσκευές: ${b.luggage}</div>`) : ''}
               ${b.special_requests ? (`<div class=\"meta\">Σχόλια: ${b.special_requests}</div>`) : ''}
               ${b.map_link ? `<div class=\"meta\"><a href=\"${b.map_link}\" target=\"_blank\" rel=\"noopener\">Χάρτης</a></div>` : ''}

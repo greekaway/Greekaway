@@ -281,6 +281,9 @@ try {
     ensureCol("ALTER TABLE bookings ADD COLUMN special_requests TEXT DEFAULT ''",'special_requests');
     ensureCol('ALTER TABLE bookings ADD COLUMN is_demo INTEGER DEFAULT 0','is_demo');
     ensureCol('ALTER TABLE bookings ADD COLUMN source TEXT','source');
+    // New columns for multi-pickup support and driver assignment
+    ensureCol('ALTER TABLE bookings ADD COLUMN pickup_points_json TEXT','pickup_points_json');
+    ensureCol('ALTER TABLE bookings ADD COLUMN assigned_driver_id TEXT','assigned_driver_id');
   } catch(e) { /* ignore */ }
   bookingsDb.exec(`CREATE TABLE IF NOT EXISTS capacities (
     trip_id TEXT,

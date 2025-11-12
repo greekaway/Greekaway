@@ -3,73 +3,28 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const path = require('path');
-const crypto = require('crypto');
-let nodemailer = null; try { nodemailer = require('nodemailer'); } catch(_) {}
+const fs = require('fs');
+let nodemailer = null; try { nodemailer = require('nodemailer'); } catch(_){ }
+let rateLimit = null; try { rateLimit = require('express-rate-limit'); } catch(_){ }
 
 const router = express.Router();
-// Accept both JSON and form-urlencoded bodies for robustness
-// Use global JSON parser installed in server.js
 router.use(express.urlencoded({ extended: true }));
-
-// Serve provider panel HTML pages at clean URLs (extensionless)
-router.get('/', (req, res) => { res.redirect('/provider/login'); });
-router.get('/login', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'login.html')); });
-router.get('/dashboard', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'dashboard.html')); });
-// Serve the actual bookings page (footer placeholder expected by tests)
-router.get('/bookings', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'provider-bookings.html')); });
-router.get('/payments', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'payments.html')); });
-router.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'profile.html')); });
-// Availability (HTML route)
-router.get('/availability', (req, res) => { res.sendFile(path.join(__dirname, '../public/provider', 'provider-availability.html')); });
-
-// CORS: allow specific origins only
-const DEV_LOCAL_IP = (process.env.DEV_LOCAL_IP || '').trim();
-const allowed = new Set([
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'https://greekaway.com',
-  'https://www.greekaway.com',
-  DEV_LOCAL_IP ? `http://${DEV_LOCAL_IP}:3000` : null,
-].filter(Boolean));
-
-function isPrivateLanOrigin(origin){
-  try {
-    const u = new URL(origin);
-    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
-    const h = u.hostname || '';
-    // localhost/loopback
-    if (h === 'localhost' || h === '127.0.0.1') return true;
-    // Private IPv4 ranges
-    if (/^192\.168\./.test(h)) return true;
-    if (/^10\./.test(h)) return true;
-    const m = h.match(/^172\.(\d{1,2})\./); if (m){ const n = parseInt(m[1],10); if (n>=16 && n<=31) return true; }
-    return false;
-  } catch(_) { return false; }
-}
-
-const allowDevAnyLan = (process.env.NODE_ENV !== 'production');
-router.use(cors({ origin: (origin, cb) => {
-  if (!origin) return cb(null, true); // allow same-origin / curl / mobile apps
-  try {
-    const o = origin.replace(/\/$/, '');
-    if (allowed.has(o)) return cb(null, true);
-    if (allowDevAnyLan && isPrivateLanOrigin(o)) return cb(null, true);
-  } catch(_) {}
-  return cb(new Error('Not allowed by CORS'));
-}, credentials: false }));
-
-// Rate-limit login
-let rateLimit = null; try { rateLimit = require('express-rate-limit'); } catch(_) {}
-if (rateLimit) {
-  router.use('/auth/', rateLimit({ windowMs: 15 * 60 * 1000, max: 50 }));
-}
+if (rateLimit){ try { router.use('/auth/', rateLimit({ windowMs: 15 * 60 * 1000, max: 50 })); } catch(_){ } }
 
 const JWT_SECRET = (process.env.JWT_SECRET || 'dev-secret').toString();
 const hasPostgres = !!process.env.DATABASE_URL;
 
-function getSqlite(){
-  const Database = require('better-sqlite3');
-  return new Database(path.join(__dirname, '..', 'data', 'db.sqlite3'));
+// Helper: add minutes to an HH:MM string, returns HH:MM (24h)
+function addMinutes(hhmm, inc){
+  try {
+    const [h, m] = String(hhmm || '00:00').slice(0,5).split(':').map(x => parseInt(x, 10) || 0);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    d.setMinutes(d.getMinutes() + (parseInt(inc,10) || 0));
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    return `${hh}:${mm}`;
+  } catch(_) { return String(hhmm || '00:00').slice(0,5); }
 }
 
 async function withPg(fn){
@@ -418,7 +373,7 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
     if (hasPostgres) {
       const out = await withPg(async (client) => {
         await ensureBookingsAssignedPg(client);
-        const { rows } = await client.query(`SELECT b.* FROM bookings b WHERE b.partner_id = $1 AND b.status IN ('confirmed','accepted','picked','completed','declined') ORDER BY b.created_at DESC LIMIT 200`, [pid]);
+  const { rows } = await client.query(`SELECT b.* FROM bookings b WHERE b.partner_id = $1 AND b.status IN ('pending','confirmed','accepted','picked','completed','declined') ORDER BY b.created_at DESC LIMIT 200`, [pid]);
         return rows || [];
       });
       // dispatch meta
@@ -427,7 +382,7 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
       const data = out.map(b => ({
         id: b.id,
         booking_id: b.id,
-        trip_title: b.trip_id,
+        trip_title: ((b.metadata && b.metadata.tour_title) ? b.metadata.tour_title : b.trip_id),
         date: b.date,
         pickup_point: (b.pickup_location && b.pickup_location.trim()) || 'N/A',
         pickup_time: (b.metadata && (b.metadata.pickup_time || b.metadata.time)) || 'N/A',
@@ -438,19 +393,20 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
         status: badgeStatus(b.status),
         dispatch: dispatch[b.id] || null,
         assigned_driver_id: b.assigned_driver_id || null,
+        stops_count: (()=>{ try { const m = b.metadata && (typeof b.metadata==='object'? b.metadata : JSON.parse(b.metadata||'{}')); const arr = m && Array.isArray(m.stops) ? m.stops : []; return arr.length || (Array.isArray(m.pickup_points)? m.pickup_points.length : 0); } catch(_){ return 0; } })(),
       }));
       return res.json({ ok: true, bookings: data });
     } else {
       const db = getSqlite();
       try {
         ensureBookingsAssignedSqlite(db);
-        const rows = db.prepare(`SELECT * FROM bookings WHERE partner_id = ? AND status IN ('confirmed','accepted','picked','completed','declined') ORDER BY created_at DESC LIMIT 200`).all(pid);
+  const rows = db.prepare(`SELECT * FROM bookings WHERE partner_id = ? AND status IN ('pending','confirmed','accepted','picked','completed','declined') ORDER BY created_at DESC LIMIT 200`).all(pid);
         const ids = rows.map(r => r.id);
         const dispatch = await require('../services/dispatchService').latestStatusForBookings(ids);
         const data = rows.map(b => ({
           id: b.id,
           booking_id: b.id,
-          trip_title: b.trip_id,
+          trip_title: (()=>{ try{ const m=b.metadata?JSON.parse(b.metadata):{}; return m.tour_title || b.trip_id; }catch(_){ return b.trip_id; } })(),
           date: b.date,
           pickup_point: b.pickup_location || 'N/A',
           pickup_time: (()=>{ let meta={}; try{ meta=b.metadata?JSON.parse(b.metadata):{} }catch(_){} return meta.pickup_time || meta.time || 'N/A'; })(),
@@ -462,6 +418,7 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
           status: badgeStatus(b.status),
           dispatch: dispatch[b.id] || null,
           assigned_driver_id: b.assigned_driver_id || null,
+          stops_count: (()=>{ try { const m = b.metadata?JSON.parse(b.metadata):{}; const arr = m && Array.isArray(m.stops) ? m.stops : []; return arr.length || (Array.isArray(m.pickup_points)? m.pickup_points.length : 0); } catch(_){ return 0; } })(),
         }));
         return res.json({ ok: true, bookings: data });
       } finally { db.close(); }
@@ -480,6 +437,56 @@ router.get('/api/bookings/:id', authMiddleware, async (req, res) => {
         return rows && rows[0] ? rows[0] : null;
       });
       if (!row) return res.status(404).json({ error: 'Not found' });
+      try {
+        const m = row.metadata && typeof row.metadata==='object' ? row.metadata : (row.metadata ? JSON.parse(row.metadata) : {});
+        let full = m && m.route && Array.isArray(m.route.full_path) ? m.route.full_path.slice() : null;
+        if (!full || !full.length){
+          // Build pickups first from pickup_points_json or metadata.pickups (address-only)
+          let pickups = [];
+          try { if (row.pickup_points_json) { const arr = JSON.parse(row.pickup_points_json); if (Array.isArray(arr)) pickups = arr; } } catch(_){}
+          if (!pickups.length){ try { const mp = Array.isArray(m.pickups) ? m.pickups : []; if (mp.length) pickups = mp.map(p => ({ address: p.address || p.pickup || p.location || '' })); } catch(_){} }
+          const pickupTimeStr = String(m.pickup_time || m.time || '09:00').slice(0,5);
+          const inc = 20;
+          full = (pickups || []).map((p,i)=>({ type:'pickup', label:`Παραλαβή: ${p.address||''}`.trim(), address:p.address||'', lat:p.lat??null, lng:p.lng??null, arrival_time: i===0?pickupTimeStr:addMinutes(pickupTimeStr, i*inc), departure_time:null }));
+          // Append trip JSON stops after pickups when missing full_path
+          const tripStops = (()=>{ try {
+            const root = path.join(__dirname, '..');
+            const tripId = row.trip_id || '';
+            const candidates = [ `${tripId}.json` ];
+            if (/_demo$/.test(tripId)) candidates.push(`${tripId.replace(/_demo$/, '')}.json`);
+            if (/_test$/.test(tripId)) candidates.push(`${tripId.replace(/_test$/, '')}.json`);
+            let fp = null; for (const n of candidates){ const p = path.join(root, 'public', 'data', 'trips', n); if (fs.existsSync(p)) { fp = p; break; } }
+            if (!fp) return [];
+            const raw = fs.readFileSync(fp, 'utf8'); const json = JSON.parse(raw); const arr = Array.isArray(json.stops)?json.stops:[];
+            return arr.map((s,i)=>({ type:'tour_stop', label: (s.label||s.title||(typeof s.name==='string'?s.name:(s.name&&(s.name.el||s.name.en)))||`Στάση ${i+1}`), address: s.address||s.location||'', arrival_time: s.arrival_time||s.time||null, departure_time: s.departure_time||null, lat: s.lat??s.latitude??null, lng: s.lng??s.longitude??null }));
+          } catch(_) { return []; } })();
+          if (tripStops.length){
+            let prevTime = (full.length? full[full.length-1].arrival_time : null) || pickupTimeStr;
+            const fallbackInc = 45;
+            tripStops.forEach((ts, idx) => { const at = ts.arrival_time || addMinutes(prevTime, fallbackInc); full.push({ ...ts, arrival_time: at }); prevTime = at || prevTime; });
+          }
+        } else {
+          // Augment existing full_path with any missing trip stops (by address match)
+          const seen = new Set(full.filter(x => (x.type||'tour_stop')==='tour_stop').map(x => (x.address||'').trim().toLowerCase()));
+          const tripStops = (()=>{ try {
+            const root = path.join(__dirname, '..');
+            const tripId = row.trip_id || '';
+            const candidates = [ `${tripId}.json` ];
+            if (/_demo$/.test(tripId)) candidates.push(`${tripId.replace(/_demo$/, '')}.json`);
+            if (/_test$/.test(tripId)) candidates.push(`${tripId.replace(/_test$/, '')}.json`);
+            let fp = null; for (const n of candidates){ const p = path.join(root, 'public', 'data', 'trips', n); if (fs.existsSync(p)) { fp = p; break; } }
+            if (!fp) return [];
+            const raw = fs.readFileSync(fp, 'utf8'); const json = JSON.parse(raw); const arr = Array.isArray(json.stops)?json.stops:[];
+            return arr.map((s,i)=>({ type:'tour_stop', label: (s.label||s.title||(typeof s.name==='string'?s.name:(s.name&&(s.name.el||s.name.en)))||`Στάση ${i+1}`), address: s.address||s.location||'', arrival_time: s.arrival_time||s.time||null, departure_time: s.departure_time||null, lat: s.lat??s.latitude??null, lng: s.lng??s.longitude??null }));
+          } catch(_) { return []; } })();
+          if (tripStops.length){
+            let prevTime = (full.length? full[full.length-1].arrival_time : null) || (String(m.pickup_time||'09:00').slice(0,5));
+            const fallbackInc = 45;
+            for (let i=0;i<tripStops.length;i++){ const ts=tripStops[i]; const key=String(ts.address||'').trim().toLowerCase(); if (key && !seen.has(key)){ const at = ts.arrival_time || addMinutes(prevTime, fallbackInc); full.push({ ...ts, arrival_time: at }); prevTime = at || prevTime; } }
+          }
+        }
+        row.route = { full_path: full };
+      } catch(_){ }
       return res.json({ ok:true, booking: row });
     } else {
       const db = getSqlite();
@@ -488,6 +495,84 @@ router.get('/api/bookings/:id', authMiddleware, async (req, res) => {
         if (!row) return res.status(404).json({ error: 'Not found' });
         if (row.metadata) { try { row.metadata = JSON.parse(row.metadata); } catch(_){} }
         if (row.suitcases_json && !row.suitcases) { try { row.suitcases = JSON.parse(row.suitcases_json); } catch(_) { row.suitcases = []; } }
+        try {
+          const meta = row.metadata || {};
+          let full = meta && meta.route && Array.isArray(meta.route.full_path) ? meta.route.full_path.slice() : null;
+          if (!full || !full.length){
+            // Build pickups first from pickup_points_json or metadata.pickups
+            let pickups = [];
+            try { if (row.pickup_points_json) { const arr = JSON.parse(row.pickup_points_json); if (Array.isArray(arr)) pickups = arr; } } catch(_){}
+            if (!pickups.length){ try { const mp = Array.isArray(meta.pickups) ? meta.pickups : []; if (mp.length) pickups = mp.map(p => ({ address: p.address || p.pickup || p.location || '' })); } catch(_){} }
+            const pickupTimeStr = String(meta.pickup_time || meta.time || '09:00').slice(0,5);
+            const inc = 20;
+            full = (pickups || []).map((p,i)=>({ type:'pickup', label:`Παραλαβή: ${p.address||''}`.trim(), address:p.address||'', lat:p.lat??null, lng:p.lng??null, arrival_time: i===0?pickupTimeStr:addMinutes(pickupTimeStr, i*inc), departure_time:null }));
+            // Append trip JSON tour stops with times
+            try {
+              const root = path.join(__dirname, '..');
+              const tripId = row.trip_id || '';
+              const candidates = [ `${tripId}.json` ];
+              if (/_demo$/.test(tripId)) candidates.push(`${tripId.replace(/_demo$/, '')}.json`);
+              if (/_test$/.test(tripId)) candidates.push(`${tripId.replace(/_test$/, '')}.json`);
+              let fp = null; for (const n of candidates){ const p = path.join(root, 'public', 'data', 'trips', n); if (fs.existsSync(p)) { fp = p; break; } }
+              if (fp) {
+                const raw = fs.readFileSync(fp, 'utf8');
+                const json = JSON.parse(raw);
+                const arr = Array.isArray(json.stops)?json.stops:[];
+                let prevTime = (full.length? full[full.length-1].arrival_time : null) || pickupTimeStr;
+                const fallbackInc = 45;
+                arr.forEach((s,i)=>{
+                  const at = s.arrival_time || s.time || (function(){
+                    try { const [h,m]=(prevTime||'00:00').split(':').map(x=>parseInt(x,10)||0); const d=new Date(); d.setHours(h,m,0,0); d.setMinutes(d.getMinutes()+fallbackInc); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); } catch(_) { return prevTime; }
+                  })();
+                  full.push({ type:'tour_stop', label: (s.label||s.title||(typeof s.name==='string'?s.name:(s.name&&(s.name.el||s.name.en)))||`Στάση ${i+1}`), address: s.address||s.location||'', arrival_time: at, departure_time: s.departure_time || null, lat: s.lat??s.latitude??null, lng: s.lng??s.longitude??null });
+                  prevTime = at || prevTime;
+                });
+              }
+            } catch(_){ }
+          } else {
+            // Augment with any missing JSON tour stops (by address key)
+            try {
+              const root = path.join(__dirname, '..');
+              const tripId = row.trip_id || '';
+              const candidates = [ `${tripId}.json` ];
+              if (/_demo$/.test(tripId)) candidates.push(`${tripId.replace(/_demo$/, '')}.json`);
+              if (/_test$/.test(tripId)) candidates.push(`${tripId.replace(/_test$/, '')}.json`);
+              let fp = null; for (const n of candidates){ const p = path.join(root, 'public', 'data', 'trips', n); if (fs.existsSync(p)) { fp = p; break; } }
+              if (fp) {
+                const raw = fs.readFileSync(fp, 'utf8'); const json = JSON.parse(raw);
+                const arr = Array.isArray(json.stops)?json.stops:[];
+                const seen = new Set(full.filter(x => (x.type||'tour_stop')==='tour_stop').map(x => (x.address||'').trim().toLowerCase()));
+                let prevTime = (full.length? full[full.length-1].arrival_time : null) || (String(meta.pickup_time||'09:00').slice(0,5));
+                const fallbackInc = 45;
+                for (let i=0;i<arr.length;i++){
+                  const s = arr[i];
+                  const key = String(s.address||'').trim().toLowerCase();
+                  if (key && seen.has(key)) continue;
+                  const at = s.arrival_time || s.time || (function(){
+                    try { const [h,m]=(prevTime||'00:00').split(':').map(x=>parseInt(x,10)||0); const d=new Date(); d.setHours(h,m,0,0); d.setMinutes(d.getMinutes()+fallbackInc); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); } catch(_) { return prevTime; }
+                  })();
+                  full.push({ type:'tour_stop', label: (s.label||s.title||(typeof s.name==='string'?s.name:(s.name&&(s.name.el||s.name.en)))||`Στάση ${i+1}`), address: s.address||s.location||'', arrival_time: at, departure_time: s.departure_time || null, lat: s.lat??s.latitude??null, lng: s.lng??s.longitude??null });
+                  prevTime = at || prevTime;
+                }
+              }
+            } catch(_){ }
+          }
+          row.route = { full_path: full };
+          // Also expose basic trip info (start_time) from JSON for UI
+          try {
+            const root = path.join(__dirname, '..');
+            const tripId = row.trip_id || '';
+            const candidates = [ `${tripId}.json` ];
+            if (/_demo$/.test(tripId)) candidates.push(`${tripId.replace(/_demo$/, '')}.json`);
+            if (/_test$/.test(tripId)) candidates.push(`${tripId.replace(/_test$/, '')}.json`);
+            let fp = null; for (const n of candidates){ const p = path.join(root, 'public', 'data', 'trips', n); if (fs.existsSync(p)) { fp = p; break; } }
+            if (fp) {
+              const raw = fs.readFileSync(fp, 'utf8'); const json = JSON.parse(raw);
+              const start_time = (json.departure && json.departure.departure_time) || (Array.isArray(json.stops) && json.stops[0] && (json.stops[0].time || json.stops[0].arrival_time)) || null;
+              row.trip_info = { start_time };
+            }
+          } catch(_){ }
+        } catch(_){ }
         return res.json({ ok:true, booking: row });
       } finally { db.close(); }
     }

@@ -52,6 +52,12 @@
     "start_time_buffer_minutes": 10
   },
 
+  "presentation": {
+    "show_full_route_to_panels": true,
+    "prefer_trip_json_stops": true,
+    "notes": "Οι πίνακες Provider/Driver εμφανίζουν πάντα όλα τα pickups και τις στάσεις της εκδρομής με ώρες από τα trip JSONs όπου υπάρχουν."
+  },
+
   "trip_status": {
     "planned": "Η εκδρομή είναι προγραμματισμένη και συλλέγει κρατήσεις.",
     "active": "Η εκδρομή είναι ενεργή και το όχημα βρίσκεται σε εξέλιξη διαδρομής.",

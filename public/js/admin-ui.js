@@ -568,6 +568,17 @@
             const reason = String(msg.violation_reason || (Array.isArray(msg.reasons)&&msg.reasons[0]&&msg.reasons[0].code) || 'policy_violation');
             const ts = msg.timestamp || new Date().toISOString();
             if (bookingId) registerPolicyViolation(bookingId, { reason, timestamp: ts, trip_id: msg.trip_id || null });
+            return;
+          }
+          if (msg.type === 'policy_status') {
+            // Generic status message (pass/fail). Only PASS is currently broadcast here.
+            const bookingId = String(msg.booking_id || '').trim();
+            const status = String(msg.status || '').toLowerCase();
+            const ts = msg.timestamp || new Date().toISOString();
+            if (!bookingId) return;
+            if (status === 'pass') {
+              registerPolicyPass(bookingId, { timestamp: ts, trip_id: msg.trip_id || null });
+            }
           }
         } catch(_){}
       };
@@ -602,6 +613,7 @@
   }
 
   const policyViolations = new Map(); // booking_id -> { reason, timestamp, trip_id }
+  const policyPasses = new Map(); // booking_id -> { timestamp, trip_id }
   let showOnlyViolations = false;
 
   function registerPolicyViolation(bookingId, data){
@@ -1093,6 +1105,34 @@
         }
         return;
       }
+    }
+  }
+
+  function registerPolicyPass(bookingId, data){
+    policyPasses.set(bookingId, data || {});
+    // Remove any violation badge if exists
+    if (bookingsTbody){
+      const cell = bookingsTbody.querySelector(`td.booking-id[data-booking="${CSS.escape(bookingId)}"]`);
+      if (cell){ const v = cell.querySelector('.policy-violation-badge'); if (v) v.remove(); }
+    }
+    applyPassBadge(bookingId);
+  }
+
+  function applyPassBadge(bookingId){
+    if (!bookingsTbody) return;
+    const cell = bookingsTbody.querySelector(`td.booking-id[data-booking="${CSS.escape(bookingId)}"]`);
+    if (!cell) return;
+    let badge = cell.querySelector('.policy-pass-badge');
+    const p = policyPasses.get(bookingId);
+    const title = p ? (`Policy PASS\n${formatDate(p.timestamp || '')}`) : 'Policy PASS';
+    if (!badge){
+      badge = document.createElement('span');
+      badge.className = 'policy-pass-badge badge success';
+      badge.title = title;
+      badge.textContent = 'PASS';
+      cell.appendChild(badge);
+    } else {
+      badge.title = title;
     }
   }
 

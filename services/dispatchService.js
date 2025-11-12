@@ -258,11 +258,12 @@ async function processQueue(bookingId, opts = {}){
   const payload = toPayload(context, context);
   const initialStatus = DISPATCH_ENABLED ? 'pending' : 'pending';
   const logId = await upsertLog({ booking_id: bookingId, partner_id, sent_by: opts.sent_by || 'system', status: initialStatus, response_text: null, payload_json: JSON.stringify(payload), retry_count: 0 });
-  // Optional: auto-assign driver based on dispatch policy
+  // Optional: auto-assign driver based on dispatch policy (temporarily disabled for acropolis_demo: manual assignment only)
   try {
     const pol = policy.loadPolicies();
     const autoAssign = pol && pol.dispatch_policy && pol.dispatch_policy.auto_assign_driver;
-    if (autoAssign && !context.assigned_driver_id) {
+    const skipForTrip = String(context.trip_id || '').toLowerCase() === 'acropolis_demo';
+    if (autoAssign && !skipForTrip && !context.assigned_driver_id) {
       await tryAutoAssignDriver(bookingId, partner_id);
     }
   } catch (_) {}

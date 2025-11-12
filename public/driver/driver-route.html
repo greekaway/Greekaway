@@ -15,16 +15,15 @@
     <div id="routeHeader" class="card"></div>
     <div id="routeNav" style="margin:12px 0;">
       <a class="btn btn-navigate" href="#" target="_blank" rel="noopener noreferrer">Πλοήγηση</a>
+      <div id="navOriginBanner" class="meta" style="margin-top:6px"></div>
     </div>
-    <div id="pickupPlanner" class="card" style="display:none; margin-bottom:12px;">
-      <div style="margin-bottom:6px;"><b>Επιλογή πρώτης παραλαβής</b></div>
-      <label style="display:block; margin-bottom:4px; font-size: 14px;">Ξεκίνα από:</label>
-      <select id="firstPickupSelect" style="width:100%; padding:6px; margin-bottom:8px;"></select>
-      <button id="applyPickupPlan" class="btn">Αποθήκευση Σχεδίου</button>
-      <div id="pickupPlanStatus" class="meta" style="margin-top:6px;"></div>
+    <h3 style="margin:12px 0 6px 0;">Παραλαβές πελατών</h3>
+    <div id="pickupStops" class="dnd-container"></div>
+    <div id="pickupActions" style="margin:10px 0 18px 0; display:none;">
+      <div id="pickupSaveStatus" class="meta" style="margin-top:6px;"></div>
     </div>
-    <h3 style="margin:8px 0 8px 0;">Στάσεις</h3>
-    <div id="routeStops"></div>
+    <h3 style="margin:12px 0 6px 0;">Στάσεις εκδρομής</h3>
+    <div id="tourStops"></div>
   </div>
   <script src="/driver/driver-common.js"></script>
   <script src="/driver/driver.js"></script>

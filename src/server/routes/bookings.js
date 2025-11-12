@@ -5,10 +5,43 @@
 function registerBookings(app, deps) {
   const { express, bookingsDb, crypto } = deps;
   if (!app) throw new Error('registerBookings: missing app');
+  // Lazy-load policy utilities to avoid heavy requires on startup
+  const policyService = (()=>{ try { return require('../../../services/policyService'); } catch(_) { return null; } })();
+  const adminSse = (()=>{ try { return require('../../../services/adminSse'); } catch(_) { return null; } })();
+  const distanceSvc = (()=>{ try { return require('../../../services/distance'); } catch(_) { return null; } })();
+  const fs = require('fs');
+  const path = require('path');
+  function readTripStops(tripId){
+    try {
+      if (!tripId) return [];
+      const root = path.join(__dirname, '../../..');
+      const tryNames = [ `${tripId}.json` ];
+      if (/_demo$/.test(tripId)) tryNames.push(`${tripId.replace(/_demo$/, '')}.json`);
+      if (/_test$/.test(tripId)) tryNames.push(`${tripId.replace(/_test$/, '')}.json`);
+      let filePath = null;
+      for (const name of tryNames){ const cand = path.join(root, 'public', 'data', 'trips', name); if (fs.existsSync(cand)) { filePath = cand; break; } }
+      if (!filePath) return [];
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const json = JSON.parse(raw);
+      const arr = Array.isArray(json.stops) ? json.stops : [];
+      return arr.map((s, i) => ({
+        type: 'tour_stop',
+        label: s.label || s.title || (typeof s.name === 'string' ? s.name : (s.name && (s.name.el || s.name.en))) || `Στάση ${i+1}`,
+        address: s.address || s.location || '',
+        arrival_time: s.arrival_time || s.time || null,
+        departure_time: s.departure_time || null,
+        lat: s.lat ?? s.latitude ?? null,
+        lng: s.lng ?? s.longitude ?? null,
+      }));
+    } catch(_) { return []; }
+  }
+  function addMinutes(hhmm, minutes){
+    try { const [h,m]=(String(hhmm||'00:00')).split(':').map(x=>parseInt(x,10)||0); const d=new Date(); d.setHours(h,m,0,0); d.setMinutes(d.getMinutes()+minutes); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); } catch(_){ return hhmm; }
+  }
 
   // Create booking (verbatim port of original complex logic)
   // Ensure JSON error responses even if body parsing fails
-  app.post('/api/bookings', (req, res) => {
+  app.post('/api/bookings', async (req, res) => {
     try {
       const { user_name, user_email, trip_id, seats, price_cents, currency } = req.body || {};
       // Traveler profile fields from step2 (optional) + mapping helpers
@@ -24,6 +57,66 @@ function registerBookings(app, deps) {
       const metadata = req.body.metadata || profile;
       if (!user_name || !user_email || !trip_id) return res.status(400).json({ error: 'Missing required fields' });
       let date = req.body.date || new Date().toISOString().slice(0,10);
+
+      // Read policies.json and apply basic checks for multi-pickup and capacity
+      const policies = policyService && policyService.loadPolicies ? (policyService.loadPolicies() || {}) : {};
+      const tripExec = policies.trip_execution || {};
+      const pickupPolicy = policies.pickup_policy || {};
+
+      // Normalize pickup_points from body or metadata
+      let pickup_points = null;
+      try {
+        if (Array.isArray(req.body.pickup_points)) pickup_points = req.body.pickup_points;
+        else if (typeof req.body.pickup_points === 'string') pickup_points = JSON.parse(req.body.pickup_points);
+        else if (metadata && typeof metadata === 'object' && Array.isArray(metadata.pickup_points)) pickup_points = metadata.pickup_points;
+      } catch(_) {}
+
+      // If pickup_points provided, compute total pax + validate distance/time
+      let effectiveSeats = (typeof seats === 'number' ? seats : Number(seats)) || null;
+      let policyFlags = [];
+      if (Array.isArray(pickup_points) && pickup_points.length) {
+        const totalPax = pickup_points.reduce((acc, p) => acc + (Number(p.pax||1) || 1), 0);
+        if (!effectiveSeats || !Number.isFinite(effectiveSeats)) effectiveSeats = totalPax;
+
+        // Distance validation (only if we have lat/lng on points)
+        try {
+          const coords = pickup_points.filter(p => p && p.lat != null && p.lng != null);
+          const maxKm = Number(tripExec.max_pickup_distance_km || 0) || 0;
+          if (maxKm && coords.length >= 2) {
+            let violation = false;
+            for (let i=0;i<coords.length;i++){
+              for (let j=i+1;j<coords.length;j++){
+                const d = policyService && policyService.haversineKm ? policyService.haversineKm(coords[i], coords[j]) : null;
+                if (d != null && d > maxKm) { violation = true; break; }
+              }
+              if (violation) break;
+            }
+            if (violation) policyFlags.push({ code: 'pickup_distance_exceeded', message: `Υπέρβαση απόστασης pickups (> ${maxKm} km)` });
+          }
+        } catch(_) {}
+
+        // Time difference validation (sequential heuristic)
+        try {
+          const maxMin = Number(tripExec.max_pickup_time_difference_minutes || 0) || 0;
+          if (maxMin && distanceSvc && distanceSvc.getTravelSeconds && pickup_points.length >= 2) {
+            let maxSec = 0;
+            for (let i=0;i<pickup_points.length-1;i++){
+              const a = pickup_points[i], b = pickup_points[i+1];
+              // getTravelSeconds tolerates missing coords via haversine fallback or default 10min
+              const sec = await distanceSvc.getTravelSeconds({ lat: a.lat, lng: a.lng }, { lat: b.lat, lng: b.lng });
+              if (sec > maxSec) maxSec = sec;
+            }
+            if (maxSec > (maxMin*60)) policyFlags.push({ code:'pickup_time_exceeded', message:`Χρονική απόκλιση pickups > ${maxMin} λεπτά (≈ ${Math.round(maxSec/60)}')` });
+          }
+        } catch(_) {}
+      }
+
+      // Capacity policy (min/max participants) based on effectiveSeats
+      const minP = Number(tripExec.min_participants || 0) || 0;
+      const maxP = Number(tripExec.max_participants || 0) || 0;
+      let statusPolicy = null;
+      if (minP && (effectiveSeats||0) < minP) statusPolicy = 'pending_fill';
+      if (maxP && (effectiveSeats||0) > maxP) statusPolicy = 'over_capacity';
       // Capacity checks (provider + legacy trip capacity)
       try {
         if (bookingsDb && trip_id) {
@@ -51,13 +144,71 @@ function registerBookings(app, deps) {
           }
         }
       } catch (e) { console.warn('Capacity check failed', e && e.message ? e.message : e); }
-      const id = crypto.randomUUID();
+  const id = crypto.randomUUID();
       const now = new Date().toISOString();
       if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
       // Partner mapping + structured columns
       let providerId = null; try { const m = bookingsDb.prepare('SELECT partner_id FROM partner_mappings WHERE trip_id = ?').get(trip_id); providerId = m && m.partner_id ? m.partner_id : null; } catch(_){ }
       const body = req.body || {};
-      const metaObj = (() => { try { return metadata && typeof metadata === 'object' ? metadata : (metadata ? JSON.parse(String(metadata)) : {}); } catch(_) { return {}; } })();
+  const metaObj = (() => { try { return metadata && typeof metadata === 'object' ? metadata : (metadata ? JSON.parse(String(metadata)) : {}); } catch(_) { return {}; } })();
+  // Attach policy flags and pickup_points to metadata for UI visibility
+  if (Array.isArray(policyFlags) && policyFlags.length) metaObj.policy_flags = policyFlags;
+  if (Array.isArray(pickup_points) && pickup_points.length) metaObj.pickup_points = pickup_points;
+  metaObj.policy_checked_at = now;
+      // Permanent rule: store a unified full route (pickups + tour stops + times) in metadata.route.full_path
+      try {
+        // If client provided structured stops, prefer them; else synthesize from pickup_points and basic timing
+        const stopsIn = Array.isArray(metaObj.stops) ? metaObj.stops : null;
+        const pickupTimeStr = String(metaObj.pickup_time || body.pickup_time || '').slice(0,5) || null;
+        let full = [];
+        if (stopsIn && stopsIn.length){
+          full = stopsIn.map((s, i) => ({
+            label: s.label || s.name || s.customer || `Στάση ${i+1}`,
+            address: s.address || s.pickup || s.location || '',
+            lat: s.lat ?? s.latitude ?? null,
+            lng: s.lng ?? s.longitude ?? null,
+            arrival_time: s.arrival_time || s.time || s.scheduled_time || null,
+            departure_time: s.departure_time || null,
+            type: (String(s.type||'').toLowerCase()==='pickup' || /παραλαβή/i.test(String(s.name||''))) ? 'pickup' : 'tour_stop',
+          }));
+        } else if (Array.isArray(pickup_points) && pickup_points.length) {
+          const inc = 20; // 20' per pickup as default heuristic
+          let t0 = pickupTimeStr || '09:00';
+          full = pickup_points.map((p, i) => ({
+            label: `Παραλαβή: ${p.address || ''}`.trim(),
+            address: p.address || '',
+            lat: p.lat ?? null,
+            lng: p.lng ?? null,
+            arrival_time: i===0 ? t0 : addMinutes(t0, i*inc),
+            departure_time: null,
+            type: 'pickup'
+          }));
+          // Append trip-defined tour stops (from public/data/trips/*.json) after pickups
+          const tripStops = readTripStops(trip_id);
+          if (tripStops.length){
+            let prevTime = (full[full.length-1] && full[full.length-1].arrival_time) || t0;
+            const fallbackInc = 45;
+            tripStops.forEach((ts, idx) => {
+              const at = ts.arrival_time || addMinutes(prevTime, fallbackInc);
+              full.push({ type:'tour_stop', label: ts.label || `Στάση ${idx+1}`, address: ts.address || '', arrival_time: at, departure_time: ts.departure_time || null, lat: ts.lat ?? null, lng: ts.lng ?? null });
+              prevTime = at || prevTime;
+            });
+          } else {
+            // Fallback: append a synthetic first tour stop
+            const last = full[full.length-1];
+            const arrival = last ? addMinutes(last.arrival_time || t0, inc) : addMinutes(t0, inc);
+            const tourLabel = metaObj.tour_title || trip_id || 'Έναρξη εκδρομής';
+            const tourAddr = metaObj.dropoff_point || metaObj.to || metaObj.end_location || metaObj.pickup_location || '';
+            full.push({ label: `Στάση: ${tourLabel}`, address: tourAddr, lat: null, lng: null, arrival_time: arrival, departure_time: null, type: 'tour_stop' });
+          }
+        }
+        if (!metaObj.route) metaObj.route = {};
+        metaObj.route.full_path = full;
+        // For backward-compatibility with existing Driver Panel, also expose as metadata.stops when not present
+        if (!Array.isArray(metaObj.stops) || !metaObj.stops.length) {
+          metaObj.stops = full.map((r) => ({ name: r.label, address: r.address, time: r.arrival_time, type: r.type, lat: r.lat, lng: r.lng }));
+        }
+      } catch(_){ /* non-fatal */ }
       const pickStr = (...arr) => { const v = arr.find(x => x != null && String(x).trim() !== ''); return v == null ? '' : String(v); };
       const toNum = (v) => { if (v == null || v === '') return null; const n = Number(v); return Number.isFinite(n) ? n : null; };
       const pickup_location = pickStr(body.pickup_location, body.pickup_point, body.pickup_address, body.pickup, body.from, body.start_location, metaObj.pickup_location, metaObj.pickup_point, metaObj.pickup_address, metaObj.pickup, metaObj.from, metaObj.start_location);
@@ -73,22 +224,36 @@ function registerBookings(app, deps) {
       if (providerId) {
         try {
           const insertWithPartner = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insertWithPartner.run(id, 'pending', null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now, date, 0, null, providerId, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
+          insertWithPartner.run(id, (statusPolicy || 'pending'), null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), price_cents || 0, currency || 'eur', JSON.stringify(metaObj), now, now, date, 0, null, providerId, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
           inserted = true;
         } catch(_) { /* fallback below */ }
       }
       if (!inserted) {
         try {
           const insert2 = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insert2.run(id, 'pending', null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now, date, 0, null, null, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
+          insert2.run(id, (statusPolicy || 'pending'), null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), price_cents || 0, currency || 'eur', JSON.stringify(metaObj), now, now, date, 0, null, null, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
         } catch(_e) {
           const insertLegacy = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insertLegacy.run(id, 'pending', date, null, null, user_name, user_email, trip_id, seats || 1, price_cents || 0, currency || 'eur', metadata ? JSON.stringify(metadata) : null, now, now);
+          insertLegacy.run(id, (statusPolicy || 'pending'), date, null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), price_cents || 0, currency || 'eur', JSON.stringify(metaObj), now, now);
         }
       }
       try { bookingsDb.prepare('UPDATE bookings SET pickup_location = ?, pickup_lat = ?, pickup_lng = ?, suitcases_json = ?, special_requests = ? WHERE id = ?').run(pickup_location || '', pickup_lat, pickup_lng, suitcases_json || '[]', special_requests || '', id); } catch(_){ }
+      try {
+        if (Array.isArray(pickup_points)) {
+          bookingsDb.prepare('UPDATE bookings SET pickup_points_json = ? WHERE id = ?').run(JSON.stringify(pickup_points), id);
+        }
+      } catch(_){ }
       try { const setDemo = bookingsDb.prepare('UPDATE bookings SET is_demo = COALESCE(is_demo, ?), source = COALESCE(?, source) WHERE id = ?'); setDemo.run(looksDemo ? 1 : 0, finalSource, id); } catch(_){ }
-      return res.json({ bookingId: id, status: 'pending' });
+      // Notify Admin stream about policy outcome (PASS when no flags)
+      try {
+        if (adminSse && adminSse.broadcast) {
+          const ok = !(policyFlags && policyFlags.length);
+          const payload = ok ? { type: 'policy_status', status: 'pass', booking_id: id, trip_id, timestamp: now }
+                             : { type: 'policy_violation', booking_id: id, trip_id, violation_reason: (policyFlags[0] && policyFlags[0].code) || 'policy_violation', reasons: policyFlags, timestamp: now };
+          adminSse.broadcast(payload);
+        }
+      } catch(_) { }
+      return res.json({ bookingId: id, status: (statusPolicy || 'pending'), policy_flags: policyFlags || [], seats: (effectiveSeats || seats || 1) });
     } catch (e) {
       console.error('Create booking error', e && e.stack ? e.stack : e);
       return res.status(500).json({ error: 'Server error' });
@@ -116,7 +281,99 @@ function registerBookings(app, deps) {
       const row = bookingsDb.prepare('SELECT * FROM bookings WHERE id = ?').get(req.params.id);
       if (!row) return res.status(404).json({ error: 'Not found' });
       if (row.metadata) { try { row.metadata = JSON.parse(row.metadata); } catch(_){} }
+      if (row && typeof row.pickup_points_json === 'string') { try { row.pickup_points = JSON.parse(row.pickup_points_json); } catch(_) { row.pickup_points = []; } }
       if (row && typeof row.suitcases_json === 'string') { try { row.suitcases = JSON.parse(row.suitcases_json); } catch(_) { row.suitcases = []; } }
+      // Compute a unified route.full_path if not already present
+      try {
+        const meta = row.metadata || {};
+        let full = meta && meta.route && Array.isArray(meta.route.full_path) ? meta.route.full_path.slice() : null;
+        if (!full || !full.length){
+          const stops = Array.isArray(meta.stops) ? meta.stops : [];
+          if (stops.length){
+            full = stops.map((s,i)=>({
+              label: s.label || s.name || s.customer || `Στάση ${i+1}`,
+              address: s.address || s.pickup || s.location || '',
+              lat: s.lat ?? s.latitude ?? null,
+              lng: s.lng ?? s.longitude ?? null,
+              arrival_time: s.arrival_time || s.time || s.scheduled_time || null,
+              departure_time: s.departure_time || null,
+              type: (String(s.type||'').toLowerCase()==='pickup' || /παραλαβή/i.test(String(s.name||''))) ? 'pickup' : 'tour_stop',
+            }));
+            // Append trip JSON tour stops after pickups
+            const pickupTimeStr = String(meta.pickup_time || '').slice(0,5) || '09:00';
+            const tripStops = readTripStops(row.trip_id);
+            if (tripStops.length){
+              const seen = new Set(full.filter(x=> (x.type||'tour_stop')==='tour_stop').map(x=> (x.address||'').trim().toLowerCase()));
+              let prevTime = (full.length ? full[full.length-1].arrival_time : null) || pickupTimeStr;
+              const fallbackInc = 45;
+              tripStops.forEach((ts, idx) => {
+                const key = String(ts.address||'').trim().toLowerCase();
+                if (key && seen.has(key)) return;
+                const at = ts.arrival_time || addMinutes(prevTime, fallbackInc);
+                full.push({ type:'tour_stop', label: ts.label || `Στάση ${idx+1}`, address: ts.address || '', arrival_time: at, departure_time: ts.departure_time || null, lat: ts.lat ?? null, lng: ts.lng ?? null });
+                prevTime = at || prevTime;
+              });
+            }
+          } else if (row.pickup_points && Array.isArray(row.pickup_points) && row.pickup_points.length){
+            const pickupTimeStr = String(meta.pickup_time || '').slice(0,5) || '09:00';
+            const inc = 20;
+            full = row.pickup_points.map((p,i)=>({
+              label: `Παραλαβή: ${p.address||''}`.trim(),
+              address: p.address || '',
+              lat: p.lat ?? null,
+              lng: p.lng ?? null,
+              arrival_time: i===0 ? pickupTimeStr : addMinutes(pickupTimeStr, i*inc),
+              departure_time: null,
+              type: 'pickup'
+            }));
+            const tripStops = readTripStops(row.trip_id);
+            if (tripStops.length){
+              let prevTime = (full[full.length-1] && full[full.length-1].arrival_time) || pickupTimeStr;
+              const fallbackInc = 45;
+              tripStops.forEach((ts, idx) => {
+                const at = ts.arrival_time || addMinutes(prevTime, fallbackInc);
+                full.push({ type:'tour_stop', label: ts.label || `Στάση ${idx+1}`, address: ts.address || '', arrival_time: at, departure_time: ts.departure_time || null, lat: ts.lat ?? null, lng: ts.lng ?? null });
+                prevTime = at || prevTime;
+              });
+            } else {
+              const last = full[full.length-1];
+              const arrival = last ? addMinutes(last.arrival_time || pickupTimeStr, inc) : addMinutes(pickupTimeStr, inc);
+              const tourLabel = meta.tour_title || row.trip_id || 'Έναρξη εκδρομής';
+              const tourAddr = meta.dropoff_point || meta.to || meta.end_location || row.pickup_location || '';
+              full.push({ label: `Στάση: ${tourLabel}`, address: tourAddr, lat: null, lng: null, arrival_time: arrival, departure_time: null, type: 'tour_stop' });
+            }
+          } else {
+            full = [];
+          }
+          if (!row.metadata) row.metadata = {};
+          if (!row.metadata.route) row.metadata.route = {};
+          row.metadata.route.full_path = full;
+        } else {
+          // Augment existing full_path with any missing JSON tour stops
+          const seen = new Set(full.filter(x => (x.type||'tour_stop')==='tour_stop').map(x => (x.address||'').trim().toLowerCase()));
+          const tripStops = readTripStops(row.trip_id);
+          if (tripStops.length){
+            let prevTime = (full.length ? full[full.length-1].arrival_time : null) || (String(meta.pickup_time||'09:00').slice(0,5));
+            const fallbackInc = 45;
+            for (let i=0;i<tripStops.length;i++){
+              const ts = tripStops[i];
+              const key = String(ts.address||'').trim().toLowerCase();
+              if (!key || seen.has(key)) continue;
+              const at = ts.arrival_time || addMinutes(prevTime, fallbackInc);
+              full.push({ type:'tour_stop', label: ts.label || `Στάση ${i+1}`, address: ts.address || '', arrival_time: at, departure_time: ts.departure_time || null, lat: ts.lat ?? null, lng: ts.lng ?? null });
+              prevTime = at || prevTime;
+            }
+            row.route = { full_path: full };
+          }
+  }
+        // Expose as stops for Driver UI compatibility when needed
+        if (!Array.isArray(row.stops) || !row.stops){
+          const src = (row.route && Array.isArray(row.route.full_path)) ? row.route.full_path
+                      : (row.metadata && row.metadata.route && Array.isArray(row.metadata.route.full_path)) ? row.metadata.route.full_path
+                      : [];
+          row.stops = src.map((r)=>({ name: r.label, address: r.address, time: r.arrival_time, type: r.type, lat: r.lat, lng: r.lng }));
+        }
+      } catch(_){ }
       return res.json(row);
     } catch (e) { console.error('Get booking error', e && e.stack ? e.stack : e); return res.status(500).json({ error: 'Server error' }); }
   });

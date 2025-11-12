@@ -28,7 +28,8 @@ function run(){
          OR LOWER(COALESCE(user_email,'')) LIKE '%demo%'
          OR LOWER(COALESCE(user_name,'')) LIKE '%demo%'
          OR LOWER(COALESCE(seed_source,'')) LIKE '%demo%'
-         OR trip_id IN ('DEMO_ACROPOLIS_TOUR','DEMO_USER_SPECIFIED_ROUTE','DEMO_CUSTOM_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST_PCODES')
+      OR trip_id IN ('DEMO_ACROPOLIS_TOUR','DEMO_USER_SPECIFIED_ROUTE','DEMO_CUSTOM_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST_PCODES')
+      AND trip_id <> 'acropolis_demo'
     `).get().c;
 
     // Drop driver assignments first (non-destructive) so nothing shows in driver panel
@@ -39,7 +40,8 @@ function run(){
          OR LOWER(COALESCE(user_email,'')) LIKE '%demo%'
          OR LOWER(COALESCE(user_name,'')) LIKE '%demo%'
          OR LOWER(COALESCE(seed_source,'')) LIKE '%demo%'
-         OR trip_id IN ('DEMO_ACROPOLIS_TOUR','DEMO_USER_SPECIFIED_ROUTE','DEMO_CUSTOM_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST_PCODES')
+      OR trip_id IN ('DEMO_ACROPOLIS_TOUR','DEMO_USER_SPECIFIED_ROUTE','DEMO_CUSTOM_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST_PCODES')
+      AND trip_id <> 'acropolis_demo'
     `).run();
 
     // Delete related dispatch logs
@@ -51,6 +53,7 @@ function run(){
            OR LOWER(COALESCE(user_name,'')) LIKE '%demo%'
            OR LOWER(COALESCE(seed_source,'')) LIKE '%demo%'
            OR trip_id IN ('DEMO_ACROPOLIS_TOUR','DEMO_USER_SPECIFIED_ROUTE','DEMO_CUSTOM_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST_PCODES')
+           AND trip_id <> 'acropolis_demo'
       )
     `).run();
 
@@ -61,7 +64,8 @@ function run(){
          OR LOWER(COALESCE(user_email,'')) LIKE '%demo%'
          OR LOWER(COALESCE(user_name,'')) LIKE '%demo%'
          OR LOWER(COALESCE(seed_source,'')) LIKE '%demo%'
-         OR trip_id IN ('DEMO_ACROPOLIS_TOUR','DEMO_USER_SPECIFIED_ROUTE','DEMO_CUSTOM_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST_PCODES')
+      OR trip_id IN ('DEMO_ACROPOLIS_TOUR','DEMO_USER_SPECIFIED_ROUTE','DEMO_CUSTOM_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST_PCODES')
+      AND trip_id <> 'acropolis_demo'
     `).run();
 
     const countAfter = db.prepare(`SELECT COUNT(1) AS c
@@ -71,7 +75,8 @@ function run(){
          OR LOWER(COALESCE(user_email,'')) LIKE '%demo%'
          OR LOWER(COALESCE(user_name,'')) LIKE '%demo%'
          OR LOWER(COALESCE(seed_source,'')) LIKE '%demo%'
-         OR trip_id IN ('DEMO_ACROPOLIS_TOUR','DEMO_USER_SPECIFIED_ROUTE','DEMO_CUSTOM_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST_PCODES')
+      OR trip_id IN ('DEMO_ACROPOLIS_TOUR','DEMO_USER_SPECIFIED_ROUTE','DEMO_CUSTOM_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST','DEMO_SCATTERED_GOOGLE_TEST_PCODES')
+      AND trip_id <> 'acropolis_demo'
     `).get().c;
 
     console.log(JSON.stringify({ cleaned: info.changes || 0, before: countBefore, after: countAfter }));

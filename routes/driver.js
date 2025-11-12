@@ -3,8 +3,12 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const fs = require('fs');
+const routeTemplate = (()=>{ try { return require('../services/routeTemplate'); } catch(_){ return null; } })();
 
 const router = express.Router();
+// Optional policies for presentation rules
+let policyService = null; try { policyService = require('../services/policyService'); } catch(_) {}
 // Use global JSON parser installed in server.js
 router.use(express.urlencoded({ extended: true }));
 
@@ -54,6 +58,19 @@ const hasPostgres = !!process.env.DATABASE_URL;
 function getSqlite(){
   const Database = require('better-sqlite3');
   return new Database(path.join(__dirname, '..', 'data', 'db.sqlite3'));
+}
+
+// Helper: add minutes to an HH:MM string, returns HH:MM (24h)
+function addMinutes(hhmm, inc){
+  try {
+    const [h, m] = String(hhmm || '00:00').slice(0,5).split(':').map(x => parseInt(x, 10) || 0);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    d.setMinutes(d.getMinutes() + (parseInt(inc,10) || 0));
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    return `${hh}:${mm}`;
+  } catch(_) { return String(hhmm || '00:00').slice(0,5); }
 }
 
 async function withPg(fn){
@@ -215,7 +232,7 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
         return {
           id: b.id,
             booking_id: b.id,
-            trip_title: b.trip_id,
+            trip_title: (meta.tour_title || b.trip_id),
             date: b.date,
             pickup_point: (b.pickup_location && b.pickup_location.trim()) || 'N/A',
             pickup_time: (meta.pickup_time || meta.time) || 'N/A',
@@ -239,7 +256,7 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
           return {
             id: b.id,
               booking_id: b.id,
-              trip_title: b.trip_id,
+              trip_title: (meta.tour_title || b.trip_id),
               date: b.date,
               pickup_point: b.pickup_location || 'N/A',
               pickup_time: meta.pickup_time || meta.time || 'N/A',
@@ -284,6 +301,121 @@ router.get('/api/bookings/:id', authMiddleware, async (req, res) => {
     if (!row) return res.status(404).json({ error: 'Not found' });
     let meta = {}; try { meta = row.metadata ? (typeof row.metadata==='object'?row.metadata:JSON.parse(row.metadata)) : {}; } catch(_) {}
 
+    // If full_path exists and presentation policy requests it, return it directly (augmenting missing trip JSON stops);
+    // Otherwise, if policy prefers full route but no full_path exists, synthesize from pickups + trip JSON.
+    try {
+      const pol = policyService && policyService.loadPolicies ? (policyService.loadPolicies() || {}) : {};
+      const pres = pol.presentation || {};
+      const preferFull = !!pres.show_full_route_to_panels;
+      if (preferFull && meta && meta.route && Array.isArray(meta.route.full_path) && meta.route.full_path.length){
+        // Augment with trip JSON stops if not all are present
+        const augment = (()=>{
+          try {
+            const tripId = row.trip_id || '';
+            const base = path.join(__dirname, '..', 'public', 'data', 'trips');
+            const candidates = [ `${tripId}.json` ];
+            if (/_demo$/.test(tripId)) candidates.push(`${tripId.replace(/_demo$/, '')}.json`);
+            if (/_test$/.test(tripId)) candidates.push(`${tripId.replace(/_test$/, '')}.json`);
+            let chosen=null; for (const n of candidates){ const p=path.join(base, n); if (fs.existsSync(p)){ chosen=p; break; } }
+            if (!chosen) return meta.route.full_path;
+            const raw = fs.readFileSync(chosen, 'utf8'); const json = JSON.parse(raw);
+            const tStops = Array.isArray(json.stops)?json.stops:[];
+            const toAdd = tStops.map((s,i)=>({ type:'tour_stop', label:(s.label||s.title||(typeof s.name==='string'?s.name:(s.name&&(s.name.el||s.name.en)))||`Στάση ${i+1}`), address:s.address||s.location||'', arrival_time:s.arrival_time||s.time||null, departure_time:s.departure_time||null, lat:s.lat??s.latitude??null, lng:s.lng??s.longitude??null }));
+            const full = meta.route.full_path.slice();
+            const seen = new Set(full.filter(x => (x.type||'tour_stop')==='tour_stop').map(x => (x.address||'').trim().toLowerCase()));
+            let prevTime = (full.length ? full[full.length-1].arrival_time : null) || (String(meta.pickup_time||'09:00').slice(0,5));
+            const fallbackInc = 45;
+            for (let i=0;i<toAdd.length;i++){ const ts=toAdd[i]; const key=String(ts.address||'').trim().toLowerCase(); if (key && !seen.has(key)){ const at = ts.arrival_time || /* fallback spacing */ (prevTime? new Date(): null); const atStr = ts.arrival_time || (prevTime ? (function(){ const [h,m]=(prevTime||'00:00').split(':').map(x=>parseInt(x,10)||0); const d=new Date(); d.setHours(h,m,0,0); d.setMinutes(d.getMinutes()+fallbackInc); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); })() : null); full.push({ ...ts, arrival_time: atStr }); prevTime = atStr || prevTime; } }
+            return full;
+          } catch(_) { return meta.route.full_path; }
+        })();
+        // Build a stable original_index for pickups using the source pickups array (pickup_points_json or meta.pickups)
+        const srcPickups = (()=>{
+          let arr = [];
+          try { if (row.pickup_points_json){ const a = JSON.parse(row.pickup_points_json); if (Array.isArray(a)) arr = a.map(x => (x && (x.address||x.pickup||x.location)) || '').filter(Boolean); } } catch(_){ }
+          if (!arr.length){
+            try { const mp = Array.isArray(meta.pickups) ? meta.pickups : []; arr = mp.map(p => (p && (p.address||p.pickup||p.location)) || '').filter(Boolean); } catch(_){ }
+          }
+          const norm = s => String(s||'').trim().toLowerCase();
+          return arr.map(norm);
+        })();
+        let pSeq = 0;
+        const isPickup = (s) => String((s.type||'').toLowerCase()) === 'pickup' || /παραλαβή/i.test(String(s.label||s.name||''));
+        const normAddr = (s)=> String(s||'').trim().toLowerCase();
+        let fp = augment.map((r,i)=>{
+          const base = {
+            idx: i,
+            type: r.type || null,
+            name: r.label || `Στάση ${i+1}`,
+            address: r.address || '—',
+            lat: r.lat ?? null,
+            lng: r.lng ?? null,
+            time: r.arrival_time || null,
+            scheduled_time: r.arrival_time || null,
+          };
+          if (isPickup(base)){
+            const j = srcPickups.indexOf(normAddr(base.address));
+            const oi = (j >= 0) ? j : (pSeq++);
+            return { ...base, original_index: oi };
+          }
+          return { ...base, original_index: null };
+        });
+        // Apply manual pickup order if present
+        let calcMethod = 'full_path';
+        try {
+          const sorted = Array.isArray(meta.stops_sorted) ? meta.stops_sorted.map(x => x.original_index).filter(n => Number.isFinite(n)) : null;
+          const manualAddr = Array.isArray(meta.pickups_manual_addresses) ? meta.pickups_manual_addresses.map(s=>String(s||'').toLowerCase()) : null;
+          const isP = (s)=> (String((s.type||'').toLowerCase())==='pickup' || /παραλαβή/i.test(String(s.name||'')));
+          const pickups = fp.filter(isP);
+          const others = fp.filter(s => !isPickup(s));
+          let applied = false;
+          if (sorted && sorted.length){
+            const byOrig = new Map(pickups.map(s => [s.original_index, s]));
+            const orderedPickups = sorted.map(n => byOrig.get(n)).filter(Boolean);
+            const restPickups = pickups.filter(p => !sorted.includes(p.original_index));
+            if (orderedPickups.length){ fp = orderedPickups.concat(restPickups).concat(others); calcMethod = 'manual'; applied = true; }
+          }
+          if (!applied && manualAddr && manualAddr.length){
+            const byAddr = new Map(pickups.map(s => [String(s.address||'').toLowerCase(), s]));
+            const ordered = manualAddr.map(a => byAddr.get(a)).filter(Boolean);
+            const rest = pickups.filter(p => !manualAddr.includes(String(p.address||'').toLowerCase()));
+            if (ordered.length){ fp = ordered.concat(rest).concat(others); calcMethod = 'manual'; applied = true; }
+          }
+        } catch(_){ }
+        return res.json({ ok:true, booking: { id: row.id, trip_title: (meta.tour_title || row.trip_id), date: row.date, pickup_time: (meta.pickup_time||meta.time||null), route_id: row.route_id || null, stops: fp, calc: { method: calcMethod, anchor_hhmm: (fp.find(s=> (s.type||'')!=='pickup') && (fp.find(s=> (s.type||'')!=='pickup').time)) || null, anchor_iso: null } } });
+      }
+      if (preferFull && (!meta || !meta.route || !Array.isArray(meta.route.full_path) || !meta.route.full_path.length)){
+        // Build using the shared route synthesis service (handles any number of pickups and trip stops)
+        if (routeTemplate && typeof routeTemplate.synthesizeRoute === 'function'){
+          const synth = routeTemplate.synthesizeRoute(row, { pickupIncMin: 20 });
+          let fp = (synth.full_path || []).map((r,i)=>({ idx:i, original_index: (r && typeof r.pickup_idx==='number') ? r.pickup_idx : i, type:r.type||null, name:r.label||`Στάση ${i+1}`, address:r.address||'—', lat:r.lat??null, lng:r.lng??null, time:r.arrival_time||null, scheduled_time:r.arrival_time||null }));
+          // Apply manual pickup order if present
+          let calcMethod = 'full_path_synth';
+          try {
+            const sorted = Array.isArray(meta.stops_sorted) ? meta.stops_sorted.map(x => x.original_index).filter(n => Number.isFinite(n)) : null;
+            const manualAddr = Array.isArray(meta.pickups_manual_addresses) ? meta.pickups_manual_addresses.map(s=>String(s||'').toLowerCase()) : null;
+            const isPickup = (s)=> (String((s.type||'').toLowerCase())==='pickup' || /παραλαβή/i.test(String(s.name||'')));
+            const pickups = fp.filter(isPickup);
+            const others = fp.filter(s => !isPickup(s));
+            let applied = false;
+            if (sorted && sorted.length){
+              const byOrig = new Map(pickups.map(s => [s.original_index, s]));
+              const orderedPickups = sorted.map(n => byOrig.get(n)).filter(Boolean);
+              const restPickups = pickups.filter(p => !sorted.includes(p.original_index));
+              if (orderedPickups.length){ fp = orderedPickups.concat(restPickups).concat(others); calcMethod = 'manual'; applied = true; }
+            }
+            if (!applied && manualAddr && manualAddr.length){
+              const byAddr = new Map(pickups.map(s => [String(s.address||'').toLowerCase(), s]));
+              const ordered = manualAddr.map(a => byAddr.get(a)).filter(Boolean);
+              const rest = pickups.filter(p => !manualAddr.includes(String(p.address||'').toLowerCase()));
+              if (ordered.length){ fp = ordered.concat(rest).concat(others); calcMethod = 'manual'; applied = true; }
+            }
+          } catch(_){ }
+          return res.json({ ok:true, booking: { id: row.id, trip_title: (meta && meta.tour_title) || row.trip_id, date: row.date, pickup_time: (meta && (meta.pickup_time||meta.time)) || null, route_id: row.route_id || null, stops: fp, calc: { method: calcMethod, anchor_hhmm: (fp.find(s=> (s.type||'')!=='pickup') && (fp.find(s=> (s.type||'')!=='pickup').time)) || null, anchor_iso: null } } });
+        }
+      }
+    } catch(_){ }
+
     // Build rawStops from metadata
     let rawStops = [];
     if (Array.isArray(meta.stops) && meta.stops.length){
@@ -311,11 +443,27 @@ router.get('/api/bookings/:id', authMiddleware, async (req, res) => {
       let anchorIso = null;
       let anchorHhmm = null;
       try {
-        const plan = meta && meta.pickup_plan ? meta.pickup_plan : null;
-        const chosenOrig = plan && typeof plan.chosen_original_index === 'number' ? plan.chosen_original_index : null;
-        if (chosenOrig != null){
-          const pos = pickups.findIndex(p => p.idx === chosenOrig);
-          if (pos > 0) pickups = pickups.slice(pos).concat(pickups.slice(0,pos));
+        // If manual order exists in metadata.stops_sorted, apply it strictly to pickups
+        const sorted = Array.isArray(meta.stops_sorted) ? meta.stops_sorted.map(x => x.original_index).filter(n => Number.isFinite(n)) : null;
+        if (sorted && sorted.length){
+          const byIdx = new Map(pickups.map(p => [p.idx, p]));
+          const manual = sorted.map(n => byIdx.get(n)).filter(Boolean);
+          const rest = pickups.filter(p => !sorted.includes(p.idx));
+          if (manual.length) pickups = manual.concat(rest);
+          methodUsed = 'manual';
+        } else if (Array.isArray(meta.pickups_manual_addresses) && meta.pickups_manual_addresses.length){
+          const manualAddr = meta.pickups_manual_addresses.map(s=>String(s||'').toLowerCase());
+          const byAddr = new Map(pickups.map(p => [String(p.address||'').toLowerCase(), p]));
+          const ordered = manualAddr.map(a => byAddr.get(a)).filter(Boolean);
+          const rest = pickups.filter(p => !manualAddr.includes(String(p.address||'').toLowerCase()));
+          if (ordered.length){ pickups = ordered.concat(rest); methodUsed = 'manual'; }
+        } else {
+          const plan = meta && meta.pickup_plan ? meta.pickup_plan : null;
+          const chosenOrig = plan && typeof plan.chosen_original_index === 'number' ? plan.chosen_original_index : null;
+          if (chosenOrig != null){
+            const pos = pickups.findIndex(p => p.idx === chosenOrig);
+            if (pos > 0) pickups = pickups.slice(pos).concat(pickups.slice(0,pos));
+          }
         }
       } catch(_){ }
       const targetAt = (() => {
@@ -338,8 +486,10 @@ router.get('/api/bookings/:id', authMiddleware, async (req, res) => {
       const routeSet = hasPickupPhase ? pickups.concat([tourFirst]) : stops;
       const normStops = routeSet.map(s => { let addr=s.address||''; if (addr && !/\bGreece\b/i.test(addr)) addr = addr.replace(/\s+$/,'') + ', Greece'; return { ...s, address: addr }; });
       const departureEpochSec = Math.floor(targetAt.getTime()/1000);
-      let optimized = null;
-      if (key){
+  let optimized = null;
+  // If manual order is set, skip Google optimization; otherwise, we may call Google
+  const hasManual = (methodUsed === 'manual');
+  if (key && !hasManual){
         try {
           const toQuery = (s)=> (s.lat!=null && s.lng!=null) ? `${s.lat},${s.lng}` : encodeURIComponent(String(s.address||'').trim());
           const origin = toQuery(normStops[0]);
@@ -394,15 +544,15 @@ router.get('/api/bookings/:id', authMiddleware, async (req, res) => {
       } catch(_){ }
       const optimizedSet = new Set(optimized.map(s=>s.original_index));
       // Ensure first tour stop shows anchor time exactly; next tour stops omit time
-      const ordered = optimized.map((s,i,arr)=>{ if (s.isFirstTourStop){ return { ...s, eta_local: anchorHhmm || s.eta_local }; } const isPickup=(s.type||'').toLowerCase()==='pickup' || /παραλαβή/i.test(String(s.name||'')); return isPickup ? s : { ...s, eta_local: null }; });
+  const ordered = optimized.map((s,i,arr)=>{ if (s.isFirstTourStop){ return { ...s, eta_local: anchorHhmm || s.eta_local }; } const isPickup=(s.type||'').toLowerCase()==='pickup' || /παραλαβή/i.test(String(s.name||'')); return isPickup ? s : { ...s, eta_local: null }; });
       if (tourStops.length>1){ tourStops.slice(1).forEach(ts=>{ if (!optimizedSet.has(ts.idx)) ordered.push({ ...ts, time: ts.time || ts.scheduled_time || null, original_index: ts.idx, eta_local: null }); }); }
       return { stops: ordered, calc: { method: methodUsed, anchor_hhmm: anchorHhmm, anchor_iso: anchorIso } };
     }
 
-    const enriched = await enrich(rawStops);
-    const stops = enriched.stops;
-    const calc = enriched.calc;
-    return res.json({ ok:true, booking: { id: row.id, trip_title: row.trip_id, date: row.date, pickup_time: (meta.pickup_time||meta.time||null), route_id: row.route_id || null, stops, calc } });
+  const enriched = await enrich(rawStops);
+  const stops = enriched.stops;
+  const calc = enriched.calc;
+  return res.json({ ok:true, booking: { id: row.id, trip_title: (meta.tour_title || row.trip_id), date: row.date, pickup_time: (meta.pickup_time||meta.time||null), route_id: row.route_id || null, stops, calc } });
   } catch(e){
     console.error('driver/api/bookings/:id error', e && e.message ? e.message : e);
     return res.status(500).json({ error:'Server error' });
@@ -506,6 +656,66 @@ router.post('/api/plan-pickups', authMiddleware, async (req, res) => {
     }
     return res.json({ ok:true, start_index: startIndex, chosen_original_index: chosen.__idx });
   } catch(e){ console.error('driver/api/plan-pickups error', e && e.message ? e.message : e); return res.status(500).json({ error:'Server error' }); }
+});
+
+// New: Save manual pickup order (drag & drop from driver UI)
+router.post('/api/update-pickup-order', async (req, res) => {
+  const devBypass = String(process.env.DRIVER_DEV_BYPASS || '').toLowerCase();
+  const allowBypass = (devBypass === '1' || devBypass === 'true' || devBypass === 'yes');
+  let did = null;
+  if (!allowBypass) {
+    // normal auth
+    const h = req.headers.authorization || '';
+    const tok = h.startsWith('Bearer ') ? h.slice(7) : null;
+    if (!tok) return res.status(401).json({ error: 'Unauthorized' });
+    try { const decoded = jwt.verify(tok, JWT_SECRET); did = decoded && (decoded.driver_id || decoded.id) || null; } catch(e){ return res.status(401).json({ error: 'Invalid token' }); }
+    if (!did) return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const bookingId = String((req.body && req.body.booking_id) || '').trim();
+  const order = (req.body && (req.body.new_order_original_indices || req.body.new_order)) || [];
+  const orderAddresses = Array.isArray(req.body && req.body.order_addresses) ? req.body.order_addresses.map(s => String(s||'').trim()).filter(Boolean) : [];
+  const list = Array.isArray(order) ? order.map(n => Number(n)).filter(n => Number.isFinite(n)) : [];
+  if (!bookingId || !list.length) return res.status(400).json({ error: 'Missing fields' });
+  try {
+    // Load booking (must belong to this driver)
+    let row = null;
+    if (hasPostgres){
+      row = await withPg(async (c) => {
+        await ensureBookingsAssignedPg(c);
+        const { rows } = await c.query('SELECT * FROM bookings WHERE id=$1 AND assigned_driver_id=$2 LIMIT 1',[bookingId, did]);
+        return rows && rows[0] ? rows[0] : null;
+      });
+    } else {
+      const db = getSqlite();
+      try {
+        ensureBookingsAssignedSqlite(db);
+        row = db.prepare('SELECT * FROM bookings WHERE id = ? AND assigned_driver_id = ? LIMIT 1').get(bookingId, did);
+      } finally { db.close(); }
+    }
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    let meta = {}; try { meta = row.metadata ? (typeof row.metadata==='object'?row.metadata:JSON.parse(row.metadata)) : {}; } catch(_) {}
+    const stopsRaw = Array.isArray(meta.stops) ? meta.stops : [];
+    const pickups = stopsRaw.map((s,i)=>({ ...s, __idx:i })).filter(s => String((s.type||'').toLowerCase()) === 'pickup' || /παραλαβή/i.test(String(s.name||'')));
+    // If metadata.stops present, validate indices; otherwise skip validation (synth case)
+    if (pickups.length) {
+      const pickupIdxSet = new Set(pickups.map(p => p.__idx));
+      for (const n of list){ if (!pickupIdxSet.has(n)) return res.status(400).json({ error: 'Invalid index in order' }); }
+    }
+    // Persist manual order as stops_sorted with only pickups in given sequence (tour stops order remains as-is)
+    meta.stops_sorted = list.map((origIdx, k) => ({ original_index: origIdx, sequence: k+1 }));
+    // Also store manual address order as a robust fallback across synthesis branches
+    if (orderAddresses && orderAddresses.length) {
+      meta.pickups_manual_addresses = orderAddresses.map(s => s.toLowerCase());
+    }
+    meta.pickup_plan = { manual: true, planned_at: new Date().toISOString() };
+    if (hasPostgres){
+      await withPg(async (c) => { await c.query('UPDATE bookings SET metadata=$1, updated_at=now() WHERE id=$2', [JSON.stringify(meta), row.id]); });
+    } else {
+      const db2 = getSqlite();
+      try { db2.prepare('UPDATE bookings SET metadata=?, updated_at=? WHERE id=?').run(JSON.stringify(meta), new Date().toISOString(), row.id); } finally { db2.close(); }
+    }
+    return res.json({ ok:true });
+  } catch(e){ console.error('driver/api/update-pickup-order error', e && e.message ? e.message : e); return res.status(500).json({ error:'Server error' }); }
 });
 
 // Lightweight profile endpoint

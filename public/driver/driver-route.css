@@ -8,3 +8,40 @@
 @media (min-width: 820px){
 	#routeStops{grid-template-columns:1fr 1fr;}
 }
+
+/* Touch-friendly drag styles for pickup cards */
+.dnd-item{
+	cursor:grab;
+	-webkit-user-select:none; user-select:none;
+	touch-action:none; /* avoid scroll hijack while dragging */
+	will-change: transform;
+	transition: transform 150ms ease-in-out;
+}
+.dnd-item.dragging{
+	opacity:.85;
+	transform: scale(1.02);
+	box-shadow:0 8px 20px rgba(0,0,0,.35);
+	cursor:grabbing;
+	background-color:#243447; /* navy-ish */
+	border-radius:8px;
+}
+.dnd-item.selected{ transition: transform 100ms ease; transform: scale(1.03); }
+.dnd-item.placeholder{opacity:.6; border:1px dashed rgba(255,255,255,.4)}
+
+/* Placeholder that occupies space while dragging (same height as the card) */
+.dnd-placeholder{
+	border:1px dashed rgba(255,255,255,.25);
+	border-radius:8px;
+	background: rgba(255,255,255,0.03);
+	margin:0 !important; /* prevent margin compounding while dragging */
+	box-sizing: border-box;
+}
+
+/* Optional: stabilize card height to reduce visual jump during drag */
+.stop.card.dnd-item{ min-height: 86px; }
+.dnd-item.dragging{ opacity:.95; transform: scale(1.03); }
+
+/* Inline SVG icon sizing/tone */
+.ico{ display:inline-block; vertical-align:-2px; margin-right:6px; fill:currentColor }
+.ico-time{ width:14px; height:14px; opacity:.9 }
+.ico-pickup{ width:15px; height:15px; opacity:.95 }
