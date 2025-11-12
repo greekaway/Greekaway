@@ -90,10 +90,76 @@ function synthesizeRoute(row, opts={}){
   return { full_path, trip_info: { start_time: trip.start_time || null } };
 }
 
+/**
+ * Reorder only pickup stops within a full_path array according to metadata.
+ * Priority 1: metadata.stops_sorted -> array of { original_index } referencing pickup_idx
+ * Priority 2: metadata.pickups_manual_addresses -> address-based ordering (lowercased exact match)
+ * Tour stops remain pinned after pickups, in their existing order. Times are not recomputed here.
+ */
+function applyManualOrder(full_path, metadata){
+  try {
+    const fp = Array.isArray(full_path) ? full_path : [];
+    const meta = metadata && typeof metadata==='object' ? metadata : {};
+    const pickups = fp.filter(x => (x && x.type)==='pickup');
+    const tours = fp.filter(x => (x && x.type)!=='pickup');
+    if (!pickups.length) return { full_path: fp.slice() };
+
+    const byIdx = new Map(pickups.map(p => [p.pickup_idx, p]));
+    const originalOrder = pickups.map(p => p.pickup_idx);
+
+    let desiredIdxOrder = null;
+    if (Array.isArray(meta.stops_sorted) && meta.stops_sorted.length){
+      const arr = meta.stops_sorted.map(x => x && x.original_index).filter(n => Number.isFinite(n));
+      if (arr.length) desiredIdxOrder = arr;
+    }
+    let manualAddrOrder = null;
+    if (!desiredIdxOrder && Array.isArray(meta.pickups_manual_addresses) && meta.pickups_manual_addresses.length){
+      manualAddrOrder = meta.pickups_manual_addresses.map(s => String(s||'').toLowerCase());
+    }
+
+    let reorderedPickups = pickups.slice();
+    if (desiredIdxOrder){
+      const seen = new Set();
+      const ordered = [];
+      for (const idx of desiredIdxOrder){
+        if (byIdx.has(idx) && !seen.has(idx)){ ordered.push(byIdx.get(idx)); seen.add(idx); }
+      }
+      for (const idx of originalOrder){ if (!seen.has(idx)){ ordered.push(byIdx.get(idx)); seen.add(idx); } }
+      reorderedPickups = ordered;
+    } else if (manualAddrOrder){
+      const byAddr = new Map();
+      pickups.forEach(p => { byAddr.set(String((p.address||'').trim()).toLowerCase(), p); });
+      const seen = new Set();
+      const ordered = [];
+      for (const a of manualAddrOrder){ const key = String(a||'').toLowerCase(); if (byAddr.has(key) && !seen.has(key)){ ordered.push(byAddr.get(key)); seen.add(key); } }
+      for (const p of pickups){ const key = String((p.address||'').trim()).toLowerCase(); if (!seen.has(key)){ ordered.push(p); seen.add(key); } }
+      reorderedPickups = ordered;
+    }
+
+    const newFull = reorderedPickups.concat(tours);
+    return { full_path: newFull };
+  } catch(_){
+    return { full_path: Array.isArray(full_path) ? full_path.slice() : [] };
+  }
+}
+
+/**
+ * Canonical route for panels: synthesize (pickups + trip stops) then apply manual pickup order from metadata.
+ * Returns shape: { full_path, trip_info }
+ */
+function getCanonicalRoute(row, opts={}){
+  const synth = synthesizeRoute(row, opts);
+  const meta = row && row.metadata ? (typeof row.metadata==='object' ? row.metadata : (function(){ try{return JSON.parse(row.metadata)}catch(_){return {}} })()) : {};
+  const applied = applyManualOrder(synth.full_path, meta);
+  return { full_path: applied.full_path, trip_info: synth.trip_info };
+}
+
 module.exports = {
   addMinutes,
   loadTripInfo,
   buildPickups,
   augmentWithTripStops,
   synthesizeRoute,
+  applyManualOrder,
+  getCanonicalRoute,
 };

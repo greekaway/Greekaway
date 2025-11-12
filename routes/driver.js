@@ -307,112 +307,21 @@ router.get('/api/bookings/:id', authMiddleware, async (req, res) => {
       const pol = policyService && policyService.loadPolicies ? (policyService.loadPolicies() || {}) : {};
       const pres = pol.presentation || {};
       const preferFull = !!pres.show_full_route_to_panels;
-      if (preferFull && meta && meta.route && Array.isArray(meta.route.full_path) && meta.route.full_path.length){
-        // Augment with trip JSON stops if not all are present
-        const augment = (()=>{
-          try {
-            const tripId = row.trip_id || '';
-            const base = path.join(__dirname, '..', 'public', 'data', 'trips');
-            const candidates = [ `${tripId}.json` ];
-            if (/_demo$/.test(tripId)) candidates.push(`${tripId.replace(/_demo$/, '')}.json`);
-            if (/_test$/.test(tripId)) candidates.push(`${tripId.replace(/_test$/, '')}.json`);
-            let chosen=null; for (const n of candidates){ const p=path.join(base, n); if (fs.existsSync(p)){ chosen=p; break; } }
-            if (!chosen) return meta.route.full_path;
-            const raw = fs.readFileSync(chosen, 'utf8'); const json = JSON.parse(raw);
-            const tStops = Array.isArray(json.stops)?json.stops:[];
-            const toAdd = tStops.map((s,i)=>({ type:'tour_stop', label:(s.label||s.title||(typeof s.name==='string'?s.name:(s.name&&(s.name.el||s.name.en)))||`Στάση ${i+1}`), address:s.address||s.location||'', arrival_time:s.arrival_time||s.time||null, departure_time:s.departure_time||null, lat:s.lat??s.latitude??null, lng:s.lng??s.longitude??null }));
-            const full = meta.route.full_path.slice();
-            const seen = new Set(full.filter(x => (x.type||'tour_stop')==='tour_stop').map(x => (x.address||'').trim().toLowerCase()));
-            let prevTime = (full.length ? full[full.length-1].arrival_time : null) || (String(meta.pickup_time||'09:00').slice(0,5));
-            const fallbackInc = 45;
-            for (let i=0;i<toAdd.length;i++){ const ts=toAdd[i]; const key=String(ts.address||'').trim().toLowerCase(); if (key && !seen.has(key)){ const at = ts.arrival_time || /* fallback spacing */ (prevTime? new Date(): null); const atStr = ts.arrival_time || (prevTime ? (function(){ const [h,m]=(prevTime||'00:00').split(':').map(x=>parseInt(x,10)||0); const d=new Date(); d.setHours(h,m,0,0); d.setMinutes(d.getMinutes()+fallbackInc); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); })() : null); full.push({ ...ts, arrival_time: atStr }); prevTime = atStr || prevTime; } }
-            return full;
-          } catch(_) { return meta.route.full_path; }
-        })();
-        // Build a stable original_index for pickups using the source pickups array (pickup_points_json or meta.pickups)
-        const srcPickups = (()=>{
-          let arr = [];
-          try { if (row.pickup_points_json){ const a = JSON.parse(row.pickup_points_json); if (Array.isArray(a)) arr = a.map(x => (x && (x.address||x.pickup||x.location)) || '').filter(Boolean); } } catch(_){ }
-          if (!arr.length){
-            try { const mp = Array.isArray(meta.pickups) ? meta.pickups : []; arr = mp.map(p => (p && (p.address||p.pickup||p.location)) || '').filter(Boolean); } catch(_){ }
-          }
-          const norm = s => String(s||'').trim().toLowerCase();
-          return arr.map(norm);
-        })();
-        let pSeq = 0;
-        const isPickup = (s) => String((s.type||'').toLowerCase()) === 'pickup' || /παραλαβή/i.test(String(s.label||s.name||''));
-        const normAddr = (s)=> String(s||'').trim().toLowerCase();
-        let fp = augment.map((r,i)=>{
-          const base = {
-            idx: i,
-            type: r.type || null,
-            name: r.label || `Στάση ${i+1}`,
-            address: r.address || '—',
-            lat: r.lat ?? null,
-            lng: r.lng ?? null,
-            time: r.arrival_time || null,
-            scheduled_time: r.arrival_time || null,
-          };
-          if (isPickup(base)){
-            const j = srcPickups.indexOf(normAddr(base.address));
-            const oi = (j >= 0) ? j : (pSeq++);
-            return { ...base, original_index: oi };
-          }
-          return { ...base, original_index: null };
-        });
-        // Apply manual pickup order if present
-        let calcMethod = 'full_path';
-        try {
-          const sorted = Array.isArray(meta.stops_sorted) ? meta.stops_sorted.map(x => x.original_index).filter(n => Number.isFinite(n)) : null;
-          const manualAddr = Array.isArray(meta.pickups_manual_addresses) ? meta.pickups_manual_addresses.map(s=>String(s||'').toLowerCase()) : null;
-          const isP = (s)=> (String((s.type||'').toLowerCase())==='pickup' || /παραλαβή/i.test(String(s.name||'')));
-          const pickups = fp.filter(isP);
-          const others = fp.filter(s => !isPickup(s));
-          let applied = false;
-          if (sorted && sorted.length){
-            const byOrig = new Map(pickups.map(s => [s.original_index, s]));
-            const orderedPickups = sorted.map(n => byOrig.get(n)).filter(Boolean);
-            const restPickups = pickups.filter(p => !sorted.includes(p.original_index));
-            if (orderedPickups.length){ fp = orderedPickups.concat(restPickups).concat(others); calcMethod = 'manual'; applied = true; }
-          }
-          if (!applied && manualAddr && manualAddr.length){
-            const byAddr = new Map(pickups.map(s => [String(s.address||'').toLowerCase(), s]));
-            const ordered = manualAddr.map(a => byAddr.get(a)).filter(Boolean);
-            const rest = pickups.filter(p => !manualAddr.includes(String(p.address||'').toLowerCase()));
-            if (ordered.length){ fp = ordered.concat(rest).concat(others); calcMethod = 'manual'; applied = true; }
-          }
-        } catch(_){ }
-        return res.json({ ok:true, booking: { id: row.id, trip_title: (meta.tour_title || row.trip_id), date: row.date, pickup_time: (meta.pickup_time||meta.time||null), route_id: row.route_id || null, stops: fp, calc: { method: calcMethod, anchor_hhmm: (fp.find(s=> (s.type||'')!=='pickup') && (fp.find(s=> (s.type||'')!=='pickup').time)) || null, anchor_iso: null } } });
-      }
-      if (preferFull && (!meta || !meta.route || !Array.isArray(meta.route.full_path) || !meta.route.full_path.length)){
-        // Build using the shared route synthesis service (handles any number of pickups and trip stops)
-        if (routeTemplate && typeof routeTemplate.synthesizeRoute === 'function'){
-          const synth = routeTemplate.synthesizeRoute(row, { pickupIncMin: 20 });
-          let fp = (synth.full_path || []).map((r,i)=>({ idx:i, original_index: (r && typeof r.pickup_idx==='number') ? r.pickup_idx : i, type:r.type||null, name:r.label||`Στάση ${i+1}`, address:r.address||'—', lat:r.lat??null, lng:r.lng??null, time:r.arrival_time||null, scheduled_time:r.arrival_time||null }));
-          // Apply manual pickup order if present
-          let calcMethod = 'full_path_synth';
-          try {
-            const sorted = Array.isArray(meta.stops_sorted) ? meta.stops_sorted.map(x => x.original_index).filter(n => Number.isFinite(n)) : null;
-            const manualAddr = Array.isArray(meta.pickups_manual_addresses) ? meta.pickups_manual_addresses.map(s=>String(s||'').toLowerCase()) : null;
-            const isPickup = (s)=> (String((s.type||'').toLowerCase())==='pickup' || /παραλαβή/i.test(String(s.name||'')));
-            const pickups = fp.filter(isPickup);
-            const others = fp.filter(s => !isPickup(s));
-            let applied = false;
-            if (sorted && sorted.length){
-              const byOrig = new Map(pickups.map(s => [s.original_index, s]));
-              const orderedPickups = sorted.map(n => byOrig.get(n)).filter(Boolean);
-              const restPickups = pickups.filter(p => !sorted.includes(p.original_index));
-              if (orderedPickups.length){ fp = orderedPickups.concat(restPickups).concat(others); calcMethod = 'manual'; applied = true; }
-            }
-            if (!applied && manualAddr && manualAddr.length){
-              const byAddr = new Map(pickups.map(s => [String(s.address||'').toLowerCase(), s]));
-              const ordered = manualAddr.map(a => byAddr.get(a)).filter(Boolean);
-              const rest = pickups.filter(p => !manualAddr.includes(String(p.address||'').toLowerCase()));
-              if (ordered.length){ fp = ordered.concat(rest).concat(others); calcMethod = 'manual'; applied = true; }
-            }
-          } catch(_){ }
-          return res.json({ ok:true, booking: { id: row.id, trip_title: (meta && meta.tour_title) || row.trip_id, date: row.date, pickup_time: (meta && (meta.pickup_time||meta.time)) || null, route_id: row.route_id || null, stops: fp, calc: { method: calcMethod, anchor_hhmm: (fp.find(s=> (s.type||'')!=='pickup') && (fp.find(s=> (s.type||'')!=='pickup').time)) || null, anchor_iso: null } } });
-        }
+      if (preferFull && routeTemplate && typeof routeTemplate.getCanonicalRoute==='function'){
+        const canon = routeTemplate.getCanonicalRoute(row, { pickupIncMin: 20 });
+        const fp = (canon.full_path || []).map((r,i)=>({
+          idx: i,
+          original_index: (r && r.type==='pickup' && typeof r.pickup_idx==='number') ? r.pickup_idx : null,
+          type: r.type||null,
+          name: r.label||`Στάση ${i+1}`,
+          address: r.address||'—',
+          lat: r.lat??null,
+          lng: r.lng??null,
+          time: r.arrival_time||null,
+          scheduled_time: r.arrival_time||null
+        }));
+        const anchor = (fp.find(s=> (s.type||'')!=='pickup') || null);
+        return res.json({ ok:true, booking: { id: row.id, trip_title: (meta && meta.tour_title) || row.trip_id, date: row.date, pickup_time: (meta && (meta.pickup_time||meta.time)) || null, route_id: row.route_id || null, stops: fp, calc: { method: 'canonical', anchor_hhmm: (anchor && anchor.time) || null, anchor_iso: null } } });
       }
     } catch(_){ }
 

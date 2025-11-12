@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
+const routeTemplate = (()=>{ try { return require('../services/routeTemplate'); } catch(_){ return null; } })();
 let nodemailer = null; try { nodemailer = require('nodemailer'); } catch(_){ }
 let rateLimit = null; try { rateLimit = require('express-rate-limit'); } catch(_){ }
 
@@ -13,6 +14,13 @@ if (rateLimit){ try { router.use('/auth/', rateLimit({ windowMs: 15 * 60 * 1000,
 
 const JWT_SECRET = (process.env.JWT_SECRET || 'dev-secret').toString();
 const hasPostgres = !!process.env.DATABASE_URL;
+
+// SQLite helper (mirrors usage pattern in other routes/services)
+function getSqlite(){
+  const Database = require('better-sqlite3');
+  const p = process.env.SQLITE_DB_PATH || path.join(__dirname, '..', 'data', 'db.sqlite3');
+  return new Database(p);
+}
 
 // Helper: add minutes to an HH:MM string, returns HH:MM (24h)
 function addMinutes(hhmm, inc){
@@ -50,6 +58,38 @@ function authMiddleware(req, res, next){
 }
 
 // ---------------- Drivers helper (DB schema + utility) ----------------
+function ensurePartnersSqlite(db){
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS partners (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      email TEXT,
+      password_hash TEXT,
+      panel_enabled INTEGER DEFAULT 0,
+      last_seen TEXT
+    )`);
+    const cols = db.prepare("PRAGMA table_info(partners)").all().map(c => c.name);
+    if (!cols.includes('password_hash')) db.exec("ALTER TABLE partners ADD COLUMN password_hash TEXT");
+    if (!cols.includes('panel_enabled')) db.exec("ALTER TABLE partners ADD COLUMN panel_enabled INTEGER DEFAULT 0");
+    if (!cols.includes('last_seen')) db.exec("ALTER TABLE partners ADD COLUMN last_seen TEXT");
+  } catch(_) { /* best effort */ }
+}
+
+async function ensurePartnersPg(client){
+  try {
+    await client.query(`CREATE TABLE IF NOT EXISTS partners (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      email TEXT,
+      password_hash TEXT,
+      panel_enabled INTEGER DEFAULT 0,
+      last_seen TEXT
+    )`);
+    await client.query(`ALTER TABLE partners ADD COLUMN IF NOT EXISTS password_hash TEXT`);
+    await client.query(`ALTER TABLE partners ADD COLUMN IF NOT EXISTS panel_enabled INTEGER DEFAULT 0`);
+    await client.query(`ALTER TABLE partners ADD COLUMN IF NOT EXISTS last_seen TEXT`);
+  } catch(_){ /* best effort */ }
+}
 function ensureDriversSqlite(db){
   db.exec(`CREATE TABLE IF NOT EXISTS drivers (
     id TEXT PRIMARY KEY,
@@ -115,6 +155,7 @@ router.post('/auth/login', async (req, res) => {
     if (!email || !password) return res.status(400).json({ error: 'Missing credentials' });
     let row = null;
     if (hasPostgres) {
+      await withPg(async (client) => { await ensurePartnersPg(client); });
       row = await withPg(async (client) => {
         const { rows } = await client.query('SELECT id, name, email, password_hash, panel_enabled, last_seen FROM partners WHERE lower(email) = $1 LIMIT 1', [email]);
         return rows && rows[0] ? rows[0] : null;
@@ -122,6 +163,7 @@ router.post('/auth/login', async (req, res) => {
     } else {
       const db = getSqlite();
       try {
+        ensurePartnersSqlite(db);
         row = db.prepare('SELECT id, name, email, password_hash, panel_enabled, last_seen FROM partners WHERE lower(email) = ? LIMIT 1').get(email);
       } finally { db.close(); }
     }
@@ -156,13 +198,14 @@ router.get('/auth/verify', authMiddleware, async (req, res) => {
     const pid = user.partner_id || user.id || null;
     if (pid) {
       if (hasPostgres) {
+        await withPg(async (client) => { await ensurePartnersPg(client); });
         partner = await withPg(async (client) => {
           const { rows } = await client.query('SELECT id, name, email, last_seen FROM partners WHERE id = $1 LIMIT 1', [pid]);
           return rows && rows[0] ? rows[0] : null;
         });
       } else {
         const db = getSqlite();
-        try { partner = db.prepare('SELECT id, name, email, last_seen FROM partners WHERE id = ? LIMIT 1').get(pid); } finally { db.close(); }
+        try { ensurePartnersSqlite(db); partner = db.prepare('SELECT id, name, email, last_seen FROM partners WHERE id = ? LIMIT 1').get(pid); } finally { db.close(); }
       }
     }
     return res.json({ ok: true, partner: partner || null });
@@ -486,6 +529,11 @@ router.get('/api/bookings/:id', authMiddleware, async (req, res) => {
           }
         }
         row.route = { full_path: full };
+        // Enforce canonical composition for consistency across panels
+        try {
+          const canon = (routeTemplate && typeof routeTemplate.getCanonicalRoute==='function') ? routeTemplate.getCanonicalRoute(row, { pickupIncMin: 20 }) : null;
+          if (canon){ row.route = { full_path: canon.full_path }; row.trip_info = canon.trip_info || row.trip_info || null; }
+        } catch(_){ }
       } catch(_){ }
       return res.json({ ok:true, booking: row });
     } else {
@@ -571,6 +619,11 @@ router.get('/api/bookings/:id', authMiddleware, async (req, res) => {
               const start_time = (json.departure && json.departure.departure_time) || (Array.isArray(json.stops) && json.stops[0] && (json.stops[0].time || json.stops[0].arrival_time)) || null;
               row.trip_info = { start_time };
             }
+          } catch(_){ }
+          // Enforce canonical composition for consistency across panels
+          try {
+            const canon = (routeTemplate && typeof routeTemplate.getCanonicalRoute==='function') ? routeTemplate.getCanonicalRoute(row, { pickupIncMin: 20 }) : null;
+            if (canon){ row.route = { full_path: canon.full_path }; row.trip_info = canon.trip_info || row.trip_info || null; }
           } catch(_){ }
         } catch(_){ }
         return res.json({ ok:true, booking: row });
