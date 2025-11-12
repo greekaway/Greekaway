@@ -1,4 +1,15 @@
 'use strict';
+/**
+ * Admin Travelers / Groups / Feedback routes
+ * Endpoints:
+ * - GET  /admin/travelers
+ * - GET  /admin/suggest-pairs
+ * - GET  /admin/groups (JSON or HTML)
+ * - POST /admin/groups (create/update/lock groups)
+ * - POST /api/feedback (public submit)
+ * - GET  /admin/feedback (list)
+ * Deps: express, bookingsDb, checkAdminAuth(req)->bool
+ */
 // Phase 6: Travelers, groups, feedback, pairing endpoints
 // registerAdminTravelersGroups(app, { express, bookingsDb, checkAdminAuth })
 

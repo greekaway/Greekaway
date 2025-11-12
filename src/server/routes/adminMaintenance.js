@@ -1,4 +1,14 @@
 'use strict';
+/**
+ * Admin Maintenance routes
+ * Endpoints:
+ * - GET  /admin/backup-status
+ * - POST /api/backup/export
+ * - POST /api/admin/seed
+ * - DELETE /api/admin/cleanup-demo
+ * - DELETE /api/admin/cleanup-test-seeds
+ * Deps: express, bookingsDb (optional), checkAdminAuth(req)->bool, ensureSeedColumns?(db)
+ */
 // Phase 6: Admin maintenance endpoints (seed, cleanup, backup)
 // registerAdminMaintenance(app, { express, bookingsDb, checkAdminAuth, ensureSeedColumns })
 

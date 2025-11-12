@@ -1,6 +1,13 @@
 'use strict';
 // Phase 7: Admin payments endpoints extracted from server.js
 // registerAdminPayments(app, { checkAdminAuth, stripe })
+/**
+ * Admin Payments routes
+ * Endpoints:
+ * - GET /admin/payments (JSON list with pagination, Postgres -> SQLite -> JSON fallback)
+ * - GET /admin/payments.csv (CSV export with filters)
+ * Deps: checkAdminAuth(req)->bool, optional stripe (not used directly here but reserved for future)
+ */
 
 function registerAdminPayments(app, deps) {
   const { checkAdminAuth, stripe } = deps;

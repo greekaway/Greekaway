@@ -1,6 +1,13 @@
 'use strict';
 // Phase 7: Partner Stripe onboarding callback + JSON redirect shim
 // registerPartnerOnboarding(app, { stripe })
+/**
+ * Partner Onboarding (Stripe Connect) routes
+ * Endpoints:
+ * - GET /partner-stripe-onboarding/callback (HTML success/failure page)
+ * - GET /api/partners/connect-callback (redirect shim when Accept: text/html)
+ * Deps: stripe (optional; if missing returns configuration error)
+ */
 
 function registerPartnerOnboarding(app, deps) {
   const { stripe } = deps;

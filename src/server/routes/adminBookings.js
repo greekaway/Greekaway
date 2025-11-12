@@ -1,4 +1,13 @@
 'use strict';
+/**
+ * Admin Bookings routes
+ * Endpoints:
+ * - GET  /admin/bookings (filtered list)
+ * - GET  /admin/bookings.csv (CSV export)
+ * - POST /admin/bookings/:id/cancel (set status=canceled)
+ * - POST /admin/bookings/:id/refund (Stripe refund if PI + set status=refunded)
+ * Deps: bookingsDb (better-sqlite3 DB), checkAdminAuth(req)->bool, optional stripe
+ */
 // Phase 5: Extract admin bookings endpoints with full filters + CSV export
 
 function registerAdminBookings(app, deps) {
