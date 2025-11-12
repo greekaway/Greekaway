@@ -38,7 +38,7 @@
     if (initialGeoAttempted) return;
     initialGeoAttempted = true;
     if (!('geolocation' in navigator)) { geo.ready=true; geo.allowed=false; return; }
-    // Show locating banner immediately and wait up to 2s before fallback
+    // Show locating banner immediately and wait up to 5s before fallback
     locatingInProgress = true;
     setNavBanner('📍 Εντοπισμός θέσης...');
     // Build nav once with current assumed origin to avoid empty state
@@ -51,7 +51,7 @@
         setNavBanner('⚠️ Δεν είναι δυνατός ο αυτόματος εντοπισμός θέσης – η διαδρομή ξεκινά από την πρώτη στάση.');
         try { updateTopNavFromDom(); } catch(_){ }
       }
-    }, 2000);
+    }, 5000);
     navigator.geolocation.getCurrentPosition((pos)=>{
       geo = { ready:true, allowed:true, lat: pos.coords.latitude, lng: pos.coords.longitude };
       locatingInProgress = false;
@@ -59,7 +59,7 @@
       setNavBanner('📍 Έναρξη από τρέχουσα θέση (ενεργό)');
       try { updateTopNavFromDom(); } catch(_){ }
     }, (_err)=>{
-      // Mark as ready but keep the locating banner until the 2s fallback fires
+      // Mark as ready but keep the locating banner until the 5s fallback fires
       geo = { ready:true, allowed:false, lat:null, lng:null };
       // Do not show fallback yet; timer will handle after 2s
     }, { enableHighAccuracy:true, maximumAge:15000, timeout:7000 });
