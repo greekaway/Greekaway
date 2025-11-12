@@ -6,7 +6,7 @@ const crypto = require('crypto');
 try { require('dotenv').config(); } catch (_) {}
 
 const router = express.Router();
-router.use(express.json());
+// Use global JSON parser installed in server.js
 router.use(express.urlencoded({ extended: true }));
 
 // -------- Auth helpers (Basic auth, aligned with other admin routes) --------

@@ -96,7 +96,7 @@ function registerAdminTravelersGroups(app, deps) {
   });
 
   // Create/update groups
-  app.post('/admin/groups', express.json(), (req, res) => {
+  app.post('/admin/groups', (req, res) => {
     if (!checkAdminAuth(req)) return res.status(403).send('Forbidden');
     try {
       if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
@@ -130,7 +130,7 @@ function registerAdminTravelersGroups(app, deps) {
   });
 
   // Feedback submit
-  app.post('/api/feedback', express.json(), (req, res) => {
+  app.post('/api/feedback', (req, res) => {
     try {
       if (!bookingsDb) return res.status(500).json({ error: 'DB not available' });
       const { trip_id, traveler_email, rating, comment } = req.body || {};

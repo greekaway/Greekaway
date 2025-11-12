@@ -8,7 +8,7 @@ let nodemailer = null; try { nodemailer = require('nodemailer'); } catch(_) {}
 
 const router = express.Router();
 // Accept both JSON and form-urlencoded bodies for robustness
-router.use(express.json());
+// Use global JSON parser installed in server.js
 router.use(express.urlencoded({ extended: true }));
 
 // Serve provider panel HTML pages at clean URLs (extensionless)

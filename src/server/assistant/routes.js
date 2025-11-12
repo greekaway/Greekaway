@@ -24,7 +24,7 @@ function registerAssistantRoutes(app, deps) {
   } = deps;
 
   // --- /api/assistant JSON ---
-  app.post('/api/assistant', express.json(), async (req, res) => {
+  app.post('/api/assistant', async (req, res) => {
     try {
       const incomingContext = (req.body && req.body.context) || {};
       const sessionContext = { lastTripId: incomingContext.lastTripId || null, lastTopic: incomingContext.lastTopic || null };
@@ -322,7 +322,7 @@ function registerAssistantRoutes(app, deps) {
   });
 
   // --- /api/assistant/stream ---
-  app.post('/api/assistant/stream', express.json(), async (req, res) => {
+  app.post('/api/assistant/stream', async (req, res) => {
     try {
       const incomingContext = (req.body && req.body.context) || {};
       const sessionContext = { lastTripId: incomingContext.lastTripId || null, lastTopic: incomingContext.lastTopic || null };

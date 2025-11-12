@@ -7,7 +7,8 @@ function registerBookings(app, deps) {
   if (!app) throw new Error('registerBookings: missing app');
 
   // Create booking (verbatim port of original complex logic)
-  app.post('/api/bookings', express.json(), (req, res) => {
+  // Ensure JSON error responses even if body parsing fails
+  app.post('/api/bookings', (req, res) => {
     try {
       const { user_name, user_email, trip_id, seats, price_cents, currency } = req.body || {};
       // Traveler profile fields from step2 (optional) + mapping helpers

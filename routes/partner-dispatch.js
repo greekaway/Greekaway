@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-router.use(express.json());
+// Use global JSON parser installed in server.js
 
 // Admin basic auth (reuse env vars)
 let ADMIN_USER = process.env.ADMIN_USER || null;

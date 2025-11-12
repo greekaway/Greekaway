@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 
 const router = express.Router();
-router.use(express.json());
+// Use global JSON parser installed in server.js
 router.use(express.urlencoded({ extended: true }));
 
 // Serve driver panel HTML pages at clean URLs (extensionless)

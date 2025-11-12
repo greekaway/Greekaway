@@ -3,3 +3,5 @@
 /.cache
 npm-debug.log
 /logs
+server.backup*.js
+*.tmp

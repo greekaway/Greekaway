@@ -3,7 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
-router.use(express.json());
+// Use global JSON parser installed in server.js
 
 const { computePickupTimes, upsertRoute, ensureTestBookingExists } = require('../services/computePickupTimes');
 

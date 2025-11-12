@@ -11,7 +11,7 @@
 // Phase 5: Extract admin bookings endpoints with full filters + CSV export
 
 function registerAdminBookings(app, deps) {
-  const { bookingsDb, checkAdminAuth, stripe } = deps;
+  const { express, bookingsDb, checkAdminAuth, stripe } = deps;
   if (!app) throw new Error('registerAdminBookings: missing app');
 
   // Admin bookings JSON list (filters/pagination)
@@ -123,7 +123,7 @@ function registerAdminBookings(app, deps) {
   });
 
   // Cancel booking
-  app.post('/admin/bookings/:id/cancel', express.json(), (req, res) => {
+  app.post('/admin/bookings/:id/cancel', (req, res) => {
     if (!checkAdminAuth(req)) return res.status(403).send('Forbidden');
     try {
       const id = req.params.id;
@@ -135,7 +135,7 @@ function registerAdminBookings(app, deps) {
   });
 
   // Refund booking
-  app.post('/admin/bookings/:id/refund', express.json(), async (req, res) => {
+  app.post('/admin/bookings/:id/refund', async (req, res) => {
     if (!checkAdminAuth(req)) return res.status(403).send('Forbidden');
     try {
       const id = req.params.id;

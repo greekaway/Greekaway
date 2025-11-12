@@ -8,7 +8,7 @@ try { require('dotenv').config(); } catch (_) {}
 const router = express.Router();
 const adminSse = require('../services/adminSse');
 router.use(express.urlencoded({ extended: true }));
-router.use(express.json());
+// Use global JSON parser installed in server.js
 
 // Basic admin auth (align with partners.js and server.js)
 let ADMIN_USER = process.env.ADMIN_USER || null;

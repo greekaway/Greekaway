@@ -8,7 +8,7 @@ try { require('dotenv').config(); } catch (_) {}
 
 const router = express.Router();
 router.use(express.urlencoded({ extended: true }));
-router.use(express.json());
+// Use global JSON parser installed in server.js
 
 // Stripe (reuse env keys; do not create new)
 const STRIPE_SECRET = (process.env.STRIPE_SECRET_KEY || '').toString().trim().replace(/^['"]|['"]$/g, '');

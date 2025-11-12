@@ -13,7 +13,61 @@ try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installe
 const app = express();
 // Parse URL-encoded bodies for simple form logins
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+// Custom lightweight JSON body parser (replaces express.json())
+// - Limits body to 1MB
+// - Returns 400 JSON { error: 'Invalid JSON' } on parse failure
+// - Returns 413 JSON { error: 'Payload too large' } if limit exceeded
+// - Does NOT log raw body or include it in responses
+app.use((req, res, next) => {
+  const ct = String(req.headers['content-type'] || '').toLowerCase();
+  if (!ct.startsWith('application/json')) return next();
+  let size = 0;
+  const LIMIT = 1 * 1024 * 1024; // 1MB
+  let chunks = [];
+  req.on('data', (chunk) => {
+    size += chunk.length;
+    if (size > LIMIT) {
+      chunks = null;
+      // Destroy stream and respond 413 once end fires
+      req.destroy();
+    } else {
+      chunks.push(chunk);
+    }
+  });
+  req.on('end', () => {
+    if (size > LIMIT) {
+      return res.status(413).json({ error: 'Payload too large' });
+    }
+    if (!chunks) return res.status(413).json({ error: 'Payload too large' });
+    const buf = Buffer.concat(chunks);
+    const raw = buf.toString('utf8').trim();
+    if (raw.length === 0) { req.body = {}; return next(); }
+    try {
+      req.body = JSON.parse(raw);
+      return next();
+    } catch (_) {
+      return res.status(400).json({ error: 'Invalid JSON' });
+    }
+  });
+  req.on('error', () => {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  });
+});
+// Early global error handler to normalize JSON errors for API requests (including body-parser parse failures)
+app.use((err, req, res, next) => {
+  if (!err) return next();
+  const p = String(req.originalUrl || req.url || '');
+  const acc = String(req.headers['accept'] || '').toLowerCase();
+  const wantsJson = p.startsWith('/api/') || acc.includes('application/json');
+  if (wantsJson && !res.headersSent) {
+    const isParse = err.type === 'entity.parse.failed';
+    const status = isParse ? 400 : (err.status && Number.isFinite(err.status) ? err.status : 500);
+    return res.status(status).json({ error: isParse ? 'Invalid JSON' : (err.message || 'Server error') });
+  }
+  return next(err);
+});
+// Ensure JSON parse errors return JSON (not default HTML) for API endpoints
+// (Removed early JSON parse error handler; replaced with unified final handler below)
 // App version from package.json
 let APP_VERSION = '0.0.0';
 try { APP_VERSION = require('./package.json').version || APP_VERSION; } catch (_) {}
@@ -419,7 +473,7 @@ app.post('/mock-checkout', express.urlencoded({ extended: true }), (req, res) =>
 });
 
 // Create a PaymentIntent via Stripe (expects JSON body {amount, currency})
-app.post('/create-payment-intent', express.json(), async (req, res) => {
+app.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server.' });
   try {
     const { amount, currency } = req.body;
@@ -504,7 +558,7 @@ try {
 } catch (e) { console.warn('bookings: failed to register public routes', e && e.message ? e.message : e); }
 try {
   const { registerAdminBookings } = require('./src/server/routes/adminBookings');
-  registerAdminBookings(app, { bookingsDb, checkAdminAuth: (req) => checkAdminAuth(req), stripe });
+  registerAdminBookings(app, { express, bookingsDb, checkAdminAuth: (req) => checkAdminAuth(req), stripe });
   console.log('bookings: admin routes registered');
 } catch (e) { console.warn('bookings: failed to register admin routes', e && e.message ? e.message : e); }
 
@@ -526,7 +580,7 @@ try {
 // Phase 6: Register admin maintenance + travelers/groups routes
 try {
   const { registerAdminMaintenance } = require('./src/server/routes/adminMaintenance');
-  registerAdminMaintenance(app, { express, bookingsDb, checkAdminAuth: (r)=>checkAdminAuth(r), ensureSeedColumns });
+  registerAdminMaintenance(app, { express, bookingsDb, checkAdminAuth: (r)=>checkAdminAuth(r) });
   console.log('admin-maintenance: routes registered');
 } catch (e) { console.warn('admin-maintenance: failed', e && e.message ? e.message : e); }
 try {
@@ -820,4 +874,22 @@ app.get('/health', (req, res) => {
 // 4️⃣ Εκκίνηση server
 app.listen(PORT, HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
+});
+
+// Final catch-all JSON error handler (after all routes)
+app.use((err, req, res, next) => {
+  try {
+    if (!err) return next();
+    const p = String(req.originalUrl || req.url || '');
+    const ct = String(req.headers['content-type'] || '').toLowerCase();
+    const acc = String(req.headers['accept'] || '').toLowerCase();
+    const wantsJson = p.startsWith('/api/') || ct.includes('application/json') || acc.includes('application/json');
+    if (wantsJson) {
+      const status = err.status && Number.isFinite(err.status) ? err.status : 500;
+      const isParse = err.type === 'entity.parse.failed';
+      const finalStatus = isParse ? 400 : (status === 200 ? 500 : status);
+      return res.status(finalStatus).json({ error: isParse ? 'Invalid JSON' : (err.message || 'Server error') });
+    }
+  } catch(_) {}
+  return next(err);
 });

@@ -4,7 +4,7 @@ const path = require('path');
 try { require('dotenv').config(); } catch(_){}
 
 const router = express.Router();
-router.use(express.json());
+// Use global JSON parser installed in server.js
 
 // ---- Auth (admin-only) ----
 let ADMIN_USER = process.env.ADMIN_USER || null;

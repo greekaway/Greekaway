@@ -73,7 +73,8 @@ function registerAdminMaintenance(app, deps) {
   });
 
   // Seed endpoint
-  app.post('/api/admin/seed', express.json({ limit: '5mb' }), async (req, res) => {
+  // Seed endpoint (relies on global custom parser; if larger than 1MB adjust global limit instead of per-route parser)
+  app.post('/api/admin/seed', async (req, res) => {
     if (!checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const payload = req.body && Object.keys(req.body).length ? req.body : null;
