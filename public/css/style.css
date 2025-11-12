@@ -1,3 +1,78 @@
+/* Trip header capsules (premium info bar) */
+.trip-header-capsules {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 0 10px;
+  gap: 6px;
+}
+.trip-header-capsules .top-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.trip-header-capsules .capsule {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #E0E6ED;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 4px rgba(0,0,0,0.25);
+}
+.trip-header-capsules .capsule.price {
+  color: #D4AF37;
+  font-weight: 600;
+  border-color: rgba(212, 175, 55, 0.5);
+}
+.trip-header-capsules .capsule.time { color: #F5F5F5; }
+.trip-header-capsules .bottom-row { display: flex; justify-content: center; }
+.trip-header-capsules .capsule.location {
+  max-width: 90%;
+  text-align: center;
+  white-space: normal;
+}
+.trip-header-capsules .capsule .icon {
+  opacity: 0.85;
+  margin-right: 6px;
+  display: inline-block;
+}
+@media (max-width: 400px) {
+  .trip-header-capsules .top-row { justify-content: center; }
+  .trip-header-capsules .capsule.location { max-width: 100%; }
+}
+
+/* Stop capsules (per-stop time + address), matching trip header style */
+.stop-capsules {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 6px 0 8px;
+  gap: 6px;
+}
+.stop-capsules .top-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.stop-capsules .capsule {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  font-size: 0.92rem;
+  color: #E0E6ED;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 4px rgba(0,0,0,0.25);
+}
+.stop-capsules .capsule.time { color: #F5F5F5; }
+.stop-capsules .capsule.location { max-width: 100%; text-align: left; white-space: normal; }
+.stop-capsules .capsule .icon { opacity: 0.85; margin-right: 6px; display: inline-block; }
+
 /* ===========================
    GREEKAWAY – STYLE SHEET
    =========================== */
@@ -324,7 +399,27 @@ footer a.central-btn:hover i {
    create a visible gap when overlays are fixed. */
 html, body { margin: 0; padding: 0; }
 
-/* Trip meta line (price • time • place) under the trip title */
+/* New trip header line (price, time, place) - premium unified bar */
+.trip-header-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.97rem;
+  color: #E0E6ED;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  padding-bottom: 8px; /* extra breathing room before description */
+}
+.trip-header-line .price {
+  color: #D4AF37;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.trip-header-line .icon { opacity: 0.85; margin-right: 4px; }
+.trip-header-line span { display: flex; align-items: center; gap: 4px; }
+
+/* Backward-compat: keep old class working if still present somewhere */
 .trip-meta {
   font-size: 15px;
   margin-top: 6px;
@@ -337,6 +432,15 @@ html, body { margin: 0; padding: 0; }
 }
 .trip-meta span { color: var(--ga-text, #fff); font-weight: 500; }
 .trip-meta .price { color: var(--color-gold, #D4AF37); font-weight: 600; }
+
+/* Mobile wrap for trip header line */
+@media (max-width: 400px) {
+  .trip-header-line {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
 
 /* Lock background scroll when any overlay is open (applies globally) */
 body.overlay-open { overflow: hidden; touch-action: none; }

@@ -603,6 +603,22 @@ app.get('/api/live/weather', async (req, res) => {
   }
 });
 
+// Lightweight geocoding endpoint used by the trip page to enrich stops without lat/lng
+// GET /api/geocode?q=ADDRESS&lang=el
+app.get('/api/geocode', async (req, res) => {
+  try {
+    const q = (req.query.q || '').toString().trim();
+    const lang = (req.query.lang || '').toString() || 'en';
+    if (!q) return res.status(400).json({ error: 'Missing q' });
+    // Prefer liveData.geocodePlace (Open-Meteo) which requires no key and is already cached
+    if (!liveData || !liveData.geocodePlace) return res.status(501).json({ error: 'geocoder unavailable' });
+    const r = await liveData.geocodePlace(q, lang);
+    return res.json({ ok: true, lat: r.latitude, lng: r.longitude, name: r.name, country: r.country || null });
+  } catch (e) {
+    return res.status(500).json({ error: e && e.message ? e.message : 'Failed' });
+  }
+});
+
 // (original /api/bookings, /api/availability, /api/bookings/:id handlers removed - now provided by registerBookings module)
 
 // Admin-protected bookings listing with pagination and filters used by admin-bookings.html

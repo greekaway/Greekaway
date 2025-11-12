@@ -64,7 +64,9 @@
     "label": "Στάση {n}"
   },
   "trip": {
-    "experienceTitle": "Εμπειρία"
+    "experienceTitle": "Εμπειρία",
+    "departure_time_label": "Αναχώρηση",
+    "departure_place_label": "Από"
   },
   "trips": {
     "selectCategory": "Επιλέξτε Κατηγορία",

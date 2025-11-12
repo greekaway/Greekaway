@@ -65,14 +65,12 @@
     }
   },
   "stop": {
-    "label": "Stop {n}"
+    "label": "Parada {n}"
   },
   "trip": {
-    "experienceTitle": "Experience"
-  },
-  "trips": {
-    "selectCategory": "Selecciona categoría",
-    "noneFound": "No se encontraron excursiones en esta categoría."
+    "experienceTitle": "Experiencia",
+    "departure_time_label": "Salida",
+    "departure_place_label": "Desde"
   },
   "ui": {
     "close": "Cerrar",

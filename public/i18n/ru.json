@@ -69,7 +69,9 @@
     "label": "Stop {n}"
   },
   "trip": {
-    "experienceTitle": "Experience"
+    "experienceTitle": "Experience",
+    "departure_time_label": "Отправление",
+    "departure_place_label": "От"
   },
   "trips": {
     "selectCategory": "Выберите категорию",

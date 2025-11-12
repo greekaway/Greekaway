@@ -63,7 +63,9 @@
     "label": "תחנה {n}"
   },
   "trip": {
-    "experienceTitle": "חוויה"
+    "experienceTitle": "חוויה",
+    "departure_time_label": "יציאה",
+    "departure_place_label": "מ־"
   },
   "trips": {
     "selectCategory": "בחר קטגוריה",

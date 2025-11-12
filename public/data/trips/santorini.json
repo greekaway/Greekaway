@@ -51,6 +51,10 @@
         "ko": "도착 & 칼데라 전망 호텔 (럭셔리 체크인)",
         "zh": "抵达与卡尔德拉景观酒店（奢华入住）"
       },
+      "address": "Caldera View Luxury Hotel, Fira",
+      "time": "12:30",
+      "lat": 36.4165,
+      "lng": 25.4326,
       "description": {
         "el": "Ιδιωτική μεταφορά και check-in σε premium ξενοδοχείο με πισίνα και πανοραμική θέα στην καλντέρα. Χρόνος για χαλάρωση και απόλαυση του τοπίου.",
         "en": "Private transfer and check-in to a premium hotel with pool and panoramic caldera views. Time to unwind and enjoy the scenery.",
@@ -88,6 +92,10 @@
         "ko": "SantoWines 와인 시음 (에게해 포도원)",
         "zh": "SantoWines 品酒（爱琴海葡萄园）"
       },
+      "address": "SantoWines Winery, Pyrgos Kallistis",
+      "time": "15:00",
+      "lat": 36.3735,
+      "lng": 25.4458,
       "description": {
         "el": "Καθοδηγούμενη γευσιγνωσία Ασύρτικου και τοπικών ποικιλιών στο SantoWines με πανοραμική θέα στην καλντέρα. Ελαφριά συνοδευτικά περιλαμβάνονται.",
         "en": "Guided tasting of Assyrtiko and local varietals at SantoWines with panoramic caldera views. Light bites included.",
@@ -125,6 +133,10 @@
         "ko": "오이아 일몰 카타마란 크루즈 (칼데라)",
         "zh": "伊亚日落双体船巡游（卡尔德拉）"
       },
+      "address": "Ammoudi Bay Pier, Oia",
+      "time": "17:30",
+      "lat": 36.4618,
+      "lng": 25.3753,
       "description": {
         "el": "Απογευματινό ιστιοπλοϊκό με στάσεις για κολύμπι, BBQ και ποτά· τελειώνει με το διάσημο ηλιοβασίλεμα της Οίας από τη θάλασσα.",
         "en": "Afternoon sailing with swimming stops, BBQ and drinks, ending with Oia’s famous sunset from the water.",
@@ -162,6 +174,10 @@
         "ko": "피라 야간 산책 (레스토랑 & 불빛)",
         "zh": "费拉夜游（餐厅与灯火）"
       },
+      "address": "Main Pedestrian Path, Fira Town",
+      "time": "20:30",
+      "lat": 36.4161,
+      "lng": 25.4325,
       "description": {
         "el": "Περιπλάνηση στα σοκάκια των Φηρών, boutiques και βεράντες· δείπνο με θέα στα φώτα της καλντέρας.",
         "en": "Wander Fira’s lanes, boutiques and terraces; dinner options with caldera lights.",
@@ -199,6 +215,10 @@
         "ko": "아침 휴식 및 출발",
         "zh": "清晨放松与离开"
       },
+      "address": "Hotel Pool Terrace, Fira",
+      "time": "09:00",
+      "lat": 36.4165,
+      "lng": 25.4326,
       "description": {
         "el": "Πρωινό δίπλα στην πισίνα, ελεύθερος χρόνος για τελευταίες φωτογραφίες και ιδιωτική μεταφορά σε λιμάνι ή αεροδρόμιο.",
         "en": "Breakfast by the pool, free time for last photos, and private transfer to the port or airport.",

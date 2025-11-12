@@ -68,7 +68,9 @@
     "label": "Stop {n}"
   },
   "trip": {
-    "experienceTitle": "Experience"
+    "experienceTitle": "Experience",
+    "departure_time_label": "출발",
+    "departure_place_label": "출발지"
   },
   "trips": {
     "selectCategory": "카테고리 선택",

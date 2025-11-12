@@ -78,4 +78,24 @@
     },
     "category": "mountain"
   }
+  ,
+  {
+    "id": "acropolis",
+    "title": {
+      "el": "Ακρόπολη",
+      "en": "Acropolis",
+      "he": "אקרופוליס",
+      "fr": "Acropole",
+      "de": "Akropolis",
+      "es": "Acrópolis",
+      "it": "Acropoli",
+      "sv": "Akropolis",
+      "nl": "Akropolis",
+      "pt": "Acrópole",
+      "ru": "Акрополь",
+      "ko": "아크로폴리스",
+      "zh": "卫城"
+    },
+    "category": "culture"
+  }
 ]

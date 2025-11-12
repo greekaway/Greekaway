@@ -47,14 +47,8 @@
   <!-- Περιεχόμενο εκδρομής -->
   <section id="trip-section" class="trip-section">
     <h2 id="trip-title"></h2>
-    <!-- Trip meta: price • departure time • departure place -->
-    <div class="trip-meta" id="trip-meta" style="display:none">
-      <span class="price" id="trip-meta-price">—</span>
-      <span class="sep"> • </span>
-      <span class="time" id="trip-meta-time" style="display:none"></span>
-      <span class="sep"> • </span>
-      <span class="place" id="trip-meta-place" style="display:none"></span>
-    </div>
+    <!-- Trip header capsules: populated dynamically (price & time on top row, location below) -->
+    <div class="trip-header-capsules" id="trip-meta" style="display:none"></div>
     <!-- Legacy single price (kept for backward compatibility, hidden by default) -->
     <div id="trip-price" class="price-tag" style="display:none">—</div>
     <p id="trip-description"></p>

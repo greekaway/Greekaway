@@ -68,7 +68,9 @@
     "label": "Stop {n}"
   },
   "trip": {
-    "experienceTitle": "Experience"
+    "experienceTitle": "Experience",
+    "departure_time_label": "Avgång",
+    "departure_place_label": "Från"
   },
   "trips": {
     "selectCategory": "Välj kategori",

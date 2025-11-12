@@ -143,7 +143,8 @@ document.addEventListener("DOMContentLoaded", () => {
   card.classList.add('ga-card');
         card.dataset.tripId = trip.id;
         // Use unified theme styles for all trips (no per-trip inline overrides)
-        if (trip.id === 'olympia' || trip.id === 'lefkas' || trip.id === 'parnassos') card.classList.add('logo-pop');
+  // Include acropolis in the 3D "logo-pop" styling group (same visual effect as Ancient Olympia)
+  if (trip.id === 'olympia' || trip.id === 'lefkas' || trip.id === 'parnassos' || trip.id === 'acropolis') card.classList.add('logo-pop');
         card.dataset.cat = trip.category || category;
         card.classList.add(`cat-${trip.category || category}`);
         card.innerHTML = `<h3>${getLocalized(trip.title)}</h3>`;
@@ -209,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!r.ok) throw new Error("Αποτυχία φόρτωσης δεδομένων εκδρομής");
       return r.json();
     })
-    .then(trip => {
+  .then(async trip => {
   // If this is olympia or parnassos, give the trip page a navy background override
   if (trip.id === 'olympia' || trip.id === 'parnassos') document.body.classList.add('navy-bg');
       // If user clicked a trip card, keep a persistent highlight on arrival
@@ -249,29 +250,41 @@ document.addEventListener("DOMContentLoaded", () => {
         if (titleEl) titleEl.textContent = getLocalized(t.title) || "";
         // Render base price badge under title if available
         try {
-          // New trip meta row: build pretty line: price • Αναχώρηση hh:mm • Από place
+          // Trip header capsules: top row (price + time), bottom row (location)
           if (metaWrap) {
-            const parts = [];
-            // Price
+            const topItems = [];
+            // Price capsule
             if (t.price_cents) {
               const base = Math.max(0, parseInt(t.price_cents, 10)) / 100;
               const cur = (t.currency || 'EUR').toUpperCase();
-              try { t.price_formatted = base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur }); } catch(_) { t.price_formatted = (base.toFixed(2) + ' €'); }
-              parts.push(`<span class=\"price\">${t.price_formatted}</span>`);
+              let formatted = '';
+              try {
+                if (cur === 'EUR') {
+                  formatted = base.toLocaleString(getCurrentLang(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC';
+                } else {
+                  formatted = base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur });
+                }
+              } catch(_) { formatted = (base.toFixed(2) + ' \u20AC'); }
+              topItems.push(`<span class=\"capsule price\">${formatted}</span>`);
             }
-            // Time
+            // Time capsule (with label + icon)
             const timeLabel = tSafe('trip.departure_time_label','Αναχώρηση');
             const timeVal = t && t.departure && t.departure.departure_time;
-            if (timeVal) parts.push(`<span class=\"time\">${timeLabel} ${timeVal}</span>`);
-            // Place
+            if (timeVal) topItems.push(`<span class=\"capsule time\"><i class=\"fa-solid fa-clock icon\" aria-hidden=\"true\"></i>${timeLabel} ${timeVal}</span>`);
+
+            // Location capsule for bottom row (with label)
+            let bottomHtml = '';
             const depName = t && t.departure && t.departure.reference_point && t.departure.reference_point.name;
             if (depName) {
               const shortName = String(depName).replace(/^Αθήνα\s*[–-]\s*/,'');
               const placeLabel = tSafe('trip.departure_place_label','Από');
-              parts.push(`<span class=\"place\">${placeLabel} ${shortName || depName}</span>`);
+              bottomHtml = `<div class=\"bottom-row\"><span class=\"capsule location\"><i class=\"fa-solid fa-location-dot icon\" aria-hidden=\"true\"></i>${placeLabel} ${shortName || depName}</span></div>`;
             }
-            if (parts.length) {
-              metaWrap.innerHTML = parts.join(' • ');
+
+            if (topItems.length || bottomHtml) {
+              try { metaWrap.classList.remove('trip-header-line'); metaWrap.classList.add('trip-header-capsules'); } catch(_) {}
+              const topRow = topItems.length ? `<div class=\"top-row\">${topItems.join('')}</div>` : '';
+              metaWrap.innerHTML = `${topRow}${bottomHtml}`;
               metaWrap.style.display = '';
             } else {
               metaWrap.style.display = 'none';
@@ -284,7 +297,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (t.price_cents) {
               const base = Math.max(0, parseInt(t.price_cents, 10)) / 100;
               const cur = (t.currency || 'EUR').toUpperCase();
-              legacyPriceEl.textContent = base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur });
+              legacyPriceEl.textContent = (cur === 'EUR')
+                ? (base.toLocaleString(getCurrentLang(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC')
+                : base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur });
               legacyPriceEl.style.display = (metaWrap ? 'none' : ''); // hide if new meta is shown
               legacyPriceEl.classList.remove('animate');
               void legacyPriceEl.offsetWidth; // reflow
@@ -351,9 +366,22 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>`;
           }
 
+          // Build stop-level capsules (time + location) following the departure header style
+          let stopCapsules = '';
+          try {
+            const hasTime = !!(stop && stop.time);
+            const hasAddr = !!(stop && stop.address);
+            if (hasTime || hasAddr) {
+              const topRow = hasTime ? `<div class="top-row"><span class="capsule time"><i class="fa-solid fa-clock icon" aria-hidden="true"></i>${String(stop.time)}</span></div>` : '';
+              const bottomRow = hasAddr ? `<div class="bottom-row"><span class="capsule location"><i class="fa-solid fa-location-dot icon" aria-hidden="true"></i>${String(stop.address)}</span></div>` : '';
+              stopCapsules = `<div class="stop-capsules">${topRow}${bottomRow}</div>`;
+            }
+          } catch(_) {}
+
           stopEl.innerHTML = `
             ${titleHtml}
             ${videoArea}
+            ${stopCapsules}
             <p class="stop-description">${getLocalized(stop.description) || ""}</p>
           `;
           stopsWrap.appendChild(stopEl);
@@ -622,8 +650,60 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch(_){ }
       });
 
-      if (trip.map && trip.map.waypoints && trip.map.waypoints.length >= 2) {
-        ensureGoogleMaps(() => renderRoute(trip.map));
+      // Auto-enrich stops with coordinates if missing (server geocode), then build map from stops
+      try {
+        // If some stops are missing lat/lng but have addresses, geocode via /api/geocode
+        const stopsNeeding = (Array.isArray(trip.stops) ? trip.stops : []).filter(s => s && s.address && (s.lat == null || s.lng == null));
+        if (stopsNeeding.length) {
+          const lang = getCurrentLang();
+          for (const s of stopsNeeding) {
+            try {
+              const u = new URL(window.location.origin + '/api/geocode');
+              u.searchParams.set('q', s.address);
+              u.searchParams.set('lang', lang);
+              const r = await fetch(u.toString(), { headers: { 'Accept': 'application/json' } });
+              if (r.ok) {
+                const j = await r.json();
+                if (j && j.ok && typeof j.lat === 'number' && typeof j.lng === 'number') {
+                  s.lat = j.lat; s.lng = j.lng;
+                }
+              }
+            } catch(_){ /* non-fatal */ }
+          }
+        }
+
+        const stopsArr = Array.isArray(trip.stops) ? trip.stops : [];
+        const stopWaypoints = stopsArr
+          .filter(s => s && typeof s.lat === 'number' && typeof s.lng === 'number')
+          .map(s => ({ lat: s.lat, lng: s.lng }));
+        const stopsMeta = stopsArr
+          .filter(s => s && typeof s.lat === 'number' && typeof s.lng === 'number')
+          .map((s, idx) => ({
+            idx,
+            lat: s.lat,
+            lng: s.lng,
+            name: getLocalized(s.name) || '',
+            address: s.address || '',
+            time: s.time || ''
+          }));
+
+        // Prefer waypoints from stops if there are at least 2; otherwise fallback to trip.map.waypoints
+        const hasStopsRoute = stopWaypoints.length >= 2;
+        const baseMap = Object.assign({}, trip.map || {});
+        if (hasStopsRoute) {
+          baseMap.waypoints = stopWaypoints;
+          baseMap.stopsMeta = stopsMeta;
+          if (!baseMap.center && stopWaypoints[0]) baseMap.center = stopWaypoints[0];
+          if (!baseMap.zoom) baseMap.zoom = 11;
+        }
+        const effectiveMap = baseMap;
+        if (effectiveMap && effectiveMap.waypoints && effectiveMap.waypoints.length >= 2) {
+          ensureGoogleMaps(() => renderRoute(effectiveMap));
+        }
+      } catch(_) {
+        if (trip.map && trip.map.waypoints && trip.map.waypoints.length >= 2) {
+          ensureGoogleMaps(() => renderRoute(trip.map));
+        }
       }
 
       // Show back-to-categories button when on a trip page
@@ -1055,12 +1135,12 @@ document.addEventListener("DOMContentLoaded", () => {
               <div style="text-align:left;margin-top:12px;"> <strong data-i18n="booking.trip">${(typeof window.t==='function')?window.t('booking.trip'):'Trip'}</strong>: ${getLocalized(trip.title) || ''}</div>
               <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.date">${(typeof window.t==='function')?window.t('booking.date'):'Date'}</strong>: ${date}</div>
               <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.seats">${(typeof window.t==='function')?window.t('booking.seats'):'Seats'}</strong>: ${seats}</div>
-              <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.total">${(typeof window.t==='function')?window.t('booking.total'):'Total'}</strong>: ${total.toLocaleString(getCurrentLang(), { style:'currency', currency:(trip.currency||'EUR').toUpperCase() })}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.total">${(typeof window.t==='function')?window.t('booking.total'):'Total'}</strong>: ${(() => { const c=(trip.currency||'EUR').toUpperCase(); return c==='EUR' ? (total.toLocaleString(getCurrentLang(), { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' \u20AC') : total.toLocaleString(getCurrentLang(), { style:'currency', currency:c }); })()}</div>
               <div style="text-align:left;margin-top:6px;"> <strong data-i18n="checkout.name">${(typeof window.t==='function')?window.t('checkout.name'):'Name'}</strong>: ${name}</div>
               <div style="text-align:left;margin-top:6px;"> <strong data-i18n="checkout.email">${(typeof window.t==='function')?window.t('checkout.email'):'Email'}</strong>: ${email}</div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);">
                 <strong data-i18n="booking.trip_cost">${(typeof window.t==='function')?window.t('booking.trip_cost'):'Trip cost'}</strong>
-                <span>${total.toLocaleString(getCurrentLang(), { style:'currency', currency:(trip.currency||'EUR').toUpperCase() })}</span>
+                <span>${(() => { const c=(trip.currency||'EUR').toUpperCase(); return c==='EUR' ? (total.toLocaleString(getCurrentLang(), { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' \u20AC') : total.toLocaleString(getCurrentLang(), { style:'currency', currency:c }); })()}</span>
               </div>
               <div style="margin-top:18px;">
                 <div class="booking-actions">
@@ -1229,7 +1309,10 @@ document.addEventListener("DOMContentLoaded", () => {
           if (trip && trip.price_cents) baseCents = parseInt(trip.price_cents,10) || baseCents;
           const total = Math.max(0, baseCents * seats);
           if (priceEl) {
-            priceEl.textContent = (total / 100).toLocaleString(getCurrentLang(), { style: 'currency', currency: (trip && trip.currency) ? trip.currency.toUpperCase() : 'EUR' });
+            const c = (trip && trip.currency) ? trip.currency.toUpperCase() : 'EUR';
+            priceEl.textContent = c === 'EUR'
+              ? ((total / 100).toLocaleString(getCurrentLang(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC')
+              : (total / 100).toLocaleString(getCurrentLang(), { style: 'currency', currency: c });
             // animate price gently
             priceEl.classList.remove('animate');
             // reflow to restart animation
@@ -1382,7 +1465,12 @@ document.addEventListener("DOMContentLoaded", () => {
           const base = trip.price_cents ? parseInt(trip.price_cents,10) : 5000;
           const s = seats2 ? Math.max(1, parseInt(seats2.value || '1',10)) : 1;
           const total = (base * s) / 100;
-          if (mini) mini.textContent = total.toLocaleString(getCurrentLang(), { style:'currency', currency: (trip.currency||'EUR').toUpperCase() });
+          if (mini) {
+            const c = (trip.currency||'EUR').toUpperCase();
+            mini.textContent = c==='EUR'
+              ? (total.toLocaleString(getCurrentLang(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC')
+              : total.toLocaleString(getCurrentLang(), { style:'currency', currency: c });
+          }
           try { if (mini) { mini.classList.remove('pulse'); void mini.offsetWidth; mini.classList.add('pulse'); setTimeout(()=>{ mini.classList.remove('pulse'); }, 700); } } catch(e){}
         } catch(e){}
       }
@@ -1563,6 +1651,24 @@ function renderRoute(mapData) {
     if (status === "OK") {
       // simply render the directions on the map; do not auto-fit or force zoom.
       directionsRenderer.setDirections(res);
+
+      // Add explicit markers for each stop so we can show name/address/time consistently
+      try {
+        if (Array.isArray(mapData.stopsMeta) && mapData.stopsMeta.length) {
+          (mapData.stopsMeta || []).forEach((m) => {
+            if (!map) return;
+            const marker = new google.maps.Marker({ position: { lat: m.lat, lng: m.lng }, map, title: (m.name || m.address || '').trim() });
+            const content = `
+              <div style="min-width:200px;max-width:260px">
+                <div style="font-weight:600;margin-bottom:4px">${(m.name || '').replace(/</g,'&lt;')}</div>
+                ${m.time ? `<div style="opacity:0.9"><i class='fa-solid fa-clock' style='margin-right:6px'></i>${m.time}</div>` : ''}
+                ${m.address ? `<div style="opacity:0.9"><i class='fa-solid fa-location-dot' style='margin-right:6px'></i>${(m.address || '').replace(/</g,'&lt;')}</div>` : ''}
+              </div>`;
+            const info = new google.maps.InfoWindow({ content });
+            marker.addListener('click', () => info.open({ map, anchor: marker }));
+          });
+        }
+      } catch(_) {}
     } else {
       G.error("Σφάλμα διαδρομής:", status);
       try { console.warn('Google Maps route failed:', status); } catch(_) {}

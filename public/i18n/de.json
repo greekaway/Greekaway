@@ -63,7 +63,9 @@
     "label": "Stopp {n}"
   },
   "trip": {
-    "experienceTitle": "Experience"
+    "experienceTitle": "Experience",
+    "departure_time_label": "Abfahrt",
+    "departure_place_label": "Ab"
   },
   "trips": {
     "selectCategory": "Kategorie wählen",
