@@ -10,6 +10,10 @@
   // Smart navigation state
   let geo = { ready:false, allowed:false, lat:null, lng:null };
   let lastOriginMode = 'first-stop'; // 'first-stop' | 'current-location'
+  // Geolocation locating-delay controls (initial load only)
+  let locatingInProgress = false;
+  let locatingTimer = null;
+  let initialGeoAttempted = false;
   function scheduleRefresh(fn, ms){
     if (pendingRefreshTimer){ clearTimeout(pendingRefreshTimer); pendingRefreshTimer = null; }
     pendingRefreshTimer = setTimeout(()=>{ pendingRefreshTimer = null; if (!isDragging) try{ fn(); }catch(_){} }, ms|0);
@@ -31,14 +35,33 @@
   }
   function setNavBanner(text){ const el = document.getElementById('navOriginBanner'); if (el) el.textContent = text||''; }
   function tryGeolocateOnce(){
+    if (initialGeoAttempted) return;
+    initialGeoAttempted = true;
     if (!('geolocation' in navigator)) { geo.ready=true; geo.allowed=false; return; }
+    // Show locating banner immediately and wait up to 2s before fallback
+    locatingInProgress = true;
+    setNavBanner('📍 Εντοπισμός θέσης...');
+    // Build nav once with current assumed origin to avoid empty state
+    try { updateTopNavFromDom(); } catch(_){ }
+    locatingTimer = setTimeout(()=>{
+      // If still no allowed geolocation, show fallback
+      if (!(geo && geo.allowed)){
+        geo.ready = true; geo.allowed = false; geo.lat = null; geo.lng = null;
+        locatingInProgress = false;
+        setNavBanner('⚠️ Δεν είναι δυνατός ο αυτόματος εντοπισμός θέσης – η διαδρομή ξεκινά από την πρώτη στάση.');
+        try { updateTopNavFromDom(); } catch(_){ }
+      }
+    }, 2000);
     navigator.geolocation.getCurrentPosition((pos)=>{
       geo = { ready:true, allowed:true, lat: pos.coords.latitude, lng: pos.coords.longitude };
-      // Rebuild nav when we get a position
+      locatingInProgress = false;
+      if (locatingTimer){ clearTimeout(locatingTimer); locatingTimer = null; }
+      setNavBanner('📍 Έναρξη από τρέχουσα θέση (ενεργό)');
       try { updateTopNavFromDom(); } catch(_){ }
     }, (_err)=>{
+      // Mark as ready but keep the locating banner until the 2s fallback fires
       geo = { ready:true, allowed:false, lat:null, lng:null };
-      setNavBanner('⚠️ Δεν είναι δυνατός ο αυτόματος εντοπισμός θέσης – η διαδρομή ξεκινά από την πρώτη στάση.');
+      // Do not show fallback yet; timer will handle after 2s
     }, { enableHighAccuracy:true, maximumAge:15000, timeout:7000 });
   }
   function mapsLink(s){
@@ -95,6 +118,16 @@
       const allEls = pickEls.concat(tourEls);
       const stops = allEls.map(toQueryFromEl).filter(Boolean);
       if (stops.length > 1){
+        if (locatingInProgress){
+          const origin = stops[0];
+          const destination = stops[stops.length - 1];
+          const middle = stops.slice(1, -1);
+          const waypointsParam = middle.length ? middle.map(encodeURIComponent).join('|') : '';
+          const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&waypoints=${waypointsParam}&travelmode=driving`;
+          navBtn.href = gmapsUrl;
+          setNavBanner('📍 Εντοπισμός θέσης...');
+          return;
+        }
         // Decide origin: if geolocation allowed and far from first stop (>300m), use Current Location, else use first stop
         let origin = stops[0];
         let destination = stops[stops.length - 1];
@@ -128,7 +161,13 @@
         const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&waypoints=${waypointsParam}&travelmode=driving`;
         navBtn.href = gmapsUrl;
       } else if (stops.length === 1){
-        // Single stop: if geolocation allowed and far, start from current location with directions
+        if (locatingInProgress){
+          const dest = stops[0];
+          navBtn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`;
+          setNavBanner('📍 Εντοπισμός θέσης...');
+          return;
+        }
+        // Single stop: if geolocation allowed, start from current location with directions
         const dest = stops[0];
         if (geo && geo.allowed){
           navBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent('Current Location')}&destination=${encodeURIComponent(dest)}&travelmode=driving`;
