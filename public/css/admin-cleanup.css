@@ -283,6 +283,10 @@ body.admin-main label {
 #bookingsContainer table th,
 #bookingsContainer table td { padding: 6px; vertical-align: middle; }
 
+/* Policy violations: subtle highlight and badge style */
+.policy-row-warning { background: #fff5f5; }
+.policy-violation-badge { text-decoration: none; cursor: pointer; }
+
 /* Column width balancing for readability (desktop/tablet) */
 @media (min-width: 769px) {
   /* Name */

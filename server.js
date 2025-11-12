@@ -9,6 +9,63 @@ const { TextDecoder } = require('util');
 // Load local .env (if present). Safe to leave out in production where env vars are set
 try { require('dotenv').config(); } catch (e) { /* noop if dotenv isn't installed */ }
 
+// Admin credentials (Basic auth) consumed by admin APIs and /admin-login
+let ADMIN_USER = process.env.ADMIN_USER || null;
+let ADMIN_PASS = process.env.ADMIN_PASS || null;
+if (typeof ADMIN_USER === 'string') ADMIN_USER = ADMIN_USER.trim().replace(/^['"]|['"]$/g, '');
+if (typeof ADMIN_PASS === 'string') ADMIN_PASS = ADMIN_PASS.trim().replace(/^['"]|['"]$/g, '');
+
+// Central admin auth check used by server and modules
+function checkAdminAuth(req){
+  // Session flag or legacy cookie
+  try { if (req && req.session && req.session.admin === true) return true; } catch(_){ }
+  if (hasAdminSession(req)) return true;
+  // Forwarded header support (base64 user:pass)
+  try {
+    const fwd = String(req.headers['x-forward-admin-auth'] || '');
+    if (fwd) {
+      const raw = Buffer.from(fwd, 'base64').toString('utf8');
+      const i = raw.indexOf(':');
+      if (i !== -1) {
+        const u = raw.slice(0,i);
+        const p = raw.slice(i+1);
+        if (u === ADMIN_USER && p === ADMIN_PASS) return true;
+      }
+    }
+  } catch(_){ }
+  // Basic Auth header fallback
+  if (!ADMIN_USER || !ADMIN_PASS) return false;
+  try {
+    const auth = String(req.headers.authorization || '');
+    if (!auth.startsWith('Basic ')) return false;
+    const creds = Buffer.from(auth.slice(6), 'base64').toString('utf8');
+    const j = creds.indexOf(':');
+    if (j === -1) return false;
+    const user = creds.slice(0,j);
+    const pass = creds.slice(j+1);
+    return (user === ADMIN_USER && pass === ADMIN_PASS);
+  } catch(_){ return false; }
+}
+
+function getCookies(req){
+  try {
+    const h = req.headers.cookie || '';
+    if (!h) return {};
+    return h.split(';').reduce((acc, part) => {
+      const i = part.indexOf('=');
+      if (i === -1) return acc;
+      const k = part.slice(0,i).trim();
+      const v = decodeURIComponent(part.slice(i+1).trim());
+      acc[k] = v; return acc;
+    }, {});
+  } catch(_) { return {}; }
+}
+function hasAdminSession(req){
+  try { if (req && req.session && req.session.admin === true) return true; } catch(_){ }
+  const c = getCookies(req);
+  return c.adminSession === 'true' || c.adminSession === '1' || c.adminSession === 'yes';
+}
+
 // (Phase 1 refactor note) Removed transient createApp() indirection; restore direct Express init for stability
 const app = express();
 // Parse URL-encoded bodies for simple form logins
@@ -130,7 +187,9 @@ function isNewsCacheFresh(){ return !!(NEWS_CACHE.updatedAt && (Date.now() - NEW
 async function refreshNewsFeed(reason='manual') {
   if (!NEWS_RSS_URLS.length) return [];
   let all = [];
-  const fetch = require('node-fetch');
+  let fetch = null;
+  try { fetch = require('node-fetch'); } catch(_) { fetch = null; }
+  if (!fetch) { return []; }
   for (const url of NEWS_RSS_URLS) {
     try {
       const resp = await fetch(url, { timeout: 8000 });
@@ -573,6 +632,12 @@ function mockAssistantReply(message) {
 // Assistant routes moved to module (Phase 4)
 try {
   const { registerAssistantRoutes } = require('./src/server/assistant/routes');
+  const {
+    buildPoliciesKnowledgePrompt,
+    maybeAnswerPolicyQuestion,
+    fallbackMissingMessage,
+    rulesLoaded,
+  } = require('./src/server/assistant/knowledge');
   registerAssistantRoutes(app, {
     express,
     OPENAI_API_KEY,
@@ -587,11 +652,14 @@ try {
     resolvePlaceForMessage,
     buildAssistantSystemPrompt,
     buildLiveRulesPrompt,
+    buildPoliciesKnowledgePrompt,
     mockAssistantReply,
     getCachedHeadlinesOrRefresh,
     NEWS_RSS_URLS,
     ASSISTANT_LIVE_ALWAYS,
-    t
+    t,
+    // lightweight policy helpers exposed to the assistant module (mock mode and fallback)
+    policyQA: { maybeAnswerPolicyQuestion, fallbackMissingMessage, rulesLoaded }
   });
   console.log('assistant: routes registered');
 } catch (e) {
@@ -846,7 +914,12 @@ app.post('/admin-login', (req, res) => {
       return res.redirect(nextUrl || '/admin');
     }
     return res.status(403).send('Invalid credentials');
-  } catch (e) { return res.status(500).send('Server error'); }
+  } catch (e) {
+    try {
+      console.error('admin-login error:', e && e.stack ? e.stack : e);
+    } catch(_){ }
+    return res.status(500).send('Server error');
+  }
 });
 
 app.get('/admin-logout', (req, res) => {

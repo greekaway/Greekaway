@@ -16,11 +16,13 @@ function registerAssistantRoutes(app, deps) {
     resolvePlaceForMessage,
     buildAssistantSystemPrompt,
     buildLiveRulesPrompt,
+    buildPoliciesKnowledgePrompt,
     mockAssistantReply,
     getCachedHeadlinesOrRefresh,
     NEWS_RSS_URLS,
     ASSISTANT_LIVE_ALWAYS,
-    t
+    t,
+    policyQA
   } = deps;
 
   // --- /api/assistant JSON ---
@@ -111,6 +113,16 @@ function registerAssistantRoutes(app, deps) {
             }
           }
         } catch (_) {}
+        // Try a direct policy Q&A if user asked a rule-related question and rules are loaded
+        try {
+          const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
+          const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
+          if (policyQA && policyQA.rulesLoaded && policyQA.maybeAnswerPolicyQuestion){
+            const ans = policyQA.maybeAnswerPolicyQuestion(message, userLang);
+            if (ans) return res.json({ reply: ans, model: 'mock-policy', context: sessionContext });
+          }
+        } catch(_){ }
+
         let extra = '';
         try {
           const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
@@ -134,6 +146,17 @@ function registerAssistantRoutes(app, deps) {
             if (txt) extra = `\n\n${txt}`;
           }
         } catch (_) {}
+        // If rules aren't loaded at all and the message seems policy-related, show fallback
+        try {
+          const m = String(message||'').toLowerCase();
+          const maybePolicyQuestion = /(πόσα|ποσα|min|ελάχιστ|κανόνες|rules|policy|policies|πότε|ποτε|αναχωρ|stops|παραλαβ)/i.test(m);
+          const acceptLang = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
+          const userLang = (req.body && req.body.lang) || (acceptLang.startsWith('el') ? 'el' : 'en');
+          if (maybePolicyQuestion && policyQA && policyQA.rulesLoaded && policyQA.fallbackMissingMessage && !policyQA.rulesLoaded()){
+            return res.json({ reply: policyQA.fallbackMissingMessage(userLang), model: 'mock-policy-missing', context: sessionContext });
+          }
+        } catch(_){ }
+
         return res.json({ reply: mockAssistantReply(message) + extra, model: 'mock', context: sessionContext });
       }
 
@@ -261,6 +284,18 @@ function registerAssistantRoutes(app, deps) {
       } catch (_) { /* continue to OpenAI */ }
 
       // OpenAI fallback
+      // If user likely asks about policies but rules are missing, answer with fallback immediately
+      try {
+        const mLow = String(message||'').toLowerCase();
+        const maybePolicyQuestion = /(πόσα|ποσα|min|ελάχιστ|κανόνες|rules|policy|policies|πότε|ποτε|αναχωρ|stops|παραλαβ)/i.test(mLow);
+        if (maybePolicyQuestion && policyQA && policyQA.rulesLoaded && !policyQA.rulesLoaded()){
+          const acceptLang2 = String(req.headers['accept-language'] || '').slice(0,5).toLowerCase();
+          const userLang2 = (req.body && req.body.lang) || (acceptLang2.startsWith('el') ? 'el' : 'en');
+          const fb = policyQA && policyQA.fallbackMissingMessage ? policyQA.fallbackMissingMessage(userLang2) : 'Operational trip rules are temporarily not loaded';
+          return res.json({ reply: fb, model: 'policy-missing', context: { lastTripId: null, lastTopic: null } });
+        }
+      } catch(_){}
+
       const place = await resolvePlaceForMessage(message, userLang);
       let liveContextText = '';
       const includeNews = !!(NEWS_RSS_URLS.length && (wantsNews(message) || wantsStrikesOrTraffic(message) || ASSISTANT_LIVE_ALWAYS));
@@ -283,11 +318,12 @@ function registerAssistantRoutes(app, deps) {
       const messages = [
         { role: 'system', content: buildAssistantSystemPrompt() },
         { role: 'system', content: buildLiveRulesPrompt() },
+        { role: 'system', content: buildPoliciesKnowledgePrompt() },
         ...(liveContextText ? [{ role: 'system', content: `Live data context (refreshed every ~5m):\n${liveContextText}` }] : []),
         ...history.filter(m => m && m.role && m.content).map(m => ({ role: m.role, content: String(m.content) })),
         { role: 'user', content: message }
       ];
-      const fetch = require('node-fetch');
+  const fetch = global.fetch || require('node-fetch');
       const resp = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -317,6 +353,11 @@ function registerAssistantRoutes(app, deps) {
       return res.json({ reply, model: 'gpt-4o-mini', context: { lastTripId: null, lastTopic: null } });
     } catch (e) {
       console.error('AI Assistant JSON error:', e && e.stack ? e.stack : e);
+      try {
+        const fs = require('fs');
+        const msg = `[${new Date().toISOString()}] ${e && e.stack ? e.stack : e}\n`;
+        fs.appendFileSync(require('path').join(__dirname, 'assistant-error.log'), msg);
+      } catch(_){}
       return res.status(500).json({ error: 'Server error' });
     }
   });

@@ -1,9 +1,10 @@
+require('./env');
 const path = require('path');
 const crypto = require('crypto');
 const { getTravelSeconds } = require('./distance');
 
 function hasPostgres(){ return !!process.env.DATABASE_URL; }
-function getSqlite(){ const Database = require('better-sqlite3'); return new Database(path.join(__dirname, '..', 'data', 'db.sqlite3')); }
+function getSqlite(){ const Database = require('better-sqlite3'); const p = process.env.SQLITE_DB_PATH || path.join(__dirname, '..', 'data', 'db.sqlite3'); return new Database(p); }
 async function withPg(fn){ const { Client } = require('pg'); const client = new Client({ connectionString: process.env.DATABASE_URL }); await client.connect(); try { return await fn(client); } finally { await client.end(); } }
 
 function toIso(d){ try { return new Date(d).toISOString(); } catch(_) { return null; } }

@@ -1,5 +1,8 @@
+require('./env');
 const path = require('path');
 const crypto = require('crypto');
+const policy = require('./policyService');
+const adminSse = require('./adminSse');
 let nodemailer = null;
 try { nodemailer = require('nodemailer'); } catch(_) {}
 
@@ -12,7 +15,8 @@ function hasPostgres() { return !!process.env.DATABASE_URL; }
 
 function getSqlite(){
   const Database = require('better-sqlite3');
-  const db = new Database(path.join(__dirname, '..', 'data', 'db.sqlite3'));
+  const SQLITE_DB_PATH = process.env.SQLITE_DB_PATH || path.join(__dirname, '..', 'data', 'db.sqlite3');
+  const db = new Database(SQLITE_DB_PATH);
   return db;
 }
 
@@ -214,6 +218,32 @@ async function processQueue(bookingId, opts = {}){
   if (!context) return { ok:false, error:'booking_not_found' };
   const partner_id = context.partner_id || context.partner || context.partner_id_text || null;
   const partner_email = context.partner_email || context.email || null;
+  // Policy gate: validate trip eligibility before any dispatch work
+  try {
+    const check = await policy.validateBeforeDispatch(bookingId);
+    if (!check.ok) {
+      const msg = 'Η εκδρομή δεν πληροί τις λειτουργικές προϋποθέσεις για αποστολή';
+      // Audit log row with policy_blocked status
+      try {
+        const payload = { booking_id: bookingId, reasons: check.reasons, participants: check.participants, min_required: check.min_required };
+        await upsertLog({ booking_id: bookingId, partner_id: partner_id || null, sent_by: opts.sent_by || 'system', status: 'policy_blocked', response_text: msg, payload_json: JSON.stringify(payload), retry_count: 0 });
+      } catch (_) {}
+      try {
+        const now = new Date().toISOString();
+        const violation_reason = (check.reasons && check.reasons[0] && (check.reasons[0].message || check.reasons[0].code)) || 'policy_failed';
+        adminSse.broadcast({ type: 'policy_violation', booking_id: String(bookingId), trip_id: context.trip_id || null, violation_reason, reasons: check.reasons, timestamp: now });
+      } catch (_) {}
+      return { ok:false, error:'policy_violation', reasons: check.reasons };
+    }
+  } catch (e) {
+    // Defensive: if policy evaluation throws, block dispatch and notify admin
+    const msg = 'Σφάλμα αξιολόγησης πολιτικών — αναστολή αποστολής';
+    try {
+      const now = new Date().toISOString();
+      adminSse.broadcast({ type: 'policy_violation', booking_id: String(bookingId), trip_id: context.trip_id || null, violation_reason: 'policy_eval_error', error: String(e && e.message || e), timestamp: now });
+    } catch(_){}
+    return { ok:false, error:'policy_eval_error' };
+  }
   if (!partner_id) return { ok:false, error:'partner_missing' };
   if (!partner_email) {
     const payload = toPayload(context, context);
@@ -228,6 +258,14 @@ async function processQueue(bookingId, opts = {}){
   const payload = toPayload(context, context);
   const initialStatus = DISPATCH_ENABLED ? 'pending' : 'pending';
   const logId = await upsertLog({ booking_id: bookingId, partner_id, sent_by: opts.sent_by || 'system', status: initialStatus, response_text: null, payload_json: JSON.stringify(payload), retry_count: 0 });
+  // Optional: auto-assign driver based on dispatch policy
+  try {
+    const pol = policy.loadPolicies();
+    const autoAssign = pol && pol.dispatch_policy && pol.dispatch_policy.auto_assign_driver;
+    if (autoAssign && !context.assigned_driver_id) {
+      await tryAutoAssignDriver(bookingId, partner_id);
+    }
+  } catch (_) {}
   // Try up to 3 attempts with backoff 0s, 60s, 300s, 900s
   const backoffs = [0, 60_000, 300_000, 900_000];
   (async () => {
@@ -244,3 +282,25 @@ module.exports = {
   queue: processQueue,
   latestStatusForBookings,
 };
+
+async function tryAutoAssignDriver(bookingId, partnerId){
+  // Assign first active driver for the partner if available
+  try {
+    if (hasPostgres()){
+      await withPg(async (c) => {
+        const { rows: d } = await c.query('SELECT id FROM drivers WHERE provider_id=$1 AND status=$2 ORDER BY created_at ASC LIMIT 1', [partnerId, 'active']);
+        if (d && d[0]) {
+          await c.query('UPDATE bookings SET assigned_driver_id=$1, updated_at=now() WHERE id=$2 AND (assigned_driver_id IS NULL OR assigned_driver_id = \'\')', [d[0].id, bookingId]);
+        }
+      });
+    } else {
+      const db = getSqlite();
+      try {
+        const d = db.prepare('SELECT id FROM drivers WHERE provider_id = ? AND status = ? ORDER BY created_at ASC LIMIT 1').get(partnerId, 'active');
+        if (d && d.id) {
+          db.prepare('UPDATE bookings SET assigned_driver_id = ?, updated_at = ? WHERE id = ? AND (assigned_driver_id IS NULL OR assigned_driver_id = \"\")').run(d.id, new Date().toISOString(), bookingId);
+        }
+      } finally { db.close(); }
+    }
+  } catch (_) { /* best-effort */ }
+}

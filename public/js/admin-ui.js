@@ -558,8 +558,16 @@
       es.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data || '{}');
-          if (msg && msg.type && msg.booking_id) {
-            if (msg.type === 'payout_sent' || msg.type === 'payout_failed') updatePayoutCells(msg.booking_id, msg.status || (msg.type==='payout_sent'?'sent':'failed'), msg.payout_date || '');
+          if (!msg || !msg.type) return;
+          if (msg.type === 'payout_sent' || msg.type === 'payout_failed') {
+            if (msg.booking_id) updatePayoutCells(msg.booking_id, msg.status || (msg.type==='payout_sent'?'sent':'failed'), msg.payout_date || '');
+            return;
+          }
+          if (msg.type === 'policy_violation') {
+            const bookingId = String(msg.booking_id || '').trim();
+            const reason = String(msg.violation_reason || (Array.isArray(msg.reasons)&&msg.reasons[0]&&msg.reasons[0].code) || 'policy_violation');
+            const ts = msg.timestamp || new Date().toISOString();
+            if (bookingId) registerPolicyViolation(bookingId, { reason, timestamp: ts, trip_id: msg.trip_id || null });
           }
         } catch(_){}
       };
@@ -591,6 +599,62 @@
       bookingsDemoForce = true;
       renderBookings([]);
     }
+  }
+
+  const policyViolations = new Map(); // booking_id -> { reason, timestamp, trip_id }
+  let showOnlyViolations = false;
+
+  function registerPolicyViolation(bookingId, data){
+    policyViolations.set(bookingId, data || {});
+    applyViolationBadge(bookingId);
+    if (showOnlyViolations) applyFilterViolations();
+  }
+
+  function applyViolationBadge(bookingId){
+    if (!bookingsTbody) return;
+    const cell = bookingsTbody.querySelector(`td.booking-id[data-booking="${CSS.escape(bookingId)}"]`);
+    if (!cell) return; // row not rendered yet
+    let badge = cell.querySelector('.policy-violation-badge');
+    const v = policyViolations.get(bookingId);
+    const title = v ? (`${v.reason || 'Policy violation'}\n${formatDate(v.timestamp || '')}`) : 'Policy violation';
+    if (!badge){
+      const a = document.createElement('a');
+      a.href = '#';
+      a.className = 'policy-violation-badge';
+      a.textContent = '⚠️';
+      a.style.marginLeft = '6px';
+      a.title = title;
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Open existing booking modal for quick context
+        showMetadataModal('', bookingId, '');
+      });
+      cell.appendChild(a);
+    } else {
+      badge.title = title;
+    }
+    // Row-level subtle style
+    const tr = cell.closest('tr');
+    if (tr) tr.classList.add('policy-row-warning');
+  }
+
+  function applyAllViolations(){
+    for (const k of policyViolations.keys()) applyViolationBadge(k);
+  }
+
+  function applyFilterViolations(){
+    if (!bookingsTbody) return;
+    const rows = bookingsTbody.querySelectorAll('tr');
+    rows.forEach(tr => {
+      const idCell = tr.querySelector('td.booking-id');
+      const id = idCell ? idCell.getAttribute('data-booking') : '';
+      if (!showOnlyViolations) {
+        tr.style.display = '';
+      } else {
+        const has = id && policyViolations.has(id);
+        tr.style.display = has ? '' : 'none';
+      }
+    });
   }
 
   function renderBookings(arr){
@@ -641,7 +705,7 @@
       const partnerShare = formatAmount(b.partner_share_cents || 0, 'eur');
       const commission = formatAmount(b.commission_cents || 0, 'eur');
       tr.innerHTML = `
-        <td>${escapeHtml(b.id||'')}</td>
+        <td class="booking-id" data-booking="${escapeHtml(b.id||'')}">${escapeHtml(b.id||'')}</td>
         <td>${escapeHtml(b.status||'')}</td>
         <td>${escapeHtml(b.payment_intent_id||'')}</td>
         <td>${escapeHtml(b.event_id||'')}</td>
@@ -664,6 +728,10 @@
     // After rows rendered, build hint (if needed) and sync widths
     ensureBookingsHint();
     queueUpdateBookingsHintWidths();
+    // Apply any pending policy violation markers
+    applyAllViolations();
+    // If toggle active, filter view
+    applyFilterViolations();
   bookingsTbody.querySelectorAll('.editable-partner').forEach(td => {
       td.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter') { ev.preventDefault(); td.blur(); }
@@ -818,6 +886,16 @@
     if (rowStatus) rowStatus.textContent = status || '';
     if (rowDate) rowDate.textContent = dateIso ? formatDate(dateIso) : '';
   }
+
+  // Hook up the violations toggle
+  (function(){
+    const cb = document.getElementById('bfOnlyViolations');
+    if (!cb) return;
+    cb.addEventListener('change', () => {
+      showOnlyViolations = !!cb.checked;
+      applyFilterViolations();
+    });
+  })();
 
   function greekStatus(s){
     if (!s) return '';

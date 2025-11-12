@@ -1,0 +1,61 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-11-12",
+  "description": "Κεντρικό αρχείο λειτουργικών κανόνων για την εκτέλεση εκδρομών, ομαδοποίηση πελατών και επιλογή οχήματος στο Greekaway.",
+
+  "trip_execution": {
+    "min_participants": 4,
+    "max_participants": 7,
+    "auto_start_time_rule": "Το όχημα ξεκινά μόνο αφού όλοι οι επιβάτες έχουν παραληφθεί και βρίσκονται στο σημείο εκκίνησης της εκδρομής.",
+    "early_arrival_buffer_minutes": 15,
+    "cancel_if_under_minimum": true,
+    "distance_grouping_rule": "Οι πελάτες ομαδοποιούνται με βάση τη γεωγραφική εγγύτητα. Εάν κάποιος απέχει πάνω από 15 km από το πλησιέστερο σημείο παραλαβής, δημιουργείται ξεχωριστό μικρότερο όχημα (έως 4 ατόμων).",
+    "max_pickup_distance_km": 15,
+    "max_pickup_time_difference_minutes": 40,
+    "elastic_vehicle_selection": true,
+    "elastic_mode_trigger": {
+      "condition": "low_occupancy",
+      "threshold": 4,
+      "description": "Αν μια εκδρομή παραμένει με λιγότερα από 4 άτομα για μεγάλο διάστημα, το σύστημα ενεργοποιεί το elastic mode και ενώνει πελάτες από διαφορετικούς τύπους ταξιδιωτών."
+    }
+  },
+
+  "vehicle_capacity": {
+    "standard_van": 7,
+    "small_van": 4
+  },
+
+  "grouping": {
+    "prefer_same_area": true,
+    "prefer_same_language": true,
+    "prefer_compatible_traveler_types": true,
+    "max_language_mix": 2,
+    "compatibility_priority": [
+      "traveler_type",
+      "language",
+      "pickup_distance"
+    ]
+  },
+
+  "pickup_policy": {
+    "require_coordinates": true,
+    "geolocation_fallback": true,
+    "address_autocomplete": true,
+    "store_lat_lng_in_db": true,
+    "maps_provider": "Google Places API"
+  },
+
+  "dispatch_policy": {
+    "auto_assign_driver": true,
+    "notify_partner_on_new_booking": true,
+    "include_pickup_links": true,
+    "start_time_buffer_minutes": 10
+  },
+
+  "trip_status": {
+    "planned": "Η εκδρομή είναι προγραμματισμένη και συλλέγει κρατήσεις.",
+    "active": "Η εκδρομή είναι ενεργή και το όχημα βρίσκεται σε εξέλιξη διαδρομής.",
+    "completed": "Η εκδρομή έχει ολοκληρωθεί.",
+    "canceled": "Η εκδρομή ακυρώθηκε λόγω χαμηλής πληρότητας ή άλλου λόγου."
+  }
+}

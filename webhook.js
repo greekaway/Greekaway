@@ -1,5 +1,6 @@
 // webhook.js
 // CommonJS module to attach Stripe webhook route to an existing express app
+require('./services/env');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -39,7 +40,7 @@ try {
 }
 try {
   const Database = require('better-sqlite3');
-  const DB_PATH = path.join(__dirname, 'data', 'db.sqlite3');
+  const DB_PATH = process.env.SQLITE_DB_PATH || path.join(__dirname, 'data', 'db.sqlite3');
   // ensure data directory exists
   try { fs.mkdirSync(path.join(__dirname, 'data'), { recursive: true }); } catch (e) {}
   db = new Database(DB_PATH);

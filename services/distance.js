@@ -1,3 +1,4 @@
+require('./env');
 const crypto = require('crypto');
 
 // In-memory TTL cache for travel times between coordinate pairs
