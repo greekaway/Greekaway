@@ -1,5 +1,17 @@
 /* Greekaway PWA – 2025-11-13 */
 
+/* Safe-area support for iOS notch / dynamic island */
+:root {
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+/* Apply safe-area padding so PWA content reaches true fullscreen */
+body {
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
 /* Container for the PWA install banner */
 .pwa-install-container {
   position: fixed;

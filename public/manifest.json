@@ -5,6 +5,7 @@
   "theme_color": "#001f3f",
   "background_color": "#001f3f",
   "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
   "start_url": "/",
   "description": "Greekaway is a smart platform for tours and experiences in Greece. / Το Greekaway είναι έξυπνη πλατφόρμα εκδρομών και εμπειριών στην Ελλάδα.",
   "descriptions": {

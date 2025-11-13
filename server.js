@@ -471,6 +471,42 @@ const { registerDocs } = require('./src/server/routes/docs');
 registerDocs(app, { DOCS_DIR, IS_DEV, express });
 // (Phase 2 refactor) inline asset version helpers removed; now imported above.
 
+// Dynamic manifest for Driver Panel (uses same SW scope and icons)
+app.get('/manifest-driver.json', (req, res) => {
+  try {
+    const theme = '#1B2A3A'; // matches Driver Panel background
+    const manifest = {
+      name: 'Greekaway Driver Panel',
+      short_name: 'Driver Panel',
+      theme_color: theme,
+      background_color: theme,
+      display: 'standalone',
+      display_override: ['fullscreen','standalone'],
+      start_url: '/driver/driver-dashboard.html',
+      description: 'Driver Panel for Greekaway routes and pickups.',
+      icons: [
+        { src: '/images/logo.png', sizes: '48x48', type: 'image/png', purpose: 'any maskable' },
+        { src: '/images/logo.png', sizes: '72x72', type: 'image/png', purpose: 'any maskable' },
+        { src: '/images/logo.png', sizes: '96x96', type: 'image/png', purpose: 'any maskable' },
+        { src: '/images/logo.png', sizes: '144x144', type: 'image/png', purpose: 'any maskable' },
+        { src: '/images/logo.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: '/images/logo.png', sizes: '256x256', type: 'image/png', purpose: 'any maskable' },
+        { src: '/images/logo.png', sizes: '384x384', type: 'image/png', purpose: 'any maskable' },
+        { src: '/images/logo.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+        { src: '/images/icons/culture.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+        { src: '/images/icons/sea.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+        { src: '/images/icons/mountain.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }
+      ]
+    };
+    res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+    // Keep short cache to allow updates but avoid flicker
+    res.setHeader('Cache-Control', IS_DEV ? 'no-store' : 'public, max-age=300');
+    return res.send(JSON.stringify(manifest));
+  } catch (e) {
+    return res.status(500).json({ error: 'manifest-error' });
+  }
+});
+
 // Locales index route moved to registerLocales
 
 // Lightweight endpoint to expose Google Maps key to frontend (used by booking-addons.js fallback)
