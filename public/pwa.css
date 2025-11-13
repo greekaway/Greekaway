@@ -12,6 +12,11 @@ body {
   padding-bottom: var(--safe-bottom);
 }
 
+/* In standalone (installed PWA), avoid double bottom spacing under fixed footers */
+@media all and (display-mode: standalone) {
+  body.has-rounded-footer { padding-bottom: 0; }
+}
+
 /* Container for the PWA install banner */
 .pwa-install-container {
   position: fixed;

@@ -24,6 +24,8 @@
           document.head.appendChild(link);
         }
       } catch(_){ /* ignore */ }
+      // Mark body so CSS overrides (e.g. PWA safe-area handling) can target only pages with the rounded footer
+      try { document.body.classList.add('has-rounded-footer'); } catch(_){ }
       // Mobile-only: prevent starting vertical scroll when dragging on the footer
       try {
         const mql = window.matchMedia && window.matchMedia('(max-width: 599px)');

@@ -152,6 +152,8 @@ try { session = require('express-session'); } catch(_) { session = null; }
 const SESSION_SECRET = (process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || crypto.randomBytes(24).toString('hex')).trim();
 // Moved asset/version scanners to lib/assets.js
 const { computeLocalesVersion, computeDataVersion, computeAssetsVersion } = require('./src/server/lib/assets');
+const { computeCacheBust } = require('./src/server/lib/cacheBust');
+const { applyAssetVersion } = require('./src/server/lib/htmlVersioning');
 
 // Read Maps API key from environment. If not provided, the placeholder remains.
 // Trim and strip surrounding quotes if the value was pasted with quotes.
@@ -353,24 +355,18 @@ app.use((req, res, next) => {
   } catch(_) { return next(); }
 });
 
-// 1️⃣ Σε DEV: Σερβίρουμε ΠΑΝΤΑ φρέσκα HTML/JS/CSS και κάνουμε inject το Google Maps key
+// Precompute a stable cache-busting version (used in HTML to version CSS/JS/manifest)
+const CACHE_BUST_VERSION = computeCacheBust(__dirname);
+
+// 1️⃣ Σε DEV: Σερβίρουμε ΠΑΝΤΑ φρέσκα HTML/JS/CSS, version τα assets, και κάνουμε inject το Google Maps key
 if (IS_DEV) {
   app.get(/^\/(?:.*)\.html$/, (req, res, next) => {
     const filePath = path.join(__dirname, 'public', req.path);
     fs.readFile(filePath, 'utf8', (err, html) => {
       if (err) return next();
       try {
-        const t = Date.now();
-        // 1) Ανανεώνουμε οποιοδήποτε υπάρχον v=NNN query param
-        let out = html.replace(/(\?v=)\d+/g, `$1${t}`);
-        // 2) Για /js/*.js χωρίς query, προσθέτουμε ?dev=timestamp
-        out = out.replace(/(src=\"\/(?:js)\/[^\"?#]+)(\")/g, (m, p1, p2) => {
-          return p1.includes('?') ? m : `${p1}?dev=${t}${p2}`;
-        });
-        // 3) Για /css/*.css χωρίς query, προσθέτουμε ?dev=timestamp
-        out = out.replace(/(href=\"\/(?:css)\/[^\"?#]+)(\")/g, (m, p1, p2) => {
-          return p1.includes('?') ? m : `${p1}?dev=${t}${p2}`;
-        });
+        // Version all local CSS/JS/manifest links
+        let out = applyAssetVersion(html, CACHE_BUST_VERSION);
         // 4) Inject Google Maps API key placeholder (trip.html etc.)
         try {
           const key = (MAP_KEY || '').trim();
@@ -393,14 +389,15 @@ if (IS_DEV) {
   });
 }
 
-// 1️⃣β Σε PROD: Κάνουμε inject το Google Maps key στα HTML (χωρίς dev cache-busting)
+// 1️⃣β Σε PROD: Version τα assets + Κάνουμε inject το Google Maps key στα HTML
 if (!IS_DEV) {
   app.get(/^\/(?:.*)\.html$/, (req, res, next) => {
     const filePath = path.join(__dirname, 'public', req.path);
     fs.readFile(filePath, 'utf8', (err, html) => {
       if (err) return next();
       try {
-        let out = html;
+        // Version all local CSS/JS/manifest links for cache-busting after deploys
+        let out = applyAssetVersion(html, CACHE_BUST_VERSION);
         // Inject Google Maps API key placeholder (trip.html κ.ά.)
         try {
           const key = (MAP_KEY || '').trim();
