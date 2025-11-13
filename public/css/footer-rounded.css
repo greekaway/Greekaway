@@ -28,3 +28,10 @@ footer:not(.version) {
     bottom: calc(env(safe-area-inset-bottom, 0px) + var(--ga-footer-gap-y));
   }
 }
+
+/* PWA (installed): σε κινητά μόνο, φέρε το footer πιο χαμηλά (μικρότερο κενό) */
+@media all and (display-mode: standalone) and (max-width: 640px) {
+  footer:not(.version) {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--ga-footer-gap-y) - 18px);
+  }
+}

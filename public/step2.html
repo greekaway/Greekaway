@@ -292,6 +292,9 @@
   <!-- Step 2 addons: suitcases popup, pickup autocomplete, special requests, validation -->
   <script src="/js/booking-addons.js?v=1" defer></script>
   <script>
+    try { document.body.classList.add('has-rounded-footer'); } catch(_){ }
+  </script>
+  <script>
     // Optional: lightweight behaviour — Πίσω γυρίζει στην προηγούμενη σελίδα
     try { document.getElementById('s2Back').addEventListener('click', () => history.back()); } catch(_){ }
     // Populate header from sessionStorage (set in Step 1)
