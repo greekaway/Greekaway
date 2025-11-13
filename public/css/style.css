@@ -359,7 +359,7 @@ footer a.central-btn:hover i {
     margin: 0;
     border-radius: 0;
     padding: 18px 16px 16px;
-    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
     /* Reserve space so any bottom action bar is always reachable */
     padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
   }
@@ -957,8 +957,8 @@ body[data-category] h2 {
 
 @media (max-width: 599px) {
   /* True fullscreen overlay on mobile */
-  .overlay { bottom: 0; width: 100vw; height: 100vh; }
-  .overlay .overlay-inner { margin: 0; border-radius: 0; padding: 1rem; min-height: 100vh; }
+  .overlay { bottom: 0; width: 100vw; height: calc(var(--vh, 1vh) * 100); }
+  .overlay .overlay-inner { margin: 0; border-radius: 0; padding: 1rem; min-height: calc(var(--vh, 1vh) * 100); }
   .overlay .close-overlay { top: 10px; right: 10px; }
 }
 
@@ -1410,7 +1410,7 @@ body.highlight-trip {
 /* tablet and up: center content in a box */
 @media (max-width: 599px) {
   /* keep overlay content comfortable on small screens */
-  .overlay .overlay-inner { padding: 12px; min-height: calc(100vh - var(--footer-offset, 80px)); }
+  .overlay .overlay-inner { padding: 12px; min-height: calc(calc(var(--vh, 1vh) * 100) - var(--footer-offset, 80px)); }
 }
 @media (min-width: 1024px) {
   .trip-section {

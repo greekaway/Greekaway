@@ -9,7 +9,7 @@ body {
      so per-category gradients can show; avoid overriding here */
   background: transparent;
   color: #ecf0f1;
-  min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
 }
 
 /* Ensure vertical page scrolling is always possible on mobile/tablet
@@ -210,7 +210,7 @@ html[data-view="trip"], body[data-view="trip"] {
 @media (min-width: 720px) { .overlay .overlay-inner { width: 88%; } }
 
 /* Booking-step specific layout (full-screen centered steps) */
-.booking-step { min-height: calc(100vh - var(--footer-offset, 80px) - 40px); display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:18px; }
+.booking-step { min-height: calc(calc(var(--vh, 1vh) * 100) - var(--footer-offset, 80px) - 40px); display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:18px; }
 .booking-step h2 { color: #d4af37; margin-bottom: 8px; }
 .booking-step .step-card { width:100%; max-width:760px; background: rgba(10,18,24,0.72); border-radius:16px; padding:18px; box-shadow: 0 22px 48px rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.04); }
 .booking-step input, .booking-step select { width: 100%; max-width:720px; margin: 8px 0; box-sizing: border-box; }
@@ -244,7 +244,7 @@ html[data-view="trip"], body[data-view="trip"] {
 .profile-option.selected { background: linear-gradient(90deg, rgba(212,175,55,0.12), rgba(212,175,55,0.06)); border-color: rgba(212,175,55,0.18); }
 
 /* cinematic full-screen modal height */
-.overlay .overlay-inner { width: calc(100vw - 40px); max-width: 980px; margin: 3vh auto; min-height: calc(100vh - var(--footer-offset,80px) - 40px); display:flex; align-items:flex-start; justify-content:center; }
+.overlay .overlay-inner { width: calc(100vw - 40px); max-width: 980px; margin: 3vh auto; min-height: calc(calc(var(--vh, 1vh) * 100) - var(--footer-offset,80px) - 40px); display:flex; align-items:flex-start; justify-content:center; }
 body.overlay-open::before { content:''; position:fixed; inset:0; background:rgba(2,6,10,0.55); z-index: 800; }
 
 /* ensure booking result/summary uses no horizontal overflow */
@@ -485,7 +485,7 @@ body[data-view="trip"] .trip-card h3 {
     margin: 0;
     border-radius: 0;
     padding: 16px;
-    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
     padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
   }
 }

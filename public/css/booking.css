@@ -7,7 +7,7 @@
 
 #bookingOverlay {
   background: linear-gradient(180deg, #1B2A3A 0%, #223345 100%) !important;
-  min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
   width: 100%;
   display: block;
 }
@@ -332,8 +332,8 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
   #bookingOverlay.overlay { padding-left: 0 !important; padding-right: 0 !important; }
   #bookingOverlay .overlay-inner { padding-bottom: calc(12vh + env(safe-area-inset-bottom)) !important; }
   #bookingOverlay .calendar-full {
-    height: 78vh; /* 70–80% band for calendar */
-    --calendar-top: calc((100vh - 78vh) / 2);
+    height: calc(var(--vh, 1vh) * 78); /* 70–80% band for calendar */
+    --calendar-top: calc((calc(var(--vh, 1vh) * 100) - calc(var(--vh, 1vh) * 78)) / 2);
     top: var(--calendar-top); /* centered vertically */
     /* Equal side insets for perfect centering */
     left: max(16px, env(safe-area-inset-left));
@@ -644,7 +644,7 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
 @media (min-width: 600px) and (max-width: 1023px) {
   /* Lock overlay to viewport ONLY during Step 1 to prevent vertical scrolling */
   #bookingOverlay.step1-active { position: fixed !important; inset: 0 !important; overflow: hidden !important; overscroll-behavior: none !important; }
-  #bookingOverlay.step1-active .overlay-inner { height: 100vh !important; overflow: hidden !important; touch-action: pan-x !important; }
+  #bookingOverlay.step1-active .overlay-inner { height: calc(var(--vh, 1vh) * 100) !important; overflow: hidden !important; touch-action: pan-x !important; }
 
   /* Make step1 a flex column so we can order blocks without touching DOM */
   #bookingOverlay #step1 { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 6px !important; padding-top: 16px !important; padding-bottom: calc(140px + env(safe-area-inset-bottom)) !important; position: relative !important; }
@@ -705,7 +705,7 @@ body.booking-testing #bookingOverlay #step1 .booking-actions { opacity: 1 !impor
   #bookingOverlay .flatpickr-current-month { margin-top: -9px !important; }
   /* Lock overlay to viewport ONLY during Step 1 on iPad touch */
   #bookingOverlay.step1-active { position: fixed !important; inset: 0 !important; overflow: hidden !important; overscroll-behavior: none !important; }
-  #bookingOverlay.step1-active .overlay-inner { height: 100vh !important; overflow: hidden !important; touch-action: pan-x !important; }
+  #bookingOverlay.step1-active .overlay-inner { height: calc(var(--vh, 1vh) * 100) !important; overflow: hidden !important; touch-action: pan-x !important; }
 
   #bookingOverlay #step1 { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 6px !important; padding-top: 16px !important; padding-bottom: calc(140px + env(safe-area-inset-bottom)) !important; position: relative !important; }
   /* Reorder: availability (1), title (2), calendar (3) */

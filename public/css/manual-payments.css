@@ -9,7 +9,7 @@
 :root { --mp-sticky-offset: 0px; }
 /* Table scroll wrapper to keep header sticky while body scrolls */
 .mp-scroll {
-	max-height: calc(100vh - 220px);
+	max-height: calc(calc(var(--vh, 1vh) * 100) - 220px);
 	overflow-y: auto;
 	overflow-x: auto;
 	-webkit-overflow-scrolling: touch;

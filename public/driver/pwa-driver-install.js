@@ -1,5 +1,15 @@
 // Driver Panel PWA Install — uses the same service worker
 (function(){
+  // Ensure mobile --vh fix is loaded for Driver pages
+  try {
+    var hasVhFix = !!document.querySelector('script[src*="/js/mobile-vh-fix.js"]');
+    if (!hasVhFix) {
+      var s = document.createElement('script');
+      s.src = '/js/mobile-vh-fix.js';
+      s.defer = false;
+      document.head.appendChild(s);
+    }
+  } catch(_) {}
   let deferredPrompt = null;
   let bannerEl = null;
 
@@ -11,18 +21,7 @@
     return false;
   }
 
-  function ensureManifestDriver(){
-    try {
-      let link = document.querySelector("link[rel='manifest']");
-      if (!link) {
-        link = document.createElement('link');
-        link.setAttribute('rel', 'manifest');
-        document.head.appendChild(link);
-      }
-      // Point manifest to Driver Panel manifest
-      link.setAttribute('href', '/manifest-driver.json');
-    } catch(_){ }
-  }
+  // No dynamic manifest changes here; driver pages include a static manifest link
 
   function hideBanner(){
     try { if (bannerEl && bannerEl.parentNode) bannerEl.parentNode.removeChild(bannerEl); } catch(_) {}
@@ -62,8 +61,6 @@
     btn.addEventListener('click', async () => {
       try {
         if (!deferredPrompt) { hideBanner(); return; }
-        // Ensure manifest is set to driver manifest before prompt
-        ensureManifestDriver();
         deferredPrompt.prompt();
         await deferredPrompt.userChoice; // { outcome, platform }
         hideBanner();
@@ -91,8 +88,6 @@
     if (deferredPrompt || alreadyInstalled()) return;
     e.preventDefault();
     deferredPrompt = e;
-    // Point manifest to Driver variant as soon as eligible
-    ensureManifestDriver();
     createBanner();
   });
 

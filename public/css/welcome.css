@@ -29,7 +29,7 @@ body.has-bg-video.ready {
 	width: 100vw;
 	height: 56.25vw;         /* 16:9 relative to width */
 	min-width: 177.78vh;     /* 100 * (16/9) → cover tall viewports */
-	min-height: 100vh;       /* at least full height */
+	min-height: calc(var(--vh, 1vh) * 100);       /* at least full height */
 	border: 0;
 }
 
@@ -47,7 +47,7 @@ body.has-bg-video.ready {
 #welcome-section {
 	/* Center the welcome stack vertically in the viewport, accounting for the fixed footer */
 	margin-top: 0;
-	min-height: calc(100vh - 64px);
+	min-height: calc(calc(var(--vh, 1vh) * 100) - 64px);
 	display: flex;
 	flex-direction: column;
 	align-items: center;

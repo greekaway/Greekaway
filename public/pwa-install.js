@@ -1,6 +1,17 @@
 // Greekaway PWA – 2025-11-13
 
 (function(){
+  // Ensure mobile --vh fix is loaded globally where this file is included
+  try {
+    var hasVhFix = !!document.querySelector('script[src*="/js/mobile-vh-fix.js"]');
+    if (!hasVhFix) {
+      var s = document.createElement('script');
+      s.src = '/js/mobile-vh-fix.js';
+      s.defer = false;
+      document.head.appendChild(s);
+    }
+  } catch(_) {}
+
   let deferredPrompt = null;
   let bannerEl = null;
 
