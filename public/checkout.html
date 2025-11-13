@@ -195,6 +195,7 @@
           console.debug('[checkout] calling GWPaymentRequest.init...');
           const merchantLabel = (window.t ? (window.t('siteTitle') || 'Greekaway') : 'Greekaway');
           const pr = await window.GWPaymentRequest.init(STRIPE_PUBLISHABLE, { total: { label: merchantLabel, amount: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 1000) } });
+          try { window.pr = pr ? pr.paymentRequest : null; } catch(_){ }
           console.debug('[checkout] GWPaymentRequest.init returned', pr);
           if (pr && pr.prButton) {
             document.getElementById('payment-request-container').style.display = 'block';

@@ -378,6 +378,13 @@ if (IS_DEV) {
             out = out.replace(/YOUR_GOOGLE_MAPS_API_KEY/g, key);
           }
         } catch(_) { }
+        // 5) Inject Stripe publishable key into checkout pages
+        try {
+          const pk = (process.env.STRIPE_PUBLISHABLE_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+          if (pk) {
+            out = out.replace(/%STRIPE_PUBLISHABLE_KEY%/g, pk);
+          }
+        } catch(_) { }
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.setHeader('Cache-Control', 'no-store');
         return res.send(out);
@@ -401,6 +408,13 @@ if (!IS_DEV) {
             out = out.replace(/YOUR_GOOGLE_MAPS_API_KEY/g, key);
           }
         } catch(_) { }
+        // Inject Stripe publishable key placeholder for checkout
+        try {
+          const pk = (process.env.STRIPE_PUBLISHABLE_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+          if (pk) {
+            out = out.replace(/%STRIPE_PUBLISHABLE_KEY%/g, pk);
+          }
+        } catch(_) { }
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         // Avoid caching HTML so key/script stays fresh
         res.setHeader('Cache-Control', 'no-cache');
@@ -409,6 +423,17 @@ if (!IS_DEV) {
     });
   });
 }
+
+// Serve Apple Pay domain association and other well-known files (explicitly allow dotfiles)
+app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known'), {
+  dotfiles: 'allow',
+  etag: !IS_DEV,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    // Do not cache aggressively to allow quick updates
+    res.setHeader('Cache-Control', 'public, max-age=300');
+  }
+}));
 
 // 1️⃣ Σερβίρουμε στατικά αρχεία από το /public με caching για non-HTML assets
 app.use(express.static(path.join(__dirname, "public"), {

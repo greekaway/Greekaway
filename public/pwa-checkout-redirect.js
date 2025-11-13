@@ -47,9 +47,10 @@
       performRedirect();
     }
 
-    // 2) On clicking a "Πληρωμή" (Pay) button, also attempt redirect before continuing
-    //    We keep it unobtrusive: only in iOS PWA on greekaway.com. We prevent default
-    //    only when we're actually changing http->https; otherwise we let the click proceed.
+    // 2) On clicking a "Πληρωμή" (Pay) button in iOS PWA, open in Safari
+    //    Apple Pay on the web is not available inside standalone PWA on iOS.
+    //    We open the same checkout URL in Safari via window.open(..., '_blank')
+    //    Note: Must be triggered by a user gesture (click), else popup blockers apply.
     document.addEventListener('click', function(ev){
       if (!shouldRedirect()) return;
       var el = ev.target;
@@ -65,11 +66,20 @@
       var looksLikePay = label.includes('πληρωμή') || label.includes('checkout.pay') || label === 'pay';
       if (!looksLikePay) return;
 
-      var current = String(window.location.href || '');
-      var target = current.replace('http://', 'https://');
-      if (target !== current) {
-        try { ev.preventDefault(); ev.stopPropagation(); } catch(_){ }
-        window.location.href = target;
+      try {
+        var current = String(window.location.href || '');
+        var httpsUrl = current.replace('http://', 'https://');
+        // Prefer opening in Safari (new tab) to escape standalone context
+        // Add a lightweight marker to help analytics/diagnostics (no functional impact)
+        var url = new URL(httpsUrl);
+        if (!url.searchParams.has('fromPWA')) url.searchParams.set('fromPWA', '1');
+        ev.preventDefault();
+        ev.stopPropagation();
+        // Open in external Safari tab; noopener prevents back-channel references
+        window.open(url.toString(), '_blank', 'noopener,noreferrer');
+      } catch (_) {
+        // As a fallback, ensure https navigation in-place
+        try { var cur = String(window.location.href||''); var tgt = cur.replace('http://','https://'); if (tgt !== cur) window.location.href = tgt; } catch(__){}
       }
     }, true);
 

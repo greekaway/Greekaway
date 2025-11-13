@@ -1,13 +1,15 @@
 // Greekaway PWA – 2025-11-13
 
-const CACHE_NAME = 'greekaway-pwa-v1';
+// Bump cache to invalidate old SW and ensure fresh checkout/network
+const CACHE_NAME = 'greekaway-pwa-v3';
 
 // Core assets to pre-cache for fast, offline-first navigation
 const CORE_ASSETS = [
   '/',
   '/index.html',
   '/trips.html',
-  '/checkout.html',
+  // Checkout MUST NOT be precached to avoid stale Stripe placeholders
+  // '/checkout.html',
   '/step2.html',
   '/step3.html',
   '/admin.html',
@@ -86,6 +88,36 @@ self.addEventListener('fetch', (event) => {
 
   const isHtmlNavigation = request.mode === 'navigate' ||
     (request.headers.get('accept') || '').includes('text/html');
+
+  // Network-only for sensitive endpoints and third-party payment scripts
+  try {
+    const url = new URL(request.url);
+    const isSameOrigin = url.origin === self.location.origin;
+    const path = url.pathname || '';
+
+    const networkOnly = (
+      // Never cache checkout page or well-known files
+      path === '/checkout.html' || path.startsWith('/.well-known/') ||
+      // Never cache any API calls (includes create-payment-intent endpoints)
+      path.startsWith('/api/') ||
+      // Explicit example file mentioned (if it ever exists)
+      path === '/js/checkout.js' ||
+      // Never touch Stripe domains or related assets
+      url.origin === 'https://js.stripe.com' ||
+      url.hostname.endsWith('.stripe.com')
+    );
+
+    if (networkOnly) {
+      event.respondWith(
+        fetch(request).catch((err) => {
+          // For navigations, provide offline fallback
+          if (isHtmlNavigation && isSameOrigin) return caches.match('/offline.html');
+          throw err;
+        })
+      );
+      return;
+    }
+  } catch (_) { /* fall through to default strategy */ }
 
   event.respondWith(
     caches.match(request).then((cached) => {
