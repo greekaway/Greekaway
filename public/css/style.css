@@ -817,7 +817,7 @@ footer { height: 64px !important; padding: 8px 0 calc(8px + env(safe-area-inset-
     padding-top: 3px !important;      /* μικρή προσαρμογή για κεντράρισμα */
   }
   body.has-rounded-footer footer a {
-    transform: translateY(2px);       /* κρατάμε την οπτική κέντρωση */
+    transform: translateY(5px);       /* +1px για απόλυτη κέντρωση */
   }
 }
 
