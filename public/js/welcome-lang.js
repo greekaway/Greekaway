@@ -3,9 +3,18 @@
   function init(){
     try {
       if (!document.body || !document.body.classList.contains('has-bg-video')) return;
+      // Respect native iOS picker style: do not override on iPhone/iPad
+      const ua = navigator.userAgent || '';
+      const isIOS = (/iPad|iPhone|iPod/.test(ua)) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       const wrap = document.querySelector('#langSelect')?.parentElement;
       const sel = document.getElementById('langSelect');
       if (!wrap || !sel) return;
+      if (isIOS) {
+        // Ensure no custom list exists; let native select open as before
+        const exist = wrap.querySelector('.ga-lang-list');
+        if (exist) exist.remove();
+        return;
+      }
       // Ensure wrapper can anchor absolute dropdown
       if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
       // Build list once
