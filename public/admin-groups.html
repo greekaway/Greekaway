@@ -9,7 +9,10 @@
   <!-- Admin CSS (load in this order after style.css) -->
   <link rel="stylesheet" href="/css/admin-core.css">
   <link rel="stylesheet" href="/css/admin-partners.css">
-</head>
+  <link rel="stylesheet" href="/css/admin-core.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#001f3f">
+  <link rel="stylesheet" href="/pwa.css">
 <body class="site-gradient admin-partners">
   <header>
     <div class="controls">
@@ -33,5 +36,7 @@
   </div>
 
   <script src="/js/admin-groups.js" defer></script>
-</body>
+  <script src="/js/admin-groups.js" defer></script>
+  <script src="/js/admin-theme-toggle.js" defer></script>
+  <script src="/pwa-install.js" defer></script>
 </html>

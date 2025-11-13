@@ -1,0 +1,61 @@
+/* Greekaway PWA – 2025-11-13 */
+
+/* Container for the PWA install banner */
+.pwa-install-container {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 2147483000; /* above app UI */
+  max-width: 90vw;
+}
+
+/* Card look and feel */
+.pwa-install-card {
+  background: #001f3f; /* navy */
+  color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pwa-install-text {
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.pwa-install-button {
+  appearance: none;
+  border: none;
+  background: #d4af37; /* gold */
+  color: #0b0b0b;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.pwa-install-close {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 18px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+
+/* Desktop: move card to bottom-right and limit width */
+@media (min-width: 768px) {
+  .pwa-install-container {
+    left: auto;
+    right: 16px;
+    bottom: 16px;
+    transform: none;
+    max-width: 400px;
+  }
+}

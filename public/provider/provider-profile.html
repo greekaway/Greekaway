@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="/provider/provider-footer.css" />
   <link rel="stylesheet" href="/provider/theme-driver.css" />
   <link rel="stylesheet" href="/provider/provider-profile.css" />
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#001f3f">
+  <link rel="stylesheet" href="/pwa.css">
 </head>
 <body>
   <header><h1>Προφίλ</h1></header>
@@ -17,6 +20,7 @@
   </main>
   <script src="/provider/provider.js"></script>
   <script src="/provider/provider-profile.js"></script>
+  <script src="/pwa-install.js" defer></script>
   <div id="footer-placeholder"></div>
   <script>
     fetch('/provider/footer/footer-profile.html')

@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="/provider/provider.css">
   <link rel="stylesheet" href="/provider/provider-footer.css">
   <link rel="stylesheet" href="/provider/theme-driver.css">
+   <link rel="manifest" href="/manifest.json">
+   <meta name="theme-color" content="#001f3f">
+   <link rel="stylesheet" href="/pwa.css">
 </head>
 <body>
   <header><h1>Σύνδεση Παρόχου</h1></header>
@@ -31,6 +34,7 @@
       .catch(() => {});
   </script>
   <script src="/provider/provider.js"></script>
+   <script src="/pwa-install.js" defer></script>
   <script>window.ProviderUI.initLogin();</script>
 </body>
 </html>

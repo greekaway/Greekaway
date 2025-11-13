@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/step2.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#001f3f">
+  <link rel="stylesheet" href="/pwa.css">
 </head>
 <body class="site-gradient">
   
@@ -650,5 +653,6 @@
       try { setTimeout(() => { if (window.currentI18n && window.setLanguage) window.setLanguage(window.currentI18n.lang); }, 60); } catch(_){ }
     });
   </script>
+  <script src="/pwa-install.js" defer></script>
 </body>
 </html>

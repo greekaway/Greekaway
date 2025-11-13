@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="/provider/provider.css" />
   <link rel="stylesheet" href="/provider/provider-footer.css" />
   <link rel="stylesheet" href="/provider/provider-drivers.css" />
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#001f3f">
+  <link rel="stylesheet" href="/pwa.css">
 </head>
 <body>
   <header>
@@ -46,6 +49,7 @@
   </div>
   <script src="/provider/provider.js"></script>
   <script src="/provider/provider-drivers.js"></script>
+  <script src="/pwa-install.js" defer></script>
   <div id="footer-placeholder"></div>
   <script>
     fetch('/provider/footer/footer-drivers.html')

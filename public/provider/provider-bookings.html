@@ -10,6 +10,9 @@
   <link rel="stylesheet" href="/provider/theme-driver.css" />
   <!-- Page-specific styles -->
   <link rel="stylesheet" href="/provider/provider-bookings.css" />
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#001f3f">
+  <link rel="stylesheet" href="/pwa.css">
 </head>
 <body>
   <header><h1>Κρατήσεις</h1></header>
@@ -27,6 +30,7 @@
   <script src="/provider/provider.js"></script>
   <!-- Page-specific logic -->
   <script src="/provider/provider-bookings.js"></script>
+  <script src="/pwa-install.js" defer></script>
   <div id="footer-placeholder"></div>
   <script>
     fetch('/provider/footer/footer-bookings.html')
