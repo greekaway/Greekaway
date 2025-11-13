@@ -1,0 +1,30 @@
+/* Greekaway footer capsule look (no color/icon changes) */
+/* Scope: standard site footer only; do NOT affect admin version footers */
+footer:not(.version) {
+  /* Responsive gaps and radius so it adapts to phone/tablet/desktop */
+  --ga-footer-gap-x: clamp(8px, 1.2vw, 18px);
+  --ga-footer-gap-y: clamp(8px, 1.2vw, 14px);
+  --ga-footer-radius: clamp(24px, 3.2vw, 36px);
+
+  /* Inset from screen edges to reveal full capsule rounding */
+  left: var(--ga-footer-gap-x);
+  right: var(--ga-footer-gap-x);
+  bottom: var(--ga-footer-gap-y); /* μικρό κενό για “αιώρηση” */
+
+  /* Πλήρως στρογγυλεμένο (κάψουλα) */
+  border-radius: var(--ga-footer-radius);
+
+  /* Λεπτή "λευκή" περίμετρος χωρίς αλλαγή διαστάσεων + σκιά αιώρησης */
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.28),
+    0 8px 24px rgba(0,0,0,0.35);
+}
+
+/* Respect safe-area insets on iOS while keeping the visible gap */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  footer:not(.version) {
+    left: calc(env(safe-area-inset-left, 0px) + var(--ga-footer-gap-x));
+    right: calc(env(safe-area-inset-right, 0px) + var(--ga-footer-gap-x));
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--ga-footer-gap-y));
+  }
+}

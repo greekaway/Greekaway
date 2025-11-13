@@ -8,8 +8,15 @@
   let AVAILABLE = null; // discovered languages from /locales/index.json
   let I18N_VERSION = null; // version tag to bust cache for locale JSONs
   // Create/update a tiny debug watermark showing the current locales version (bottom-right)
+  // Disabled by default; enable only when window.gwI18nDebug === true
   function ensureVersionWatermark(){
     try {
+      const debugOn = !!(typeof window !== 'undefined' && window.gwI18nDebug === true);
+      if (!debugOn) {
+        const exist = document.getElementById('gwVersionMark');
+        if (exist && exist.parentNode) exist.parentNode.removeChild(exist);
+        return; // do not render watermark in production
+      }
       let el = document.getElementById('gwVersionMark');
       if (!el) {
         el = document.createElement('div');

@@ -257,3 +257,37 @@ body.has-bg-video .hero-bg::after {
 	background-image: none !important;
 	box-shadow: none !important;
 }
+
+/* -------- Welcome-only: semi-transparent dropdown list for languages -------- */
+/* Glassy list that opens under the existing select, same visual γλώσσα με το footer */
+body.has-bg-video .ga-lang-list {
+	position: absolute;
+	right: 0;
+	top: calc(100% + 6px);
+	min-width: 200px;
+	background: rgba(14,21,32,0.58);
+	border: 1px solid rgba(255,255,255,0.28);
+	border-radius: 12px;
+	padding: 6px;
+	z-index: 2000;
+	box-shadow: 0 12px 30px rgba(0,0,0,0.45), inset 0 0 0.5px rgba(255,255,255,0.5);
+	backdrop-filter: blur(10px) saturate(1.05);
+	-webkit-backdrop-filter: blur(10px) saturate(1.05);
+}
+body.has-bg-video .ga-lang-list[hidden] { display: none; }
+body.has-bg-video .ga-lang-list button {
+	width: 100%;
+	text-align: left;
+	background: rgba(20,33,50,0.66);
+	color: #fff;
+	border: 1px solid rgba(255,255,255,0.20);
+	border-radius: 10px;
+	padding: 8px 10px;
+	margin: 4px 0;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	cursor: pointer;
+}
+body.has-bg-video .ga-lang-list button:hover { background: rgba(27,43,66,0.75); }

@@ -1,0 +1,16 @@
+/* Welcome page only: make the footer semi-transparent over the background video */
+/* Scope strictly to welcome page via body.has-bg-video */
+body.has-bg-video footer:not(.version) {
+  /* Keep the same base color tone but with transparency */
+  background: rgba(13, 26, 38, 0.58);
+  /* Glassy effect so το βιντεάκι φαίνεται ευδιάκριτα αλλά ευγενικά */
+  backdrop-filter: blur(8px) saturate(1.05);
+  -webkit-backdrop-filter: blur(8px) saturate(1.05);
+}
+
+/* Ensure this applies on all devices without layout shifts */
+@media (min-width: 0px) {
+  body.has-bg-video footer:not(.version) {
+    /* No changes to size, icons, ή χρώματα κειμένου */
+  }
+}

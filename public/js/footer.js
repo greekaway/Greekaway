@@ -13,6 +13,17 @@
         f.innerHTML = html;
         document.body.appendChild(f);
       }
+      // Ensure capsule styling CSS is loaded (separate file; no color/icon changes)
+      try {
+        const CSS_ID = 'ga-footer-rounded-css';
+        if (!document.getElementById(CSS_ID)) {
+          const link = document.createElement('link');
+          link.id = CSS_ID;
+          link.rel = 'stylesheet';
+          link.href = '/css/footer-rounded.css?v=20251113';
+          document.head.appendChild(link);
+        }
+      } catch(_){ /* ignore */ }
       // Mobile-only: prevent starting vertical scroll when dragging on the footer
       try {
         const mql = window.matchMedia && window.matchMedia('(max-width: 599px)');
