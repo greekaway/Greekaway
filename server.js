@@ -644,34 +644,49 @@ app.post('/mock-checkout', express.urlencoded({ extended: true }), (req, res) =>
 app.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server.' });
   try {
-    const { amount, currency } = req.body;
+    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType } = req.body || {};
     const { booking_id } = req.body || {};
     const clientMeta = req.body && req.body.metadata ? req.body.metadata : null;
-    // basic validation
-    const amt = parseInt(amount, 10) || 0;
-    if (amt <= 0) return res.status(400).json({ error: 'Invalid amount' });
+
+    // Compute final amount from server-side trip data
+    let tripId = clientTripId || clientTripIdAlt || null;
+    let seats = 1;
+    try {
+      if (booking_id && bookingsDb) {
+        const row = bookingsDb.prepare('SELECT trip_id, seats FROM bookings WHERE id = ?').get(booking_id);
+        if (row) { tripId = row.trip_id || tripId; seats = parseInt(row.seats,10) || 1; }
+      } else {
+        seats = parseInt(req.body && req.body.seats, 10) || 1;
+      }
+    } catch(_){ }
+    let baseCents = 0;
+    try {
+      const tripData = require('./live/tripData');
+      const trip = tripId ? tripData.readTripJsonById(tripId) : null;
+      if (trip && typeof trip.price_cents === 'number') baseCents = parseInt(trip.price_cents,10) || 0;
+      else if (trip && typeof trip.price === 'number') baseCents = Math.round(parseFloat(trip.price) * 100);
+    } catch(_){ baseCents = 0; }
+    const finalAmount = Math.max(0, baseCents * Math.max(1, seats));
+    if (!tripId || finalAmount <= 0) return res.status(400).json({ error: 'Invalid trip price' });
 
     // Support idempotency: prefer client-provided Idempotency-Key header, else generate one
     const idempotencyKey = (req.headers['idempotency-key'] || req.headers['Idempotency-Key'] || req.headers['Idempotency-key']) || `gw_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
     const opts = { idempotencyKey };
-    // attach booking metadata if present
+    // attach metadata (include client hints for traceability)
     const piParams = {
-      amount: amt,
+      amount: finalAmount,
       currency: currency || 'eur',
       automatic_payment_methods: { enabled: true },
+      metadata: Object.assign({}, (booking_id ? { booking_id } : {}), clientMeta || {}, { trip_id: tripId, requested_price_cents: (parseInt(price_cents||amount||0,10)||0), duration: (duration||null), vehicle_type: (vehicleType||null) })
     };
-    if (booking_id) piParams.metadata = { booking_id };
-    if (clientMeta) {
-      piParams.metadata = Object.assign({}, piParams.metadata || {}, clientMeta);
-    }
     const paymentIntent = await stripe.paymentIntents.create(piParams, opts);
 
     // If booking exists in SQLite, save the payment_intent id for later matching in webhook
     try {
       if (booking_id && bookingsDb) {
         const now = new Date().toISOString();
-        const stmt = bookingsDb.prepare('UPDATE bookings SET payment_intent_id = ?, updated_at = ? WHERE id = ?');
-        stmt.run(paymentIntent.id, now, booking_id);
+        const stmt = bookingsDb.prepare('UPDATE bookings SET payment_intent_id = ?, price_cents = COALESCE(?, price_cents), currency = COALESCE(?, currency), updated_at = ? WHERE id = ?');
+        stmt.run(paymentIntent.id, finalAmount, (currency || 'eur'), now, booking_id);
       }
     } catch (e) { console.warn('Failed to update booking with payment_intent_id', e && e.message ? e.message : e); }
 

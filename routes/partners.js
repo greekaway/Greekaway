@@ -535,22 +535,42 @@ function computeSplit(amount_cents, share_percent) {
 router.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server' });
   try {
-    const { amount, currency } = req.body || {};
+    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType } = req.body || {};
     const booking_id = (req.body && req.body.booking_id) || null;
-    const amt = parseInt(amount, 10) || 0;
-    if (amt <= 0) return res.status(400).json({ error: 'Invalid amount' });
     let meta = (req.body && req.body.metadata) || {};
     if (booking_id) meta = { ...meta, booking_id };
 
-    // read booking to discover trip_id and resolve partner
-    let tripId = null;
-    try { const b = booking_id ? getBookingById(booking_id) : null; if (b) tripId = b.trip_id; } catch(_){}
+    // Determine final amount securely from server-side trip data
+    let tripId = clientTripId || clientTripIdAlt || null;
+    let seats = 1;
+    if (booking_id) {
+      try { const b = getBookingById(booking_id); if (b) { tripId = b.trip_id || tripId; seats = parseInt(b.seats,10) || 1; } } catch(_){ }
+    } else {
+      // allow client to hint seats but do not trust amount
+      try { seats = parseInt(req.body && req.body.seats, 10) || 1; } catch(_) { seats = 1; }
+    }
+    let baseCents = 0;
+    try {
+      const tripData = require('../live/tripData');
+      const trip = tripId ? tripData.readTripJsonById(tripId) : null;
+      if (trip && typeof trip.price_cents === 'number') baseCents = parseInt(trip.price_cents, 10) || 0;
+      else if (trip && typeof trip.price === 'number') baseCents = Math.round(parseFloat(trip.price) * 100);
+    } catch(_){ baseCents = 0; }
+    const finalAmount = Math.max(0, baseCents * Math.max(1, seats));
+    if (!tripId || finalAmount <= 0) {
+      return res.status(400).json({ error: 'Invalid trip price' });
+    }
+
+    // enrich metadata for traceability
+    meta = { ...meta, trip_id: tripId, requested_price_cents: (parseInt(price_cents||amount||0,10)||0), duration: (duration||null), vehicle_type: (vehicleType||null) };
+
+    // read partner mapping and compute split
     const mapping = tripId ? resolvePartnerForTrip(tripId) : null;
     const share_percent = (mapping && mapping.share_percent) || (parseInt(process.env.DEFAULT_PARTNER_SHARE || '80',10) || 80);
-    const split = computeSplit(amt, share_percent);
+    const split = computeSplit(finalAmount, share_percent);
 
     const params = {
-      amount: amt,
+      amount: finalAmount,
       currency: currency || 'eur',
       automatic_payment_methods: { enabled: true },
       metadata: meta
@@ -572,6 +592,8 @@ router.post('/create-payment-intent', async (req, res) => {
         partner_id: (mapping && mapping.partner && mapping.partner.id) || null,
         partner_share_cents: split.partner_share_cents,
         commission_cents: split.commission_cents,
+        price_cents: finalAmount,
+        currency: (currency || 'eur'),
         payout_status: (mapping && mapping.partner && mapping.partner.stripe_account_id) ? 'pending' : 'pending',
       });
 
