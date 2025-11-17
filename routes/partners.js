@@ -611,6 +611,9 @@ router.post('/create-payment-intent', async (req, res) => {
     const idempotencyKey = (req.headers['idempotency-key'] || req.headers['Idempotency-Key'] || req.headers['Idempotency-key']) || `gw_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
     console.log('FINAL_AMOUNT_CENTS:', finalAmountCents);
     const pi = await stripe.paymentIntents.create(params, { idempotencyKey });
+    try {
+      console.log('[payments] PI created', pi.id, 'amount', finalAmountCents, 'client_submitted', clientSubmittedCents, 'server_computed', serverComputedCents, 'trip', tripId, 'vehicle', vehicleType, 'seats', seats);
+    } catch(_) {}
 
     // persist extended info on booking for admin dashboard
     if (booking_id) {
@@ -693,10 +696,13 @@ router.post('/create-payment-intent', async (req, res) => {
       }
     }
 
-    return res.json({ clientSecret: pi.client_secret, paymentIntentId: pi.id, idempotencyKey, bookingId: booking_id || null });
+    return res.json({ clientSecret: pi.client_secret, paymentIntentId: pi.id, idempotencyKey, bookingId: booking_id || null, finalAmountCents });
   } catch (e) {
-    console.error('partners: create-payment-intent failed', e && e.message ? e.message : e);
-    return res.status(500).json({ error: 'Failed to create payment intent' });
+    const msg = e && e.message ? e.message : String(e);
+    try { console.error('partners: create-payment-intent failed', msg); } catch(_){}
+    // Return a generic error plus a short code (no sensitive stack) for client display / support.
+    const code = (e && e.code) ? String(e.code) : 'pi_create_failed';
+    return res.status(500).json({ error: 'Failed to create payment intent', code });
   }
 });
 
