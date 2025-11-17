@@ -543,8 +543,15 @@ router.post('/create-payment-intent', async (req, res) => {
     // Determine final amount securely from server-side trip data
     let tripId = clientTripId || clientTripIdAlt || null;
     let seats = 1;
+    let bookingRow = null;
     if (booking_id) {
-      try { const b = getBookingById(booking_id); if (b) { tripId = b.trip_id || tripId; seats = parseInt(b.seats,10) || 1; } } catch(_){ }
+      try {
+        bookingRow = getBookingById(booking_id);
+        if (bookingRow) {
+          tripId = bookingRow.trip_id || tripId;
+          seats = parseInt(bookingRow.seats,10) || 1;
+        }
+      } catch(_){ }
     } else {
       // allow client to hint seats but do not trust amount
       try { seats = parseInt(req.body && req.body.seats, 10) || 1; } catch(_) { seats = 1; }
@@ -556,7 +563,26 @@ router.post('/create-payment-intent', async (req, res) => {
       if (trip && typeof trip.price_cents === 'number') baseCents = parseInt(trip.price_cents, 10) || 0;
       else if (trip && typeof trip.price === 'number') baseCents = Math.round(parseFloat(trip.price) * 100);
     } catch(_){ baseCents = 0; }
-    const finalAmount = Math.max(0, baseCents * Math.max(1, seats));
+    // Vehicle dynamic pricing override (per seat) for specific trips (currently Acropolis)
+    try {
+      if (tripId === 'acropolis') {
+        // Determine vehicle type: prefer explicit vehicleType, then bookingRow.trip_mode
+        let vType = (vehicleType || (bookingRow && bookingRow.trip_mode) || '').toLowerCase();
+        if (vType === 'private') vType = 'mercedes';
+        const VEHICLE_PRICE_MAP = { van: 10, bus: 5, mercedes: 20 }; // EUR per seat
+        if (Object.prototype.hasOwnProperty.call(VEHICLE_PRICE_MAP, vType)) {
+          const perSeatEuros = VEHICLE_PRICE_MAP[vType];
+          if (typeof perSeatEuros === 'number' && perSeatEuros > 0) {
+            baseCents = Math.round(perSeatEuros * 100); // override base (per seat)
+          }
+        }
+      }
+    } catch(_){ }
+    let finalAmount = Math.max(0, baseCents * Math.max(1, seats));
+    // If booking row already has a computed price_cents (new logic on Step 3), trust it over recomputation
+    if (bookingRow && bookingRow.price_cents && parseInt(bookingRow.price_cents,10) > 0) {
+      finalAmount = parseInt(bookingRow.price_cents,10);
+    }
     if (!tripId || finalAmount <= 0) {
       return res.status(400).json({ error: 'Invalid trip price' });
     }
