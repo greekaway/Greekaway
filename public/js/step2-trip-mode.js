@@ -108,8 +108,18 @@
     ['ageGroupRow','travTypeRow','interestsRow','socialityRow','specialRequestsRow'].forEach(id=> disableRow(qs(id)));
     // Pickup auto-filled from trip page (localStorage) or fallback
     const busAddr = (function(){
-      try { return localStorage.getItem('bus_pickup_address'); } catch(_) { return null; }
-    })() || DEFAULT_BUS_ADDRESS;
+      // Prefer trip JSON fixed start location if available
+      try {
+        const trip = (window.__loadedTrip || null);
+        const depName = trip && trip.departure && trip.departure.reference_point && trip.departure.reference_point.name;
+        if (depName && String(depName).trim()) return String(depName).trim();
+      } catch(_){ }
+      // Fallback to value persisted by trip page
+      try { const v = localStorage.getItem('bus_pickup_address'); if (v && v.trim()) return v.trim(); } catch(_) { }
+      // Last resort: any session value from a previous pass
+      try { const v2 = sessionStorage.getItem('gw_pickup_address'); if (v2 && v2.trim()) return v2.trim(); } catch(_){ }
+      return DEFAULT_BUS_ADDRESS;
+    })();
     setPickupDisabled(busAddr);
     // Persist to session for Step 3 consumption
     try {

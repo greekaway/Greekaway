@@ -192,7 +192,28 @@
         const langLabel = tSafe('booking.preferred_language_options.' + langC, (langFallbackLabels[langC] || langC.toUpperCase()));
         const langFlag = langFlags[langC] || '';
         document.getElementById('vLang').textContent = langLabel ? (langFlag ? `${langFlag} ${langLabel}` : langLabel) : '—';
-        document.getElementById('vPickup').textContent = (get('gw_pickup_address','') || '—');
+        // Determine pickup address: for bus mode always use trip's fixed start location
+        (function(){
+          function getTripMode(){
+            try { const p=new URLSearchParams(window.location.search); return (p.get('mode')||localStorage.getItem('trip_mode')||'van').toLowerCase(); } catch(_){ return 'van'; }
+          }
+          function getBusFixedAddress(){
+            // Prefer loaded trip JSON
+            try {
+              const trip = (window.__loadedTrip || null);
+              const depName = trip && trip.departure && trip.departure.reference_point && trip.departure.reference_point.name;
+              if (depName && String(depName).trim()) return String(depName).trim();
+            } catch(_){ }
+            // Next, any value persisted by Step 1 trip page
+            try { const v = localStorage.getItem('bus_pickup_address'); if (v && v.trim()) return v.trim(); } catch(_){ }
+            // Finally, whatever is in session from Step 2
+            try { const s = sessionStorage.getItem('gw_pickup_address'); if (s && s.trim()) return s.trim(); } catch(_){ }
+            return '';
+          }
+          const mode = getTripMode();
+          const val = (mode === 'bus') ? getBusFixedAddress() : (get('gw_pickup_address','') || '');
+          document.getElementById('vPickup').textContent = (val || '—');
+        })();
         document.getElementById('vAgeGroup').textContent = ageG || '—';
         const travLabel = travT ? tSafe('booking.traveler_type_options.' + travT, (travTypeFallback[travT] || '—')) : '—';
         const intLabel = interest ? tSafe('booking.interests_options.' + interest, (interestFallback[interest] || '—')) : '—';
@@ -340,13 +361,40 @@
               interest: (sessionStorage.getItem('gw_interest') || ''),
               sociality: (sessionStorage.getItem('gw_sociality') || ''),
               children_ages: (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]'); } catch(_){ return []; } })(),
-              pickup_address: (sessionStorage.getItem('gw_pickup_address') || ''),
-              pickup_place_id: (sessionStorage.getItem('gw_pickup_place_id') || ''),
-              pickup_lat: (sessionStorage.getItem('gw_pickup_lat') || ''),
-              pickup_lng: (sessionStorage.getItem('gw_pickup_lng') || ''),
-              // Duplicate pickup_address under legacy keys so provider panel & dispatch emails display it
-              pickup: (sessionStorage.getItem('gw_pickup_address') || ''),
-              pickup_point: (sessionStorage.getItem('gw_pickup_address') || ''),
+              // For bus: force fixed start location from trip JSON; otherwise use state/session
+              ...(function(){
+                function getBusFixedAddress(){
+                  try {
+                    const t = (window.__loadedTrip || null);
+                    const depName = t && t.departure && t.departure.reference_point && t.departure.reference_point.name;
+                    if (depName && String(depName).trim()) return String(depName).trim();
+                  } catch(_){ }
+                  try { const v = localStorage.getItem('bus_pickup_address'); if (v && v.trim()) return v.trim(); } catch(_){ }
+                  try { const s = sessionStorage.getItem('gw_pickup_address'); if (s && s.trim()) return s.trim(); } catch(_){ }
+                  return '';
+                }
+                if (mode === 'bus') {
+                  const addr = getBusFixedAddress();
+                  return {
+                    pickup_address: addr,
+                    pickup_place_id: '',
+                    pickup_lat: '',
+                    pickup_lng: '',
+                    pickup: addr,
+                    pickup_point: addr
+                  };
+                } else {
+                  return {
+                    pickup_address: (sessionStorage.getItem('gw_pickup_address') || ''),
+                    pickup_place_id: (sessionStorage.getItem('gw_pickup_place_id') || ''),
+                    pickup_lat: (sessionStorage.getItem('gw_pickup_lat') || ''),
+                    pickup_lng: (sessionStorage.getItem('gw_pickup_lng') || ''),
+                    // Duplicate pickup_address under legacy keys so provider panel & dispatch emails display it
+                    pickup: (sessionStorage.getItem('gw_pickup_address') || ''),
+                    pickup_point: (sessionStorage.getItem('gw_pickup_address') || '')
+                  };
+                }
+              })(),
               // Luggage summary (S/M/L) for provider visibility & email
               luggage: (function(){
                 const s = parseInt(sessionStorage.getItem('gw_bags_small')||'0',10)||0;
