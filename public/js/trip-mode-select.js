@@ -14,10 +14,12 @@
   }
 
   function navigateTo(slug, mode) {
-    if (!slug) return;
-    // Site uses a central trip page: /trips/trip.html?id={slug}
+    try { localStorage.setItem('trip_mode', String(mode)); } catch(_) {}
+    if (!slug) return; // need a trip id to continue
+    // Central trip page as Step 1
     const url = `/trips/trip.html?id=${encodeURIComponent(slug)}&mode=${encodeURIComponent(mode)}`;
-    window.location.assign(url);
+    try { window.location.assign(url); }
+    catch(_) { window.location.href = url; }
   }
 
   function ready() {
@@ -49,7 +51,8 @@
     cards.forEach(function (card) {
       const mode = card.getAttribute('data-mode');
       function go() { navigateTo(slug, mode); }
-      card.addEventListener('click', go);
+      // Ensure any previous listeners are not duplicated
+      card.addEventListener('click', go, { once: false });
       card.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
       });

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/trip.css?v=20251019">
   <link rel="stylesheet" href="/css/booking.css">
+  <link rel="stylesheet" href="/css/trip-mode-select.css">
   <link rel="stylesheet" href="/css/notification-bubble.css?v=20251108">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#001f3f">
@@ -42,6 +43,39 @@
   <!-- Trip-only: iPhone-style notification bubble (fake for now) -->
   <script src="/js/notification-bubble.js" defer></script>
   <script src="/pwa-install.js" defer></script>
+  <!-- Share trip-mode logic so Step 1 can also style mode-specific UI -->
+  <script src="/js/step2-trip-mode.js" defer></script>
+  <script>
+    // Persist trip_mode from URL (default to van) for Step 2
+    (function(){
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const mode = (params.get('mode') || localStorage.getItem('trip_mode') || 'van').toLowerCase();
+        localStorage.setItem('trip_mode', ['van','private','bus'].includes(mode) ? mode : 'van');
+      } catch(_) {}
+    })();
+    // Capture official bus departure reference point name for Step 2 auto pickup
+    (function(){
+      function storeBusPickup(){
+        try {
+          const mode = (localStorage.getItem('trip_mode')||'').toLowerCase();
+          if (mode !== 'bus') return;
+          const trip = window.__loadedTrip;
+          const depName = trip && trip.departure && trip.departure.reference_point && trip.departure.reference_point.name;
+          if (depName && depName.trim()) {
+            localStorage.setItem('bus_pickup_address', depName.trim());
+          }
+        } catch(_){ }
+      }
+      // Poll until trip data is loaded or timeout
+      let tries = 0;
+      const iv = setInterval(()=>{
+        tries++; storeBusPickup();
+        if (window.__loadedTrip || tries > 60) clearInterval(iv);
+      }, 100);
+      document.addEventListener('i18n:changed', storeBusPickup);
+    })();
+  </script>
 </head>
 
 <body>

@@ -145,3 +145,27 @@ body {
   .trip-mode-bus .trip-mode-desc,
   .trip-mode-bus .trip-mode-price { color: #ffffff !important; }
 }
+
+/* Dark mode: keep gold titles (and price already gold) for van & limousine */
+@media (prefers-color-scheme: dark) {
+  .trip-mode-van .trip-mode-title,
+  .trip-mode-private .trip-mode-title { color: var(--gold) !important; }
+}
+
+/* Booking Step 2 dynamic mode disabled styling */
+.disabled-field {
+  opacity: 0.45;
+  pointer-events: none;
+  filter: grayscale(100%);
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+
+/* Subtle capacity warning pulse (private mode max 3 pax) */
+.capacity-warning {
+  animation: tmPulseWarn 0.6s ease-in-out 0s 2;
+}
+@keyframes tmPulseWarn {
+  0% { box-shadow: 0 0 0 0 rgba(220,53,69,0.55); }
+  50% { box-shadow: 0 0 0 6px rgba(220,53,69,0.18); }
+  100% { box-shadow: 0 0 0 0 rgba(220,53,69,0.0); }
+}

@@ -893,7 +893,15 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch(_) {}
             try {
               const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
-              const absUrl = origin ? (new URL('/step2.html', origin).href) : '/step2.html';
+              const params = new URLSearchParams(window.location.search);
+              const mode = (params.get('mode') || localStorage.getItem('trip_mode') || 'van').toLowerCase();
+              const id = (tripForHeader && tripForHeader.id) ? String(tripForHeader.id) : '';
+              let path = '/step2.html';
+              if (id) {
+                const qs = new URLSearchParams({ id, mode });
+                path = `/step2.html?${qs.toString()}`;
+              }
+              const absUrl = origin ? (new URL(path, origin).href) : path;
               try { window.location.assign(absUrl); }
               catch(_e1){ try { window.location.href = absUrl; } catch(_e2){ setTimeout(()=>{ window.location.href = '/step2.html'; }, 0); } }
             } catch(_){ window.location.href = '/step2.html'; }

@@ -151,6 +151,11 @@ function registerBookings(app, deps) {
       let providerId = null; try { const m = bookingsDb.prepare('SELECT partner_id FROM partner_mappings WHERE trip_id = ?').get(trip_id); providerId = m && m.partner_id ? m.partner_id : null; } catch(_){ }
       const body = req.body || {};
   const metaObj = (() => { try { return metadata && typeof metadata === 'object' ? metadata : (metadata ? JSON.parse(String(metadata)) : {}); } catch(_) { return {}; } })();
+  // Attach trip_mode if provided (front-end stores in localStorage and posts with booking)
+  try {
+    const tripMode = body.trip_mode || body.tripMode || null;
+    if (tripMode && !metaObj.trip_mode) metaObj.trip_mode = String(tripMode).toLowerCase();
+  } catch(_) { /* non-fatal */ }
   // Attach policy flags and pickup_points to metadata for UI visibility
   if (Array.isArray(policyFlags) && policyFlags.length) metaObj.policy_flags = policyFlags;
   if (Array.isArray(pickup_points) && pickup_points.length) metaObj.pickup_points = pickup_points;
