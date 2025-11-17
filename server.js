@@ -644,41 +644,31 @@ app.post('/mock-checkout', express.urlencoded({ extended: true }), (req, res) =>
 app.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server.' });
   try {
-    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType } = req.body || {};
+    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, customerEmail } = req.body || {};
     const { booking_id } = req.body || {};
     const clientMeta = req.body && req.body.metadata ? req.body.metadata : null;
 
-    // Compute final amount from server-side trip data
-    let tripId = clientTripId || clientTripIdAlt || null;
-    let seats = 1;
-    try {
-      if (booking_id && bookingsDb) {
-        const row = bookingsDb.prepare('SELECT trip_id, seats FROM bookings WHERE id = ?').get(booking_id);
-        if (row) { tripId = row.trip_id || tripId; seats = parseInt(row.seats,10) || 1; }
-      } else {
-        seats = parseInt(req.body && req.body.seats, 10) || 1;
-      }
-    } catch(_){ }
-    let baseCents = 0;
-    try {
-      const tripData = require('./live/tripData');
-      const trip = tripId ? tripData.readTripJsonById(tripId) : null;
-      if (trip && typeof trip.price_cents === 'number') baseCents = parseInt(trip.price_cents,10) || 0;
-      else if (trip && typeof trip.price === 'number') baseCents = Math.round(parseFloat(trip.price) * 100);
-    } catch(_){ baseCents = 0; }
-    const finalAmount = Math.max(0, baseCents * Math.max(1, seats));
-    if (!tripId || finalAmount <= 0) return res.status(400).json({ error: 'Invalid trip price' });
+    // Trust UI-provided amount (price_cents or amount); remove server-side recomputation/overrides.
+    const finalAmountCents = parseInt(price_cents || amount || 0, 10) || 0;
+    if (!finalAmountCents || finalAmountCents <= 0) return res.status(400).json({ error: 'Invalid amount' });
 
-    // Support idempotency: prefer client-provided Idempotency-Key header, else generate one
+    // Keep trip id for metadata traceability
+    let tripId = clientTripId || clientTripIdAlt || null;
+    if (booking_id && tripId === null && bookingsDb) {
+      try { const row = bookingsDb.prepare('SELECT trip_id FROM bookings WHERE id = ?').get(booking_id); if (row) tripId = row.trip_id || tripId; } catch(_) {}
+    }
+
+    // Support idempotency
     const idempotencyKey = (req.headers['idempotency-key'] || req.headers['Idempotency-Key'] || req.headers['Idempotency-key']) || `gw_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
     const opts = { idempotencyKey };
-    // attach metadata (include client hints for traceability)
     const piParams = {
-      amount: finalAmount,
+      amount: finalAmountCents,
       currency: currency || 'eur',
       automatic_payment_methods: { enabled: true },
-      metadata: Object.assign({}, (booking_id ? { booking_id } : {}), clientMeta || {}, { trip_id: tripId, requested_price_cents: (parseInt(price_cents||amount||0,10)||0), duration: (duration||null), vehicle_type: (vehicleType||null) })
+      metadata: Object.assign({}, (booking_id ? { booking_id } : {}), clientMeta || {}, { trip_id: tripId, requested_price_cents: finalAmountCents, duration: (duration||null), vehicle_type: (vehicleType||null) }),
+      receipt_email: customerEmail || req.body.email || null
     };
+    console.log('FINAL_AMOUNT_CENTS:', finalAmountCents);
     const paymentIntent = await stripe.paymentIntents.create(piParams, opts);
 
     // If booking exists in SQLite, save the payment_intent id for later matching in webhook
@@ -686,7 +676,7 @@ app.post('/create-payment-intent', async (req, res) => {
       if (booking_id && bookingsDb) {
         const now = new Date().toISOString();
         const stmt = bookingsDb.prepare('UPDATE bookings SET payment_intent_id = ?, price_cents = COALESCE(?, price_cents), currency = COALESCE(?, currency), updated_at = ? WHERE id = ?');
-        stmt.run(paymentIntent.id, finalAmount, (currency || 'eur'), now, booking_id);
+        stmt.run(paymentIntent.id, finalAmountCents, (currency || 'eur'), now, booking_id);
       }
     } catch (e) { console.warn('Failed to update booking with payment_intent_id', e && e.message ? e.message : e); }
 

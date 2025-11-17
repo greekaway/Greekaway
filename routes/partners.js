@@ -535,87 +535,35 @@ function computeSplit(amount_cents, share_percent) {
 router.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server' });
   try {
-    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType } = req.body || {};
+    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, customerEmail } = req.body || {};
     const booking_id = (req.body && req.body.booking_id) || null;
     let meta = (req.body && req.body.metadata) || {};
     if (booking_id) meta = { ...meta, booking_id };
 
-    // Determine final amount securely from server-side trip data
-    let tripId = clientTripId || clientTripIdAlt || null;
-    let seats = 1;
-    let bookingRow = null;
-    if (booking_id) {
-      try {
-        bookingRow = getBookingById(booking_id);
-        if (bookingRow) {
-          tripId = bookingRow.trip_id || tripId;
-          seats = parseInt(bookingRow.seats,10) || 1;
-        }
-      } catch(_){ }
-    } else {
-      // allow client to hint seats but do not trust amount
-      try { seats = parseInt(req.body && req.body.seats, 10) || 1; } catch(_) { seats = 1; }
-    }
-    let baseCents = 0;
-    try {
-      const tripData = require('../live/tripData');
-      const trip = tripId ? tripData.readTripJsonById(tripId) : null;
-      if (trip && typeof trip.price_cents === 'number') baseCents = parseInt(trip.price_cents, 10) || 0;
-      else if (trip && typeof trip.price === 'number') baseCents = Math.round(parseFloat(trip.price) * 100);
-    } catch(_){ baseCents = 0; }
-    // Vehicle dynamic pricing override (per seat) for specific trips (currently Acropolis)
-    try {
-      if (tripId === 'acropolis') {
-        // Determine vehicle type: prefer explicit vehicleType, then bookingRow.trip_mode
-        let vType = (vehicleType || (bookingRow && bookingRow.trip_mode) || '').toLowerCase();
-        if (vType === 'private') vType = 'mercedes';
-        const VEHICLE_PRICE_MAP = { van: 10, bus: 5, mercedes: 20 }; // EUR per seat
-        if (Object.prototype.hasOwnProperty.call(VEHICLE_PRICE_MAP, vType)) {
-          const perSeatEuros = VEHICLE_PRICE_MAP[vType];
-          if (typeof perSeatEuros === 'number' && perSeatEuros > 0) {
-            baseCents = Math.round(perSeatEuros * 100); // override base (per seat)
-          }
-        }
-      }
-    } catch(_){ }
-    let finalAmount = Math.max(0, baseCents * Math.max(1, seats));
-    // Always compute price server-side from trip data and seats to avoid stale or mismatched totals
-    // If a booking exists and has a different stored price, align it to the computed amount for consistency
-    try {
-      if (bookingRow && typeof bookingRow.price_cents === 'number' && bookingRow.price_cents !== finalAmount) {
-        updateBookingExtended(booking_id, { price_cents: finalAmount, currency: (currency || 'eur') });
-      }
-    } catch(_){ }
+    // Trust UI-provided final amount (price_cents or amount). Remove server-side overrides/dynamic pricing.
+    const finalAmountCents = parseInt(price_cents || amount || 0, 10) || 0;
+    if (!finalAmountCents || finalAmountCents <= 0) return res.status(400).json({ error: 'Invalid amount' });
 
-    try {
-      if (process.env.DEBUG_CHECKOUT === '1') {
-        console.log('[checkout] amount computation', {
-          tripId,
-          vehicleType: (vehicleType || null),
-          seats,
-          baseCents,
-          finalAmount,
-          booking_id: booking_id || null
-        });
-      }
-    } catch(_){ }
-    if (!tripId || finalAmount <= 0) {
-      return res.status(400).json({ error: 'Invalid trip price' });
+    // Keep trip id for metadata & partner resolution (do not alter amount)
+    let tripId = clientTripId || clientTripIdAlt || null;
+    if (booking_id && tripId === null) {
+      try { const b = getBookingById(booking_id); if (b) tripId = b.trip_id || tripId; } catch(_) {}
     }
 
     // enrich metadata for traceability
-    meta = { ...meta, trip_id: tripId, requested_price_cents: (parseInt(price_cents||amount||0,10)||0), duration: (duration||null), vehicle_type: (vehicleType||null) };
+    meta = { ...meta, trip_id: tripId, requested_price_cents: finalAmountCents, duration: (duration||null), vehicle_type: (vehicleType||null) };
 
-    // read partner mapping and compute split
+    // read partner mapping and compute split from finalAmountCents
     const mapping = tripId ? resolvePartnerForTrip(tripId) : null;
     const share_percent = (mapping && mapping.share_percent) || (parseInt(process.env.DEFAULT_PARTNER_SHARE || '80',10) || 80);
-    const split = computeSplit(finalAmount, share_percent);
+    const split = computeSplit(finalAmountCents, share_percent);
 
     const params = {
-      amount: finalAmount,
+      amount: finalAmountCents,
       currency: currency || 'eur',
       automatic_payment_methods: { enabled: true },
-      metadata: meta
+      metadata: meta,
+      receipt_email: customerEmail || req.body.email || null
     };
     // If partner has a Connect account, set transfer_data and fee
     if (mapping && mapping.partner && mapping.partner.stripe_account_id) {
@@ -624,6 +572,7 @@ router.post('/create-payment-intent', async (req, res) => {
     }
 
     const idempotencyKey = (req.headers['idempotency-key'] || req.headers['Idempotency-Key'] || req.headers['Idempotency-key']) || `gw_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
+    console.log('FINAL_AMOUNT_CENTS:', finalAmountCents);
     const pi = await stripe.paymentIntents.create(params, { idempotencyKey });
 
     // persist extended info on booking for admin dashboard
@@ -634,7 +583,7 @@ router.post('/create-payment-intent', async (req, res) => {
         partner_id: (mapping && mapping.partner && mapping.partner.id) || null,
         partner_share_cents: split.partner_share_cents,
         commission_cents: split.commission_cents,
-        price_cents: finalAmount,
+        price_cents: finalAmountCents,
         currency: (currency || 'eur'),
         payout_status: (mapping && mapping.partner && mapping.partner.stripe_account_id) ? 'pending' : 'pending',
       });
@@ -714,55 +663,7 @@ router.post('/create-payment-intent', async (req, res) => {
   }
 });
 
-// Debug-only endpoint to verify amount computation without requiring Stripe
-try {
-  if (process.env.DEBUG_CHECKOUT === '1') {
-    router.post('/_debug-compute-amount', async (req, res) => {
-      try {
-        const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType } = req.body || {};
-        const booking_id = (req.body && req.body.booking_id) || null;
-        let tripId = clientTripId || clientTripIdAlt || null;
-        let seats = 1;
-        let bookingRow = null;
-        if (booking_id) {
-          try {
-            bookingRow = getBookingById(booking_id);
-            if (bookingRow) {
-              tripId = bookingRow.trip_id || tripId;
-              seats = parseInt(bookingRow.seats,10) || 1;
-            }
-          } catch(_){}
-        } else {
-          try { seats = parseInt(req.body && req.body.seats, 10) || 1; } catch(_) { seats = 1; }
-        }
-        let baseCents = 0;
-        try {
-          const tripData = require('../live/tripData');
-          const trip = tripId ? tripData.readTripJsonById(tripId) : null;
-          if (trip && typeof trip.price_cents === 'number') baseCents = parseInt(trip.price_cents, 10) || 0;
-          else if (trip && typeof trip.price === 'number') baseCents = Math.round(parseFloat(trip.price) * 100);
-        } catch(_){ baseCents = 0; }
-        try {
-          if (tripId === 'acropolis') {
-            let vType = (vehicleType || (bookingRow && bookingRow.trip_mode) || '').toLowerCase();
-            if (vType === 'private') vType = 'mercedes';
-            const VEHICLE_PRICE_MAP = { van: 10, bus: 5, mercedes: 20 };
-            if (Object.prototype.hasOwnProperty.call(VEHICLE_PRICE_MAP, vType)) {
-              const perSeatEuros = VEHICLE_PRICE_MAP[vType];
-              if (typeof perSeatEuros === 'number' && perSeatEuros > 0) {
-                baseCents = Math.round(perSeatEuros * 100);
-              }
-            }
-          }
-        } catch(_){ }
-        const finalAmount = Math.max(0, baseCents * Math.max(1, seats));
-        return res.json({ ok: true, tripId, vehicleType: (vehicleType||null), seats, baseCents, finalAmount, currency: (currency||'eur') });
-      } catch (e) {
-        return res.status(500).json({ ok: false, error: e && e.message ? e.message : 'error' });
-      }
-    });
-  }
-} catch(_){ }
+// Removed legacy debug pricing endpoint to prevent any server-side amount overrides.
 
 // Background payout scheduler: periodically attempt payouts for manual partners when funds available
 const adminSse = require('../services/adminSse');
