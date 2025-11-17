@@ -535,14 +535,13 @@ function computeSplit(amount_cents, share_percent) {
 router.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server' });
   try {
-    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, customerEmail } = req.body || {};
+    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, customerEmail, seats } = req.body || {};
     const booking_id = (req.body && req.body.booking_id) || null;
     let meta = (req.body && req.body.metadata) || {};
     if (booking_id) meta = { ...meta, booking_id };
 
-    // Trust UI-provided final amount (price_cents or amount). Remove server-side overrides/dynamic pricing.
-    const finalAmountCents = parseInt(price_cents || amount || 0, 10) || 0;
-    if (!finalAmountCents || finalAmountCents <= 0) return res.status(400).json({ error: 'Invalid amount' });
+    // Trust UI-provided final amount (price_cents or amount). If missing/zero, compute a safe fallback from trip data.
+    const clientSubmittedCents = parseInt(price_cents || amount || 0, 10) || 0;
 
     // Keep trip id for metadata & partner resolution (do not alter amount)
     let tripId = clientTripId || clientTripIdAlt || null;
@@ -550,8 +549,46 @@ router.post('/create-payment-intent', async (req, res) => {
       try { const b = getBookingById(booking_id); if (b) tripId = b.trip_id || tripId; } catch(_) {}
     }
 
-    // enrich metadata for traceability
-    meta = { ...meta, trip_id: tripId, requested_price_cents: finalAmountCents, duration: (duration||null), vehicle_type: (vehicleType||null) };
+    // Compute server-side fallback when client amount is not provided or invalid
+    function safeInt(x, d=0){ const n = parseInt(x,10); return Number.isFinite(n) ? n : d; }
+    function computeServerAmountCents(tripId, vehType, seatsCount){
+      try {
+        const s = Math.max(1, safeInt(seatsCount, 1));
+        // Special dynamic pricing for Acropolis by vehicle type (server mirror of frontend map)
+        const map = { van: 10, bus: 5, mercedes: 20 };
+        if (tripId === 'acropolis' && map.hasOwnProperty(String(vehType||'').toLowerCase())) {
+          const perSeatEur = map[String(vehType).toLowerCase()];
+          return Math.round(perSeatEur * 100) * s;
+        }
+        // Generic: read trip JSON price_cents and multiply by seats
+        if (tripId) {
+          const p = path.join(__dirname, '..', 'public', 'data', 'trips', `${tripId}.json`);
+          try {
+            if (fs.existsSync(p)) {
+              const trip = JSON.parse(fs.readFileSync(p, 'utf8'));
+              const base = safeInt(trip && trip.price_cents, 0);
+              if (base > 0) return base * s;
+            }
+          } catch(_){}
+        }
+      } catch(_){}
+      return 0;
+    }
+    const serverComputedCents = computeServerAmountCents(tripId, vehicleType, seats);
+    const finalAmountCents = clientSubmittedCents > 0 ? clientSubmittedCents : serverComputedCents;
+    if (!finalAmountCents || finalAmountCents <= 0) return res.status(400).json({ error: 'Invalid amount' });
+
+    // enrich metadata for traceability and audit
+    meta = {
+      ...meta,
+      trip_id: tripId,
+      requested_price_cents: finalAmountCents,
+      client_submitted_price_cents: (clientSubmittedCents || null),
+      server_computed_price_cents: (serverComputedCents || null),
+      duration: (duration||null),
+      vehicle_type: (vehicleType||null),
+      seats: (safeInt(seats, null))
+    };
 
     // read partner mapping and compute split from finalAmountCents
     const mapping = tripId ? resolvePartnerForTrip(tripId) : null;
