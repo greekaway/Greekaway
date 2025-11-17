@@ -88,6 +88,7 @@
     let CHECKOUT_TRIP_ID = null;
     let CHECKOUT_DURATION = null;
     let CHECKOUT_VEHICLE_TYPE = null;
+    let CHECKOUT_SEATS = 1;
     const amountEl = document.getElementById('checkoutAmount');
     const getLang = () => (window.currentI18n && window.currentI18n.lang) || (navigator.language || 'el');
     const showAmount = () => {
@@ -142,9 +143,9 @@
                 const adults = parseInt(ss('gw_adults','2'),10) || 2;
                 let childrenAges = [];
                 try { childrenAges = JSON.parse(ss('gw_children_ages','[]')) || []; } catch(_){ childrenAges = []; }
-                const seats = Math.max(1, adults + (childrenAges.length||0));
-                if (typeof CHECKOUT_AMOUNT_CENTS === 'number') CHECKOUT_AMOUNT_CENTS = CHECKOUT_AMOUNT_CENTS * seats;
-              } catch(_){ }
+                CHECKOUT_SEATS = Math.max(1, adults + (childrenAges.length||0));
+                if (typeof CHECKOUT_AMOUNT_CENTS === 'number') CHECKOUT_AMOUNT_CENTS = CHECKOUT_AMOUNT_CENTS * CHECKOUT_SEATS;
+              } catch(_){ CHECKOUT_SEATS = 1; }
               showAmount();
             }
           } catch(_){ }
@@ -238,7 +239,7 @@
 
             pr.paymentRequest.on('paymentmethod', async (ev) => {
               try {
-                const resp = await fetch('/api/partners/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE }) });
+                const resp = await fetch('/api/partners/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1) }) });
                 const data = await resp.json();
                 if (!data.clientSecret) { ev.complete('fail'); return showResult('i18n:checkout.payment_error', false); }
 
@@ -274,6 +275,7 @@
             let childrenAges = [];
             try { childrenAges = JSON.parse(ss('gw_children_ages','[]')) || []; } catch(_){ childrenAges = []; }
             const seats = Math.max(1, adults + (childrenAges.length||0));
+            CHECKOUT_SEATS = seats;
             const payload = {
               trip_id: tripId,
               date: null,
@@ -296,7 +298,7 @@
         } catch (err) { console.warn('[checkout] create booking failed (continuing)', err); }
 
           // create payment intent on server with verified price from trip JSON
-        const body = { price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE };
+        const body = { price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1) };
         if (bookingId) body.booking_id = bookingId;
         const resp = await fetch('/api/partners/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
         const data = await resp.json();
