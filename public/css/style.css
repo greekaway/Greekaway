@@ -802,24 +802,8 @@ body.rtl footer {
   direction: ltr; /* keep layout left-to-right */
 }
 
-/* Global enforcement: consistent footer height and vertical padding across all pages */
-footer { height: 64px !important; padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)) !important; }
-
-/* Installed PWA: keep only the safe-area inside footer, no extra px */
-@media all and (display-mode: standalone) {
-  footer { padding-bottom: env(safe-area-inset-bottom, 0px) !important; }
-}
-
-/* PWA μικρές συσκευές: ελαφρώς μικρότερο ύψος + καλύτερη κάθετη κέντρωση */
-@media all and (display-mode: standalone) and (max-width: 640px) {
-  body.has-rounded-footer footer {
-    height: 54px !important;          /* δύο «κλικ» ακόμη πιο χαμηλό */
-    padding-top: 3px !important;      /* μικρή προσαρμογή για κεντράρισμα */
-  }
-  body.has-rounded-footer footer a {
-    transform: translateY(5px);       /* +1px για απόλυτη κέντρωση */
-  }
-}
+/* Global footer base (PWA-specific adjustments live in /css/pwa-fixes.css) */
+footer { height: 64px; padding: 8px 0; }
 
 /* Mobile stability: reduce rubber-band overscroll that can "pull" the footer */
 @media (max-width: 599px) {

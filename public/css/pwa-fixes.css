@@ -1,0 +1,5 @@
+/* iOS PWA content padding fix (no footer style changes) */
+body.pwa main,
+body.pwa .page-wrapper {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 90px);
+}

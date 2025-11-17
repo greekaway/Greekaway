@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Επίλεξε τύπο εμπειρίας • Greekaway</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Use site-wide theme so background matches category/trip pages -->
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/theme.css" />
+  <link rel="stylesheet" href="/pwa.css">
+  <link rel="stylesheet" href="/css/pwa-fixes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/trip-mode-select.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#001f3f">
+</head>
+<body data-view="category">
+  <main id="trip-mode-select" aria-labelledby="trip-mode-title">
+    <header class="page-header">
+      <h1 id="trip-mode-title">Επίλεξε τύπο εμπειρίας</h1>
+      <p class="page-sub">
+        Διάλεξε όχημα και εμπειρία που σου ταιριάζει.
+      </p>
+    </header>
+
+    <section class="trip-mode-card trip-mode-van" role="button" tabindex="0" data-mode="van" aria-label="Premium Van (5–7 άτομα)">
+      <div class="trip-mode-header">
+        <span class="trip-mode-title">Premium Van (5–7 άτομα)</span>
+        <span class="trip-mode-price">1,00 €</span>
+      </div>
+      <p class="trip-mode-desc">
+        Premium εμπειρία 5–7 ατόμων, pickup από το σπίτι, περιλαμβάνονται εισιτήρια, έξυπνο matching ταξιδιωτών.
+      </p>
+    </section>
+
+    <section class="trip-mode-card trip-mode-private" role="button" tabindex="0" data-mode="private" aria-label="Private Mercedes (1–3 άτομα)">
+      <div class="trip-mode-header">
+        <span class="trip-mode-title">Private Mercedes (1–3 άτομα)</span>
+        <span class="trip-mode-price">1,00 €</span>
+      </div>
+      <p class="trip-mode-desc">
+        Ιδιωτική premium εμπειρία για 1–3 άτομα, παραλαβή από το σπίτι, περιλαμβάνονται εισιτήρια.
+      </p>
+    </section>
+
+    <section class="trip-mode-card trip-mode-bus" role="button" tabindex="0" data-mode="bus" aria-label="Bus Tour (30–5 άτομα)">
+      <div class="trip-mode-header">
+        <span class="trip-mode-title">Bus Tour (30–5 άτομα)</span>
+        <span class="trip-mode-price">1,00 €</span>
+      </div>
+      <p class="trip-mode-desc">
+        Classic organized tour από σταθερό σημείο συνάντησης, χωρίς pickup από το σπίτι. Περιλαμβάνονται εισιτήρια.
+      </p>
+    </section>
+
+    <p id="trip-warning" class="trip-warning" hidden>
+      Δεν δόθηκε εκδρομή. Συνέχισε από την κατηγορία για να επιλέξεις σωστά.
+    </p>
+  </main>
+
+  <footer></footer>
+
+  <noscript>
+    <div class="nojs">Απαιτείται JavaScript για να συνεχίσεις στην εκδρομή.</div>
+  </noscript>
+
+  <script src="/js/i18n.js" defer></script>
+  <script src="/js/theme.js" defer></script>
+  <script src="/js/footer.js" defer></script>
+  <script src="js/trip-mode-select.js" defer></script>
+</body>
+</html>

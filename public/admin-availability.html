@@ -11,6 +11,7 @@
   <link rel="manifest" href="/manifest-admin.json">
   <meta name="theme-color" content="#001f3f">
   <link rel="stylesheet" href="/pwa.css">
+  <link rel="stylesheet" href="/css/pwa-fixes.css">
   </head>
 <body>
   <header class="sticky-bar" aria-label="Availability — Φίλτρα" data-collapsed="false">
@@ -60,6 +61,7 @@
   <script src="/js/admin-availability.js"></script>
   <script src="/js/admin-theme-toggle.js"></script>
   <script src="/pwa-install.js" defer></script>
+  <script src="/js/main.js"></script>
 
   <script>
     fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{

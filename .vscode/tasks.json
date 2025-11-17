@@ -69,5 +69,17 @@
 			"isBackground": false,
 			"problemMatcher": []
 		}
+		,
+		{
+			"label": "Pre-create file: check duplicates",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"tools/file_guard.js"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"detail": "Run without args to see usage; pass --name/--path/--like in terminal."
+		}
 	]
 }

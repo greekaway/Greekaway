@@ -1,4 +1,5 @@
 /* Greekaway PWA – 2025-11-13 */
+@import url('/css/pwa-fixes.css');
 
 /* Safe-area support for iOS notch / dynamic island */
 :root {
@@ -12,10 +13,7 @@ body {
   padding-bottom: var(--safe-bottom);
 }
 
-/* In standalone (installed PWA), avoid double bottom spacing under fixed footers */
-@media all and (display-mode: standalone) {
-  body.has-rounded-footer { padding-bottom: 0; }
-}
+/* PWA-specific footer/layout fixes moved to /css/pwa-fixes.css */
 
 /* Container for the PWA install banner */
 .pwa-install-container {

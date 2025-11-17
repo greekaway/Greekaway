@@ -65,7 +65,8 @@ const CORE_ASSETS = [
   '/js/admin-bookings.js',
   '/js/admin-payments.js',
   '/offline.html',
-  '/pwa.css'
+  '/pwa.css',
+  '/css/pwa-fixes.css'
 ];
 
 self.addEventListener('install', (event) => {

@@ -5,3 +5,5 @@ npm-debug.log
 /logs
 server.backup*.js
 *.tmp
+reports/repo-inventory*
+tools/inventory.js

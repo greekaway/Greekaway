@@ -1,0 +1,147 @@
+/* Trip Mode Select - Mobile-first navy + gold theme */
+:root {
+  --navy-900: #0b1530;
+  --navy-800: #101c3a;
+  --navy-700: #15244a;
+  --gold: #d4af37;
+  --gold-soft: #e1c766;
+  --text: #ffffff;
+  --text-dim: rgba(255,255,255,0.85);
+  --ring: rgba(212,175,55,0.45);
+  --shadow: rgba(0,0,0,0.45);
+}
+
+#trip-mode-select, #trip-mode-select * { box-sizing: border-box; }
+body {
+  margin: 0;
+  /* Defer background/colors to site theme (style.css) so this page matches category/trip backgrounds */
+  font-family: -apple-system, system-ui, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#trip-mode-select {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+}
+
+.page-header { margin: 6px 2px 18px; }
+.page-header h1 {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+}
+.page-sub {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
+.trip-mode-card {
+  display: block;
+  width: 100%;
+  background: var(--navy-800);
+  color: var(--text);
+  border-radius: 16px;
+  padding: 16px 18px 14px;
+  margin: 14px 0;
+  text-decoration: none;
+  box-shadow:
+    0 0 0 1px rgba(225, 199, 102, 0.18),
+    0 8px 24px var(--shadow),
+    0 0 28px rgba(15, 45, 110, 0.18);
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  outline: none;
+  cursor: pointer;
+}
+
+.trip-mode-card:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--ring),
+    0 0 0 6px rgba(212,175,55,0.18),
+    0 8px 28px var(--shadow);
+}
+
+.trip-mode-card:hover { transform: translateY(-2px); }
+
+.trip-mode-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.trip-mode-title { font-weight: 600; }
+.trip-mode-price { color: var(--gold); font-weight: 600; }
+
+.trip-mode-desc {
+  margin: 0;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* Emphasis variations */
+.trip-mode-van {
+  background: linear-gradient(180deg, rgba(212,175,55,0.06), transparent 60%), var(--navy-800);
+  box-shadow:
+    0 0 0 1px rgba(212,175,55,0.28),
+    0 10px 28px rgba(0,0,0,0.55),
+    0 0 48px rgba(212,175,55,0.20);
+}
+
+.trip-mode-private {
+  box-shadow:
+    0 0 0 1px rgba(212,175,55,0.20),
+    0 8px 24px rgba(0,0,0,0.5),
+    0 0 36px rgba(212,175,55,0.14);
+}
+
+.trip-mode-bus {
+  background: var(--navy-700);
+  box-shadow:
+    0 0 0 1px rgba(212,175,55,0.12),
+    0 6px 18px rgba(0,0,0,0.45),
+    0 0 24px rgba(212,175,55,0.08);
+}
+
+.trip-warning {
+  margin: 18px 4px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 102, 102, 0.12);
+  color: #ffdede;
+  font-size: 0.95rem;
+  border: 1px solid rgba(255, 102, 102, 0.25);
+}
+
+.nojs {
+  margin: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Larger screens */
+@media (min-width: 640px) {
+  #trip-mode-select { padding: 28px 24px 40px; }
+  .page-header h1 { font-size: 1.9rem; }
+  .trip-mode-card { padding: 18px 22px 16px; }
+}
+
+/* Day (light) mode: gold text on cards; bus card stays white */
+@media (prefers-color-scheme: light) {
+  .trip-mode-card, 
+  .trip-mode-card .trip-mode-title,
+  .trip-mode-card .trip-mode-desc,
+  .trip-mode-card .trip-mode-price { color: var(--gold) !important; }
+
+  .trip-mode-bus,
+  .trip-mode-bus .trip-mode-title,
+  .trip-mode-bus .trip-mode-desc,
+  .trip-mode-bus .trip-mode-price { color: #ffffff !important; }
+}

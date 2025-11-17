@@ -2,6 +2,17 @@
 // main.js — Greekaway (ενιαίο, τελικό διορθωμένο)
 // ==============================
 
+// PWA detection: add a body class when running as installed PWA
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const isStandalone = (
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+      (window.navigator && window.navigator.standalone === true)
+    );
+    if (isStandalone) document.body.classList.add('pwa');
+  } catch(_) {}
+});
+
 // Lightweight logger: set debug = true to enable console output during development.
 const G = {
   debug: false,
@@ -150,7 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
         card.innerHTML = `<h3>${getLocalized(trip.title)}</h3>`;
         card.addEventListener("click", () => {
           try { sessionStorage.setItem('highlightTrip', trip.id); } catch(e) {}
-          window.location.href = `/trips/trip.html?id=${trip.id}`;
+          // Route via the new trip mode selection page before entering the trip
+          window.location.href = `/select-trip-type.html?trip=${encodeURIComponent(trip.id)}`;
         });
         container.appendChild(card);
       });

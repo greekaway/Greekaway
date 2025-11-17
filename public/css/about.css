@@ -192,3 +192,8 @@
 /* Keep 2x2 layout across breakpoints (desktop/tablet/mobile) */
 @media (min-width: 1200px) { .about-tabs { max-width: 980px; margin: 0 auto; } }
 
+/* PWA-only: raise footer slightly on About page */
+body.pwa.about-page footer {
+  margin-bottom: 36px;
+}
+

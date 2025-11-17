@@ -8,12 +8,14 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/about.css">
+  <link rel="stylesheet" href="/css/pwa-fixes.css">
+  <link rel="stylesheet" href="/pwa.css">
   <style>
     /* Local page tweaks for the sticky tabs layout (kept small; main rules live in /css/about.css) */
     body { background-color: #1B2A3A; }
   </style>
 </head>
-<body>
+<body class="about-page">
   <!-- Sticky compact header: tabs + dynamic title -->
   <div class="about-sticky">
     <nav class="about-tabs" role="tablist" aria-label="About and Legal">
@@ -141,6 +143,7 @@
   <script src="/js/i18n.js" defer></script>
   <script src="/js/overlay-manager.js" defer></script>
   <script src="/js/footer.js" defer></script>
+  <script src="/js/main.js"></script>
   <script src="/js/assistant.js" defer></script>
 
   <script>

@@ -10,7 +10,8 @@
     "test": "jest --runInBand",
     "test:admin-smoke": "node tools/admin_functional_smoke.js",
     "build:logo-webp": "node tools/convert_logo_to_webp.js",
-    "migrate:dispatch": "node tools/run_dispatch_migration.js"
+    "migrate:dispatch": "node tools/run_dispatch_migration.js",
+    "guard:file": "node tools/file_guard.js"
   },
   "repository": {
     "type": "git",
