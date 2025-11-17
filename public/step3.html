@@ -273,12 +273,24 @@
 
       document.getElementById('s3Back')?.addEventListener('click', ()=> history.back());
 
+      function getTripMode(){
+        try {
+          const p = new URLSearchParams(window.location.search);
+          return (p.get('mode') || localStorage.getItem('trip_mode') || 'van').toLowerCase();
+        } catch(_) { return 'van'; }
+      }
       function validateProfile(){
-        const ageG = get('gw_age_group','').trim();
-        const travT = get('gw_traveler_type','').trim();
+        const mode = getTripMode();
         const errBox = document.getElementById('s3Error');
         const ageRow = document.querySelector('#vAgeGroup')?.closest('.s3-row');
         const travRow = document.querySelector('#vTravelerType')?.closest('.s3-row');
+        if (mode === 'bus') {
+          // Bypass profile validation for bus mode; ensure no red states
+          try { errBox?.setAttribute('hidden',''); ageRow?.classList.remove('required'); travRow?.classList.remove('required'); } catch(_){}
+          return true;
+        }
+        const ageG = get('gw_age_group','').trim();
+        const travT = get('gw_traveler_type','').trim();
         let ok = true;
         if (!ageG){ ok = false; ageRow?.classList.add('required'); } else { ageRow?.classList.remove('required'); }
         if (!travT){ ok = false; travRow?.classList.add('required'); } else { travRow?.classList.remove('required'); }
@@ -307,12 +319,14 @@
           const baseCents = trip && trip.price_cents ? Math.max(0, parseInt(trip.price_cents,10)||0) : 5000;
           const currency = (trip && trip.currency ? String(trip.currency).toLowerCase() : 'eur');
           const price_cents = Math.max(0, baseCents * seats);
+          const mode = getTripMode();
           const payload = {
             trip_id: tripId,
             date: null,
             seats,
             price_cents,
             currency,
+            trip_mode: mode,
             language: (sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_lang') || 'el'),
             travelerProfile: (sessionStorage.getItem('gw_traveler_type') || ''),
             travelStyle: (sessionStorage.getItem('gw_interest') || ''),
@@ -320,6 +334,7 @@
             travelTempo: (sessionStorage.getItem('gw_sociality') || ''),
             children_ages: (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]'); } catch(_){ return []; } })(),
             metadata: {
+              trip_mode: mode,
               age_group: (sessionStorage.getItem('gw_age_group') || ''),
               traveler_type: (sessionStorage.getItem('gw_traveler_type') || ''),
               interest: (sessionStorage.getItem('gw_interest') || ''),

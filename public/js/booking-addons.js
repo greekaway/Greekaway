@@ -272,6 +272,12 @@
     }, 480);
 
     function updateNextVisualState(){
+      // Bus mode: always allow proceed visually
+      try {
+        const qsMode = (new URLSearchParams(window.location.search)).get('mode');
+        const mode = (qsMode || localStorage.getItem('trip_mode') || 'van').toLowerCase();
+        if (mode === 'bus') { setNextEnabled(true); return; }
+      } catch(_){}
       const val = (input.value||'').trim();
       const ageOk = !!(persist.get('gw_age_group')||'');
       const travOk = !!(persist.get('gw_traveler_type')||'');
@@ -352,6 +358,24 @@
   function guardNext(){
     const btn = $('#s2Next'); if (!btn) return;
     btn.addEventListener('click', (ev)=>{
+      // Bus mode: bypass all validations and persist the auto pickup
+      try {
+        const qsMode = (new URLSearchParams(window.location.search)).get('mode');
+        const mode = (qsMode || localStorage.getItem('trip_mode') || 'van').toLowerCase();
+        if (mode === 'bus') {
+          const input = $('#pickupInput');
+          const val = (input && input.value || '').trim();
+          try {
+            persist.set('gw_pickup_address', val);
+            persist.set('gw_dropoff_same','true');
+            persist.set('gw_dropoff_address', val);
+            // place_id not required for bus
+            persist.set('gw_pickup_place_id','');
+          } catch(_){ }
+          assignPreferredLanguage();
+          return true;
+        }
+      } catch(_){ }
       const input = $('#pickupInput');
       const val = (input && input.value || '').trim();
       // validate age group & traveler type inline on Step 2

@@ -111,11 +111,20 @@
       try { return localStorage.getItem('bus_pickup_address'); } catch(_) { return null; }
     })() || DEFAULT_BUS_ADDRESS;
     setPickupDisabled(busAddr);
+    // Persist to session for Step 3 consumption
+    try {
+      sessionStorage.setItem('gw_pickup_address', busAddr);
+      sessionStorage.setItem('gw_dropoff_same', 'true');
+      sessionStorage.setItem('gw_dropoff_address', busAddr);
+      sessionStorage.removeItem('gw_pickup_place_id');
+    } catch(_){ }
     // Enable pax counters & suitcases
     ['suitcasesRow'].forEach(id=> enableRow(qs(id)));
     const adultsRow = qs('adultsCount')?.closest('.s2-row');
     const childrenRow = qs('childrenCount')?.closest('.s2-row');
     [adultsRow, childrenRow].forEach(r=> enableRow(r));
+    // Notify other scripts to refresh Next button visual state
+    try { document.dispatchEvent(new CustomEvent('gw:step2:fieldsChanged')); } catch(_){ }
   }
 
   // Step 1 (trip.html) occupancy/availability greying when private or bus

@@ -14,7 +14,18 @@
   }
 
   function navigateTo(slug, mode) {
+    let prevMode = '';
+    try { prevMode = (localStorage.getItem('trip_mode')||'').toLowerCase(); } catch(_){ }
     try { localStorage.setItem('trip_mode', String(mode)); } catch(_) {}
+    // Clear booking state only when mode actually changes
+    try {
+      if (window.clearBookingState && prevMode && prevMode !== String(mode).toLowerCase()) {
+        window.clearBookingState();
+      } else if (window.clearBookingState && !prevMode) {
+        // first-time selection: treat as fresh start
+        window.clearBookingState();
+      }
+    } catch(_){}
     if (!slug) return; // need a trip id to continue
     // Central trip page as Step 1
     const url = `/trips/trip.html?id=${encodeURIComponent(slug)}&mode=${encodeURIComponent(mode)}`;
