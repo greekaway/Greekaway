@@ -347,7 +347,14 @@
             } catch(_){ }
           }
           const seats = (parseInt(adults||'0',10) || 0) + (parseInt(children||'0',10) || 0) || 1;
-          const baseCents = trip && trip.price_cents ? Math.max(0, parseInt(trip.price_cents,10)||0) : 5000;
+          let baseCents = trip && trip.price_cents ? Math.max(0, parseInt(trip.price_cents,10)||0) : 5000;
+          try {
+            const sel = sessionStorage.getItem('selectedVehiclePrice');
+            if (sel) {
+              const euros = parseFloat(sel);
+              if (!isNaN(euros) && euros > 0) baseCents = Math.round(euros * 100);
+            }
+          } catch(_){ }
           const currency = (trip && trip.currency ? String(trip.currency).toLowerCase() : 'eur');
           const price_cents = Math.max(0, baseCents * seats);
           const mode = getTripMode();
