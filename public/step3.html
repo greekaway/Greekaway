@@ -239,12 +239,22 @@
         try {
           const trip = (window.__loadedTrip || null);
           const seats = (parseInt(adults||'0',10) || 0) + (parseInt(children||'0',10) || 0);
-          let baseCents = 5000; // conservative fallback
+          let baseCents = 5000; // fallback base price (in cents)
           let cur = 'EUR';
           if (trip) {
             if (trip.price_cents != null) baseCents = Math.max(0, parseInt(trip.price_cents,10) || 0);
             if (trip.currency) cur = String(trip.currency).toUpperCase();
           }
+          // Vehicle dynamic override: if user selected a vehicle-specific price earlier (Step 0/1)
+          try {
+            const sel = sessionStorage.getItem('selectedVehiclePrice');
+            if (sel) {
+              const euros = parseFloat(sel);
+              if (!isNaN(euros) && euros > 0) {
+                baseCents = Math.round(euros * 100);
+              }
+            }
+          } catch(_){ }
           const totalCents = Math.max(0, baseCents * Math.max(1, seats));
           const val = (totalCents/100).toLocaleString((window.currentI18n && window.currentI18n.lang) || (navigator.language||'el'), { style:'currency', currency: cur });
           const el = document.getElementById('vTripCost'); if (el) el.textContent = val;

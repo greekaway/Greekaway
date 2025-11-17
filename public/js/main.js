@@ -259,6 +259,17 @@ document.addEventListener("DOMContentLoaded", () => {
       function renderTripLocalized() {
         const t = window.__loadedTrip || trip;
         if (!t) return;
+        // Vehicle-based dynamic price override for Acropolis (per seat base) before rendering
+        let displayPriceCents = t.price_cents;
+        try {
+          if (t && t.id === 'acropolis') {
+            const sel = sessionStorage.getItem('selectedVehiclePrice');
+            if (sel) {
+              const euros = parseFloat(sel);
+              if (!isNaN(euros) && euros > 0) displayPriceCents = Math.round(euros * 100);
+            }
+          }
+        } catch(_){ }
         if (titleEl) titleEl.textContent = getLocalized(t.title) || "";
         // Render base price badge under title if available
         try {
@@ -266,8 +277,8 @@ document.addEventListener("DOMContentLoaded", () => {
           if (metaWrap) {
             const topItems = [];
             // Price capsule
-            if (t.price_cents) {
-              const base = Math.max(0, parseInt(t.price_cents, 10)) / 100;
+            if (displayPriceCents) {
+              const base = Math.max(0, parseInt(displayPriceCents, 10)) / 100;
               const cur = (t.currency || 'EUR').toUpperCase();
               let formatted = '';
               try {
@@ -306,8 +317,8 @@ document.addEventListener("DOMContentLoaded", () => {
           // Keep legacy price badge updated for backward compatibility
           const legacyPriceEl = document.getElementById('trip-price');
           if (legacyPriceEl) {
-            if (t.price_cents) {
-              const base = Math.max(0, parseInt(t.price_cents, 10)) / 100;
+            if (displayPriceCents) {
+              const base = Math.max(0, parseInt(displayPriceCents, 10)) / 100;
               const cur = (t.currency || 'EUR').toUpperCase();
               legacyPriceEl.textContent = (cur === 'EUR')
                 ? (base.toLocaleString(getCurrentLang(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC')
@@ -1146,7 +1157,16 @@ document.addEventListener("DOMContentLoaded", () => {
           const name = document.getElementById('bookingName2') ? document.getElementById('bookingName2').value : (document.getElementById('bookingName') ? document.getElementById('bookingName').value : '');
           const email = document.getElementById('bookingEmail2') ? document.getElementById('bookingEmail2').value : (document.getElementById('bookingEmail') ? document.getElementById('bookingEmail').value : '');
           const trip = window.__loadedTrip || {};
-          const base = trip.price_cents ? parseInt(trip.price_cents,10) : 5000;
+          let base = trip.price_cents ? parseInt(trip.price_cents,10) : 5000;
+          try {
+            if (trip && trip.id === 'acropolis') {
+              const sel = sessionStorage.getItem('selectedVehiclePrice');
+              if (sel) {
+                const euros = parseFloat(sel);
+                if (!isNaN(euros) && euros > 0) base = Math.round(euros * 100);
+              }
+            }
+          } catch(_){ }
           const total = (base * parseInt(seats || '1',10))/100;
           step3.innerHTML = `
             <div class="booking-confirmation step-card confirmation-view">
@@ -1200,7 +1220,16 @@ document.addEventListener("DOMContentLoaded", () => {
               payload.travelTempo = document.getElementById('travelTempo') ? document.getElementById('travelTempo').value : '';
             }
             const trip = window.__loadedTrip || {};
-            const baseCents = trip.price_cents ? parseInt(trip.price_cents,10) : 5000;
+            let baseCents = trip.price_cents ? parseInt(trip.price_cents,10) : 5000;
+            try {
+              if (trip && trip.id === 'acropolis') {
+                const sel = sessionStorage.getItem('selectedVehiclePrice');
+                if (sel) {
+                  const euros = parseFloat(sel);
+                  if (!isNaN(euros) && euros > 0) baseCents = Math.round(euros * 100);
+                }
+              }
+            } catch(_){ }
             payload.price_cents = Math.max(0, baseCents * payload.seats);
             try {
               const resp = await fetch('/api/bookings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
@@ -1327,6 +1356,15 @@ document.addEventListener("DOMContentLoaded", () => {
           const trip = window.__loadedTrip || null;
           let baseCents = 5000;
           if (trip && trip.price_cents) baseCents = parseInt(trip.price_cents,10) || baseCents;
+          try {
+            if (trip && trip.id === 'acropolis') {
+              const sel = sessionStorage.getItem('selectedVehiclePrice');
+              if (sel) {
+                const euros = parseFloat(sel);
+                if (!isNaN(euros) && euros > 0) baseCents = Math.round(euros * 100);
+              }
+            }
+          } catch(_){ }
           const total = Math.max(0, baseCents * seats);
           if (priceEl) {
             const c = (trip && trip.currency) ? trip.currency.toUpperCase() : 'EUR';
@@ -1403,6 +1441,15 @@ document.addEventListener("DOMContentLoaded", () => {
               const trip = window.__loadedTrip;
               let baseCents = null;
               if (trip && trip.price_cents) baseCents = parseInt(trip.price_cents,10);
+              try {
+                if (trip && trip.id === 'acropolis') {
+                  const sel = sessionStorage.getItem('selectedVehiclePrice');
+                  if (sel) {
+                    const euros = parseFloat(sel);
+                    if (!isNaN(euros) && euros > 0) baseCents = Math.round(euros * 100);
+                  }
+                }
+              } catch(_){ }
               // If trip has no explicit price, assume a default (e.g. 5000 cents = €50) — keep conservative
               if (!baseCents) baseCents = 5000;
               data.price_cents = Math.max(0, baseCents * data.seats);
@@ -1482,7 +1529,16 @@ document.addEventListener("DOMContentLoaded", () => {
           const seats2 = document.getElementById('bookingSeats2');
           const mini = document.getElementById('miniPrice');
           const trip = window.__loadedTrip || {};
-          const base = trip.price_cents ? parseInt(trip.price_cents,10) : 5000;
+          let base = trip.price_cents ? parseInt(trip.price_cents,10) : 5000;
+          try {
+            if (trip && trip.id === 'acropolis') {
+              const sel = sessionStorage.getItem('selectedVehiclePrice');
+              if (sel) {
+                const euros = parseFloat(sel);
+                if (!isNaN(euros) && euros > 0) base = Math.round(euros * 100);
+              }
+            }
+          } catch(_){ }
           const s = seats2 ? Math.max(1, parseInt(seats2.value || '1',10)) : 1;
           const total = (base * s) / 100;
           if (mini) {

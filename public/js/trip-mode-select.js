@@ -17,6 +17,15 @@
     let prevMode = '';
     try { prevMode = (localStorage.getItem('trip_mode')||'').toLowerCase(); } catch(_){ }
     try { localStorage.setItem('trip_mode', String(mode)); } catch(_) {}
+    // Persist selected vehicle type & price for dynamic Acropolis pricing
+    try {
+      const vehicleType = (mode === 'private') ? 'mercedes' : String(mode).toLowerCase();
+      const map = window.vehiclePriceMap || {};
+      if (Object.prototype.hasOwnProperty.call(map, vehicleType)) {
+        sessionStorage.setItem('selectedVehicleType', vehicleType);
+        sessionStorage.setItem('selectedVehiclePrice', String(map[vehicleType]));
+      }
+    } catch(_){ }
     // Clear booking state only when mode actually changes
     try {
       if (window.clearBookingState && prevMode && prevMode !== String(mode).toLowerCase()) {
@@ -38,6 +47,23 @@
     if (!slug) {
       setWarningVisible(true);
     }
+
+    // Update visible prices on selection cards using vehiclePriceMap
+    try {
+      const map = window.vehiclePriceMap || {};
+      const formatter = (val) => {
+        try { return (Number(val).toLocaleString('el-GR',{minimumFractionDigits:2, maximumFractionDigits:2})) + ' \u20AC'; } catch(_) { return val + '€'; }
+      };
+      document.querySelectorAll('.trip-mode-card[data-mode]').forEach(card => {
+        const mode = (card.getAttribute('data-mode')||'').toLowerCase();
+        let key = mode;
+        if (mode === 'private') key = 'mercedes';
+        if (Object.prototype.hasOwnProperty.call(map, key)) {
+          const priceEl = card.querySelector('.trip-mode-price');
+          if (priceEl) priceEl.textContent = formatter(map[key]);
+        }
+      });
+    } catch(_){ }
 
     // Make background match the trip's category, like category/trip pages
     (function setCategoryBackground() {

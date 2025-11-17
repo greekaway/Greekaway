@@ -12,6 +12,7 @@
   <meta name="theme-color" content="#001f3f">
   <link rel="stylesheet" href="/pwa.css">
   <link rel="stylesheet" href="/css/pwa-fixes.css">
+  <script src="/js/vehiclePriceMap.js" defer></script>
 </head>
 <body>
   
@@ -131,6 +132,18 @@
               const trip = await t.json();
               CHECKOUT_TRIP_ID = tripId;
               try { if (typeof trip.price_cents === 'number') { CHECKOUT_AMOUNT_CENTS = trip.price_cents; } } catch(_){ }
+              // Vehicle override for Acropolis: replace per-seat base before multiplying by seats
+              try {
+                if (tripId === 'acropolis') {
+                  const sel = sessionStorage.getItem('selectedVehiclePrice');
+                  const veh = sessionStorage.getItem('selectedVehicleType');
+                  if (veh) CHECKOUT_VEHICLE_TYPE = veh;
+                  if (sel) {
+                    const euros = parseFloat(sel);
+                    if (!isNaN(euros) && euros > 0) CHECKOUT_AMOUNT_CENTS = Math.round(euros * 100);
+                  }
+                }
+              } catch(_){ }
               try { if (typeof trip.currency === 'string') { CHECKOUT_CURRENCY = String(trip.currency).toLowerCase(); } } catch(_){ }
               try {
                 // Optional metadata
