@@ -109,118 +109,92 @@
         if (qAdults && !sessionStorage.getItem('gw_adults')) sessionStorage.setItem('gw_adults', String(parseInt(qAdults,10)||1));
       } catch(_){ }
 
-      // Helper: load trip details by id and update cost immediately when ready
-      async function loadTripAndUpdate(tripId){
-        if (!tripId) return;
-        try {
-          let dv = '';
-          try {
-            const rv = await fetch('/version.json', { cache: 'no-cache' });
-            if (rv.ok) {
-              function renderValuesFromState(){
-                const state = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
-                const adults = (()=>{ try { return parseInt(sessionStorage.getItem('gw_adults')||'0',10)||0; } catch(_){ return 0; } })();
-                const ages = (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]')||[]; } catch(_){ return []; } })();
-                const children = String(ages.length);
-                const bags = (state && state.suitcases) ? state.suitcases : { small:0, medium:0, large:0 };
-                const totalBags = (bags.small||0)+(bags.medium||0)+(bags.large||0);
-                const langC = (state && state.traveler_profile && state.traveler_profile.language) ? state.traveler_profile.language : (localStorage.getItem('gw_lang')||'el');
-                const ageG = (state && state.traveler_profile && state.traveler_profile.age_group) || '';
-                const travT = (state && state.traveler_profile && state.traveler_profile.type) || '';
-                const interest = (function(){ try { return sessionStorage.getItem('gw_interest')||''; } catch(_){ return ''; } })();
-                const social = (state && state.traveler_profile && state.traveler_profile.social) || '';
+      // Small helpers missing in original script
+      function get(k, d=''){ try { const v=sessionStorage.getItem(k); return v==null?d:v; } catch(_){ return d; } }
+      const langFallbackLabels = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', ru:'Русский', he:'עברית', nl:'Nederlands', pt:'Português', sv:'Svenska', ko:'한국어', zh:'中文' };
+      const langFlags = { el:'🇬🇷', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', es:'🇪🇸', ru:'🇷🇺', he:'🇮🇱', nl:'🇳🇱', pt:'🇵🇹', sv:'🇸🇪', ko:'🇰🇷', zh:'🇨🇳' };
+      try { if (window.GWBookingState && window.GWBookingState.buildFromStep2) window.GWBookingState.buildFromStep2(); } catch(_){ }
 
-                document.getElementById('vAdults').textContent = String(adults || 0);
-                document.getElementById('vChildren').textContent = ages.length ? (children + ' (' + ages.join('-') + ')') : '—';
-                if (totalBags) {
-                  const parts = [];
-                  if (bags.small) parts.push(`${bags.small}S`);
-                  if (bags.medium) parts.push(`${bags.medium}M`);
-                  if (bags.large) parts.push(`${bags.large}L`);
-                  const detail = parts.join(' · ');
-                  document.getElementById('vBags').textContent = detail ? `${totalBags} (${detail})` : String(totalBags);
-                } else {
-                  document.getElementById('vBags').textContent = '—';
-                }
-                const langLabel = tSafe('booking.preferred_language_options.' + langC, (langFallbackLabels[langC] || (langC && langC.toUpperCase()) || '—'));
-                const langFlag = langFlags[langC] || '';
-                document.getElementById('vLang').textContent = langLabel ? (langFlag ? `${langFlag} ${langLabel}` : langLabel) : '—';
-                document.getElementById('vPickup').textContent = (state && state.pickup && state.pickup.address) ? state.pickup.address : '—';
-                document.getElementById('vAgeGroup').textContent = ageG || '—';
-                const travTypeFallback = { explore:'Εξερευνητές – δραστήριοι', relax:'Χαλαροί ταξιδιώτες', family:'Οικογενειακό ύφος', solo:'Μοναχικοί ταξιδιώτες' };
-                const interestFallback = { nature:'Φύση', culture:'Πολιτισμός', mountain:'Βουνό', sea:'Θάλασσα', gastronomy:'Γαστρονομία' };
-                const travLabel = travT ? tSafe('booking.traveler_type_options.' + travT, (travTypeFallback[travT] || '—')) : '—';
-                const intLabel = interest ? tSafe('booking.interests_options.' + interest, (interestFallback[interest] || '—')) : '—';
-                const socLabel = social ? tSafe('booking.sociality_options.' + social, (social === 'social' ? 'Κοινωνικός' : social === 'quiet' ? 'Ήσυχος' : '—')) : '—';
-                document.getElementById('vTravelerType').textContent = travLabel;
-                document.getElementById('vInterest').textContent = intLabel;
-                document.getElementById('vSocial').textContent = socLabel;
-                // note: special_requests is sensitive; show privacy-safe hint only
-                const row = document.getElementById('vNotesInfoRow');
-                const el = document.getElementById('vNotesInfo');
-                try {
-                  if (state && state.special_requests && String(state.special_requests).trim()) {
-                    const msg = tSafe('booking.driver_message_updated','✅ μήνυμα του οδηγού ενημερώθηκε');
-                    if (row && el) { el.textContent = msg; row.hidden = false; }
-                  } else if (row) { row.hidden = true; }
-                } catch(_){ }
-              }
-  // Display children as "N (a-b-c)" when ages exist, otherwise dash
-  document.getElementById('vChildren').textContent = ages.length ? (children + ' (' + ages.join('-') + ')') : '—';
+      function renderValuesFromState(){
+        const state = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
+        const adults = (()=>{ try { return parseInt(sessionStorage.getItem('gw_adults')||'0',10)||0; } catch(_){ return 0; } })();
+        const ages = (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]')||[]; } catch(_){ return []; } })();
+        const children = String(ages.length);
+        const bags = (state && state.suitcases) ? state.suitcases : { small:0, medium:0, large:0 };
+        const totalBags = (bags.small||0)+(bags.medium||0)+(bags.large||0);
+        const langC = (state && state.traveler_profile && state.traveler_profile.language) ? state.traveler_profile.language : (localStorage.getItem('gw_lang')||'el');
+        const ageG = (state && state.traveler_profile && state.traveler_profile.age_group) || '';
+        const travT = (state && state.traveler_profile && state.traveler_profile.type) || '';
+        const interest = (function(){ try { return sessionStorage.getItem('gw_interest')||''; } catch(_){ return ''; } })();
+        const social = (state && state.traveler_profile && state.traveler_profile.social) || '';
+
+        document.getElementById('vAdults').textContent = String(adults || 0);
+        document.getElementById('vChildren').textContent = ages.length ? (children + ' (' + ages.join('-') + ')') : '—';
         if (totalBags) {
           const parts = [];
-          if (bagsS) parts.push(`${bagsS}S`);
-          if (bagsM) parts.push(`${bagsM}M`);
-          if (bagsL) parts.push(`${bagsL}L`);
+          if (bags.small) parts.push(`${bags.small}S`);
+          if (bags.medium) parts.push(`${bags.medium}M`);
+          if (bags.large) parts.push(`${bags.large}L`);
           const detail = parts.join(' · ');
           document.getElementById('vBags').textContent = detail ? `${totalBags} (${detail})` : String(totalBags);
         } else {
           document.getElementById('vBags').textContent = '—';
         }
-        const langLabel = tSafe('booking.preferred_language_options.' + langC, (langFallbackLabels[langC] || langC.toUpperCase()));
+        const langLabel = tSafe('booking.preferred_language_options.' + langC, (langFallbackLabels[langC] || (langC && langC.toUpperCase()) || '—'));
         const langFlag = langFlags[langC] || '';
         document.getElementById('vLang').textContent = langLabel ? (langFlag ? `${langFlag} ${langLabel}` : langLabel) : '—';
-        // Determine pickup address: for bus mode always use trip's fixed start location
+        // Determine pickup address: simple preference order
         (function(){
-          function getTripMode(){
-            try { const p=new URLSearchParams(window.location.search); return (p.get('mode')||localStorage.getItem('trip_mode')||'van').toLowerCase(); } catch(_){ return 'van'; }
-          }
-          function getBusFixedAddress(){
-            // Prefer loaded trip JSON
-            try {
-              const trip = (window.__loadedTrip || null);
-              const depName = trip && trip.departure && trip.departure.reference_point && trip.departure.reference_point.name;
-              if (depName && String(depName).trim()) return String(depName).trim();
-            } catch(_){ }
-            // Next, any value persisted by Step 1 trip page
-            try { const v = localStorage.getItem('bus_pickup_address'); if (v && v.trim()) return v.trim(); } catch(_){ }
-            // Finally, whatever is in session from Step 2
-            try { const s = sessionStorage.getItem('gw_pickup_address'); if (s && s.trim()) return s.trim(); } catch(_){ }
-            return '';
-          }
-          const mode = getTripMode();
-          const val = (mode === 'bus') ? getBusFixedAddress() : (get('gw_pickup_address','') || '');
+          const val = (get('gw_pickup_address','') || (state && state.pickup && state.pickup.address) || '');
           document.getElementById('vPickup').textContent = (val || '—');
         })();
         document.getElementById('vAgeGroup').textContent = ageG || '—';
+        const travTypeFallback = { explore:'Εξερευνητές – δραστήριοι', relax:'Χαλαροί ταξιδιώτες', family:'Οικογενειακό ύφος', solo:'Μοναχικοί ταξιδιώτες' };
+        const interestFallback = { nature:'Φύση', culture:'Πολιτισμός', mountain:'Βουνό', sea:'Θάλασσα', gastronomy:'Γαστρονομία' };
         const travLabel = travT ? tSafe('booking.traveler_type_options.' + travT, (travTypeFallback[travT] || '—')) : '—';
         const intLabel = interest ? tSafe('booking.interests_options.' + interest, (interestFallback[interest] || '—')) : '—';
         const socLabel = social ? tSafe('booking.sociality_options.' + social, (social === 'social' ? 'Κοινωνικός' : social === 'quiet' ? 'Ήσυχος' : '—')) : '—';
         document.getElementById('vTravelerType').textContent = travLabel;
         document.getElementById('vInterest').textContent = intLabel;
         document.getElementById('vSocial').textContent = socLabel;
-        // Show privacy-preserving message if special requests exist
+        // Special requests privacy-safe hint
+        const row = document.getElementById('vNotesInfoRow');
+        const el = document.getElementById('vNotesInfo');
         try {
-          const notes = (get('gw_notes','') || '').trim();
-          const row = document.getElementById('vNotesInfoRow');
-          const el = document.getElementById('vNotesInfo');
-          if (notes && row && el) {
-            const msg = tSafe('booking.driver_message_updated','✅ μήνυμα του οδηγού ενημερώθηκε');
-            el.textContent = msg;
-            row.hidden = false;
-          } else if (row) { row.hidden = true; }
-        } catch(_){}
-        try { renderTripCost(); } catch(_){}
+          const notes = (state && state.special_requests) ? String(state.special_requests).trim() : (get('gw_notes','')||'').trim();
+          if (notes && row && el) { el.textContent = tSafe('booking.driver_message_updated','✅ μήνυμα του οδηγού ενημερώθηκε'); row.hidden = false; }
+          else if (row) { row.hidden = true; }
+        } catch(_){ }
+      }
+
+      // Load trip JSON and update title + price
+      async function loadTripAndUpdate(tripId){
+        if (!tripId) return null;
+        let dv = '';
+        try {
+          const rv = await fetch('/version.json', { cache: 'no-cache' });
+          if (rv.ok) { const j = await rv.json(); dv = (j && j.dataVersion) ? ('?v=' + encodeURIComponent(String(j.dataVersion))) : ''; }
+        } catch(_){ }
+        try {
+          const r = await fetch(`/data/trips/${encodeURIComponent(tripId)}.json${dv}`, { cache:'no-cache' });
+          if (!r.ok) return null;
+          const trip = await r.json();
+          window.__loadedTrip = trip;
+          try {
+            const titleEl = document.getElementById('s3TripTitle');
+            const lang = (window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el';
+            const getLocalized = (field) => {
+              if (!field) return '';
+              if (typeof field === 'string') return field;
+              if (typeof field === 'object') return field[lang] || field['el'] || Object.values(field)[0] || '';
+              return '';
+            };
+            const title = getLocalized(trip.title);
+            if (title && titleEl) titleEl.textContent = title;
+          } catch(_){ }
+          try { renderTripCost(); } catch(_){ }
+          return trip;
+        } catch(_){ return null; }
       }
 
       function renderTripCost(){
