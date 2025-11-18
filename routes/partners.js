@@ -561,12 +561,14 @@ function computeServerAmountCents(tripId, vehType, seatsCount) {
 router.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server' });
   try {
-    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, customerEmail, seats } = req.body || {};
+    // Accept both camelCase and snake_case vehicle type from client
+    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, vehicle_type, customerEmail, seats } = req.body || {};
+    const vehTypeInput = vehicleType || vehicle_type || null;
     const booking_id = (req.body && req.body.booking_id) || null;
     let meta = (req.body && req.body.metadata) || {};
     if (booking_id) meta = { ...meta, booking_id };
 
-    // Trust UI-provided final amount (price_cents or amount). If missing/zero, compute a safe fallback from trip data.
+    // UI-provided amount (untrusted / informational)
     const clientSubmittedCents = parseInt(price_cents || amount || 0, 10) || 0;
 
     // Keep trip id for metadata & partner resolution (do not alter amount)
@@ -576,8 +578,17 @@ router.post('/create-payment-intent', async (req, res) => {
     }
 
     // Compute server-side fallback when client amount is not provided or invalid
-    const serverComputedCents = computeServerAmountCents(tripId, vehicleType, seats);
-    const finalAmountCents = clientSubmittedCents > 0 ? clientSubmittedCents : serverComputedCents;
+    // Always recompute server-side amount based on trip + vehType to avoid mismatches with Apple Pay sheet.
+    const serverComputedCents = computeServerAmountCents(tripId, vehTypeInput, seats);
+    let finalAmountCents = serverComputedCents;
+    // If server cannot compute (e.g., missing data) but client sent a positive amount, fall back while logging mismatch.
+    let pricingSource = 'server';
+    if ((!finalAmountCents || finalAmountCents <= 0) && clientSubmittedCents > 0) {
+      finalAmountCents = clientSubmittedCents;
+      pricingSource = 'client_fallback';
+    } else if (finalAmountCents > 0 && clientSubmittedCents > 0 && finalAmountCents !== clientSubmittedCents) {
+      pricingSource = 'server_override_mismatch';
+    }
     if (!finalAmountCents || finalAmountCents <= 0) return res.status(400).json({ error: 'Invalid amount' });
 
     // enrich metadata for traceability and audit
@@ -588,9 +599,14 @@ router.post('/create-payment-intent', async (req, res) => {
       client_submitted_price_cents: (clientSubmittedCents || null),
       server_computed_price_cents: (serverComputedCents || null),
       duration: (duration||null),
-      vehicle_type: (vehicleType||null),
+      vehicle_type: (vehTypeInput||null),
       seats: (safeInt(seats, null))
     };
+    // Add pricing provenance + mismatch info for audit
+    meta.pricing_source = pricingSource;
+    if (clientSubmittedCents > 0 && serverComputedCents > 0 && clientSubmittedCents !== serverComputedCents) {
+      meta.client_server_mismatch = Math.abs(clientSubmittedCents - serverComputedCents);
+    }
 
     // read partner mapping and compute split from finalAmountCents
     const mapping = tripId ? resolvePartnerForTrip(tripId) : null;
@@ -611,11 +627,24 @@ router.post('/create-payment-intent', async (req, res) => {
     }
 
     const idempotencyKey = (req.headers['idempotency-key'] || req.headers['Idempotency-Key'] || req.headers['Idempotency-key']) || `gw_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
-    console.log('FINAL_AMOUNT_CENTS:', finalAmountCents);
     const pi = await stripe.paymentIntents.create(params, { idempotencyKey });
-    try {
-      console.log('[payments] PI created', pi.id, 'amount', finalAmountCents, 'client_submitted', clientSubmittedCents, 'server_computed', serverComputedCents, 'trip', tripId, 'vehicle', vehicleType, 'seats', seats);
-    } catch(_) {}
+    // Optional debug logging (enable by setting PAYMENTS_DEBUG=1)
+    if (process.env.PAYMENTS_DEBUG) {
+      try {
+        console.log('[payments:create-payment-intent]', JSON.stringify({
+          vehicle_type: vehTypeInput || null,
+          price_cents_client: clientSubmittedCents || null,
+          amount_sent_to_stripe: finalAmountCents,
+          pricing_source,
+          server_computed_cents: serverComputedCents || null,
+          payment_intent_id: pi.id,
+          payment_intent_status: pi.status,
+          trip_id: tripId || null,
+          seats: safeInt(seats, null) || null,
+          mismatch: (clientSubmittedCents > 0 && serverComputedCents > 0 && clientSubmittedCents !== serverComputedCents) ? (clientSubmittedCents - serverComputedCents) : 0
+        }));
+      } catch(_) {}
+    }
 
     // persist extended info on booking for admin dashboard
     if (booking_id) {
