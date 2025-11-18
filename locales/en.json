@@ -34,7 +34,7 @@
     "name": "Name",
     "email": "Email",
     "cardLabel": "Card",
-  "expiry": "MM / YY",
+  "expiry": "Expiry date",
   "cvc": "CVC",
     "payment_error": "Payment error",
     "payment_failed": "Payment failed",
@@ -42,7 +42,8 @@
     "mock_complete": "Completed",
     "network_error": "Network error",
     "info": "The payment form will appear here.",
-    "notice": "Secure Payment via Stripe"
+    "notice": "Secure Payment via Stripe",
+    "poweredByStripe": "Powered by Stripe"
   },
   "welcome": {
     "title": "Welcome to Greekaway",

@@ -32,15 +32,16 @@
     "name": "Όνομα",
     "email": "Email",
     "cardLabel": "Κάρτα",
-  "expiry": "MM / YY",
-  "cvc": "CVC",
+  "expiry": "Ημερομηνία λήξης",
+  "cvc": "Τριψήφιος αριθμός",
     "payment_error": "Πρόβλημα με πληρωμή",
     "payment_failed": "Η πληρωμή απέτυχε",
     "payment_success_test": "Η πληρωμή ολοκληρώθηκε",
     "mock_complete": "Ολοκληρώθηκε",
     "network_error": "Σφάλμα δικτύου",
     "info": "Η φόρμα πληρωμής θα εμφανίζεται εδώ.",
-    "notice": "Ασφαλής πληρωμή μέσω Stripe"
+    "notice": "Ασφαλής πληρωμή μέσω Stripe",
+    "poweredByStripe": "Powered by Stripe"
   },
   "welcome": {
     "title": "Καλώς ήρθατε στο Greekaway",

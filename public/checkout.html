@@ -52,6 +52,18 @@
   <label data-i18n="checkout.cardLabel">Κάρτα</label>
   <input name="card" type="text" data-i18n-placeholder="checkout.cardPlaceholder" placeholder="Card number">
       </div>
+      <!-- Manual fallback fields (shown only if Stripe Elements fail to mount) -->
+      <div class="form-row manual-card-extra">
+        <label data-i18n="checkout.expiry">Ημερομηνία λήξης</label>
+        <input name="card_expiry_fallback" type="text" inputmode="numeric" pattern="\d{2}\s?/\s?\d{2}" placeholder="MM / YY">
+      </div>
+      <div class="form-row manual-card-extra">
+        <label data-i18n="checkout.cvc">Τριψήφιος αριθμός</label>
+        <input name="card_cvc_fallback" type="text" inputmode="numeric" maxlength="4" pattern="\d{3,4}" placeholder="CVC">
+      </div>
+      <div class="stripe-branding" style="text-align:center;margin:12px 0;font-size:.8rem;opacity:.85">
+        <a href="https://stripe.com" target="_blank" rel="noopener" data-i18n="checkout.poweredByStripe">Powered by Stripe</a>
+      </div>
   <button class="btn" type="submit" data-i18n="checkout.pay">Pay</button>
     </form>
 
@@ -315,6 +327,8 @@
         cardExpiry.mount(cardExpiryMount);
         cardCvc.mount(cardCvcMount);
         if (cardInput) cardInput.style.display = 'none';
+        // Hide manual fallback fields when Stripe Elements are active
+        try { document.querySelectorAll('.manual-card-extra').forEach(el => el.style.display='none'); } catch(_){ }
       } catch (mountErr) {
         console.error('[checkout] Failed to mount Stripe Elements, falling back to plain input', mountErr);
       }
