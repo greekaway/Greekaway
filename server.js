@@ -669,13 +669,14 @@ app.post('/create-payment-intent', async (req, res) => {
     // Support idempotency
     const idempotencyKey = (req.headers['idempotency-key'] || req.headers['Idempotency-Key'] || req.headers['Idempotency-key']) || `gw_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
     const opts = { idempotencyKey };
+    const rawEmail = ((customerEmail || req.body.email || '') + '').trim();
     const piParams = {
       amount: finalAmountCents,
       currency: currency || 'eur',
       automatic_payment_methods: { enabled: true },
-      metadata: Object.assign({}, (booking_id ? { booking_id } : {}), clientMeta || {}, { trip_id: tripId, requested_price_cents: finalAmountCents, duration: (duration||null), vehicle_type: (vehicleType||null) }),
-      receipt_email: customerEmail || req.body.email || null
+      metadata: Object.assign({}, (booking_id ? { booking_id } : {}), clientMeta || {}, { trip_id: tripId, requested_price_cents: finalAmountCents, duration: (duration||null), vehicle_type: (vehicleType||null) })
     };
+    if (rawEmail) piParams.receipt_email = rawEmail; else try { console.log('[root-pi:info] no email provided; skipping receipt_email'); } catch(_) {}
     console.log('FINAL_AMOUNT_CENTS:', finalAmountCents);
     const paymentIntent = await stripe.paymentIntents.create(piParams, opts);
 

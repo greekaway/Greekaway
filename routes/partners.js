@@ -647,13 +647,16 @@ router.post('/create-payment-intent', async (req, res) => {
     const share_percent = (mapping && mapping.share_percent) || (parseInt(process.env.DEFAULT_PARTNER_SHARE || '80',10) || 80);
     const split = computeSplit(finalAmountCents, share_percent);
 
+    // Build params; only include receipt_email if non-empty trimmed
+    const rawEmail = ((customerEmail || req.body.email || '') + '').trim();
     const params = {
       amount: finalAmountCents,
       currency: currency || 'eur',
       automatic_payment_methods: { enabled: true },
-      metadata: meta,
-      receipt_email: customerEmail || req.body.email || null
+      metadata: meta
     };
+    if (rawEmail) params.receipt_email = rawEmail;
+    else try { console.log('[pi:info] no email provided; skipping receipt_email'); } catch(_) {}
     // If partner has a Connect account, set transfer_data and fee
     if (mapping && mapping.partner && mapping.partner.stripe_account_id) {
       params.transfer_data = { destination: mapping.partner.stripe_account_id };
