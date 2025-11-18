@@ -363,6 +363,36 @@ module.exports = function attachWebhook(app, stripe) {
       case 'payment_intent.payment_failed':
         await processPaymentEvent(event, 'failed');
         break;
+      case 'charge.succeeded':
+        try {
+          const charge = event && event.data && event.data.object ? event.data.object : null;
+          const pid = charge && (charge.payment_intent || charge.paymentIntent || null);
+          if (pid && stripe && stripe.paymentIntents && stripe.paymentIntents.retrieve) {
+            try {
+              const pi = await stripe.paymentIntents.retrieve(pid);
+              const adapted = { id: event.id, type: 'payment_intent.succeeded', data: { object: pi } };
+              await processPaymentEvent(adapted, 'succeeded');
+            } catch (e) {
+              console.warn('webhook: failed to retrieve PI for charge.succeeded', e && e.message ? e.message : e);
+            }
+          }
+        } catch (e) { /* ignore */ }
+        break;
+      case 'checkout.session.completed':
+        try {
+          const cs = event && event.data && event.data.object ? event.data.object : null;
+          const pid = cs && (cs.payment_intent || cs.paymentIntent || null);
+          if (pid && stripe && stripe.paymentIntents && stripe.paymentIntents.retrieve) {
+            try {
+              const pi = await stripe.paymentIntents.retrieve(pid);
+              const adapted = { id: event.id, type: 'payment_intent.succeeded', data: { object: pi } };
+              await processPaymentEvent(adapted, 'succeeded');
+            } catch (e) {
+              console.warn('webhook: failed to retrieve PI for checkout.session.completed', e && e.message ? e.message : e);
+            }
+          }
+        } catch (e) { /* ignore */ }
+        break;
       default:
         console.log(`Webhook received event: ${event.type}`);
     }
