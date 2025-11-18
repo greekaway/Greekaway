@@ -91,6 +91,8 @@
     let CHECKOUT_VEHICLE_TYPE = null;
     let CHECKOUT_SEATS = 1;
     let CHECKOUT_VEHICLE_OVERRIDE_FINAL = false; // If true (Acropolis vehicle price), do not multiply by seats
+    const CHECKOUT_DEBUG = (typeof window !== 'undefined') && (window.location.search.includes('debugCheckout=1') || window.DEBUG_CHECKOUT === 1 || window.DEBUG_CHECKOUT === '1');
+    if (CHECKOUT_DEBUG) { try { console.log('[checkout:diag] debug mode active'); } catch(_){ } }
     const amountEl = document.getElementById('checkoutAmount');
     const getLang = () => (window.currentI18n && window.currentI18n.lang) || (navigator.language || 'el');
     const showAmount = () => {
@@ -172,6 +174,10 @@
       }
     } catch(e) { /* ignore prefill errors */ }
     console.debug('[checkout] STRIPE_PUBLISHABLE present?', !!STRIPE_PUBLISHABLE);
+    try { console.debug('[checkout] STRIPE_PUBLISHABLE masked:', STRIPE_PUBLISHABLE ? STRIPE_PUBLISHABLE.slice(0,12)+'…' : 'null'); } catch(_){ }
+    if (!STRIPE_PUBLISHABLE || STRIPE_PUBLISHABLE.includes('STRIPE')) {
+      console.warn('[checkout] Stripe publishable key missing or placeholder; card flow disabled, will use diagnostic fallback');
+    }
     if (STRIPE_PUBLISHABLE && !STRIPE_PUBLISHABLE.includes('STRIPE')) {
       console.debug('[checkout] Stripe lib loaded?', typeof Stripe !== 'undefined');
       console.debug('[checkout] GWPaymentRequest available?', !!window.GWPaymentRequest && !!window.GWPaymentRequest.init);
@@ -341,14 +347,24 @@
         else showResult('i18n:checkout.payment_success_test', true);
       });
     } else {
-      // Fallback: use mock endpoint
-      form.addEventListener('submit', function(e){
+      // Diagnostic fallback: still hit create-payment-intent to verify server path
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        var fd = new FormData(e.target);
-        fetch('/mock-checkout', { method:'POST', body: new URLSearchParams(fd) })
-          .then(r => r.json())
-          .then(j => showResult(j.message || 'i18n:checkout.mock_complete', j.success))
-            .catch(err => showResult('i18n:checkout.network_error', false));
+        try { console.log('[checkout:fallback] submit start'); } catch(_){ }
+        const body = { price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1) };
+        try { console.log('[checkout:fallback] body', body); } catch(_){ }
+        let resp, data;
+        try {
+          resp = await fetch('/api/partners/create-payment-intent', { method:'POST', cache:'no-store', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        } catch(err) {
+          console.error('[checkout:fallback] network error', err);
+          return showResult('i18n:checkout.payment_error', false);
+        }
+        try { data = await resp.json(); } catch(_){ data = {}; }
+        try { console.log('[checkout:fallback] status', resp.status, 'response', data); } catch(_){ }
+        if(!resp.ok || !data.clientSecret){ console.error('[checkout:fallback] failed', data); return showResult('i18n:checkout.payment_error', false); }
+        // We cannot confirm card without Stripe Elements; show diagnostic success
+        return showResult('i18n:checkout.payment_success_test', true);
       });
     }
     })();
