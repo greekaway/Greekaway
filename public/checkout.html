@@ -284,6 +284,7 @@
       // Classic card form fallback
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        try { console.log('[checkout] submit handler start'); } catch(_){ }
         const name = form.name.value;
         const email = form.email.value;
         // Derive booking id or create a booking first (to persist traveler profile)
@@ -322,9 +323,18 @@
 
           // create payment intent on server with verified price from trip JSON
         const body = { price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1) };
+        try { console.log('[checkout] create-payment-intent body', body); } catch(_){ }
         if (bookingId) body.booking_id = bookingId;
-        const resp = await fetch('/api/partners/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-        const data = await resp.json().catch(()=>({}));
+        let resp, data;
+        try {
+          resp = await fetch('/api/partners/create-payment-intent', { method:'POST', cache:'no-store', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        } catch(err) {
+          console.error('[checkout] fetch network error', err);
+          return showResult('i18n:checkout.payment_error', false);
+        }
+        try { console.log('[checkout] create-payment-intent status', resp.status); } catch(_){ }
+        try { data = await resp.json(); } catch(_){ data = {}; }
+        try { console.log('[checkout] create-payment-intent response', data); } catch(_){ }
         if(!resp.ok || !data.clientSecret){ console.error('[checkout] create-payment-intent failed', data && data.error, data && data.code, data); return showResult('i18n:checkout.payment_error', false); }
         const { error } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardNumber, billing_details: { name, email } } });
         if(error) showResult(error.message || 'i18n:checkout.payment_failed', false);

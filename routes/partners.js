@@ -563,6 +563,16 @@ function computeServerAmountCents(tripId, vehType, seatsCount) {
 router.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server' });
   try {
+    try {
+      console.log('[pi:req]', {
+        ts: new Date().toISOString(),
+        headers: {
+          'content-type': req.headers['content-type'],
+          'idempotency-key': req.headers['idempotency-key'] || req.headers['Idempotency-Key'] || req.headers['Idempotency-key']
+        },
+        body: req.body || null
+      });
+    } catch(_) {}
     // Accept both camelCase and snake_case vehicle type from client
     const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, vehicle_type, customerEmail, seats } = req.body || {};
     const vehTypeInput = vehicleType || vehicle_type || null;
