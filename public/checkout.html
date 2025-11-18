@@ -123,13 +123,15 @@
     try {
       const st = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
       try { console.log('[checkout] bookingState before create', st); } catch(_){ }
-      if (st) {
+      let PR_AMOUNT_CENTS = null; // authoritative amount for Payment Request sheet
+      try {
         // Render summary box
         try {
           const summaryBox = document.getElementById('checkoutSummary');
           if (summaryBox) {
             const fmtPrice = (typeof st.price_cents === 'number') ? (st.price_cents/100).toLocaleString(getLang(), { style:'currency', currency: (st.currency||'eur').toUpperCase() }) : '—';
             document.getElementById('coTripId').textContent = st.trip_id || '—';
+          if (typeof st.price_cents === 'number' && st.price_cents > 0) PR_AMOUNT_CENTS = st.price_cents;
             document.getElementById('coDate').textContent = st.date || '—';
             document.getElementById('coMode').textContent = st.mode || '—';
             document.getElementById('coSeats').textContent = st.seats || '—';
@@ -141,6 +143,8 @@
         } catch(_){ }
         CHECKOUT_TRIP_ID = st.trip_id || null;
         CHECKOUT_SEATS = st.seats || 1;
+          // Prefer authoritative state price for PR sheet if available; else use resolved checkout amount
+          if (PR_AMOUNT_CENTS == null) PR_AMOUNT_CENTS = CHECKOUT_AMOUNT_CENTS;
         CHECKOUT_CURRENCY = (st.currency || 'eur');
         // Create a temporary booking on the backend to obtain a bookingId and verified amount
         const resp = await fetch('/api/bookings/create', { method:'POST', headers:{ 'Content-Type': 'application/json' }, body: JSON.stringify(st) });
@@ -314,8 +318,11 @@
       try {
         if (window.GWPaymentRequest && window.GWPaymentRequest.init) {
           console.debug('[checkout] calling GWPaymentRequest.init...');
-          const merchantLabel = (window.t ? (window.t('siteTitle') || 'Greekaway') : 'Greekaway');
-          const pr = await window.GWPaymentRequest.init(STRIPE_PUBLISHABLE, { total: { label: merchantLabel, amount: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0) } });
+          // Use translated siteTitle unless it's the raw key; fallback to Greekaway
+          const rawTitle = (window.t ? (window.t('siteTitle') || '') : '');
+          const merchantLabel = (rawTitle && rawTitle !== 'siteTitle') ? rawTitle : 'Greekaway';
+          const prAmount = (PR_AMOUNT_CENTS != null ? PR_AMOUNT_CENTS : (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0));
+          const pr = await window.GWPaymentRequest.init(STRIPE_PUBLISHABLE, { total: { label: merchantLabel, amount: prAmount } });
           try { window.pr = pr ? pr.paymentRequest : null; } catch(_){ }
           console.debug('[checkout] GWPaymentRequest.init returned', pr);
           if (pr && pr.prButton) {
@@ -324,8 +331,18 @@
 
             pr.paymentRequest.on('paymentmethod', async (ev) => {
               try {
-                const resp = await fetch('/api/partners/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1) }) });
+                const reqBody = { price_cents: (PR_AMOUNT_CENTS != null ? PR_AMOUNT_CENTS : (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0)), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1) };
+                try { console.log('[checkout:PR] creating payment intent with', reqBody); } catch(_){ }
+                let resp;
+                try {
+                  resp = await fetch('/api/partners/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(reqBody) });
+                } catch (netErr) {
+                  console.error('[checkout:PR] fetch error', netErr);
+                  ev.complete('fail');
+                  return showResult('i18n:checkout.payment_error', false);
+                }
                 const data = await resp.json().catch(()=>({}));
+                try { console.log('[checkout:PR] create-payment-intent status', resp.status, 'response', data); } catch(_){ }
                 if (!resp.ok || !data.clientSecret) {
                   console.error('[checkout] create-payment-intent failed', data && data.error, data && data.code, data);
                   ev.complete('fail');
