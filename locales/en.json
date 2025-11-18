@@ -34,7 +34,7 @@
     "name": "Name",
     "email": "Email",
     "cardLabel": "Card",
-  "expiry": "Expiry date",
+  "expiry": "MM / YY",
   "cvc": "CVC",
     "payment_error": "Payment error",
     "payment_failed": "Payment failed",
