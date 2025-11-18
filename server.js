@@ -379,6 +379,9 @@ if (IS_DEV) {
           const pk = (process.env.STRIPE_PUBLISHABLE_KEY || '').trim().replace(/^['"]|['"]$/g, '');
           if (pk) {
             out = out.replace(/%STRIPE_PUBLISHABLE_KEY%/g, pk);
+            try { console.log('checkout: injecting publishable key (masked):', pk.slice(0,8)+'…'); } catch(_){}
+          } else {
+            try { console.warn('checkout: STRIPE_PUBLISHABLE_KEY missing — card/Apple Pay UI will be disabled'); } catch(_){}
           }
         } catch(_) { }
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -410,6 +413,8 @@ if (!IS_DEV) {
           const pk = (process.env.STRIPE_PUBLISHABLE_KEY || '').trim().replace(/^['"]|['"]$/g, '');
           if (pk) {
             out = out.replace(/%STRIPE_PUBLISHABLE_KEY%/g, pk);
+          } else {
+            try { console.warn('checkout: STRIPE_PUBLISHABLE_KEY missing in prod handler'); } catch(_){}
           }
         } catch(_) { }
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
