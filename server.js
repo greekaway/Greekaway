@@ -374,16 +374,18 @@ if (IS_DEV) {
             out = out.replace(/YOUR_GOOGLE_MAPS_API_KEY/g, key);
           }
         } catch(_) { }
-        // 5) Inject Stripe publishable key into checkout pages
+        // 5) Inject Stripe publishable key into checkout pages (only if valid pattern)
         try {
-          const pk = (process.env.STRIPE_PUBLISHABLE_KEY || '').trim().replace(/^['"]|['"]$/g, '');
-          if (pk) {
-            out = out.replace(/%STRIPE_PUBLISHABLE_KEY%/g, pk);
-            try { console.log('checkout: injecting publishable key (masked):', pk.slice(0,8)+'…'); } catch(_){}
+          const pkRaw = (process.env.STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE || '').trim().replace(/^['"]|['"]$/g, '');
+          const validPk = /^pk_(live|test)_/.test(pkRaw);
+          if (validPk) {
+            out = out.replace(/%STRIPE_PUBLISHABLE_KEY%/g, pkRaw);
+            try { console.log('checkout: injecting publishable key (masked):', pkRaw.slice(0,8)+'…'); } catch(_){}
           } else {
-            try { console.warn('checkout: STRIPE_PUBLISHABLE_KEY missing — card/Apple Pay UI will be disabled'); } catch(_){}
+            // Leave placeholder intact so frontend can detect missing/invalid key
+            try { console.warn('checkout: Stripe publishable key missing or invalid format; placeholder left untouched'); } catch(_){}
           }
-        } catch(_) { }
+        } catch(err) { try { console.error('checkout: pk injection error', err); } catch(_){} }
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.setHeader('Cache-Control', 'no-store');
         return res.send(out);
@@ -408,15 +410,16 @@ if (!IS_DEV) {
             out = out.replace(/YOUR_GOOGLE_MAPS_API_KEY/g, key);
           }
         } catch(_) { }
-        // Inject Stripe publishable key placeholder for checkout
+        // Inject Stripe publishable key placeholder for checkout (prod) if valid
         try {
-          const pk = (process.env.STRIPE_PUBLISHABLE_KEY || '').trim().replace(/^['"]|['"]$/g, '');
-          if (pk) {
-            out = out.replace(/%STRIPE_PUBLISHABLE_KEY%/g, pk);
+          const pkRaw = (process.env.STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE || '').trim().replace(/^['"]|['"]$/g, '');
+          const validPk = /^pk_(live|test)_/.test(pkRaw);
+          if (validPk) {
+            out = out.replace(/%STRIPE_PUBLISHABLE_KEY%/g, pkRaw);
           } else {
-            try { console.warn('checkout: STRIPE_PUBLISHABLE_KEY missing in prod handler'); } catch(_){}
+            try { console.warn('checkout: Stripe publishable key missing/invalid in prod handler'); } catch(_){}
           }
-        } catch(_) { }
+        } catch(err) { try { console.error('checkout: pk injection error (prod)', err); } catch(_){} }
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         // Avoid caching HTML so key/script stays fresh
         res.setHeader('Cache-Control', 'no-cache');
