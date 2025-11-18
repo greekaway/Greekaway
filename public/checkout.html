@@ -273,12 +273,20 @@
                 }
 
                 const confirm = await pr.stripe.confirmCardPayment(data.clientSecret, { payment_method: ev.paymentMethod.id }, { handleActions: false });
-                if (confirm.error) { ev.complete('fail'); return showResult(confirm.error.message || 'i18n:checkout.payment_failed', false); }
+                if (confirm.error) {
+                  try { console.error('[checkout:paymentRequest] confirmCardPayment error', { code: confirm.error.code, decline_code: confirm.error.decline_code, message: confirm.error.message }); } catch(_){ }
+                  ev.complete('fail');
+                  return showResult(confirm.error.message || 'i18n:checkout.payment_failed', false);
+                }
                 if (confirm.paymentIntent && confirm.paymentIntent.status === 'requires_action') {
                   const res2 = await pr.stripe.confirmCardPayment(data.clientSecret);
-                  if (res2.error) { ev.complete('fail'); return showResult(res2.error.message || 'i18n:checkout.payment_failed', false); }
+                  if (res2.error) {
+                    try { console.error('[checkout:paymentRequest] second confirmCardPayment error', { code: res2.error.code, decline_code: res2.error.decline_code, message: res2.error.message }); } catch(_){ }
+                    ev.complete('fail');
+                    return showResult(res2.error.message || 'i18n:checkout.payment_failed', false);
+                  }
                 }
-
+                try { console.log('[checkout:paymentRequest] success', { payment_intent_id: confirm.paymentIntent && confirm.paymentIntent.id, status: confirm.paymentIntent && confirm.paymentIntent.status }); } catch(_){ }
                 ev.complete('success');
                 showResult('i18n:checkout.payment_success_test', true);
               } catch (err) { console.error('paymentRequest handler error', err); ev.complete('fail'); showResult('i18n:checkout.payment_error', false); }
@@ -342,9 +350,14 @@
         try { data = await resp.json(); } catch(_){ data = {}; }
         try { console.log('[checkout] create-payment-intent response', data); } catch(_){ }
         if(!resp.ok || !data.clientSecret){ console.error('[checkout] create-payment-intent failed', data && data.error, data && data.code, data); return showResult('i18n:checkout.payment_error', false); }
-        const { error } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardNumber, billing_details: { name, email } } });
-        if(error) showResult(error.message || 'i18n:checkout.payment_failed', false);
-        else showResult('i18n:checkout.payment_success_test', true);
+        const { error, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardNumber, billing_details: { name, email } } });
+        if(error){
+          try { console.error('[checkout:card] confirmCardPayment error', { code: error.code, decline_code: error.decline_code, message: error.message }); } catch(_){ }
+          showResult(error.message || 'i18n:checkout.payment_failed', false);
+        } else {
+          try { console.log('[checkout:card] success', { payment_intent_id: paymentIntent && paymentIntent.id, status: paymentIntent && paymentIntent.status }); } catch(_){ }
+          showResult('i18n:checkout.payment_success_test', true);
+        }
       });
     } else {
       // Diagnostic fallback: still hit create-payment-intent to verify server path

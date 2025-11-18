@@ -777,6 +777,46 @@ router.post('/admin/payment-diagnose', (req, res) => {
   }
 });
 
+// Admin: retrieve a PaymentIntent by id (diagnostics: status + last_payment_error + charges summary)
+router.get('/admin/payment-intent/:id', async (req, res) => {
+  try {
+    if (!checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    if (!stripe) return res.status(500).json({ error: 'stripe-not-configured' });
+    const id = (req.params.id || '').trim();
+    if (!id) return res.status(400).json({ error: 'missing-id' });
+    const pi = await stripe.paymentIntents.retrieve(id);
+    const out = {
+      ok: true,
+      id: pi.id,
+      status: pi.status,
+      amount: pi.amount,
+      currency: pi.currency,
+      application_fee_amount: pi.application_fee_amount || null,
+      transfer_data: pi.transfer_data || null,
+      payment_method_types: pi.payment_method_types || [],
+      last_payment_error: pi.last_payment_error ? {
+        code: pi.last_payment_error.code || null,
+        message: pi.last_payment_error.message || null,
+        type: pi.last_payment_error.type || null,
+        decline_code: pi.last_payment_error.decline_code || null
+      } : null,
+      charges: (pi.charges && Array.isArray(pi.charges.data)) ? pi.charges.data.map(c => ({
+        id: c.id,
+        status: c.status,
+        paid: !!c.paid,
+        amount: c.amount,
+        currency: c.currency,
+        failure_code: c.failure_code || null,
+        failure_message: c.failure_message || null,
+        payment_method: c.payment_method || null
+      })) : []
+    };
+    return res.json(out);
+  } catch (e) {
+    return res.status(500).json({ error: 'retrieve_failed', message: e && e.message ? e.message : String(e) });
+  }
+});
+
 // Removed legacy debug pricing endpoint to prevent any server-side amount overrides.
 
 // Background payout scheduler: periodically attempt payouts for manual partners when funds available
