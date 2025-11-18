@@ -272,5 +272,39 @@
 
   <!-- Google Maps -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+  <script>
+    // Ensure central "Online Κράτηση" button sends user to Step 2 with id, mode, date
+    (function(){
+      function getParams(){ try { return new URLSearchParams(window.location.search); } catch(_){ return new URLSearchParams(''); } }
+      function getMode(){ try { const p=getParams(); return (p.get('mode') || localStorage.getItem('trip_mode') || 'van').toLowerCase(); } catch(_){ return 'van'; } }
+      function getTripId(){ try { const p=getParams(); return (p.get('id')||'').trim(); } catch(_){ return ''; } }
+      function getDate(){
+        // Prefer explicit input#bookingDate if present; else any session value
+        try { const inp = document.getElementById('bookingDate'); if (inp && inp.value) return inp.value; } catch(_){ }
+        try { const s = sessionStorage.getItem('gw_trip_date'); if (s) return s; } catch(_){ }
+        return '';
+      }
+      function goStep2(){
+        const id = getTripId(); const mode = getMode(); const date = getDate();
+        if (!id || !date) { try { alert('Παρακαλώ επιλέξτε ημερομηνία'); } catch(_){ } return; }
+        const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
+        const url = new URL('/step2.html', origin || window.location.href);
+        url.searchParams.set('id', id);
+        url.searchParams.set('mode', mode);
+        url.searchParams.set('date', date);
+        try { window.location.assign(url.href); }
+        catch(_e1){ try { window.location.href = url.href; } catch(_e2){ setTimeout(()=>{ window.location.href = url.href; }, 0); } }
+      }
+      document.addEventListener('DOMContentLoaded', function(){
+        const cta = document.querySelector('footer .central-btn');
+        if (cta) cta.addEventListener('click', function(ev){ try { ev.preventDefault(); } catch(_){ } goStep2(); });
+        // Persist date selection changes to session for stability across refresh
+        try {
+          const inp = document.getElementById('bookingDate');
+          if (inp) inp.addEventListener('change', function(){ try { sessionStorage.setItem('gw_trip_date', inp.value || ''); } catch(_){ } });
+        } catch(_){ }
+      });
+    })();
+  </script>
 </body>
 </html>

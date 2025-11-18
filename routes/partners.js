@@ -562,6 +562,15 @@ function computeServerAmountCents(tripId, vehType, seatsCount) {
 // Create PaymentIntent that supports Stripe Connect transfer_data when partner account exists
 router.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server' });
+  // Safety guard: prevent accidental live-key usage during local/dev runs
+  try {
+    const isDev = (process.env.NODE_ENV !== 'production');
+    const allowLive = String(process.env.ALLOW_LIVE_STRIPE_IN_DEV || '').trim() === '1';
+    const looksLive = /^sk_live_/.test(STRIPE_SECRET || '');
+    if (isDev && looksLive && !allowLive) {
+      return res.status(400).json({ error: 'Live Stripe key detected in development. Use test keys (sk_test...) or set ALLOW_LIVE_STRIPE_IN_DEV=1 to override.' });
+    }
+  } catch(_) {}
   try {
     try {
       console.log('[pi:req]', {

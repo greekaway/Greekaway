@@ -738,6 +738,67 @@ try {
   registerBookings(app, { express, bookingsDb, crypto });
   console.log('bookings: public routes registered');
 } catch (e) { console.warn('bookings: failed to register public routes', e && e.message ? e.message : e); }
+
+// Guard: lightweight unified booking endpoints if not provided by module
+try {
+  const testCreate = app._router && app._router.stack && app._router.stack.some(l => l && l.route && l.route.path === '/api/bookings/create');
+  if (!testCreate) {
+    app.post('/api/bookings/create', (req, res) => {
+      try {
+        const b = req.body || {};
+        const trip_id = (b.trip_id || '').toString().trim();
+        const mode = (b.mode || '').toString().trim().toLowerCase();
+        const date = (b.date || '').toString().trim() || new Date().toISOString().slice(0,10);
+        const seats = Number(b.seats || 1) || 1;
+        const price_cents = Number(b.price_cents || 0) || 0;
+        const currency = (b.currency || 'eur').toString().toLowerCase();
+        const pickup = b.pickup || {};
+        const suitcases = b.suitcases || {};
+        const special_requests = (b.special_requests || '').toString();
+        const traveler_profile = b.traveler_profile || {};
+        if (!trip_id || !seats || !price_cents) return res.status(400).json({ error: 'Missing required fields' });
+        if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
+        const id = crypto.randomUUID();
+        const now = new Date().toISOString();
+        const metadata = {
+          trip_mode: mode || null,
+          traveler_profile,
+          pickup_address: pickup.address || null,
+          pickup_place_id: pickup.place_id || null,
+          pickup_lat: pickup.lat || null,
+          pickup_lng: pickup.lng || null,
+          suitcases,
+          special_requests,
+          source: 'unified_flow'
+        };
+        try {
+          const stmt = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+          stmt.run(id, 'pending', null, null, null, null, trip_id, seats, price_cents, currency, JSON.stringify(metadata), now, now, date, 0, null, null, null, null, null, null, 0, 'unified_flow', (pickup.address||''), (pickup.lat||null), (pickup.lng||null), JSON.stringify(suitcases||{}), special_requests || '');
+        } catch(e2) {
+          const stmt2 = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+          stmt2.run(id, 'pending', date, null, null, null, null, trip_id, seats, price_cents, currency, JSON.stringify(metadata), now, now);
+        }
+        return res.json({ bookingId: id, amount_cents: price_cents, currency });
+      } catch (e3) { console.error('fallback /api/bookings/create error', e3 && e3.stack ? e3.stack : e3); return res.status(500).json({ error: 'Server error' }); }
+    });
+  }
+  const testConfirm = app._router && app._router.stack && app._router.stack.some(l => l && l.route && l.route.path === '/api/bookings/confirm');
+  if (!testConfirm) {
+    app.post('/api/bookings/confirm', (req, res) => {
+      try {
+        const { bookingId, payment_intent_id } = req.body || {};
+        if (!bookingId) return res.status(400).json({ error: 'Missing bookingId' });
+        if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
+        const now = new Date().toISOString();
+        try {
+          const stmt = bookingsDb.prepare('UPDATE bookings SET status = ?, payment_intent_id = COALESCE(?, payment_intent_id), updated_at = ? WHERE id = ?');
+          stmt.run('confirmed', payment_intent_id || null, now, bookingId);
+        } catch(_) { bookingsDb.prepare('UPDATE bookings SET status = ? WHERE id = ?').run('confirmed', bookingId); }
+        return res.json({ ok: true, bookingId });
+      } catch (e4) { console.error('fallback /api/bookings/confirm error', e4 && e4.stack ? e4.stack : e4); return res.status(500).json({ error: 'Server error' }); }
+    });
+  }
+} catch(_){ }
 try {
   const { registerAdminBookings } = require('./src/server/routes/adminBookings');
   registerAdminBookings(app, { express, bookingsDb, checkAdminAuth: (req) => checkAdminAuth(req), stripe });

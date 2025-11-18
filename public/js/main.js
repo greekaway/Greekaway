@@ -901,15 +901,25 @@ document.addEventListener("DOMContentLoaded", () => {
               sessionStorage.setItem('gw_trip_id', (tripForHeader && tripForHeader.id) ? String(tripForHeader.id) : '');
               sessionStorage.setItem('gw_trip_title', ''); // keep blank so step2 will fetch/localize
               sessionStorage.setItem('gw_trip_desc', '');
+              // persist selected date (YYYY-MM-DD) for Step 2/3 and booking payload
+              try {
+                const dateEl = document.querySelector('#calendarFull') || document.getElementById('bookingDate');
+                const dateVal = (dateEl && dateEl.value) ? String(dateEl.value) : '';
+                if (dateVal) sessionStorage.setItem('gw_trip_date', dateVal);
+              } catch(_){ }
             } catch(_) {}
             try {
               const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
               const params = new URLSearchParams(window.location.search);
               const mode = (params.get('mode') || localStorage.getItem('trip_mode') || 'van').toLowerCase();
               const id = (tripForHeader && tripForHeader.id) ? String(tripForHeader.id) : '';
+              // read selected date if available
+              const dateEl = document.querySelector('#calendarFull') || document.getElementById('bookingDate');
+              const dateVal = (dateEl && dateEl.value) ? String(dateEl.value) : '';
               let path = '/step2.html';
               if (id) {
                 const qs = new URLSearchParams({ id, mode });
+                if (dateVal) qs.set('date', dateVal);
                 path = `/step2.html?${qs.toString()}`;
               }
               const absUrl = origin ? (new URL(path, origin).href) : path;

@@ -21,6 +21,7 @@
   <div class="step2-header">
     <div class="trip-title" id="s2TripTitle">&nbsp;</div>
     <div class="trip-desc" id="s2TripDesc">&nbsp;</div>
+    <div class="trip-date" id="s2TripDate" style="margin-top:6px;color:var(--color-muted,#ccd);font-weight:500"></div>
   <div class="step-indicator" style="margin-top:14px;color:var(--color-gold,#d9b85f);font-weight:700;opacity:.9" data-i18n="booking.step2_of3">Βήμα 2 από 3</div>
   </div>
 
@@ -292,6 +293,8 @@
   <script src="/js/i18n.js?v=20251022" defer></script>
   <script src="/js/overlay-manager.js?v=2" defer></script>
   <script src="/js/assistant.js?v=2" defer></script>
+  <!-- Shared booking state utilities -->
+  <script src="/js/booking-state.js" defer></script>
   <!-- Step 2 addons: suitcases popup, pickup autocomplete, special requests, validation -->
   <script src="/js/booking-addons.js?v=1" defer></script>
   <!-- Trip mode dynamic logic (van/private/bus) -->
@@ -307,10 +310,16 @@
       const headerEl = document.querySelector('.step2-header');
       const titleEl = document.getElementById('s2TripTitle');
       const descEl = document.getElementById('s2TripDesc');
+      const dateEl = document.getElementById('s2TripDate');
       try {
         const t = sessionStorage.getItem('gw_trip_title') || '';
         const d = sessionStorage.getItem('gw_trip_desc') || '';
         const id = sessionStorage.getItem('gw_trip_id') || '';
+        let tripDate = sessionStorage.getItem('gw_trip_date') || '';
+        try {
+          const urlDate = (new URLSearchParams(window.location.search)).get('date');
+          if (!tripDate && urlDate) { sessionStorage.setItem('gw_trip_date', urlDate); tripDate = urlDate; }
+        } catch(_){ }
         if (t) {
           titleEl.textContent = t;
         } else if (id) {
@@ -339,6 +348,14 @@
             } catch(_){ }
           })();
         }
+        // Render date if present
+        try {
+          if (tripDate && dateEl) {
+            dateEl.textContent = tripDate;
+          } else if (dateEl) {
+            dateEl.textContent = '';
+          }
+        } catch(_){ }
         if (!t && !d && !id && headerEl) headerEl.style.display = 'none';
       } catch(_) {
         if (headerEl) headerEl.style.display = 'none';
@@ -407,8 +424,10 @@
           // Also set immediate text for UX
           const span = childrenAgesEl.querySelector('.hint');
           if (span) span.textContent = hint;
+            try { sessionStorage.setItem('gw_children_ages', JSON.stringify([])); } catch(_){ }
         } else {
           childrenAgesEl.textContent = ages.join(', ');
+            try { sessionStorage.setItem('gw_children_ages', JSON.stringify(ages)); } catch(_){ }
         }
       };
       const openPicker = () => {
@@ -446,10 +465,10 @@
       };
       const closePicker = () => { if (agePicker) agePicker.hidden = true; };
 
-  document.getElementById('adultsDec')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)-1,1,10); setN(adultsCount,n); });
-  document.getElementById('adultsInc')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)+1,1,10); setN(adultsCount,n); });
+  document.getElementById('adultsDec')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)-1,1,10); setN(adultsCount,n); try { sessionStorage.setItem('gw_adults', String(n)); } catch(_){ } });
+    document.getElementById('adultsInc')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)+1,1,10); setN(adultsCount,n); try { sessionStorage.setItem('gw_adults', String(n)); } catch(_){ } });
       document.getElementById('childrenDec')?.addEventListener('click', ()=>{
-        if (ages.length > 0) { ages.pop(); setN(childrenCount, ages.length); renderAges(); }
+          if (ages.length > 0) { ages.pop(); setN(childrenCount, ages.length); renderAges(); }
         else { const n=clamp(getN(childrenCount)-1,0,10); setN(childrenCount,n); }
       });
       document.getElementById('childrenInc')?.addEventListener('click', (e)=>{
@@ -457,6 +476,9 @@
         openPicker();
       });
       renderAges();
+        // Initialize persisted adults/ages on load
+        try { const curAdults = getN(adultsCount); sessionStorage.setItem('gw_adults', String(curAdults)); } catch(_){ }
+        renderAges();
 
       // Suitcases field: handled in booking-addons.js
 
@@ -588,17 +610,20 @@
         if (socialMenu && !socialMenu.hidden && !socialMenu.contains(e.target) && e.target !== socialBtn) socialMenu.hidden = true;
       });
 
-      // Persist all values on Next and go to Step 3
-      document.getElementById('s2Next')?.addEventListener('click', (ev)=>{
+      // Persist all values as a single bookingState and go to Step 3
+      document.getElementById('s2Next')?.addEventListener('click', async (ev)=>{
         try { ev.preventDefault(); } catch(_){ }
         try {
-          // adults
+          // sync counters to session for compatibility with existing UI helpers
           sessionStorage.setItem('gw_adults', String(getN(adultsCount)));
-          // children ages
           sessionStorage.setItem('gw_children_ages', JSON.stringify(ages));
-          // dropoff same as pickup by default
           sessionStorage.setItem('gw_dropoff_same', 'true');
-        } catch(_){}
+        } catch(_){ }
+        try {
+          if (window.GWBookingState && window.GWBookingState.buildFromStep2) {
+            await window.GWBookingState.buildFromStep2();
+          }
+        } catch(_){ }
         try {
           const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
           const absUrl = origin ? (new URL('/step3.html', origin).href) : '/step3.html';

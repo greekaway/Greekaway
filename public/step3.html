@@ -84,6 +84,8 @@
   <script src="/js/i18n.js?v=20251022" defer></script>
   <script src="/js/overlay-manager.js?v=2" defer></script>
   <script src="/js/assistant.js?v=2" defer></script>
+  <!-- Shared booking state utilities -->
+  <script src="/js/booking-state.js" defer></script>
   <script src="/pwa-install.js" defer></script>
   <script>
     try { document.body.classList.add('has-rounded-footer'); } catch(_){ }
@@ -96,6 +98,17 @@
         try { const v = (window.t && window.t(key)) || ''; return (v && v !== key) ? v : fallback; } catch(_){ return fallback; }
       }
 
+      // Normalize URL params into sessionStorage so Step 3 can render even on direct opens
+      try {
+        const p = new URLSearchParams(window.location.search);
+        const qId = (p.get('id') || '').trim();
+        const qDate = (p.get('date') || '').trim();
+        const qAdults = (p.get('adults') || p.get('seats') || '').trim();
+        if (qId && !sessionStorage.getItem('gw_trip_id')) sessionStorage.setItem('gw_trip_id', qId);
+        if (qDate && !sessionStorage.getItem('gw_trip_date')) sessionStorage.setItem('gw_trip_date', qDate);
+        if (qAdults && !sessionStorage.getItem('gw_adults')) sessionStorage.setItem('gw_adults', String(parseInt(qAdults,10)||1));
+      } catch(_){ }
+
       // Helper: load trip details by id and update cost immediately when ready
       async function loadTripAndUpdate(tripId){
         if (!tripId) return;
@@ -104,79 +117,54 @@
           try {
             const rv = await fetch('/version.json', { cache: 'no-cache' });
             if (rv.ok) {
-              const j = await rv.json();
-              dv = j && j.dataVersion ? ('?v=' + encodeURIComponent(String(j.dataVersion))) : '';
-            }
-          } catch(_) {}
-          const r = await fetch(`/data/trips/${encodeURIComponent(tripId)}.json${dv}`, { cache: 'no-cache' });
-          if (!r.ok) return;
-          const trip = await r.json();
-          try { window.__loadedTrip = trip; } catch(_) {}
-          try { renderTripCost(); } catch(_) {}
-          return trip;
-        } catch(_) { /* silent */ }
-      }
+              function renderValuesFromState(){
+                const state = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
+                const adults = (()=>{ try { return parseInt(sessionStorage.getItem('gw_adults')||'0',10)||0; } catch(_){ return 0; } })();
+                const ages = (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]')||[]; } catch(_){ return []; } })();
+                const children = String(ages.length);
+                const bags = (state && state.suitcases) ? state.suitcases : { small:0, medium:0, large:0 };
+                const totalBags = (bags.small||0)+(bags.medium||0)+(bags.large||0);
+                const langC = (state && state.traveler_profile && state.traveler_profile.language) ? state.traveler_profile.language : (localStorage.getItem('gw_lang')||'el');
+                const ageG = (state && state.traveler_profile && state.traveler_profile.age_group) || '';
+                const travT = (state && state.traveler_profile && state.traveler_profile.type) || '';
+                const interest = (function(){ try { return sessionStorage.getItem('gw_interest')||''; } catch(_){ return ''; } })();
+                const social = (state && state.traveler_profile && state.traveler_profile.social) || '';
 
-      try {
-        const t = sessionStorage.getItem('gw_trip_title') || '';
-        const id = sessionStorage.getItem('gw_trip_id') || '';
-        if (t) {
-          const el = document.getElementById('s3TripTitle');
-          if (el) el.textContent = t;
-          // Even if title exists, ensure we fetch the trip for accurate pricing
-          loadTripAndUpdate(id);
-        } else if (id) {
-          (async function(){
-            try {
-              let dv = '';
-              try { const rv = await fetch('/version.json', { cache: 'no-cache' }); if (rv.ok) { const j = await rv.json(); dv = j && j.dataVersion ? ('?v='+encodeURIComponent(String(j.dataVersion))) : ''; } } catch(_){ }
-              const r = await fetch(`/data/trips/${encodeURIComponent(id)}.json${dv}`, { cache: 'no-cache' });
-              if (!r.ok) return;
-              const trip = await r.json();
-              try { window.__loadedTrip = trip; } catch(_){ }
-              const lang = (localStorage.getItem('gw_lang') || 'el');
-              const getLocalized = (field) => {
-                if (!field) return '';
-                if (typeof field === 'string') return field;
-                if (typeof field === 'object') return field[lang] || field['el'] || Object.values(field)[0] || '';
-                return '';
-              };
-              const title = getLocalized(trip.title);
-              if (title) document.getElementById('s3TripTitle').textContent = title;
-              try { renderTripCost(); } catch(_) {}
-            } catch(_){ }
-          })();
-        }
-  } catch(_){ }
-
-      const get = (k, d='')=>{ 
-        try { 
-          let v = sessionStorage.getItem(k);
-          if (v == null) v = localStorage.getItem(k);
-          return v == null ? d : v; 
-        } catch(_){ return d; } 
-      };
-  const langFlags = { el:'🇬🇷', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', es:'🇪🇸', zh:'🇨🇳', he:'🇮🇱', nl:'🇳🇱', sv:'🇸🇪', ko:'🇰🇷', pt:'🇵🇹', ru:'🇷🇺' };
-  const travTypeFallback = { explore:'Εξερευνητές – δραστήριοι', relax:'Χαλαροί ταξιδιώτες', family:'Οικογενειακό ύφος', solo:'Μοναχικοί ταξιδιώτες' };
-  const interestFallback = { nature:'Φύση', culture:'Πολιτισμός', mountain:'Βουνό', sea:'Θάλασσα', gastronomy:'Γαστρονομία' };
-  const langFallbackLabels = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', zh:'中文', he:'עברית', nl:'Nederlands', sv:'Svenska', ko:'한국어', pt:'Português', ru:'Русский' };
-
-      const adults = get('gw_adults','2');
-  const ages = (()=>{ try { return JSON.parse(get('gw_children_ages','[]')); } catch(_){ return []; } })();
-  const children = String(ages.length);
-  const bagsL = parseInt(get('gw_bags_large','0'),10)||0;
-  const bagsM = parseInt(get('gw_bags_medium','0'),10)||0;
-  const bagsS = parseInt(get('gw_bags_small','0'),10)||0;
-  const totalBags = bagsL + bagsM + bagsS;
-  // Communication preference: prefer explicit booking preference, fallback to global UI language
-  const langC = (() => { const v = get('gw_pref_lang',''); return v || get('gw_lang','el'); })();
-      const ageG = get('gw_age_group','');
-      const travT = get('gw_traveler_type','');
-      const interest = get('gw_interest','');
-      const social = get('gw_sociality','');
-
-      function renderValues(){
-  document.getElementById('vAdults').textContent = adults;
+                document.getElementById('vAdults').textContent = String(adults || 0);
+                document.getElementById('vChildren').textContent = ages.length ? (children + ' (' + ages.join('-') + ')') : '—';
+                if (totalBags) {
+                  const parts = [];
+                  if (bags.small) parts.push(`${bags.small}S`);
+                  if (bags.medium) parts.push(`${bags.medium}M`);
+                  if (bags.large) parts.push(`${bags.large}L`);
+                  const detail = parts.join(' · ');
+                  document.getElementById('vBags').textContent = detail ? `${totalBags} (${detail})` : String(totalBags);
+                } else {
+                  document.getElementById('vBags').textContent = '—';
+                }
+                const langLabel = tSafe('booking.preferred_language_options.' + langC, (langFallbackLabels[langC] || (langC && langC.toUpperCase()) || '—'));
+                const langFlag = langFlags[langC] || '';
+                document.getElementById('vLang').textContent = langLabel ? (langFlag ? `${langFlag} ${langLabel}` : langLabel) : '—';
+                document.getElementById('vPickup').textContent = (state && state.pickup && state.pickup.address) ? state.pickup.address : '—';
+                document.getElementById('vAgeGroup').textContent = ageG || '—';
+                const travTypeFallback = { explore:'Εξερευνητές – δραστήριοι', relax:'Χαλαροί ταξιδιώτες', family:'Οικογενειακό ύφος', solo:'Μοναχικοί ταξιδιώτες' };
+                const interestFallback = { nature:'Φύση', culture:'Πολιτισμός', mountain:'Βουνό', sea:'Θάλασσα', gastronomy:'Γαστρονομία' };
+                const travLabel = travT ? tSafe('booking.traveler_type_options.' + travT, (travTypeFallback[travT] || '—')) : '—';
+                const intLabel = interest ? tSafe('booking.interests_options.' + interest, (interestFallback[interest] || '—')) : '—';
+                const socLabel = social ? tSafe('booking.sociality_options.' + social, (social === 'social' ? 'Κοινωνικός' : social === 'quiet' ? 'Ήσυχος' : '—')) : '—';
+                document.getElementById('vTravelerType').textContent = travLabel;
+                document.getElementById('vInterest').textContent = intLabel;
+                document.getElementById('vSocial').textContent = socLabel;
+                // note: special_requests is sensitive; show privacy-safe hint only
+                const row = document.getElementById('vNotesInfoRow');
+                const el = document.getElementById('vNotesInfo');
+                try {
+                  if (state && state.special_requests && String(state.special_requests).trim()) {
+                    const msg = tSafe('booking.driver_message_updated','✅ μήνυμα του οδηγού ενημερώθηκε');
+                    if (row && el) { el.textContent = msg; row.hidden = false; }
+                  } else if (row) { row.hidden = true; }
+                } catch(_){ }
+              }
   // Display children as "N (a-b-c)" when ages exist, otherwise dash
   document.getElementById('vChildren').textContent = ages.length ? (children + ' (' + ages.join('-') + ')') : '—';
         if (totalBags) {
@@ -237,36 +225,21 @@
 
       function renderTripCost(){
         try {
-          const trip = (window.__loadedTrip || null);
-          const seats = (parseInt(adults||'0',10) || 0) + (parseInt(children||'0',10) || 0);
-          let baseCents = 5000; // fallback base price (in cents)
-          let cur = 'EUR';
-          let vehicleOverrideFinal = false; // When true, do not multiply by seats
-          if (trip) {
-            if (trip.price_cents != null) baseCents = Math.max(0, parseInt(trip.price_cents,10) || 0);
-            if (trip.currency) cur = String(trip.currency).toUpperCase();
-          }
-          // Vehicle dynamic override: if user selected a vehicle-specific price earlier (Step 0/1)
-          try {
-            const sel = sessionStorage.getItem('selectedVehiclePrice');
-            if (sel) {
-              const euros = parseFloat(sel);
-              if (!isNaN(euros) && euros > 0) {
-                baseCents = Math.round(euros * 100);
-                // Treat Acropolis vehicle selection as final total amount
-                try {
-                  const tripId = sessionStorage.getItem('gw_trip_id') || '';
-                  if (tripId === 'acropolis') vehicleOverrideFinal = true;
-                } catch(_){ }
-              }
+          const state = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
+          let cents = state && typeof state.price_cents === 'number' ? state.price_cents : null;
+          let cur = (state && state.currency) ? String(state.currency).toUpperCase() : 'EUR';
+          if (cents == null) {
+            // fallback: quick compute from trip JSON if needed
+            const seats = (()=>{ try { const a=parseInt(sessionStorage.getItem('gw_adults')||'0',10)||0; const ages=JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]')||[]; return Math.max(1, a + (ages.length||0)); } catch(_){ return 1; } })();
+            if (window.__loadedTrip && typeof window.__loadedTrip.price_cents === 'number') {
+              cents = Math.max(0, (parseInt(window.__loadedTrip.price_cents,10)||0) * seats);
+              cur = (window.__loadedTrip.currency ? String(window.__loadedTrip.currency).toUpperCase() : cur);
             }
-          } catch(_){ }
-          const totalCents = Math.max(0, vehicleOverrideFinal ? baseCents : (baseCents * Math.max(1, seats)) );
-          const val = (totalCents/100).toLocaleString((window.currentI18n && window.currentI18n.lang) || (navigator.language||'el'), { style:'currency', currency: cur });
-          const el = document.getElementById('vTripCost'); if (el) el.textContent = val;
-          // persist intended amount so checkout can use it if booking creation fails (last resort)
-          try { sessionStorage.setItem('gw_amount_cents', String(totalCents)); } catch(_){ }
-          try { sessionStorage.setItem('gw_currency', cur.toLowerCase()); } catch(_){ }
+          }
+          if (cents != null) {
+            const val = (cents/100).toLocaleString((window.currentI18n && window.currentI18n.lang) || (navigator.language||'el'), { style:'currency', currency: cur });
+            const el = document.getElementById('vTripCost'); if (el) el.textContent = val;
+          }
         } catch(_){ }
       }
 
@@ -305,7 +278,7 @@
           } catch(_){ }
         });
       } catch(_){ }
-  renderValues();
+  renderValuesFromState();
   try { translateTripCostLabel(); } catch(_){}
 
       document.getElementById('s3Back')?.addEventListener('click', ()=> history.back());
@@ -336,121 +309,12 @@
         return ok;
       }
 
-      document.getElementById('s3ProceedPay')?.addEventListener('click', async (ev)=>{
+      document.getElementById('s3ProceedPay')?.addEventListener('click', (ev)=>{
         try { ev.preventDefault(); } catch(_){ }
-        const btn = document.getElementById('s3ProceedPay'); if (btn) btn.disabled = true;
-        if (!validateProfile()) { if (btn) btn.disabled=false; return; }
-        try {
-          // Build booking payload using stored selections and loaded trip
-          const tripId = (sessionStorage.getItem('gw_trip_id') || '').trim();
-          let trip = (window.__loadedTrip || null);
-          if (!trip && tripId) {
-            try {
-              let dv = '';
-              try { const rv = await fetch('/version.json', { cache: 'no-cache' }); if (rv.ok) { const j = await rv.json(); dv = j && j.dataVersion ? ('?v='+encodeURIComponent(String(j.dataVersion))) : ''; } } catch(_){ }
-              const r = await fetch(`/data/trips/${encodeURIComponent(tripId)}.json${dv}`, { cache: 'no-cache' });
-              if (r.ok) trip = await r.json();
-            } catch(_){ }
-          }
-          const seats = (parseInt(adults||'0',10) || 0) + (parseInt(children||'0',10) || 0) || 1;
-          let baseCents = trip && trip.price_cents ? Math.max(0, parseInt(trip.price_cents,10)||0) : 5000;
-          try {
-            const sel = sessionStorage.getItem('selectedVehiclePrice');
-            if (sel) {
-              const euros = parseFloat(sel);
-              if (!isNaN(euros) && euros > 0) baseCents = Math.round(euros * 100);
-            }
-          } catch(_){ }
-          const currency = (trip && trip.currency ? String(trip.currency).toLowerCase() : 'eur');
-          const price_cents = Math.max(0, baseCents * seats);
-          const mode = getTripMode();
-          const payload = {
-            trip_id: tripId,
-            date: null,
-            seats,
-            price_cents,
-            currency,
-            trip_mode: mode,
-            language: (sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_lang') || 'el'),
-            travelerProfile: (sessionStorage.getItem('gw_traveler_type') || ''),
-            travelStyle: (sessionStorage.getItem('gw_interest') || ''),
-            preferredLanguage: (sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || ''),
-            travelTempo: (sessionStorage.getItem('gw_sociality') || ''),
-            children_ages: (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]'); } catch(_){ return []; } })(),
-            metadata: {
-              trip_mode: mode,
-              age_group: (sessionStorage.getItem('gw_age_group') || ''),
-              traveler_type: (sessionStorage.getItem('gw_traveler_type') || ''),
-              interest: (sessionStorage.getItem('gw_interest') || ''),
-              sociality: (sessionStorage.getItem('gw_sociality') || ''),
-              children_ages: (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]'); } catch(_){ return []; } })(),
-              // For bus: force fixed start location from trip JSON; otherwise use state/session
-              ...(function(){
-                function getBusFixedAddress(){
-                  try {
-                    const t = (window.__loadedTrip || null);
-                    const depName = t && t.departure && t.departure.reference_point && t.departure.reference_point.name;
-                    if (depName && String(depName).trim()) return String(depName).trim();
-                  } catch(_){ }
-                  try { const v = localStorage.getItem('bus_pickup_address'); if (v && v.trim()) return v.trim(); } catch(_){ }
-                  try { const s = sessionStorage.getItem('gw_pickup_address'); if (s && s.trim()) return s.trim(); } catch(_){ }
-                  return '';
-                }
-                if (mode === 'bus') {
-                  const addr = getBusFixedAddress();
-                  return {
-                    pickup_address: addr,
-                    pickup_place_id: '',
-                    pickup_lat: '',
-                    pickup_lng: '',
-                    pickup: addr,
-                    pickup_point: addr
-                  };
-                } else {
-                  return {
-                    pickup_address: (sessionStorage.getItem('gw_pickup_address') || ''),
-                    pickup_place_id: (sessionStorage.getItem('gw_pickup_place_id') || ''),
-                    pickup_lat: (sessionStorage.getItem('gw_pickup_lat') || ''),
-                    pickup_lng: (sessionStorage.getItem('gw_pickup_lng') || ''),
-                    // Duplicate pickup_address under legacy keys so provider panel & dispatch emails display it
-                    pickup: (sessionStorage.getItem('gw_pickup_address') || ''),
-                    pickup_point: (sessionStorage.getItem('gw_pickup_address') || '')
-                  };
-                }
-              })(),
-              // Luggage summary (S/M/L) for provider visibility & email
-              luggage: (function(){
-                const s = parseInt(sessionStorage.getItem('gw_bags_small')||'0',10)||0;
-                const m = parseInt(sessionStorage.getItem('gw_bags_medium')||'0',10)||0;
-                const l = parseInt(sessionStorage.getItem('gw_bags_large')||'0',10)||0;
-                const total = s+m+l;
-                if (!total) return '';
-                const parts = [];
-                if (s) parts.push(s+'S');
-                if (m) parts.push(m+'M');
-                if (l) parts.push(l+'L');
-                return total + (parts.length? ' ('+parts.join(' · ')+')' : '');
-              })(),
-              notes: (sessionStorage.getItem('gw_notes') || ''),
-              special_requests: (sessionStorage.getItem('gw_notes') || '')
-            }
-          };
-          let bookingId = '';
-          try {
-            const resp = await fetch('/api/bookings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-            const j = await resp.json();
-            if (resp.ok && j.bookingId) bookingId = j.bookingId;
-          } catch(_){ }
-          const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
-          const url = new URL('/checkout.html', origin || window.location.href);
-          if (tripId) url.searchParams.set('trip', tripId);
-          if (bookingId) url.searchParams.set('bookingId', bookingId);
-          // Navigation
-          try { window.location.assign(url.href); }
-          catch(_e1){ try { window.location.href = url.href; } catch(_e2){ setTimeout(()=>{ window.location.href = url.href; }, 0); } }
-        } finally {
-          if (btn) btn.disabled = false;
-        }
+        const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
+        const url = origin ? (new URL('/checkout.html', origin).href) : '/checkout.html';
+        try { window.location.assign(url); }
+        catch(_e1){ try { window.location.href = url; } catch(_e2){ setTimeout(()=>{ window.location.href = '/checkout.html'; }, 0); } }
       });
       try { window.addEventListener('i18n:changed', () => { validateProfile(); }); } catch(_){ }
 
@@ -458,7 +322,7 @@
   try { if (window.currentI18n && window.setLanguage) { window.setLanguage(window.currentI18n.lang); translateTripCostLabel(); } } catch(_){ }
   try { setTimeout(()=>{ try { if (window.currentI18n && window.setLanguage) { window.setLanguage(window.currentI18n.lang); translateTripCostLabel(); } } catch(_){ } }, 60); } catch(_){ }
       try {
-        window.addEventListener('i18n:changed', ()=>{ try { renderValues(); renderTripCost(); translateTripCostLabel(); } catch(_){ } });
+        window.addEventListener('i18n:changed', ()=>{ try { renderValuesFromState(); renderTripCost(); translateTripCostLabel(); } catch(_){ } });
       } catch(_){ }
     });
   </script>

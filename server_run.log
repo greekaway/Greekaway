@@ -1,0 +1,21 @@
+server: compression enabled
+server: bookings DB ready
+assistant: routes registered
+bookings: public routes registered
+bookings: admin routes registered
+payments: admin routes registered
+webhook: using better-sqlite3 for persistence
+webhook: routes attached
+admin-maintenance: routes registered
+admin-travelers-groups: routes registered
+partnerOnboarding: registered
+partners: CONNECT_CALLBACK_BASE = https://www.greekaway.com
+partners: routes mounted at /api/partners
+admin-suppliers: routes mounted at /api/admin/suppliers
+manual-payments: routes mounted at /api/manual-payments
+provider-availability: routes mounted at /api/provider-availability
+driver: routes mounted at /driver
+pickup-route: routes mounted at / (admin/route/* and driver/route/*)
+pickup-notify: scheduler started (interval 5m)
+pickup-notify: enabled
+Server running at http://0.0.0.0:3000

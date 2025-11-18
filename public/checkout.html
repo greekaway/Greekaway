@@ -51,6 +51,7 @@
   </main>
 
   <script src="https://js.stripe.com/v3/"></script>
+  <script src="/js/booking-state.js"></script>
   <script src="/js/payment-request.js"></script>
   <script src="/js/feedback.js" defer></script>
     <script src="/js/i18n.js" defer></script>
@@ -91,6 +92,7 @@
     let CHECKOUT_VEHICLE_TYPE = null;
     let CHECKOUT_SEATS = 1;
     let CHECKOUT_VEHICLE_OVERRIDE_FINAL = false; // If true (Acropolis vehicle price), do not multiply by seats
+    let CHECKOUT_BOOKING_ID = null;
     const CHECKOUT_DEBUG = (typeof window !== 'undefined') && (window.location.search.includes('debugCheckout=1') || window.DEBUG_CHECKOUT === 1 || window.DEBUG_CHECKOUT === '1');
     if (CHECKOUT_DEBUG) { try { console.log('[checkout:diag] debug mode active'); } catch(_){ } }
     const amountEl = document.getElementById('checkoutAmount');
@@ -109,11 +111,33 @@
       } catch(_){}
     };
     try { window.addEventListener('i18n:changed', showAmount); } catch(_){}
-    // If landed with a bookingId, fetch booking and prefill name/email
+    // Preferred: build from unified booking state; else fallback to query/bookings
+    try {
+      const st = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
+      if (st) {
+        CHECKOUT_TRIP_ID = st.trip_id || null;
+        CHECKOUT_SEATS = st.seats || 1;
+        CHECKOUT_CURRENCY = (st.currency || 'eur');
+        // Create a temporary booking on the backend to obtain a bookingId and verified amount
+        const resp = await fetch('/api/bookings/create', { method:'POST', headers:{ 'Content-Type': 'application/json' }, body: JSON.stringify(st) });
+        const data = await resp.json().catch(()=>({}));
+        if (resp.ok && data && data.bookingId) {
+          CHECKOUT_BOOKING_ID = data.bookingId;
+          if (typeof data.amount_cents === 'number') CHECKOUT_AMOUNT_CENTS = data.amount_cents;
+          if (typeof data.currency === 'string') CHECKOUT_CURRENCY = String(data.currency).toLowerCase();
+        } else {
+          // fallback to client-computed amount
+          if (typeof st.price_cents === 'number') CHECKOUT_AMOUNT_CENTS = st.price_cents;
+        }
+        showAmount();
+      }
+    } catch(_){ }
+
+    // If landed with a bookingId, fetch booking and prefill name/email (legacy/fallback)
     try {
       const qs = new URLSearchParams(window.location.search);
       const bid = qs.get('bookingId');
-      CHECKOUT_TRIP_ID = qs.get('trip') || null;
+      if (!CHECKOUT_TRIP_ID) CHECKOUT_TRIP_ID = qs.get('trip') || null;
       if (bid) {
         const bk = await fetch('/api/bookings/' + encodeURIComponent(bid));
         if (bk && bk.ok) {
@@ -125,9 +149,10 @@
           try { if (jb.trip_id) CHECKOUT_TRIP_ID = jb.trip_id; } catch(_){ }
           showAmount();
         }
+        CHECKOUT_BOOKING_ID = bid;
       } else {
         // No booking yet: compute amount from trip JSON and seats (from Step 2 session)
-        const tripId = qs.get('trip');
+        const tripId = CHECKOUT_TRIP_ID || qs.get('trip');
         if (tripId) {
           try {
             const t = await fetch(`/data/trips/${encodeURIComponent(tripId)}.json`);
@@ -138,9 +163,20 @@
                 // Vehicle override for Acropolis: treat selected vehicle price as FINAL total (no seat multiplication)
                 try {
                   if (tripId === 'acropolis') {
-                    const sel = sessionStorage.getItem('selectedVehiclePrice');
-                    const veh = sessionStorage.getItem('selectedVehicleType');
+                    // Prefer explicit selection from earlier step
+                    let veh = null;
+                    try { veh = sessionStorage.getItem('selectedVehicleType'); } catch(_){ }
+                    if (!veh) {
+                      // Derive from trip_mode when missing
+                      try {
+                        const p = new URLSearchParams(window.location.search);
+                        const m = (p.get('mode') || localStorage.getItem('trip_mode') || 'van').toLowerCase();
+                        veh = (m === 'private') ? 'mercedes' : m;
+                      } catch(_){ }
+                    }
                     if (veh) CHECKOUT_VEHICLE_TYPE = veh;
+                    // Price: use stored selection if available
+                    const sel = (function(){ try { return sessionStorage.getItem('selectedVehiclePrice'); } catch(_){ return null; } })();
                     if (sel) {
                       const euros = parseFloat(sel);
                       if (!isNaN(euros) && euros > 0) {
@@ -301,44 +337,22 @@
         try { console.log('[checkout] submit handler start'); } catch(_){ }
         const name = form.name.value;
         const email = form.email.value;
-        // Derive booking id or create a booking first (to persist traveler profile)
-        const qs = new URLSearchParams(window.location.search);
-        let bookingId = qs.get('bookingId');
-        const tripId = qs.get('trip');
-        try {
-          if (!bookingId && tripId) {
-            // collect profile from sessionStorage (Step 2)
-            const ss = (k,d='')=>{ try{ const v=sessionStorage.getItem(k); return v==null?d:v; }catch(_){ return d; } };
-            const adults = parseInt(ss('gw_adults','2'),10) || 2;
-            let childrenAges = [];
-            try { childrenAges = JSON.parse(ss('gw_children_ages','[]')) || []; } catch(_){ childrenAges = []; }
-            const seats = Math.max(1, adults + (childrenAges.length||0));
-            CHECKOUT_SEATS = seats;
-            const payload = {
-              trip_id: tripId,
-              date: null,
-              seats,
-              user_name: name,
-              user_email: email,
-              price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0),
-              currency: 'eur',
-              language: ss('gw_lang','el') || null,
-              age_group: ss('gw_age_group','') || null,
-              traveler_type: ss('gw_traveler_type','') || null,
-              interest: ss('gw_interest','') || null,
-              sociality: ss('gw_sociality','') || null,
-              children_ages: childrenAges
-            };
-            const r = await fetch('/api/bookings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-            const j = await r.json();
-            if (r.ok && j.bookingId) bookingId = j.bookingId;
-          }
-        } catch (err) { console.warn('[checkout] create booking failed (continuing)', err); }
+        // Ensure we have a booking created from state
+        if (!CHECKOUT_BOOKING_ID) {
+          try {
+            const st = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
+            if (st) {
+              const r = await fetch('/api/bookings/create', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(st) });
+              const j = await r.json().catch(()=>({}));
+              if (r.ok && j.bookingId) { CHECKOUT_BOOKING_ID = j.bookingId; if (typeof j.amount_cents==='number') CHECKOUT_AMOUNT_CENTS = j.amount_cents; }
+            }
+          } catch(err){ console.warn('[checkout] create booking failed (continuing)', err); }
+        }
 
           // create payment intent on server with verified price from trip JSON
         const body = { price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1) };
         try { console.log('[checkout] create-payment-intent body', body); } catch(_){ }
-        if (bookingId) body.booking_id = bookingId;
+        if (CHECKOUT_BOOKING_ID) body.booking_id = CHECKOUT_BOOKING_ID;
         let resp, data;
         try {
           resp = await fetch('/api/partners/create-payment-intent', { method:'POST', cache:'no-store', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
@@ -356,6 +370,13 @@
           showResult(error.message || 'i18n:checkout.payment_failed', false);
         } else {
           try { console.log('[checkout:card] success', { payment_intent_id: paymentIntent && paymentIntent.id, status: paymentIntent && paymentIntent.status }); } catch(_){ }
+          // Mark booking as confirmed on backend and clear local booking state
+          try {
+            if (CHECKOUT_BOOKING_ID) {
+              await fetch('/api/bookings/confirm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ bookingId: CHECKOUT_BOOKING_ID, payment_intent_id: paymentIntent && paymentIntent.id }) });
+            }
+          } catch(_){ }
+          try { if (window.GWBookingState && window.GWBookingState.clear) window.GWBookingState.clear(); } catch(_){ }
           showResult('i18n:checkout.payment_success_test', true);
         }
       });

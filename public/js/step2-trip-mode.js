@@ -159,8 +159,22 @@
 
   function init(){
     const qsMode = (new URLSearchParams(window.location.search)).get('mode');
-    const mode = (qsMode || localStorage.getItem('trip_mode') || 'van').toLowerCase();
+    let mode = (qsMode || localStorage.getItem('trip_mode') || 'van').toLowerCase();
+    if (mode === 'mercedes') mode = 'private';
     try { localStorage.setItem('trip_mode', mode); } catch(_) {}
+    // Ensure selected vehicle type/price are present even if user landed directly with ?mode=
+    try {
+      const map = (window.vehiclePriceMap || {});
+      const veh = (mode === 'private') ? 'mercedes' : mode;
+      // Write if missing or if mode changed
+      const curVeh = (function(){ try { return sessionStorage.getItem('selectedVehicleType') || ''; } catch(_){ return ''; } })();
+      if (!curVeh || curVeh !== veh) {
+        try { sessionStorage.setItem('selectedVehicleType', veh); } catch(_){ }
+        if (Object.prototype.hasOwnProperty.call(map, veh)) {
+          try { sessionStorage.setItem('selectedVehiclePrice', String(map[veh])); } catch(_){ }
+        }
+      }
+    } catch(_){ }
     if (mode === 'private'){ applyPrivateMode(); }
     else if (mode === 'bus'){ applyBusMode(); }
     else { applyVanMode(); }
