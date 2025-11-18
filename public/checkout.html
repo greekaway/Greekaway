@@ -15,44 +15,43 @@
   <script src="/js/vehiclePriceMap.js" defer></script>
 </head>
 <body>
-  
   <main>
     <div class="checkout-header">
       <button type="button" class="back-btn three-d" onclick="history.back()" data-i18n-aria="ui.close">
         <i class="fas fa-arrow-left"></i>
       </button>
-    <div class="title-wrap">
-  <small data-i18n="ui.back">Πίσω</small>
-  <h1 data-i18n="checkout.title">Checkout — Greekaway</h1>
+      <div class="title-wrap">
+        <small data-i18n="ui.back">Πίσω</small>
+        <h1 data-i18n="checkout.title">Checkout — Greekaway</h1>
       </div>
     </div>
-  <p class="checkout-subtitle" data-i18n="checkout.notice">Secure Payment via Stripe</p>
-  <div id="checkoutAmount" class="price-badge" style="display:none; margin:8px auto; text-align:center;">—</div>
-  <div id="checkoutSummary" class="checkout-summary" style="display:none;max-width:600px;margin:12px auto;padding:12px;border:1px solid #224;border-radius:8px;background:#0d1b2a;color:#fff;font-size:.95rem;line-height:1.4">
-    <div><strong data-i18n="booking.trip">Εκδρομή</strong>: <span id="coTripId">—</span></div>
-    <div><strong data-i18n="booking.date">Ημερομηνία</strong>: <span id="coDate">—</span></div>
-    <div><strong data-i18n="booking.mode">Τύπος</strong>: <span id="coMode">—</span></div>
-    <div><strong data-i18n="booking.seats">Θέσεις</strong>: <span id="coSeats">—</span></div>
-    <div><strong data-i18n="booking.pickup_location">Παραλαβή</strong>: <span id="coPickup">—</span></div>
-    <div><strong data-i18n="booking.trip_cost">Κόστος</strong>: <span id="coPrice">—</span></div>
-  </div>
+    <p class="checkout-subtitle" data-i18n="checkout.notice">Secure Payment via Stripe</p>
+    <div id="checkoutAmount" class="price-badge" style="display:none; margin:8px auto; text-align:center;">—</div>
+    <div id="checkoutSummary" class="checkout-summary" style="display:none;max-width:600px;margin:12px auto;padding:12px;border:1px solid #224;border-radius:8px;background:#0d1b2a;color:#fff;font-size:.95rem;line-height:1.4">
+      <div><strong data-i18n="booking.trip">Εκδρομή</strong>: <span id="coTripId">—</span></div>
+      <div><strong data-i18n="booking.date">Ημερομηνία</strong>: <span id="coDate">—</span></div>
+      <div><strong data-i18n="booking.mode">Τύπος</strong>: <span id="coMode">—</span></div>
+      <div><strong data-i18n="booking.seats">Θέσεις</strong>: <span id="coSeats">—</span></div>
+      <div><strong data-i18n="booking.pickup_location">Παραλαβή</strong>: <span id="coPickup">—</span></div>
+      <div><strong data-i18n="booking.trip_cost">Κόστος</strong>: <span id="coPrice">—</span></div>
+    </div>
 
     <form id="checkoutForm">
       <!-- Payment Request Button (Apple Pay / Google Pay) will mount here when available -->
       <div id="payment-request-container" style="display:none;margin-bottom:1rem;"></div>
       <div class="form-row">
-  <label data-i18n="checkout.name">Όνομα</label>
+        <label data-i18n="checkout.name">Όνομα</label>
         <input name="name" type="text" required>
       </div>
       <div class="form-row">
-  <label data-i18n="checkout.email">Email</label>
+        <label data-i18n="checkout.email">Email</label>
         <input name="email" type="email" required>
       </div>
       <div class="form-row">
-  <label data-i18n="checkout.cardLabel">Κάρτα</label>
-  <input name="card" type="text" data-i18n-placeholder="checkout.cardPlaceholder" placeholder="Card number">
+        <label data-i18n="checkout.cardLabel">Κάρτα</label>
+        <input name="card" type="text" data-i18n-placeholder="checkout.cardPlaceholder" placeholder="Card number">
       </div>
-  <button class="btn" type="submit" data-i18n="checkout.pay">Pay</button>
+      <button class="btn" type="submit" data-i18n="checkout.pay">Pay</button>
     </form>
 
     <div id="result" class="result" aria-live="polite" style="display:none;"></div>
@@ -62,168 +61,12 @@
   <script src="/js/booking-state.js"></script>
   <script src="/js/payment-request.js"></script>
   <script src="/js/feedback.js" defer></script>
-    <script src="/js/i18n.js" defer></script>
+  <script src="/js/i18n.js" defer></script>
   <script src="/pwa-install.js" defer></script>
   <script defer src="/pwa-checkout-redirect.js"></script>
-  <script>
-    // Client-side Stripe integration (scaffold). Requires STRIPE_PUBLISHABLE_KEY set on server
-    const STRIPE_PUBLISHABLE = '%STRIPE_PUBLISHABLE_KEY%'; // replaced server-side if needed
-    const form = document.getElementById('checkoutForm');
-    const resultEl = document.getElementById('result');
+  <script>window.STRIPE_PUBLISHABLE='%STRIPE_PUBLISHABLE_KEY%';</script>
+  <script src="/js/checkout.js"></script>
+  <script src="/js/main.js"></script>
+ </body>
+ </html>
 
-    function resolveI18n(m){
-      if (typeof m === 'string' && m.indexOf('i18n:') === 0) {
-        const key = m.slice(5);
-        try { return window.t ? window.t(key) : key; } catch(e) { return key; }
-      }
-      return m;
-    }
-    function showResult(msg, success){
-      const text = resolveI18n(msg);
-      resultEl.style.display='block'; resultEl.textContent=text; resultEl.style.background = success ? '#e6ffe6' : '#ffe6e6';
-    }
-
-    // Keep document.title localized
-    try {
-      const updateDocTitle = () => {
-        try { document.title = (window.t ? (window.t('checkout.title') || 'Checkout — Greekaway') : 'Checkout — Greekaway'); } catch(_){}
-      };
-      document.addEventListener('DOMContentLoaded', updateDocTitle);
-      window.addEventListener('i18n:changed', updateDocTitle);
-    } catch(_){ }
-
-    (async function(){
-    let CHECKOUT_AMOUNT_CENTS = null;
-    let CHECKOUT_CURRENCY = 'eur';
-    let CHECKOUT_TRIP_ID = null;
-    let CHECKOUT_DURATION = null;
-    let CHECKOUT_VEHICLE_TYPE = null;
-    let CHECKOUT_SEATS = 1;
-    let CHECKOUT_VEHICLE_OVERRIDE_FINAL = false; // If true (Acropolis vehicle price), do not multiply by seats
-    let CHECKOUT_BOOKING_ID = null;
-    const CHECKOUT_DEBUG = (typeof window !== 'undefined') && (window.location.search.includes('debugCheckout=1') || window.DEBUG_CHECKOUT === 1 || window.DEBUG_CHECKOUT === '1');
-    if (CHECKOUT_DEBUG) { try { console.log('[checkout:diag] debug mode active'); } catch(_){ } }
-    const amountEl = document.getElementById('checkoutAmount');
-    const getLang = () => (window.currentI18n && window.currentI18n.lang) || (navigator.language || 'el');
-    const showAmount = () => {
-      try {
-        if (!amountEl) return;
-        if (CHECKOUT_AMOUNT_CENTS != null) {
-          const cur = (CHECKOUT_CURRENCY || 'eur').toUpperCase();
-          const val = (CHECKOUT_AMOUNT_CENTS/100).toLocaleString(getLang(), { style:'currency', currency: cur });
-          amountEl.textContent = val;
-          amountEl.style.display = 'inline-block';
-        } else {
-          amountEl.style.display = 'none';
-        }
-      } catch(_){}
-    };
-    try { window.addEventListener('i18n:changed', showAmount); } catch(_){}
-    // Preferred: build from unified booking state; else fallback to query/bookings
-    try {
-      const st = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
-      try { console.log('[checkout] bookingState before create', st); } catch(_){ }
-      let PR_AMOUNT_CENTS = null; // authoritative amount for Payment Request sheet
-      try {
-        // Render summary box
-        try {
-          const summaryBox = document.getElementById('checkoutSummary');
-          if (summaryBox) {
-            const fmtPrice = (typeof st.price_cents === 'number') ? (st.price_cents/100).toLocaleString(getLang(), { style:'currency', currency: (st.currency||'eur').toUpperCase() }) : '—';
-            document.getElementById('coTripId').textContent = st.trip_id || '—';
-          if (typeof st.price_cents === 'number' && st.price_cents > 0) PR_AMOUNT_CENTS = st.price_cents;
-            document.getElementById('coDate').textContent = st.date || '—';
-            document.getElementById('coMode').textContent = st.mode || '—';
-            document.getElementById('coSeats').textContent = st.seats || '—';
-            const pu = st.pickup && st.pickup.address ? st.pickup.address : '—';
-            document.getElementById('coPickup').textContent = pu;
-            document.getElementById('coPrice').textContent = fmtPrice;
-            summaryBox.style.display = 'block';
-          }
-        } catch(_){ }
-        CHECKOUT_TRIP_ID = st.trip_id || null;
-        CHECKOUT_SEATS = st.seats || 1;
-          // Prefer authoritative state price for PR sheet if available; else use resolved checkout amount
-          if (PR_AMOUNT_CENTS == null) PR_AMOUNT_CENTS = CHECKOUT_AMOUNT_CENTS;
-        CHECKOUT_CURRENCY = (st.currency || 'eur');
-        // Create a temporary booking on the backend to obtain a bookingId and verified amount
-        const resp = await fetch('/api/bookings/create', { method:'POST', headers:{ 'Content-Type': 'application/json' }, body: JSON.stringify(st) });
-        const data = await resp.json().catch(()=>({}));
-        if (resp.ok && data && data.bookingId) {
-          CHECKOUT_BOOKING_ID = data.bookingId;
-          if (typeof data.amount_cents === 'number') CHECKOUT_AMOUNT_CENTS = data.amount_cents;
-          if (typeof data.currency === 'string') CHECKOUT_CURRENCY = String(data.currency).toLowerCase();
-        } else {
-          // fallback to client-computed amount
-          if (typeof st.price_cents === 'number') CHECKOUT_AMOUNT_CENTS = st.price_cents;
-        }
-        showAmount();
-      }
-    } catch(_){ }
-
-    // If landed with a bookingId, fetch booking and prefill name/email (legacy/fallback)
-    try {
-      const qs = new URLSearchParams(window.location.search);
-      const bid = qs.get('bookingId');
-      if (!CHECKOUT_TRIP_ID) CHECKOUT_TRIP_ID = qs.get('trip') || null;
-      if (bid) {
-        const bk = await fetch('/api/bookings/' + encodeURIComponent(bid));
-        if (bk && bk.ok) {
-          const jb = await bk.json();
-          try { if (jb.user_name) form.name.value = jb.user_name; } catch(e){}
-          try { if (jb.user_email) form.email.value = jb.user_email; } catch(e){}
-          try { if (typeof jb.price_cents === 'number') CHECKOUT_AMOUNT_CENTS = jb.price_cents; } catch(_){ }
-          try { if (jb.currency) CHECKOUT_CURRENCY = String(jb.currency).toLowerCase(); } catch(_){ }
-          try { if (jb.trip_id) CHECKOUT_TRIP_ID = jb.trip_id; } catch(_){ }
-          showAmount();
-        }
-        CHECKOUT_BOOKING_ID = bid;
-      } else {
-        // No booking yet: compute amount from trip JSON and seats (from Step 2 session)
-        const tripId = CHECKOUT_TRIP_ID || qs.get('trip');
-        if (tripId) {
-          try {
-            const t = await fetch(`/data/trips/${encodeURIComponent(tripId)}.json`);
-            if (t && t.ok) {
-              const trip = await t.json();
-              CHECKOUT_TRIP_ID = tripId;
-              try { if (typeof trip.price_cents === 'number') { CHECKOUT_AMOUNT_CENTS = trip.price_cents; } } catch(_){ }
-                // Vehicle override for Acropolis: treat selected vehicle price as FINAL total (no seat multiplication)
-                try {
-                  if (tripId === 'acropolis') {
-                    // Prefer explicit selection from earlier step
-                    let veh = null;
-                    try { veh = sessionStorage.getItem('selectedVehicleType'); } catch(_){ }
-                    if (!veh) {
-                      // Derive from trip_mode when missing
-                      try {
-                        const p = new URLSearchParams(window.location.search);
-                        const m = (p.get('mode') || localStorage.getItem('trip_mode') || 'van').toLowerCase();
-                        veh = (m === 'private') ? 'mercedes' : m;
-                      } catch(_){ }
-                    }
-                    if (veh) CHECKOUT_VEHICLE_TYPE = veh;
-                    // Price: use stored selection if available
-                    const sel = (function(){ try { return sessionStorage.getItem('selectedVehiclePrice'); } catch(_){ return null; } })();
-                    if (sel) {
-                      const euros = parseFloat(sel);
-                      if (!isNaN(euros) && euros > 0) {
-                        CHECKOUT_AMOUNT_CENTS = Math.round(euros * 100);
-                        CHECKOUT_VEHICLE_OVERRIDE_FINAL = true;
-                      }
-                    }
-                  }
-                } catch(_){ }
-              try { if (typeof trip.currency === 'string') { CHECKOUT_CURRENCY = String(trip.currency).toLowerCase(); } } catch(_){ }
-              try {
-                // Optional metadata
-                CHECKOUT_DURATION = trip && trip.duration ? String(trip.duration) : null;
-                CHECKOUT_VEHICLE_TYPE = trip && trip.vehicleType ? String(trip.vehicleType) : null;
-              } catch(_){ }
-                // Multiply by seats only when override is not final
-                try {
-                  const ss = (k,d='')=>{ try{ const v=sessionStorage.getItem(k); return v==null?d:v; }catch(_){ return d; } };
-                  <!-- Inject Stripe publishable key and load external checkout logic -->
-                  <script>window.STRIPE_PUBLISHABLE='%STRIPE_PUBLISHABLE_KEY%';</script>
-                  <script src="/js/checkout.js"></script>
-                  CHECKOUT_SEATS = Math.max(1, adults + (childrenAges.length||0));
