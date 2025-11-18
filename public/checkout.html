@@ -251,68 +251,73 @@
       const stripe = Stripe(STRIPE_PUBLISHABLE);
       const elements = stripe.elements();
 
-  // Create and mount separate card Elements (number, expiry, cvc) for clearer layout
-  const cardInput = document.querySelector('input[name="card"]');
-  if (cardInput) cardInput.style.display = 'none';
-  const cardWrapper = document.createElement('div');
-  cardWrapper.style.marginBottom = '1rem';
-  cardWrapper.className = 'card-elements-wrapper';
+      // Create and mount separate card Elements (number, expiry, cvc) for clearer layout
+      let cardNumber, cardExpiry, cardCvc;
+      try {
+        const cardInput = document.querySelector('input[name="card"]');
+        const formParent = cardInput ? cardInput.parentNode : form;
+        // Hide the raw input ONLY if we successfully render Stripe Elements
+        const cardWrapper = document.createElement('div');
+        cardWrapper.style.marginBottom = '1rem';
+        cardWrapper.className = 'card-elements-wrapper';
 
-  // Number
-  const numberLabel = document.createElement('label');
-  numberLabel.setAttribute('data-i18n', 'checkout.cardPlaceholder');
-  numberLabel.textContent = (window.t ? window.t('checkout.cardPlaceholder') : 'Card number');
-  numberLabel.className = 'card-field-label';
-  const cardNumberMount = document.createElement('div');
-  cardNumberMount.className = 'card-number-mount stripe-mount';
-  cardWrapper.appendChild(numberLabel);
-  cardWrapper.appendChild(cardNumberMount);
+        // Number
+        const numberLabel = document.createElement('label');
+        numberLabel.setAttribute('data-i18n', 'checkout.cardPlaceholder');
+        numberLabel.textContent = (window.t ? window.t('checkout.cardPlaceholder') : 'Card number');
+        numberLabel.className = 'card-field-label';
+        const cardNumberMount = document.createElement('div');
+        cardNumberMount.className = 'card-number-mount stripe-mount';
+        cardWrapper.appendChild(numberLabel);
+        cardWrapper.appendChild(cardNumberMount);
 
-  // Expiry + CVC row
-  const smallRow = document.createElement('div');
-  smallRow.style.display = 'flex';
-  smallRow.style.gap = '12px';
+        // Expiry + CVC row
+        const smallRow = document.createElement('div');
+        smallRow.style.display = 'flex';
+        smallRow.style.gap = '12px';
 
-  const expiryLabel = document.createElement('label');
-  expiryLabel.setAttribute('data-i18n', 'checkout.expiry');
-  expiryLabel.textContent = (window.t ? (window.t('checkout.expiry') || 'MM / YY') : 'MM / YY');
-  expiryLabel.className = 'card-field-label';
-  const cvcLabel = document.createElement('label');
-  cvcLabel.setAttribute('data-i18n', 'checkout.cvc');
-  cvcLabel.textContent = (window.t ? (window.t('checkout.cvc') || 'CVC') : 'CVC');
-  cvcLabel.className = 'card-field-label small';
+        const expiryLabel = document.createElement('label');
+        expiryLabel.setAttribute('data-i18n', 'checkout.expiry');
+        expiryLabel.textContent = (window.t ? (window.t('checkout.expiry') || 'MM / YY') : 'MM / YY');
+        expiryLabel.className = 'card-field-label';
+        const cvcLabel = document.createElement('label');
+        cvcLabel.setAttribute('data-i18n', 'checkout.cvc');
+        cvcLabel.textContent = (window.t ? (window.t('checkout.cvc') || 'CVC') : 'CVC');
+        cvcLabel.className = 'card-field-label small';
 
-  const cardExpiryMount = document.createElement('div');
-  cardExpiryMount.className = 'card-expiry-mount stripe-mount';
-  cardExpiryMount.style.flex = '1';
-  const cardCvcMount = document.createElement('div');
-  cardCvcMount.className = 'card-cvc-mount stripe-mount';
-  cardCvcMount.style.width = '120px';
+        const cardExpiryMount = document.createElement('div');
+        cardExpiryMount.className = 'card-expiry-mount stripe-mount';
+        cardExpiryMount.style.flex = '1';
+        const cardCvcMount = document.createElement('div');
+        cardCvcMount.className = 'card-cvc-mount stripe-mount';
+        cardCvcMount.style.width = '120px';
 
-  const expiryWrapper = document.createElement('div');
-  expiryWrapper.style.flex = '1';
-  expiryWrapper.appendChild(expiryLabel);
-  expiryWrapper.appendChild(cardExpiryMount);
+        const expiryWrapper = document.createElement('div');
+        expiryWrapper.style.flex = '1';
+        expiryWrapper.appendChild(expiryLabel);
+        expiryWrapper.appendChild(cardExpiryMount);
 
-  const cvcWrapper = document.createElement('div');
-  cvcWrapper.style.width = '120px';
-  cvcWrapper.appendChild(cvcLabel);
-  cvcWrapper.appendChild(cardCvcMount);
+        const cvcWrapper = document.createElement('div');
+        cvcWrapper.style.width = '120px';
+        cvcWrapper.appendChild(cvcLabel);
+        cvcWrapper.appendChild(cardCvcMount);
 
-  smallRow.appendChild(expiryWrapper);
-  smallRow.appendChild(cvcWrapper);
-  cardWrapper.appendChild(smallRow);
+        smallRow.appendChild(expiryWrapper);
+        smallRow.appendChild(cvcWrapper);
+        cardWrapper.appendChild(smallRow);
 
-  const formParent = cardInput ? cardInput.parentNode : form;
-  formParent.insertBefore(cardWrapper, formParent.querySelector('.btn'));
+        formParent.insertBefore(cardWrapper, formParent.querySelector('.btn'));
 
-  const cardNumber = elements.create('cardNumber', { showIcon: true });
-  const cardExpiry = elements.create('cardExpiry');
-  const cardCvc = elements.create('cardCvc');
-
-  cardNumber.mount(cardNumberMount);
-  cardExpiry.mount(cardExpiryMount);
-  cardCvc.mount(cardCvcMount);
+        cardNumber = elements.create('cardNumber', { showIcon: true });
+        cardExpiry = elements.create('cardExpiry');
+        cardCvc = elements.create('cardCvc');
+        cardNumber.mount(cardNumberMount);
+        cardExpiry.mount(cardExpiryMount);
+        cardCvc.mount(cardCvcMount);
+        if (cardInput) cardInput.style.display = 'none';
+      } catch (mountErr) {
+        console.error('[checkout] Failed to mount Stripe Elements, falling back to plain input', mountErr);
+      }
 
       // Payment Request (Apple Pay / Google Pay) setup via helper
       try {
@@ -418,7 +423,7 @@
         try { data = await resp.json(); } catch(_){ data = {}; }
         try { console.log('[checkout] create-payment-intent response', data); } catch(_){ }
         if(!resp.ok || !data.clientSecret){ console.error('[checkout] create-payment-intent failed', data && data.error, data && data.code, data); return showResult('i18n:checkout.payment_error', false); }
-        const { error, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardNumber, billing_details: { name, email } } });
+        const { error, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardNumber || undefined, billing_details: { name, email } } });
         if(error){
           try { console.error('[checkout:card] confirmCardPayment error', { code: error.code, decline_code: error.decline_code, message: error.message }); } catch(_){ }
           showResult(error.message || 'i18n:checkout.payment_failed', false);
