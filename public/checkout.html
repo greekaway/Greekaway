@@ -253,8 +253,12 @@
             pr.paymentRequest.on('paymentmethod', async (ev) => {
               try {
                 const resp = await fetch('/api/partners/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1) }) });
-                const data = await resp.json();
-                if (!data.clientSecret) { ev.complete('fail'); return showResult('i18n:checkout.payment_error', false); }
+                const data = await resp.json().catch(()=>({}));
+                if (!resp.ok || !data.clientSecret) {
+                  console.error('[checkout] create-payment-intent failed', data && data.error, data && data.code, data);
+                  ev.complete('fail');
+                  return showResult('i18n:checkout.payment_error', false);
+                }
 
                 const confirm = await pr.stripe.confirmCardPayment(data.clientSecret, { payment_method: ev.paymentMethod.id }, { handleActions: false });
                 if (confirm.error) { ev.complete('fail'); return showResult(confirm.error.message || 'i18n:checkout.payment_failed', false); }
@@ -314,8 +318,8 @@
         const body = { price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1) };
         if (bookingId) body.booking_id = bookingId;
         const resp = await fetch('/api/partners/create-payment-intent', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-        const data = await resp.json();
-        if(!data.clientSecret) return showResult('i18n:checkout.payment_error', false);
+        const data = await resp.json().catch(()=>({}));
+        if(!resp.ok || !data.clientSecret){ console.error('[checkout] create-payment-intent failed', data && data.error, data && data.code, data); return showResult('i18n:checkout.payment_error', false); }
         const { error } = await stripe.confirmCardPayment(data.clientSecret, { payment_method: { card: cardNumber, billing_details: { name, email } } });
         if(error) showResult(error.message || 'i18n:checkout.payment_failed', false);
         else showResult('i18n:checkout.payment_success_test', true);

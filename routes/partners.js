@@ -531,6 +531,32 @@ function computeSplit(amount_cents, share_percent) {
   return { partner_share_cents: partner_share, commission_cents: commission };
 }
 
+// Shared helpers for amount computation
+function safeInt(x, d = 0) { const n = parseInt(x, 10); return Number.isFinite(n) ? n : d; }
+function computeServerAmountCents(tripId, vehType, seatsCount) {
+  try {
+    const s = Math.max(1, safeInt(seatsCount, 1));
+    // Dynamic pricing for Acropolis by vehicle type (server mirror of frontend map)
+    const map = { van: 10, bus: 5, mercedes: 20 };
+    if (tripId === 'acropolis' && map.hasOwnProperty(String(vehType || '').toLowerCase())) {
+      const perSeatEur = map[String(vehType).toLowerCase()];
+      return Math.round(perSeatEur * 100) * s;
+    }
+    // Generic: read trip JSON price_cents and multiply by seats
+    if (tripId) {
+      const p = path.join(__dirname, '..', 'public', 'data', 'trips', `${tripId}.json`);
+      try {
+        if (fs.existsSync(p)) {
+          const trip = JSON.parse(fs.readFileSync(p, 'utf8'));
+          const base = safeInt(trip && trip.price_cents, 0);
+          if (base > 0) return base * s;
+        }
+      } catch (_) {}
+    }
+  } catch (_) {}
+  return 0;
+}
+
 // Create PaymentIntent that supports Stripe Connect transfer_data when partner account exists
 router.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server' });
@@ -550,30 +576,6 @@ router.post('/create-payment-intent', async (req, res) => {
     }
 
     // Compute server-side fallback when client amount is not provided or invalid
-    function safeInt(x, d=0){ const n = parseInt(x,10); return Number.isFinite(n) ? n : d; }
-    function computeServerAmountCents(tripId, vehType, seatsCount){
-      try {
-        const s = Math.max(1, safeInt(seatsCount, 1));
-        // Special dynamic pricing for Acropolis by vehicle type (server mirror of frontend map)
-        const map = { van: 10, bus: 5, mercedes: 20 };
-        if (tripId === 'acropolis' && map.hasOwnProperty(String(vehType||'').toLowerCase())) {
-          const perSeatEur = map[String(vehType).toLowerCase()];
-          return Math.round(perSeatEur * 100) * s;
-        }
-        // Generic: read trip JSON price_cents and multiply by seats
-        if (tripId) {
-          const p = path.join(__dirname, '..', 'public', 'data', 'trips', `${tripId}.json`);
-          try {
-            if (fs.existsSync(p)) {
-              const trip = JSON.parse(fs.readFileSync(p, 'utf8'));
-              const base = safeInt(trip && trip.price_cents, 0);
-              if (base > 0) return base * s;
-            }
-          } catch(_){}
-        }
-      } catch(_){}
-      return 0;
-    }
     const serverComputedCents = computeServerAmountCents(tripId, vehicleType, seats);
     const finalAmountCents = clientSubmittedCents > 0 ? clientSubmittedCents : serverComputedCents;
     if (!finalAmountCents || finalAmountCents <= 0) return res.status(400).json({ error: 'Invalid amount' });
@@ -703,6 +705,34 @@ router.post('/create-payment-intent', async (req, res) => {
     // Return a generic error plus a short code (no sensitive stack) for client display / support.
     const code = (e && e.code) ? String(e.code) : 'pi_create_failed';
     return res.status(500).json({ error: 'Failed to create payment intent', code });
+  }
+});
+
+// Admin-only: diagnose amount computation without creating a PaymentIntent
+router.post('/admin/payment-diagnose', (req, res) => {
+  try {
+    if (!checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    const { price_cents, amount, tripId, trip_id, vehicleType, seats } = req.body || {};
+    const trip = tripId || trip_id || null;
+    const clientSubmittedCents = parseInt(price_cents || amount || 0, 10) || 0;
+    const serverComputedCents = computeServerAmountCents(trip, vehicleType, seats);
+    const finalAmountCents = clientSubmittedCents > 0 ? clientSubmittedCents : serverComputedCents;
+    const mapping = trip ? resolvePartnerForTrip(trip) : null;
+    const share_percent = (mapping && mapping.share_percent) || (parseInt(process.env.DEFAULT_PARTNER_SHARE || '80',10) || 80);
+    const split = computeSplit(finalAmountCents, share_percent);
+    return res.json({
+      trip_id: trip,
+      vehicle_type: vehicleType || null,
+      seats: safeInt(seats, null),
+      client_submitted_price_cents: clientSubmittedCents || null,
+      server_computed_price_cents: serverComputedCents || null,
+      final_amount_cents: finalAmountCents,
+      share_percent,
+      partner_share_cents: split.partner_share_cents,
+      commission_cents: split.commission_cents
+    });
+  } catch (e) {
+    return res.status(500).json({ error: 'diagnose_failed' });
   }
 });
 
