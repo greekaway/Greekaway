@@ -10,14 +10,24 @@ const router = express.Router();
 router.use(express.urlencoded({ extended: true }));
 // Use global JSON parser installed in server.js
 
-// Stripe (reuse env keys; do not create new)
-const STRIPE_SECRET = (process.env.STRIPE_SECRET_KEY || '').toString().trim().replace(/^['"]|['"]$/g, '');
+// Stripe (reuse env keys; accept STRIPE_SECRET_KEY or STRIPE_SECRET)
+const STRIPE_SECRET = (process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET || '').toString().trim().replace(/^['"]|['"]$/g, '');
 // Optional: force HTTPS callback base for live-mode Connect (e.g. https://greekaway.com)
 const CONNECT_CALLBACK_BASE = (process.env.CONNECT_CALLBACK_BASE || '').toString().trim().replace(/^['"]|['"]$/g, '');
 try { console.log('partners: CONNECT_CALLBACK_BASE =', CONNECT_CALLBACK_BASE || '(unset)'); } catch(_) {}
 let stripe = null;
 if (STRIPE_SECRET) {
-  try { stripe = require('stripe')(STRIPE_SECRET); } catch (e) { console.warn('partners: stripe not initialized (missing dependency?)'); }
+  try {
+    stripe = require('stripe')(STRIPE_SECRET);
+    try {
+      const masked = STRIPE_SECRET.replace(/^(sk_[a-z]+_).+/, '$1********');
+      console.log('partners: stripe initialized (masked secret):', masked);
+    } catch(_) {}
+  } catch (e) {
+    console.warn('partners: stripe not initialized (missing dependency?)', e && e.message ? e.message : e);
+  }
+} else {
+  try { console.warn('partners: STRIPE secret missing (STRIPE_SECRET_KEY or STRIPE_SECRET not set)'); } catch(_) {}
 }
 
 // Admin basic auth (align with server.js env)
@@ -656,8 +666,17 @@ router.post('/create-payment-intent', async (req, res) => {
       pi = await stripe.paymentIntents.create(params, { idempotencyKey });
     } catch (stripeErr) {
       const msg = stripeErr && stripeErr.message ? stripeErr.message : String(stripeErr);
-      try { console.error('[pi:error] stripe.paymentIntents.create failed', { message: msg, code: stripeErr && stripeErr.code, type: stripeErr && stripeErr.type, param: stripeErr && stripeErr.param }); } catch(_){ }
-      throw stripeErr;
+      try {
+        console.error('[pi:error] stripe.paymentIntents.create failed', {
+          message: msg,
+          code: stripeErr && stripeErr.code,
+          type: stripeErr && stripeErr.type,
+          param: stripeErr && stripeErr.param,
+          raw: stripeErr && stripeErr.raw ? stripeErr.raw : undefined
+        });
+      } catch(_){ }
+      // Immediate failure response to client (avoid masking with generic catch below)
+      return res.status(500).json({ error: 'Failed to create payment intent', code: stripeErr && stripeErr.code ? stripeErr.code : 'pi_create_error', message: msg });
     }
     try {
       console.log('[payments] create-payment-intent summary', {
@@ -775,10 +794,9 @@ router.post('/create-payment-intent', async (req, res) => {
     return res.json({ clientSecret: pi.client_secret, paymentIntentId: pi.id, idempotencyKey, bookingId: booking_id || null, finalAmountCents });
   } catch (e) {
     const msg = e && e.message ? e.message : String(e);
-    try { console.error('partners: create-payment-intent failed', msg); } catch(_){}
-    // Return a generic error plus a short code (no sensitive stack) for client display / support.
+    try { console.error('partners: create-payment-intent failed (catch-all)', msg); } catch(_){ }
     const code = (e && e.code) ? String(e.code) : 'pi_create_failed';
-    return res.status(500).json({ error: 'Failed to create payment intent', code });
+    return res.status(500).json({ error: 'Failed to create payment intent', code, message: msg });
   }
 });
 
