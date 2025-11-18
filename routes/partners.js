@@ -649,14 +649,18 @@ router.post('/create-payment-intent', async (req, res) => {
 
     // Build params; only include receipt_email if non-empty trimmed
     const rawEmail = ((customerEmail || req.body.email || '') + '').trim();
+    if (!rawEmail) {
+      try { console.warn('[pi:reject] missing email – rejecting before PaymentIntent'); } catch(_){}
+      return res.status(400).json({ error: 'email_required' });
+    }
     const params = {
       amount: finalAmountCents,
       currency: currency || 'eur',
       automatic_payment_methods: { enabled: true },
       metadata: meta
     };
-    if (rawEmail) params.receipt_email = rawEmail;
-    else try { console.log('[pi:info] no email provided; skipping receipt_email'); } catch(_) {}
+    // rawEmail guaranteed non-empty here
+    params.receipt_email = rawEmail;
     // If partner has a Connect account, set transfer_data and fee
     if (mapping && mapping.partner && mapping.partner.stripe_account_id) {
       params.transfer_data = { destination: mapping.partner.stripe_account_id };
