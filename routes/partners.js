@@ -546,15 +546,11 @@ function safeInt(x, d = 0) { const n = parseInt(x, 10); return Number.isFinite(n
 function computeServerAmountCents(tripId, vehType, seatsCount) {
   try {
     const s = Math.max(1, safeInt(seatsCount, 1));
-    // Dynamic pricing for Acropolis by vehicle type (server mirror of frontend map)
-    const map = { van: 10, bus: 5, mercedes: 20 };
-    if (tripId === 'acropolis' && map.hasOwnProperty(String(vehType || '').toLowerCase())) {
-      // For Acropolis vehicle overrides we now treat map values as FINAL TOTAL price (not per seat)
-      // to avoid double multiplication when frontend has already shown the final amount.
-      const finalEur = map[String(vehType).toLowerCase()];
-      return Math.round(finalEur * 100);
+    // Fixed price ONLY for Mercedes (private) on Acropolis
+    if (tripId === 'acropolis' && String(vehType||'').toLowerCase() === 'mercedes') {
+      return 2000; // 20 € flat regardless of seats
     }
-    // Generic: read trip JSON price_cents and multiply by seats
+    // Generic per-seat logic for all other cases (including van & bus)
     if (tripId) {
       const p = path.join(__dirname, '..', 'public', 'data', 'trips', `${tripId}.json`);
       try {
