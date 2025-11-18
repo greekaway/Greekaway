@@ -69,11 +69,21 @@
     const traveler_profile = getTravelerProfileFromSession();
     let price_cents = 0;
     let currency = 'eur';
+    // Mode-based fixed pricing per requirements (van=10€, bus=5€, mercedes=20€ per seat)
     try {
-      const trip = await loadTrip(base.trip_id);
-      if (trip) {
-        if (typeof trip.price_cents === 'number') price_cents = computePriceCents(trip.price_cents, seats);
-        if (trip.currency) currency = String(trip.currency).toLowerCase();
+      const modeMap = { van: 10, bus: 5, mercedes: 20 };
+      const m = (base.mode || '').toLowerCase();
+      if (modeMap.hasOwnProperty(m)) {
+        price_cents = modeMap[m] * 100 * seats;
+      } else {
+        // Fallback to trip JSON base price × seats
+        try {
+          const trip = await loadTrip(base.trip_id);
+            if (trip) {
+              if (typeof trip.price_cents === 'number') price_cents = computePriceCents(trip.price_cents, seats);
+              if (trip.currency) currency = String(trip.currency).toLowerCase();
+            }
+        } catch(_){ }
       }
     } catch(_){ }
     if (!price_cents) {

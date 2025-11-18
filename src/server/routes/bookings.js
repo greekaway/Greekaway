@@ -269,6 +269,7 @@ function registerBookings(app, deps) {
   // Expects body as bookingState { trip_id, mode, date, seats, pickup, suitcases, special_requests, traveler_profile, price_cents, currency }
   app.post('/api/bookings/create', (req, res) => {
     try {
+      try { console.log('[api] /api/bookings/create payload', req.body); } catch(_){ }
       const b = req.body || {};
       const trip_id = (b.trip_id || '').toString().trim();
       const mode = (b.mode || '').toString().trim().toLowerCase();
@@ -303,6 +304,7 @@ function registerBookings(app, deps) {
         const stmt = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
         stmt.run(id, 'pending', date, null, null, null, null, trip_id, seats, price_cents, currency, JSON.stringify(metadata), now, now);
       }
+      try { console.log('[api] /api/bookings/create stored', { bookingId: id, amount_cents: price_cents, currency }); } catch(_){ }
       return res.json({ bookingId: id, amount_cents: price_cents, currency });
     } catch (e) {
       console.error('Unified create booking error', e && e.stack ? e.stack : e);

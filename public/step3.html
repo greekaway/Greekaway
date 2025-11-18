@@ -113,10 +113,11 @@
       function get(k, d=''){ try { const v=sessionStorage.getItem(k); return v==null?d:v; } catch(_){ return d; } }
       const langFallbackLabels = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', ru:'Русский', he:'עברית', nl:'Nederlands', pt:'Português', sv:'Svenska', ko:'한국어', zh:'中文' };
       const langFlags = { el:'🇬🇷', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', es:'🇪🇸', ru:'🇷🇺', he:'🇮🇱', nl:'🇳🇱', pt:'🇵🇹', sv:'🇸🇪', ko:'🇰🇷', zh:'🇨🇳' };
-      try { if (window.GWBookingState && window.GWBookingState.buildFromStep2) window.GWBookingState.buildFromStep2(); } catch(_){ }
+      // Step 3 is read-only: do NOT rebuild or mutate booking state here.
 
       function renderValuesFromState(){
         const state = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
+        try { console.log('[step3] GWBookingState.get()', state); } catch(_){ }
         const adults = (()=>{ try { return parseInt(sessionStorage.getItem('gw_adults')||'0',10)||0; } catch(_){ return 0; } })();
         const ages = (()=>{ try { return JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]')||[]; } catch(_){ return []; } })();
         const children = String(ages.length);
@@ -285,6 +286,7 @@
 
       document.getElementById('s3ProceedPay')?.addEventListener('click', (ev)=>{
         try { ev.preventDefault(); } catch(_){ }
+        try { console.log('[step3] proceed to checkout'); } catch(_){ }
         const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
         const url = origin ? (new URL('/checkout.html', origin).href) : '/checkout.html';
         try { window.location.assign(url); }

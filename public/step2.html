@@ -621,7 +621,8 @@
         } catch(_){ }
         try {
           if (window.GWBookingState && window.GWBookingState.buildFromStep2) {
-            await window.GWBookingState.buildFromStep2();
+            const st = await window.GWBookingState.buildFromStep2();
+            try { console.log('[step2] bookingState saved', st); } catch(_){ }
           }
         } catch(_){ }
         try {

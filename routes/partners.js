@@ -649,6 +649,20 @@ router.post('/create-payment-intent', async (req, res) => {
 
     const idempotencyKey = (req.headers['idempotency-key'] || req.headers['Idempotency-Key'] || req.headers['Idempotency-key']) || `gw_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
     const pi = await stripe.paymentIntents.create(params, { idempotencyKey });
+    try {
+      console.log('[payments] create-payment-intent summary', {
+        booking_id,
+        trip_id: tripId || null,
+        vehicle_type: vehTypeInput || null,
+        seats: safeInt(seats, null) || null,
+        final_amount_cents: finalAmountCents,
+        pricing_source,
+        server_computed_cents: serverComputedCents || null,
+        client_submitted_cents: clientSubmittedCents || null,
+        payment_intent_id: pi.id,
+        status: pi.status
+      });
+    } catch(_){ }
     // Optional debug logging (enable by setting PAYMENTS_DEBUG=1)
     if (process.env.PAYMENTS_DEBUG) {
       try {

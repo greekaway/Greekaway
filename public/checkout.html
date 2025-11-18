@@ -28,6 +28,14 @@
     </div>
   <p class="checkout-subtitle" data-i18n="checkout.notice">Secure Payment via Stripe</p>
   <div id="checkoutAmount" class="price-badge" style="display:none; margin:8px auto; text-align:center;">—</div>
+  <div id="checkoutSummary" class="checkout-summary" style="display:none;max-width:600px;margin:12px auto;padding:12px;border:1px solid #224;border-radius:8px;background:#0d1b2a;color:#fff;font-size:.95rem;line-height:1.4">
+    <div><strong data-i18n="booking.trip">Εκδρομή</strong>: <span id="coTripId">—</span></div>
+    <div><strong data-i18n="booking.date">Ημερομηνία</strong>: <span id="coDate">—</span></div>
+    <div><strong data-i18n="booking.mode">Τύπος</strong>: <span id="coMode">—</span></div>
+    <div><strong data-i18n="booking.seats">Θέσεις</strong>: <span id="coSeats">—</span></div>
+    <div><strong data-i18n="booking.pickup_location">Παραλαβή</strong>: <span id="coPickup">—</span></div>
+    <div><strong data-i18n="booking.trip_cost">Κόστος</strong>: <span id="coPrice">—</span></div>
+  </div>
 
     <form id="checkoutForm">
       <!-- Payment Request Button (Apple Pay / Google Pay) will mount here when available -->
@@ -114,7 +122,23 @@
     // Preferred: build from unified booking state; else fallback to query/bookings
     try {
       const st = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
+      try { console.log('[checkout] bookingState before create', st); } catch(_){ }
       if (st) {
+        // Render summary box
+        try {
+          const summaryBox = document.getElementById('checkoutSummary');
+          if (summaryBox) {
+            const fmtPrice = (typeof st.price_cents === 'number') ? (st.price_cents/100).toLocaleString(getLang(), { style:'currency', currency: (st.currency||'eur').toUpperCase() }) : '—';
+            document.getElementById('coTripId').textContent = st.trip_id || '—';
+            document.getElementById('coDate').textContent = st.date || '—';
+            document.getElementById('coMode').textContent = st.mode || '—';
+            document.getElementById('coSeats').textContent = st.seats || '—';
+            const pu = st.pickup && st.pickup.address ? st.pickup.address : '—';
+            document.getElementById('coPickup').textContent = pu;
+            document.getElementById('coPrice').textContent = fmtPrice;
+            summaryBox.style.display = 'block';
+          }
+        } catch(_){ }
         CHECKOUT_TRIP_ID = st.trip_id || null;
         CHECKOUT_SEATS = st.seats || 1;
         CHECKOUT_CURRENCY = (st.currency || 'eur');
@@ -351,6 +375,19 @@
 
           // create payment intent on server with verified price from trip JSON
         const body = { price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1) };
+        // Enrich with booking state fields required by architecture (pass through separately for server metadata)
+        try {
+          const stFull = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
+          if (stFull) {
+            body.trip_id = stFull.trip_id || CHECKOUT_TRIP_ID || null;
+            body.mode = stFull.mode || null;
+            body.date = stFull.date || null;
+            body.seats = stFull.seats || CHECKOUT_SEATS || 1;
+            body.pickup = stFull.pickup || null;
+            body.traveler_profile = stFull.traveler_profile || null;
+            if (typeof stFull.price_cents === 'number') body.price_cents = stFull.price_cents; // ensure authoritative price
+          }
+        } catch(_){ }
         try { console.log('[checkout] create-payment-intent body', body); } catch(_){ }
         if (CHECKOUT_BOOKING_ID) body.booking_id = CHECKOUT_BOOKING_ID;
         let resp, data;
