@@ -43,7 +43,7 @@ function registerBookings(app, deps) {
   // Ensure JSON error responses even if body parsing fails
   app.post('/api/bookings', async (req, res) => {
     try {
-      const { user_name, user_email, trip_id, seats, price_cents, currency } = req.body || {};
+      const { user_name, user_email, trip_id, seats, price_cents, currency, vehicleType, vehicle_type, mode: rawMode } = req.body || {};
       // Traveler profile fields from step2 (optional) + mapping helpers
       const mapTravelerType = (v) => { if (!v) return null; const x = String(v).toLowerCase(); if (x === 'explorer') return 'explore'; if (x === 'relaxed') return 'relax'; return x; };
       const mapInterest = (v) => { if (!v) return null; const x = String(v).toLowerCase(); if (x === 'cultural') return 'culture'; if (x === 'nature') return 'nature'; return x; };
@@ -226,17 +226,27 @@ function registerBookings(app, deps) {
       const looksDemo = (() => { const m = (s) => (s||'').toString().toLowerCase(); const hasDemo = (s) => /demo|test|example\.com/.test(m(s)); return !!(hasDemo(user_email) || hasDemo(user_name) || hasDemo(sourceVal) || (metaObj && (metaObj.is_demo === true || metaObj.demo === true))); })();
       const finalSource = sourceVal || (looksDemo ? 'demo' : null);
       let inserted = false;
+      // Normalize vehicle_type only for Acropolis checkout
+      let normalizedVehicleType = vehicleType || vehicle_type || rawMode || null;
+      try {
+        if (trip_id === 'acropolis') {
+          const raw = String(normalizedVehicleType || '').toLowerCase();
+          if (raw === 'private' || raw === 'mercedes/private') normalizedVehicleType = 'mercedes';
+          else if (raw === 'van') normalizedVehicleType = 'van';
+          else if (raw === 'bus') normalizedVehicleType = 'bus';
+        }
+      } catch(_){}
       if (providerId) {
         try {
-          const insertWithPartner = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insertWithPartner.run(id, (statusPolicy || 'pending'), null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), price_cents || 0, currency || 'eur', JSON.stringify(metaObj), now, now, date, 0, null, providerId, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
+          const insertWithPartner = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,vehicle_type,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+          insertWithPartner.run(id, (statusPolicy || 'pending'), null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), normalizedVehicleType || null, price_cents || 0, currency || 'eur', JSON.stringify(metaObj), now, now, date, 0, null, providerId, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
           inserted = true;
         } catch(_) { /* fallback below */ }
       }
       if (!inserted) {
         try {
-          const insert2 = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insert2.run(id, (statusPolicy || 'pending'), null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), price_cents || 0, currency || 'eur', JSON.stringify(metaObj), now, now, date, 0, null, null, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
+          const insert2 = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,vehicle_type,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+          insert2.run(id, (statusPolicy || 'pending'), null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), normalizedVehicleType || null, price_cents || 0, currency || 'eur', JSON.stringify(metaObj), now, now, date, 0, null, null, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
         } catch(_e) {
           const insertLegacy = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
           insertLegacy.run(id, (statusPolicy || 'pending'), date, null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), price_cents || 0, currency || 'eur', JSON.stringify(metaObj), now, now);
@@ -273,6 +283,13 @@ function registerBookings(app, deps) {
       const b = req.body || {};
       const trip_id = (b.trip_id || '').toString().trim();
       const mode = (b.mode || '').toString().trim().toLowerCase();
+      let vehType = (b.vehicleType || b.vehicle_type || mode || null);
+      if (trip_id === 'acropolis') {
+        const raw = String(vehType || '').toLowerCase();
+        if (raw === 'private' || raw === 'mercedes/private') vehType = 'mercedes';
+        else if (raw === 'van') vehType = 'van';
+        else if (raw === 'bus') vehType = 'bus';
+      }
       const date = (b.date || '').toString().trim() || new Date().toISOString().slice(0,10);
       const seats = Number(b.seats || 1) || 1;
       const price_cents = Number(b.price_cents || 0) || 0;
@@ -297,11 +314,11 @@ function registerBookings(app, deps) {
         source: 'unified_flow'
       };
       try {
-        const stmt = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-        stmt.run(id, 'pending', null, null, null, null, trip_id, seats, price_cents, currency, JSON.stringify(metadata), now, now, date, 0, null, null, null, null, null, null, 0, 'unified_flow', (pickup.address||''), (pickup.lat||null), (pickup.lng||null), JSON.stringify(suitcases||{}), special_requests || '');
+        const stmt = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,vehicle_type,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+        stmt.run(id, 'pending', null, null, null, null, trip_id, seats, vehType || null, price_cents, currency, JSON.stringify(metadata), now, now, date, 0, null, null, null, null, null, null, 0, 'unified_flow', (pickup.address||''), (pickup.lat||null), (pickup.lng||null), JSON.stringify(suitcases||{}), special_requests || '');
       } catch(e) {
         // Minimal legacy insert fallback
-        const stmt = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+        const stmt = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
         stmt.run(id, 'pending', date, null, null, null, null, trip_id, seats, price_cents, currency, JSON.stringify(metadata), now, now);
       }
       try { console.log('[api] /api/bookings/create stored', { bookingId: id, amount_cents: price_cents, currency }); } catch(_){ }

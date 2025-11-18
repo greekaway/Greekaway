@@ -594,7 +594,7 @@ router.post('/create-payment-intent', async (req, res) => {
     } catch(_) {}
     // Accept both camelCase and snake_case vehicle type from client
     const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, vehicle_type, customerEmail, seats } = req.body || {};
-    const vehTypeInput = vehicleType || vehicle_type || null;
+    let vehTypeInput = vehicleType || vehicle_type || null;
     const booking_id = (req.body && req.body.booking_id) || null;
     let meta = (req.body && req.body.metadata) || {};
     if (booking_id) meta = { ...meta, booking_id };
@@ -612,6 +612,13 @@ router.post('/create-payment-intent', async (req, res) => {
       try { const b = getBookingById(booking_id); if (b) tripId = b.trip_id || tripId; } catch(_) {}
     }
 
+    // Normalize vehicle type only for Acropolis (private -> mercedes, mercedes/private -> mercedes)
+    if (tripId === 'acropolis') {
+      const raw = String(vehTypeInput || '').toLowerCase();
+      if (raw === 'private' || raw === 'mercedes/private') vehTypeInput = 'mercedes';
+      if (raw === 'van') vehTypeInput = 'van';
+      if (raw === 'bus') vehTypeInput = 'bus';
+    }
     // Compute server-side amount for diagnostics; prefer client authoritative price from state
     const serverComputedCents = computeServerAmountCents(tripId, vehTypeInput, seats);
     try { console.log('[pi:diag] serverComputedCents', serverComputedCents, { tripId, vehicleType: vehTypeInput, seats }); } catch(_){ }

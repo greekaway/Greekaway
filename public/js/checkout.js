@@ -54,7 +54,20 @@
       } catch(_){ }
       CHECKOUT_TRIP_ID = st.trip_id || null;
       CHECKOUT_SEATS = st.seats || 1;
-      // Derive vehicle type from explicit field or fallback to mode
+      // Normalize vehicleType only for Acropolis
+      try {
+        if (CHECKOUT_TRIP_ID === 'acropolis') {
+          const rawMode = String(st.mode || st.vehicleType || st.vehicle_type || '').toLowerCase();
+          if (rawMode === 'private' || rawMode === 'mercedes/private') {
+            st.vehicleType = 'mercedes';
+          } else if (rawMode === 'van') {
+            st.vehicleType = 'van';
+          } else if (rawMode === 'bus') {
+            st.vehicleType = 'bus';
+          }
+        }
+      } catch(_){ }
+      // Derive vehicle type from explicit field or fallback to mode (after normalization)
       CHECKOUT_VEHICLE_TYPE = (st.vehicleType || st.vehicle_type || st.mode || null);
       try {
         if (!st.vehicleType && (st.mode)) {
@@ -129,9 +142,19 @@
               let emailVal = '';
               try { emailVal = (form && form.email && form.email.value) ? form.email.value.trim() : ''; } catch(_) { emailVal=''; }
               if (!emailVal) {
-                try { console.warn('[checkout:PR] email missing – blocking Payment Request flow'); } catch(_){}
+                try { console.warn('[checkout:PR] email missing – blocking Payment Request flow'); } catch(_){ }
+                try {
+                  if (form && form.email) {
+                    form.email.style.border='2px solid #d00';
+                    form.email.classList.add('input-error');
+                    form.email.focus();
+                    form.email.scrollIntoView({ behavior:'smooth', block:'center' });
+                  }
+                } catch(_){ }
                 ev.complete('fail');
                 return showResult('Παρακαλώ συμπληρώστε το email σας πριν την πληρωμή.', false);
+              } else {
+                try { form.email.style.border='1px solid #ccc'; form.email.classList.remove('input-error'); } catch(_){}
               }
               reqBody.email = emailVal; reqBody.customerEmail = emailVal;
               // Ensure vehicleType present (fallback again if needed)
@@ -155,8 +178,14 @@
         const name = form.name.value; const email = form.email.value;
         const emailTrim = (email || '').trim();
         if (!emailTrim) {
+          try {
+            form.email.style.border='2px solid #d00';
+            form.email.classList.add('input-error');
+            form.email.focus();
+            form.email.scrollIntoView({ behavior:'smooth', block:'center' });
+          } catch(_){ }
           return showResult('Παρακαλώ συμπληρώστε το email σας πριν την πληρωμή.', false);
-        }
+        } else { try { form.email.style.border='1px solid #ccc'; form.email.classList.remove('input-error'); } catch(_){} }
         if (!CHECKOUT_BOOKING_ID) {
           try { const st = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null; if (st) { const r = await fetch('/api/bookings/create', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(st) }); const j = await r.json().catch(()=>({})); if (r.ok && j.bookingId){ CHECKOUT_BOOKING_ID = j.bookingId; if (typeof j.amount_cents==='number') CHECKOUT_AMOUNT_CENTS = j.amount_cents; } } } catch(err){ }
         }
@@ -180,8 +209,14 @@
         e.preventDefault();
         const emailTrim = (form && form.email && form.email.value) ? form.email.value.trim() : '';
         if (!emailTrim) {
+          try {
+            form.email.style.border='2px solid #d00';
+            form.email.classList.add('input-error');
+            form.email.focus();
+            form.email.scrollIntoView({ behavior:'smooth', block:'center' });
+          } catch(_){ }
           return showResult('Παρακαλώ συμπληρώστε το email σας πριν την πληρωμή.', false);
-        }
+        } else { try { form.email.style.border='1px solid #ccc'; form.email.classList.remove('input-error'); } catch(_){} }
         const body = { price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1), email: emailTrim, customerEmail: emailTrim };
         if (!body.vehicleType) body.vehicleType = CHECKOUT_VEHICLE_TYPE;
         let resp, data; try { resp = await fetch('/api/partners/create-payment-intent', { method:'POST', cache:'no-store', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }); } catch(err){ console.error('[checkout:fallback] network error', err); return showResult('i18n:checkout.payment_error', false); }

@@ -286,6 +286,8 @@ try {
     // New columns for multi-pickup support and driver assignment
     ensureCol('ALTER TABLE bookings ADD COLUMN pickup_points_json TEXT','pickup_points_json');
     ensureCol('ALTER TABLE bookings ADD COLUMN assigned_driver_id TEXT','assigned_driver_id');
+    // Vehicle type (mode normalization) for Acropolis checkout diagnostics
+    ensureCol('ALTER TABLE bookings ADD COLUMN vehicle_type TEXT','vehicle_type');
   } catch(e) { /* ignore */ }
   bookingsDb.exec(`CREATE TABLE IF NOT EXISTS capacities (
     trip_id TEXT,
