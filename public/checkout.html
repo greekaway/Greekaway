@@ -90,6 +90,7 @@
     let CHECKOUT_DURATION = null;
     let CHECKOUT_VEHICLE_TYPE = null;
     let CHECKOUT_SEATS = 1;
+    let CHECKOUT_VEHICLE_OVERRIDE_FINAL = false; // If true (Acropolis vehicle price), do not multiply by seats
     const amountEl = document.getElementById('checkoutAmount');
     const getLang = () => (window.currentI18n && window.currentI18n.lang) || (navigator.language || 'el');
     const showAmount = () => {
@@ -132,33 +133,38 @@
               const trip = await t.json();
               CHECKOUT_TRIP_ID = tripId;
               try { if (typeof trip.price_cents === 'number') { CHECKOUT_AMOUNT_CENTS = trip.price_cents; } } catch(_){ }
-              // Vehicle override for Acropolis: replace per-seat base before multiplying by seats
-              try {
-                if (tripId === 'acropolis') {
-                  const sel = sessionStorage.getItem('selectedVehiclePrice');
-                  const veh = sessionStorage.getItem('selectedVehicleType');
-                  if (veh) CHECKOUT_VEHICLE_TYPE = veh;
-                  if (sel) {
-                    const euros = parseFloat(sel);
-                    if (!isNaN(euros) && euros > 0) CHECKOUT_AMOUNT_CENTS = Math.round(euros * 100);
+                // Vehicle override for Acropolis: treat selected vehicle price as FINAL total (no seat multiplication)
+                try {
+                  if (tripId === 'acropolis') {
+                    const sel = sessionStorage.getItem('selectedVehiclePrice');
+                    const veh = sessionStorage.getItem('selectedVehicleType');
+                    if (veh) CHECKOUT_VEHICLE_TYPE = veh;
+                    if (sel) {
+                      const euros = parseFloat(sel);
+                      if (!isNaN(euros) && euros > 0) {
+                        CHECKOUT_AMOUNT_CENTS = Math.round(euros * 100);
+                        CHECKOUT_VEHICLE_OVERRIDE_FINAL = true;
+                      }
+                    }
                   }
-                }
-              } catch(_){ }
+                } catch(_){ }
               try { if (typeof trip.currency === 'string') { CHECKOUT_CURRENCY = String(trip.currency).toLowerCase(); } } catch(_){ }
               try {
                 // Optional metadata
                 CHECKOUT_DURATION = trip && trip.duration ? String(trip.duration) : null;
                 CHECKOUT_VEHICLE_TYPE = trip && trip.vehicleType ? String(trip.vehicleType) : null;
               } catch(_){ }
-              // Multiply by seats if we can infer them from session
-              try {
-                const ss = (k,d='')=>{ try{ const v=sessionStorage.getItem(k); return v==null?d:v; }catch(_){ return d; } };
-                const adults = parseInt(ss('gw_adults','2'),10) || 2;
-                let childrenAges = [];
-                try { childrenAges = JSON.parse(ss('gw_children_ages','[]')) || []; } catch(_){ childrenAges = []; }
-                CHECKOUT_SEATS = Math.max(1, adults + (childrenAges.length||0));
-                if (typeof CHECKOUT_AMOUNT_CENTS === 'number') CHECKOUT_AMOUNT_CENTS = CHECKOUT_AMOUNT_CENTS * CHECKOUT_SEATS;
-              } catch(_){ CHECKOUT_SEATS = 1; }
+                // Multiply by seats only when override is not final
+                try {
+                  const ss = (k,d='')=>{ try{ const v=sessionStorage.getItem(k); return v==null?d:v; }catch(_){ return d; } };
+                  const adults = parseInt(ss('gw_adults','2'),10) || 2;
+                  let childrenAges = [];
+                  try { childrenAges = JSON.parse(ss('gw_children_ages','[]')) || []; } catch(_){ childrenAges = []; }
+                  CHECKOUT_SEATS = Math.max(1, adults + (childrenAges.length||0));
+                  if (!CHECKOUT_VEHICLE_OVERRIDE_FINAL && typeof CHECKOUT_AMOUNT_CENTS === 'number') {
+                    CHECKOUT_AMOUNT_CENTS = CHECKOUT_AMOUNT_CENTS * CHECKOUT_SEATS;
+                  }
+                } catch(_){ CHECKOUT_SEATS = 1; }
               showAmount();
             }
           } catch(_){ }

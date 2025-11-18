@@ -1,4 +1,5 @@
-// Vehicle price map (per seat, EUR). Used to override Acropolis trip base price.
+// Vehicle price map (FINAL total price in EUR for Acropolis override).
+// These values are now treated as final amounts (no seat multiplication)
 // private mode maps to mercedes.
 (function(){
   window.vehiclePriceMap = {
