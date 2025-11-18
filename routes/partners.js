@@ -615,6 +615,7 @@ router.post('/create-payment-intent', async (req, res) => {
     // Compute server-side amount for diagnostics; prefer client authoritative price from state
     const serverComputedCents = computeServerAmountCents(tripId, vehTypeInput, seats);
     try { console.log('[pi:diag] serverComputedCents', serverComputedCents, { tripId, vehicleType: vehTypeInput, seats }); } catch(_){ }
+    try { console.log('[pi:info] vehicleType=' + (vehTypeInput || 'null')); } catch(_) {}
     let finalAmountCents = (clientSubmittedCents > 0) ? clientSubmittedCents : serverComputedCents;
     let pricingSource = (clientSubmittedCents > 0) ? 'client' : 'server_fallback';
     if (clientSubmittedCents > 0 && serverComputedCents > 0 && clientSubmittedCents !== serverComputedCents) {
