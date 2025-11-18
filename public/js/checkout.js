@@ -40,9 +40,24 @@
       try {
         const summaryBox = document.getElementById('checkoutSummary');
         if (summaryBox) {
-          const fmtPrice = (typeof st.price_cents === 'number') ? (st.price_cents/100).toLocaleString(getLang(), { style:'currency', currency: (st.currency||'eur').toUpperCase() }) : '—';
+          const tripId = st.trip_id || '';
+          const vehRaw = (st.vehicleType || st.vehicle_type || st.mode || '').toLowerCase();
+          const isMercedes = (tripId === 'acropolis') && (vehRaw === 'mercedes' || vehRaw === 'private');
+          let displayCents = null;
+          if (isMercedes) {
+            displayCents = 2000; // fixed 20€ for Comfort/private
+            PR_AMOUNT_CENTS = 2000;
+            CHECKOUT_AMOUNT_CENTS = 2000;
+          } else {
+            if (typeof st.price_cents === 'number' && st.price_cents > 0) {
+              displayCents = st.price_cents;
+              PR_AMOUNT_CENTS = st.price_cents;
+            }
+          }
+          const fmtPrice = (typeof displayCents === 'number')
+            ? (displayCents/100).toLocaleString(getLang(), { style:'currency', currency: (st.currency||'eur').toUpperCase() })
+            : '—';
           document.getElementById('coTripId').textContent = st.trip_id || '—';
-          if (typeof st.price_cents === 'number' && st.price_cents > 0) PR_AMOUNT_CENTS = st.price_cents;
           document.getElementById('coDate').textContent = st.date || '—';
           document.getElementById('coMode').textContent = st.mode || '—';
           document.getElementById('coSeats').textContent = st.seats || '—';
@@ -82,7 +97,15 @@
       const data = await resp.json().catch(()=>({}));
       if (resp.ok && data && data.bookingId) {
         CHECKOUT_BOOKING_ID = data.bookingId;
-        if (typeof data.amount_cents === 'number') CHECKOUT_AMOUNT_CENTS = data.amount_cents;
+        // Preserve fixed price for mercedes/private on acropolis
+        const tripId = st.trip_id || '';
+        const vehRaw = (st.vehicleType || st.vehicle_type || st.mode || '').toLowerCase();
+        const isMercedes = (tripId === 'acropolis') && (vehRaw === 'mercedes' || vehRaw === 'private');
+        if (isMercedes) {
+          CHECKOUT_AMOUNT_CENTS = 2000;
+        } else if (typeof data.amount_cents === 'number') {
+          CHECKOUT_AMOUNT_CENTS = data.amount_cents;
+        }
         if (typeof data.currency === 'string') CHECKOUT_CURRENCY = String(data.currency).toLowerCase();
       } else { if (typeof st.price_cents === 'number') CHECKOUT_AMOUNT_CENTS = st.price_cents; }
       showAmount();
