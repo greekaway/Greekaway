@@ -7,19 +7,7 @@
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/admin-common.css" />
   <link rel="stylesheet" href="/css/admin-availability.css" />
-  <style>
-    .avail-wrapper{max-width:1080px;margin:0 auto;padding:16px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-    .editor-card{background:#102535;border:1px solid #1f3a50;border-radius:12px;padding:16px}
-    label{display:block;font-size:12px;margin:8px 0 4px;color:#a8c0d8}
-    select,input{width:100%;padding:8px;border-radius:8px;border:1px solid #264357;background:#0e2032;color:#fff}
-    input[readonly]{opacity:.7}
-    #calendar{margin-top:12px}
-    .save-btn{margin-top:12px;background:#2a7ade;color:#fff;border:none;padding:10px 16px;border-radius:8px;font-weight:600;cursor:pointer}
-    .badges-note{font-size:12px;color:#92aec4;margin-top:4px}
-    .ga-day-badge{position:absolute;bottom:4px;right:4px;background:#1d394e;color:#fff;font-size:10px;padding:2px 5px;border-radius:10px;line-height:1;font-weight:600}
-    .ga-day-full .ga-day-badge{background:#b6273b}
-  </style>
+  <link rel="stylesheet" href="/admin/css/trip-availability.css" />
 </head>
 <body>
   <div class="avail-wrapper">
@@ -51,7 +39,18 @@
       </div>
     </div>
   </div>
+  <nav class="bottom-nav" style="margin-top:24px">
+    <a href="/admin-home.html">Home</a>
+    <a href="/admin-bookings.html">Bookings</a>
+    <a href="/admin-payments.html">Payments</a>
+    <a href="/admin-manual.html">Manual</a>
+    <a href="/admin-providers.html">Providers</a>
+    <a href="/admin-availability.html">Availability</a>
+    <a href="/admin/trip-availability.html" class="active">Trip Availability</a>
+  </nav>
+  <footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
   <script src="/js/main.js"></script>
   <script src="/admin/trip-availability.js" defer></script>
+  <script>fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){document.getElementById('ga-version').textContent=v.version||'—'} })</script>
 </body>
 </html>
