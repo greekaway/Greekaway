@@ -120,8 +120,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Load from Category CMS API (published only)
-  (async () => fetch(`/api/categories?published=true`, { cache: 'no-store' }))()
+  // Load from Category CMS API (published only) via public endpoint
+  (async () => fetch(`/api/public/categories`, { cache: 'no-store' }))()
     .then(r => { if (!r.ok) throw new Error("Failed to load categories"); return r.json(); })
     .then(cats => {
       window.__gwCategories = cats;

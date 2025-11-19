@@ -94,6 +94,23 @@ function registerCategoriesRoutes(app, { checkAdminAuth }){
   try {
     app.use('/api/categories', buildCategoriesRouter({ checkAdminAuth }));
     console.log('categories: router mounted at /api/categories');
+    // Public read-only endpoint for published categories (no auth)
+    app.get('/api/public/categories', (req, res) => {
+      try {
+        let list = safeReadCategories();
+        list = list.filter(c => !!c.published);
+        list.sort((a,b)=>(a.order-b.order)||String(a.title||'').localeCompare(String(b.title||'')));
+        const out = list.map(c => {
+          const slug = c.slug || '';
+          const fp = path.join(PUBLIC_CATEGORIES_DIR, slug, 'icon.svg');
+          let iconSvg = null;
+          try { if (fs.existsSync(fp)) iconSvg = fs.readFileSync(fp, 'utf8'); } catch(_){ }
+          const iconPath = c.iconPath && typeof c.iconPath === 'string' && c.iconPath.trim() ? c.iconPath : `/categories/${slug}/icon.svg`;
+          return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath, iconSvg };
+        });
+        return res.json(out);
+      } catch(e){ console.error('categories: public GET failed', e); return res.status(500).json({ error: 'read_failed' }); }
+    });
   } catch(e){ console.error('categories: router mount failed', e && e.message ? e.message : e); }
 }
 
