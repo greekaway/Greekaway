@@ -56,6 +56,7 @@
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
   "trips": { "selectCategory": "Categorie kiezen", "noneFound": "Geen reizen gevonden in deze categorie." },
+    "no_categories": "Geen categorieën."
   "ui": { "close": "Sluiten", "cancel": "Annuleren", "back": "Terug", "finish": "Voltooien", "choose": "Kies" },
   "trips_ui": { "backToCategories": "Back to categories" },
   "notifications": {

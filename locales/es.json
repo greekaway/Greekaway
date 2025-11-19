@@ -55,7 +55,7 @@
   },
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "Selecciona categoría", "noneFound": "No se encontraron excursiones en esta categoría." },
+  "trips": { "selectCategory": "Selecciona categoría", "noneFound": "No se encontraron excursiones en esta categoría.", "no_categories": "No hay categorías." },
   "ui": { "close": "Cerrar", "cancel": "Cancelar", "back": "Atrás", "finish": "Finalizar", "choose": "Elegir" },
   "trips_ui": { "backToCategories": "Back to categories" },
   "notifications": {

@@ -25,9 +25,15 @@
       <label style="display:flex;align-items:center;gap:6px;margin-top:4px">Publish
         <input type="checkbox" id="catPublished">
       </label>
-      <label>Icon SVG
-        <textarea id="catIcon" rows="4" placeholder="<svg>...</svg>"></textarea>
-      </label>
+      <div class="field-row">
+        <label style="flex:1 1 auto">Icon File (SVG/PNG/WEBP)
+          <input type="file" id="catIcon" accept=".svg,.png,.webp">
+        </label>
+        <div class="icon-preview-wrap">
+          <div id="catIconPreview" class="category-icon admin-preview" aria-label="Icon preview"></div>
+          <div class="hint small">Preview</div>
+        </div>
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
         <button class="btn secondary" id="resetForm" type="button">Reset</button>
         <button class="btn" id="saveCategory" type="button">Save / Upsert</button>

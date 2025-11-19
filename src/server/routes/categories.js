@@ -3,14 +3,36 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const CATEGORIES_PATH = path.join(__dirname, '..', '..', '..', 'data', 'categories.json');
-const PUBLIC_CATEGORIES_DIR = path.join(__dirname, '..', '..', '..', 'public', 'categories');
+const ROOT_DIR = path.join(__dirname, '..', '..', '..');
+const CATEGORIES_PATH = path.join(ROOT_DIR, 'data', 'categories.json');
+const PUBLIC_CATEGORIES_DIR = path.join(ROOT_DIR, 'public', 'categories');
+const UPLOAD_ICONS_DIR = path.join(ROOT_DIR, 'public', 'uploads', 'category-icons');
+let multer = null;
+try { multer = require('multer'); } catch(_) { multer = null; }
 
 function ensureCategoriesFile(){
   try { fs.mkdirSync(path.dirname(CATEGORIES_PATH), { recursive: true }); } catch(_){ }
   try { fs.mkdirSync(PUBLIC_CATEGORIES_DIR, { recursive: true }); } catch(_){ }
+  try { fs.mkdirSync(UPLOAD_ICONS_DIR, { recursive: true }); } catch(_){ }
   if (!fs.existsSync(CATEGORIES_PATH)) {
     try { fs.writeFileSync(CATEGORIES_PATH, '[]', 'utf8'); } catch(_){ }
+  }
+  // Ensure a default.svg exists for fallback
+  const defaultIconPath = path.join(UPLOAD_ICONS_DIR, 'default.svg');
+  if (!fs.existsSync(defaultIconPath)) {
+    const fallbackSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><rect x="4" y="4" width="56" height="56" rx="12" fill="#1e5179"/><text x="32" y="38" font-size="18" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif">CAT</text></svg>';
+    try { fs.writeFileSync(defaultIconPath, fallbackSvg, 'utf8'); } catch(_){ }
+  }
+  try {
+    // Check write access and log absolute path resolutions
+    const resolved = path.resolve(UPLOAD_ICONS_DIR);
+    fs.accessSync(resolved, fs.constants.W_OK);
+    console.log('categories: upload dir ready:', resolved);
+  } catch(e){
+    console.error('categories: upload dir not writable', {
+      dir: path.resolve(UPLOAD_ICONS_DIR),
+      error: e && e.message ? e.message : e
+    });
   }
 }
 function safeReadCategories(){
@@ -39,6 +61,7 @@ function upsertCategory(list, input){
   existing.published = !!input.published;
   return existing;
 }
+// Legacy inline SVG save (kept for backward compatibility if still sent)
 function saveIconIfProvided(category, iconSvg){
   if (!iconSvg || typeof iconSvg !== 'string') return;
   const catDir = path.join(PUBLIC_CATEGORIES_DIR, category.slug);
@@ -46,6 +69,30 @@ function saveIconIfProvided(category, iconSvg){
   const iconPathDisk = path.join(catDir, 'icon.svg');
   try { fs.writeFileSync(iconPathDisk, iconSvg, 'utf8'); category.iconPath = `/categories/${category.slug}/icon.svg`; } catch(_){ }
 }
+
+// Multer storage (filename: slug + timestamp + ext)
+const upload = multer ? multer({
+  storage: multer.diskStorage({
+    destination: (req,file,cb) => {
+      try { fs.mkdirSync(UPLOAD_ICONS_DIR, { recursive:true }); } catch(_){ }
+      cb(null, UPLOAD_ICONS_DIR);
+    },
+    filename: (req,file,cb) => {
+      const orig = String(file.originalname||'').toLowerCase();
+      const extMatch = orig.match(/\.([a-z0-9]+)$/);
+      const ext = extMatch ? extMatch[1] : 'svg';
+      const slugRaw = sanitizeSlug((req.body && (req.body.slug||req.body.title)) || 'icon');
+      const fname = `${slugRaw}-${Date.now()}.${ext}`;
+      cb(null, fname);
+    }
+  }),
+  fileFilter: (req,file,cb) => {
+    const ok = /(svg|png|webp)$/i.test(file.originalname||'');
+    if (!ok) return cb(new Error('invalid_file_type'));
+    cb(null,true);
+  },
+  limits: { fileSize: 512 * 1024 }
+}) : null; // 512KB limit
 
 function buildCategoriesRouter({ checkAdminAuth }){
   ensureCategoriesFile();
@@ -61,31 +108,71 @@ function buildCategoriesRouter({ checkAdminAuth }){
       if (wantPublishedOnly || !isAdmin) {
         list = list.filter(c => !!c.published);
       }
-      // Enrich with inline SVG content for convenience on the client
       const enriched = list.map(c => {
         const slug = c.slug || '';
-        const fp = path.join(PUBLIC_CATEGORIES_DIR, slug, 'icon.svg');
-        let iconSvg = null;
-        try { if (fs.existsSync(fp)) iconSvg = fs.readFileSync(fp, 'utf8'); } catch(_){ }
-        const iconPath = c.iconPath && typeof c.iconPath === 'string' && c.iconPath.trim() ? c.iconPath : `/categories/${slug}/icon.svg`;
-        return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath, iconSvg };
+        // Priority: stored iconPath -> legacy /categories/<slug>/icon.svg if exists -> default fallback
+        let iconPath = (c.iconPath && c.iconPath.trim()) ? c.iconPath.trim() : '';
+        if (!iconPath) {
+          const legacy = path.join(PUBLIC_CATEGORIES_DIR, slug, 'icon.svg');
+          if (fs.existsSync(legacy)) iconPath = `/categories/${slug}/icon.svg`;
+        }
+        if (!iconPath) iconPath = '/uploads/category-icons/default.svg';
+        return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath };
       });
       return res.json(enriched);
     } catch(e){ console.error('categories: unexpected GET', e); return res.status(500).json({ error:'read_failed' }); }
   });
+  // Multipart handler inlined to capture and log Multer errors explicitly
   router.post('/', (req,res) => {
-    try {
-      if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });
-      const body = (req.body && typeof req.body==='object') ? req.body : null;
-      if (!body) return res.status(400).json({ error:'invalid_body' });
-      const list = safeReadCategories();
-      let updated; try { updated = upsertCategory(list, body); } catch(err){ return res.status(400).json({ error: err.message||'upsert_failed' }); }
-      if (body.iconSvg) saveIconIfProvided(updated, body.iconSvg);
-      if (updated.iconPath && !updated.iconPath.startsWith('/categories/')) updated.iconPath = `/categories/${updated.slug}/icon.svg`;
-      list.sort((a,b)=>(a.order-b.order)||a.title.localeCompare(b.title));
-      if (!writeCategories(list)) return res.status(500).json({ error:'write_failed' });
-      return res.json({ ok:true, category:updated, total:list.length });
-    } catch(e){ console.error('categories: unexpected POST', e); return res.status(500).json({ error:'write_failed' }); }
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });
+    const resolvedUploadDir = path.resolve(UPLOAD_ICONS_DIR);
+    console.log('categories: POST start', { resolvedUploadDir, bodyKeys: Object.keys(req.body||{}) });
+    function proceed(){
+      try {
+        const body = (req.body && typeof req.body==='object') ? req.body : null;
+        if (!body) return res.status(400).json({ error:'invalid_body' });
+        const list = safeReadCategories();
+        let updated; try { updated = upsertCategory(list, body); } catch(err){ return res.status(400).json({ error: err.message||'upsert_failed' }); }
+        if (req.file && req.file.filename) {
+          updated.iconPath = `/uploads/category-icons/${req.file.filename}`;
+        } else if (body.iconPath && typeof body.iconPath === 'string' && body.iconPath.trim()) {
+          updated.iconPath = body.iconPath.trim();
+        } else if (body.iconSvg) {
+          saveIconIfProvided(updated, body.iconSvg);
+        } else if (!updated.iconPath) {
+          updated.iconPath = '/uploads/category-icons/default.svg';
+        }
+        list.sort((a,b)=>(a.order-b.order)||a.title.localeCompare(b.title));
+        if (!writeCategories(list)) return res.status(500).json({ error:'write_failed' });
+        console.log('categories: POST saved', { slug: updated.slug, iconPath: updated.iconPath, file: req.file ? req.file.filename : null });
+        return res.json({ ok:true, category:updated, total:list.length });
+      } catch(e){
+        console.error('categories: POST error', e && e.stack ? e.stack : e);
+        return res.status(500).json({ error:'write_failed', detail: e && e.message ? e.message : String(e) });
+      }
+    }
+    // If multer available, run it and capture errors; else proceed without file
+    if (upload) {
+      try {
+        upload.single('iconFile')(req,res,(err)=>{
+          if (err) {
+            console.error('categories: multer error', {
+              message: err && err.message ? err.message : err,
+              code: err && err.code ? err.code : undefined,
+              dest: resolvedUploadDir
+            });
+            return res.status(400).json({ error:'upload_failed', detail: err && err.message ? err.message : String(err) });
+          }
+          proceed();
+        });
+      } catch(e){
+        console.error('categories: multer invocation failed', e && e.message ? e.message : e);
+        return res.status(500).json({ error:'upload_failed', detail: e && e.message ? e.message : String(e) });
+      }
+    } else {
+      console.warn('categories: multer not available, proceeding without file handling');
+      proceed();
+    }
   });
   router.delete('/:slug', (req, res) => {
     try {
@@ -115,11 +202,13 @@ function registerCategoriesRoutes(app, { checkAdminAuth }){
         list.sort((a,b)=>(a.order-b.order)||String(a.title||'').localeCompare(String(b.title||'')));
         const out = list.map(c => {
           const slug = c.slug || '';
-          const fp = path.join(PUBLIC_CATEGORIES_DIR, slug, 'icon.svg');
-          let iconSvg = null;
-          try { if (fs.existsSync(fp)) iconSvg = fs.readFileSync(fp, 'utf8'); } catch(_){ }
-          const iconPath = c.iconPath && typeof c.iconPath === 'string' && c.iconPath.trim() ? c.iconPath : `/categories/${slug}/icon.svg`;
-          return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath, iconSvg };
+          let iconPath = (c.iconPath && c.iconPath.trim()) ? c.iconPath.trim() : '';
+          if (!iconPath) {
+            const legacy = path.join(PUBLIC_CATEGORIES_DIR, slug, 'icon.svg');
+            if (fs.existsSync(legacy)) iconPath = `/categories/${slug}/icon.svg`;
+          }
+            if (!iconPath) iconPath = '/uploads/category-icons/default.svg';
+          return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath };
         });
         return res.json(out);
       } catch(e){ console.error('categories: public GET failed', e); return res.status(500).json({ error: 'read_failed' }); }

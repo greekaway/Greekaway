@@ -444,6 +444,26 @@ app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-kno
   }
 }));
 
+// Unified admin HTML protection (Basic/session auth) before static handler
+app.use((req, res, next) => {
+  try {
+    // Normalize path (strip query/hash)
+    const p = req.path || '';
+    const isAdminHtml = p.startsWith('/admin') && (p.endsWith('.html') || p === '/admin' || p === '/admin/');
+    if (isAdminHtml) {
+      if (!checkAdminAuth(req)) {
+        res.set('WWW-Authenticate', 'Basic realm="Greekaway Admin"');
+        return res.status(401).send('Auth required');
+      }
+      // If requesting /admin root, redirect to dashboard
+      if (p === '/admin' || p === '/admin/') {
+        return res.redirect('/admin/index.html');
+      }
+    }
+  } catch(_) { /* ignore */ }
+  return next();
+});
+
 // 1️⃣ Σερβίρουμε στατικά αρχεία από το /public με caching για non-HTML assets
 app.use(express.static(path.join(__dirname, "public"), {
   etag: !IS_DEV,
@@ -851,6 +871,13 @@ try {
   registerCategoriesRoutes(app, { checkAdminAuth: (r)=>checkAdminAuth(r) });
   console.log('categories: routes registered');
 } catch (e) { console.warn('categories: failed to register', e && e.message ? e.message : e); }
+
+// Trip CMS MVP routes (admin + public)
+try {
+  const { registerTripsRoutes } = require('./src/server/routes/trips');
+  registerTripsRoutes(app, { checkAdminAuth: (r)=>checkAdminAuth(r) });
+  console.log('trips: routes registered');
+} catch (e) { console.warn('trips: failed to register', e && e.message ? e.message : e); }
 
 // Public live weather endpoint for quick UI/tests: /api/live/weather?place=Lefkada&lang=en
 app.get('/api/live/weather', async (req, res) => {

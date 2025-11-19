@@ -1,0 +1,29 @@
+.trip-form{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.trip-form .form-group{display:flex;gap:12px;flex:1;min-width:260px}
+.trip-form label{display:flex;flex-direction:column;font-size:0.85rem;flex:1;min-width:160px}
+.trip-form label.full{flex:1 1 100%}
+.trip-form input,
+.trip-form textarea,
+.trip-form select{
+	padding:8px 10px;
+	font-size:0.9rem;
+	border:1px solid var(--ga-border);
+	border-radius:8px;
+	background:#0F1C29;
+	color:var(--ga-text);
+}
+.trip-form input:focus,
+.trip-form textarea:focus,
+.trip-form select:focus{
+	outline:none;
+	border-color:var(--ga-gold);
+}
+.trip-form .actions{display:flex;gap:8px;flex-wrap:wrap;width:100%;margin-top:4px}
+.errors{margin-top:6px;color:#b30000;font-size:0.8rem}
+.warning{margin-top:6px;color:#b36b00;font-size:0.8rem}
+.admin-table{width:100%;border-collapse:collapse;margin-top:16px}
+.admin-table th, .admin-table td{border:1px solid #ccc;padding:6px;font-size:0.8rem}
+.admin-table th{background:#1e5179;color:#fff;text-align:left}
+.admin-table td button{padding:4px 8px;font-size:0.75rem}
+.empty{margin-top:12px;font-size:0.85rem;color:#555}
+header.sticky-bar[data-collapsed='true'] .trip-form{display:none}

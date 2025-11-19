@@ -55,7 +55,7 @@
   },
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "Seleziona categoria", "noneFound": "Nessun viaggio trovato in questa categoria." },
+  "trips": { "selectCategory": "Seleziona categoria", "noneFound": "Nessun viaggio trovato in questa categoria.", "no_categories": "Nessuna categoria." },
   "ui": { "close": "Chiudi", "cancel": "Annulla", "back": "Indietro", "finish": "Termina", "choose": "Scegli" },
   "trips_ui": { "backToCategories": "Back to categories" },
   "notifications": {

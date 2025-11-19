@@ -55,7 +55,7 @@
   },
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "Välj kategori", "noneFound": "Inga resor hittades i denna kategori." },
+  "trips": { "selectCategory": "Välj kategori", "noneFound": "Inga resor hittades i denna kategori.", "no_categories": "Inga kategorier." },
   "ui": { "close": "Stäng", "cancel": "Avbryt", "back": "Tillbaka", "finish": "Slutför", "choose": "Välj" },
   "trips_ui": { "backToCategories": "Back to categories" },
   "notifications": {

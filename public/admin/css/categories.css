@@ -1,5 +1,20 @@
 #categoryForm textarea{font-family:monospace;font-size:12px}
+#categoryForm input[type=file]{font-size:12px}
 #categoriesTable td, #categoriesTable th{vertical-align:middle}
 .icon-badge{display:inline-block;padding:2px 6px;background:#114e7a;color:#fff;border-radius:6px;font-size:11px}
 #catMessage.error{color:#c33}
 #catMessage.ok{color:#0a0}
+
+/* Layout for file + preview */
+.field-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.field-row label{flex:1 1 280px}
+.icon-preview-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.icon-preview-wrap .small{font-size:11px;color:#888}
+
+/* Admin preview wrapper (48x48) */
+.category-icon.admin-preview{width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:transparent}
+.category-icon.admin-preview svg,.category-icon.admin-preview img.svg-icon{width:48px;height:48px;display:block;max-width:48px;max-height:48px}
+/* Enforce gold color for SVG preview only inside the preview wrapper */
+.category-icon.admin-preview svg, .category-icon.admin-preview svg *{fill:#D4AF37 !important;stroke:#D4AF37 !important}
+/* PNG/WEBP approximate gold filter */
+.category-icon.admin-preview img.svg-icon:not([src$=".svg"]) {filter:brightness(0) saturate(100%) sepia(85%) hue-rotate(10deg) saturate(450%) brightness(92%)}

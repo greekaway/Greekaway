@@ -56,7 +56,7 @@
   },
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "Выберите категорию", "noneFound": "В этой категории поездки не найдены." },
+  "trips": { "selectCategory": "Выберите категорию", "noneFound": "В этой категории поездки не найдены.", "no_categories": "Категории отсутствуют." },
   "ui": { "close": "Закрыть", "cancel": "Отмена", "back": "Назад", "finish": "Готово", "choose": "Выбрать" },
   "trips_ui": { "backToCategories": "Back to categories" },
   "notifications": {

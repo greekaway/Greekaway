@@ -59,7 +59,7 @@
     "departure_time_label": "Αναχώρηση",
     "departure_place_label": "Από"
   },
-  "trips": { "selectCategory": "Επιλέξτε Κατηγορία", "noneFound": "Δεν βρέθηκαν εκδρομές σε αυτή την κατηγορία." },
+  "trips": { "selectCategory": "Επιλέξτε Κατηγορία", "noneFound": "Δεν βρέθηκαν εκδρομές σε αυτή την κατηγορία.", "no_categories": "Δεν υπάρχουν κατηγορίες." },
   "ui": { "close": "Κλείσιμο", "cancel": "Άκυρο", "back": "Πίσω", "finish": "Ολοκλήρωση", "choose": "Επιλέξτε" },
   "trips_ui": { "backToCategories": "Πίσω στις κατηγορίες" },
   "notifications": {

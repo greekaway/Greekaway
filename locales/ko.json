@@ -55,7 +55,7 @@
   },
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "카테고리 선택", "noneFound": "이 카테고리에 해당하는 여행이 없습니다." },
+  "trips": { "selectCategory": "카테고리 선택", "noneFound": "이 카테고리에 해당하는 여행이 없습니다.", "no_categories": "카테고리가 없습니다." },
   "ui": { "close": "닫기", "cancel": "취소", "back": "뒤로", "finish": "완료", "choose": "선택" },
   "trips_ui": { "backToCategories": "Back to categories" },
   "notifications": {

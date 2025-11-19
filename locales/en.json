@@ -62,7 +62,11 @@
     "departure_time_label": "Departure",
     "departure_place_label": "From"
   },
-  "trips": { "selectCategory": "Select Category", "noneFound": "No trips found in this category." },
+  "trips": { 
+    "selectCategory": "Select Category", 
+    "noneFound": "No trips found in this category.", 
+    "no_categories": "No categories found." 
+  },
   "ui": { "close": "Close", "cancel": "Cancel", "back": "Back", "finish": "Finish", "choose": "Choose" },
   "trips_ui": { "backToCategories": "Back to categories" },
   "notifications": {

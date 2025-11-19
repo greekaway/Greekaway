@@ -67,6 +67,27 @@ body.ga-variant-flat .category-btn.cat-mountain::after {
   -webkit-mask-position: center;  mask-position: center;
   -webkit-mask-size: contain;     mask-size: contain;
 }
+
+/* ================= New Universal SVG Icon Styling ================= */
+/* Disable legacy mask-based icons and pseudo-elements when using uploaded SVGs */
+body.ga-variant-flat .category-btn::after,
+body.ga-variant-flat .category-btn::before { display: none !important; content: none !important; }
+body.ga-variant-flat .category-btn img { display: none !important; }
+body.ga-variant-flat .category-btn img.svg-icon { display: block !important; }
+
+.category-tile .category-icon { width:64px; height:64px; display:flex; align-items:center; justify-content:center; }
+.category-tile .category-icon svg, .category-tile .category-icon img.svg-icon { width:64px; height:64px; max-width:64px; max-height:64px; display:block; }
+/* Force gold color on all vector shapes */
+.category-tile .category-icon svg *, .category-tile .category-icon svg { fill:#D4AF37 !important; stroke:#D4AF37 !important; }
+/* Ensure no background/mask artifacts */
+.category-tile .category-icon, .category-tile .category-icon svg { background:transparent !important; }
+
+/* Subtle padding so caption has space; keep consistent press visuals */
+.category-btn { padding:18px 18px 26px; }
+.category-btn .category-icon { pointer-events:none; }
+
+/* Optional recolor approximation for non-SVG fallbacks (PNG/WEBP) */
+.category-tile .category-icon img.svg-icon:not([src$=".svg"]) { filter:brightness(0) saturate(100%) sepia(85%) hue-rotate(10deg) saturate(450%) brightness(92%); }
 /* Make mountain icon 10% larger than base (handled below with top offset) */
 body.ga-variant-flat .category-btn.cat-culture::after {
   -webkit-mask-image: url('/images/icons/culture.svg');
@@ -143,6 +164,12 @@ body.is-loaded #categories-container .category-btn:nth-child(6){ animation-delay
   filter: drop-shadow(0 0 18px rgba(255,255,255,0.34));
 }
 .category-btn.is-pressing::before { opacity: 1; transform: scaleX(1.06); }
+
+/* ============ Global category icon styling (all pages) ============ */
+.category-icon { width:64px; height:64px; display:flex; align-items:center; justify-content:center; background:transparent !important; }
+.category-icon svg, .category-icon img.svg-icon { width:64px; height:64px; max-width:64px; max-height:64px; display:block; }
+/* Enforce gold color for all shapes inside the icon svg */
+.category-icon svg, .category-icon svg * { fill: #D4AF37 !important; stroke: #D4AF37 !important; }
 
 /* ============ Trip listing cards (category pages) ============ */
 /* Only on category listing view to avoid affecting other pages */

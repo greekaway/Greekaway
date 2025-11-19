@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Greekaway Admin – Trips</title>
+  <link rel="stylesheet" href="/css/admin-common.css">
+  <link rel="stylesheet" href="/css/admin-tables.css">
+  <link rel="stylesheet" href="/css/admin-theme-toggle.css">
+  <link rel="stylesheet" href="/css/trips-admin.css">
+  <link rel="manifest" href="/manifest-admin.json">
+  <meta name="theme-color" content="#001f3f">
+  <link rel="stylesheet" href="/pwa.css">
+  <link rel="stylesheet" href="/css/pwa-fixes.css">
+</head>
+<body>
+  <header class="sticky-bar" aria-label="Trips CMS" data-collapsed="false">
+    <div class="bar-inner">
+      <div class="title">Trips CMS</div>
+      <button id="togglePanel" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φόρμας" aria-expanded="true">▲</button>
+      <form id="tripForm" class="trip-form" onsubmit="return false;">
+        <div class="form-group">
+          <label>Title *<input type="text" id="title" required></label>
+          <label>Slug *<input type="text" id="slug" required></label>
+        </div>
+        <label class="full">Description *<textarea id="description" rows="3" required></textarea></label>
+        <div class="form-group">
+          <label>Category *<select id="category" required></select></label>
+          <label>Duration *<input type="text" id="duration" placeholder="π.χ. 4 ώρες" required></label>
+        </div>
+        <div class="form-group">
+          <label style="flex:1 1 auto">Trip Icon (SVG/PNG/WEBP)
+            <input type="file" id="tripIcon" accept=".svg,.png,.webp" aria-label="Trip Icon">
+          </label>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+            <div id="tripIconPreview" class="category-icon admin-preview" aria-label="Trip icon preview"></div>
+            <div class="hint small">Preview</div>
+            <div id="tripIconName" class="filename small mono" aria-live="polite"></div>
+          </div>
+        </div>
+        
+        <label class="full">Stops (μία ανά γραμμή)<textarea id="stops" rows="4" placeholder="Στάση 1\nΣτάση 2\nΣτάση 3"></textarea></label>
+        <div class="actions">
+          <button id="saveBtn" class="btn primary" type="button">Αποθήκευση / Ενημέρωση</button>
+          <button id="resetBtn" class="btn secondary" type="button">Νέα εγγραφή</button>
+          <button id="deleteBtn" class="btn danger" type="button" disabled>Διαγραφή</button>
+        </div>
+        <div id="formErrors" class="errors" aria-live="polite"></div>
+        <div id="categoryWarning" class="warning" hidden>⚠ Η κατηγορία αυτής της εκδρομής δεν υπάρχει πλέον.</div>
+      </form>
+    </div>
+  </header>
+
+  <main class="content-wrap">
+    <section>
+      <h2>Trips</h2>
+      <table id="tripsTable" class="admin-table">
+        <thead>
+          <tr><th>Title</th><th>Slug</th><th>Category</th><th>Duration</th><th>Actions</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="tableEmpty" class="empty" hidden>Δεν υπάρχουν trips ακόμα.</div>
+    </section>
+  </main>
+
+  <div id="tripConfirmModal" class="modal" hidden>
+    <div class="modal-inner" role="dialog" aria-modal="true" aria-labelledby="tripConfirmTitle">
+      <h3 id="tripConfirmTitle">Είσαι σίγουρος;</h3>
+      <p>Η εκδρομή θα διαγραφεί οριστικά.</p>
+      <div class="actions">
+        <button id="tripConfirmCancel" class="btn secondary" type="button">Άκυρο</button>
+        <button id="tripConfirmOk" class="btn danger" type="button">Διαγραφή</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="/admin-home.html">Home</a>
+    <a href="/admin-bookings.html">Bookings</a>
+    <a href="/admin-payments.html">Payments</a>
+    <a href="/admin-manual.html">Manual</a>
+    <a href="/admin-providers.html">Providers</a>
+    <a href="/admin-availability.html">Availability</a>
+    <a href="/admin-trips.html" class="active">Trips</a>
+  </nav>
+  <footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
+  <script src="/js/admin-theme-toggle.js"></script>
+  <script src="/admin/trips.js"></script>
+  <script src="/pwa-install.js" defer></script>
+  <script src="/js/main.js"></script>
+  <script>
+    fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){ document.getElementById('ga-version').textContent = v.version || '—' }});
+    (function(){
+      const header=document.querySelector('header.sticky-bar');
+      const btn=document.getElementById('togglePanel');
+      if(header&&btn){
+        btn.addEventListener('click',()=>{
+          const cur=header.getAttribute('data-collapsed')==='true';
+          header.setAttribute('data-collapsed',cur? 'false':'true');
+          btn.setAttribute('aria-expanded',cur? 'true':'false');
+          btn.textContent = (cur? '▲':'▼');
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

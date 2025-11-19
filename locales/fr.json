@@ -49,6 +49,7 @@
   "stop": { "label": "Arrêt {n}" },
   "trip": { "experienceTitle": "Expérience" },
   "trips": { "selectCategory": "Choisir une catégorie", "noneFound": "Aucune excursion trouvée dans cette catégorie." },
+  "no_categories": "Aucune catégorie."
   "ui": { "close": "Fermer", "cancel": "Annuler", "back": "Retour", "finish": "Terminer", "choose": "Choisir" },
   "trips_ui": { "backToCategories": "Retour aux catégories" },
   "notifications": {

@@ -48,7 +48,7 @@
   },
   "stop": { "label": "תחנה {n}" },
   "trip": { "experienceTitle": "חוויה" },
-  "trips": { "selectCategory": "בחר קטגוריה", "noneFound": "לא נמצאו טיולים בקטגוריה זו." },
+  "trips": { "selectCategory": "בחר קטגוריה", "noneFound": "לא נמצאו טיולים בקטגוריה זו.", "no_categories": "אין קטגוריות." },
   "ui": { "close": "סגור", "cancel": "בטל", "back": "חזרה", "finish": "סיום", "choose": "בחר" },
   "trips_ui": { "backToCategories": "חזרה לקטגוריות" },
   "notifications": {

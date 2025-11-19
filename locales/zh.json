@@ -55,7 +55,7 @@
   },
   "stop": { "label": "Stop {n}" },
   "trip": { "experienceTitle": "Experience" },
-  "trips": { "selectCategory": "选择类别", "noneFound": "该类别中未找到行程。" },
+  "trips": { "selectCategory": "选择类别", "noneFound": "该类别中未找到行程。", "no_categories": "没有类别。" },
   "ui": { "close": "关闭", "cancel": "取消", "back": "返回", "finish": "完成", "choose": "选择" },
   "trips_ui": { "backToCategories": "Back to categories" },
   "notifications": {

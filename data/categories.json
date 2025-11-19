@@ -1,17 +1,33 @@
 [
   {
-    "id": "b386ecfe-17c5-4b1f-a1a1-daac490b6dfe",
-    "title": "θαλασσα",
-    "slug": "thallasa",
-    "iconPath": "/categories/thallasa/icon.svg",
-    "order": 0,
+    "id": "65fd1809-31c7-4626-a5d4-cc02d058eb31",
+    "title": "Αθήνα",
+    "slug": "athina",
+    "iconPath": "/uploads/category-icons/athina-1763560564929.svg",
+    "order": 1,
     "published": true
   },
   {
-    "id": "190eea3b-f57f-497f-b870-40530e5c24dc",
-    "title": "βουνο",
-    "slug": "mountain",
-    "iconPath": "/categories/mountain/icon.svg",
+    "id": "d57e6f6a-854e-4418-b70a-1492f295da19",
+    "title": "Βουνό",
+    "slug": "boyno",
+    "iconPath": "/uploads/category-icons/boyno-1763552980857.svg",
+    "order": 1,
+    "published": true
+  },
+  {
+    "id": "b96e4fa7-3755-4830-bb62-d20823e24a5b",
+    "title": "Θάλασσα",
+    "slug": "thalassa",
+    "iconPath": "/uploads/category-icons/thalassa-1763552452977.svg",
+    "order": 1,
+    "published": true
+  },
+  {
+    "id": "795e65b4-e45b-4dd4-9903-8800b03ef458",
+    "title": "Πολιτισμός",
+    "slug": "politismos",
+    "iconPath": "/uploads/category-icons/politismos-1763552850472.svg",
     "order": 1,
     "published": true
   }

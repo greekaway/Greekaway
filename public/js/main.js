@@ -13,6 +13,35 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch(_) {}
 });
 
+// Ensure admin bottom-nav has Categories/Trips; append if missing, label by href (EN), keep stable order
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const navs = document.querySelectorAll('nav.bottom-nav');
+    if (!navs || !navs.length) return;
+    navs.forEach(nav => {
+      const ensureLink = (href, label) => {
+        let a = nav.querySelector(`a[href="${href}"]`);
+        if (!a) {
+          a = document.createElement('a');
+          a.setAttribute('href', href);
+          a.textContent = label;
+          nav.appendChild(a);
+        }
+        // Always normalize label by href (no index dependence)
+        a.textContent = label;
+        return a;
+      };
+      const cat = ensureLink('/admin/categories.html', 'Categories');
+      const trips = ensureLink('/admin-trips.html', 'Trips');
+      // Keep order stable: ... Availability, Categories, Trips
+      try {
+        if (cat && cat.parentNode === nav) nav.appendChild(cat);
+        if (trips && trips.parentNode === nav) nav.appendChild(trips);
+      } catch(_) { /* ignore */ }
+    });
+  } catch(_) { /* silent */ }
+});
+
 // Lightweight logger: set debug = true to enable console output during development.
 const G = {
   debug: false,
@@ -108,36 +137,78 @@ document.addEventListener("DOMContentLoaded", () => {
       container.innerHTML = `<p class="no-categories">${msg}</p>`;
       return;
     }
-    cats.forEach(cat => {
-      const slug = cat.slug || cat.id;
-      const catTitle = getLocalized(cat.title) || '';
-      const iconPath = cat.iconPath || (`/categories/${slug}/icon.svg`);
-      const wrapper = document.createElement('div');
-      wrapper.className = 'category-tile';
-      // Button with icon only
-      const btn = document.createElement('button');
-      btn.className = 'category-btn ga-card';
-      btn.dataset.cat = slug;
-      btn.classList.add(`cat-${slug}`);
-      btn.title = catTitle;
-      btn.addEventListener('click', () => { window.location.href = `/categories/${slug}.html`; });
-      // Icon element (img or fallback span)
-      const iconEl = document.createElement('img');
-      iconEl.src = iconPath;
-      iconEl.alt = catTitle;
-      btn.appendChild(iconEl);
-      // Caption below button
-      const caption = document.createElement('div');
-      caption.className = 'category-caption';
-      caption.textContent = catTitle;
-      wrapper.appendChild(btn);
-      wrapper.appendChild(caption);
-      container.appendChild(wrapper);
-      if (["sea","mountain","culture"].includes(slug)) {
-        const delay = (["sea","mountain","culture"].indexOf(slug) * 100) + 90;
-        setTimeout(() => btn.classList.add('cinematic'), delay);
-      }
-    });
+      cats.forEach(cat => {
+        const slug = cat.slug || cat.id;
+        const catTitle = getLocalized(cat.title) || '';
+        let iconPath = cat.iconPath || (`/categories/${slug}/icon.svg`);
+        if (!iconPath) iconPath = '/uploads/category-icons/default.svg';
+        const tile = document.createElement('div');
+        tile.className = 'category-tile';
+        const btn = document.createElement('button');
+        btn.className = 'category-btn ga-card';
+        btn.dataset.cat = slug;
+        btn.classList.add(`cat-${slug}`);
+        btn.title = catTitle;
+        // Route all categories through a single template with slug param
+        btn.addEventListener('click', () => { window.location.href = `/categories/culture.html?slug=${encodeURIComponent(slug)}`; });
+        // Icon wrapper
+        const iconWrapper = document.createElement('div');
+        iconWrapper.className = 'category-icon';
+        // Inject inline SVG to enforce gold color via CSS; fallback to <img> for non-SVG
+        const isSvg = /\.svg(\?|$)/i.test(iconPath);
+        if (isSvg) {
+          fetch(iconPath, { cache:'no-store' })
+            .then(r => r.ok ? r.text() : Promise.reject(new Error('svg_fetch_failed_'+r.status)))
+            .then(txt => {
+              try {
+                const cleaned = txt.replace(/<\?xml[^>]*>/ig,'').replace(/<!DOCTYPE[^>]*>/ig,'');
+                const tmp = document.createElement('div');
+                tmp.innerHTML = cleaned;
+                const svg = tmp.querySelector('svg');
+                if (svg) {
+                  svg.removeAttribute('width');
+                  svg.removeAttribute('height');
+                  svg.setAttribute('role','img');
+                  svg.setAttribute('aria-label', catTitle);
+                  svg.classList.add('svg-icon');
+                  iconWrapper.appendChild(svg);
+                } else {
+                  throw new Error('no_svg_tag');
+                }
+              } catch(e){
+                const imgFallback = document.createElement('img');
+                imgFallback.src = iconPath;
+                imgFallback.alt = catTitle;
+                imgFallback.className = 'svg-icon';
+                iconWrapper.appendChild(imgFallback);
+              }
+            })
+            .catch(_ => {
+              const imgFallback = document.createElement('img');
+              imgFallback.src = iconPath;
+              imgFallback.alt = catTitle;
+              imgFallback.className = 'svg-icon';
+              iconWrapper.appendChild(imgFallback);
+            });
+        } else {
+          const imgEl = document.createElement('img');
+          imgEl.src = iconPath;
+          imgEl.alt = catTitle;
+          imgEl.className = 'svg-icon';
+          iconWrapper.appendChild(imgEl);
+        }
+        btn.appendChild(iconWrapper);
+        const caption = document.createElement('div');
+        caption.className = 'category-caption';
+        caption.textContent = catTitle;
+        tile.appendChild(btn);
+        tile.appendChild(caption);
+        container.appendChild(tile);
+        if (["sea","mountain","culture"].includes(slug)) {
+          const delay = (["sea","mountain","culture"].indexOf(slug) * 100) + 90;
+          setTimeout(() => btn.classList.add('cinematic'), delay);
+        }
+      });
   }
 
   // Load from Category CMS API (published only) via public endpoint
@@ -159,7 +230,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const tripsContainer = document.getElementById("trips-container");
   if (!tripsContainer) return; // αν δεν είμαστε σε σελίδα κατηγορίας, πήγαινε στο [C]
 
-  const category = document.body.dataset.category; // π.χ. "culture"
+  // Determine category from query param (?slug=...) with fallback to body data-category
+  let category = '';
+  try {
+    const params = new URLSearchParams(window.location.search);
+    category = (params.get('slug') || '').trim();
+  } catch(_) { /* ignore */ }
+  if (!category) category = document.body.dataset.category || '';
   // ensure view flag for listing pages
   document.body.dataset.view = 'category';
   if (!category) return;
@@ -169,24 +246,79 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!container) return;
     container.innerHTML = "";
     allTrips
-      .filter(t => t.category === category)
+      .filter(t => t && t.category === category)
       .forEach(trip => {
-  const card = document.createElement("div");
-  card.className = "trip-card";
-  card.classList.add('ga-card');
-        card.dataset.tripId = trip.id;
-        // Use unified theme styles for all trips (no per-trip inline overrides)
-  // Include acropolis in the 3D "logo-pop" styling group (same visual effect as Ancient Olympia)
-  if (trip.id === 'olympia' || trip.id === 'lefkas' || trip.id === 'parnassos' || trip.id === 'acropolis') card.classList.add('logo-pop');
-        card.dataset.cat = trip.category || category;
-        card.classList.add(`cat-${trip.category || category}`);
-        card.innerHTML = `<h3>${getLocalized(trip.title)}</h3>`;
-        card.addEventListener("click", () => {
-          try { sessionStorage.setItem('highlightTrip', trip.id); } catch(e) {}
-          // Route via the new trip mode selection page before entering the trip
-          window.location.href = `/select-trip-type.html?trip=${encodeURIComponent(trip.id)}`;
+        const tile = document.createElement('div');
+        tile.className = 'category-tile';
+        const tripSlug = trip.slug || trip.id;
+        // Button with icon (same structure/classes as categories)
+        const btn = document.createElement('button');
+        btn.className = 'category-btn ga-card';
+        btn.dataset.trip = tripSlug;
+        btn.dataset.cat = trip.category || category;
+        btn.classList.add(`cat-${trip.category || category}`);
+        if (tripSlug === 'olympia' || tripSlug === 'lefkas' || tripSlug === 'parnassos' || tripSlug === 'acropolis') btn.classList.add('logo-pop');
+        btn.title = getLocalized(trip.title) || '';
+        btn.addEventListener('click', () => {
+          try { sessionStorage.setItem('highlightTrip', tripSlug); } catch(_) {}
+          window.location.href = `/select-trip-type.html?trip=${encodeURIComponent(tripSlug)}`;
         });
-        container.appendChild(card);
+        const iconWrapper = document.createElement('div');
+        iconWrapper.className = 'category-icon';
+        // Inline SVG injection for gold styling; fallback to <img>
+        try {
+          let iconPath = trip.iconPath || '';
+          if (!iconPath) iconPath = '/uploads/category-icons/default.svg';
+          const isSvg = /\.svg(\?|$)/i.test(iconPath);
+          if (isSvg) {
+            fetch(iconPath, { cache:'no-store' })
+              .then(r => r.ok ? r.text() : Promise.reject(new Error('svg_fetch_failed_'+r.status)))
+              .then(txt => {
+                try {
+                  const cleaned = txt.replace(/<\?xml[^>]*>/ig,'').replace(/<!DOCTYPE[^>]*>/ig,'');
+                  const tmp = document.createElement('div');
+                  tmp.innerHTML = cleaned;
+                  const svg = tmp.querySelector('svg');
+                  if (svg) {
+                    svg.removeAttribute('width');
+                    svg.removeAttribute('height');
+                    svg.setAttribute('role','img');
+                    svg.setAttribute('aria-label', btn.title || 'Trip icon');
+                    svg.classList.add('svg-icon');
+                    iconWrapper.appendChild(svg);
+                  } else {
+                    throw new Error('no_svg_tag');
+                  }
+                } catch(e){
+                  const imgFallback = document.createElement('img');
+                  imgFallback.src = iconPath;
+                  imgFallback.alt = btn.title || 'Trip icon';
+                  imgFallback.className = 'svg-icon';
+                  iconWrapper.appendChild(imgFallback);
+                }
+              })
+              .catch(_ => {
+                const imgFallback = document.createElement('img');
+                imgFallback.src = iconPath;
+                imgFallback.alt = btn.title || 'Trip icon';
+                imgFallback.className = 'svg-icon';
+                iconWrapper.appendChild(imgFallback);
+              });
+          } else {
+            const imgEl = document.createElement('img');
+            imgEl.src = iconPath;
+            imgEl.alt = btn.title || 'Trip icon';
+            imgEl.className = 'svg-icon';
+            iconWrapper.appendChild(imgEl);
+          }
+        } catch(_){ /* ignore icon errors */ }
+        btn.appendChild(iconWrapper);
+        const caption = document.createElement('div');
+        caption.className = 'category-caption';
+        caption.textContent = getLocalized(trip.title);
+        tile.appendChild(btn);
+        tile.appendChild(caption);
+        container.appendChild(tile);
       });
 
     if (!container.children.length) {
@@ -195,11 +327,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  ;(async () => {
-    const dv = await getDataVersionEnsure();
-    return fetch(`/data/tripindex.json${dv ? ('?v='+encodeURIComponent(dv)) : ''}`)
-  })()
-    .then(r => r.json())
+  ;(async () => fetch(`/api/public/trips`, { cache:'no-store' }))()
+    .then(r => { if (!r.ok) throw new Error('Failed to load trips'); return r.json(); })
     .then(allTrips => {
       window.__gwCategoryTrips = allTrips;
       renderCategoryTrips(allTrips);
@@ -225,25 +354,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Try to set category early from tripindex so per-category background
   // appears as soon as possible (before the full trip JSON finishes loading).
-  ;(async () => {
-    const dv = await getDataVersionEnsure();
-    return fetch(`/data/tripindex.json${dv ? ('?v='+encodeURIComponent(dv)) : ''}`)
-  })()
-    .then(r => r.json())
-    .then(all => {
-      const meta = (all || []).find(t => t.id === tripId);
+  // Try to fetch meta by slug from public API first; fallback to old tripindex
+  (async () => {
+    try {
+      const all = await fetch('/api/public/trips', { cache:'no-store' }).then(r=>r.ok?r.json():[]);
+      const meta = (all || []).find(t => (t.slug || t.id) === tripId);
       if (meta && meta.category) document.body.dataset.category = meta.category;
-    })
-    .catch(() => {});
+    } catch(_){
+      try {
+        const dv = await getDataVersionEnsure();
+        const all = await fetch(`/data/tripindex.json${dv ? ('?v='+encodeURIComponent(dv)) : ''}`).then(r=>r.json());
+        const meta = (all || []).find(t => t.id === tripId);
+        if (meta && meta.category) document.body.dataset.category = meta.category;
+      } catch(__) {}
+    }
+  })();
 
+  // Prefer new public API (slug-based). Fallback to legacy JSON file if missing.
   ;(async () => {
-    const dv = await getDataVersionEnsure();
-    return fetch(`/data/trips/${tripId}.json${dv ? ('?v='+encodeURIComponent(dv)) : ''}`)
+    try {
+      const r = await fetch(`/api/public/trips/${encodeURIComponent(tripId)}`, { cache:'no-store' });
+      if (r.ok) return r.json();
+      throw new Error('fallback');
+    } catch(_){
+      const dv = await getDataVersionEnsure();
+      const r2 = await fetch(`/data/trips/${tripId}.json${dv ? ('?v='+encodeURIComponent(dv)) : ''}`);
+      if (!r2.ok) throw new Error("Αποτυχία φόρτωσης δεδομένων εκδρομής");
+      return r2.json();
+    }
   })()
-    .then(r => {
-      if (!r.ok) throw new Error("Αποτυχία φόρτωσης δεδομένων εκδρομής");
-      return r.json();
-    })
   .then(async trip => {
   // If this is olympia or parnassos, give the trip page a navy background override
   if (trip.id === 'olympia' || trip.id === 'parnassos') document.body.classList.add('navy-bg');
@@ -256,6 +395,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const titleEl = document.getElementById("trip-title");
   const descEl = document.getElementById("trip-description");
   const metaWrap = document.getElementById('trip-meta');
+          // Render trip cover image at the top if available (non-intrusive)
+          try {
+            const cover = trip.coverImage || '';
+            if (cover) {
+              const section = document.getElementById('trip-section');
+              if (section) {
+                let holder = document.getElementById('trip-cover');
+                if (!holder) {
+                  holder = document.createElement('div');
+                  holder.id = 'trip-cover';
+                  holder.style.margin = '12px 0';
+                  section.insertBefore(holder, metaWrap || descEl || section.firstChild);
+                }
+                holder.innerHTML = '';
+                const img = new Image();
+                const url = cover.startsWith('/') ? cover : (`/uploads/trips/${cover}`);
+                img.src = url;
+                img.alt = getLocalized(trip.title) || 'Trip cover';
+                img.style.width = '100%';
+                img.style.height = 'auto';
+                img.style.borderRadius = '12px';
+                holder.appendChild(img);
+              }
+            }
+          } catch(_) {}
   const metaPriceEl = document.getElementById('trip-meta-price');
   const metaTimeEl = document.getElementById('trip-meta-time');
   const metaPlaceEl = document.getElementById('trip-meta-place');
@@ -360,81 +524,67 @@ document.addEventListener("DOMContentLoaded", () => {
         const stopsWrap = document.getElementById("stops");
         if (!stopsWrap) return;
         stopsWrap.innerHTML = "";
-        (t.stops || []).forEach((stop, i) => {
-          const stopEl = document.createElement("div");
-          // use video-card so CSS applies rounded card, padding and shadow
-          stopEl.className = "trip-stop video-card";
-          const stopLabelTemplate = (window.t && typeof window.t === 'function') ? window.t('stop.label') : 'Stop {n}';
-          const stopLabel = stopLabelTemplate.replace('{n}', String(i + 1));
-          const titleHtml = `<h3 class="stop-title">${stopLabel}: ${getLocalized(stop.name) || ""}</h3>`;
-          const videos = Array.isArray(stop.videos) && stop.videos.length ? stop.videos : (stop.video ? [stop.video] : []);
-
-          let videoArea = '';
-          if (videos.length <= 1) {
-            const v = videos[0] || '';
-            videoArea = `
-              <div class="video-wrap">
-                <iframe
-                  src="${v}"
-                  title="${getLocalized(stop.name) || 'video'}"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                  loading="lazy"
-                  width="100%"
-                  height="315"></iframe>
-              </div>`;
-          } else {
-            const slides = videos.map((url, idx) => `
-              <div class="carousel-slide" data-idx="${idx}">
+        const stopsArr = Array.isArray(t.stops) ? t.stops : [];
+        // New CMS: stops may be an array of strings; legacy: array of objects with media
+        if (stopsArr.length && typeof stopsArr[0] === 'string') {
+          stopsArr.forEach((s, i) => {
+            const stopEl = document.createElement('div');
+            stopEl.className = 'trip-stop video-card';
+            const stopLabelTemplate = (window.t && typeof window.t === 'function') ? window.t('stop.label') : 'Stop {n}';
+            const stopLabel = stopLabelTemplate.replace('{n}', String(i + 1));
+            stopEl.innerHTML = `<h3 class="stop-title">${stopLabel}: ${String(s)}</h3>`;
+            stopsWrap.appendChild(stopEl);
+          });
+        } else {
+          (stopsArr || []).forEach((stop, i) => {
+            const stopEl = document.createElement("div");
+            stopEl.className = "trip-stop video-card";
+            const stopLabelTemplate = (window.t && typeof window.t === 'function') ? window.t('stop.label') : 'Stop {n}';
+            const stopLabel = stopLabelTemplate.replace('{n}', String(i + 1));
+            const titleHtml = `<h3 class="stop-title">${stopLabel}: ${getLocalized(stop.name) || ""}</h3>`;
+            const videos = Array.isArray(stop.videos) && stop.videos.length ? stop.videos : (stop.video ? [stop.video] : []);
+            let videoArea = '';
+            if (videos.length <= 1) {
+              const v = videos[0] || '';
+              videoArea = v ? `
                 <div class="video-wrap">
-                  <iframe
-                    data-src="${url}"
-                    title="${(getLocalized(stop.name) || 'video') + ' — ' + (idx+1)}"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowfullscreen
-                    loading="lazy"
-                    width="100%"
-                    height="315"></iframe>
-                  <button class="slide-arrow left" type="button" data-i18n-aria="carousel.prev">&#10094;</button>
-                  <button class="slide-arrow right" type="button" data-i18n-aria="carousel.next">&#10095;</button>
-                </div>
-              </div>`).join('');
-            videoArea = `
-              <div class="video-carousel peek" data-count="${videos.length}">
-                <div class="carousel-viewport" tabindex="0" aria-label="Video carousel">
-                  <div class="carousel-track">${slides}</div>
-                  <div class="carousel-edge left" aria-hidden="true"></div>
-                  <div class="carousel-edge right" aria-hidden="true"></div>
-                </div>
-              </div>`;
-          }
-
-          // Build stop-level capsules (time + location) following the departure header style
-          let stopCapsules = '';
-          try {
-            const hasTime = !!(stop && stop.time);
-            const hasAddr = !!(stop && stop.address);
-            if (hasTime || hasAddr) {
-              const topRow = hasTime ? `<div class="top-row"><span class="capsule time"><i class="fa-solid fa-clock icon" aria-hidden="true"></i>${String(stop.time)}</span></div>` : '';
-              const bottomRow = hasAddr ? `<div class="bottom-row"><span class="capsule location"><i class="fa-solid fa-location-dot icon" aria-hidden="true"></i>${String(stop.address)}</span></div>` : '';
-              stopCapsules = `<div class="stop-capsules">${topRow}${bottomRow}</div>`;
+                  <iframe src="${v}" title="${getLocalized(stop.name) || 'video'}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" width="100%" height="315"></iframe>
+                </div>` : '';
+            } else {
+              const slides = videos.map((url, idx) => `
+                <div class="carousel-slide" data-idx="${idx}">
+                  <div class="video-wrap">
+                    <iframe data-src="${url}" title="${(getLocalized(stop.name) || 'video') + ' — ' + (idx+1)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" width="100%" height="315"></iframe>
+                    <button class="slide-arrow left" type="button" data-i18n-aria="carousel.prev">&#10094;</button>
+                    <button class="slide-arrow right" type="button" data-i18n-aria="carousel.next">&#10095;</button>
+                  </div>
+                </div>`).join('');
+              videoArea = `
+                <div class="video-carousel peek" data-count="${videos.length}">
+                  <div class="carousel-viewport" tabindex="0" aria-label="Video carousel">
+                    <div class="carousel-track">${slides}</div>
+                    <div class="carousel-edge left" aria-hidden="true"></div>
+                    <div class="carousel-edge right" aria-hidden="true"></div>
+                  </div>
+                </div>`;
             }
-          } catch(_) {}
-
-          stopEl.innerHTML = `
-            ${titleHtml}
-            ${videoArea}
-            ${stopCapsules}
-            <p class="stop-description">${getLocalized(stop.description) || ""}</p>
-          `;
-          stopsWrap.appendChild(stopEl);
-
-          // Initialize carousel if present
-          const carousel = stopEl.querySelector('.video-carousel');
-          if (carousel) initScrollSnapCarousel(carousel);
-        });
+            let stopCapsules = '';
+            try {
+              const hasTime = !!(stop && stop.time);
+              const hasAddr = !!(stop && stop.address);
+              if (hasTime || hasAddr) {
+                const topRow = hasTime ? `<div class="top-row"><span class="capsule time"><i class="fa-solid fa-clock icon" aria-hidden="true"></i>${String(stop.time)}</span></div>` : '';
+                const bottomRow = hasAddr ? `<div class="bottom-row"><span class="capsule location"><i class="fa-solid fa-location-dot icon" aria-hidden="true"></i>${String(stop.address)}</span></div>` : '';
+                stopCapsules = `<div class="stop-capsules">${topRow}${bottomRow}</div>`;
+              }
+            } catch(_) {}
+            const descHtml = (stop && stop.description) ? `<p class="stop-description">${getLocalized(stop.description) || ""}</p>` : '';
+            stopEl.innerHTML = `${titleHtml}${videoArea}${stopCapsules}${descHtml}`;
+            stopsWrap.appendChild(stopEl);
+            const carousel = stopEl.querySelector('.video-carousel');
+            if (carousel) initScrollSnapCarousel(carousel);
+          });
+        }
 
         // Render experience description below the last video on mobile
         if (t.experience) {
@@ -758,7 +908,7 @@ document.addEventListener("DOMContentLoaded", () => {
         backBtn.addEventListener('click', () => {
           // If we know the category, go to that category page; otherwise go to trips listing
           const cat = document.body.dataset.category;
-          if (cat) window.location.href = `/categories/${cat}.html`;
+          if (cat) window.location.href = `/categories/culture.html?slug=${encodeURIComponent(cat)}`;
           else window.location.href = '/trips.html';
         });
       }
