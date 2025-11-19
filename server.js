@@ -363,7 +363,8 @@ const CACHE_BUST_VERSION = computeCacheBust(__dirname);
 // 1️⃣ Σε DEV: Σερβίρουμε ΠΑΝΤΑ φρέσκα HTML/JS/CSS, version τα assets, και κάνουμε inject το Google Maps key
 if (IS_DEV) {
   app.get(/^\/(?:.*)\.html$/, (req, res, next) => {
-    const filePath = path.join(__dirname, 'public', req.path);
+    const relPath = String(req.path || '').replace(/^\/+/, '');
+    const filePath = path.join(__dirname, 'public', relPath);
     fs.readFile(filePath, 'utf8', (err, html) => {
       if (err) return next();
       try {
@@ -399,7 +400,8 @@ if (IS_DEV) {
 // 1️⃣β Σε PROD: Version τα assets + Κάνουμε inject το Google Maps key στα HTML
 if (!IS_DEV) {
   app.get(/^\/(?:.*)\.html$/, (req, res, next) => {
-    const filePath = path.join(__dirname, 'public', req.path);
+    const relPath = String(req.path || '').replace(/^\/+/, '');
+    const filePath = path.join(__dirname, 'public', relPath);
     fs.readFile(filePath, 'utf8', (err, html) => {
       if (err) return next();
       try {
