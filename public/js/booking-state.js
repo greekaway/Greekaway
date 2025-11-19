@@ -69,21 +69,26 @@
     const traveler_profile = getTravelerProfileFromSession();
     let price_cents = 0;
     let currency = 'eur';
-    // Mode-based fixed pricing per requirements (van=10€, bus=5€, mercedes=20€ per seat)
+    // Pricing JSON single source: private (mercedes) fixed per vehicle; van/bus per seat
     try {
-      const modeMap = { van: 10, bus: 5, mercedes: 20 };
-      const m = (base.mode || '').toLowerCase();
-      if (modeMap.hasOwnProperty(m)) {
-        price_cents = modeMap[m] * 100 * seats;
-      } else {
-        // Fallback to trip JSON base price × seats
-        try {
-          const trip = await loadTrip(base.trip_id);
-            if (trip) {
-              if (typeof trip.price_cents === 'number') price_cents = computePriceCents(trip.price_cents, seats);
-              if (trip.currency) currency = String(trip.currency).toLowerCase();
-            }
-        } catch(_){ }
+      const r = await fetch('/api/pricing', { cache: 'no-store' });
+      if (r && r.ok) {
+        const pricing = await r.json();
+        const tripId = base.trip_id || '';
+        const entry = pricing && pricing[tripId];
+        if (entry) {
+          const m = (base.mode || '').toLowerCase();
+          if (m === 'private' || m === 'mercedes' || m === 'mercedes/private') {
+            price_cents = Number(entry.private)||0;
+          } else if (m === 'van') {
+            price_cents = (Number(entry.van)||0) * seats;
+          } else if (m === 'bus') {
+            price_cents = (Number(entry.bus)||0) * seats;
+          } else {
+            // default per-seat van if unknown
+            price_cents = (Number(entry.van)||0) * seats;
+          }
+        }
       }
     } catch(_){ }
     if (!price_cents) {

@@ -543,26 +543,13 @@ function computeSplit(amount_cents, share_percent) {
 
 // Shared helpers for amount computation
 function safeInt(x, d = 0) { const n = parseInt(x, 10); return Number.isFinite(n) ? n : d; }
+// Pricing single-source: use server pricing module
+let computePriceCents;
+try { ({ computePriceCents } = require('../src/server/routes/pricing')); } catch(_) { computePriceCents = () => 0; }
 function computeServerAmountCents(tripId, vehType, seatsCount) {
-  try {
-    const s = Math.max(1, safeInt(seatsCount, 1));
-    // Fixed price ONLY for Mercedes (private) on Acropolis
-    if (tripId === 'acropolis' && String(vehType||'').toLowerCase() === 'mercedes') {
-      return 2000; // 20 € flat regardless of seats
-    }
-    // Generic per-seat logic for all other cases (including van & bus)
-    if (tripId) {
-      const p = path.join(__dirname, '..', 'public', 'data', 'trips', `${tripId}.json`);
-      try {
-        if (fs.existsSync(p)) {
-          const trip = JSON.parse(fs.readFileSync(p, 'utf8'));
-          const base = safeInt(trip && trip.price_cents, 0);
-          if (base > 0) return base * s;
-        }
-      } catch (_) {}
-    }
-  } catch (_) {}
-  return 0;
+  const veh = String(vehType || '').toLowerCase();
+  const s = safeInt(seatsCount, 1);
+  return computePriceCents(tripId, veh, s);
 }
 
 // Create PaymentIntent that supports Stripe Connect transfer_data when partner account exists
@@ -595,12 +582,8 @@ router.post('/create-payment-intent', async (req, res) => {
     let meta = (req.body && req.body.metadata) || {};
     if (booking_id) meta = { ...meta, booking_id };
 
-    // UI-provided amount (untrusted / informational)
-    const clientSubmittedCents = parseInt(price_cents || amount || 0, 10) || 0;
-    try {
-      console.log('[pi:diag] clientSubmittedCents', clientSubmittedCents, 'raw', { amount, price_cents, currency, seats, vehicleType: vehTypeInput });
-      if (!clientSubmittedCents) console.warn('[pi:diag] client amount missing/zero');
-    } catch(_){ }
+    // UI-provided amount ignored; compute strictly from pricing.json
+    const clientSubmittedCents = 0;
 
     // Keep trip id for metadata & partner resolution (do not alter amount)
     let tripId = clientTripId || clientTripIdAlt || null;
@@ -615,15 +598,12 @@ router.post('/create-payment-intent', async (req, res) => {
       if (raw === 'van') vehTypeInput = 'van';
       if (raw === 'bus') vehTypeInput = 'bus';
     }
-    // Compute server-side amount for diagnostics; prefer client authoritative price from state
+    // Compute strictly from server pricing
     const serverComputedCents = computeServerAmountCents(tripId, vehTypeInput, seats);
     try { console.log('[pi:diag] serverComputedCents', serverComputedCents, { tripId, vehicleType: vehTypeInput, seats }); } catch(_){ }
     try { console.log('[pi:info] vehicleType=' + (vehTypeInput || 'null')); } catch(_) {}
-    let finalAmountCents = (clientSubmittedCents > 0) ? clientSubmittedCents : serverComputedCents;
-    let pricingSource = (clientSubmittedCents > 0) ? 'client' : 'server_fallback';
-    if (clientSubmittedCents > 0 && serverComputedCents > 0 && clientSubmittedCents !== serverComputedCents) {
-      pricingSource = 'client_overrode_server_mismatch';
-    }
+    let finalAmountCents = serverComputedCents;
+    let pricingSource = 'server_pricing_json';
     if (!finalAmountCents || finalAmountCents <= 0) {
       try { console.error('[pi:error] invalid amount', { clientSubmittedCents, serverComputedCents, tripId, vehTypeInput, seats }); } catch(_){ }
       return res.status(400).json({ error: 'Invalid amount' });

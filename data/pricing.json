@@ -1,0 +1,4 @@
+{
+  "acropolis": { "van": 1000, "bus": 500, "private": 2000 },
+  "delphi":    { "van": 3500, "bus": 2500, "private": 9000 }
+}

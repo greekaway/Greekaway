@@ -41,6 +41,19 @@ footer{margin-top:24px;padding:20px;border-top:1px solid var(--ga-border);color:
 }
 .bottom-nav a.active, .bottom-nav a:hover{ background:rgba(212,175,55,.15); }
 
+/* Mobile/tablet: horizontal carousel for admin footer */
+@media (max-width: 900px){
+  .bottom-nav{
+    justify-content:flex-start;
+    gap:8px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width: none; /* Firefox */
+  }
+  .bottom-nav::-webkit-scrollbar{ display:none; }
+  .bottom-nav a{ flex:0 0 auto; }
+}
+
 @media (max-width:420px){
   .container{ padding:12px; }
   .panel{ padding:12px; }
