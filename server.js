@@ -152,6 +152,9 @@ try { session = require('express-session'); } catch(_) { session = null; }
 const SESSION_SECRET = (process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || crypto.randomBytes(24).toString('hex')).trim();
 // Moved asset/version scanners to lib/assets.js
 const { computeLocalesVersion, computeDataVersion, computeAssetsVersion } = require('./src/server/lib/assets');
+// Pricing: single source of truth
+const pricing = require('./src/server/routes/pricing');
+const { createPricingRouter, computePriceCents } = pricing;
 const { computeCacheBust } = require('./src/server/lib/cacheBust');
 const { applyAssetVersion } = require('./src/server/lib/htmlVersioning');
 
@@ -337,7 +340,7 @@ try {
   bookingsDb = null;
 }
 
-// Admin HTML guard: redirect to /admin-login if no session cookie
+// Admin HTML guard: use unified auth check for all admin HTML pages
 app.use((req, res, next) => {
   try {
     const p = req.path || '';
@@ -348,11 +351,11 @@ app.use((req, res, next) => {
       /^\/admin-[^\/]+\.html$/i.test(p)
     );
     if (!isAdminHtml) return next();
-    if (hasAdminSession(req)) return next();
+    // Use the same unified auth gate as APIs
+    if (checkAdminAuth(req)) return next();
     // Allow Admin Home to load even without session (embedded login is on-page)
     if (p === '/admin-home.html') return next();
     const nextUrl = encodeURIComponent(req.originalUrl || p);
-    // Redirect unauthenticated admin pages to Admin Home (embedded login)
     return res.redirect(`/admin-home.html?next=${nextUrl}`);
   } catch(_) { return next(); }
 });
@@ -471,6 +474,11 @@ app.use(express.static(path.join(__dirname, "public"), {
 const LOCALES_DIR = path.join(__dirname, 'locales');
 const { registerLocales } = require('./src/server/routes/locales');
 registerLocales(app, { LOCALES_DIR, IS_DEV, computeLocalesVersion });
+// Register pricing API (public read + admin write)
+try {
+  app.use('/api', pricing.createPricingRouter({ checkAdminAuth: (r)=>checkAdminAuth(r) }));
+  console.log('pricing: routes registered at /api');
+} catch (e) { console.warn('pricing: failed to register routes', e && e.message ? e.message : e); }
 // Serve legal/marketing PDF documents under /docs (tabbed About & Legal page)
 const DOCS_DIR = path.join(__dirname, 'docs');
 try { fs.mkdirSync(DOCS_DIR, { recursive: true }); } catch(e){}
@@ -654,16 +662,23 @@ app.post('/mock-checkout', express.urlencoded({ extended: true }), (req, res) =>
 app.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server.' });
   try {
-    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, customerEmail } = req.body || {};
+    const { currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, customerEmail, seats } = req.body || {};
     const { booking_id } = req.body || {};
     const clientMeta = req.body && req.body.metadata ? req.body.metadata : null;
 
-    // Trust UI-provided amount (price_cents or amount); remove server-side recomputation/overrides.
-    const finalAmountCents = parseInt(price_cents || amount || 0, 10) || 0;
+    // Compute strictly from pricing.json (single source of truth)
+    let tripId = clientTripId || clientTripIdAlt || null;
+    let vehType = vehicleType || null;
+    if (tripId === 'acropolis') {
+      const raw = String(vehType || '').toLowerCase();
+      if (raw === 'private' || raw === 'mercedes/private') vehType = 'mercedes';
+    }
+    const finalAmountCents = computePriceCents(tripId, vehType, seats);
     if (!finalAmountCents || finalAmountCents <= 0) return res.status(400).json({ error: 'Invalid amount' });
 
     // Keep trip id for metadata traceability
-    let tripId = clientTripId || clientTripIdAlt || null;
+    // Keep trip id for metadata traceability (may be resolved via booking below)
+    
     if (booking_id && tripId === null && bookingsDb) {
       try { const row = bookingsDb.prepare('SELECT trip_id FROM bookings WHERE id = ?').get(booking_id); if (row) tripId = row.trip_id || tripId; } catch(_) {}
     }
@@ -676,7 +691,7 @@ app.post('/create-payment-intent', async (req, res) => {
       amount: finalAmountCents,
       currency: currency || 'eur',
       automatic_payment_methods: { enabled: true },
-      metadata: Object.assign({}, (booking_id ? { booking_id } : {}), clientMeta || {}, { trip_id: tripId, requested_price_cents: finalAmountCents, duration: (duration||null), vehicle_type: (vehicleType||null) })
+      metadata: Object.assign({}, (booking_id ? { booking_id } : {}), clientMeta || {}, { trip_id: tripId, requested_price_cents: finalAmountCents, duration: (duration||null), vehicle_type: (vehType||null) })
     };
     if (rawEmail) piParams.receipt_email = rawEmail; else try { console.log('[root-pi:info] no email provided; skipping receipt_email'); } catch(_) {}
     console.log('FINAL_AMOUNT_CENTS:', finalAmountCents);
@@ -761,13 +776,19 @@ try {
         const mode = (b.mode || '').toString().trim().toLowerCase();
         const date = (b.date || '').toString().trim() || new Date().toISOString().slice(0,10);
         const seats = Number(b.seats || 1) || 1;
-        const price_cents = Number(b.price_cents || 0) || 0;
+        let price_cents = Number(b.price_cents || 0) || 0;
         const currency = (b.currency || 'eur').toString().toLowerCase();
         const pickup = b.pickup || {};
         const suitcases = b.suitcases || {};
         const special_requests = (b.special_requests || '').toString();
         const traveler_profile = b.traveler_profile || {};
-        if (!trip_id || !seats || !price_cents) return res.status(400).json({ error: 'Missing required fields' });
+        if (!trip_id || !seats) return res.status(400).json({ error: 'Missing required fields' });
+        if (!price_cents) {
+          const veh = (b.vehicleType || b.vehicle_type || b.mode || '').toLowerCase();
+          const vehNorm = (trip_id === 'acropolis' && (veh === 'private' || veh === 'mercedes/private')) ? 'mercedes' : veh;
+          price_cents = computePriceCents(trip_id, vehNorm, seats);
+        }
+        if (!price_cents || price_cents <= 0) return res.status(400).json({ error: 'Invalid amount' });
         if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
         const id = crypto.randomUUID();
         const now = new Date().toISOString();
