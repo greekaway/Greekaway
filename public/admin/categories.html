@@ -1,0 +1,81 @@
+<!doctype html><html lang="el"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Greekaway Admin – Categories</title>
+<link rel="stylesheet" href="/css/admin-common.css">
+<link rel="stylesheet" href="/admin/css/categories.css">
+<link rel="manifest" href="/manifest-admin.json">
+<meta name="theme-color" content="#001f3f">
+<link rel="stylesheet" href="/pwa.css">
+<link rel="stylesheet" href="/css/pwa-fixes.css">
+</head><body>
+<header class="sticky-bar" aria-label="Κατηγορίες — Φόρμα" data-collapsed="false">
+  <div class="bar-inner">
+    <div class="title">Categories CMS</div>
+    <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φόρμας" aria-expanded="true">▲</button>
+    <form id="categoryForm" class="filters" onsubmit="return false;">
+      <label>Title
+        <input type="text" id="catTitle" required placeholder="Title">
+      </label>
+      <label>Slug
+        <input type="text" id="catSlug" placeholder="auto από title">
+      </label>
+      <label>Order
+        <input type="number" id="catOrder" value="0" min="0" step="1">
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;margin-top:4px">Publish
+        <input type="checkbox" id="catPublished">
+      </label>
+      <label>Icon SVG
+        <textarea id="catIcon" rows="4" placeholder="<svg>...</svg>"></textarea>
+      </label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn secondary" id="resetForm" type="button">Reset</button>
+        <button class="btn" id="saveCategory" type="button">Save / Upsert</button>
+      </div>
+    </form>
+  </div>
+</header>
+<main class="content-wrap">
+  <div class="table-wrap">
+    <table class="table" aria-label="Λίστα Κατηγοριών" id="categoriesTable">
+      <thead><tr>
+        <th>Title</th>
+        <th>Slug</th>
+        <th>Order</th>
+        <th>Published</th>
+        <th>Icon</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody id="catRows"></tbody>
+    </table>
+    <div id="catMessage" class="hint" style="padding:8px;color:#666"></div>
+  </div>
+</main>
+<nav class="bottom-nav">
+  <a href="/admin-home.html">Home</a>
+  <a href="/admin-bookings.html">Bookings</a>
+  <a href="/admin-payments.html">Payments</a>
+  <a href="/admin-manual.html">Manual</a>
+  <a href="/admin-providers.html">Providers</a>
+  <a href="/admin-availability.html">Availability</a>
+  <a href="/admin/categories.html" class="active">Categories</a>
+</nav>
+<footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
+<script src="/admin/js/categories.js"></script>
+<script src="/pwa-install.js" defer></script>
+<script>
+fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){document.getElementById('ga-version').textContent=v.version||'—'} });
+(function(){
+  const header = document.querySelector('header.sticky-bar');
+  const btn = document.getElementById('toggleFilters');
+  if (header && btn) {
+    btn.addEventListener('click', () => {
+      const collapsed = header.getAttribute('data-collapsed') === 'true';
+      header.setAttribute('data-collapsed', collapsed ? 'false' : 'true');
+      btn.textContent = collapsed ? '▲' : '▼';
+      btn.setAttribute('aria-expanded', collapsed ? 'true' : 'false');
+    });
+  }
+})();
+</script>
+</body></html>

@@ -843,6 +843,13 @@ try {
   console.log('admin-travelers-groups: routes registered');
 } catch (e) { console.warn('admin-travelers-groups: failed', e && e.message ? e.message : e); }
 
+// Category CMS MVP routes (admin protected)
+try {
+  const { registerCategoriesRoutes } = require('./src/server/routes/categories');
+  registerCategoriesRoutes(app, { checkAdminAuth: (r)=>checkAdminAuth(r) });
+  console.log('categories: routes registered');
+} catch (e) { console.warn('categories: failed to register', e && e.message ? e.message : e); }
+
 // Public live weather endpoint for quick UI/tests: /api/live/weather?place=Lefkada&lang=en
 app.get('/api/live/weather', async (req, res) => {
   if (!liveData) return res.status(501).json({ error: 'live-data module unavailable' });

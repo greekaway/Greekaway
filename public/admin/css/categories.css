@@ -1,0 +1,5 @@
+#categoryForm textarea{font-family:monospace;font-size:12px}
+#categoriesTable td, #categoriesTable th{vertical-align:middle}
+.icon-badge{display:inline-block;padding:2px 6px;background:#114e7a;color:#fff;border-radius:6px;font-size:11px}
+#catMessage.error{color:#c33}
+#catMessage.ok{color:#0a0}
