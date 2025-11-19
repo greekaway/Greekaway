@@ -133,13 +133,15 @@
     if (!window.flatpickr || !calWrap) return;
     // Remove previous instance markup if needed
     try { while (calWrap.firstChild) calWrap.removeChild(calWrap.firstChild); } catch(_){ }
+    console.log('Calendar render init', { trip: (tripSel && tripSel.value), mode: (modeSel && modeSel.value) });
     const input = document.createElement('input');
     input.type='text'; input.id='calInput'; input.className='flatpickr-input';
     calWrap.appendChild(input);
     const todayIso = new Date().toISOString().slice(0,10);
     fpInstance = window.flatpickr(input, {
-      altInput:true,
-      altFormat:'d F Y',
+      inline: true,
+      static: true,
+      appendTo: calWrap,
       dateFormat:'Y-m-d',
       defaultDate: todayIso,
       locale: (typeof getFlatpickrLocale==='function') ? getFlatpickrLocale() : undefined,
@@ -151,6 +153,7 @@
         prefetchMonth(trip, mode, y, m).then(()=>{ try { inst.redraw(); } catch(_){ } });
       },
       onReady: function(selDates, dateStr, inst){
+        console.log('Calendar ready', { year: inst.currentYear, month: inst.currentMonth+1 });
         const y = inst.currentYear; const m = inst.currentMonth + 1;
         const trip = tripSel.value.trim(); const mode = modeSel.value.trim();
         prefetchMonth(trip, mode, y, m).then(()=>{ try { inst.redraw(); } catch(_){ } });
