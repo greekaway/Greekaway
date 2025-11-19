@@ -3,7 +3,8 @@
 (function(){
   const tripSel = document.getElementById('tripSelect');
   const modeSel = document.getElementById('modeSelect');
-  const calWrap = document.getElementById('calendar');
+  // Prefer new container; fallback to legacy id if present
+  const calWrap = document.getElementById('calendar-container') || document.getElementById('calendar');
   const capInput = document.getElementById('capacityInput');
   const takenInput = document.getElementById('takenInput');
   const availInput = document.getElementById('availableInput');
