@@ -24,6 +24,7 @@ const CORE_ASSETS = [
   '/admin-manual.html',
   '/admin-providers.html',
   '/admin-availability.html',
+  '/admin/trip-availability.html',
   '/manual-payments.html',
   '/partner-agreement.html',
   '/partner-manual-onboarding.html',

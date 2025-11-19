@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trip Availability Editor</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/admin-common.css" />
+  <link rel="stylesheet" href="/css/admin-availability.css" />
+  <style>
+    .avail-wrapper{max-width:1080px;margin:0 auto;padding:16px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+    .editor-card{background:#102535;border:1px solid #1f3a50;border-radius:12px;padding:16px}
+    label{display:block;font-size:12px;margin:8px 0 4px;color:#a8c0d8}
+    select,input{width:100%;padding:8px;border-radius:8px;border:1px solid #264357;background:#0e2032;color:#fff}
+    input[readonly]{opacity:.7}
+    #calendar{margin-top:12px}
+    .save-btn{margin-top:12px;background:#2a7ade;color:#fff;border:none;padding:10px 16px;border-radius:8px;font-weight:600;cursor:pointer}
+    .badges-note{font-size:12px;color:#92aec4;margin-top:4px}
+    .ga-day-badge{position:absolute;bottom:4px;right:4px;background:#1d394e;color:#fff;font-size:10px;padding:2px 5px;border-radius:10px;line-height:1;font-weight:600}
+    .ga-day-full .ga-day-badge{background:#b6273b}
+  </style>
+</head>
+<body>
+  <div class="avail-wrapper">
+    <h1 style="margin:0 0 12px;font-size:20px">Διαθεσιμότητα Εκδρομής</h1>
+    <div class="grid">
+      <div class="editor-card">
+        <label for="tripSelect">Trip</label>
+        <select id="tripSelect"><option value="">— Φόρτωση...</option></select>
+        <label for="modeSelect">Mode</label>
+        <select id="modeSelect">
+          <option value="bus">Bus</option>
+          <option value="van" selected>Van</option>
+          <option value="mercedes">Mercedes</option>
+        </select>
+        <div id="calendar"></div>
+        <p class="badges-note">Badges = διαθέσιμες θέσεις (capacity − taken). Κόκκινο όταν 0.</p>
+      </div>
+      <div class="editor-card">
+        <h2 style="margin:0 0 8px;font-size:16px">Ημέρα</h2>
+        <div id="selectedDateDisplay" style="font-size:14px;color:#fff;margin-bottom:8px">Καμία ημερομηνία</div>
+        <label for="capacityInput">Capacity</label>
+        <input id="capacityInput" type="number" min="0" value="0" />
+        <label for="takenInput">Taken</label>
+        <input id="takenInput" type="number" min="0" value="0" />
+        <label for="availableInput">Available</label>
+        <input id="availableInput" type="number" readonly value="0" />
+        <button id="saveBtn" class="save-btn" disabled>Αποθήκευση</button>
+        <div id="saveMsg" style="margin-top:8px;font-size:13px"></div>
+      </div>
+    </div>
+  </div>
+  <script src="/js/main.js"></script>
+  <script src="/admin/trip-availability.js" defer></script>
+</body>
+</html>

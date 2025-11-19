@@ -2,6 +2,32 @@
 
 All notable changes to this project are documented in this file.
 
+## 2025-11-19 — Mode-Aware Availability Editor & Month Prefetch API
+
+- Backend (`registerBookings`):
+  - Extended `GET /api/availability` with `month` + `mode` parameters returning `{ trip_id, mode, month, days:[{date,capacity,taken,available}] }` for efficient calendar preloading.
+  - Added `taken_custom` column (auto-migrated) enabling manual override of computed "taken" seats per date/mode.
+  - Per-date `GET /api/availability` unchanged for existing consumers; now passes through manual `taken_custom` when present.
+  - `POST /api/availability` accepts `taken` (optional) to store override alongside capacity (admin-auth protected); enforces `mercedes` capacity = 1.
+  - Fallback capacities when no stored row: bus=trip default (or 50 via month endpoint fallback), van=trip default (or 7), mercedes=1.
+
+- Admin UI:
+  - New page `public/admin/trip-availability.html` with trip/mode selectors, flatpickr-based calendar, per-day editor (capacity, taken, computed available).
+  - New script `public/admin/trip-availability.js` implements month prefetch caching, badge rendering (available seats), live redraw after save.
+  - Badges turn red (full) when `available <= 0`.
+
+- Validation Tests:
+  - Confirmed booking flow returns `bus_full`, `van_full`, `mercedes_full` when trying to exceed capacity after filling for each mode.
+  - Availability reflects updated taken counts immediately after bookings.
+
+- Service Worker:
+  - Added `'/admin/trip-availability.html'` to precache list to support offline admin navigation.
+
+Future:
+  - CSS refinement pass for the new admin page.
+  - Potential bulk editing (range apply) & export/import of availability.
+
+
 ## 2025-11-12 — Dynamic pickups + trip itinerary in Provider/Driver
 
 - Global presentation rule: panels always show customer pickups (from booking metadata) and the trip itinerary (tour stops and times) from the trip JSON files.
