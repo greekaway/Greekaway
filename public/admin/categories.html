@@ -50,6 +50,16 @@
     </table>
     <div id="catMessage" class="hint" style="padding:8px;color:#666"></div>
   </div>
+  <div id="confirmModal" class="modal" hidden>
+    <div class="modal-inner" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <h3 id="confirmTitle">Είσαι σίγουρος;</h3>
+      <p>Η κατηγορία θα διαγραφεί οριστικά.</p>
+      <div class="actions">
+        <button id="confirmCancel" class="btn secondary" type="button">Άκυρο</button>
+        <button id="confirmOk" class="btn danger" type="button">Διαγραφή</button>
+      </div>
+    </div>
+  </div>
 </main>
 <nav class="bottom-nav">
   <a href="/admin-home.html">Home</a>

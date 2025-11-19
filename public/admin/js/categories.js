@@ -21,6 +21,36 @@
     return String(raw||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
   }
 
+  let pendingDeleteSlug = null;
+
+  function showConfirm(slug){
+    const m = document.getElementById('confirmModal');
+    const ok = document.getElementById('confirmOk');
+    const cancel = document.getElementById('confirmCancel');
+    pendingDeleteSlug = slug;
+    if (!m || !ok || !cancel) { if (slug) doDelete(slug); return; }
+    m.hidden = false;
+    function close(){ m.hidden = true; ok.removeEventListener('click', onOk); cancel.removeEventListener('click', onCancel); }
+    function onOk(){ const s = pendingDeleteSlug; pendingDeleteSlug = null; close(); if (s) doDelete(s); }
+    function onCancel(){ pendingDeleteSlug = null; close(); }
+    ok.addEventListener('click', onOk);
+    cancel.addEventListener('click', onCancel);
+  }
+
+  function doDelete(slug){
+    if (!slug) return;
+    msg('Διαγραφή...', '');
+    fetch(`/api/categories/${encodeURIComponent(slug)}`, { method:'DELETE', credentials:'same-origin' })
+      .then(r => r.json().then(j => ({ ok:r.ok, j })) )
+      .then(({ok,j}) => {
+        if (!ok || !j || j.success!==true) throw new Error(j && j.error ? j.error : 'delete_failed');
+        categories = categories.filter(c => c.slug !== slug);
+        render();
+        msg('✅ Διαγράφηκε.', 'ok');
+      })
+      .catch(_ => { msg('❌ Σφάλμα διαγραφής.', 'error'); });
+  }
+
   function render(){
     if (!rowsEl) return;
     rowsEl.innerHTML = '';
@@ -37,7 +67,10 @@
         <td class="num">${c.order||0}</td>
         <td>${c.published? '✅':'—'}</td>
         <td>${c.iconPath? `<span class="icon-badge" title="icon">SVG</span>`:'—'}</td>
-        <td><button class="btn secondary" data-edit="${c.id}" type="button">Edit</button></td>`;
+        <td>
+          <button class="btn secondary" data-edit="${c.id}" type="button">Edit</button>
+          <button class="btn danger" data-del="${c.slug}" type="button">Delete</button>
+        </td>`;
       rowsEl.appendChild(tr);
     });
   }
@@ -100,6 +133,7 @@
     if (rowsEl) rowsEl.addEventListener('click', (ev) => {
       const t = ev.target;
       if (t && t.dataset && t.dataset.edit){ editCategory(t.dataset.edit); }
+      if (t && t.dataset && t.dataset.del){ showConfirm(t.dataset.del); }
     });
   }
 

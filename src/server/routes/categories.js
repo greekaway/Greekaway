@@ -87,6 +87,19 @@ function buildCategoriesRouter({ checkAdminAuth }){
       return res.json({ ok:true, category:updated, total:list.length });
     } catch(e){ console.error('categories: unexpected POST', e); return res.status(500).json({ error:'write_failed' }); }
   });
+  router.delete('/:slug', (req, res) => {
+    try {
+      if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });
+      const slug = String(req.params.slug || '').trim().toLowerCase();
+      if (!slug) return res.status(400).json({ error: 'invalid_slug' });
+      const list = safeReadCategories();
+      const before = list.length;
+      const filtered = list.filter(c => String(c.slug||'').toLowerCase() !== slug);
+      if (filtered.length === before) return res.status(404).json({ error: 'not_found' });
+      if (!writeCategories(filtered)) return res.status(500).json({ error: 'write_failed' });
+      return res.json({ success: true });
+    } catch(e){ console.error('categories: unexpected DELETE', e); return res.status(500).json({ error:'delete_failed' }); }
+  });
   return router;
 }
 
