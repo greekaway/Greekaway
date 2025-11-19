@@ -8,14 +8,6 @@
     "published": true
   },
   {
-    "id": "943f2cda-84f2-4340-812c-ef2a138607bb",
-    "title": "Test Category",
-    "slug": "test-category",
-    "iconPath": "/categories/test-category/icon.svg",
-    "order": 1,
-    "published": true
-  },
-  {
     "id": "190eea3b-f57f-497f-b870-40530e5c24dc",
     "title": "βουνο",
     "slug": "mountain",
