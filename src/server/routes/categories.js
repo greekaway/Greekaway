@@ -52,8 +52,25 @@ function buildCategoriesRouter({ checkAdminAuth }){
   const router = express.Router();
   router.get('/', (req,res) => {
     try {
-      if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });
-      return res.json(safeReadCategories());
+      const isAdmin = (checkAdminAuth && checkAdminAuth(req)) ? true : false;
+      let list = safeReadCategories();
+      // Always sort by order then title for deterministic output
+      list.sort((a,b)=>(a.order-b.order)||String(a.title||'').localeCompare(String(b.title||'')));
+      const qp = String(req.query.published || '').toLowerCase();
+      const wantPublishedOnly = (qp === 'true' || qp === '1' || qp === 'yes');
+      if (wantPublishedOnly || !isAdmin) {
+        list = list.filter(c => !!c.published);
+      }
+      // Enrich with inline SVG content for convenience on the client
+      const enriched = list.map(c => {
+        const slug = c.slug || '';
+        const fp = path.join(PUBLIC_CATEGORIES_DIR, slug, 'icon.svg');
+        let iconSvg = null;
+        try { if (fs.existsSync(fp)) iconSvg = fs.readFileSync(fp, 'utf8'); } catch(_){ }
+        const iconPath = c.iconPath && typeof c.iconPath === 'string' && c.iconPath.trim() ? c.iconPath : `/categories/${slug}/icon.svg`;
+        return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath, iconSvg };
+      });
+      return res.json(enriched);
     } catch(e){ console.error('categories: unexpected GET', e); return res.status(500).json({ error:'read_failed' }); }
   });
   router.post('/', (req,res) => {

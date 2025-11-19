@@ -95,32 +95,34 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("categories-container");
     if (!container) return;
     container.innerHTML = "";
+    if (!Array.isArray(cats) || cats.length === 0) {
+      const msg = (window.t && typeof window.t === 'function') ? window.t('trips.no_categories') : 'No categories available.';
+      container.innerHTML = `<p>${msg}</p>`;
+      return;
+    }
     cats.forEach(cat => {
-  const btn = document.createElement("button");
-  btn.className = "category-btn";
-  btn.classList.add('ga-card');
+      const btn = document.createElement("button");
+      btn.className = "category-btn";
+      btn.classList.add('ga-card');
+      const slug = cat.slug || cat.id;
       const catTitle = getLocalized(cat.title) || '';
-      btn.innerHTML = `<img src="${cat.image}" alt="${catTitle}"><span class="cat-label">${catTitle}</span>`;
-      btn.dataset.cat = cat.id;
-      btn.classList.add(`cat-${cat.id}`);
+      const iconPath = cat.iconPath || (`/categories/${slug}/icon.svg`);
+      btn.innerHTML = `<img src="${iconPath}" alt="${catTitle}"><span class="cat-label">${catTitle}</span>`;
+      btn.dataset.cat = slug;
+      btn.classList.add(`cat-${slug}`);
       btn.title = catTitle;
-      btn.addEventListener("click", () => { window.location.href = `/categories/${cat.id}.html`; });
+      btn.addEventListener("click", () => { window.location.href = `/categories/${slug}.html`; });
       container.appendChild(btn);
-      if (["sea","mountain","culture"].includes(cat.id)) {
-        const delay = (["sea","mountain","culture"].indexOf(cat.id) * 100) + 90;
+      if (["sea","mountain","culture"].includes(slug)) {
+        const delay = (["sea","mountain","culture"].indexOf(slug) * 100) + 90;
         setTimeout(() => btn.classList.add('cinematic'), delay);
       }
     });
   }
 
-  (async () => {
-    const dv = await getDataVersionEnsure();
-    return fetch(`/data/categories.json${dv ? ('?v='+encodeURIComponent(dv)) : ''}`)
-  })()
-    .then(r => {
-      if (!r.ok) throw new Error("Αποτυχία φόρτωσης categories.json");
-      return r.json();
-    })
+  // Load from Category CMS API (published only)
+  (async () => fetch(`/api/categories?published=true`, { cache: 'no-store' }))()
+    .then(r => { if (!r.ok) throw new Error("Failed to load categories"); return r.json(); })
     .then(cats => {
       window.__gwCategories = cats;
       renderCategories(cats);
