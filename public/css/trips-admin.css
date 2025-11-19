@@ -21,9 +21,57 @@
 .trip-form .actions{display:flex;gap:8px;flex-wrap:wrap;width:100%;margin-top:4px}
 .errors{margin-top:6px;color:#b30000;font-size:0.8rem}
 .warning{margin-top:6px;color:#b36b00;font-size:0.8rem}
-.admin-table{width:100%;border-collapse:collapse;margin-top:16px}
-.admin-table th, .admin-table td{border:1px solid #ccc;padding:6px;font-size:0.8rem}
-.admin-table th{background:#1e5179;color:#fff;text-align:left}
-.admin-table td button{padding:4px 8px;font-size:0.75rem}
-.empty{margin-top:12px;font-size:0.85rem;color:#555}
+/* Removed custom .admin-table styling to unify with categories .table style */
+/* Empty state now rendered inside table body similarly to categories CMS */
 header.sticky-bar[data-collapsed='true'] .trip-form{display:none}
+
+/* Trip delete confirm modal: nudge content slightly to the right */
+#tripConfirmModal .modal-inner{position:relative;left:24px}
+
+/* Icon preview styling (duplicated from Categories CMS, gold color #f4c542) */
+.category-icon.admin-preview{width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:transparent}
+.category-icon.admin-preview svg,.category-icon.admin-preview img.svg-icon{width:48px;height:48px;display:block;max-width:48px;max-height:48px}
+/* Force gold color on SVG shapes for trip icon preview */
+.category-icon.admin-preview svg, .category-icon.admin-preview svg *{fill:#f4c542 !important;stroke:#f4c542 !important}
+/* PNG/WEBP approximate gold filter */
+.category-icon.admin-preview img.svg-icon:not([src$=".svg"]) {filter:brightness(0) saturate(100%) sepia(85%) hue-rotate(10deg) saturate(450%) brightness(92%)}
+/* Preview wrapper layout (copied from Categories CMS) */
+.icon-preview-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.icon-preview-wrap .small{font-size:11px;color:#888}
+
+/* Modes grid layout (uses shared .panel visuals) */
+.modes-grid{display:grid;gap:12px;margin-top:4px;grid-template-columns:1fr}
+.modes-section{margin-top:6px}
+.modes-section .h1{margin:0 0 6px}
+.modes-grid > .mode-card{min-width:0}
+.modes-grid > .mode-card .mode-row > label{flex:1 1 160px}
+.modes-grid > .mode-card .mode-row > label:first-child{flex:0 0 auto}
+.mode-card .mode-row input[type="number"]{min-width:120px}
+.mode-card .mode-row select{min-width:140px}
+.mode-card .mode-row{align-items:flex-end}
+
+/* Responsive columns: 1 / 2 / 3 at 0 / 800 / 1200px */
+@media (min-width:800px){ .modes-grid{ grid-template-columns: repeat(2, 1fr); } }
+@media (min-width:1200px){ .modes-grid{ grid-template-columns: repeat(3, 1fr); } }
+.mode-card{display:flex;flex-direction:column;gap:10px}
+.mode-card .mode-header{font-weight:700;color:var(--ga-gold)}
+.mode-card .mode-row{display:flex;gap:10px;flex-wrap:wrap}
+.mode-card label{display:flex;flex-direction:column;font-size:.85rem;min-width:140px}
+.mode-card input,.mode-card select{padding:8px 10px;font-size:.9rem;border:1px solid var(--ga-border);border-radius:8px;background:#0F1C29;color:var(--ga-text)}
+
+/* Layout polish: keep content visible above fixed bottom nav, remove extra bottoms */
+main.content-wrap{min-height:calc(100vh - 140px); padding-bottom:12px; margin-top:8px}
+.content-wrap .hint#tripsMessage.error{color:#c33}
+.content-wrap .hint#tripsMessage.ok{color:#0a0}
+@media (max-width:1024px){
+	main.content-wrap{ min-height: calc(100vh - 120px); margin-top:6px }
+}
+@media (max-width:768px){
+	main.content-wrap{ min-height: calc(100vh - 110px); }
+}
+.trip-form > *:last-child{margin-bottom:0}
+
+/* On tablets (iPad/mini), disable sticky header to allow smooth page scroll */
+@media (max-width:1024px){
+  header.sticky-bar{ position: static; top:auto; box-shadow:none; }
+}

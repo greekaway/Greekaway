@@ -32,13 +32,111 @@
           <label style="flex:1 1 auto">Trip Icon (SVG/PNG/WEBP)
             <input type="file" id="tripIcon" accept=".svg,.png,.webp" aria-label="Trip Icon">
           </label>
-          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+          <div class="icon-preview-wrap">
             <div id="tripIconPreview" class="category-icon admin-preview" aria-label="Trip icon preview"></div>
             <div class="hint small">Preview</div>
             <div id="tripIconName" class="filename small mono" aria-live="polite"></div>
           </div>
         </div>
         
+        <section aria-labelledby="modesTitle" class="modes-section">
+          <h3 id="modesTitle" class="h1" style="margin-top:8px">Modes</h3>
+          <div class="modes-grid">
+            <div class="panel mode-card" data-mode="bus">
+              <div class="mode-header"><strong>Bus</strong></div>
+              <div class="mode-row">
+                <label style="align-items:center;flex-direction:row;gap:8px;flex:0 0 auto">
+                  <input type="checkbox" id="mode_bus_active"> Active
+                </label>
+              </div>
+              <div class="mode-row">
+                <label>Τιμή (€)
+                  <input type="number" id="mode_bus_price_eur" step="0.01" min="0" placeholder="0.00">
+                </label>
+                <label>Τρόπος χρέωσης
+                  <select id="mode_bus_charge_type">
+                    <option value="per_person">per_person</option>
+                    <option value="per_vehicle">per_vehicle</option>
+                  </select>
+                </label>
+                <label>Default capacity
+                  <input type="number" id="mode_bus_capacity" min="0" step="1" placeholder="0">
+                </label>
+              </div>
+            </div>
+
+            <div class="panel mode-card" data-mode="van">
+              <div class="mode-header"><strong>Van</strong></div>
+              <div class="mode-row">
+                <label style="align-items:center;flex-direction:row;gap:8px;flex:0 0 auto">
+                  <input type="checkbox" id="mode_van_active"> Active
+                </label>
+              </div>
+              <div class="mode-row">
+                <label>Τιμή (€)
+                  <input type="number" id="mode_van_price_eur" step="0.01" min="0" placeholder="0.00">
+                </label>
+                <label>Τρόπος χρέωσης
+                  <select id="mode_van_charge_type">
+                    <option value="per_person">per_person</option>
+                    <option value="per_vehicle">per_vehicle</option>
+                  </select>
+                </label>
+                <label>Default capacity
+                  <input type="number" id="mode_van_capacity" min="0" step="1" placeholder="0">
+                </label>
+              </div>
+            </div>
+
+            <div class="panel mode-card" data-mode="mercedes">
+              <div class="mode-header"><strong>Mercedes</strong></div>
+              <div class="mode-row">
+                <label style="align-items:center;flex-direction:row;gap:8px;flex:0 0 auto">
+                  <input type="checkbox" id="mode_mercedes_active"> Active
+                </label>
+              </div>
+              <div class="mode-row">
+                <label>Τιμή (€)
+                  <input type="number" id="mode_mercedes_price_eur" step="0.01" min="0" placeholder="0.00">
+                </label>
+                <label>Τρόπος χρέωσης
+                  <select id="mode_mercedes_charge_type">
+                    <option value="per_person">per_person</option>
+                    <option value="per_vehicle">per_vehicle</option>
+                  </select>
+                </label>
+                <label>Default capacity
+                  <input type="number" id="mode_mercedes_capacity" min="0" step="1" placeholder="0">
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="modeAvailTitle" class="modes-section">
+          <h3 id="modeAvailTitle" class="h1" style="margin-top:8px">Mode Availability</h3>
+          <div class="form-group" style="gap:12px; align-items:flex-end; flex-wrap:wrap;">
+            <label>Mode
+              <select id="mode_avail_mode">
+                <option value="bus">Bus</option>
+                <option value="van">Van</option>
+                <option value="mercedes">Mercedes</option>
+              </select>
+            </label>
+            <label>Ημερομηνία
+              <input type="date" id="mode_avail_date">
+            </label>
+            <label>Seats/Capacity
+              <input type="number" min="0" step="1" id="mode_avail_capacity" placeholder="0">
+            </label>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn secondary" id="mode_avail_load">Φόρτωση</button>
+              <button type="button" class="btn" id="mode_avail_save">Αποθήκευση</button>
+            </div>
+          </div>
+          <div id="mode_avail_msg" class="hint" style="padding:4px 0; color:#666;"></div>
+        </section>
+
         <label class="full">Stops (μία ανά γραμμή)<textarea id="stops" rows="4" placeholder="Στάση 1\nΣτάση 2\nΣτάση 3"></textarea></label>
         <div class="actions">
           <button id="saveBtn" class="btn primary" type="button">Αποθήκευση / Ενημέρωση</button>
@@ -52,16 +150,23 @@
   </header>
 
   <main class="content-wrap">
-    <section>
-      <h2>Trips</h2>
-      <table id="tripsTable" class="admin-table">
+    <div class="table-wrap">
+      <table id="tripsTable" class="table" aria-label="Λίστα Εκδρομών">
         <thead>
-          <tr><th>Title</th><th>Slug</th><th>Category</th><th>Duration</th><th>Actions</th></tr>
+          <tr>
+            <th>Title</th>
+            <th>Slug</th>
+            <th>Category</th>
+            <th>Duration</th>
+            <th>Modes</th>
+            <th>Icon</th>
+            <th>Actions</th>
+          </tr>
         </thead>
         <tbody></tbody>
       </table>
-      <div id="tableEmpty" class="empty" hidden>Δεν υπάρχουν trips ακόμα.</div>
-    </section>
+      <div id="tripsMessage" class="hint" style="padding:8px;color:#666"></div>
+    </div>
   </main>
 
   <div id="tripConfirmModal" class="modal" hidden>

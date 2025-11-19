@@ -3,7 +3,7 @@
 // registerBookings(app, { express, bookingsDb, crypto })
 
 function registerBookings(app, deps) {
-  const { express, bookingsDb, crypto } = deps;
+  const { express, bookingsDb, crypto, checkAdminAuth } = deps;
   if (!app) throw new Error('registerBookings: missing app');
   // Lazy-load policy utilities to avoid heavy requires on startup
   const policyService = (()=>{ try { return require('../../../services/policyService'); } catch(_) { return null; } })();
@@ -11,6 +11,44 @@ function registerBookings(app, deps) {
   const distanceSvc = (()=>{ try { return require('../../../services/distance'); } catch(_) { return null; } })();
   const fs = require('fs');
   const path = require('path');
+  const ROOT_DIR = path.join(__dirname, '..', '..', '..');
+  const TRIPS_DIR = path.join(ROOT_DIR, 'trips');
+  function readTrip(slug){
+    try {
+      const s = String(slug||'').trim(); if (!s) return null;
+      const file = path.join(TRIPS_DIR, s + '.json');
+      if (!fs.existsSync(file)) return null;
+      const raw = fs.readFileSync(file,'utf8');
+      const obj = JSON.parse(raw||'null');
+      return obj || null;
+    } catch(_) { return null; }
+  }
+  function normMode(m){ const x=String(m||'').toLowerCase(); if (x==='private') return 'mercedes'; if (x==='mercedes' || x==='van' || x==='bus') return x; return ''; }
+  function getDefaultCapacityForMode(trip, mode){
+    try {
+      const ms = trip && trip.mode_set ? trip.mode_set : null; if (!ms) return 0; const m = ms[mode]; if (!m) return 0;
+      let n = parseInt(m.default_capacity,10);
+      if (!Number.isFinite(n) || n <= 0) n = 0;
+      // Business rule: mercedes always treated as capacity 1 (single vehicle per day)
+      if (mode === 'mercedes') return 1;
+      return n > 0 ? n : 0;
+    } catch(_){ return 0; }
+  }
+  function isModeActive(trip, mode){ try { return !!(trip && trip.mode_set && trip.mode_set[mode] && trip.mode_set[mode].active); } catch(_){ return false; } }
+
+  // Ensure per-mode availability table exists
+  try {
+    if (bookingsDb) {
+      bookingsDb.exec(`CREATE TABLE IF NOT EXISTS mode_availability (
+        trip_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        mode TEXT NOT NULL,
+        capacity INTEGER NOT NULL,
+        updated_at TEXT,
+        PRIMARY KEY (trip_id, date, mode)
+      )`);
+    }
+  } catch(_){ }
   function readTripStops(tripId){
     try {
       if (!tripId) return [];
@@ -117,8 +155,40 @@ function registerBookings(app, deps) {
       let statusPolicy = null;
       if (minP && (effectiveSeats||0) < minP) statusPolicy = 'pending_fill';
       if (maxP && (effectiveSeats||0) > maxP) statusPolicy = 'over_capacity';
-      // Capacity checks (provider + legacy trip capacity)
+      // Capacity checks (mode-based + provider + legacy trip capacity)
       try {
+        // Mode-based check: enforce per-mode availability
+        const modeIn = normMode(rawMode || req.body.mode || req.body.trip_mode || '');
+        if (modeIn) {
+          const trip = readTrip(trip_id);
+          if (!isModeActive(trip, modeIn)) {
+            return res.status(409).json({ error: 'Mode not available' });
+          }
+          let capacityUnits = 0;
+          try {
+            const row = bookingsDb.prepare('SELECT capacity FROM mode_availability WHERE trip_id = ? AND date = ? AND mode = ?').get(trip_id, date, modeIn) || {};
+            if (typeof row.capacity === 'number' && row.capacity > 0) capacityUnits = row.capacity;
+          } catch(_){ }
+          if (!capacityUnits) capacityUnits = getDefaultCapacityForMode(trip, modeIn) || 0;
+          // taken units for this mode/date
+          let takenUnits = 0;
+          try {
+            const rows = bookingsDb.prepare("SELECT seats, metadata FROM bookings WHERE trip_id = ? AND date = ? AND status != 'canceled'").all(trip_id, date) || [];
+            rows.forEach(r => {
+              let m = '';
+              try { const meta = r && r.metadata ? JSON.parse(r.metadata) : null; const mm = (meta && (meta.trip_mode || meta.mode || meta.vehicle_type)) || ''; m = normMode(mm); } catch(_){ m=''; }
+              if (m !== modeIn) return;
+              if (modeIn === 'mercedes') takenUnits += 1; else takenUnits += (parseInt(r.seats,10) || 0);
+            });
+          } catch(_){ }
+          const chargeType = (trip && trip.mode_set && trip.mode_set[modeIn] && trip.mode_set[modeIn].charge_type) || 'per_person';
+          const seatsReq = Number(seats || 1) || 1;
+          const requestedUnits = (chargeType === 'per_vehicle') ? 1 : seatsReq;
+          if (capacityUnits <= 0 || (takenUnits + requestedUnits) > capacityUnits) {
+            const code = modeIn==='bus' ? 'bus_full' : (modeIn==='van' ? 'van_full' : 'mercedes_full');
+            return res.status(409).json({ error: code });
+          }
+        }
         if (bookingsDb && trip_id) {
           let providerId = null;
             try { const map = bookingsDb.prepare('SELECT partner_id FROM partner_mappings WHERE trip_id = ?').get(trip_id); providerId = map && map.partner_id ? map.partner_id : null; } catch(_){ }
@@ -153,7 +223,7 @@ function registerBookings(app, deps) {
   const metaObj = (() => { try { return metadata && typeof metadata === 'object' ? metadata : (metadata ? JSON.parse(String(metadata)) : {}); } catch(_) { return {}; } })();
   // Attach trip_mode if provided (front-end stores in localStorage and posts with booking)
   try {
-    const tripMode = body.trip_mode || body.tripMode || null;
+    const tripMode = normMode(body.mode || body.trip_mode || body.tripMode || null);
     if (tripMode && !metaObj.trip_mode) metaObj.trip_mode = String(tripMode).toLowerCase();
   } catch(_) { /* non-fatal */ }
   // Attach policy flags and pickup_points to metadata for UI visibility
@@ -351,18 +421,67 @@ function registerBookings(app, deps) {
     }
   });
 
-  // Availability endpoint
+  // Availability endpoints (mode-aware)
   app.get('/api/availability', (req, res) => {
     try {
       const trip_id = req.query.trip_id;
       const date = req.query.date || new Date().toISOString().slice(0,10);
+      const modeParam = normMode(req.query.mode || '');
       if (!trip_id) return res.status(400).json({ error: 'Missing trip_id' });
       if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
-      const capRow = bookingsDb.prepare('SELECT capacity FROM capacities WHERE trip_id = ? AND date = ?').get(trip_id, date) || {};
-      const capacity = (typeof capRow.capacity === 'number' && capRow.capacity > 0) ? capRow.capacity : 7;
-      const takenRow = bookingsDb.prepare('SELECT COALESCE(SUM(seats),0) as s FROM bookings WHERE trip_id = ? AND date = ? AND status = ?').get(trip_id, date, 'confirmed') || { s: 0 };
-      return res.json({ trip_id, date, capacity, taken: takenRow.s || 0 });
+      const trip = readTrip(trip_id) || {};
+      const computeForMode = (mode) => {
+        let capacity = 0;
+        try {
+          const row = bookingsDb.prepare('SELECT capacity FROM mode_availability WHERE trip_id = ? AND date = ? AND mode = ?').get(trip_id, date, mode) || {};
+          if (typeof row.capacity === 'number' && row.capacity > 0) capacity = row.capacity;
+        } catch(_){ }
+        if (!capacity) capacity = getDefaultCapacityForMode(trip, mode) || 0;
+        // Enforce mercedes hard cap = 1 regardless of stored override (safety)
+        if (mode === 'mercedes') capacity = 1;
+        let taken = 0;
+        try {
+          const rows = bookingsDb.prepare("SELECT seats, metadata, status FROM bookings WHERE trip_id = ? AND date = ? AND status != 'canceled'").all(trip_id, date) || [];
+          rows.forEach(r => {
+            let m = '';
+            try { const meta = r && r.metadata ? JSON.parse(r.metadata) : null; const mm = (meta && (meta.trip_mode || meta.mode || meta.vehicle_type)) || ''; m = normMode(mm); } catch(_){ m=''; }
+            if (m !== mode) return;
+            if (mode === 'mercedes') taken += 1; else taken += (parseInt(r.seats,10) || 0);
+          });
+        } catch(_){ }
+        const available = Math.max(0, (capacity || 0) - (taken || 0));
+        return { capacity: capacity || 0, taken: taken || 0, available };
+      };
+      if (modeParam) {
+        const out = computeForMode(modeParam);
+        return res.json({ trip_id, date, mode: modeParam, capacity: out.capacity, taken: out.taken, available: out.available });
+      }
+      const modes = {};
+      ['bus','van','mercedes'].forEach(m => { modes[m] = computeForMode(m); });
+      return res.json({ trip_id, date, modes });
     } catch (e) { console.error('Availability error', e); return res.status(500).json({ error: 'Server error' }); }
+  });
+
+  // Upsert per-mode capacity (admin only)
+  app.post('/api/availability', (req, res) => {
+    try {
+      const body = req.body || {};
+      const trip_id = String(body.trip_id||'').trim();
+      const date = String(body.date||'').trim();
+      const mode = normMode(body.mode||'');
+      const capacity = parseInt(body.capacity,10);
+      if (!trip_id || !date || !mode) return res.status(400).json({ error: 'Missing trip_id/date/mode' });
+      if (!Number.isFinite(capacity) || capacity < 0) return res.status(400).json({ error: 'Invalid capacity' });
+      if (typeof checkAdminAuth === 'function' && !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+      if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
+      // Enforce mercedes capacity always 1 regardless of provided value
+      const finalCapacity = (mode === 'mercedes') ? 1 : capacity;
+      const now = new Date().toISOString();
+      const stmt = bookingsDb.prepare('INSERT INTO mode_availability (trip_id,date,mode,capacity,updated_at) VALUES (?,?,?,?,?) ON CONFLICT(trip_id,date,mode) DO UPDATE SET capacity=excluded.capacity, updated_at=excluded.updated_at');
+      stmt.run(trip_id, date, mode, finalCapacity, now);
+      try { console.log('[availability-upsert]', { trip_id, date, mode, finalCapacity }); } catch(_){ }
+      return res.json({ ok: true });
+    } catch (e) { console.error('availability upsert error', e && e.message ? e.message : e); return res.status(500).json({ error: 'Server error' }); }
   });
 
   // Get booking by id

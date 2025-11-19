@@ -141,6 +141,10 @@
           <label for="bookingDate" data-i18n="booking.date">Ημερομηνία</label>
           <input id="bookingDate" name="date" type="date" required data-i18n-placeholder="booking.date_placeholder" placeholder="YYYY-MM-DD" />
         </div>
+        <!-- Per-mode availability summary for chosen date -->
+        <div id="modeAvailSummary" class="mode-avail-summary" style="display:none; font-size:0.85rem; line-height:1.4; margin-top:6px; background:#0b2538; padding:6px 8px; border-radius:6px;">
+          <!-- populated dynamically: Bus: 12/40 • Van: 3/7 • Mercedes: 0/1 -->
+        </div>
 
         <div class="row two-col">
           <div>

@@ -768,7 +768,7 @@ try {
 // Phase 5: Bookings routes moved to modules
 try {
   const { registerBookings } = require('./src/server/routes/bookings');
-  registerBookings(app, { express, bookingsDb, crypto });
+  registerBookings(app, { express, bookingsDb, crypto, checkAdminAuth: (r)=>checkAdminAuth(r) });
   console.log('bookings: public routes registered');
 } catch (e) { console.warn('bookings: failed to register public routes', e && e.message ? e.message : e); }
 

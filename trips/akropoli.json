@@ -1,11 +1,36 @@
 {
-  "id": "8f6a838c-61e0-442c-864a-c96605414c81",
+  "id": "28683de3-5c79-4c0f-b8c4-44cdb84d4cd4",
   "title": "Ακρόπολη",
   "slug": "akropoli",
-  "description": "τωσζωτστω",
+  "description": "Εμπειρία πολιτισμού στην καρδιά της Αθήνας με ξενάγηση στον Ιερό Βράχο και τους σημαντικότερους χώρους.",
   "category": "politismos",
   "duration": "4",
   "stops": [
-    "`αρψαςρψσ`ψφσ`ρψσψ"
-  ]
+    "Είσοδος Ακρόπολης",
+    "Παρθενώνας",
+    "Θέατρο Ηρώδου Αττικού",
+    "Προπύλαια"
+  ],
+  "coverImage": "",
+  "iconPath": "/uploads/trips/file-1763570700198.svg",
+  "mode_set": {
+    "bus": {
+      "active": true,
+      "price_cents": 500,
+      "charge_type": "per_person",
+      "default_capacity": 40
+    },
+    "van": {
+      "active": true,
+      "price_cents": 1000,
+      "charge_type": "per_person",
+      "default_capacity": 7
+    },
+    "mercedes": {
+      "active": true,
+      "price_cents": 2000,
+      "charge_type": "per_vehicle",
+      "default_capacity": 3
+    }
+  }
 }

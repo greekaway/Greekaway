@@ -9,6 +9,26 @@ const UPLOAD_TRIPS_DIR = path.join(ROOT_DIR, 'public', 'uploads', 'trips');
 let multer = null;
 try { multer = require('multer'); } catch(_) { multer = null; }
 
+// Default mode_set factory (kept in sync with validateTrip defaults)
+function getDefaultModeSet(){
+  return {
+    bus:      { active:false, price_cents:0, charge_type:'per_person',  default_capacity:40 },
+    van:      { active:false, price_cents:0, charge_type:'per_person',  default_capacity:7 },
+    // Mercedes (private) strictly per_vehicle: capacity always 1 by business rule
+    mercedes: { active:false, price_cents:0, charge_type:'per_vehicle', default_capacity:1 }
+  };
+}
+
+function normalizeExistingModeSet(ms){
+  const def = getDefaultModeSet();
+  if (!ms || typeof ms!== 'object') return def;
+  return {
+    bus:      { ...def.bus, ...(typeof ms.bus==='object'? ms.bus : {}) },
+    van:      { ...def.van, ...(typeof ms.van==='object'? ms.van : {}) },
+    mercedes: { ...def.mercedes, ...(typeof ms.mercedes==='object'? ms.mercedes : {}) }
+  };
+}
+
 function ensureTripsDir(){
   try { fs.mkdirSync(TRIPS_DIR, { recursive:true }); } catch(_){ }
   try { fs.mkdirSync(UPLOAD_TRIPS_DIR, { recursive:true }); } catch(_){ }
@@ -22,7 +42,9 @@ function readTrip(slug){
     const file = path.join(TRIPS_DIR, slug + '.json');
     if (!fs.existsSync(file)) return null;
     const raw = fs.readFileSync(file, 'utf8');
-    return JSON.parse(raw||'null');
+    const obj = JSON.parse(raw||'null');
+    if (obj) obj.mode_set = normalizeExistingModeSet(obj.mode_set);
+    return obj;
   } catch(e){ console.error('trips: readTrip failed', slug, e.message); return null; }
 }
 function writeTrip(data){
@@ -42,7 +64,12 @@ function listTrips(){
   try {
     const fns = fs.readdirSync(TRIPS_DIR).filter(f=>f.endsWith('.json'));
     return fns.map(fn=>{
-      try { const raw = fs.readFileSync(path.join(TRIPS_DIR, fn), 'utf8'); const obj = JSON.parse(raw||'null'); return obj; } catch(e){ return null; }
+      try {
+        const raw = fs.readFileSync(path.join(TRIPS_DIR, fn), 'utf8');
+        const obj = JSON.parse(raw||'null');
+        if (obj) obj.mode_set = normalizeExistingModeSet(obj.mode_set);
+        return obj;
+      } catch(e){ return null; }
     }).filter(Boolean).sort((a,b)=>String(a.title||'').localeCompare(String(b.title||'')));
   } catch(e){ console.error('trips: listTrips failed', e.message); return []; }
 }
@@ -55,6 +82,30 @@ function validateTrip(input){
   const duration = String(input.duration||'').trim();
   const coverImage = String(input.coverImage||'').trim();
   const iconPath = String(input.iconPath||'').trim();
+  function toInt(n, def){ const v = parseInt(n,10); return Number.isFinite(v) && v>=0 ? v : (def||0); }
+  function toBool(v){ return !!v && String(v).toLowerCase()!=='false' && String(v)!=='0'; }
+  function normChargeType(v){ return (v==='per_vehicle') ? 'per_vehicle' : 'per_person'; }
+  function parseMode(m){
+    if (!m || typeof m!=='object') return { active:false, price_cents:0, charge_type:'per_person', default_capacity:0 };
+    return {
+      active: toBool(m.active),
+      price_cents: toInt(m.price_cents, 0),
+      charge_type: normChargeType(m.charge_type),
+      default_capacity: toInt(m.default_capacity, 0)
+    };
+  }
+  const defaultModes = {
+    bus:      { active:false, price_cents:0, charge_type:'per_person',  default_capacity:40 },
+    van:      { active:false, price_cents:0, charge_type:'per_person',  default_capacity:7 },
+    // Mercedes hard default capacity=1 (single vehicle/day)
+    mercedes: { active:false, price_cents:0, charge_type:'per_vehicle', default_capacity:1 }
+  };
+  let mode_set_in = (input && input.mode_set && typeof input.mode_set==='object') ? input.mode_set : {};
+  const mode_set = {
+    bus: parseMode(mode_set_in.bus || defaultModes.bus),
+    van: parseMode(mode_set_in.van || defaultModes.van),
+    mercedes: parseMode(mode_set_in.mercedes || defaultModes.mercedes)
+  };
   let stopsRaw = input.stops;
   if (typeof stopsRaw === 'string') {
     // newline or comma separated
@@ -67,7 +118,7 @@ function validateTrip(input){
   if (!description) errors.push('missing_description');
   if (!category) errors.push('missing_category');
   if (!duration) errors.push('missing_duration');
-  return { ok: errors.length===0, errors, data: { id: input.id || crypto.randomUUID(), title, slug, description, category, duration, stops, coverImage, iconPath } };
+  return { ok: errors.length===0, errors, data: { id: input.id || crypto.randomUUID(), title, slug, description, category, duration, stops, coverImage, iconPath, mode_set } };
 }
 
 function registerTripsRoutes(app, { checkAdminAuth }){
@@ -83,13 +134,15 @@ function registerTripsRoutes(app, { checkAdminAuth }){
         const orig = String(file.originalname||'').toLowerCase();
         const extMatch = orig.match(/\.([a-z0-9]+)$/);
         const ext = extMatch ? extMatch[1] : 'jpg';
-        const stem = sanitizeSlug((req.body && (req.body.slug||req.body.title)) || 'cover');
+        const stem = sanitizeSlug((req.body && (req.body.slug||req.body.title)) || 'file');
         const fname = `${stem}-${Date.now()}.${ext}`;
         cb(null, fname);
       }
     }),
     fileFilter: (req,file,cb) => {
-      const ok = /(jpg|jpeg|png|webp)$/i.test(file.originalname||'');
+      // Allow SVG for tripIconFile; broaden to accept jpg/jpeg/png/webp/svg universally.
+      const name = String(file.originalname||'');
+      const ok = /(jpg|jpeg|png|webp|svg)$/i.test(name);
       if (!ok) return cb(new Error('invalid_file_type'));
       cb(null,true);
     },
@@ -116,6 +169,8 @@ function registerTripsRoutes(app, { checkAdminAuth }){
     if (!v.ok) return res.status(400).json({ error:'validation_failed', errors: v.errors });
     const existing = readTrip(v.data.slug);
     const toWrite = existing ? { ...existing, ...v.data, slug: v.data.slug } : v.data;
+    // Ensure mode_set is always the validated version (avoid accidental loss)
+    toWrite.mode_set = v.data.mode_set;
     if (!writeTrip(toWrite)) return res.status(500).json({ error:'write_failed' });
     return res.json({ ok:true, trip: toWrite });
   });

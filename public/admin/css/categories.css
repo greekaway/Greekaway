@@ -15,6 +15,6 @@
 .category-icon.admin-preview{width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:transparent}
 .category-icon.admin-preview svg,.category-icon.admin-preview img.svg-icon{width:48px;height:48px;display:block;max-width:48px;max-height:48px}
 /* Enforce gold color for SVG preview only inside the preview wrapper */
-.category-icon.admin-preview svg, .category-icon.admin-preview svg *{fill:#D4AF37 !important;stroke:#D4AF37 !important}
+.category-icon.admin-preview svg, .category-icon.admin-preview svg *{fill:#f4c542 !important;stroke:#f4c542 !important}
 /* PNG/WEBP approximate gold filter */
 .category-icon.admin-preview img.svg-icon:not([src$=".svg"]) {filter:brightness(0) saturate(100%) sepia(85%) hue-rotate(10deg) saturate(450%) brightness(92%)}

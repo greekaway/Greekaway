@@ -50,6 +50,17 @@ const G = {
   error: (...a) => { if (G.debug) console.error(...a); }
 };
 
+// Selected trip mode helpers
+function getSelectedMode(){
+  try {
+    const params = new URLSearchParams(window.location.search);
+    let mode = (params.get('mode') || localStorage.getItem('trip_mode') || 'van').toLowerCase();
+    if (mode === 'private') mode = 'mercedes';
+    if (!['van','bus','mercedes'].includes(mode)) mode = 'van';
+    return mode;
+  } catch(_) { return 'van'; }
+}
+
 // Temporary flag to disable any flatpickr calendar initialization in the booking overlay
 // Allow only the inline calendar inside the overlay; prevent other calendars/popups
 const GW_DISABLE_BOOKING_CALENDAR = false;
@@ -1386,6 +1397,8 @@ document.addEventListener("DOMContentLoaded", () => {
             payload.seats = parseInt(seats || '1',10);
             payload.user_name = name;
             payload.user_email = email;
+            // mode-aware
+            try { payload.mode = getSelectedMode(); } catch(_){ }
             try {
               const p2 = document.getElementById('travelerProfile2');
               payload.travelerProfile = p2 ? ((p2.dataset && p2.dataset.selected) || p2.value || '') : (document.getElementById('travelerProfile') ? document.getElementById('travelerProfile').value : '');
@@ -1402,17 +1415,15 @@ document.addEventListener("DOMContentLoaded", () => {
               payload.travelTempo = document.getElementById('travelTempo') ? document.getElementById('travelTempo').value : '';
             }
             const trip = window.__loadedTrip || {};
-            let baseCents = trip.price_cents ? parseInt(trip.price_cents,10) : 5000;
+            // mode-specific price and charge_type
             try {
-              if (trip && trip.id === 'acropolis') {
-                const sel = sessionStorage.getItem('selectedVehiclePrice');
-                if (sel) {
-                  const euros = parseFloat(sel);
-                  if (!isNaN(euros) && euros > 0) baseCents = Math.round(euros * 100);
-                }
-              }
-            } catch(_){ }
-            payload.price_cents = Math.max(0, baseCents * payload.seats);
+              const mode = getSelectedMode();
+              const ms = (trip && trip.mode_set) ? trip.mode_set : null;
+              let priceCents = (ms && ms[mode] && Number.isFinite(parseInt(ms[mode].price_cents,10))) ? parseInt(ms[mode].price_cents,10) : (trip.price_cents ? parseInt(trip.price_cents,10) : 5000);
+              const chargeType = (ms && ms[mode] && ms[mode].charge_type === 'per_vehicle') ? 'per_vehicle' : 'per_person';
+              const units = (chargeType === 'per_vehicle') ? 1 : payload.seats;
+              payload.price_cents = Math.max(0, priceCents * units);
+            } catch(_){ payload.price_cents = Math.max(0, (trip && parseInt(trip.price_cents,10)) || 5000 * payload.seats); }
             try {
               const resp = await fetch('/api/bookings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
               const j = await resp.json();
@@ -1536,18 +1547,22 @@ document.addEventListener("DOMContentLoaded", () => {
           const priceEl = document.getElementById('bookingPrice');
           const seats = seatsEl ? Math.max(1, parseInt(seatsEl.value || '1',10)) : 1;
           const trip = window.__loadedTrip || null;
-          let baseCents = 5000;
-          if (trip && trip.price_cents) baseCents = parseInt(trip.price_cents,10) || baseCents;
+          // Mode-based pricing
+          const mode = getSelectedMode();
+          let priceCents = 0;
+          let chargeType = 'per_person';
           try {
-            if (trip && trip.id === 'acropolis') {
-              const sel = sessionStorage.getItem('selectedVehiclePrice');
-              if (sel) {
-                const euros = parseFloat(sel);
-                if (!isNaN(euros) && euros > 0) baseCents = Math.round(euros * 100);
-              }
+            const ms = trip && trip.mode_set ? trip.mode_set : null;
+            if (ms && ms[mode]) {
+              priceCents = parseInt(ms[mode].price_cents,10) || 0;
+              chargeType = (ms[mode].charge_type === 'per_vehicle') ? 'per_vehicle' : 'per_person';
             }
           } catch(_){ }
-          const total = Math.max(0, baseCents * seats);
+          // Fallback safety
+          if (!priceCents && trip && trip.price_cents) priceCents = parseInt(trip.price_cents,10) || 0;
+          if (!priceCents) priceCents = 5000;
+          const units = (chargeType === 'per_vehicle') ? 1 : seats;
+          const total = Math.max(0, priceCents * units);
           if (priceEl) {
             const c = (trip && trip.currency) ? trip.currency.toUpperCase() : 'EUR';
             priceEl.textContent = c === 'EUR'
@@ -1586,7 +1601,46 @@ document.addEventListener("DOMContentLoaded", () => {
               try {
                 if (!GW_DISABLE_BOOKING_CALENDAR && window.flatpickr) {
                   const fpLocale = getFlatpickrLocale();
-                  window.flatpickr(dateEl, {
+                  // availability cache per mode+date (month scope)
+                  const availabilityCache = {};
+                  async function fetchMonthAvailability(mode){
+                    try {
+                      if (!window.__loadedTrip || !window.__loadedTrip.id) return;
+                      const base = new Date();
+                      const year = base.getFullYear();
+                      const month = base.getMonth(); // 0-based
+                      const first = new Date(year, month, 1);
+                      const daysInMonth = new Date(year, month+1, 0).getDate();
+                      const promises = [];
+                      for (let d=1; d<=daysInMonth; d++){
+                        const dt = new Date(year, month, d);
+                        const iso = dt.toISOString().slice(0,10);
+                        const key = mode+':'+iso;
+                        if (availabilityCache[key] != null) continue;
+                        const q = new URLSearchParams({ trip_id: window.__loadedTrip.id, date: iso, mode });
+                        promises.push(fetch('/api/availability?' + q.toString()).then(r=>r.ok?r.json():null).then(j=>{
+                          if (j && typeof j.available === 'number') availabilityCache[key]=j.available; else availabilityCache[key]=null;
+                        }).catch(()=>{ availabilityCache[key]=null; }));
+                      }
+                      await Promise.all(promises);
+                    } catch(_){ }
+                  }
+                  function annotateDay(dObj, date){
+                    try {
+                      const mode = getSelectedMode();
+                      const iso = date.toISOString().slice(0,10);
+                      const key = mode+':'+iso;
+                      const avail = availabilityCache[key];
+                      if (avail == null) return; // no data yet
+                      dObj.classList.add('ga-avail');
+                      if (avail <= 0) dObj.classList.add('ga-full');
+                      const badge = document.createElement('span');
+                      badge.className = 'ga-avail-badge';
+                      badge.textContent = String(avail);
+                      dObj.appendChild(badge);
+                    } catch(_){ }
+                  }
+                  const fpInstance = window.flatpickr(dateEl, {
                     altInput: true,
                     altFormat: 'd F Y',
                     dateFormat: 'Y-m-d',
@@ -1596,8 +1650,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     theme: 'dark',
                     animate: true,
                     onOpen: function() { dateEl.classList.add('fp-open'); },
-                    onClose: function() { dateEl.classList.remove('fp-open'); }
+                    onClose: function() { dateEl.classList.remove('fp-open'); },
+                    onDayCreate: function(_, __, ___, dayElem){
+                      try { const date = dayElem.dateObj; annotateDay(dayElem, date); } catch(_){ }
+                    }
                   });
+                  // Initial month fetch for current selected mode
+                  fetchMonthAvailability(getSelectedMode()).then(()=>{ try { fpInstance.redraw(); } catch(_){ } });
+                  // Observe mode changes (localStorage trip_mode) via polling (cheap)
+                  let lastMode = getSelectedMode();
+                  setInterval(()=>{
+                    const curr = getSelectedMode();
+                    if (curr !== lastMode){
+                      lastMode = curr;
+                      fetchMonthAvailability(curr).then(()=>{ try { fpInstance.redraw(); } catch(_){ } });
+                    }
+                  }, 1500);
                 }
               } catch (e) { /* ignore flatpickr init errors */ }
             }
@@ -1618,23 +1686,17 @@ document.addEventListener("DOMContentLoaded", () => {
             new FormData(bookingForm).forEach((v,k) => { data[k] = v; });
             // ensure numeric seats and compute price_cents client-side when possible
             data.seats = parseInt(data.seats || '1', 10) || 1;
+            // add mode
+            try { data.mode = getSelectedMode(); } catch(_){ }
             // compute price from loaded trip if available: prefer trip.price_cents or fallback
             try {
               const trip = window.__loadedTrip;
-              let baseCents = null;
-              if (trip && trip.price_cents) baseCents = parseInt(trip.price_cents,10);
-              try {
-                if (trip && trip.id === 'acropolis') {
-                  const sel = sessionStorage.getItem('selectedVehiclePrice');
-                  if (sel) {
-                    const euros = parseFloat(sel);
-                    if (!isNaN(euros) && euros > 0) baseCents = Math.round(euros * 100);
-                  }
-                }
-              } catch(_){ }
-              // If trip has no explicit price, assume a default (e.g. 5000 cents = €50) — keep conservative
-              if (!baseCents) baseCents = 5000;
-              data.price_cents = Math.max(0, baseCents * data.seats);
+              const mode = getSelectedMode();
+              const ms = trip && trip.mode_set ? trip.mode_set : null;
+              let priceCents = (ms && ms[mode] && Number.isFinite(parseInt(ms[mode].price_cents,10))) ? parseInt(ms[mode].price_cents,10) : (trip && trip.price_cents ? parseInt(trip.price_cents,10) : 5000);
+              const chargeType = (ms && ms[mode] && ms[mode].charge_type === 'per_vehicle') ? 'per_vehicle' : 'per_person';
+              const units = (chargeType === 'per_vehicle') ? 1 : data.seats;
+              data.price_cents = Math.max(0, priceCents * units);
             } catch (e) { data.price_cents = 0; }
             // include traveler profile fields if present
             try {
@@ -1747,17 +1809,49 @@ document.addEventListener("DOMContentLoaded", () => {
           // Show the availability banner (without the step indicator prefix).
           el.style.display = 'block';
           el.textContent = tSafe('booking.loading_availability','Loading availability…');
-          const q = new URLSearchParams({ trip_id: trip.id, date: dateStr });
+          const mode = getSelectedMode();
+          const q = new URLSearchParams({ trip_id: trip.id, date: dateStr, mode });
           let capacity = 7, taken = 0, avail = 0;
           try {
             const resp = await fetch('/api/availability?' + q.toString());
             if (resp.ok) {
               const j = await resp.json();
-              capacity = j.capacity || 7;
-              taken = j.taken || 0;
-              avail = Math.max(0, capacity - taken);
+              // Unified mode-aware API returns single-mode shape when mode param supplied: { trip_id,date,mode,capacity,taken,available }
+              if (j && typeof j === 'object') {
+                if (j.mode) {
+                  capacity = (typeof j.capacity === 'number') ? j.capacity : capacity;
+                  taken = (typeof j.taken === 'number') ? j.taken : taken;
+                  avail = (typeof j.available === 'number') ? j.available : Math.max(0, capacity - taken);
+                } else if (j.modes && j.modes[mode]) { // fallback when server returned all modes
+                  const mObj = j.modes[mode];
+                  capacity = (typeof mObj.capacity === 'number') ? mObj.capacity : capacity;
+                  taken = (typeof mObj.taken === 'number') ? mObj.taken : taken;
+                  avail = (typeof mObj.available === 'number') ? mObj.available : Math.max(0, capacity - taken);
+                } else {
+                  avail = Math.max(0, capacity - taken);
+                }
+              }
             }
           } catch(_) {}
+          // Multi-mode summary (single extra request without mode param) to populate summary panel
+          try {
+            const sumBox = document.getElementById('modeAvailSummary');
+            if (sumBox) {
+              const multiResp = await fetch('/api/availability?trip_id=' + encodeURIComponent(trip.id) + '&date=' + encodeURIComponent(dateStr));
+              if (multiResp.ok) {
+                const mj = await multiResp.json().catch(()=>null);
+                if (mj && mj.modes) {
+                  const format = (m,label) => {
+                    const o = mj.modes[m] || { capacity:0, taken:0, available:0 };
+                    return `${label}: ${o.taken}/${o.capacity}`;
+                  };
+                  const parts = [ format('bus','Bus'), format('van','Van'), format('mercedes','Mercedes') ];
+                  sumBox.textContent = parts.join(' • ');
+                  sumBox.style.display = 'block';
+                }
+              }
+            }
+          } catch(_){ }
           // Render compact occupancy “x/y” above the buttons
           try {
             if (occ) {

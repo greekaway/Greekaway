@@ -78,7 +78,7 @@ body.ga-variant-flat .category-btn img.svg-icon { display: block !important; }
 .category-tile .category-icon { width:64px; height:64px; display:flex; align-items:center; justify-content:center; }
 .category-tile .category-icon svg, .category-tile .category-icon img.svg-icon { width:64px; height:64px; max-width:64px; max-height:64px; display:block; }
 /* Force gold color on all vector shapes */
-.category-tile .category-icon svg *, .category-tile .category-icon svg { fill:#D4AF37 !important; stroke:#D4AF37 !important; }
+.category-tile .category-icon svg *, .category-tile .category-icon svg { fill:#f4c542 !important; stroke:#f4c542 !important; }
 /* Ensure no background/mask artifacts */
 .category-tile .category-icon, .category-tile .category-icon svg { background:transparent !important; }
 
@@ -169,7 +169,7 @@ body.is-loaded #categories-container .category-btn:nth-child(6){ animation-delay
 .category-icon { width:64px; height:64px; display:flex; align-items:center; justify-content:center; background:transparent !important; }
 .category-icon svg, .category-icon img.svg-icon { width:64px; height:64px; max-width:64px; max-height:64px; display:block; }
 /* Enforce gold color for all shapes inside the icon svg */
-.category-icon svg, .category-icon svg * { fill: #D4AF37 !important; stroke: #D4AF37 !important; }
+.category-icon svg, .category-icon svg * { fill: #f4c542 !important; stroke: #f4c542 !important; }
 
 /* ============ Trip listing cards (category pages) ============ */
 /* Only on category listing view to avoid affecting other pages */
