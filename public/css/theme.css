@@ -32,6 +32,9 @@ body.ga-variant-flat .category-btn {
 
 /* Hide legacy PNGs in flat variant */
 body.ga-variant-flat .category-btn img { display: none !important; }
+/* Allow new wrapper structure: button + caption. Keep previous label styling for backward compatibility but hide internal label spans if any. */
+.category-tile { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; margin: 12px; }
+.category-tile .category-caption { color: var(--ga-gold); font-weight: 600; text-align: center; font-size: 0.92rem; }
 
 /* Gold label across all categories */
 .category-btn .cat-label { color: var(--ga-gold) !important; font-weight: 600; }

@@ -8,6 +8,7 @@
   const fOrder = document.getElementById('catOrder');
   const fPublished = document.getElementById('catPublished');
   const fIcon = document.getElementById('catIcon');
+  let userTouchedSlug = false;
 
   let categories = [];
 
@@ -19,6 +20,18 @@
 
   function sanitizeSlug(raw){
     return String(raw||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  }
+
+  // Basic Greek -> Latin transliteration map (extendable)
+  const GREEK_MAP = {
+    'α':'a','ά':'a','β':'b','γ':'g','δ':'d','ε':'e','έ':'e','ζ':'z','η':'i','ή':'i','θ':'th','ι':'i','ί':'i','ϊ':'i','ΐ':'i','κ':'k','λ':'l','μ':'m','ν':'n','ξ':'x','ο':'o','ό':'o','π':'p','ρ':'r','σ':'s','ς':'s','τ':'t','υ':'y','ύ':'y','ϋ':'y','ΰ':'y','φ':'f','χ':'ch','ψ':'ps','ω':'o','ώ':'o'
+  };
+  function transliterate(str){
+    return String(str||'').toLowerCase().split('').map(ch => GREEK_MAP[ch] || ch).join('');
+  }
+  function generateSlugFromTitle(title){
+    const base = transliterate(title).replace(/['"’]/g,'').replace(/&/g,'-and-');
+    return sanitizeSlug(base);
   }
 
   let pendingDeleteSlug = null;
@@ -97,6 +110,7 @@
     if (!c) return;
     if (fTitle) fTitle.value = c.title || '';
     if (fSlug) fSlug.value = c.slug || '';
+    userTouchedSlug = true; // prevent auto overwrite while editing existing
     if (fOrder) fOrder.value = c.order || 0;
     if (fPublished) fPublished.checked = !!c.published;
     msg('Edit mode: '+(c.slug||c.id));
@@ -135,6 +149,21 @@
       if (t && t.dataset && t.dataset.edit){ editCategory(t.dataset.edit); }
       if (t && t.dataset && t.dataset.del){ showConfirm(t.dataset.del); }
     });
+    if (fSlug) {
+      fSlug.addEventListener('input', () => { userTouchedSlug = true; });
+    }
+    if (fTitle) {
+      fTitle.addEventListener('input', () => {
+        if (userTouchedSlug) return; // do not overwrite manual edits
+        const proposed = generateSlugFromTitle(fTitle.value);
+        if (fSlug) fSlug.value = proposed;
+      });
+      fTitle.addEventListener('blur', () => {
+        if (!userTouchedSlug && fTitle && fSlug && !fSlug.value.trim()) {
+          fSlug.value = generateSlugFromTitle(fTitle.value);
+        }
+      });
+    }
   }
 
   wire();

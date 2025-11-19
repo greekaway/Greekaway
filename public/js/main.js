@@ -96,23 +96,43 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!container) return;
     container.innerHTML = "";
     if (!Array.isArray(cats) || cats.length === 0) {
-      const msg = (window.t && typeof window.t === 'function') ? window.t('trips.no_categories') : 'No categories available.';
-      container.innerHTML = `<p>${msg}</p>`;
+      // Use translation key with fallback without showing raw key
+      const fallback = 'Δεν υπάρχουν διαθέσιμες κατηγορίες.';
+      let msg = fallback;
+      try {
+        if (typeof window.t === 'function') {
+          const maybe = window.t('trips.no_categories');
+          if (maybe && maybe !== 'trips.no_categories') msg = maybe;
+        }
+      } catch(_) {}
+      container.innerHTML = `<p class="no-categories">${msg}</p>`;
       return;
     }
     cats.forEach(cat => {
-      const btn = document.createElement("button");
-      btn.className = "category-btn";
-      btn.classList.add('ga-card');
       const slug = cat.slug || cat.id;
       const catTitle = getLocalized(cat.title) || '';
       const iconPath = cat.iconPath || (`/categories/${slug}/icon.svg`);
-      btn.innerHTML = `<img src="${iconPath}" alt="${catTitle}"><span class="cat-label">${catTitle}</span>`;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'category-tile';
+      // Button with icon only
+      const btn = document.createElement('button');
+      btn.className = 'category-btn ga-card';
       btn.dataset.cat = slug;
       btn.classList.add(`cat-${slug}`);
       btn.title = catTitle;
-      btn.addEventListener("click", () => { window.location.href = `/categories/${slug}.html`; });
-      container.appendChild(btn);
+      btn.addEventListener('click', () => { window.location.href = `/categories/${slug}.html`; });
+      // Icon element (img or fallback span)
+      const iconEl = document.createElement('img');
+      iconEl.src = iconPath;
+      iconEl.alt = catTitle;
+      btn.appendChild(iconEl);
+      // Caption below button
+      const caption = document.createElement('div');
+      caption.className = 'category-caption';
+      caption.textContent = catTitle;
+      wrapper.appendChild(btn);
+      wrapper.appendChild(caption);
+      container.appendChild(wrapper);
       if (["sea","mountain","culture"].includes(slug)) {
         const delay = (["sea","mountain","culture"].indexOf(slug) * 100) + 90;
         setTimeout(() => btn.classList.add('cinematic'), delay);
