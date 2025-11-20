@@ -51,53 +51,99 @@ const G = {
 };
 
 // Selected trip mode helpers
+const AVAILABLE_MODES = ['van','mercedes','bus'];
+
+function canonicalMode(mode){
+  const value = String(mode || '').toLowerCase();
+  if (value === 'private') return 'mercedes';
+  if (AVAILABLE_MODES.includes(value)) return value;
+  return 'van';
+}
+
+function navModeFromCanonical(mode){
+  return mode === 'mercedes' ? 'private' : mode;
+}
+
 function getSelectedMode(){
   try {
     const params = new URLSearchParams(window.location.search);
-    let mode = (params.get('mode') || localStorage.getItem('trip_mode') || 'van').toLowerCase();
-    if (mode === 'private') mode = 'mercedes';
-    if (!['van','bus','mercedes'].includes(mode)) mode = 'van';
-    return mode;
-  } catch(_) { return 'van'; }
+    const queryMode = params.get('mode');
+    const storedMode = localStorage.getItem('trip_mode');
+    return canonicalMode(queryMode || storedMode || 'van');
+  } catch(_) {
+    return 'van';
+  }
 }
 
-function getTripModeInfo(tripData, modeKey) {
-  if (!tripData || !tripData.modes) return null;
-  const raw = String(modeKey || '').toLowerCase();
-  let key = raw === 'private' ? 'mercedes' : raw;
-  if (!['van', 'bus', 'mercedes'].includes(key)) key = 'van';
-  const mode = tripData.modes[key];
-  if (!mode) return null;
-  const activeValue = mode.active;
-  const isActive = (() => {
-    if (typeof activeValue === 'boolean') return activeValue;
-    if (activeValue == null) return true;
-    if (typeof activeValue === 'number') return activeValue !== 0;
-    if (typeof activeValue === 'string') {
-      const normalized = activeValue.trim().toLowerCase();
-      if (!normalized) return true;
-      if (['false','0','no','inactive'].includes(normalized)) return false;
-      if (['true','1','yes','active'].includes(normalized)) return true;
-    }
-    return true;
-  })();
+function resolveModeActive(primary, fallback){
+  const value = (typeof primary !== 'undefined') ? primary : fallback;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return true;
+    if (['false','0','no','inactive','disabled'].includes(normalized)) return false;
+    if (['true','1','yes','active','enabled'].includes(normalized)) return true;
+  }
+  return true;
+}
+
+function resolveModePrice(modeSet, rawMode){
+  if (modeSet && typeof modeSet.price_cents === 'number') return modeSet.price_cents / 100;
+  const candidates = [
+    rawMode && rawMode.price_per_person,
+    rawMode && rawMode.price_total,
+    rawMode && rawMode.price
+  ];
+  for (const value of candidates) {
+    if (value == null || value === '') continue;
+    const num = Number(value);
+    if (Number.isFinite(num)) return num;
+  }
+  return null;
+}
+
+function resolveModeChargeType(modeSet, rawMode){
+  const raw = (modeSet && modeSet.charge_type) || (rawMode && (rawMode.charge_type || rawMode.charging_type)) || 'per_person';
+  const lowered = String(raw).toLowerCase();
+  if (lowered === 'per_vehicle' || lowered === 'flat') return 'per_vehicle';
+  return 'per_person';
+}
+
+function resolveModeCapacity(modeSet, rawMode){
+  const candidates = [
+    modeSet && modeSet.default_capacity,
+    rawMode && rawMode.default_capacity,
+    rawMode && rawMode.capacity
+  ];
+  for (const value of candidates) {
+    const num = Number(value);
+    if (Number.isFinite(num) && num > 0) return num;
+  }
+  return null;
+}
+
+function getTripModeInfo(tripData, modeKey){
+  if (!tripData) return null;
+  const canonical = canonicalMode(modeKey || getSelectedMode());
+  const legacyModes = (tripData.modes && typeof tripData.modes === 'object') ? tripData.modes : {};
+  const rawMode = legacyModes[canonical] || null;
+  const modeSet = (tripData.mode_set && typeof tripData.mode_set === 'object') ? tripData.mode_set[canonical] : null;
+  const isActive = resolveModeActive(modeSet && modeSet.active, rawMode && rawMode.active);
   if (!isActive) return null;
-  const rawPrice = mode.price;
-  if (rawPrice == null || rawPrice === '') return null;
-  const price = Number(rawPrice);
-  if (!Number.isFinite(price)) return null;
-  const rawCharge = (mode.charge_type || mode.charging_type || 'per_person').toLowerCase();
-  const chargeType = rawCharge === 'per_vehicle' ? 'per_vehicle' : 'per_person';
-  const capacityRaw = mode.default_capacity != null ? mode.default_capacity : mode.capacity;
-  const capacityNum = capacityRaw != null ? Number(capacityRaw) : null;
-  const capacity = Number.isFinite(capacityNum) ? capacityNum : null;
+  const price = resolveModePrice(modeSet, rawMode);
+  if (price == null) return null;
+  const chargeType = resolveModeChargeType(modeSet, rawMode);
+  const capacity = resolveModeCapacity(modeSet, rawMode);
   const currency = (tripData.currency || 'EUR').toUpperCase();
-  return { price, chargeType, capacity, currency, key };
+  const description = rawMode && rawMode.description ? rawMode.description : '';
+  return { key: canonical, price, chargeType, capacity, currency, description };
 }
 
 // Temporary flag to disable any flatpickr calendar initialization in the booking overlay
 // Allow only the inline calendar inside the overlay; prevent other calendars/popups
 const GW_DISABLE_BOOKING_CALENDAR = false;
+
 // Return translation for key if available; otherwise, return fallback
 function tSafe(key, fallback){
   try {
@@ -113,17 +159,13 @@ function getFlatpickrLocale() {
     const lang = getCurrentLang();
     const l10n = (window.flatpickr && window.flatpickr.l10ns) ? window.flatpickr.l10ns : null;
     if (!l10n) return 'default';
-    // Greek uses 'gr' in flatpickr
     if (lang === 'el') return l10n.gr || 'gr';
-    // English is default when no l10n specified
     if (lang === 'en') return 'default';
-    // direct mapping for fr, de, he if loaded
     if (l10n[lang]) return l10n[lang];
     return 'default';
   } catch(_) { return 'default'; }
 }
 
-// Global i18n helpers used by multiple blocks
 function getCurrentLang() {
   return (window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el';
 }
@@ -131,26 +173,52 @@ function getCurrentLang() {
 function getLocalized(field) {
   const currentLang = getCurrentLang();
   if (!field) return '';
-  if (typeof field === 'string') return field; // legacy single-language
+  if (typeof field === 'string') return field;
   if (typeof field === 'object') return field[currentLang] || field['el'] || Object.values(field)[0] || '';
   return '';
 }
 
-// Shared categories cache so trip pages can reuse CMS meta (mode card texts, etc.)
 let __gwCategoryCache = null;
 let __gwCategoryCachePromise = null;
+
+async function fetchCategoriesFromAdmin(){
+  const res = await fetch('/api/admin/categories', { cache: 'no-store', credentials: 'same-origin' });
+  if (!res.ok) throw new Error('categories_admin_load_failed');
+  const json = await res.json();
+  const arr = Array.isArray(json) ? json : [];
+  return arr.filter(cat => cat && cat.published);
+}
+
+async function fetchCategoriesFromCms(){
+  const res = await fetch('/api/categories?published=true', { cache: 'no-store' });
+  if (!res.ok) throw new Error('categories_cms_load_failed');
+  const json = await res.json();
+  return Array.isArray(json) ? json : [];
+}
+
 function fetchPublishedCategoriesOnce(){
   if (__gwCategoryCache) return Promise.resolve(__gwCategoryCache);
   if (!__gwCategoryCachePromise) {
-    __gwCategoryCachePromise = fetch('/api/public/categories', { cache:'no-store' })
-      .then(r => r.ok ? r.json() : [])
-      .then(list => {
-        const arr = Array.isArray(list) ? list : [];
-        __gwCategoryCache = arr;
-        try { window.__gwCategories = arr; } catch(_) {}
-        return arr;
-      })
-      .catch(() => []);
+    __gwCategoryCachePromise = (async () => {
+      try {
+        const published = await fetchCategoriesFromCms();
+        if (published && published.length) {
+          __gwCategoryCache = published;
+          try { window.__gwCategories = published; } catch(_){ }
+          return published;
+        }
+      } catch(_){ }
+      try {
+        const adminList = await fetchCategoriesFromAdmin();
+        if (adminList && adminList.length) {
+          __gwCategoryCache = adminList;
+          try { window.__gwCategories = adminList; } catch(_){ }
+          return adminList;
+        }
+      } catch(_){ }
+      __gwCategoryCache = [];
+      return [];
+    })();
   }
   return __gwCategoryCachePromise;
 }
@@ -168,9 +236,8 @@ async function getCategoryMetaBySlug(slug){
   return (list || []).find(cat => (cat.slug || cat.id) === slug) || null;
 }
 
-// Helper: ensure we have a data version to cache-bust /public/data JSON in prod
 async function getDataVersionEnsure(){
-  if (typeof window.__GW_DATA_VER !== 'undefined') return window.__GW_DATA_VER || '';
+  if (typeof window.__GW_DATA_VER !== 'undefined' && window.__GW_DATA_VER !== null && window.__GW_DATA_VER !== '') return window.__GW_DATA_VER;
   try {
     const r = await fetch('/version.json', { cache: 'no-cache' });
     if (r.ok) {
@@ -182,6 +249,8 @@ async function getDataVersionEnsure(){
   window.__GW_DATA_VER = '';
   return '';
 }
+
+window.__GW_DATA_VER = '';
 
 // ---------- [A] Λίστα Κατηγοριών (trips.html) ----------
 document.addEventListener("DOMContentLoaded", () => {
@@ -281,25 +350,22 @@ document.addEventListener("DOMContentLoaded", () => {
         tile.appendChild(btn);
         tile.appendChild(caption);
         container.appendChild(tile);
-        if (["sea","mountain","culture"].includes(slug)) {
-          const delay = (["sea","mountain","culture"].indexOf(slug) * 100) + 90;
-          setTimeout(() => btn.classList.add('cinematic'), delay);
-        }
       });
   }
 
-  // Load from Category CMS API (published only) via public endpoint
-  (async () => fetch(`/api/public/categories`, { cache: 'no-store' }))()
-    .then(r => { if (!r.ok) throw new Error("Failed to load categories"); return r.json(); })
+  fetchPublishedCategoriesOnce()
     .then(cats => {
-      window.__gwCategories = cats;
-      renderCategories(cats);
-      // Re-render titles on language switch
+      const list = Array.isArray(cats) ? cats : [];
+      window.__gwCategories = list;
+      renderCategories(list);
       window.addEventListener('i18n:changed', () => {
-        try { renderCategories(window.__gwCategories || cats); } catch(_) {}
+        try { renderCategories(window.__gwCategories || list); } catch(_) {}
       });
     })
-  .catch(err => G.error("Σφάλμα φόρτωσης κατηγοριών:", err));
+  .catch(err => {
+    G.error("Σφάλμα φόρτωσης κατηγοριών:", err);
+    renderCategories([]);
+  });
 });
 
 // ---------- [B] Σελίδα Κατηγορίας (π.χ. /category.html?slug=culture) ----------
@@ -379,9 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (match) return match;
         }
       } catch(_) { /* ignore */ }
-      const resp = await fetch(`/api/public/categories`, { cache: 'no-store' });
-      if (!resp.ok) throw new Error('Failed to load categories');
-      const cats = await resp.json();
+      const cats = await fetchPublishedCategoriesOnce();
       if (Array.isArray(cats)) {
         window.__gwCategories = cats;
         return cats.find(cat => (cat.slug || cat.id) === category) || null;
@@ -433,7 +497,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.title = getLocalized(trip.title) || '';
         btn.addEventListener('click', () => {
           try { sessionStorage.setItem('highlightTrip', tripSlug); } catch(_) {}
-          window.location.href = `/trips/trip.html?id=${encodeURIComponent(tripSlug)}`;
+          window.location.href = `/mode-select.html?trip=${encodeURIComponent(tripSlug)}`;
         });
         const iconWrapper = document.createElement('div');
         iconWrapper.className = 'category-icon';
@@ -520,10 +584,15 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!tripSection) return; // αν δεν είμαστε σε trip.html, τέλος
 
   const params = new URLSearchParams(window.location.search);
-  const tripId = params.get("id");
+  const tripId = (params.get("trip") || params.get("id") || '').trim();
+  const requestedMode = (params.get("mode") || '').trim().toLowerCase();
+  const allowedModes = ['van','bus','mercedes','private'];
   if (!tripId) {
-    document.getElementById("trip-section").innerHTML =
-      "<p>Δεν δόθηκε εκδρομή (λείπει το ?id=...).</p>";
+    window.location.href = '/index.html';
+    return;
+  }
+  if (!requestedMode || !allowedModes.includes(requestedMode)) {
+    window.location.href = `/mode-select.html?trip=${encodeURIComponent(tripId)}`;
     return;
   }
 
@@ -626,43 +695,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // store loaded trip and render localized fields via a function so we can re-render on language change
       window.__loadedTrip = trip;
-      const modeCardRoot = document.getElementById('chooseExperienceCard');
-      const MODE_PRIORITY = ['van','mercedes','bus'];
-      let currentCategoryMeta = null;
-      let activeModeKey = canonicalMode(getSelectedMode());
+      const slugForRedirect = trip.slug || trip.id || tripId;
+      const initialModeKey = canonicalMode(requestedMode || getSelectedMode());
       function escapeHtml(str){
         return String(str || '').replace(/[&<>"']/g, (ch) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch] || ch));
       }
 
-      function canonicalMode(mode){
-        const v = String(mode || '').toLowerCase();
-        if (v === 'private') return 'mercedes';
-        return ['van','bus','mercedes'].includes(v) ? v : 'van';
-      }
-
-      function navModeFromCanonical(mode){
-        return mode === 'mercedes' ? 'private' : mode;
-      }
-
-      function persistModePayload(payload){
-        if (!payload) return;
-        const canonical = canonicalMode(payload.canonicalMode || payload.mode);
-        const navMode = payload.mode || navModeFromCanonical(canonical);
-        const info = payload.info || null;
+      function persistActiveMode(modeKey, info){
+        if (!modeKey) return;
+        const navMode = navModeFromCanonical(modeKey);
         let prevMode = '';
         try { prevMode = (localStorage.getItem('trip_mode') || '').toLowerCase(); } catch(_){ }
-        try {
-          localStorage.setItem('trip_mode', navMode);
-          window.__tripSelectedModeNav = navMode;
-        } catch(_){ }
+        try { localStorage.setItem('trip_mode', navMode); } catch(_){ }
         try {
           const url = new URL(window.location.href);
+          url.searchParams.set('trip', slugForRedirect);
+          url.searchParams.set('id', slugForRedirect);
           url.searchParams.set('mode', navMode);
           window.history.replaceState({}, '', url.toString());
         } catch(_){ }
         try {
-          sessionStorage.setItem('gw_trip_id', trip.slug || trip.id || '');
-          sessionStorage.setItem('selectedVehicleType', canonical);
+          sessionStorage.setItem('gw_trip_id', slugForRedirect || '');
+          sessionStorage.setItem('selectedVehicleType', modeKey);
           if (info) {
             sessionStorage.setItem('selectedVehiclePrice', String(info.price != null ? info.price : 0));
             sessionStorage.setItem('selectedVehicleCurrency', info.currency || (trip.currency || 'EUR'));
@@ -674,45 +728,16 @@ document.addEventListener("DOMContentLoaded", () => {
         if (typeof window.clearBookingState === 'function' && prevMode && prevMode !== navMode) {
           try { window.clearBookingState(); } catch(_){ }
         }
-        activeModeKey = canonical;
         renderTripLocalized();
-        try { document.dispatchEvent(new CustomEvent('gw:mode:changed', { detail: { mode: canonical, info } })); } catch(_){ }
+        try { document.dispatchEvent(new CustomEvent('gw:mode:changed', { detail: { mode: modeKey, info } })); } catch(_){ }
       }
 
-      function ensureModeSelection(){
-        if (!trip || !trip.modes) return;
-        let target = canonicalMode(getSelectedMode());
-        let info = getTripModeInfo(trip, target);
-        if (!info) {
-          for (const candidate of MODE_PRIORITY) {
-            info = getTripModeInfo(trip, candidate);
-            if (info) {
-              target = candidate;
-              break;
-            }
-          }
-        }
-        if (info) {
-          persistModePayload({ mode: navModeFromCanonical(target), canonicalMode: target, info });
-        } else if (modeCardRoot) {
-          modeCardRoot.hidden = true;
-        }
+      const initialModeInfo = getTripModeInfo(trip, initialModeKey);
+      if (!initialModeInfo) {
+        window.location.href = `/mode-select.html?trip=${encodeURIComponent(slugForRedirect)}`;
+        return;
       }
-
-      function renderModeCard(){
-        if (!modeCardRoot || !window.GWModeCard || typeof window.GWModeCard.render !== 'function') return;
-        const displayMode = window.__tripSelectedModeNav || navModeFromCanonical(activeModeKey || getSelectedMode());
-        window.GWModeCard.render({
-          root: modeCardRoot,
-          trip,
-          category: currentCategoryMeta,
-          activeMode: displayMode,
-          onSelect: (payload) => {
-            persistModePayload(payload);
-            renderModeCard();
-          }
-        });
-      }
+      persistActiveMode(initialModeKey, initialModeInfo);
 
       function resolveModePricingForTrip(tripData, modeOverride){
         if (!tripData) return null;
@@ -1019,15 +1044,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // initial render
-      ensureModeSelection();
-      renderModeCard();
       renderTripLocalized();
-
-      if (trip.category) {
-        getCategoryMetaBySlug(trip.category)
-          .then((meta) => { currentCategoryMeta = meta; renderModeCard(); })
-          .catch(() => {});
-      }
 
       // Apply global carousel config to CSS variables once
       try {
@@ -1239,7 +1256,6 @@ document.addEventListener("DOMContentLoaded", () => {
       // listen for language changes and re-render localized content
       window.addEventListener('i18n:changed', () => {
         try { renderTripLocalized(); } catch (e) { G.error('i18n render failed', e); }
-        try { renderModeCard(); } catch (e) { console.error('mode card re-render failed', e); }
         try { updatePrice(); } catch (e) { G.error('price rerender failed', e); }
         try { updateMiniPrice(); } catch (_) {}
       });

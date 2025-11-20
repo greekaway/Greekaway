@@ -259,8 +259,10 @@ function buildCategoriesRouter({ checkAdminAuth }){
 
 function registerCategoriesRoutes(app, { checkAdminAuth }){
   try {
-    app.use('/api/categories', buildCategoriesRouter({ checkAdminAuth }));
-    console.log('categories: router mounted at /api/categories');
+    const adminRouter = buildCategoriesRouter({ checkAdminAuth });
+    app.use('/api/categories', adminRouter);
+    app.use('/api/admin/categories', adminRouter);
+    console.log('categories: router mounted at /api/categories (+ /api/admin/categories)');
     // Public read-only endpoint for published categories (no auth)
     app.get('/api/public/categories', (req, res) => {
       try {

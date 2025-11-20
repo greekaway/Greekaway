@@ -44,13 +44,14 @@
     if (!catsEl || !tripsEl) return; // not dashboard
     try {
       const [catsResp,tripsResp] = await Promise.all([
-        fetch('/api/public/categories'),
-        fetch('/api/public/trips')
+        fetch('/api/admin/categories', { cache:'no-store', credentials:'same-origin' }),
+        fetch('/api/admin/trips', { cache:'no-store', credentials:'same-origin' })
       ]);
       const cats = catsResp.ok? await catsResp.json():[];
       const trips = tripsResp.ok? await tripsResp.json():[];
-      catsEl.textContent = cats.length;
-      tripsEl.textContent = trips.length;
+      const publishedCats = Array.isArray(cats) ? cats.filter(c => c && c.published) : [];
+      catsEl.textContent = publishedCats.length;
+      tripsEl.textContent = Array.isArray(trips) ? trips.length : 0;
     } catch(e){ catsEl.textContent='—'; tripsEl.textContent='—'; }
   }
   document.addEventListener('DOMContentLoaded',()=>{ ensureCoreLinks(); markActive(); loadDashboardCounts(); });

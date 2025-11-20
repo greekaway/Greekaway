@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Greekaway – Επιλογή εμπειρίας</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/mode-select.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#001f3f">
+  <link rel="stylesheet" href="/pwa.css">
+  <link rel="stylesheet" href="/css/pwa-fixes.css">
+  <script src="/js/i18n.js?v=20251022" defer></script>
+  <script src="/js/theme.js" defer></script>
+  <script src="/js/overlay-manager.js" defer></script>
+  <script src="/js/footer.js?v=20251021" defer></script>
+  <script src="/js/assistant.js" defer></script>
+  <script src="/pwa-install.js" defer></script>
+  <script src="/js/mode-select.js" defer></script>
+</head>
+<body class="mode-select-page" data-view="mode-select">
+  <main class="mode-select-shell">
+    <section class="mode-select-hero" id="modeIntro">
+      <p id="modeTripBreadcrumb" class="mode-select-trip-breadcrumb"></p>
+      <h1 id="modeCardTitle">Επέλεξε εμπειρία</h1>
+      <p id="modeCardDescription">Διάλεξε όχημα και εμπειρία πριν συνεχίσεις στην εκδρομή.</p>
+      <div class="mode-select-trip-meta" id="modeTripMeta"></div>
+    </section>
+
+    <section id="modeStatus" class="mode-select-status" aria-live="polite" hidden>
+      Φόρτωση διαθέσιμων modes...
+    </section>
+
+    <section id="modeCards" class="mode-card-grid" aria-live="polite"></section>
+
+    <div class="mode-select-actions">
+      <button id="modeContinue" class="btn" type="button" disabled>Συνέχεια</button>
+    </div>
+
+    <div id="modeError" class="mode-select-error" hidden></div>
+  </main>
+
+  <footer></footer>
+
+  <!-- Shared overlays -->
+  <div id="aboutOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
+    <button class="close-overlay" onclick="closeOverlay('aboutOverlay')" data-i18n-aria="ui.close">×</button>
+    <div class="overlay-inner">
+      <h2 data-i18n="about.title">Σχετικά με εμάς</h2>
+      <p data-i18n="about.text">Το Greekaway δημιουργήθηκε για να σας προσφέρει επιλεγμένες εκδρομές στην Ελλάδα με άνεση, τεχνολογία και στυλ.</p>
+    </div>
+  </div>
+
+  <div id="aiOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
+    <button class="close-overlay" onclick="closeOverlay('aiOverlay')" data-i18n-aria="ui.close">×</button>
+    <div class="overlay-inner">
+      <h2 data-i18n="nav.ai">Βοηθός AI</h2>
+      <p data-i18n="welcome.ask">Ρωτήστε μας ό,τι θέλετε για την εκδρομή σας!</p>
+    </div>
+  </div>
+
+  <div id="profileOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
+    <button class="close-overlay" onclick="closeOverlay('profileOverlay')" data-i18n-aria="ui.close">×</button>
+    <div class="overlay-inner">
+      <h2 data-i18n="nav.profile">Το Προφίλ μου</h2>
+      <p data-i18n="profile.info">Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας.</p>
+    </div>
+  </div>
+</body>
+</html>

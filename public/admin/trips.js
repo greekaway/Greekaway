@@ -480,12 +480,11 @@
     };
     try {
       // Προσπάθησε admin endpoint (πλήρης λίστα)
-      const r1 = await fetch('/api/categories', { credentials:'same-origin', cache:'no-store' });
+      const r1 = await fetch('/api/admin/categories', { credentials:'same-origin', cache:'no-store' });
       if (r1.ok) { const j = await r1.json(); renderOptions(j); return; }
     } catch(_){ /* fallback below */ }
     try {
-      // Fallback σε public (δημοσιευμένες)
-      const r2 = await fetch('/api/public/categories', { cache:'no-store' });
+      const r2 = await fetch('/api/categories?published=true', { cache:'no-store' });
       const j2 = r2.ok ? await r2.json() : [];
       renderOptions(j2);
     } catch(_){ renderOptions([]); }
