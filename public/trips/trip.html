@@ -9,8 +9,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/trip.css?v=20251019">
+  <link rel="stylesheet" href="/css/trip-mode-select.css?v=20251120">
   <link rel="stylesheet" href="/css/booking.css">
-  <link rel="stylesheet" href="/css/trip-mode-select.css">
   <link rel="stylesheet" href="/css/notification-bubble.css?v=20251108">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#001f3f">
@@ -38,8 +38,9 @@
   <script src="/js/carousel-config.js"></script>
   <!-- Load i18n early so booking/labels can translate immediately -->
   <script src="/js/i18n.js?v=20251022" defer></script>
+  <script src="/js/booking-reset.js?v=20251120" defer></script>
+  <script src="/js/trip-mode-select.js?v=20251120" defer></script>
   <!-- App logic (cache-busted) -->
-  <script src="/js/vehiclePriceMap.js" defer></script>
   <script src="/js/main.js?v=20251022" defer></script>
   <!-- Trip-only: iPhone-style notification bubble (fake for now) -->
   <script src="/js/notification-bubble.js" defer></script>
@@ -91,10 +92,25 @@
     <div class="trip-header-capsules" id="trip-meta" style="display:none"></div>
     <!-- Legacy single price (kept for backward compatibility, hidden by default) -->
     <div id="trip-price" class="price-tag" style="display:none">—</div>
+    <p id="trip-subtitle" class="trip-subtitle" style="display:none"></p>
+    <div id="trip-duration" class="trip-duration" style="display:none"></div>
+    <div id="trip-tags" class="trip-tags" style="display:none"></div>
     <p id="trip-description"></p>
 
-    <div id="map"></div>
-    <div id="stops"></div>
+    <section id="chooseExperienceCard" class="trip-card choose-experience-card" hidden aria-live="polite"></section>
+
+    <div id="trip-includes" class="trip-card trip-inclusions" style="display:none"></div>
+    <div id="trip-sections" class="trip-sections"></div>
+    <div id="trip-gallery" class="trip-card trip-gallery" style="display:none"></div>
+    <div id="trip-video" class="trip-card trip-video" style="display:none"></div>
+    <div id="trip-faq" class="trip-card trip-faq" style="display:none"></div>
+
+    <div id="trip-map-card" class="trip-card trip-map-card" style="display:none">
+      <h3 data-i18n="trip.map_heading">Χάρτης & Διαδρομή</h3>
+      <div id="map" class="trip-map"></div>
+    </div>
+    <div id="stops" class="trip-stops"></div>
+
   </section>
 
   <!-- Overlays -->

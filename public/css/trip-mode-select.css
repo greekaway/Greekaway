@@ -1,70 +1,87 @@
-/* Trip Mode Select - Mobile-first navy + gold theme */
+/* Choose Experience Type card styles */
 :root {
-  --navy-900: #0b1530;
-  --navy-800: #101c3a;
-  --navy-700: #15244a;
-  --gold: #d4af37;
-  --gold-soft: #e1c766;
-  --text: #ffffff;
-  --text-dim: rgba(255,255,255,0.85);
-  --ring: rgba(212,175,55,0.45);
-  --shadow: rgba(0,0,0,0.45);
+  --mode-navy-900: #0b1530;
+  --mode-navy-800: #101c3a;
+  --mode-navy-700: #15244a;
+  --mode-gold: #d4af37;
+  --mode-gold-soft: #e1c766;
+  --mode-text: #ffffff;
+  --mode-text-dim: rgba(255,255,255,0.85);
+  --mode-ring: rgba(212,175,55,0.45);
+  --mode-shadow: rgba(0,0,0,0.45);
 }
 
-#trip-mode-select, #trip-mode-select * { box-sizing: border-box; }
-body {
+.choose-experience-card {
+  margin: 16px auto 24px;
+  padding: clamp(16px, 2vw, 32px);
+  border-radius: 22px;
+  border: 1px solid rgba(212,175,55,0.2);
+  background: linear-gradient(180deg, rgba(11,21,40,0.95), rgba(12,28,48,0.92));
+  box-shadow: 0 26px 70px rgba(0,0,0,0.45);
+  width: 100%;
+  max-width: 1100px;
+}
+
+.mode-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.mode-card-title {
   margin: 0;
-  /* Defer background/colors to site theme (style.css) so this page matches category/trip backgrounds */
-  font-family: -apple-system, system-ui, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-size: 1.3rem;
+  color: var(--mode-gold);
 }
 
-#trip-mode-select {
-  max-width: 840px;
-  margin: 0 auto;
-  padding: 20px 16px 32px;
-}
-
-.page-header { margin: 6px 2px 18px; }
-.page-header h1 {
-  margin: 0 0 6px;
-  font-size: 1.6rem;
-  line-height: 1.2;
-  letter-spacing: 0.2px;
-}
-.page-sub {
+.mode-card-subtitle {
   margin: 0;
-  color: var(--text-dim);
   font-size: 0.95rem;
+  color: var(--mode-text-dim);
+}
+
+.trip-mode-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: clamp(12px, 1.8vw, 20px);
+  align-items: stretch;
 }
 
 .trip-mode-card {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  background: var(--navy-800);
-  color: var(--text);
+  background: var(--mode-navy-800);
+  color: var(--mode-text);
   border-radius: 16px;
-  padding: 16px 18px 14px;
-  margin: 14px 0;
+  padding: 20px 22px 18px;
   text-decoration: none;
   box-shadow:
-    0 0 0 1px rgba(225, 199, 102, 0.18),
-    0 8px 24px var(--shadow),
-    0 0 28px rgba(15, 45, 110, 0.18);
+    0 0 0 1px rgba(225,199,102,0.18),
+    0 8px 24px var(--mode-shadow),
+    0 0 28px rgba(15,45,110,0.18);
   transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
   outline: none;
   cursor: pointer;
+  min-height: 180px;
 }
 
 .trip-mode-card:focus-visible {
   box-shadow:
-    0 0 0 2px var(--ring),
+    0 0 0 2px var(--mode-ring),
     0 0 0 6px rgba(212,175,55,0.18),
-    0 8px 28px var(--shadow);
+    0 8px 28px var(--mode-shadow);
 }
 
 .trip-mode-card:hover { transform: translateY(-2px); }
+.trip-mode-card.active {
+  box-shadow:
+    0 0 0 2px rgba(212,175,55,0.38),
+    0 12px 32px rgba(0,0,0,0.55),
+    0 0 36px rgba(212,175,55,0.22);
+  transform: translateY(-1px);
+}
 
 .trip-mode-header {
   display: flex;
@@ -75,17 +92,23 @@ body {
 }
 
 .trip-mode-title { font-weight: 600; }
-.trip-mode-price { color: var(--gold); font-weight: 600; }
+.trip-mode-price { color: var(--mode-gold); font-weight: 600; }
 
 .trip-mode-desc {
-  margin: 0;
-  color: var(--text-dim);
+  margin: 0 0 10px;
+  color: var(--mode-text-dim);
   line-height: 1.5;
+}
+
+.trip-mode-meta {
+  margin-top: auto;
+  color: var(--mode-text-dim);
+  font-size: 0.85rem;
 }
 
 /* Emphasis variations */
 .trip-mode-van {
-  background: linear-gradient(180deg, rgba(212,175,55,0.06), transparent 60%), var(--navy-800);
+  background: linear-gradient(180deg, rgba(212,175,55,0.06), transparent 60%), var(--mode-navy-800);
   box-shadow:
     0 0 0 1px rgba(212,175,55,0.28),
     0 10px 28px rgba(0,0,0,0.55),
@@ -100,56 +123,34 @@ body {
 }
 
 .trip-mode-bus {
-  background: var(--navy-700);
+  background: var(--mode-navy-700);
   box-shadow:
     0 0 0 1px rgba(212,175,55,0.12),
     0 6px 18px rgba(0,0,0,0.45),
     0 0 24px rgba(212,175,55,0.08);
 }
 
-.trip-warning {
-  margin: 18px 4px 0;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(255, 102, 102, 0.12);
-  color: #ffdede;
-  font-size: 0.95rem;
-  border: 1px solid rgba(255, 102, 102, 0.25);
+@media (min-width: 720px) {
+  .trip-mode-card-list {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .choose-experience-card {
+    padding: clamp(20px, 2.4vw, 36px);
+  }
 }
 
-.nojs {
-  margin: 16px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-/* Larger screens */
-@media (min-width: 640px) {
-  #trip-mode-select { padding: 28px 24px 40px; }
-  .page-header h1 { font-size: 1.9rem; }
-  .trip-mode-card { padding: 18px 22px 16px; }
-}
-
-/* Day (light) mode: gold text on cards; bus card stays white */
-@media (prefers-color-scheme: light) {
-  .trip-mode-card, 
-  .trip-mode-card .trip-mode-title,
-  .trip-mode-card .trip-mode-desc,
-  .trip-mode-card .trip-mode-price { color: var(--gold) !important; }
-
-  .trip-mode-bus,
-  .trip-mode-bus .trip-mode-title,
-  .trip-mode-bus .trip-mode-desc,
-  .trip-mode-bus .trip-mode-price { color: #ffffff !important; }
-}
-
-/* Dark mode: keep gold titles (and price already gold) for van & limousine */
-@media (prefers-color-scheme: dark) {
-  .trip-mode-van .trip-mode-title,
-  .trip-mode-private .trip-mode-title { color: var(--gold) !important; }
+@media (min-width: 1024px) {
+  .mode-card-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .mode-card-title { font-size: 1.45rem; }
+  .mode-card-subtitle { max-width: 520px; font-size: 1.05rem; }
+  .trip-mode-card-list {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
 }
 
 /* Booking Step 2 dynamic mode disabled styling */

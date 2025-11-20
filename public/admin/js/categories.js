@@ -32,7 +32,15 @@
   const fOrder = document.getElementById('catOrder');
   const fPublished = document.getElementById('catPublished');
   const fIcon = document.getElementById('catIcon');
+  const fModeCardTitle = document.getElementById('catModeCardTitle');
+  const fModeCardSubtitle = document.getElementById('catModeCardSubtitle');
+  const fModeVanDescription = document.getElementById('catModeVanDescription');
+  const fModeMercedesDescription = document.getElementById('catModeMercedesDescription');
+  const fModeBusDescription = document.getElementById('catModeBusDescription');
   const previewEl = document.getElementById('catIconPreview');
+  const modeCardPanel = document.querySelector('.mode-card-panel');
+  const modeCardEditBtn = document.getElementById('modeCardEdit');
+  const modeCardClearBtn = document.getElementById('modeCardClear');
   let userTouchedSlug = false;
 
   let categories = [];
@@ -90,6 +98,41 @@
       .catch(_ => { msg('❌ Σφάλμα διαγραφής.', 'error'); });
   }
 
+  function normalizeModeCard(cat){
+    const legacy = cat || {};
+    const raw = (cat && typeof cat.modeCard === 'object') ? cat.modeCard : {};
+    const desc = (raw && typeof raw.desc === 'object') ? raw.desc : {};
+    const val = (value, legacyKey) => {
+      if (typeof value === 'string') return value;
+      if (legacyKey && typeof legacy[legacyKey] === 'string') return legacy[legacyKey];
+      return '';
+    };
+    return {
+      title: val(raw && raw.title, 'mode_card_title'),
+      subtitle: val(raw && raw.subtitle, 'mode_card_subtitle'),
+      desc: {
+        van: val(desc.van, 'mode_van_description'),
+        mercedes: val(desc.mercedes, 'mode_mercedes_description'),
+        bus: val(desc.bus, 'mode_bus_description')
+      }
+    };
+  }
+
+  function fillModeCardFields(values){
+    const card = values || { title:'', subtitle:'', desc:{ van:'', mercedes:'', bus:'' } };
+    if (fModeCardTitle) fModeCardTitle.value = card.title || '';
+    if (fModeCardSubtitle) fModeCardSubtitle.value = card.subtitle || '';
+    if (fModeVanDescription) fModeVanDescription.value = (card.desc && card.desc.van) || '';
+    if (fModeMercedesDescription) fModeMercedesDescription.value = (card.desc && card.desc.mercedes) || '';
+    if (fModeBusDescription) fModeBusDescription.value = (card.desc && card.desc.bus) || '';
+  }
+
+  function highlightModePanel(){
+    if (!modeCardPanel) return;
+    modeCardPanel.classList.add('panel-active');
+    setTimeout(()=> modeCardPanel.classList.remove('panel-active'), 1400);
+  }
+
   function render(){
     if (!rowsEl) return;
     rowsEl.innerHTML = '';
@@ -128,6 +171,7 @@
     if (fOrder) fOrder.value='0';
     if (fPublished) fPublished.checked=false;
     if (fIcon) fIcon.value='';
+    fillModeCardFields({ title:'', subtitle:'', desc:{ van:'', mercedes:'', bus:'' } });
     msg('Φόρμα μηδενίστηκε');
   }
 
@@ -139,6 +183,7 @@
     userTouchedSlug = true; // prevent auto overwrite while editing existing
     if (fOrder) fOrder.value = c.order || 0;
     if (fPublished) fPublished.checked = !!c.published;
+    fillModeCardFields(normalizeModeCard(c));
     // Show existing icon preview if available
     try {
       if (previewEl) {
@@ -181,6 +226,11 @@
     fd.append('slug', slug);
     fd.append('order', String(order));
     fd.append('published', published ? 'true' : '');
+    if (fModeCardTitle) fd.append('mode_card_title', fModeCardTitle.value.trim());
+    if (fModeCardSubtitle) fd.append('mode_card_subtitle', fModeCardSubtitle.value.trim());
+    if (fModeVanDescription) fd.append('mode_van_description', fModeVanDescription.value.trim());
+    if (fModeMercedesDescription) fd.append('mode_mercedes_description', fModeMercedesDescription.value.trim());
+    if (fModeBusDescription) fd.append('mode_bus_description', fModeBusDescription.value.trim());
     if (fIcon && fIcon.files && fIcon.files[0]) {
       fd.append('iconFile', fIcon.files[0]);
     }
@@ -197,6 +247,20 @@
   function wire(){
     if (saveBtn) saveBtn.addEventListener('click', upsert);
     if (resetBtn) resetBtn.addEventListener('click', resetForm);
+    if (modeCardEditBtn) modeCardEditBtn.addEventListener('click', () => {
+      highlightModePanel();
+      if (modeCardPanel) {
+        try { modeCardPanel.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_) { modeCardPanel.scrollIntoView(); }
+      }
+      if (fModeCardTitle) {
+        try { fModeCardTitle.focus(); } catch(_) {}
+      }
+    });
+    if (modeCardClearBtn) modeCardClearBtn.addEventListener('click', () => {
+      fillModeCardFields({ title:'', subtitle:'', desc:{ van:'', mercedes:'', bus:'' } });
+      highlightModePanel();
+      msg('Mode card texts cleared (μην ξεχάσεις αποθήκευση).', '');
+    });
     if (rowsEl) rowsEl.addEventListener('click', (ev) => {
       const t = ev.target;
       if (t && t.dataset && t.dataset.edit){ editCategory(t.dataset.edit); }

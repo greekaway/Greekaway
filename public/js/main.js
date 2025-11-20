@@ -61,6 +61,40 @@ function getSelectedMode(){
   } catch(_) { return 'van'; }
 }
 
+function getTripModeInfo(tripData, modeKey) {
+  if (!tripData || !tripData.modes) return null;
+  const raw = String(modeKey || '').toLowerCase();
+  let key = raw === 'private' ? 'mercedes' : raw;
+  if (!['van', 'bus', 'mercedes'].includes(key)) key = 'van';
+  const mode = tripData.modes[key];
+  if (!mode) return null;
+  const activeValue = mode.active;
+  const isActive = (() => {
+    if (typeof activeValue === 'boolean') return activeValue;
+    if (activeValue == null) return true;
+    if (typeof activeValue === 'number') return activeValue !== 0;
+    if (typeof activeValue === 'string') {
+      const normalized = activeValue.trim().toLowerCase();
+      if (!normalized) return true;
+      if (['false','0','no','inactive'].includes(normalized)) return false;
+      if (['true','1','yes','active'].includes(normalized)) return true;
+    }
+    return true;
+  })();
+  if (!isActive) return null;
+  const rawPrice = mode.price;
+  if (rawPrice == null || rawPrice === '') return null;
+  const price = Number(rawPrice);
+  if (!Number.isFinite(price)) return null;
+  const rawCharge = (mode.charge_type || mode.charging_type || 'per_person').toLowerCase();
+  const chargeType = rawCharge === 'per_vehicle' ? 'per_vehicle' : 'per_person';
+  const capacityRaw = mode.default_capacity != null ? mode.default_capacity : mode.capacity;
+  const capacityNum = capacityRaw != null ? Number(capacityRaw) : null;
+  const capacity = Number.isFinite(capacityNum) ? capacityNum : null;
+  const currency = (tripData.currency || 'EUR').toUpperCase();
+  return { price, chargeType, capacity, currency, key };
+}
+
 // Temporary flag to disable any flatpickr calendar initialization in the booking overlay
 // Allow only the inline calendar inside the overlay; prevent other calendars/popups
 const GW_DISABLE_BOOKING_CALENDAR = false;
@@ -100,6 +134,38 @@ function getLocalized(field) {
   if (typeof field === 'string') return field; // legacy single-language
   if (typeof field === 'object') return field[currentLang] || field['el'] || Object.values(field)[0] || '';
   return '';
+}
+
+// Shared categories cache so trip pages can reuse CMS meta (mode card texts, etc.)
+let __gwCategoryCache = null;
+let __gwCategoryCachePromise = null;
+function fetchPublishedCategoriesOnce(){
+  if (__gwCategoryCache) return Promise.resolve(__gwCategoryCache);
+  if (!__gwCategoryCachePromise) {
+    __gwCategoryCachePromise = fetch('/api/public/categories', { cache:'no-store' })
+      .then(r => r.ok ? r.json() : [])
+      .then(list => {
+        const arr = Array.isArray(list) ? list : [];
+        __gwCategoryCache = arr;
+        try { window.__gwCategories = arr; } catch(_) {}
+        return arr;
+      })
+      .catch(() => []);
+  }
+  return __gwCategoryCachePromise;
+}
+
+async function getCategoryMetaBySlug(slug){
+  if (!slug) return null;
+  try {
+    const cached = Array.isArray(window.__gwCategories) ? window.__gwCategories : __gwCategoryCache;
+    if (cached && cached.length) {
+      const match = cached.find(cat => (cat.slug || cat.id) === slug);
+      if (match) return match;
+    }
+  } catch(_){ }
+  const list = await fetchPublishedCategoriesOnce();
+  return (list || []).find(cat => (cat.slug || cat.id) === slug) || null;
 }
 
 // Helper: ensure we have a data version to cache-bust /public/data JSON in prod
@@ -367,7 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.title = getLocalized(trip.title) || '';
         btn.addEventListener('click', () => {
           try { sessionStorage.setItem('highlightTrip', tripSlug); } catch(_) {}
-          window.location.href = `/select-trip-type.html?trip=${encodeURIComponent(tripSlug)}`;
+          window.location.href = `/trips/trip.html?id=${encodeURIComponent(tripSlug)}`;
         });
         const iconWrapper = document.createElement('div');
         iconWrapper.className = 'category-icon';
@@ -504,6 +570,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const titleEl = document.getElementById("trip-title");
   const descEl = document.getElementById("trip-description");
   const metaWrap = document.getElementById('trip-meta');
+  const subtitleEl = document.getElementById('trip-subtitle');
+  const durationEl = document.getElementById('trip-duration');
+  const tagsEl = document.getElementById('trip-tags');
+  const sectionsWrap = document.getElementById('trip-sections');
+  const galleryWrap = document.getElementById('trip-gallery');
+  const videoWrap = document.getElementById('trip-video');
+  const includesWrap = document.getElementById('trip-includes');
+  const faqWrap = document.getElementById('trip-faq');
+  const mapCard = document.getElementById('trip-map-card');
+  const tripMapEl = document.getElementById('map');
           // Render trip cover image at the top if available (non-intrusive)
           try {
             const cover = trip.coverImage || '';
@@ -550,58 +626,302 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // store loaded trip and render localized fields via a function so we can re-render on language change
       window.__loadedTrip = trip;
+      const modeCardRoot = document.getElementById('chooseExperienceCard');
+      const MODE_PRIORITY = ['van','mercedes','bus'];
+      let currentCategoryMeta = null;
+      let activeModeKey = canonicalMode(getSelectedMode());
+      function escapeHtml(str){
+        return String(str || '').replace(/[&<>"']/g, (ch) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch] || ch));
+      }
+
+      function canonicalMode(mode){
+        const v = String(mode || '').toLowerCase();
+        if (v === 'private') return 'mercedes';
+        return ['van','bus','mercedes'].includes(v) ? v : 'van';
+      }
+
+      function navModeFromCanonical(mode){
+        return mode === 'mercedes' ? 'private' : mode;
+      }
+
+      function persistModePayload(payload){
+        if (!payload) return;
+        const canonical = canonicalMode(payload.canonicalMode || payload.mode);
+        const navMode = payload.mode || navModeFromCanonical(canonical);
+        const info = payload.info || null;
+        let prevMode = '';
+        try { prevMode = (localStorage.getItem('trip_mode') || '').toLowerCase(); } catch(_){ }
+        try {
+          localStorage.setItem('trip_mode', navMode);
+          window.__tripSelectedModeNav = navMode;
+        } catch(_){ }
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.set('mode', navMode);
+          window.history.replaceState({}, '', url.toString());
+        } catch(_){ }
+        try {
+          sessionStorage.setItem('gw_trip_id', trip.slug || trip.id || '');
+          sessionStorage.setItem('selectedVehicleType', canonical);
+          if (info) {
+            sessionStorage.setItem('selectedVehiclePrice', String(info.price != null ? info.price : 0));
+            sessionStorage.setItem('selectedVehicleCurrency', info.currency || (trip.currency || 'EUR'));
+            sessionStorage.setItem('selectedVehicleChargeType', info.chargeType || 'per_person');
+            if (info.capacity != null) sessionStorage.setItem('selectedVehicleCapacity', String(info.capacity));
+            else sessionStorage.removeItem('selectedVehicleCapacity');
+          }
+        } catch(_){ }
+        if (typeof window.clearBookingState === 'function' && prevMode && prevMode !== navMode) {
+          try { window.clearBookingState(); } catch(_){ }
+        }
+        activeModeKey = canonical;
+        renderTripLocalized();
+        try { document.dispatchEvent(new CustomEvent('gw:mode:changed', { detail: { mode: canonical, info } })); } catch(_){ }
+      }
+
+      function ensureModeSelection(){
+        if (!trip || !trip.modes) return;
+        let target = canonicalMode(getSelectedMode());
+        let info = getTripModeInfo(trip, target);
+        if (!info) {
+          for (const candidate of MODE_PRIORITY) {
+            info = getTripModeInfo(trip, candidate);
+            if (info) {
+              target = candidate;
+              break;
+            }
+          }
+        }
+        if (info) {
+          persistModePayload({ mode: navModeFromCanonical(target), canonicalMode: target, info });
+        } else if (modeCardRoot) {
+          modeCardRoot.hidden = true;
+        }
+      }
+
+      function renderModeCard(){
+        if (!modeCardRoot || !window.GWModeCard || typeof window.GWModeCard.render !== 'function') return;
+        const displayMode = window.__tripSelectedModeNav || navModeFromCanonical(activeModeKey || getSelectedMode());
+        window.GWModeCard.render({
+          root: modeCardRoot,
+          trip,
+          category: currentCategoryMeta,
+          activeMode: displayMode,
+          onSelect: (payload) => {
+            persistModePayload(payload);
+            renderModeCard();
+          }
+        });
+      }
+
+      function resolveModePricingForTrip(tripData, modeOverride){
+        if (!tripData) return null;
+        const info = getTripModeInfo(tripData, modeOverride || getSelectedMode());
+        if (!info) return null;
+        return {
+          price: info.price,
+          chargeType: info.chargeType,
+          capacity: info.capacity,
+          currency: info.currency
+        };
+      }
+
+      function formatMoney(amount, currency){
+        const cur = (currency || 'EUR').toUpperCase();
+        const val = Number(amount || 0);
+        try {
+          if (cur === 'EUR') {
+            return val.toLocaleString(getCurrentLang(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC';
+          }
+          return val.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur });
+        } catch(_){
+          return `${val.toFixed(2)} ${cur}`;
+        }
+      }
+
+      function buildDurationText(tripData){
+        if (tripData.duration_text) return tripData.duration_text;
+        const days = parseInt(tripData.duration_days, 10) || 0;
+        const hours = parseInt(tripData.duration_hours, 10) || 0;
+        const parts = [];
+        if (days) {
+          parts.push(`${days} ${days === 1 ? tSafe('trip.day','ημέρα') : tSafe('trip.days','ημέρες')}`);
+        }
+        if (hours) {
+          parts.push(`${hours} ${hours === 1 ? tSafe('trip.hour','ώρα') : tSafe('trip.hours','ώρες')}`);
+        }
+        return parts.join(' • ');
+      }
+
+      function renderTags(tripData){
+        if (!tagsEl) return;
+        const tags = Array.isArray(tripData.tags) ? tripData.tags.filter(Boolean) : [];
+        if (!tags.length) {
+          tagsEl.style.display = 'none';
+          tagsEl.innerHTML = '';
+          return;
+        }
+        tagsEl.innerHTML = tags.map(tag => `<span class="trip-tag">${escapeHtml(tag)}</span>`).join('');
+        tagsEl.style.display = '';
+      }
+
+      function renderIncludesBlock(tripData){
+        if (!includesWrap) return;
+        const includes = Array.isArray(tripData.includes) ? tripData.includes.filter(Boolean) : [];
+        const excludes = Array.isArray(tripData.excludes) ? tripData.excludes.filter(Boolean) : [];
+        if (!includes.length && !excludes.length) {
+          includesWrap.style.display = 'none';
+          includesWrap.innerHTML = '';
+          return;
+        }
+        const makeList = (items) => `<ul>${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+        includesWrap.innerHTML = `
+          <h3>${tSafe('trip.includes_heading','Τι περιλαμβάνεται')}</h3>
+          <div class="trip-inclusions-grid">
+            ${includes.length ? `<div class="trip-inclusions-column"><h4>${tSafe('trip.includes','Περιλαμβάνονται')}</h4>${makeList(includes)}</div>` : ''}
+            ${excludes.length ? `<div class="trip-inclusions-column is-excludes"><h4>${tSafe('trip.excludes','Δεν περιλαμβάνονται')}</h4>${makeList(excludes)}</div>` : ''}
+          </div>`;
+        includesWrap.style.display = '';
+      }
+
+      function renderSectionsBlock(tripData){
+        if (!sectionsWrap) return;
+        sectionsWrap.innerHTML = '';
+        const sections = Array.isArray(tripData.sections) ? tripData.sections.filter(sec => (sec && (sec.title || sec.content || sec.text))) : [];
+        if (!sections.length) {
+          sectionsWrap.style.display = 'none';
+          return;
+        }
+        sections.forEach(sec => {
+          const card = document.createElement('div');
+          card.className = 'trip-card trip-section-card';
+          const title = getLocalized(sec.title) || sec.title || '';
+          const body = getLocalized(sec.content || sec.text) || sec.content || sec.text || '';
+          card.innerHTML = `<h3>${escapeHtml(title)}</h3><p>${escapeHtml(body).replace(/\n/g,'<br>')}</p>`;
+          sectionsWrap.appendChild(card);
+        });
+        sectionsWrap.style.display = '';
+      }
+
+      function resolveMediaUrl(entry){
+        const raw = (typeof entry === 'string') ? entry : (entry && (entry.url || entry.src || entry.path || entry.href || ''));
+        if (!raw) return '';
+        if (/^https?:/i.test(raw)) return raw;
+        if (raw.startsWith('/')) return raw;
+        return `/uploads/trips/${raw}`;
+      }
+
+      function renderGalleryBlock(tripData){
+        if (!galleryWrap) return;
+        const items = Array.isArray(tripData.gallery) ? tripData.gallery.map(resolveMediaUrl).filter(Boolean) : [];
+        if (!items.length) {
+          galleryWrap.style.display = 'none';
+          galleryWrap.innerHTML = '';
+          return;
+        }
+        galleryWrap.innerHTML = `<h3>${tSafe('trip.gallery','Gallery')}</h3><div class="trip-gallery-grid">${items.map(src => `<img src="${escapeHtml(src)}" alt="${escapeHtml(getLocalized(tripData.title) || 'Trip image')}" loading="lazy">`).join('')}</div>`;
+        galleryWrap.style.display = '';
+      }
+
+      function renderVideoBlock(tripData){
+        if (!videoWrap) return;
+        const videoObj = tripData.video || {};
+        const url = videoObj.url || videoObj.src || '';
+        if (!url) {
+          videoWrap.style.display = 'none';
+          videoWrap.innerHTML = '';
+          return;
+        }
+        const thumb = videoObj.thumbnail || videoObj.thumb || '';
+        const safeUrl = escapeHtml(url);
+        let content = '';
+        if (/youtube.com|youtu.be|vimeo.com/i.test(url)) {
+          const embed = url.includes('embed') ? url : url.replace('watch?v=', 'embed/');
+          content = `<iframe src="${escapeHtml(embed)}" title="${escapeHtml(getLocalized(tripData.title) || 'Trip video')}" allowfullscreen loading="lazy"></iframe>`;
+        } else {
+          content = `<video controls ${thumb ? `poster="${escapeHtml(thumb)}"` : ''}><source src="${safeUrl}"></video>`;
+        }
+        if (!/iframe|video/.test(content) && thumb) {
+          content = `<a href="${safeUrl}" target="_blank" rel="noopener"><img src="${escapeHtml(thumb)}" alt="${escapeHtml(getLocalized(tripData.title) || 'Trip video')}" loading="lazy"></a>`;
+        }
+        videoWrap.innerHTML = `<h3>${tSafe('trip.video','Βίντεο')}</h3>${content}`;
+        videoWrap.style.display = '';
+      }
+
+      function renderFaqBlock(tripData){
+        if (!faqWrap) return;
+        const faq = Array.isArray(tripData.faq) ? tripData.faq.filter(item => item && (item.q || item.question)) : [];
+        if (!faq.length) {
+          faqWrap.style.display = 'none';
+          faqWrap.innerHTML = '';
+          return;
+        }
+        const itemsHtml = faq.map(item => {
+          const question = getLocalized(item.q || item.question) || item.q || item.question || '';
+          const answer = getLocalized(item.a || item.answer) || item.a || item.answer || '';
+          return `<div class="trip-faq-item"><strong>${escapeHtml(question)}</strong><p>${escapeHtml(answer)}</p></div>`;
+        }).join('');
+        faqWrap.innerHTML = `<h3>${tSafe('trip.faq','Συχνές ερωτήσεις')}</h3>${itemsHtml}`;
+        faqWrap.style.display = '';
+      }
 
       function renderTripLocalized() {
         const t = window.__loadedTrip || trip;
         if (!t) return;
-        // Vehicle-based dynamic price override for Acropolis (per seat base) before rendering
-        let displayPriceCents = t.price_cents;
+        const perPersonLabel = tSafe('trip.per_person','ανά άτομο');
+        const perVehicleLabel = tSafe('trip.per_vehicle','ανά όχημα');
+        const selectedMode = canonicalMode(getSelectedMode());
+        const modeInfo = resolveModePricingForTrip(t, selectedMode);
+        let displayPriceCents = 0;
+        let displayCurrency = (t.currency || 'EUR').toUpperCase();
+        let displayChargeType = 'per_person';
+        if (modeInfo) {
+          displayPriceCents = Math.round(Number(modeInfo.price || 0) * 100);
+          displayCurrency = (modeInfo.currency || displayCurrency).toUpperCase();
+          displayChargeType = modeInfo.chargeType || 'per_person';
+        }
+
+        if (titleEl) titleEl.textContent = getLocalized(t.title) || '';
+        if (subtitleEl) {
+          const subtitle = getLocalized(t.subtitle) || t.subtitle || '';
+          subtitleEl.textContent = subtitle;
+          subtitleEl.style.display = subtitle ? '' : 'none';
+        }
+        if (durationEl) {
+          const dur = buildDurationText(t);
+          durationEl.textContent = dur;
+          durationEl.style.display = dur ? '' : 'none';
+        }
+        if (descEl) descEl.textContent = getLocalized(t.description) || '';
+
+        renderTags(t);
+        renderIncludesBlock(t);
+        renderSectionsBlock(t);
+        renderGalleryBlock(t);
+        renderVideoBlock(t);
+        renderFaqBlock(t);
+
         try {
-          if (t && t.id === 'acropolis') {
-            const sel = sessionStorage.getItem('selectedVehiclePrice');
-            if (sel) {
-              const euros = parseFloat(sel);
-              if (!isNaN(euros) && euros > 0) displayPriceCents = Math.round(euros * 100);
-            }
-          }
-        } catch(_){ }
-        if (titleEl) titleEl.textContent = getLocalized(t.title) || "";
-        // Render base price badge under title if available
-        try {
-          // Trip header capsules: top row (price + time), bottom row (location)
           if (metaWrap) {
             const topItems = [];
-            // Price capsule
             if (displayPriceCents) {
-              const base = Math.max(0, parseInt(displayPriceCents, 10)) / 100;
-              const cur = (t.currency || 'EUR').toUpperCase();
-              let formatted = '';
-              try {
-                if (cur === 'EUR') {
-                  formatted = base.toLocaleString(getCurrentLang(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC';
-                } else {
-                  formatted = base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur });
-                }
-              } catch(_) { formatted = (base.toFixed(2) + ' \u20AC'); }
-              topItems.push(`<span class=\"capsule price\">${formatted}</span>`);
+              const priceEuros = displayPriceCents / 100;
+              const priceLabel = displayChargeType === 'per_vehicle' ? perVehicleLabel : perPersonLabel;
+              topItems.push(`<span class="capsule price">${formatMoney(priceEuros, displayCurrency)} / ${priceLabel}</span>`);
             }
-            // Time capsule (with label + icon)
             const timeLabel = tSafe('trip.departure_time_label','Αναχώρηση');
             const timeVal = t && t.departure && t.departure.departure_time;
-            if (timeVal) topItems.push(`<span class=\"capsule time\"><i class=\"fa-solid fa-clock icon\" aria-hidden=\"true\"></i>${timeLabel} ${timeVal}</span>`);
-
-            // Location capsule for bottom row (with label)
+            if (timeVal) topItems.push(`<span class="capsule time"><i class="fa-solid fa-clock icon" aria-hidden="true"></i>${timeLabel} ${timeVal}</span>`);
             let bottomHtml = '';
             const depName = t && t.departure && t.departure.reference_point && t.departure.reference_point.name;
             if (depName) {
-              const shortName = String(depName).replace(/^Αθήνα\s*[–-]\s*/,'');
+              const shortName = String(depName).replace(/^Αθήνα\s*[–-]\s*/, '');
               const placeLabel = tSafe('trip.departure_place_label','Από');
-              bottomHtml = `<div class=\"bottom-row\"><span class=\"capsule location\"><i class=\"fa-solid fa-location-dot icon\" aria-hidden=\"true\"></i>${placeLabel} ${shortName || depName}</span></div>`;
+              bottomHtml = `<div class="bottom-row"><span class="capsule location"><i class="fa-solid fa-location-dot icon" aria-hidden="true"></i>${placeLabel} ${shortName || depName}</span></div>`;
             }
-
             if (topItems.length || bottomHtml) {
-              try { metaWrap.classList.remove('trip-header-line'); metaWrap.classList.add('trip-header-capsules'); } catch(_) {}
-              const topRow = topItems.length ? `<div class=\"top-row\">${topItems.join('')}</div>` : '';
+              try { metaWrap.classList.remove('trip-header-line'); metaWrap.classList.add('trip-header-capsules'); } catch(_){ }
+              const topRow = topItems.length ? `<div class="top-row">${topItems.join('')}</div>` : '';
               metaWrap.innerHTML = `${topRow}${bottomHtml}`;
               metaWrap.style.display = '';
             } else {
@@ -609,104 +929,105 @@ document.addEventListener("DOMContentLoaded", () => {
               metaWrap.innerHTML = '';
             }
           }
-          // Keep legacy price badge updated for backward compatibility
           const legacyPriceEl = document.getElementById('trip-price');
           if (legacyPriceEl) {
             if (displayPriceCents) {
-              const base = Math.max(0, parseInt(displayPriceCents, 10)) / 100;
-              const cur = (t.currency || 'EUR').toUpperCase();
-              legacyPriceEl.textContent = (cur === 'EUR')
-                ? (base.toLocaleString(getCurrentLang(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC')
-                : base.toLocaleString(getCurrentLang(), { style: 'currency', currency: cur });
-              legacyPriceEl.style.display = (metaWrap ? 'none' : ''); // hide if new meta is shown
+              const base = displayPriceCents / 100;
+              legacyPriceEl.textContent = formatMoney(base, displayCurrency);
+              legacyPriceEl.style.display = (metaWrap ? 'none' : '');
               legacyPriceEl.classList.remove('animate');
-              void legacyPriceEl.offsetWidth; // reflow
+              void legacyPriceEl.offsetWidth;
               legacyPriceEl.classList.add('animate');
               setTimeout(() => { legacyPriceEl.classList.remove('animate'); }, 600);
             } else {
               legacyPriceEl.style.display = 'none';
             }
           }
-        } catch(_) {}
-        if (descEl) descEl.textContent = getLocalized(t.description) || "";
+        } catch(_){ }
 
-        const stopsWrap = document.getElementById("stops");
-        if (!stopsWrap) return;
-        stopsWrap.innerHTML = "";
-        const stopsArr = Array.isArray(t.stops) ? t.stops : [];
-        // New CMS: stops may be an array of strings; legacy: array of objects with media
-        if (stopsArr.length && typeof stopsArr[0] === 'string') {
-          stopsArr.forEach((s, i) => {
-            const stopEl = document.createElement('div');
-            stopEl.className = 'trip-stop video-card';
-            const stopLabelTemplate = (window.t && typeof window.t === 'function') ? window.t('stop.label') : 'Stop {n}';
-            const stopLabel = stopLabelTemplate.replace('{n}', String(i + 1));
-            stopEl.innerHTML = `<h3 class="stop-title">${stopLabel}: ${String(s)}</h3>`;
-            stopsWrap.appendChild(stopEl);
-          });
-        } else {
-          (stopsArr || []).forEach((stop, i) => {
-            const stopEl = document.createElement("div");
-            stopEl.className = "trip-stop video-card";
-            const stopLabelTemplate = (window.t && typeof window.t === 'function') ? window.t('stop.label') : 'Stop {n}';
-            const stopLabel = stopLabelTemplate.replace('{n}', String(i + 1));
-            const titleHtml = `<h3 class="stop-title">${stopLabel}: ${getLocalized(stop.name) || ""}</h3>`;
-            const videos = Array.isArray(stop.videos) && stop.videos.length ? stop.videos : (stop.video ? [stop.video] : []);
-            let videoArea = '';
-            if (videos.length <= 1) {
-              const v = videos[0] || '';
-              videoArea = v ? `
-                <div class="video-wrap">
-                  <iframe src="${v}" title="${getLocalized(stop.name) || 'video'}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" width="100%" height="315"></iframe>
-                </div>` : '';
-            } else {
-              const slides = videos.map((url, idx) => `
-                <div class="carousel-slide" data-idx="${idx}">
+        const stopsWrap = document.getElementById('stops');
+        if (stopsWrap) {
+          stopsWrap.innerHTML = '';
+          const stopsArr = Array.isArray(t.stops) ? t.stops : [];
+          if (stopsArr.length && typeof stopsArr[0] === 'string') {
+            stopsArr.forEach((s, i) => {
+              const stopEl = document.createElement('div');
+              stopEl.className = 'trip-stop video-card';
+              const stopLabelTemplate = (window.t && typeof window.t === 'function') ? window.t('stop.label') : 'Stop {n}';
+              const stopLabel = stopLabelTemplate.replace('{n}', String(i + 1));
+              stopEl.innerHTML = `<h3 class="stop-title">${stopLabel}: ${escapeHtml(String(s))}</h3>`;
+              stopsWrap.appendChild(stopEl);
+            });
+          } else {
+            (stopsArr || []).forEach((stop, i) => {
+              const stopEl = document.createElement('div');
+              stopEl.className = 'trip-stop video-card';
+              const stopLabelTemplate = (window.t && typeof window.t === 'function') ? window.t('stop.label') : 'Stop {n}';
+              const stopLabel = stopLabelTemplate.replace('{n}', String(i + 1));
+              const titleHtml = `<h3 class="stop-title">${stopLabel}: ${escapeHtml(getLocalized(stop.name) || "")}</h3>`;
+              const videos = Array.isArray(stop.videos) && stop.videos.length ? stop.videos : (stop.video ? [stop.video] : []);
+              let videoArea = '';
+              if (videos.length <= 1) {
+                const v = videos[0] || '';
+                videoArea = v ? `
                   <div class="video-wrap">
-                    <iframe data-src="${url}" title="${(getLocalized(stop.name) || 'video') + ' — ' + (idx+1)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" width="100%" height="315"></iframe>
-                    <button class="slide-arrow left" type="button" data-i18n-aria="carousel.prev">&#10094;</button>
-                    <button class="slide-arrow right" type="button" data-i18n-aria="carousel.next">&#10095;</button>
-                  </div>
-                </div>`).join('');
-              videoArea = `
-                <div class="video-carousel peek" data-count="${videos.length}">
-                  <div class="carousel-viewport" tabindex="0" aria-label="Video carousel">
-                    <div class="carousel-track">${slides}</div>
-                    <div class="carousel-edge left" aria-hidden="true"></div>
-                    <div class="carousel-edge right" aria-hidden="true"></div>
-                  </div>
-                </div>`;
-            }
-            let stopCapsules = '';
-            try {
-              const hasTime = !!(stop && stop.time);
-              const hasAddr = !!(stop && stop.address);
-              if (hasTime || hasAddr) {
-                const topRow = hasTime ? `<div class="top-row"><span class="capsule time"><i class="fa-solid fa-clock icon" aria-hidden="true"></i>${String(stop.time)}</span></div>` : '';
-                const bottomRow = hasAddr ? `<div class="bottom-row"><span class="capsule location"><i class="fa-solid fa-location-dot icon" aria-hidden="true"></i>${String(stop.address)}</span></div>` : '';
-                stopCapsules = `<div class="stop-capsules">${topRow}${bottomRow}</div>`;
+                    <iframe src="${escapeHtml(v)}" title="${escapeHtml(getLocalized(stop.name) || 'video')}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" width="100%" height="315"></iframe>
+                  </div>` : '';
+              } else {
+                const slides = videos.map((url, idx) => `
+                  <div class="carousel-slide" data-idx="${idx}">
+                    <div class="video-wrap">
+                      <iframe data-src="${escapeHtml(url)}" title="${escapeHtml((getLocalized(stop.name) || 'video') + ' — ' + (idx+1))}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" width="100%" height="315"></iframe>
+                      <button class="slide-arrow left" type="button" data-i18n-aria="carousel.prev">&#10094;</button>
+                      <button class="slide-arrow right" type="button" data-i18n-aria="carousel.next">&#10095;</button>
+                    </div>
+                  </div>`).join('');
+                videoArea = `
+                  <div class="video-carousel peek" data-count="${videos.length}">
+                    <div class="carousel-viewport" tabindex="0" aria-label="Video carousel">
+                      <div class="carousel-track">${slides}</div>
+                      <div class="carousel-edge left" aria-hidden="true"></div>
+                      <div class="carousel-edge right" aria-hidden="true"></div>
+                    </div>
+                  </div>`;
               }
-            } catch(_) {}
-            const descHtml = (stop && stop.description) ? `<p class="stop-description">${getLocalized(stop.description) || ""}</p>` : '';
-            stopEl.innerHTML = `${titleHtml}${videoArea}${stopCapsules}${descHtml}`;
-            stopsWrap.appendChild(stopEl);
-            const carousel = stopEl.querySelector('.video-carousel');
-            if (carousel) initScrollSnapCarousel(carousel);
-          });
-        }
-
-        // Render experience description below the last video on mobile
-        if (t.experience) {
-          const expEl = document.createElement('div');
-          expEl.className = 'trip-experience card video-card';
-          const expTitle = (window.t && typeof window.t === 'function') ? window.t('trip.experienceTitle') : 'Experience';
-          expEl.innerHTML = `<h3 class="stop-title">${expTitle}</h3><p>${getLocalized(t.experience)}</p>`;
-          stopsWrap.appendChild(expEl);
+              let stopCapsules = '';
+              try {
+                const hasTime = !!(stop && stop.time);
+                const hasAddr = !!(stop && stop.address);
+                if (hasTime || hasAddr) {
+                  const topRow = hasTime ? `<div class="top-row"><span class="capsule time"><i class="fa-solid fa-clock icon" aria-hidden="true"></i>${escapeHtml(String(stop.time))}</span></div>` : '';
+                  const bottomRow = hasAddr ? `<div class="bottom-row"><span class="capsule location"><i class="fa-solid fa-location-dot icon" aria-hidden="true"></i>${escapeHtml(String(stop.address))}</span></div>` : '';
+                  stopCapsules = `<div class="stop-capsules">${topRow}${bottomRow}</div>`;
+                }
+              } catch(_){ }
+              const descHtml = (stop && stop.description) ? `<p class="stop-description">${escapeHtml(getLocalized(stop.description) || "")}</p>` : '';
+              stopEl.innerHTML = `${titleHtml}${videoArea}${stopCapsules}${descHtml}`;
+              stopsWrap.appendChild(stopEl);
+              const carousel = stopEl.querySelector('.video-carousel');
+              if (carousel) initScrollSnapCarousel(carousel);
+            });
+          }
+          if (t.experience) {
+            const expEl = document.createElement('div');
+            expEl.className = 'trip-experience card video-card';
+            const expTitle = (window.t && typeof window.t === 'function') ? window.t('trip.experienceTitle') : 'Experience';
+            expEl.innerHTML = `<h3 class="stop-title">${expTitle}</h3><p>${escapeHtml(getLocalized(t.experience) || t.experience)}</p>`;
+            stopsWrap.appendChild(expEl);
+          }
         }
       }
 
       // initial render
+      ensureModeSelection();
+      renderModeCard();
       renderTripLocalized();
+
+      if (trip.category) {
+        getCategoryMetaBySlug(trip.category)
+          .then((meta) => { currentCategoryMeta = meta; renderModeCard(); })
+          .catch(() => {});
+      }
 
       // Apply global carousel config to CSS variables once
       try {
@@ -917,7 +1238,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // listen for language changes and re-render localized content
       window.addEventListener('i18n:changed', () => {
-        try{ renderTripLocalized(); } catch(e){ G.error('i18n render failed', e); }
+        try { renderTripLocalized(); } catch (e) { G.error('i18n render failed', e); }
+        try { renderModeCard(); } catch (e) { console.error('mode card re-render failed', e); }
+        try { updatePrice(); } catch (e) { G.error('price rerender failed', e); }
+        try { updateMiniPrice(); } catch (_) {}
       });
 
       // When the global UI language changes, ensure any open booking overlay or injected
@@ -991,7 +1315,6 @@ document.addEventListener("DOMContentLoaded", () => {
             time: s.time || ''
           }));
 
-        // Prefer waypoints from stops if there are at least 2; otherwise fallback to trip.map.waypoints
         const hasStopsRoute = stopWaypoints.length >= 2;
         const baseMap = Object.assign({}, trip.map || {});
         if (hasStopsRoute) {
@@ -1000,13 +1323,38 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!baseMap.center && stopWaypoints[0]) baseMap.center = stopWaypoints[0];
           if (!baseMap.zoom) baseMap.zoom = 11;
         }
+        const markerWaypoints = Array.isArray(baseMap.markers)
+          ? baseMap.markers.filter(m => m && typeof m.lat === 'number' && typeof m.lng === 'number')
+          : [];
+        if (!hasStopsRoute && markerWaypoints.length) {
+          baseMap.waypoints = markerWaypoints.map(m => ({ lat: m.lat, lng: m.lng }));
+          baseMap.stopsMeta = markerWaypoints.map((m, idx) => ({
+            idx,
+            lat: m.lat,
+            lng: m.lng,
+            name: m.title || m.name || '',
+            address: m.description || m.address || '',
+            time: m.time || ''
+          }));
+        }
+        if (!baseMap.center && typeof baseMap.lat === 'number' && typeof baseMap.lng === 'number') {
+          baseMap.center = { lat: baseMap.lat, lng: baseMap.lng };
+        }
         const effectiveMap = baseMap;
-        if (effectiveMap && effectiveMap.waypoints && effectiveMap.waypoints.length >= 2) {
+        const hasRoute = effectiveMap && effectiveMap.waypoints && effectiveMap.waypoints.length >= 2;
+        const hasMarkerData = effectiveMap && ((effectiveMap.stopsMeta && effectiveMap.stopsMeta.length) || (effectiveMap.markers && effectiveMap.markers.length) || effectiveMap.center);
+        if (hasRoute || hasMarkerData) {
+          if (mapCard) mapCard.style.display = '';
           ensureGoogleMaps(() => renderRoute(effectiveMap));
+        } else if (mapCard) {
+          mapCard.style.display = 'none';
         }
       } catch(_) {
-        if (trip.map && trip.map.waypoints && trip.map.waypoints.length >= 2) {
+        if (trip.map && ((trip.map.waypoints && trip.map.waypoints.length >= 1) || (trip.map.markers && trip.map.markers.length))) {
+          if (mapCard) mapCard.style.display = '';
           ensureGoogleMaps(() => renderRoute(trip.map));
+        } else if (mapCard) {
+          mapCard.style.display = 'none';
         }
       }
 
@@ -1448,17 +1796,14 @@ document.addEventListener("DOMContentLoaded", () => {
           const name = document.getElementById('bookingName2') ? document.getElementById('bookingName2').value : (document.getElementById('bookingName') ? document.getElementById('bookingName').value : '');
           const email = document.getElementById('bookingEmail2') ? document.getElementById('bookingEmail2').value : (document.getElementById('bookingEmail') ? document.getElementById('bookingEmail').value : '');
           const trip = window.__loadedTrip || {};
-          let base = trip.price_cents ? parseInt(trip.price_cents,10) : 5000;
-          try {
-            if (trip && trip.id === 'acropolis') {
-              const sel = sessionStorage.getItem('selectedVehiclePrice');
-              if (sel) {
-                const euros = parseFloat(sel);
-                if (!isNaN(euros) && euros > 0) base = Math.round(euros * 100);
-              }
-            }
-          } catch(_){ }
-          const total = (base * parseInt(seats || '1',10))/100;
+          const seatsInt = Math.max(1, parseInt(seats || '1', 10));
+          const mode = getSelectedMode();
+          const modeInfo = getTripModeInfo(trip, mode);
+          const perUnitCents = modeInfo ? Math.round(Number(modeInfo.price || 0) * 100) : 0;
+          const units = (modeInfo && modeInfo.chargeType === 'per_vehicle') ? 1 : seatsInt;
+          const totalCents = Math.max(0, perUnitCents * units);
+          const currencyCode = (modeInfo && modeInfo.currency) || (trip.currency || 'EUR').toUpperCase();
+          const formatTotal = () => formatMoney(totalCents / 100, currencyCode);
           step3.innerHTML = `
             <div class="booking-confirmation step-card confirmation-view">
               <h2 data-i18n="booking.confirmation_title">${(typeof window.t==='function')?window.t('booking.confirmation_title'):'Booking Confirmation'}</h2>
@@ -1466,12 +1811,12 @@ document.addEventListener("DOMContentLoaded", () => {
               <div style="text-align:left;margin-top:12px;"> <strong data-i18n="booking.trip">${(typeof window.t==='function')?window.t('booking.trip'):'Trip'}</strong>: ${getLocalized(trip.title) || ''}</div>
               <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.date">${(typeof window.t==='function')?window.t('booking.date'):'Date'}</strong>: ${date}</div>
               <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.seats">${(typeof window.t==='function')?window.t('booking.seats'):'Seats'}</strong>: ${seats}</div>
-              <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.total">${(typeof window.t==='function')?window.t('booking.total'):'Total'}</strong>: ${(() => { const c=(trip.currency||'EUR').toUpperCase(); return c==='EUR' ? (total.toLocaleString(getCurrentLang(), { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' \u20AC') : total.toLocaleString(getCurrentLang(), { style:'currency', currency:c }); })()}</div>
+              <div style="text-align:left;margin-top:6px;"> <strong data-i18n="booking.total">${(typeof window.t==='function')?window.t('booking.total'):'Total'}</strong>: ${formatTotal()}</div>
               <div style="text-align:left;margin-top:6px;"> <strong data-i18n="checkout.name">${(typeof window.t==='function')?window.t('checkout.name'):'Name'}</strong>: ${name}</div>
               <div style="text-align:left;margin-top:6px;"> <strong data-i18n="checkout.email">${(typeof window.t==='function')?window.t('checkout.email'):'Email'}</strong>: ${email}</div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);">
                 <strong data-i18n="booking.trip_cost">${(typeof window.t==='function')?window.t('booking.trip_cost'):'Trip cost'}</strong>
-                <span>${(() => { const c=(trip.currency||'EUR').toUpperCase(); return c==='EUR' ? (total.toLocaleString(getCurrentLang(), { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' \u20AC') : total.toLocaleString(getCurrentLang(), { style:'currency', currency:c }); })()}</span>
+                <span>${formatTotal()}</span>
               </div>
               <div style="margin-top:18px;">
                 <div class="booking-actions">
@@ -1516,12 +1861,16 @@ document.addEventListener("DOMContentLoaded", () => {
             // mode-specific price and charge_type
             try {
               const mode = getSelectedMode();
-              const ms = (trip && trip.mode_set) ? trip.mode_set : null;
-              let priceCents = (ms && ms[mode] && Number.isFinite(parseInt(ms[mode].price_cents,10))) ? parseInt(ms[mode].price_cents,10) : (trip.price_cents ? parseInt(trip.price_cents,10) : 5000);
-              const chargeType = (ms && ms[mode] && ms[mode].charge_type === 'per_vehicle') ? 'per_vehicle' : 'per_person';
-              const units = (chargeType === 'per_vehicle') ? 1 : payload.seats;
-              payload.price_cents = Math.max(0, priceCents * units);
-            } catch(_){ payload.price_cents = Math.max(0, (trip && parseInt(trip.price_cents,10)) || 5000 * payload.seats); }
+              const modeInfo = getTripModeInfo(trip, mode);
+              if (modeInfo) {
+                const perUnit = Math.round(Number(modeInfo.price || 0) * 100);
+                const units = modeInfo.chargeType === 'per_vehicle' ? 1 : payload.seats;
+                payload.price_cents = Math.max(0, perUnit * units);
+                payload.charge_type = modeInfo.chargeType;
+              } else {
+                payload.price_cents = 0;
+              }
+            } catch(_){ payload.price_cents = 0; }
             try {
               const resp = await fetch('/api/bookings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
               const j = await resp.json();
@@ -1647,32 +1996,21 @@ document.addEventListener("DOMContentLoaded", () => {
           const trip = window.__loadedTrip || null;
           // Mode-based pricing
           const mode = getSelectedMode();
-          let priceCents = 0;
-          let chargeType = 'per_person';
-          try {
-            const ms = trip && trip.mode_set ? trip.mode_set : null;
-            if (ms && ms[mode]) {
-              priceCents = parseInt(ms[mode].price_cents,10) || 0;
-              chargeType = (ms[mode].charge_type === 'per_vehicle') ? 'per_vehicle' : 'per_person';
-            }
-          } catch(_){ }
-          // Fallback safety
-          if (!priceCents && trip && trip.price_cents) priceCents = parseInt(trip.price_cents,10) || 0;
-          if (!priceCents) priceCents = 5000;
-          const units = (chargeType === 'per_vehicle') ? 1 : seats;
-          const total = Math.max(0, priceCents * units);
-          if (priceEl) {
-            const c = (trip && trip.currency) ? trip.currency.toUpperCase() : 'EUR';
-            priceEl.textContent = c === 'EUR'
-              ? ((total / 100).toLocaleString(getCurrentLang(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC')
-              : (total / 100).toLocaleString(getCurrentLang(), { style: 'currency', currency: c });
-            // animate price gently
-            priceEl.classList.remove('animate');
-            // reflow to restart animation
-            void priceEl.offsetWidth;
-            priceEl.classList.add('animate');
-            setTimeout(() => { priceEl.classList.remove('animate'); }, 600);
+          if (!priceEl) return;
+          if (!trip) { priceEl.textContent = '—'; return; }
+          const modeInfo = getTripModeInfo(trip, mode);
+          if (!modeInfo) {
+            priceEl.textContent = '—';
+            return;
           }
+          const priceCents = Math.max(0, Math.round(Number(modeInfo.price || 0) * 100));
+          const units = (modeInfo.chargeType === 'per_vehicle') ? 1 : seats;
+          const total = Math.max(0, priceCents * units) / 100;
+          priceEl.textContent = formatMoney(total, modeInfo.currency || (trip.currency || 'EUR').toUpperCase());
+          priceEl.classList.remove('animate');
+          void priceEl.offsetWidth;
+          priceEl.classList.add('animate');
+          setTimeout(() => { priceEl.classList.remove('animate'); }, 600);
         } catch (e) { /* ignore */ }
       }
 
@@ -1786,15 +2124,18 @@ document.addEventListener("DOMContentLoaded", () => {
             data.seats = parseInt(data.seats || '1', 10) || 1;
             // add mode
             try { data.mode = getSelectedMode(); } catch(_){ }
-            // compute price from loaded trip if available: prefer trip.price_cents or fallback
+            // compute price from the loaded trip's active mode data
             try {
               const trip = window.__loadedTrip;
               const mode = getSelectedMode();
-              const ms = trip && trip.mode_set ? trip.mode_set : null;
-              let priceCents = (ms && ms[mode] && Number.isFinite(parseInt(ms[mode].price_cents,10))) ? parseInt(ms[mode].price_cents,10) : (trip && trip.price_cents ? parseInt(trip.price_cents,10) : 5000);
-              const chargeType = (ms && ms[mode] && ms[mode].charge_type === 'per_vehicle') ? 'per_vehicle' : 'per_person';
-              const units = (chargeType === 'per_vehicle') ? 1 : data.seats;
-              data.price_cents = Math.max(0, priceCents * units);
+              const modeInfo = getTripModeInfo(trip, mode);
+              if (modeInfo) {
+                const priceCents = Math.max(0, Math.round(Number(modeInfo.price || 0) * 100));
+                const units = (modeInfo.chargeType === 'per_vehicle') ? 1 : data.seats;
+                data.price_cents = Math.max(0, priceCents * units);
+              } else {
+                data.price_cents = 0;
+              }
             } catch (e) { data.price_cents = 0; }
             // include traveler profile fields if present
             try {
@@ -1865,33 +2206,33 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {}
       }
 
-      // update the mini price in step2 based on seats and trip.price_cents
+      // update the mini price in step2 based on seats and the active trip mode
       function updateMiniPrice() {
         try {
           const seats2 = document.getElementById('bookingSeats2');
           const mini = document.getElementById('miniPrice');
-          const trip = window.__loadedTrip || {};
-          let base = trip.price_cents ? parseInt(trip.price_cents,10) : 5000;
-          try {
-            if (trip && trip.id === 'acropolis') {
-              const sel = sessionStorage.getItem('selectedVehiclePrice');
-              if (sel) {
-                const euros = parseFloat(sel);
-                if (!isNaN(euros) && euros > 0) base = Math.round(euros * 100);
-              }
-            }
-          } catch(_){ }
-          const s = seats2 ? Math.max(1, parseInt(seats2.value || '1',10)) : 1;
-          const total = (base * s) / 100;
-          if (mini) {
-            const c = (trip.currency||'EUR').toUpperCase();
-            mini.textContent = c==='EUR'
-              ? (total.toLocaleString(getCurrentLang(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC')
-              : total.toLocaleString(getCurrentLang(), { style:'currency', currency: c });
+          const trip = window.__loadedTrip || null;
+          if (!mini) return;
+          if (!trip) { mini.textContent = '—'; return; }
+          const mode = getSelectedMode();
+          const modeInfo = getTripModeInfo(trip, mode);
+          if (!modeInfo) {
+            mini.textContent = '—';
+            return;
           }
-          try { if (mini) { mini.classList.remove('pulse'); void mini.offsetWidth; mini.classList.add('pulse'); setTimeout(()=>{ mini.classList.remove('pulse'); }, 700); } } catch(e){}
+          const seats = seats2 ? Math.max(1, parseInt(seats2.value || '1',10)) : 1;
+          const perUnitCents = Math.max(0, Math.round(Number(modeInfo.price || 0) * 100));
+          const units = (modeInfo.chargeType === 'per_vehicle') ? 1 : seats;
+          const total = Math.max(0, perUnitCents * units) / 100;
+          mini.textContent = formatMoney(total, modeInfo.currency || (trip.currency || 'EUR').toUpperCase());
+          try { mini.classList.remove('pulse'); void mini.offsetWidth; mini.classList.add('pulse'); setTimeout(()=>{ mini.classList.remove('pulse'); }, 700); } catch(e){}
         } catch(e){}
       }
+
+      document.addEventListener('gw:mode:changed', () => {
+        try { updatePrice(); } catch(_){ }
+        try { updateMiniPrice(); } catch(_){ }
+      });
 
       // Fetch availability for a trip/date and render into the availability block under the calendar
       async function showAvailability(dateStr) {
@@ -2084,6 +2425,39 @@ function renderRoute(mapData) {
   directionsRenderer = new google.maps.DirectionsRenderer({ map });
 
   const wps = Array.isArray(mapData.waypoints) && mapData.waypoints.length ? mapData.waypoints : [];
+  const stopMeta = Array.isArray(mapData.stopsMeta) ? mapData.stopsMeta : [];
+  const looseMarkers = Array.isArray(mapData.markers)
+    ? mapData.markers.filter(m => m && typeof m.lat === 'number' && typeof m.lng === 'number')
+    : [];
+
+  if (wps.length < 2) {
+    const markersToRender = stopMeta.length ? stopMeta : looseMarkers;
+    if (map) {
+      if (markersToRender.length) {
+        markersToRender.forEach(m => {
+          const marker = new google.maps.Marker({ position: { lat: m.lat, lng: m.lng }, map, title: (m.name || m.title || m.address || '').trim() });
+          const nameHtml = (m.name || m.title || '').replace(/</g, '&lt;');
+          const addressHtml = (m.address || m.description || '').replace(/</g, '&lt;');
+          if (nameHtml || addressHtml || m.time) {
+            const content = `
+              <div style="min-width:200px;max-width:260px">
+                ${nameHtml ? `<div style='font-weight:600;margin-bottom:4px'>${nameHtml}</div>` : ''}
+                ${m.time ? `<div style='opacity:0.9'><i class="fa-solid fa-clock" style="margin-right:6px"></i>${m.time}</div>` : ''}
+                ${addressHtml ? `<div style='opacity:0.9'><i class="fa-solid fa-location-dot" style="margin-right:6px"></i>${addressHtml}</div>` : ''}
+              </div>`;
+            const info = new google.maps.InfoWindow({ content });
+            marker.addListener('click', () => info.open({ map, anchor: marker }));
+          }
+        });
+        map.setCenter({ lat: markersToRender[0].lat, lng: markersToRender[0].lng });
+      } else if (mapData.center && typeof mapData.center.lat === 'number' && typeof mapData.center.lng === 'number') {
+        new google.maps.Marker({ position: mapData.center, map });
+        map.setCenter(mapData.center);
+      }
+    }
+    return;
+  }
+
   const origin = wps[0] || (map && map.getCenter ? map.getCenter() : { lat: 38.0, lng: 23.7 });
   const destination = wps.length ? wps[wps.length - 1] : origin;
   const midStops = wps
@@ -2104,8 +2478,8 @@ function renderRoute(mapData) {
 
       // Add explicit markers for each stop so we can show name/address/time consistently
       try {
-        if (Array.isArray(mapData.stopsMeta) && mapData.stopsMeta.length) {
-          (mapData.stopsMeta || []).forEach((m) => {
+        if (stopMeta.length) {
+          stopMeta.forEach((m) => {
             if (!map) return;
             const marker = new google.maps.Marker({ position: { lat: m.lat, lng: m.lng }, map, title: (m.name || m.address || '').trim() });
             const content = `

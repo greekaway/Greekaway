@@ -10,7 +10,6 @@
 </head><body>
 <header class="sticky-bar" aria-label="Κατηγορίες — Φόρμα" data-collapsed="false">
   <div class="bar-inner">
-    <div class="title">Categories CMS</div>
     <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φόρμας" aria-expanded="true">▲</button>
     <form id="categoryForm" class="filters" onsubmit="return false;">
       <label>Title
@@ -56,6 +55,36 @@
     </table>
     <div id="catMessage" class="hint" style="padding:8px;color:#666"></div>
   </div>
+  <section class="panel mode-card-panel" aria-labelledby="modeCardHeading">
+    <div class="mode-card-panel-head">
+      <div>
+        <p class="panel-kicker">Choose Experience Type</p>
+        <h3 id="modeCardHeading">Mode Card Texts</h3>
+        <p class="panel-subtitle">These texts power the front-end &ldquo;Choose Experience Type&rdquo; card.</p>
+      </div>
+      <div class="mode-card-actions">
+        <button class="btn secondary" id="modeCardEdit" type="button">Edit</button>
+        <button class="btn danger" id="modeCardClear" type="button">Delete</button>
+      </div>
+    </div>
+    <div class="mode-card-grid">
+      <label>Mode Card Title
+        <input type="text" id="catModeCardTitle" placeholder="Επίλεξε τύπο εμπειρίας">
+      </label>
+      <label>Mode Card Subtitle
+        <input type="text" id="catModeCardSubtitle" placeholder="Διάλεξε όχημα και εμπειρία">
+      </label>
+      <label>Description for Van
+        <textarea id="catModeVanDescription" rows="2" placeholder="Κείμενο για Van"></textarea>
+      </label>
+      <label>Description for Mercedes
+        <textarea id="catModeMercedesDescription" rows="2" placeholder="Κείμενο για Mercedes"></textarea>
+      </label>
+      <label>Description for Bus
+        <textarea id="catModeBusDescription" rows="2" placeholder="Κείμενο για Bus"></textarea>
+      </label>
+    </div>
+  </section>
   <div id="confirmModal" class="modal" hidden>
     <div class="modal-inner" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
       <h3 id="confirmTitle">Είσαι σίγουρος;</h3>

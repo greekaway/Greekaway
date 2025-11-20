@@ -10,6 +10,27 @@
     const s = Math.max(1, parseInt(seats || 1, 10) || 1);
     return b * s;
   }
+  function normalizeMode(mode){
+    const m = String(mode || '').toLowerCase();
+    if (m === 'private') return 'mercedes';
+    return ['van','bus','mercedes'].includes(m) ? m : 'van';
+  }
+  function resolveTripMode(trip, mode){
+    if (!trip) return null;
+    const normalized = normalizeMode(mode);
+    const currency = (trip.currency || 'EUR').toUpperCase();
+    const fromNewSchema = trip.modes && trip.modes[normalized];
+    if (fromNewSchema) {
+      const price = Number(fromNewSchema.price || 0);
+      const chargeType = fromNewSchema.charging_type || fromNewSchema.charge_type || 'per_person';
+      const capacity = fromNewSchema.capacity != null ? fromNewSchema.capacity : fromNewSchema.default_capacity;
+      return { price, chargeType, capacity, currency };
+    }
+    if (typeof trip.price_cents === 'number') {
+      return { price: trip.price_cents / 100, chargeType: 'per_person', capacity: null, currency };
+    }
+    return null;
+  }
   async function loadTrip(tripId){
     if (!tripId) return null;
     let dv = '';
@@ -69,28 +90,36 @@
     const traveler_profile = getTravelerProfileFromSession();
     let price_cents = 0;
     let currency = 'eur';
-    // Mode-based fixed pricing per requirements (van=10€, bus=5€, mercedes=20€ per seat)
+    let chargeType = 'per_person';
+    const normalizedMode = normalizeMode(base.mode);
     try {
-      const modeMap = { van: 10, bus: 5, mercedes: 20 };
-      const m = (base.mode || '').toLowerCase();
-      if (modeMap.hasOwnProperty(m)) {
-        price_cents = modeMap[m] * 100 * seats;
-      } else {
-        // Fallback to trip JSON base price × seats
-        try {
-          const trip = await loadTrip(base.trip_id);
-            if (trip) {
-              if (typeof trip.price_cents === 'number') price_cents = computePriceCents(trip.price_cents, seats);
-              if (trip.currency) currency = String(trip.currency).toLowerCase();
-            }
-        } catch(_){ }
+      const trip = await loadTrip(base.trip_id);
+      const info = trip ? resolveTripMode(trip, normalizedMode) : null;
+      if (trip && trip.currency) currency = String(trip.currency).toLowerCase();
+      if (info) {
+        chargeType = info.chargeType || 'per_person';
+        const perUnitCents = Math.round(Number(info.price || 0) * 100);
+        const units = chargeType === 'per_vehicle' ? 1 : seats;
+        price_cents = Math.max(0, perUnitCents * units);
+        if (info.currency) currency = String(info.currency).toLowerCase();
       }
     } catch(_){ }
     if (!price_cents) {
       // fallback to session overrides (vehicle price) or last computed amount
       try {
         const sel = sessionStorage.getItem('selectedVehiclePrice');
-        if (sel) { const euros = parseFloat(sel); if (!isNaN(euros) && euros>0) price_cents = Math.round(euros*100); }
+        if (sel) {
+          const euros = parseFloat(sel);
+          if (!isNaN(euros) && euros>0) {
+            const perUnit = Math.round(euros * 100);
+            const units = chargeType === 'per_vehicle' ? 1 : seats;
+            price_cents = Math.max(0, perUnit * units);
+            try {
+              const curStored = sessionStorage.getItem('selectedVehicleCurrency');
+              if (curStored) currency = String(curStored).toLowerCase();
+            } catch(_){ }
+          }
+        }
       } catch(_){ }
       if (!price_cents) { try { price_cents = parseInt(sessionStorage.getItem('gw_amount_cents')||'0',10)||0; } catch(_){ price_cents = 0; } }
     }

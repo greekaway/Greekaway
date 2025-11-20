@@ -1,104 +1,151 @@
+// Choose Experience Type card renderer (shared on trip.html)
 (function () {
-  function getTripSlug() {
-    const params = new URLSearchParams(window.location.search);
-    const raw = params.get('trip') || '';
-    // allow simple slugs: letters, numbers, dash, underscore, dot
-    const slug = raw.toLowerCase().trim().match(/[a-z0-9._-]+/g);
-    return slug ? slug.join('') : '';
+  const MODE_ORDER = ['van', 'mercedes', 'bus'];
+  const MODE_LABELS = {
+    van: 'Premium Van',
+    mercedes: 'Private Mercedes',
+    bus: 'Bus Tour'
+  };
+
+  function escapeHtml(str) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    return String(str || '').replace(/[&<>"']/g, (ch) => map[ch] || ch);
   }
 
-  function setWarningVisible(visible) {
-    const el = document.getElementById('trip-warning');
-    if (!el) return;
-    el.hidden = !visible;
+  function canonicalMode(mode) {
+    const value = String(mode || '').toLowerCase();
+    if (value === 'private') return 'mercedes';
+    return MODE_ORDER.includes(value) ? value : 'van';
   }
 
-  function navigateTo(slug, mode) {
-    let prevMode = '';
-    try { prevMode = (localStorage.getItem('trip_mode')||'').toLowerCase(); } catch(_){ }
-    try { localStorage.setItem('trip_mode', String(mode)); } catch(_) {}
-    // Persist selected vehicle type & price for dynamic Acropolis pricing
+  function toNavMode(key) {
+    return key === 'mercedes' ? 'private' : key;
+  }
+
+  function formatPrice(amount, currency) {
+    const cur = (currency || 'EUR').toUpperCase();
+    const val = Number(amount || 0);
+    const locale = (window.currentI18n && window.currentI18n.lang) || undefined;
     try {
-      const vehicleType = (mode === 'private') ? 'mercedes' : String(mode).toLowerCase();
-      const map = window.vehiclePriceMap || {};
-      if (Object.prototype.hasOwnProperty.call(map, vehicleType)) {
-        sessionStorage.setItem('selectedVehicleType', vehicleType);
-        sessionStorage.setItem('selectedVehiclePrice', String(map[vehicleType]));
+      if (cur === 'EUR') {
+        return val.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' \u20AC';
       }
-    } catch(_){ }
-    // Clear booking state only when mode actually changes
-    try {
-      if (window.clearBookingState && prevMode && prevMode !== String(mode).toLowerCase()) {
-        window.clearBookingState();
-      } else if (window.clearBookingState && !prevMode) {
-        // first-time selection: treat as fresh start
-        window.clearBookingState();
-      }
-    } catch(_){}
-    if (!slug) return; // need a trip id to continue
-    // Central trip page as Step 1
-    const url = `/trips/trip.html?id=${encodeURIComponent(slug)}&mode=${encodeURIComponent(mode)}`;
-    try { window.location.assign(url); }
-    catch(_) { window.location.href = url; }
+      return val.toLocaleString(locale, { style: 'currency', currency: cur });
+    } catch (_) {
+      return `${val.toFixed(2)} ${cur}`;
+    }
   }
 
-  function ready() {
-    const slug = getTripSlug();
-    if (!slug) {
-      setWarningVisible(true);
+  function deriveModeInfo(trip, canonicalKey) {
+    if (!trip || !trip.modes) return null;
+    const safeKey = canonicalMode(canonicalKey);
+    const mode = trip.modes[safeKey];
+    if (!mode) return null;
+    const rawPrice = mode.price;
+    if (rawPrice == null || rawPrice === '') return null;
+    const price = Number(rawPrice);
+    if (!Number.isFinite(price)) return null;
+    const activeValue = mode.active;
+    const isActive = (() => {
+      if (typeof activeValue === 'boolean') return activeValue;
+      if (activeValue == null) return true;
+      if (typeof activeValue === 'number') return activeValue !== 0;
+      if (typeof activeValue === 'string') {
+        const normalized = activeValue.trim().toLowerCase();
+        if (!normalized) return true;
+        if (['false','0','no','inactive'].includes(normalized)) return false;
+        if (['true','1','yes','active'].includes(normalized)) return true;
+      }
+      return true;
+    })();
+    if (!isActive) return null;
+    const chargeRaw = (mode.charge_type || mode.charging_type || 'per_person').toLowerCase();
+    const chargeType = chargeRaw === 'per_vehicle' ? 'per_vehicle' : 'per_person';
+    const capacityRaw = mode.default_capacity != null ? mode.default_capacity : mode.capacity;
+    const capacityNum = capacityRaw != null ? Number(capacityRaw) : null;
+    const capacity = Number.isFinite(capacityNum) ? capacityNum : null;
+    const currency = (trip.currency || 'EUR').toUpperCase();
+    return { price, chargeType, capacity, currency, key: safeKey };
+  }
+
+  function buildDescription(category, canonicalKey) {
+    const desc = category && category.modeCard && category.modeCard.desc;
+    if (desc && typeof desc[canonicalKey] === 'string') return desc[canonicalKey];
+    return '';
+  }
+
+  function renderModeCards({ root, trip, category, activeMode, onSelect }) {
+    if (!root || !trip) return;
+    const currentActive = canonicalMode(activeMode);
+    root.innerHTML = '';
+    root.classList.add('choose-experience-card');
+    const cardTexts = category && category.modeCard ? category.modeCard : null;
+    const header = document.createElement('div');
+    header.className = 'mode-card-header';
+    const headerBody = document.createElement('div');
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'mode-card-title';
+    titleEl.textContent = (cardTexts && cardTexts.title) || '';
+    const subtitleEl = document.createElement('p');
+    subtitleEl.className = 'mode-card-subtitle';
+    subtitleEl.textContent = (cardTexts && cardTexts.subtitle) || '';
+    headerBody.appendChild(titleEl);
+    headerBody.appendChild(subtitleEl);
+    header.appendChild(headerBody);
+    if ((cardTexts && (cardTexts.title || cardTexts.subtitle))) {
+      root.appendChild(header);
     }
 
-    // Update visible prices on selection cards using vehiclePriceMap
-    try {
-      const map = window.vehiclePriceMap || {};
-      const formatter = (val) => {
-        try { return (Number(val).toLocaleString('el-GR',{minimumFractionDigits:2, maximumFractionDigits:2})) + ' \u20AC'; } catch(_) { return val + '€'; }
-      };
-      document.querySelectorAll('.trip-mode-card[data-mode]').forEach(card => {
-        const mode = (card.getAttribute('data-mode')||'').toLowerCase();
-        let key = mode;
-        if (mode === 'private') key = 'mercedes';
-        if (Object.prototype.hasOwnProperty.call(map, key)) {
-          const priceEl = card.querySelector('.trip-mode-price');
-          if (priceEl) priceEl.textContent = formatter(map[key]);
-        }
+    const listEl = document.createElement('div');
+    listEl.className = 'trip-mode-card-list';
+    let rendered = 0;
+    MODE_ORDER.forEach((modeKey) => {
+      const info = deriveModeInfo(trip, modeKey);
+      if (!info) return;
+      rendered++;
+      const navMode = toNavMode(modeKey);
+      const card = document.createElement('article');
+      card.className = `trip-mode-card trip-mode-${navMode}`;
+      if (currentActive === modeKey) card.classList.add('active');
+      const cardHeader = document.createElement('div');
+      cardHeader.className = 'trip-mode-header';
+      const title = document.createElement('span');
+      title.className = 'trip-mode-title';
+      title.textContent = MODE_LABELS[modeKey] || navMode;
+      const price = document.createElement('span');
+      price.className = 'trip-mode-price';
+      price.textContent = formatPrice(info.price, info.currency);
+      cardHeader.appendChild(title);
+      cardHeader.appendChild(price);
+      const desc = document.createElement('p');
+      desc.className = 'trip-mode-desc';
+      const descText = buildDescription(category, modeKey);
+      desc.innerHTML = escapeHtml(descText).replace(/\n/g, '<br>');
+      const meta = document.createElement('div');
+      meta.className = 'trip-mode-meta';
+      const chargeLabel = info.chargeType === 'per_vehicle' ? 'ανά όχημα' : 'ανά άτομο';
+      const bits = [chargeLabel];
+      if (info.capacity) bits.push(`${info.capacity} pax`);
+      meta.textContent = bits.join(' • ');
+      card.appendChild(cardHeader);
+      if (descText) card.appendChild(desc);
+      card.appendChild(meta);
+      card.addEventListener('click', () => {
+        if (typeof onSelect === 'function') onSelect({ mode: navMode, canonicalMode: modeKey, info });
       });
-    } catch(_){ }
-
-    // Make background match the trip's category, like category/trip pages
-    (function setCategoryBackground() {
-      if (!slug) return;
-      try {
-        fetch('/data/tripindex.json', { cache: 'no-store' })
-          .then(r => r.ok ? r.json() : [])
-          .then(list => {
-            const meta = (list || []).find(t => t.id === slug);
-            if (meta && meta.category) {
-              document.body.dataset.category = meta.category;
-              document.documentElement.dataset.category = meta.category;
-              document.body.dataset.view = document.body.dataset.view || 'category';
-              document.documentElement.dataset.view = document.documentElement.dataset.view || 'category';
-            }
-          })
-          .catch(() => {});
-      } catch (_) {}
-    })();
-
-    const cards = document.querySelectorAll('.trip-mode-card[data-mode]');
-    cards.forEach(function (card) {
-      const mode = card.getAttribute('data-mode');
-      function go() { navigateTo(slug, mode); }
-      // Ensure any previous listeners are not duplicated
-      card.addEventListener('click', go, { once: false });
-      card.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
-      });
+      listEl.appendChild(card);
     });
+
+    if (!rendered) {
+      root.hidden = true;
+      return;
+    }
+    root.hidden = false;
+    root.appendChild(listEl);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ready);
-  } else {
-    ready();
-  }
+  window.GWModeCard = {
+    render: renderModeCards,
+    extractModeInfo: (trip, modeKey) => deriveModeInfo(trip, modeKey)
+  };
 })();
