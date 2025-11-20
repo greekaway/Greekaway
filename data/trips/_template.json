@@ -3,48 +3,115 @@
   "slug": "",
   "title": "",
   "subtitle": "",
+  "teaser": "",
   "description": "",
-  "duration_hours": 0,
-  "duration_days": 0,
-
-  "modes": {
-    "van":       { "price": 0, "capacity": 7 },
-    "bus":       { "price": 0, "capacity": 40 },
-    "mercedes":  { "price": 0, "capacity": 3 }
-  },
-
-  "stops": [
-    {
-      "title": "",
-      "description": "",
-      "videos": ["", "", ""]
-    }
-  ],
-
-  "sections": [
-    { "title": "", "content": "" }
-  ],
-
-  "includes": [],
-  "excludes": [],
+  "category": "",
+  "defaultMode": "van",
+  "iconPath": "",
+  "coverImage": "",
+  "currency": "EUR",
   "tags": [],
-  "faq": [
-    { "q": "", "a": "" }
-  ],
-
-  "gallery": [],
-  
-  "video": {
-    "url": "",
-    "thumbnail": ""
+  "modes": {
+    "van": {
+      "active": false,
+      "title": "",
+      "subtitle": "",
+      "description": "",
+      "duration": "",
+      "duration_hours": 0,
+      "duration_days": 0,
+      "price_per_person": 0,
+      "price_total": 0,
+      "charge_type": "per_person",
+      "capacity": 7,
+      "includes": [],
+      "excludes": [],
+      "tags": [],
+      "sections": [
+        { "title": "", "content": "" }
+      ],
+      "gallery": [],
+      "video": { "url": "", "thumbnail": "" },
+      "videos": [],
+      "stops": [
+        { "title": "", "description": "", "images": [], "videos": [] }
+      ],
+      "faq": [
+        { "q": "", "a": "" }
+      ],
+      "map": {
+        "start": { "label": "", "lat": null, "lng": null },
+        "end": { "label": "", "lat": null, "lng": null },
+        "route": []
+      }
+    },
+    "mercedes": {
+      "active": false,
+      "title": "",
+      "subtitle": "",
+      "description": "",
+      "duration": "",
+      "duration_hours": 0,
+      "duration_days": 0,
+      "price_per_person": 0,
+      "price_total": 0,
+      "charge_type": "per_vehicle",
+      "capacity": 1,
+      "includes": [],
+      "excludes": [],
+      "tags": [],
+      "sections": [
+        { "title": "", "content": "" }
+      ],
+      "gallery": [],
+      "video": { "url": "", "thumbnail": "" },
+      "videos": [],
+      "stops": [
+        { "title": "", "description": "", "images": [], "videos": [] }
+      ],
+      "faq": [
+        { "q": "", "a": "" }
+      ],
+      "map": {
+        "start": { "label": "", "lat": null, "lng": null },
+        "end": { "label": "", "lat": null, "lng": null },
+        "route": []
+      }
+    },
+    "bus": {
+      "active": false,
+      "title": "",
+      "subtitle": "",
+      "description": "",
+      "duration": "",
+      "duration_hours": 0,
+      "duration_days": 0,
+      "price_per_person": 0,
+      "price_total": 0,
+      "charge_type": "per_person",
+      "capacity": 40,
+      "includes": [],
+      "excludes": [],
+      "tags": [],
+      "sections": [
+        { "title": "", "content": "" }
+      ],
+      "gallery": [],
+      "video": { "url": "", "thumbnail": "" },
+      "videos": [],
+      "stops": [
+        { "title": "", "description": "", "images": [], "videos": [] }
+      ],
+      "faq": [
+        { "q": "", "a": "" }
+      ],
+      "map": {
+        "start": { "label": "", "lat": null, "lng": null },
+        "end": { "label": "", "lat": null, "lng": null },
+        "route": []
+      }
+    }
   },
-
-  "map": {
-    "lat": null,
-    "lng": null,
-    "markers": []
-  },
-
   "createdAt": "",
   "updatedAt": ""
 }

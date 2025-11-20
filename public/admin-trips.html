@@ -41,137 +41,257 @@
           </div>
         </div>
         
-        <section aria-labelledby="modesTitle" class="modes-section">
-          <h3 id="modesTitle" class="h1" style="margin-top:8px">Modes</h3>
-          <div class="modes-grid">
-            <div class="panel mode-card" data-mode="bus">
-              <div class="mode-header"><strong>Bus</strong></div>
-              <div class="mode-row">
-                <label style="align-items:center;flex-direction:row;gap:8px;flex:0 0 auto">
-                  <input type="checkbox" id="mode_bus_active"> Active
-                </label>
-              </div>
-              <div class="mode-row">
-                <label>Τιμή (€)
-                  <input type="number" id="mode_bus_price_eur" step="0.01" min="0" placeholder="0.00">
-                </label>
-                <label>Τρόπος χρέωσης
-                  <select id="mode_bus_charge_type">
-                    <option value="per_person">per_person</option>
-                    <option value="per_vehicle">per_vehicle</option>
-                  </select>
-                </label>
-                <label>Default capacity
-                  <input type="number" id="mode_bus_capacity" min="0" step="1" placeholder="0">
-                </label>
-              </div>
-            </div>
-
-            <div class="panel mode-card" data-mode="van">
-              <div class="mode-header"><strong>Van</strong></div>
-              <div class="mode-row">
-                <label style="align-items:center;flex-direction:row;gap:8px;flex:0 0 auto">
-                  <input type="checkbox" id="mode_van_active"> Active
-                </label>
-              </div>
-              <div class="mode-row">
-                <label>Τιμή (€)
-                  <input type="number" id="mode_van_price_eur" step="0.01" min="0" placeholder="0.00">
-                </label>
-                <label>Τρόπος χρέωσης
-                  <select id="mode_van_charge_type">
-                    <option value="per_person">per_person</option>
-                    <option value="per_vehicle">per_vehicle</option>
-                  </select>
-                </label>
-                <label>Default capacity
-                  <input type="number" id="mode_van_capacity" min="0" step="1" placeholder="0">
-                </label>
-              </div>
-            </div>
-
-            <div class="panel mode-card" data-mode="mercedes">
-              <div class="mode-header"><strong>Mercedes</strong></div>
-              <div class="mode-row">
-                <label style="align-items:center;flex-direction:row;gap:8px;flex:0 0 auto">
-                  <input type="checkbox" id="mode_mercedes_active"> Active
-                </label>
-              </div>
-              <div class="mode-row">
-                <label>Τιμή (€)
-                  <input type="number" id="mode_mercedes_price_eur" step="0.01" min="0" placeholder="0.00">
-                </label>
-                <label>Τρόπος χρέωσης
-                  <select id="mode_mercedes_charge_type">
-                    <option value="per_person">per_person</option>
-                    <option value="per_vehicle">per_vehicle</option>
-                  </select>
-                </label>
-                <label>Default capacity
-                  <input type="number" id="mode_mercedes_capacity" min="0" step="1" placeholder="0">
-                </label>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        
-
-        <label class="full">Stops (μία ανά γραμμή)<textarea id="stops" rows="4" placeholder="Στάση 1\nΣτάση 2\nΣτάση 3"></textarea></label>
-
-        <section class="panel form-panel" aria-labelledby="sectionsTitle">
-          <div class="panel-header">
-            <h3 id="sectionsTitle">Ενότητες Περιγραφής (sections)</h3>
-            <button type="button" id="addSectionBtn" class="btn secondary small">+ Προσθήκη ενότητας</button>
-          </div>
-          <div id="sectionsList" class="repeatable-list" aria-live="polite"></div>
-        </section>
-
-        <section class="panel form-panel" aria-labelledby="includesTitle">
-          <h3 id="includesTitle">Περιλαμβάνεται / Δεν Περιλαμβάνεται</h3>
-          <div class="form-group stack-on-mobile">
-            <label>Περιλαμβάνονται (μία γραμμή ανά στοιχείο)
-              <textarea id="includesInput" rows="4" placeholder="Επαγγελματίας οδηγός\nPremium όχημα"></textarea>
-            </label>
-            <label>Δεν περιλαμβάνονται (μία γραμμή ανά στοιχείο)
-              <textarea id="excludesInput" rows="4" placeholder="Γεύματα\nΔιαμονή"></textarea>
-            </label>
-          </div>
-        </section>
-
         <label class="full">Tags (λέξεις-κλειδιά – μία ανά γραμμή)<textarea id="tagsInput" rows="3" placeholder="family\nfast-track"></textarea></label>
 
-        <section class="panel form-panel" aria-labelledby="faqTitle">
-          <div class="panel-header">
-            <h3 id="faqTitle">Συχνές Ερωτήσεις (FAQ)</h3>
-            <button type="button" id="addFaqBtn" class="btn secondary small">+ Προσθήκη ερώτησης</button>
-          </div>
-          <div id="faqList" class="repeatable-list" aria-live="polite"></div>
-        </section>
+        <section aria-labelledby="modesTitle" class="modes-section">
+          <h3 id="modesTitle" class="h1" style="margin-top:8px">Modes – Περιεχόμενο ανά όχημα</h3>
+          <p class="hint" style="margin-bottom:12px">Κάθε mode έχει δικό του κείμενο, στάσεις, media και χάρτη. Συμπληρώστε τα πεδία για κάθε εμπειρία ξεχωριστά.</p>
+          <div class="mode-stack">
+            <article class="panel mode-card" data-mode-form="van">
+              <div class="mode-header">
+                <strong>Premium Van</strong>
+                <label class="mode-toggle"><input type="checkbox" data-field="active"> Active</label>
+              </div>
+              <div class="form-group stack-on-mobile">
+                <label>Mode Title<input type="text" data-field="title" placeholder="π.χ. Premium Van Tour"></label>
+                <label>Mode Subtitle<input type="text" data-field="subtitle" placeholder="Περιγραφή για hero"></label>
+                <label>Duration (text)<input type="text" data-field="duration" placeholder="4 ώρες"></label>
+              </div>
+              <div class="form-group stack-on-mobile">
+                <label>Διάρκεια (ώρες)<input type="number" min="0" step="1" data-field="duration_hours"></label>
+                <label>Διάρκεια (ημέρες)<input type="number" min="0" step="1" data-field="duration_days"></label>
+              </div>
+              <label class="full">Mode Description<textarea data-field="description" rows="3" placeholder="Αναλυτική περιγραφή για το van mode"></textarea></label>
+              <div class="form-group stack-on-mobile">
+                <label>Τιμή ανά άτομο (€)<input type="number" min="0" step="0.01" data-field="price_per_person" placeholder="0.00"></label>
+                <label>Τιμή ανά όχημα (€)<input type="number" min="0" step="0.01" data-field="price_total" placeholder="0.00"></label>
+                <label>Τρόπος χρέωσης
+                  <select data-field="charge_type">
+                    <option value="per_person">per_person</option>
+                    <option value="per_vehicle">per_vehicle</option>
+                  </select>
+                </label>
+                <label>Capacity<input type="number" min="0" step="1" data-field="capacity" placeholder="7"></label>
+              </div>
+              <section class="panel form-panel">
+                <h4>Περιλαμβάνεται / Δεν περιλαμβάνεται</h4>
+                <div class="form-group stack-on-mobile">
+                  <label>Περιλαμβάνονται<textarea rows="3" data-field="includes" placeholder="Premium οδηγός\nPrivate pickup"></textarea></label>
+                  <label>Δεν περιλαμβάνονται<textarea rows="3" data-field="excludes" placeholder="Γεύματα\nΕισιτήρια"></textarea></label>
+                </div>
+              </section>
+              <section class="panel form-panel">
+                <div class="panel-header">
+                  <h4>Στάσεις</h4>
+                  <button type="button" class="btn secondary small" data-action="add-stop" data-mode="van">+ Προσθήκη στάσης</button>
+                </div>
+                <div class="repeatable-list" data-field="stopsList" aria-live="polite"></div>
+              </section>
+              <section class="panel form-panel">
+                <div class="panel-header">
+                  <h4>Ενότητες Περιγραφής</h4>
+                  <button type="button" class="btn secondary small" data-action="add-section" data-mode="van">+ Προσθήκη ενότητας</button>
+                </div>
+                <div class="repeatable-list" data-field="sectionsList" aria-live="polite"></div>
+              </section>
+              <section class="panel form-panel">
+                <div class="panel-header">
+                  <h4>Συχνές Ερωτήσεις</h4>
+                  <button type="button" class="btn secondary small" data-action="add-faq" data-mode="van">+ Προσθήκη ερώτησης</button>
+                </div>
+                <div class="repeatable-list" data-field="faqList" aria-live="polite"></div>
+              </section>
+              <section class="panel form-panel">
+                <h4>Media</h4>
+                <div class="form-group stack-on-mobile">
+                  <label>Gallery εικόνες<textarea rows="3" data-field="gallery" placeholder="/uploads/trips/van-1.jpg"></textarea></label>
+                  <label>Videos (λίστα URL)<textarea rows="3" data-field="videos" placeholder="https://youtu.be/...\nhttps://cdn..."></textarea></label>
+                </div>
+                <div class="form-group stack-on-mobile">
+                  <label>Hero Video URL<input type="text" data-field="video_url" placeholder="https://www.youtube.com/embed/..."></label>
+                  <label>Hero Thumbnail<input type="text" data-field="video_thumbnail" placeholder="/uploads/trips/video-thumb.jpg"></label>
+                </div>
+              </section>
+              <section class="panel form-panel">
+                <h4>Χάρτης & Διαδρομή</h4>
+                <div class="form-group stack-on-mobile">
+                  <label>Start label<input type="text" data-field="map_start_label" placeholder="Pickup σημείο"></label>
+                  <label>Start lat<input type="number" step="0.0001" data-field="map_start_lat"></label>
+                  <label>Start lng<input type="number" step="0.0001" data-field="map_start_lng"></label>
+                </div>
+                <div class="form-group stack-on-mobile">
+                  <label>End label<input type="text" data-field="map_end_label" placeholder="Τελικός προορισμός"></label>
+                  <label>End lat<input type="number" step="0.0001" data-field="map_end_lat"></label>
+                  <label>End lng<input type="number" step="0.0001" data-field="map_end_lng"></label>
+                </div>
+                <label class="full">Route waypoints (lat,lng,label ανά γραμμή)
+                  <textarea rows="3" data-field="map_route" placeholder="37.9715,23.7257,Acropolis"></textarea>
+                </label>
+              </section>
+            </article>
 
-        <label class="full">Gallery εικόνες (ένα URL ανά γραμμή)<textarea id="galleryInput" rows="4" placeholder="/uploads/trips/cover-1.jpg\nhttps://cdn.example.com/trip2.jpg"></textarea></label>
+            <article class="panel mode-card" data-mode-form="mercedes">
+              <div class="mode-header">
+                <strong>Private Mercedes</strong>
+                <label class="mode-toggle"><input type="checkbox" data-field="active"> Active</label>
+              </div>
+              <div class="form-group stack-on-mobile">
+                <label>Mode Title<input type="text" data-field="title" placeholder="Private Mercedes Tour"></label>
+                <label>Mode Subtitle<input type="text" data-field="subtitle"></label>
+                <label>Duration (text)<input type="text" data-field="duration"></label>
+              </div>
+              <div class="form-group stack-on-mobile">
+                <label>Διάρκεια (ώρες)<input type="number" min="0" step="1" data-field="duration_hours"></label>
+                <label>Διάρκεια (ημέρες)<input type="number" min="0" step="1" data-field="duration_days"></label>
+              </div>
+              <label class="full">Mode Description<textarea data-field="description" rows="3"></textarea></label>
+              <div class="form-group stack-on-mobile">
+                <label>Τιμή ανά άτομο (€)<input type="number" min="0" step="0.01" data-field="price_per_person"></label>
+                <label>Τιμή ανά όχημα (€)<input type="number" min="0" step="0.01" data-field="price_total"></label>
+                <label>Τρόπος χρέωσης
+                  <select data-field="charge_type">
+                    <option value="per_person">per_person</option>
+                    <option value="per_vehicle">per_vehicle</option>
+                  </select>
+                </label>
+                <label>Capacity<input type="number" min="0" step="1" data-field="capacity" placeholder="1"></label>
+              </div>
+              <section class="panel form-panel">
+                <h4>Περιλαμβάνεται / Δεν περιλαμβάνεται</h4>
+                <div class="form-group stack-on-mobile">
+                  <label>Περιλαμβάνονται<textarea rows="3" data-field="includes"></textarea></label>
+                  <label>Δεν περιλαμβάνονται<textarea rows="3" data-field="excludes"></textarea></label>
+                </div>
+              </section>
+              <section class="panel form-panel">
+                <div class="panel-header">
+                  <h4>Στάσεις</h4>
+                  <button type="button" class="btn secondary small" data-action="add-stop" data-mode="mercedes">+ Προσθήκη στάσης</button>
+                </div>
+                <div class="repeatable-list" data-field="stopsList" aria-live="polite"></div>
+              </section>
+              <section class="panel form-panel">
+                <div class="panel-header">
+                  <h4>Ενότητες Περιγραφής</h4>
+                  <button type="button" class="btn secondary small" data-action="add-section" data-mode="mercedes">+ Προσθήκη ενότητας</button>
+                </div>
+                <div class="repeatable-list" data-field="sectionsList" aria-live="polite"></div>
+              </section>
+              <section class="panel form-panel">
+                <div class="panel-header">
+                  <h4>Συχνές Ερωτήσεις</h4>
+                  <button type="button" class="btn secondary small" data-action="add-faq" data-mode="mercedes">+ Προσθήκη ερώτησης</button>
+                </div>
+                <div class="repeatable-list" data-field="faqList" aria-live="polite"></div>
+              </section>
+              <section class="panel form-panel">
+                <h4>Media</h4>
+                <div class="form-group stack-on-mobile">
+                  <label>Gallery<textarea rows="3" data-field="gallery"></textarea></label>
+                  <label>Videos<textarea rows="3" data-field="videos"></textarea></label>
+                </div>
+                <div class="form-group stack-on-mobile">
+                  <label>Hero Video URL<input type="text" data-field="video_url"></label>
+                  <label>Hero Thumbnail<input type="text" data-field="video_thumbnail"></label>
+                </div>
+              </section>
+              <section class="panel form-panel">
+                <h4>Χάρτης & Διαδρομή</h4>
+                <div class="form-group stack-on-mobile">
+                  <label>Start label<input type="text" data-field="map_start_label"></label>
+                  <label>Start lat<input type="number" step="0.0001" data-field="map_start_lat"></label>
+                  <label>Start lng<input type="number" step="0.0001" data-field="map_start_lng"></label>
+                </div>
+                <div class="form-group stack-on-mobile">
+                  <label>End label<input type="text" data-field="map_end_label"></label>
+                  <label>End lat<input type="number" step="0.0001" data-field="map_end_lat"></label>
+                  <label>End lng<input type="number" step="0.0001" data-field="map_end_lng"></label>
+                </div>
+                <label class="full">Route waypoints<textarea rows="3" data-field="map_route"></textarea></label>
+              </section>
+            </article>
 
-        <section class="panel form-panel" aria-labelledby="videoTitle">
-          <h3 id="videoTitle">Κεντρικό Βίντεο</h3>
-          <div class="form-group">
-            <label>Video URL
-              <input type="text" id="videoUrl" placeholder="https://www.youtube.com/embed/...">
-            </label>
-            <label>Thumbnail URL
-              <input type="text" id="videoThumbnail" placeholder="/uploads/trips/video-thumb.jpg">
-            </label>
+            <article class="panel mode-card" data-mode-form="bus">
+              <div class="mode-header">
+                <strong>Classic Bus Tour</strong>
+                <label class="mode-toggle"><input type="checkbox" data-field="active"> Active</label>
+              </div>
+              <div class="form-group stack-on-mobile">
+                <label>Mode Title<input type="text" data-field="title"></label>
+                <label>Mode Subtitle<input type="text" data-field="subtitle"></label>
+                <label>Duration (text)<input type="text" data-field="duration"></label>
+              </div>
+              <div class="form-group stack-on-mobile">
+                <label>Διάρκεια (ώρες)<input type="number" min="0" step="1" data-field="duration_hours"></label>
+                <label>Διάρκεια (ημέρες)<input type="number" min="0" step="1" data-field="duration_days"></label>
+              </div>
+              <label class="full">Mode Description<textarea data-field="description" rows="3"></textarea></label>
+              <div class="form-group stack-on-mobile">
+                <label>Τιμή ανά άτομο (€)<input type="number" min="0" step="0.01" data-field="price_per_person"></label>
+                <label>Τιμή ανά όχημα (€)<input type="number" min="0" step="0.01" data-field="price_total"></label>
+                <label>Τρόπος χρέωσης
+                  <select data-field="charge_type">
+                    <option value="per_person">per_person</option>
+                    <option value="per_vehicle">per_vehicle</option>
+                  </select>
+                </label>
+                <label>Capacity<input type="number" min="0" step="1" data-field="capacity" placeholder="40"></label>
+              </div>
+              <section class="panel form-panel">
+                <h4>Περιλαμβάνεται / Δεν περιλαμβάνεται</h4>
+                <div class="form-group stack-on-mobile">
+                  <label>Περιλαμβάνονται<textarea rows="3" data-field="includes"></textarea></label>
+                  <label>Δεν περιλαμβάνονται<textarea rows="3" data-field="excludes"></textarea></label>
+                </div>
+              </section>
+              <section class="panel form-panel">
+                <div class="panel-header">
+                  <h4>Στάσεις</h4>
+                  <button type="button" class="btn secondary small" data-action="add-stop" data-mode="bus">+ Προσθήκη στάσης</button>
+                </div>
+                <div class="repeatable-list" data-field="stopsList" aria-live="polite"></div>
+              </section>
+              <section class="panel form-panel">
+                <div class="panel-header">
+                  <h4>Ενότητες Περιγραφής</h4>
+                  <button type="button" class="btn secondary small" data-action="add-section" data-mode="bus">+ Προσθήκη ενότητας</button>
+                </div>
+                <div class="repeatable-list" data-field="sectionsList" aria-live="polite"></div>
+              </section>
+              <section class="panel form-panel">
+                <div class="panel-header">
+                  <h4>Συχνές Ερωτήσεις</h4>
+                  <button type="button" class="btn secondary small" data-action="add-faq" data-mode="bus">+ Προσθήκη ερώτησης</button>
+                </div>
+                <div class="repeatable-list" data-field="faqList" aria-live="polite"></div>
+              </section>
+              <section class="panel form-panel">
+                <h4>Media</h4>
+                <div class="form-group stack-on-mobile">
+                  <label>Gallery<textarea rows="3" data-field="gallery"></textarea></label>
+                  <label>Videos<textarea rows="3" data-field="videos"></textarea></label>
+                </div>
+                <div class="form-group stack-on-mobile">
+                  <label>Hero Video URL<input type="text" data-field="video_url"></label>
+                  <label>Hero Thumbnail<input type="text" data-field="video_thumbnail"></label>
+                </div>
+              </section>
+              <section class="panel form-panel">
+                <h4>Χάρτης & Διαδρομή</h4>
+                <div class="form-group stack-on-mobile">
+                  <label>Start label<input type="text" data-field="map_start_label"></label>
+                  <label>Start lat<input type="number" step="0.0001" data-field="map_start_lat"></label>
+                  <label>Start lng<input type="number" step="0.0001" data-field="map_start_lng"></label>
+                </div>
+                <div class="form-group stack-on-mobile">
+                  <label>End label<input type="text" data-field="map_end_label"></label>
+                  <label>End lat<input type="number" step="0.0001" data-field="map_end_lat"></label>
+                  <label>End lng<input type="number" step="0.0001" data-field="map_end_lng"></label>
+                </div>
+                <label class="full">Route waypoints<textarea rows="3" data-field="map_route"></textarea></label>
+              </section>
+            </article>
           </div>
-        </section>
-
-        <section class="panel form-panel" aria-labelledby="mapTitle">
-          <h3 id="mapTitle">Χάρτης Εκδρομής</h3>
-          <div class="form-group stack-on-mobile">
-            <label>Latitude<input type="number" step="0.0001" id="mapLat" placeholder="37.9715"></label>
-            <label>Longitude<input type="number" step="0.0001" id="mapLng" placeholder="23.7257"></label>
-          </div>
-          <label class="full">Σημεία ενδιαφέροντος (μία γραμμή ανά σημείο)
-            <textarea id="mapMarkers" rows="3" placeholder="Acropolis entrance\nHerodeion"></textarea>
-          </label>
         </section>
         <div class="actions">
           <button id="saveBtn" class="btn primary" type="button">Αποθήκευση / Ενημέρωση</button>
