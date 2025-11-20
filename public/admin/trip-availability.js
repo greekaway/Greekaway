@@ -1,10 +1,12 @@
 'use strict';
 // Admin Trip Availability Editor – month prefetch & per-day override
-(function(){
+ (function(){
   const tripSel = document.getElementById('tripSelect');
   const modeSel = document.getElementById('modeSelect');
-  // Prefer new container; fallback to legacy id if present
-  const calWrap = document.getElementById('calendar-container') || document.getElementById('calendar');
+  const monthInput = document.getElementById('monthSelect');
+  const prevMonthBtn = document.getElementById('prevMonthBtn');
+  const nextMonthBtn = document.getElementById('nextMonthBtn');
+  const calWrap = document.getElementById('calendar-container');
   const capInput = document.getElementById('capacityInput');
   const takenInput = document.getElementById('takenInput');
   const availInput = document.getElementById('availableInput');
@@ -13,8 +15,7 @@
   const dateDisplay = document.getElementById('selectedDateDisplay');
 
   const availabilityMonthCache = {}; // key: trip|mode|YYYY-MM -> { days: { date: {capacity,taken,available} } }
-  let fpInstance = null;
-  let selectedDate = null; // ISO YYYY-MM-DD
+  let selectedDate = null; // ISO YYYY-MM-DD (raw string, no Date())
 
   function log(...args){ try { console.log('[admin-trip-avail]', ...args); } catch(_){ } }
   function escapeHtml(str){ return String(str||'').replace(/[&<>"']/g,s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;' }[s])); }
@@ -109,70 +110,100 @@
       if (r.ok && j && j.ok){
         updateCache(trip, mode, dateStr, (mode==='mercedes')?1:capacity, taken); // enforce mercedes capacity=1
         saveMsg.textContent = '✅ Αποθηκεύτηκε'; saveMsg.style.color = '#2a7';
-        try { fpInstance && fpInstance.redraw(); } catch(_){ }
+        // Immediate calendar refresh to reflect new availability without extra click
+        try { renderCalendar(); } catch(_){ }
       } else { saveMsg.textContent = '❌ Αποτυχία'; saveMsg.style.color = '#c33'; }
     } catch(e){ saveMsg.textContent = '❌ Σφάλμα δικτύου'; saveMsg.style.color = '#c33'; }
   }
 
-  function annotateDay(dayElem, dateObj){
-    try {
-      const trip = tripSel.value.trim(); const mode = modeSel.value.trim();
-      if (!trip || !mode) return;
-      const iso = dateObj.toISOString().slice(0,10);
-      const d = getDayData(trip, mode, iso);
-      if (!d){ return; }
-      dayElem.classList.add('ga-day');
-      if (d.available <= 0) dayElem.classList.add('ga-day-full');
-      const badge = document.createElement('span');
-      badge.className = 'ga-day-badge'; badge.textContent = String(d.available);
-      dayElem.appendChild(badge);
-    } catch(_){ }
+  function buildMonthGrid(year, month){
+    const firstDay = new Date(year, month-1, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const cells = [];
+    // Pad before (convert Sunday=0 to 6 if we want Monday-first)
+    const pad = (firstDay === 0) ? 6 : firstDay - 1;
+    for (let i=0;i<pad;i++) cells.push({ spacer:true });
+    for (let d=1; d<=daysInMonth; d++){
+      const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      cells.push({ dateStr });
+    }
+    return cells;
   }
 
-  function initCalendar(){
-    if (!window.flatpickr || !calWrap) return;
-    // Remove previous instance markup if needed
-    try { while (calWrap.firstChild) calWrap.removeChild(calWrap.firstChild); } catch(_){ }
-    console.log('Calendar render init', { trip: (tripSel && tripSel.value), mode: (modeSel && modeSel.value) });
-    const input = document.createElement('input');
-    input.type='text'; input.id='calInput'; input.className='flatpickr-input';
-    calWrap.appendChild(input);
-    const todayIso = new Date().toISOString().slice(0,10);
-    fpInstance = window.flatpickr(input, {
-      inline: true,
-      static: true,
-      appendTo: calWrap,
-      dateFormat:'Y-m-d',
-      defaultDate: todayIso,
-      locale: (typeof getFlatpickrLocale==='function') ? getFlatpickrLocale() : undefined,
-      onDayCreate: function(_, __, ___, dayElem){ try { annotateDay(dayElem, dayElem.dateObj); } catch(_){ } },
-      onChange: function(sel, dateStr){ setEditor(dateStr); },
-      onMonthChange: function(selDates, dateStr, inst){
-        const y = inst.currentYear; const m = inst.currentMonth + 1; // 1-based
-        const trip = tripSel.value.trim(); const mode = modeSel.value.trim();
-        prefetchMonth(trip, mode, y, m).then(()=>{ try { inst.redraw(); } catch(_){ } });
-      },
-      onReady: function(selDates, dateStr, inst){
-        console.log('Calendar ready', { year: inst.currentYear, month: inst.currentMonth+1 });
-        const y = inst.currentYear; const m = inst.currentMonth + 1;
-        const trip = tripSel.value.trim(); const mode = modeSel.value.trim();
-        prefetchMonth(trip, mode, y, m).then(()=>{ try { inst.redraw(); } catch(_){ } });
-      }
-    });
-    setEditor(todayIso);
+  function renderCalendar(){
+    if (!calWrap) return;
+    const trip = tripSel.value.trim(); const mode = modeSel.value.trim();
+    if (!trip || !mode){ calWrap.innerHTML='<div style="font-size:12px;color:#89a9c1">Επιλέξτε trip & mode.</div>'; return; }
+    let monthVal = (monthInput && monthInput.value) ? monthInput.value : null; // YYYY-MM
+    if (!monthVal){
+      const now = new Date(); monthVal = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      if (monthInput) monthInput.value = monthVal;
+    }
+    const year = parseInt(monthVal.slice(0,4),10);
+    const month = parseInt(monthVal.slice(5,7),10);
+    const monthStr = `${year}-${String(month).padStart(2,'0')}`;
+    const key = `${trip}|${mode}|${monthStr}`;
+    const doRender = ()=>{
+      const cells = buildMonthGrid(year, month);
+      const bucket = availabilityMonthCache[key];
+      calWrap.innerHTML='';
+      const header = document.createElement('div');
+      header.className='calendar-grid';
+      ['ΔΕΥ','ΤΡΙ','ΤΕΤ','ΠΕΜ','ΠΑΡ','ΣΑΒ','ΚΥΡ'].forEach(w=>{ const wd=document.createElement('div'); wd.className='calendar-weekday'; wd.textContent=w; header.appendChild(wd); });
+      calWrap.appendChild(header);
+      const grid = document.createElement('div'); grid.className='calendar-grid';
+      cells.forEach(cell=>{
+        if (cell.spacer){ const sp=document.createElement('div'); sp.className='calendar-spacer'; grid.appendChild(sp); return; }
+        const dData = bucket ? bucket.days[cell.dateStr] : null;
+        const capacity = dData ? dData.capacity : computeDefaultCapacity(mode);
+        const taken = dData ? dData.taken : 0;
+        const available = Math.max(0, capacity - taken);
+        const dayEl = document.createElement('div');
+        let cls = 'day-cell';
+        if (available <= 0) cls += ' full';
+        else if (available <= Math.floor(capacity * 0.25)) cls += ' low';
+        else cls += ' medium';
+        dayEl.className = cls;
+        if (selectedDate === cell.dateStr) dayEl.classList.add('selected');
+        const dateDiv = document.createElement('div'); dateDiv.className='day-date'; dateDiv.textContent = cell.dateStr.slice(-2) + '/' + monthStr.slice(5,7);
+        const metrics = document.createElement('div'); metrics.className='day-metrics';
+        metrics.innerHTML = `<span class="metric-cap">C:${capacity}</span><span class="metric-taken">T:${taken}</span><span class="metric-avail">A:${available}</span>`;
+        dayEl.appendChild(dateDiv); dayEl.appendChild(metrics);
+        dayEl.addEventListener('click', ()=>{ setEditor(cell.dateStr); renderCalendar(); });
+        grid.appendChild(dayEl);
+      });
+      calWrap.appendChild(grid);
+    };
+    if (availabilityMonthCache[key]){ doRender(); }
+    else { prefetchMonth(trip, mode, year, month).then(doRender); }
   }
 
-  function reloadCalendar(){
-    initCalendar();
-  }
+  function reloadCalendar(){ renderCalendar(); }
 
   // Event listeners
-  tripSel.addEventListener('change', ()=>{ reloadCalendar(); });
-  modeSel.addEventListener('change', ()=>{ reloadCalendar(); });
+  tripSel.addEventListener('change', ()=>{ selectedDate=null; reloadCalendar(); });
+  modeSel.addEventListener('change', ()=>{ selectedDate=null; reloadCalendar(); });
+  monthInput.addEventListener('change', ()=>{ selectedDate=null; reloadCalendar(); });
+  function shiftMonth(delta){
+    if (!monthInput) return;
+    let val = monthInput.value;
+    if (!val){ const now=new Date(); val = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; }
+    const y = parseInt(val.slice(0,4),10);
+    const m = parseInt(val.slice(5,7),10);
+    const date = new Date(y, m-1+delta, 1);
+    const newVal = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
+    monthInput.value = newVal;
+    selectedDate = null;
+    reloadCalendar();
+  }
+  prevMonthBtn && prevMonthBtn.addEventListener('click', ()=>shiftMonth(-1));
+  nextMonthBtn && nextMonthBtn.addEventListener('click', ()=>shiftMonth(1));
   capInput.addEventListener('input', recalcAvailable);
   takenInput.addEventListener('input', recalcAvailable);
   saveBtn.addEventListener('click', ()=>{ saveCurrent(); });
 
   // Boot
+  // Initialize month input default
+  (function initMonth(){ if (monthInput && !monthInput.value){ const now=new Date(); monthInput.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; } })();
   fetchTrips().then(()=>{ reloadCalendar(); });
 })();

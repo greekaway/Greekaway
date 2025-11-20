@@ -1,5 +1,13 @@
 [
   {
+    "id": "c9d9c292-da1c-4249-bd04-b682c24c068c",
+    "title": "city by night",
+    "slug": "city-by-night",
+    "iconPath": "/uploads/category-icons/city-by-night-1763594981733.svg",
+    "order": 1,
+    "published": true
+  },
+  {
     "id": "65fd1809-31c7-4626-a5d4-cc02d058eb31",
     "title": "Αθήνα",
     "slug": "athina",
@@ -12,6 +20,14 @@
     "title": "Βουνό",
     "slug": "boyno",
     "iconPath": "/uploads/category-icons/boyno-1763552980857.svg",
+    "order": 1,
+    "published": true
+  },
+  {
+    "id": "b75a1099-8401-4108-8e43-6939e88f913a",
+    "title": "Γιόγκα",
+    "slug": "giogka",
+    "iconPath": "/uploads/category-icons/giogka-1763583478795.svg",
     "order": 1,
     "published": true
   },

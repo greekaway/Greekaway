@@ -397,7 +397,10 @@
     const ok = document.getElementById('tripConfirmOk');
     const cancel = document.getElementById('tripConfirmCancel');
     if (!m || !ok || !cancel) return;
+    try { console.debug('[Trips Admin] Opening delete modal for', editingSlug); } catch(_){ }
     m.hidden = false;
+    // Accessibility: focus first actionable button
+    setTimeout(()=>{ try { ok.focus(); } catch(_){ } }, 30);
     function close(){ m.hidden = true; ok.removeEventListener('click', onOk); cancel.removeEventListener('click', onCancel); }
     async function onOk(){
       try {
@@ -409,6 +412,9 @@
     function onCancel(){ close(); }
     ok.addEventListener('click', onOk);
     cancel.addEventListener('click', onCancel);
+    // ESC key handler
+    const onKey = (ev)=>{ if (ev.key === 'Escape'){ ev.preventDefault(); close(); document.removeEventListener('keydown', onKey); } };
+    document.addEventListener('keydown', onKey);
   }
 
   els.saveBtn.addEventListener('click', saveTrip);
@@ -477,5 +483,10 @@
     const btnLoad = document.getElementById('mode_avail_load'); if (btnLoad) btnLoad.addEventListener('click', loadModeAvailability);
     const btnSave = document.getElementById('mode_avail_save'); if (btnSave) btnSave.addEventListener('click', saveModeAvailability);
   }
-  document.addEventListener('DOMContentLoaded', init);
+  // Ensure init runs even if DOMContentLoaded has already fired (script loaded late or injected)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();

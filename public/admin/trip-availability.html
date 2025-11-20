@@ -4,9 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Trip Availability Editor</title>
-  <!-- Flatpickr for inline calendar grid -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+  <!-- Custom calendar grid (flatpickr removed) -->
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/admin-common.css" />
   <link rel="stylesheet" href="/css/admin-availability.css" />
@@ -25,8 +23,19 @@
           <option value="van" selected>Van</option>
           <option value="mercedes">Mercedes</option>
         </select>
+        <label for="monthSelect">Μήνας</label>
+        <div class="month-nav">
+          <button id="prevMonthBtn" type="button" aria-label="Προηγούμενος μήνας">◀</button>
+          <input id="monthSelect" type="month" />
+          <button id="nextMonthBtn" type="button" aria-label="Επόμενος μήνας">▶</button>
+        </div>
         <div id="calendar-container"></div>
-        <p class="badges-note">Badges = διαθέσιμες θέσεις (capacity − taken). Κόκκινο όταν 0.</p>
+        <div class="calendar-legend">
+          <span><span class="legend-box legend-full"></span> Full (A=0)</span>
+          <span><span class="legend-box legend-low"></span> Low (≤25%)</span>
+          <span><span class="legend-box legend-available"></span> Available</span>
+        </div>
+        <p class="badges-note">Κάντε κλικ σε ημέρα: εμφανίζει και επεξεργάζεται capacity / taken / available.</p>
       </div>
       <div class="editor-card">
         <h2 style="margin:0 0 8px;font-size:16px">Ημέρα</h2>
@@ -52,10 +61,7 @@
     <a href="/admin/trip-availability.html" class="active">Trip Availability</a>
   </nav>
   <footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <!-- Locales commonly used -->
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/gr.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/en.js"></script>
+  <!-- Flatpickr scripts removed after refactor -->
   <script src="/js/main.js"></script>
   <script src="/admin/trip-availability.js" defer></script>
   <script>fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){document.getElementById('ga-version').textContent=v.version||'—'} })</script>

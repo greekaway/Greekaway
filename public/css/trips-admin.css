@@ -26,7 +26,12 @@
 header.sticky-bar[data-collapsed='true'] .trip-form{display:none}
 
 /* Trip delete confirm modal: nudge content slightly to the right */
-#tripConfirmModal .modal-inner{position:relative;left:24px}
+#tripConfirmModal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);z-index:9999;padding:20px}
+#tripConfirmModal[hidden]{display:none !important}
+#tripConfirmModal .modal-inner{background:#132637;border:1px solid var(--ga-border);border-radius:12px;box-shadow:0 8px 34px -4px rgba(0,0,0,0.45);padding:20px;max-width:360px;width:100%;position:relative;left:0}
+#tripConfirmModal .modal-inner h3{margin:0 0 8px;font-size:1.1rem;color:var(--ga-gold)}
+#tripConfirmModal .modal-inner p{margin:0 0 14px;font-size:.85rem;line-height:1.3;color:var(--ga-text)}
+#tripConfirmModal .actions{display:flex;gap:8px;justify-content:flex-end}
 
 /* Icon preview styling (duplicated from Categories CMS, gold color #f4c542) */
 .category-icon.admin-preview{width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:transparent}
