@@ -161,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.classList.add(`cat-${slug}`);
         btn.title = catTitle;
         // Route all categories through a single template with slug param
-        btn.addEventListener('click', () => { window.location.href = `/categories/culture.html?slug=${encodeURIComponent(slug)}`; });
+        btn.addEventListener('click', () => { window.location.href = `/category.html?slug=${encodeURIComponent(slug)}`; });
         // Icon wrapper
         const iconWrapper = document.createElement('div');
         iconWrapper.className = 'category-icon';
@@ -236,10 +236,22 @@ document.addEventListener("DOMContentLoaded", () => {
   .catch(err => G.error("Σφάλμα φόρτωσης κατηγοριών:", err));
 });
 
-// ---------- [B] Σελίδα Κατηγορίας (π.χ. /categories/culture.html) ----------
+// ---------- [B] Σελίδα Κατηγορίας (π.χ. /category.html?slug=culture) ----------
 document.addEventListener("DOMContentLoaded", () => {
   const tripsContainer = document.getElementById("trips-container");
   if (!tripsContainer) return; // αν δεν είμαστε σε σελίδα κατηγορίας, πήγαινε στο [C]
+  const categoryTitleEl = document.getElementById('category-title') || document.querySelector('[data-role="category-title"]');
+  const defaultHeadingText = categoryTitleEl ? categoryTitleEl.textContent.trim() : '';
+  const categoryDescriptionEl = document.getElementById('category-description');
+  const defaultDescriptionText = categoryDescriptionEl ? categoryDescriptionEl.textContent.trim() : '';
+  const defaultDescriptionHidden = categoryDescriptionEl ? (categoryDescriptionEl.hasAttribute('hidden') || categoryDescriptionEl.hidden) : true;
+  const defaultDocumentTitle = document.title;
+  const documentTitleSuffix = (() => {
+    const parts = defaultDocumentTitle.split(' - ');
+    return parts.length > 1 ? parts.slice(1).join(' - ') : '';
+  })();
+  let currentCategoryMeta = null;
+  let categoryMetaPromise = null;
 
   // Determine category from query param (?slug=...) with fallback to body data-category
   let category = '';
@@ -250,14 +262,97 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!category) category = document.body.dataset.category || '';
   // ensure view flag for listing pages
   document.body.dataset.view = 'category';
-  if (!category) return;
+  if (document.documentElement) document.documentElement.dataset.view = 'category';
+  if (!category) {
+    const missingTitle = tSafe('categories.missingTitle', 'Δεν βρέθηκε κατηγορία');
+    const missingDesc = tSafe('categories.missingDescription', 'Επιστρέψτε στη λίστα και επιλέξτε μια διαθέσιμη κατηγορία.');
+    if (categoryTitleEl) categoryTitleEl.textContent = missingTitle;
+    if (categoryDescriptionEl) {
+      categoryDescriptionEl.textContent = missingDesc;
+      categoryDescriptionEl.removeAttribute('hidden');
+    }
+    tripsContainer.innerHTML = `<p class="no-trips">${tSafe('categories.missingSlug', 'Δεν βρέθηκε η συγκεκριμένη κατηγορία.')}</p>`;
+    return;
+  }
+  document.body.dataset.category = category;
+  if (document.documentElement) document.documentElement.dataset.category = category;
+
+  const updateCategoryHeading = (meta) => {
+    const localized = meta ? (getLocalized(meta.title) || meta.title || '') : '';
+    if (categoryTitleEl) {
+      categoryTitleEl.textContent = localized || defaultHeadingText || '';
+    }
+    if (categoryDescriptionEl) {
+      const localizedDesc = meta ? (getLocalized(meta.description) || meta.description || '') : '';
+      if (localizedDesc) {
+        categoryDescriptionEl.textContent = localizedDesc;
+        categoryDescriptionEl.removeAttribute('hidden');
+      } else {
+        categoryDescriptionEl.textContent = defaultDescriptionText || '';
+        if (defaultDescriptionHidden || !categoryDescriptionEl.textContent.trim()) {
+          categoryDescriptionEl.setAttribute('hidden','');
+        } else {
+          categoryDescriptionEl.removeAttribute('hidden');
+        }
+      }
+    }
+    if (localized) {
+      document.title = documentTitleSuffix ? `${localized} - ${documentTitleSuffix}` : localized;
+    } else {
+      document.title = defaultDocumentTitle;
+    }
+  };
+
+  const fetchCategoryMeta = () => {
+    if (categoryMetaPromise) return categoryMetaPromise;
+    categoryMetaPromise = (async () => {
+      try {
+        const cached = Array.isArray(window.__gwCategories) ? window.__gwCategories : null;
+        if (cached && cached.length) {
+          const match = cached.find(cat => (cat.slug || cat.id) === category);
+          if (match) return match;
+        }
+      } catch(_) { /* ignore */ }
+      const resp = await fetch(`/api/public/categories`, { cache: 'no-store' });
+      if (!resp.ok) throw new Error('Failed to load categories');
+      const cats = await resp.json();
+      if (Array.isArray(cats)) {
+        window.__gwCategories = cats;
+        return cats.find(cat => (cat.slug || cat.id) === category) || null;
+      }
+      return null;
+    })().catch(err => { G.error('Category meta load failed:', err); return null; });
+    return categoryMetaPromise;
+  };
+
+  fetchCategoryMeta().then(meta => {
+    currentCategoryMeta = meta;
+    if (meta) {
+      const canonicalSlug = meta.slug || meta.id || '';
+      if (canonicalSlug) {
+        category = canonicalSlug;
+        document.body.dataset.category = canonicalSlug;
+        if (document.documentElement) document.documentElement.dataset.category = canonicalSlug;
+      }
+    }
+    updateCategoryHeading(meta);
+    if (window.__gwCategoryTrips && Array.isArray(window.__gwCategoryTrips)) {
+      try { renderCategoryTrips(window.__gwCategoryTrips); } catch(_) {}
+    }
+  });
 
   function renderCategoryTrips(allTrips){
     const container = document.getElementById("trips-container");
     if (!container) return;
     container.innerHTML = "";
+    const targetValues = new Set();
+    if (category) targetValues.add(category);
+    if (currentCategoryMeta) {
+      if (currentCategoryMeta.slug) targetValues.add(currentCategoryMeta.slug);
+      if (currentCategoryMeta.id) targetValues.add(currentCategoryMeta.id);
+    }
     allTrips
-      .filter(t => t && t.category === category)
+      .filter(t => t && targetValues.has(t.category))
       .forEach(trip => {
         const tile = document.createElement('div');
         tile.className = 'category-tile';
@@ -333,8 +428,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
     if (!container.children.length) {
-      const noTrips = (window.t && typeof window.t === 'function') ? window.t('trips.noneFound') : 'No trips found in this category.';
-      container.innerHTML = `<p>${noTrips}</p>`;
+      const noTrips = (window.t && typeof window.t === 'function') ? window.t('trips.noneFound') : 'Δεν βρέθηκαν εκδρομές αυτή την κατηγορία';
+      container.innerHTML = `<p class="no-trips">${noTrips}</p>`;
     }
   }
 
@@ -344,7 +439,10 @@ document.addEventListener("DOMContentLoaded", () => {
       window.__gwCategoryTrips = allTrips;
       renderCategoryTrips(allTrips);
       window.addEventListener('i18n:changed', () => {
-        try { renderCategoryTrips(window.__gwCategoryTrips || allTrips); } catch(_) {}
+        try {
+          renderCategoryTrips(window.__gwCategoryTrips || allTrips);
+          updateCategoryHeading(currentCategoryMeta);
+        } catch(_) {}
       });
     })
   .catch(err => G.error("Σφάλμα tripindex:", err));
@@ -919,7 +1017,7 @@ document.addEventListener("DOMContentLoaded", () => {
         backBtn.addEventListener('click', () => {
           // If we know the category, go to that category page; otherwise go to trips listing
           const cat = document.body.dataset.category;
-          if (cat) window.location.href = `/categories/culture.html?slug=${encodeURIComponent(cat)}`;
+          if (cat) window.location.href = `/category.html?slug=${encodeURIComponent(cat)}`;
           else window.location.href = '/trips.html';
         });
       }

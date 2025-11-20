@@ -18,6 +18,7 @@
   let trips = [];
   let editingSlug = null;
   let slugManuallyEdited = false;
+  let currentTripDraft = null; // Keeps the full template-backed record currently being edited
 
   // Default mode_set scaffold
   const DEFAULT_MODE_SET = {
@@ -25,6 +26,31 @@
     van:      { active:false, price_cents:0, charge_type:'per_person',  default_capacity:7 },
     mercedes: { active:false, price_cents:0, charge_type:'per_vehicle', default_capacity:3 }
   };
+
+  function templateClone(){
+    try {
+      if (window.TripTemplateLoader && typeof window.TripTemplateLoader.clone === 'function') {
+        return window.TripTemplateLoader.clone();
+      }
+    } catch(err){ console.warn('Trips Admin: template clone failed', err); }
+    return {};
+  }
+
+  function mergeWithTemplate(source){
+    try {
+      if (window.TripTemplateLoader && typeof window.TripTemplateLoader.withDefaults === 'function') {
+        return window.TripTemplateLoader.withDefaults(source || {});
+      }
+    } catch(err){ console.warn('Trips Admin: template merge failed', err); }
+    return { ...(source||{}) };
+  }
+
+  function buildTripPayload(formValues){
+    const baseValues = formValues || formData();
+    const draft = currentTripDraft ? { ...currentTripDraft } : {};
+    const merged = { ...draft, ...baseValues };
+    return mergeWithTemplate(merged);
+  }
 
   function getModeInputs(){
     return {
@@ -126,17 +152,19 @@
     };
   }
   function populateForm(trip){
-    editingSlug = trip.slug;
+    const tripData = mergeWithTemplate(trip || {});
+    currentTripDraft = tripData;
+    editingSlug = tripData.slug;
     slugManuallyEdited = true;
-    els.title.value = trip.title||'';
-    els.slug.value = trip.slug||'';
-    els.description.value = trip.description||'';
-    els.category.value = trip.category||'';
-    els.duration.value = trip.duration||'';
-    els.stops.value = (trip.stops||[]).join('\n');
+    els.title.value = tripData.title||'';
+    els.slug.value = tripData.slug||'';
+    els.description.value = tripData.description||'';
+    els.category.value = tripData.category||'';
+    els.duration.value = tripData.duration||'';
+    els.stops.value = (tripData.stops||[]).join('\n');
     // Modes
     try {
-      const modes = trip.mode_set || DEFAULT_MODE_SET;
+      const modes = tripData.mode_set || DEFAULT_MODE_SET;
       const bus = modes.bus || DEFAULT_MODE_SET.bus;
       const van = modes.van || DEFAULT_MODE_SET.van;
       const mer = modes.mercedes || DEFAULT_MODE_SET.mercedes;
@@ -156,12 +184,12 @@
       set('mode_mercedes_capacity', String(mer.default_capacity||0));
     } catch(_){ }
     els.deleteBtn.disabled = false;
-    checkCategoryWarning(trip.category);
+    checkCategoryWarning(tripData.category);
     // Trip icon preview (similar to categories)
     try {
       if (els.tripIconPreview) {
         els.tripIconPreview.innerHTML = '';
-        const icon = trip.iconPath || '';
+        const icon = tripData.iconPath || '';
         if (icon) {
           const isSvg = /\.svg(\?|$)/i.test(icon);
           if (isSvg) {
@@ -191,6 +219,7 @@
   function resetForm(){
     editingSlug = null;
     slugManuallyEdited = false;
+    currentTripDraft = templateClone();
     els.title.value=''; els.slug.value=''; els.description.value='';
     els.category.value = categories.length? categories[0].slug : '';
     els.duration.value=''; els.stops.value='';
@@ -323,6 +352,20 @@
     if (els.tripsMessage) els.tripsMessage.textContent = '';
   }
 
+  async function loadTripForEdit(slug){
+    if (!slug) return;
+    try {
+      const res = await fetch('/api/admin/trips/' + encodeURIComponent(slug), { cache:'no-store', credentials:'same-origin' });
+      if (!res.ok) throw new Error('fetch_failed');
+      const data = await res.json();
+      populateForm(data);
+    } catch(err){
+      console.warn('Trips Admin: failed to fetch trip', slug, err);
+      const fallback = trips.find(t=>t.slug===slug);
+      if (fallback) populateForm(fallback);
+    }
+  }
+
   async function fetchTrips(){
     try {
       let r = await fetch('/api/admin/trips', { cache:'no-store', credentials:'same-origin' });
@@ -352,13 +395,13 @@
   async function saveTrip(){
     showErrors([]);
     try { if (els.tripsMessage) { els.tripsMessage.className=''; els.tripsMessage.textContent='Αποθήκευση...'; } } catch(_){ }
-    const data = formData();
+    const formValues = formData();
     const errs = [];
-    if(!data.title) errs.push('missing_title');
-    if(!data.slug) errs.push('missing_slug');
-    if(!data.description) errs.push('missing_description');
-    if(!data.category) errs.push('missing_category');
-    if(!data.duration) errs.push('missing_duration');
+    if(!formValues.title) errs.push('missing_title');
+    if(!formValues.slug) errs.push('missing_slug');
+    if(!formValues.description) errs.push('missing_description');
+    if(!formValues.category) errs.push('missing_category');
+    if(!formValues.duration) errs.push('missing_duration');
     if (errs.length){ showErrors(errs); return; }
     try {
       // Upload icon αν υπάρχει νέο αρχείο
@@ -372,8 +415,9 @@
           if (up.ok && uj && uj.ok && uj.filename) iconFilename = `/uploads/trips/${uj.filename}`;
         }
       } catch(_){ }
-      if (iconFilename) data.iconPath = iconFilename;
-      const r = await fetch('/api/admin/trips', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(data) });
+      const payload = buildTripPayload(formValues);
+      if (iconFilename) payload.iconPath = iconFilename;
+      const r = await fetch('/api/admin/trips', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
       const j = await r.json();
       if (!r.ok || !j.ok){
         showErrors((j && j.errors)||['save_failed']);
@@ -435,6 +479,10 @@
   async function init(){
     await fetchCategories();
     await fetchTrips();
+    if (window.TripTemplateLoader && typeof window.TripTemplateLoader.ensure === 'function') {
+      try { await window.TripTemplateLoader.ensure(); }
+      catch(err){ console.warn('Trips Admin: template ensure failed', err); }
+    }
     resetForm();
     // Trip icon input + preview
     els.tripIcon = document.getElementById('tripIcon');
@@ -477,7 +525,7 @@
     });
     els.tableBody.addEventListener('click', (ev) => {
       const editBtn = ev.target.closest && ev.target.closest('.edit-btn');
-      if (editBtn){ const slug = editBtn.getAttribute('data-slug'); const trip = trips.find(t=>t.slug===slug); if (trip) populateForm(trip); }
+      if (editBtn){ const slug = editBtn.getAttribute('data-slug'); if (slug) loadTripForEdit(slug); }
     });
     // Wire mode availability buttons
     const btnLoad = document.getElementById('mode_avail_load'); if (btnLoad) btnLoad.addEventListener('click', loadModeAvailability);

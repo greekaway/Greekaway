@@ -12,10 +12,11 @@ function registerBookings(app, deps) {
   const fs = require('fs');
   const path = require('path');
   const ROOT_DIR = path.join(__dirname, '..', '..', '..');
-  const TRIPS_DIR = path.join(ROOT_DIR, 'trips');
+  const TRIPS_DIR = path.join(ROOT_DIR, 'data', 'trips');
   function readTrip(slug){
     try {
-      const s = String(slug||'').trim(); if (!s) return null;
+      const s = String(slug||'').trim();
+      if (!s || s === '_template') return null;
       const file = path.join(TRIPS_DIR, s + '.json');
       if (!fs.existsSync(file)) return null;
       const raw = fs.readFileSync(file,'utf8');

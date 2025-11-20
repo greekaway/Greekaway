@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 
 (async () => {
-  const startUrl = 'http://localhost:3000/categories/culture.html';
+  const startUrl = 'http://localhost:3000/category.html?slug=culture';
   const browser = await puppeteer.launch({ args: ['--no-sandbox'], headless: true });
   const page = await browser.newPage();
 

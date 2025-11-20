@@ -4,10 +4,80 @@ const path = require('path');
 const crypto = require('crypto');
 
 const ROOT_DIR = path.join(__dirname, '..', '..', '..');
-const TRIPS_DIR = path.join(ROOT_DIR, 'trips');
+const TRIPS_DIR = path.join(ROOT_DIR, 'data', 'trips');
+const TRIP_TEMPLATE_FILE = path.join(TRIPS_DIR, '_template.json');
 const UPLOAD_TRIPS_DIR = path.join(ROOT_DIR, 'public', 'uploads', 'trips');
 let multer = null;
 try { multer = require('multer'); } catch(_) { multer = null; }
+const TEMPLATE_FILENAME = path.basename(TRIP_TEMPLATE_FILE);
+
+let tripTemplateCache = null;
+function loadTripTemplate(){
+  if (tripTemplateCache) return tripTemplateCache;
+  try {
+    const raw = fs.readFileSync(TRIP_TEMPLATE_FILE, 'utf8');
+    tripTemplateCache = JSON.parse(raw || '{}') || {};
+  } catch (err) {
+    console.warn('trips: failed to load template, falling back to empty structure', err && err.message ? err.message : err);
+    tripTemplateCache = {
+      id: '', slug: '', title: '', subtitle: '', description: '',
+      duration_hours: 0, duration_days: 0,
+      modes: {
+        van: { price: 0, capacity: 7 },
+        bus: { price: 0, capacity: 40 },
+        mercedes: { price: 0, capacity: 3 }
+      },
+      stops: [{ title: '', description: '', videos: ['', '', ''] }],
+      sections: [{ title: '', content: '' }],
+      includes: [], excludes: [], tags: [], faq: [{ q: '', a: '' }],
+      gallery: [],
+      video: { url: '', thumbnail: '' },
+      map: { lat: null, lng: null, markers: [] },
+      createdAt: '',
+      updatedAt: ''
+    };
+  }
+  return tripTemplateCache;
+}
+
+function cloneJson(value){
+  if (value === undefined) return undefined;
+  return JSON.parse(JSON.stringify(value));
+}
+
+function applyTemplateDefaults(input){
+  const tpl = loadTripTemplate();
+  const obj = (input && typeof input === 'object' && !Array.isArray(input)) ? { ...input } : {};
+  const visit = (target, template) => {
+    if (!template || typeof template !== 'object' || Array.isArray(template)) return;
+    Object.keys(template).forEach((key)=>{
+      const tplVal = template[key];
+      const hasKey = Object.prototype.hasOwnProperty.call(target, key);
+      if (!hasKey) {
+        target[key] = cloneJson(tplVal);
+        return;
+      }
+      const curVal = target[key];
+      if (curVal === undefined) {
+        target[key] = cloneJson(tplVal);
+        return;
+      }
+      if (Array.isArray(tplVal)) {
+        if (!Array.isArray(curVal)) target[key] = cloneJson(tplVal);
+        return;
+      }
+      if (tplVal && typeof tplVal === 'object' && !Array.isArray(tplVal)) {
+        if (curVal && typeof curVal === 'object' && !Array.isArray(curVal)) {
+          visit(curVal, tplVal);
+        } else {
+          target[key] = cloneJson(tplVal);
+        }
+      }
+    });
+  };
+  visit(obj, tpl);
+  return obj;
+}
 
 // Default mode_set factory (kept in sync with validateTrip defaults)
 function getDefaultModeSet(){
@@ -39,36 +109,50 @@ function sanitizeSlug(raw){
 function readTrip(slug){
   ensureTripsDir();
   try {
-    const file = path.join(TRIPS_DIR, slug + '.json');
+    const safeSlug = sanitizeSlug(slug||'');
+    if (!safeSlug || safeSlug === '_template') return null;
+    const file = path.join(TRIPS_DIR, safeSlug + '.json');
     if (!fs.existsSync(file)) return null;
     const raw = fs.readFileSync(file, 'utf8');
     const obj = JSON.parse(raw||'null');
     if (obj) obj.mode_set = normalizeExistingModeSet(obj.mode_set);
-    return obj;
+    return obj ? applyTemplateDefaults(obj) : null;
   } catch(e){ console.error('trips: readTrip failed', slug, e.message); return null; }
 }
 function writeTrip(data){
   ensureTripsDir();
   try {
-    const file = path.join(TRIPS_DIR, data.slug + '.json');
-    fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+    const safeSlug = sanitizeSlug(data && data.slug);
+    if (!safeSlug || safeSlug === '_template') return false;
+    const file = path.join(TRIPS_DIR, safeSlug + '.json');
+    const prepared = applyTemplateDefaults({ ...data, slug: safeSlug });
+    fs.writeFileSync(file, JSON.stringify(prepared, null, 2), 'utf8');
     return true;
   } catch(e){ console.error('trips: writeTrip failed', data.slug, e.message); return false; }
 }
 function deleteTrip(slug){
   ensureTripsDir();
-  try { const file = path.join(TRIPS_DIR, slug + '.json'); if (fs.existsSync(file)) fs.unlinkSync(file); return true; } catch(e){ console.error('trips: deleteTrip failed', slug, e.message); return false; }
+  try {
+    const safeSlug = sanitizeSlug(slug||'');
+    if (!safeSlug || safeSlug === '_template') return false;
+    const file = path.join(TRIPS_DIR, safeSlug + '.json');
+    if (fs.existsSync(file)) fs.unlinkSync(file);
+    return true;
+  } catch(e){ console.error('trips: deleteTrip failed', slug, e.message); return false; }
 }
 function listTrips(){
   ensureTripsDir();
   try {
-    const fns = fs.readdirSync(TRIPS_DIR).filter(f=>f.endsWith('.json'));
+    const fns = fs.readdirSync(TRIPS_DIR).filter(f => f.endsWith('.json') && f !== TEMPLATE_FILENAME);
     return fns.map(fn=>{
       try {
         const raw = fs.readFileSync(path.join(TRIPS_DIR, fn), 'utf8');
         const obj = JSON.parse(raw||'null');
-        if (obj) obj.mode_set = normalizeExistingModeSet(obj.mode_set);
-        return obj;
+        if (obj) {
+          obj.mode_set = normalizeExistingModeSet(obj.mode_set);
+          return applyTemplateDefaults(obj);
+        }
+        return null;
       } catch(e){ return null; }
     }).filter(Boolean).sort((a,b)=>String(a.title||'').localeCompare(String(b.title||'')));
   } catch(e){ console.error('trips: listTrips failed', e.message); return []; }
@@ -154,6 +238,10 @@ function registerTripsRoutes(app, { checkAdminAuth }){
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });
     return res.json(listTrips());
   });
+  adminRouter.get('/template', (req,res)=>{
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });
+    return res.json(loadTripTemplate());
+  });
   adminRouter.get('/:slug', (req,res)=>{
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });
     const slug = sanitizeSlug(req.params.slug||'');
@@ -168,11 +256,20 @@ function registerTripsRoutes(app, { checkAdminAuth }){
     const v = validateTrip(input);
     if (!v.ok) return res.status(400).json({ error:'validation_failed', errors: v.errors });
     const existing = readTrip(v.data.slug);
-    const toWrite = existing ? { ...existing, ...v.data, slug: v.data.slug } : v.data;
+    const base = existing ? { ...existing } : applyTemplateDefaults({});
+    const toWrite = { ...base, ...v.data, slug: v.data.slug };
     // Ensure mode_set is always the validated version (avoid accidental loss)
     toWrite.mode_set = v.data.mode_set;
+    const nowIso = new Date().toISOString();
+    if (existing && existing.createdAt) {
+      toWrite.createdAt = existing.createdAt;
+    } else if (!toWrite.createdAt) {
+      toWrite.createdAt = nowIso;
+    }
+    toWrite.updatedAt = nowIso;
+    if (!toWrite.id) toWrite.id = crypto.randomUUID();
     if (!writeTrip(toWrite)) return res.status(500).json({ error:'write_failed' });
-    return res.json({ ok:true, trip: toWrite });
+    return res.json({ ok:true, trip: applyTemplateDefaults(toWrite) });
   });
   adminRouter.delete('/:slug', (req,res)=>{
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });

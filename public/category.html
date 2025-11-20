@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Εκδρομές Πολιτισμού - Greekaway</title>
-  <link rel="stylesheet" href="../css/style.css" />
-  <link rel="stylesheet" href="../css/theme.css" />
-  <link rel="stylesheet" href="../css/cards.css" />
+  <title>Κατηγορία - Greekaway</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/theme.css" />
+  <link rel="stylesheet" href="/css/cards.css" />
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#001f3f">
   <link rel="stylesheet" href="/pwa.css">
@@ -20,10 +20,29 @@
   <script src="/js/assistant.js" defer></script>
   <script src="/pwa-install.js" defer></script>
 </head>
-
-  <body data-category="culture">
-  <h2 data-i18n="categories.culture.title">Εκδρομές Πολιτισμού</h2>
-  <div id="trips-container"></div>
+<body data-view="category">
+  <script>
+    (function setInitialCategory() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const slug = (params.get('slug') || '').trim();
+        if (!slug) return;
+        document.documentElement.dataset.category = slug;
+        document.documentElement.dataset.view = 'category';
+        document.body.dataset.category = slug;
+        document.body.dataset.view = 'category';
+      } catch (_) {
+        /* ignore */
+      }
+    })();
+  </script>
+  <main class="category-page">
+    <header class="category-hero">
+      <h2 id="category-title" data-role="category-title">Εκδρομές</h2>
+      <p id="category-description" class="category-description" hidden></p>
+    </header>
+    <div id="trips-container" class="category-trips"></div>
+  </main>
 
   <!-- Overlays: About, AI, Profile -->
   <div id="aboutOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
@@ -51,6 +70,5 @@
   </div>
 
   <footer></footer>
-  
 </body>
 </html>
