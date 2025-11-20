@@ -16,20 +16,22 @@
 <body>
   <header class="sticky-bar" aria-label="Trips CMS" data-collapsed="false">
     <div class="bar-inner">
-      <div class="title">Trips CMS</div>
       <button id="togglePanel" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φόρμας" aria-expanded="true">▲</button>
       <form id="tripForm" class="trip-form" onsubmit="return false;">
         <div class="form-group">
           <label>Title *<input type="text" id="title" required></label>
           <label>Slug *<input type="text" id="slug" required></label>
+          <label>Υπότιτλος (subtitle)<input type="text" id="subtitle" placeholder="π.χ. Premium εμπειρία"></label>
         </div>
         <label class="full">Description *<textarea id="description" rows="3" required></textarea></label>
         <div class="form-group">
           <label>Category *<select id="category" required></select></label>
           <label>Duration *<input type="text" id="duration" placeholder="π.χ. 4 ώρες" required></label>
+          <label>Διάρκεια (ώρες)<input type="number" id="duration_hours" min="0" step="1" placeholder="0"></label>
+          <label>Διάρκεια (ημέρες)<input type="number" id="duration_days" min="0" step="1" placeholder="0"></label>
         </div>
-        <div class="form-group">
-          <label style="flex:1 1 auto">Trip Icon (SVG/PNG/WEBP)
+        <div class="form-group full-row file-row">
+          <label class="file-input-wrapper">Trip Icon (SVG/PNG/WEBP)
             <input type="file" id="tripIcon" accept=".svg,.png,.webp" aria-label="Trip Icon">
           </label>
           <div class="icon-preview-wrap">
@@ -116,6 +118,61 @@
         
 
         <label class="full">Stops (μία ανά γραμμή)<textarea id="stops" rows="4" placeholder="Στάση 1\nΣτάση 2\nΣτάση 3"></textarea></label>
+
+        <section class="panel form-panel" aria-labelledby="sectionsTitle">
+          <div class="panel-header">
+            <h3 id="sectionsTitle">Ενότητες Περιγραφής (sections)</h3>
+            <button type="button" id="addSectionBtn" class="btn secondary small">+ Προσθήκη ενότητας</button>
+          </div>
+          <div id="sectionsList" class="repeatable-list" aria-live="polite"></div>
+        </section>
+
+        <section class="panel form-panel" aria-labelledby="includesTitle">
+          <h3 id="includesTitle">Περιλαμβάνεται / Δεν Περιλαμβάνεται</h3>
+          <div class="form-group stack-on-mobile">
+            <label>Περιλαμβάνονται (μία γραμμή ανά στοιχείο)
+              <textarea id="includesInput" rows="4" placeholder="Επαγγελματίας οδηγός\nPremium όχημα"></textarea>
+            </label>
+            <label>Δεν περιλαμβάνονται (μία γραμμή ανά στοιχείο)
+              <textarea id="excludesInput" rows="4" placeholder="Γεύματα\nΔιαμονή"></textarea>
+            </label>
+          </div>
+        </section>
+
+        <label class="full">Tags (λέξεις-κλειδιά – μία ανά γραμμή)<textarea id="tagsInput" rows="3" placeholder="family\nfast-track"></textarea></label>
+
+        <section class="panel form-panel" aria-labelledby="faqTitle">
+          <div class="panel-header">
+            <h3 id="faqTitle">Συχνές Ερωτήσεις (FAQ)</h3>
+            <button type="button" id="addFaqBtn" class="btn secondary small">+ Προσθήκη ερώτησης</button>
+          </div>
+          <div id="faqList" class="repeatable-list" aria-live="polite"></div>
+        </section>
+
+        <label class="full">Gallery εικόνες (ένα URL ανά γραμμή)<textarea id="galleryInput" rows="4" placeholder="/uploads/trips/cover-1.jpg\nhttps://cdn.example.com/trip2.jpg"></textarea></label>
+
+        <section class="panel form-panel" aria-labelledby="videoTitle">
+          <h3 id="videoTitle">Κεντρικό Βίντεο</h3>
+          <div class="form-group">
+            <label>Video URL
+              <input type="text" id="videoUrl" placeholder="https://www.youtube.com/embed/...">
+            </label>
+            <label>Thumbnail URL
+              <input type="text" id="videoThumbnail" placeholder="/uploads/trips/video-thumb.jpg">
+            </label>
+          </div>
+        </section>
+
+        <section class="panel form-panel" aria-labelledby="mapTitle">
+          <h3 id="mapTitle">Χάρτης Εκδρομής</h3>
+          <div class="form-group stack-on-mobile">
+            <label>Latitude<input type="number" step="0.0001" id="mapLat" placeholder="37.9715"></label>
+            <label>Longitude<input type="number" step="0.0001" id="mapLng" placeholder="23.7257"></label>
+          </div>
+          <label class="full">Σημεία ενδιαφέροντος (μία γραμμή ανά σημείο)
+            <textarea id="mapMarkers" rows="3" placeholder="Acropolis entrance\nHerodeion"></textarea>
+          </label>
+        </section>
         <div class="actions">
           <button id="saveBtn" class="btn primary" type="button">Αποθήκευση / Ενημέρωση</button>
           <button id="resetBtn" class="btn secondary" type="button">Νέα εγγραφή</button>

@@ -3,8 +3,11 @@
     title: document.getElementById('title'),
     slug: document.getElementById('slug'),
     description: document.getElementById('description'),
+    subtitle: document.getElementById('subtitle'),
     category: document.getElementById('category'),
     duration: document.getElementById('duration'),
+    durationHours: document.getElementById('duration_hours'),
+    durationDays: document.getElementById('duration_days'),
     stops: document.getElementById('stops'),
     errors: document.getElementById('formErrors'),
     warning: document.getElementById('categoryWarning'),
@@ -12,7 +15,20 @@
     resetBtn: document.getElementById('resetBtn'),
     deleteBtn: document.getElementById('deleteBtn'),
     tableBody: document.querySelector('#tripsTable tbody'),
-    tripsMessage: document.getElementById('tripsMessage')
+    tripsMessage: document.getElementById('tripsMessage'),
+    sectionsList: document.getElementById('sectionsList'),
+    addSectionBtn: document.getElementById('addSectionBtn'),
+    includesInput: document.getElementById('includesInput'),
+    excludesInput: document.getElementById('excludesInput'),
+    tagsInput: document.getElementById('tagsInput'),
+    faqList: document.getElementById('faqList'),
+    addFaqBtn: document.getElementById('addFaqBtn'),
+    galleryInput: document.getElementById('galleryInput'),
+    videoUrl: document.getElementById('videoUrl'),
+    videoThumbnail: document.getElementById('videoThumbnail'),
+    mapLat: document.getElementById('mapLat'),
+    mapLng: document.getElementById('mapLng'),
+    mapMarkers: document.getElementById('mapMarkers')
   };
   let categories = [];
   let trips = [];
@@ -50,6 +66,118 @@
     const draft = currentTripDraft ? { ...currentTripDraft } : {};
     const merged = { ...draft, ...baseValues };
     return mergeWithTemplate(merged);
+  }
+
+  function linesToArray(val){
+    if (val == null) return [];
+    return String(val).split(/\n/g).map(s=>s.trim()).filter(Boolean);
+  }
+  function arrayToLines(arr){
+    if (!Array.isArray(arr) || !arr.length) return '';
+    return arr.map(s=>String(s||'').trim()).filter(Boolean).join('\n');
+  }
+  function toPositiveInt(v){ const n = parseInt(v,10); return Number.isFinite(n) && n>=0 ? n : 0; }
+  function toFloatOrNull(v){ const n = parseFloat(v); return Number.isFinite(n) ? n : null; }
+
+  function ensureListHasRow(listEl, factory){
+    if (!listEl) return;
+    if (!listEl.children.length) listEl.appendChild(factory({}));
+  }
+
+  function createSectionItem(section){
+    const item = document.createElement('div');
+    item.className = 'repeatable-item section-item';
+    item.innerHTML = `
+      <label>Τίτλος
+        <input type="text" class="section-title" placeholder="Τίτλος ενότητας">
+      </label>
+      <label>Κείμενο
+        <textarea class="section-content" rows="3" placeholder="Περιγραφή ενότητας"></textarea>
+      </label>
+      <div class="inline-actions">
+        <button type="button" class="btn danger small remove-section-btn">Διαγραφή</button>
+      </div>`;
+    const titleInput = item.querySelector('.section-title');
+    const contentInput = item.querySelector('.section-content');
+    if (titleInput) titleInput.value = section && section.title ? section.title : '';
+    if (contentInput) contentInput.value = section && section.content ? section.content : '';
+    const removeBtn = item.querySelector('.remove-section-btn');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        item.remove();
+        ensureListHasRow(els.sectionsList, createSectionItem);
+      });
+    }
+    return item;
+  }
+
+  function addSectionRow(section){
+    if (!els.sectionsList) return;
+    els.sectionsList.appendChild(createSectionItem(section || {}));
+  }
+
+  function renderSections(sections){
+    if (!els.sectionsList) return;
+    els.sectionsList.innerHTML = '';
+    const data = Array.isArray(sections) && sections.length ? sections : [{}];
+    data.forEach(section => addSectionRow(section));
+  }
+
+  function readSectionsFromDom(){
+    if (!els.sectionsList) return [];
+    return Array.from(els.sectionsList.querySelectorAll('.section-item')).map(item => {
+      const title = (item.querySelector('.section-title')||{}).value || '';
+      const content = (item.querySelector('.section-content')||{}).value || '';
+      return { title: title.trim(), content: content.trim() };
+    }).filter(sec => sec.title || sec.content);
+  }
+
+  function createFaqItem(entry){
+    const item = document.createElement('div');
+    item.className = 'repeatable-item faq-item';
+    item.innerHTML = `
+      <label>Ερώτηση
+        <input type="text" class="faq-question" placeholder="Π.χ. Τι να έχω μαζί μου;">
+      </label>
+      <label>Απάντηση
+        <textarea class="faq-answer" rows="2" placeholder="Σύντομη απάντηση"></textarea>
+      </label>
+      <div class="inline-actions">
+        <button type="button" class="btn danger small remove-faq-btn">Διαγραφή</button>
+      </div>`;
+    const questionInput = item.querySelector('.faq-question');
+    const answerInput = item.querySelector('.faq-answer');
+    if (questionInput) questionInput.value = entry && entry.q ? entry.q : '';
+    if (answerInput) answerInput.value = entry && entry.a ? entry.a : '';
+    const removeBtn = item.querySelector('.remove-faq-btn');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        item.remove();
+        ensureListHasRow(els.faqList, createFaqItem);
+      });
+    }
+    return item;
+  }
+
+  function addFaqRow(entry){
+    if (!els.faqList) return;
+    els.faqList.appendChild(createFaqItem(entry || {}));
+  }
+
+  function renderFaq(entries){
+    if (!els.faqList) return;
+    els.faqList.innerHTML = '';
+    const data = Array.isArray(entries) && entries.length ? entries : [{}];
+    data.forEach(entry => addFaqRow(entry));
+  }
+
+  function readFaqFromDom(){
+    if (!els.faqList) return [];
+    return Array.from(els.faqList.querySelectorAll('.faq-item')).map(item => {
+      const q = (item.querySelector('.faq-question')||{}).value || '';
+      const a = (item.querySelector('.faq-answer')||{}).value || '';
+      return { q: q.trim(), a: a.trim() };
+    }).filter(entry => entry.q || entry.a);
   }
 
   function getModeInputs(){
@@ -144,10 +272,28 @@
     return {
       title: els.title.value.trim(),
       slug: els.slug.value.trim(),
+      subtitle: (els.subtitle && els.subtitle.value || '').trim(),
       description: els.description.value.trim(),
       category: els.category.value.trim(),
       duration: els.duration.value.trim(),
+      duration_hours: els.durationHours ? toPositiveInt(els.durationHours.value) : 0,
+      duration_days: els.durationDays ? toPositiveInt(els.durationDays.value) : 0,
       stops: els.stops.value.trim().split(/\n/g).map(s=>s.trim()).filter(s=>s),
+      sections: readSectionsFromDom(),
+      includes: linesToArray(els.includesInput && els.includesInput.value),
+      excludes: linesToArray(els.excludesInput && els.excludesInput.value),
+      tags: linesToArray(els.tagsInput && els.tagsInput.value),
+      faq: readFaqFromDom(),
+      gallery: linesToArray(els.galleryInput && els.galleryInput.value),
+      video: {
+        url: (els.videoUrl && els.videoUrl.value || '').trim(),
+        thumbnail: (els.videoThumbnail && els.videoThumbnail.value || '').trim()
+      },
+      map: {
+        lat: toFloatOrNull(els.mapLat && els.mapLat.value),
+        lng: toFloatOrNull(els.mapLng && els.mapLng.value),
+        markers: linesToArray(els.mapMarkers && els.mapMarkers.value)
+      },
       mode_set
     };
   }
@@ -158,10 +304,24 @@
     slugManuallyEdited = true;
     els.title.value = tripData.title||'';
     els.slug.value = tripData.slug||'';
+    if (els.subtitle) els.subtitle.value = tripData.subtitle || '';
     els.description.value = tripData.description||'';
     els.category.value = tripData.category||'';
     els.duration.value = tripData.duration||'';
+    if (els.durationHours) els.durationHours.value = (tripData.duration_hours!=null && tripData.duration_hours!=='') ? String(tripData.duration_hours) : '';
+    if (els.durationDays) els.durationDays.value = (tripData.duration_days!=null && tripData.duration_days!=='') ? String(tripData.duration_days) : '';
     els.stops.value = (tripData.stops||[]).join('\n');
+    if (els.includesInput) els.includesInput.value = arrayToLines(tripData.includes);
+    if (els.excludesInput) els.excludesInput.value = arrayToLines(tripData.excludes);
+    if (els.tagsInput) els.tagsInput.value = arrayToLines(tripData.tags);
+    if (els.galleryInput) els.galleryInput.value = arrayToLines(tripData.gallery);
+    if (els.videoUrl) els.videoUrl.value = (tripData.video && tripData.video.url) || '';
+    if (els.videoThumbnail) els.videoThumbnail.value = (tripData.video && tripData.video.thumbnail) || '';
+    if (els.mapLat) els.mapLat.value = (tripData.map && tripData.map.lat!=null) ? String(tripData.map.lat) : '';
+    if (els.mapLng) els.mapLng.value = (tripData.map && tripData.map.lng!=null) ? String(tripData.map.lng) : '';
+    if (els.mapMarkers) els.mapMarkers.value = arrayToLines(tripData.map && tripData.map.markers);
+    renderSections(tripData.sections);
+    renderFaq(tripData.faq);
     // Modes
     try {
       const modes = tripData.mode_set || DEFAULT_MODE_SET;
@@ -220,9 +380,24 @@
     editingSlug = null;
     slugManuallyEdited = false;
     currentTripDraft = templateClone();
+    const draft = currentTripDraft || {};
     els.title.value=''; els.slug.value=''; els.description.value='';
+    if (els.subtitle) els.subtitle.value = draft.subtitle || '';
     els.category.value = categories.length? categories[0].slug : '';
     els.duration.value=''; els.stops.value='';
+    if (els.durationHours) els.durationHours.value = draft.duration_hours!=null ? String(draft.duration_hours) : '';
+    if (els.durationDays) els.durationDays.value = draft.duration_days!=null ? String(draft.duration_days) : '';
+    if (els.includesInput) els.includesInput.value = arrayToLines(draft.includes);
+    if (els.excludesInput) els.excludesInput.value = arrayToLines(draft.excludes);
+    if (els.tagsInput) els.tagsInput.value = arrayToLines(draft.tags);
+    if (els.galleryInput) els.galleryInput.value = arrayToLines(draft.gallery);
+    if (els.videoUrl) els.videoUrl.value = (draft.video && draft.video.url) || '';
+    if (els.videoThumbnail) els.videoThumbnail.value = (draft.video && draft.video.thumbnail) || '';
+    if (els.mapLat) els.mapLat.value = (draft.map && draft.map.lat!=null) ? String(draft.map.lat) : '';
+    if (els.mapLng) els.mapLng.value = (draft.map && draft.map.lng!=null) ? String(draft.map.lng) : '';
+    if (els.mapMarkers) els.mapMarkers.value = arrayToLines(draft.map && draft.map.markers);
+    renderSections(draft.sections);
+    renderFaq(draft.faq);
     els.deleteBtn.disabled = true; showErrors([]); els.warning.hidden = true;
     try { if (els.tripIconName) els.tripIconName.textContent = ''; } catch(_){ }
     // Reset modes to defaults
@@ -432,8 +607,6 @@
       try { if (els.tripsMessage){ els.tripsMessage.className='error'; els.tripsMessage.textContent='❌ Σφάλμα δικτύου.'; } } catch(_){ }
     }
   }
-  els.resetBtn.addEventListener('click', ()=>{ resetForm(); });
-
   function showTripDeleteModal(slugOverride){
     if (slugOverride) editingSlug = slugOverride;
     if(!editingSlug) return;
@@ -484,6 +657,8 @@
       catch(err){ console.warn('Trips Admin: template ensure failed', err); }
     }
     resetForm();
+    if (els.addSectionBtn) els.addSectionBtn.addEventListener('click', ()=>{ addSectionRow({}); });
+    if (els.addFaqBtn) els.addFaqBtn.addEventListener('click', ()=>{ addFaqRow({}); });
     // Trip icon input + preview
     els.tripIcon = document.getElementById('tripIcon');
     els.tripIconPreview = document.getElementById('tripIconPreview');

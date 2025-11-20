@@ -2,6 +2,7 @@
 .trip-form .form-group{display:flex;gap:12px;flex:1;min-width:260px}
 .trip-form label{display:flex;flex-direction:column;font-size:0.85rem;flex:1;min-width:160px}
 .trip-form label.full{flex:1 1 100%}
+.trip-form .full-row{flex:1 1 100%}
 .trip-form input,
 .trip-form textarea,
 .trip-form select{
@@ -24,6 +25,8 @@
 /* Removed custom .admin-table styling to unify with categories .table style */
 /* Empty state now rendered inside table body similarly to categories CMS */
 header.sticky-bar[data-collapsed='true'] .trip-form{display:none}
+header.sticky-bar .bar-inner{display:flex;flex-direction:column;align-items:stretch;gap:12px}
+header.sticky-bar .filters-toggle{align-self:flex-end;margin-left:0}
 
 /* Trip delete confirm modal: nudge content slightly to the right */
 #tripConfirmModal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);z-index:9999;padding:20px}
@@ -44,8 +47,36 @@ header.sticky-bar[data-collapsed='true'] .trip-form{display:none}
 .icon-preview-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
 .icon-preview-wrap .small{font-size:11px;color:#888}
 
+.file-row{flex-direction:column;align-items:flex-start;gap:10px}
+.file-input-wrapper{flex:1 1 100%}
+.file-input-wrapper input[type="file"]{margin-top:6px}
+.file-row .icon-preview-wrap{align-self:flex-start}
+@media (min-width:768px){
+	.file-row{flex-direction:row;align-items:flex-end}
+	.file-input-wrapper{flex:1 1 auto}
+	.file-row .icon-preview-wrap{align-self:center}
+}
+
 /* Modes grid layout (uses shared .panel visuals) */
 .modes-grid{display:grid;gap:12px;margin-top:4px;grid-template-columns:1fr}
+
+@media (min-width:1400px){
+	header.sticky-bar{ position: static; top:auto; box-shadow:none; }
+	header.sticky-bar .bar-inner,
+	main.content-wrap{max-width:1680px;padding-left:24px;padding-right:24px}
+	.trip-form{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px}
+	.trip-form .form-group{grid-column:span 6;min-width:auto}
+	.trip-form .form-group.full-row,
+	.trip-form .form-group.file-row,
+	.trip-form label.full,
+	.trip-form .full-row,
+	.trip-form .modes-section,
+	.trip-form .form-panel,
+	.trip-form .actions,
+	#formErrors,
+	#categoryWarning{grid-column:1 / -1}
+	.modes-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;width:100%}
+}
 .modes-section{margin-top:6px}
 .modes-section .h1{margin:0 0 6px}
 .modes-grid > .mode-card{min-width:0}
@@ -64,6 +95,23 @@ header.sticky-bar[data-collapsed='true'] .trip-form{display:none}
 .mode-card label{display:flex;flex-direction:column;font-size:.85rem;min-width:140px}
 .mode-card input,.mode-card select{padding:8px 10px;font-size:.9rem;border:1px solid var(--ga-border);border-radius:8px;background:#0F1C29;color:var(--ga-text)}
 
+.form-panel{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.form-panel h3{margin:0;color:var(--ga-gold);font-size:1rem}
+.panel-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.repeatable-list{display:flex;flex-direction:column;gap:12px}
+.repeatable-item{border:1px dashed rgba(255,255,255,0.12);border-radius:10px;padding:12px;background:rgba(15,28,41,0.6);display:flex;flex-direction:column;gap:8px}
+.repeatable-item .inline-actions{display:flex;justify-content:flex-end}
+.repeatable-item label{font-size:.8rem}
+.btn.small{padding:6px 12px;font-size:.78rem}
+.stack-on-mobile{flex-wrap:wrap}
+.stack-on-mobile label{min-width:220px}
+#faqList .repeatable-item input{font-size:.85rem}
+@media (max-width:900px){
+	.stack-on-mobile{flex-direction:column}
+}
+#mapMarkers{min-height:120px}
+.repeatable-item textarea{min-height:80px}
+
 /* Layout polish: keep content visible above fixed bottom nav, remove extra bottoms */
 main.content-wrap{min-height:calc(100vh - 140px); padding-bottom:12px; margin-top:8px}
 .content-wrap .hint#tripsMessage.error{color:#c33}
@@ -75,6 +123,13 @@ main.content-wrap{min-height:calc(100vh - 140px); padding-bottom:12px; margin-to
 	main.content-wrap{ min-height: calc(100vh - 110px); }
 }
 .trip-form > *:last-child{margin-bottom:0}
+
+@media (min-width:1400px){
+	.sticky-bar .bar-inner,
+	main.content-wrap{max-width:1440px;padding-left:24px;padding-right:24px}
+	.trip-form{gap:16px}
+	.trip-form .form-group{min-width:320px}
+}
 
 /* On tablets (iPad/mini), disable sticky header to allow smooth page scroll */
 @media (max-width:1024px){
