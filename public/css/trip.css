@@ -191,16 +191,7 @@ html[data-view="trip"], body[data-view="trip"] {
   box-shadow: none;
 }
 
-.trip-info-tabs::before {
-  content: '';
-  flex: 0 0 var(--trip-tabs-offset);
-}
-
-/* end spacer so you can scroll far enough to see the last tab fully */
-.trip-info-tabs::after {
-  content: '';
-  flex: 0 0 var(--trip-tabs-offset);
-}
+/* Use padding + scroll-padding for start/end spacing instead of scrollable spacers */
 
 .trip-info-tabs.is-floating { z-index: 15000; }
 
@@ -267,7 +258,6 @@ html[data-view="trip"], body[data-view="trip"] {
     scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 2px);
     scroll-padding-right: clamp(12px, 5vw, 28px);
   }
-  .trip-info-tabs::before { flex-basis: var(--trip-tabs-offset); }
   .trip-info-tab { min-width: 96px; font-size: 0.74rem; height: 44px; padding: 0 14px; }
 }
 
