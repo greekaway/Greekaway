@@ -165,8 +165,8 @@ html[data-view="trip"], body[data-view="trip"] {
 /* Trip info tabs (sticky row below header, footer-inspired look) */
 .trip-info-tabs {
   --trip-tabs-offset: clamp(30px, 8vw, 90px);
-  /* slightly smaller right-end spacer so the last tab doesn't sit too far right */
-  --trip-tabs-end-offset: clamp(14px, 4vw, 24px);
+  /* smaller right-end spacer so the last tab sits closer to edge */
+  --trip-tabs-end-offset: clamp(10px, 3vw, 18px);
   position: sticky;
   top: calc(env(safe-area-inset-top, 0px) + var(--site-header-height, 60px));
   z-index: 900;
@@ -261,7 +261,7 @@ html[data-view="trip"], body[data-view="trip"] {
 @media (max-width: 640px) {
   .trip-info-tabs {
     --trip-tabs-offset: clamp(26px, 12vw, 74px);
-    --trip-tabs-end-offset: clamp(12px, 4vw, 20px);
+    --trip-tabs-end-offset: clamp(8px, 3vw, 16px);
     gap: 8px;
     padding-top: 0;
     padding-bottom: 12px;
