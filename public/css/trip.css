@@ -165,8 +165,6 @@ html[data-view="trip"], body[data-view="trip"] {
 /* Trip info tabs (sticky row below header, footer-inspired look) */
 .trip-info-tabs {
   --trip-tabs-offset: clamp(30px, 8vw, 90px);
-  /* right-end spacer: ensure last tab fully visible without extra space */
-  --trip-tabs-end-offset: clamp(16px, 3.5vw, 22px);
   position: sticky;
   top: calc(env(safe-area-inset-top, 0px) + var(--site-header-height, 60px));
   z-index: 900;
@@ -176,16 +174,17 @@ html[data-view="trip"], body[data-view="trip"] {
   -webkit-overflow-scrolling: touch;
   padding-top: 0;
   padding-bottom: 14px;
-  padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
-  padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 1px);
-  /* snap cleanly with a slight left/right inset so first/last tabs are visible */
-  scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 1px);
-  scroll-padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
+  padding-right: clamp(14px, 5vw, 30px);
+  padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset));
+  /* align snap paddings with visual paddings so first/last tabs settle fully visible */
+  scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset));
+  scroll-padding-right: clamp(14px, 5vw, 30px);
   margin: 0 0 20px 0;
   width: 100%;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x proximity;
+  /* prevent page body from being pulled when reaching ends */
   overscroll-behavior-x: contain;
   background: transparent;
   border: none;
@@ -200,7 +199,7 @@ html[data-view="trip"], body[data-view="trip"] {
 /* end spacer so you can scroll far enough to see the last tab fully */
 .trip-info-tabs::after {
   content: '';
-  flex: 0 0 var(--trip-tabs-end-offset);
+  flex: 0 0 var(--trip-tabs-offset);
 }
 
 .trip-info-tabs.is-floating { z-index: 15000; }
@@ -226,7 +225,6 @@ html[data-view="trip"], body[data-view="trip"] {
   cursor: pointer;
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, color 140ms ease, background 140ms ease;
   scroll-snap-align: start;
-  scroll-snap-stop: always;
   white-space: nowrap;
 }
 
@@ -261,14 +259,13 @@ html[data-view="trip"], body[data-view="trip"] {
 @media (max-width: 640px) {
   .trip-info-tabs {
     --trip-tabs-offset: clamp(26px, 12vw, 74px);
-    --trip-tabs-end-offset: clamp(14px, 4.5vw, 22px);
     gap: 8px;
     padding-top: 0;
     padding-bottom: 12px;
-    padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 1px);
-    scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 1px);
-    padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
-    scroll-padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
+    padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 2px);
+    padding-right: clamp(12px, 5vw, 28px);
+    scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 2px);
+    scroll-padding-right: clamp(12px, 5vw, 28px);
   }
   .trip-info-tabs::before { flex-basis: var(--trip-tabs-offset); }
   .trip-info-tab { min-width: 96px; font-size: 0.74rem; height: 44px; padding: 0 14px; }
