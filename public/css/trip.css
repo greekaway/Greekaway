@@ -165,6 +165,8 @@ html[data-view="trip"], body[data-view="trip"] {
 /* Trip info tabs (sticky row below header, footer-inspired look) */
 .trip-info-tabs {
   --trip-tabs-offset: clamp(30px, 8vw, 90px);
+  /* slightly smaller right-end spacer so the last tab doesn't sit too far right */
+  --trip-tabs-end-offset: clamp(14px, 4vw, 24px);
   position: sticky;
   top: calc(env(safe-area-inset-top, 0px) + var(--site-header-height, 60px));
   z-index: 900;
@@ -174,11 +176,11 @@ html[data-view="trip"], body[data-view="trip"] {
   -webkit-overflow-scrolling: touch;
   padding-top: 0;
   padding-bottom: 14px;
-  padding-right: clamp(14px, 5vw, 30px);
+  padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
   padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 3px);
   /* snap cleanly with a slight left/right inset so first/last tabs are visible */
   scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 3px);
-  scroll-padding-right: clamp(14px, 5vw, 30px);
+  scroll-padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
   margin: 0 0 20px 0;
   width: 100%;
   scrollbar-width: none;
@@ -198,7 +200,7 @@ html[data-view="trip"], body[data-view="trip"] {
 /* end spacer so you can scroll far enough to see the last tab fully */
 .trip-info-tabs::after {
   content: '';
-  flex: 0 0 var(--trip-tabs-offset);
+  flex: 0 0 var(--trip-tabs-end-offset);
 }
 
 .trip-info-tabs.is-floating { z-index: 15000; }
@@ -259,13 +261,14 @@ html[data-view="trip"], body[data-view="trip"] {
 @media (max-width: 640px) {
   .trip-info-tabs {
     --trip-tabs-offset: clamp(26px, 12vw, 74px);
+    --trip-tabs-end-offset: clamp(12px, 4vw, 20px);
     gap: 8px;
     padding-top: 0;
     padding-bottom: 12px;
     padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 3px);
     scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 3px);
-    padding-right: clamp(12px, 5vw, 28px);
-    scroll-padding-right: clamp(12px, 5vw, 28px);
+    padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
+    scroll-padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
   }
   .trip-info-tabs::before { flex-basis: var(--trip-tabs-offset); }
   .trip-info-tab { min-width: 96px; font-size: 0.74rem; height: 44px; padding: 0 14px; }
