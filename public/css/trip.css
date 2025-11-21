@@ -190,6 +190,12 @@ html[data-view="trip"], body[data-view="trip"] {
   flex: 0 0 var(--trip-tabs-offset);
 }
 
+/* end spacer so you can scroll far enough to see the last tab fully */
+.trip-info-tabs::after {
+  content: '';
+  flex: 0 0 var(--trip-tabs-offset);
+}
+
 .trip-info-tabs.is-floating { z-index: 15000; }
 
 .trip-info-tabs::-webkit-scrollbar { display: none; }
