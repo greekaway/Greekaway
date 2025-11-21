@@ -24,4 +24,4 @@ services:
     routes:
       - type: rewrite
         source: /trips/trip.html
-        destination: /trips/trip.html
+        destination: /trip.html

@@ -8,7 +8,7 @@ const puppeteer = require('puppeteer');
   page.on('pageerror', err => logs.push({ type: 'pageerror', text: err.message }));
 
   try {
-    await page.goto('http://localhost:3000/trips/trip.html?id=olympia', { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.goto('http://localhost:3000/trip.html?trip=olympia', { waitUntil: 'networkidle2', timeout: 30000 });
     await page.waitForSelector('footer a.central-btn', { timeout: 15000 });
     await page.click('footer a.central-btn');
     await page.waitForSelector('#bookingOverlay', { timeout: 15000 });

@@ -5,7 +5,7 @@ const puppeteer = require('puppeteer');
   const page = await browser.newPage();
   try {
     await page.setViewport({ width: 430, height: 932, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
-    await page.goto('http://localhost:3000/trips/trip.html?id=olympia', { waitUntil: 'networkidle2' });
+    await page.goto('http://localhost:3000/trip.html?trip=olympia', { waitUntil: 'networkidle2' });
     await page.waitForSelector('footer a.central-btn', { timeout: 15000 });
     await page.click('footer a.central-btn');
     await page.waitForSelector('#bookingOverlay.active, #bookingOverlay.overlay.active', { timeout: 15000 });

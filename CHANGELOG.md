@@ -80,7 +80,7 @@ Future:
   - Overlays are fully opaque to avoid background bleed-through.
 
 - Trip pages:
-  - Added overlay manager to `/trips/trip.html` as well.
+  - Added overlay manager to `/trip.html` as well.
   - Back button behavior improved (returns to category when available).
   - Navy background applied to `olympia` and `parnassos` trips.
   - Added persistent highlight via `sessionStorage` for clicked trip cards.

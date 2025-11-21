@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Greekaway – Εκδρομή</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/trip-view.css?v=20251121">
+  <link rel="stylesheet" href="/css/mode-select.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#001f3f">
+  <link rel="stylesheet" href="/pwa.css">
+  <link rel="stylesheet" href="/pwa-ios.css">
+  <link rel="stylesheet" href="/css/pwa-fixes.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+</head>
+<body class="trip-view-page">
+  <main class="trip-layout">
+    <div class="trip-container">
+      <a class="trip-breadcrumb" href="/trips.html">← Όλες οι εκδρομές</a>
+
+      <div id="trip-alert" class="trip-alert" role="alert" hidden></div>
+
+      <section class="trip-card trip-hero" aria-live="polite">
+        <div class="trip-hero-head">
+          <p id="trip-category" class="trip-eyebrow">Εκδρομή</p>
+          <h1 id="trip-title">Εκδρομή</h1>
+          <p id="trip-subtitle" class="trip-subtitle"></p>
+        </div>
+        <p id="trip-description" class="trip-description"></p>
+        <dl class="trip-meta">
+          <div>
+            <dt>Διάρκεια</dt>
+            <dd id="trip-duration">—</dd>
+          </div>
+          <div>
+            <dt>Εμπειρία</dt>
+            <dd id="trip-mode-label">—</dd>
+          </div>
+          <div>
+            <dt>Τιμή</dt>
+            <dd id="trip-price">—</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="trip-card trip-mode-select" aria-live="polite" hidden>
+        <div class="trip-mode-select-head">
+          <h2>Επίλεξε εμπειρία</h2>
+          <p>Διάλεξε όχημα ή mode και συνέχισε στην κράτηση.</p>
+        </div>
+        <div id="trip-mode-select" class="trip-mode-select-body"></div>
+      </section>
+
+      <section class="trip-card trip-calendar-card">
+        <div class="trip-calendar-head">
+          <h2>Ημερολόγιο</h2>
+          <p>Επίλεξε ημερομηνία και συνέχισε στην κράτηση.</p>
+        </div>
+        <div class="trip-calendar-body">
+          <div class="trip-date-field">
+            <label for="trip-date">Ημερομηνία</label>
+            <input type="text" id="trip-date" placeholder="Επιλέξτε ημερομηνία">
+          </div>
+          <button type="button" id="trip-booking-shortcut">Συνέχεια</button>
+        </div>
+      </section>
+
+      <div class="trip-tabs-shell">
+        <div class="trip-tab-buttons" role="tablist" aria-label="Πληροφορίες εκδρομής">
+          <button type="button" class="trip-tab-button is-active" data-tab="trip-tab-main">Αρχική</button>
+          <button type="button" class="trip-tab-button" data-tab="trip-tab-photos">Φωτογραφίες</button>
+          <button type="button" class="trip-tab-button" data-tab="trip-tab-includes">Περιλαμβάνεται</button>
+          <button type="button" class="trip-tab-button" data-tab="trip-tab-excludes">Δεν Περιλαμβάνεται</button>
+          <button type="button" class="trip-tab-button" data-tab="trip-tab-experience">Εμπειρία</button>
+          <button type="button" class="trip-tab-button" data-tab="trip-tab-faq">Συχνές Ερωτήσεις</button>
+          <button type="button" class="trip-tab-button" data-tab="trip-tab-stops">Στάσεις</button>
+        </div>
+        <section class="trip-card trip-panels" id="trip-panels">
+          <section id="trip-tab-main" class="trip-tab-panel is-active">
+            <p class="trip-panel-placeholder">Φόρτωση εκδρομής…</p>
+          </section>
+          <section id="trip-tab-photos" class="trip-tab-panel" hidden>
+            <p class="trip-panel-placeholder">Δεν υπάρχουν φωτογραφίες.</p>
+          </section>
+          <section id="trip-tab-includes" class="trip-tab-panel" hidden>
+            <p class="trip-panel-placeholder">Δεν έχουν καταχωρηθεί ακόμη στοιχεία.</p>
+          </section>
+          <section id="trip-tab-excludes" class="trip-tab-panel" hidden>
+            <p class="trip-panel-placeholder">Δεν έχουν καταχωρηθεί ακόμη στοιχεία.</p>
+          </section>
+          <section id="trip-tab-experience" class="trip-tab-panel" hidden>
+            <p class="trip-panel-placeholder">Δεν υπάρχουν επιπλέον πληροφορίες.</p>
+          </section>
+          <section id="trip-tab-faq" class="trip-tab-panel" hidden>
+            <p class="trip-panel-placeholder">Δεν υπάρχουν συχνές ερωτήσεις.</p>
+          </section>
+          <section id="trip-tab-stops" class="trip-tab-panel" hidden>
+            <p class="trip-panel-placeholder">Δεν υπάρχουν στάσεις για εμφάνιση.</p>
+          </section>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/gr.js" defer></script>
+  <script src="/js/i18n.js" defer></script>
+  <script src="/js/footer.js" defer></script>
+  <script src="/pwa-install.js" defer></script>
+  <script src="/pwa-ios.js" defer></script>
+  <script src="/js/mode-select.js" defer></script>
+  <script src="/js/trip.js" defer></script>
+</body>
+</html>

@@ -26,7 +26,7 @@ const fs = require('fs');
   const sleep = (ms) => new Promise(res => setTimeout(res, ms));
   try {
     // Navigate to trip page on the configured base
-    await page.goto(`${BASE}/trips/trip.html?id=olympia&smoke=1`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${BASE}/trip.html?trip=olympia&smoke=1`, { waitUntil: 'domcontentloaded' });
     // Early screenshot for diagnostics
     try { await page.screenshot({ path: 'smoke_step0_trip.png', fullPage: false }); } catch(_){ }
     // Wait for footer element first (in case delayed injection)

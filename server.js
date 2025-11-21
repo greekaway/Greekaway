@@ -153,7 +153,6 @@ const SESSION_SECRET = (process.env.ADMIN_SESSION_SECRET || process.env.SESSION_
 // Moved asset/version scanners to lib/assets.js
 const { computeLocalesVersion, computeDataVersion, computeAssetsVersion } = require('./src/server/lib/assets');
 const { computeCacheBust } = require('./src/server/lib/cacheBust');
-const { applyAssetVersion } = require('./src/server/lib/htmlVersioning');
 
 // Read Maps API key from environment. If not provided, the placeholder remains.
 // Trim and strip surrounding quotes if the value was pasted with quotes.
@@ -359,79 +358,60 @@ app.use((req, res, next) => {
 
 // Precompute a stable cache-busting version (used in HTML to version CSS/JS/manifest)
 const CACHE_BUST_VERSION = computeCacheBust(__dirname);
+const TRIP_PAGE_FILE = path.join(__dirname, 'public', 'trip.html');
+const TRIPS_DATA_DIR = path.join(__dirname, 'data', 'trips');
 
-// 1️⃣ Σε DEV: Σερβίρουμε ΠΑΝΤΑ φρέσκα HTML/JS/CSS, version τα assets, και κάνουμε inject το Google Maps key
-if (IS_DEV) {
-  app.get(/^\/(?:.*)\.html$/, (req, res, next) => {
-    const relPath = String(req.path || '').replace(/^\/+/, '');
-    const filePath = path.join(__dirname, 'public', relPath);
-    fs.readFile(filePath, 'utf8', (err, html) => {
-      if (err) return next();
-      try {
-        // Version all local CSS/JS/manifest links
-        let out = applyAssetVersion(html, CACHE_BUST_VERSION);
-        // 4) Inject Google Maps API key placeholder (trip.html etc.)
-        try {
-          const key = (MAP_KEY || '').trim();
-          if (key && key !== 'YOUR_GOOGLE_MAPS_API_KEY') {
-            out = out.replace(/YOUR_GOOGLE_MAPS_API_KEY/g, key);
-          }
-        } catch(_) { }
-        // 5) Inject Stripe publishable key into checkout pages (only if valid pattern)
-        try {
-          const pkRaw = (process.env.STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE || '').trim().replace(/^['"]|['"]$/g, '');
-          const validPk = /^pk_(live|test)_/.test(pkRaw);
-          if (validPk) {
-            out = out.replace(/%STRIPE_PUBLISHABLE_KEY%/g, pkRaw);
-            try { console.log('checkout: injecting publishable key (masked):', pkRaw.slice(0,8)+'…'); } catch(_){}
-          } else {
-            // Leave placeholder intact so frontend can detect missing/invalid key
-            try { console.warn('checkout: Stripe publishable key missing or invalid format; placeholder left untouched'); } catch(_){}
-          }
-        } catch(err) { try { console.error('checkout: pk injection error', err); } catch(_){} }
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-store');
-        return res.send(out);
-      } catch (e) { return next(); }
-    });
-  });
+const serveTripView = (req, res) => {
+  try {
+    return res.sendFile(TRIP_PAGE_FILE);
+  } catch (err) {
+    return res.status(500).send('Trip page unavailable');
+  }
+};
+
+app.get('/trip.html', serveTripView);
+app.get('/trip', serveTripView);
+app.get(['/trips/trip.html', '/trips/trip'], (req, res) => {
+  try {
+    const base = `${req.protocol || 'http'}://${req.get('host') || 'localhost'}`;
+    const parsed = new URL(req.originalUrl || req.url || '/trips/trip.html', base);
+    const slug = (parsed.searchParams.get('trip') || parsed.searchParams.get('id') || '').trim();
+    parsed.searchParams.delete('id');
+    parsed.searchParams.delete('mode');
+    if (slug) parsed.searchParams.set('trip', slug);
+    else parsed.searchParams.delete('trip');
+    const search = parsed.searchParams.toString();
+    const dest = `/trip.html${search ? `?${search}` : ''}`;
+    return res.redirect(301, dest);
+  } catch (err) {
+    return res.redirect(301, '/trip.html');
+  }
+});
+
+function sanitizeTripSlug(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-_]/g, '');
 }
 
-// 1️⃣β Σε PROD: Version τα assets + Κάνουμε inject το Google Maps key στα HTML
-if (!IS_DEV) {
-  app.get(/^\/(?:.*)\.html$/, (req, res, next) => {
-    const relPath = String(req.path || '').replace(/^\/+/, '');
-    const filePath = path.join(__dirname, 'public', relPath);
-    fs.readFile(filePath, 'utf8', (err, html) => {
-      if (err) return next();
-      try {
-        // Version all local CSS/JS/manifest links for cache-busting after deploys
-        let out = applyAssetVersion(html, CACHE_BUST_VERSION);
-        // Inject Google Maps API key placeholder (trip.html κ.ά.)
-        try {
-          const key = (MAP_KEY || '').trim();
-          if (key && key !== 'YOUR_GOOGLE_MAPS_API_KEY') {
-            out = out.replace(/YOUR_GOOGLE_MAPS_API_KEY/g, key);
-          }
-        } catch(_) { }
-        // Inject Stripe publishable key placeholder for checkout (prod) if valid
-        try {
-          const pkRaw = (process.env.STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE || '').trim().replace(/^['"]|['"]$/g, '');
-          const validPk = /^pk_(live|test)_/.test(pkRaw);
-          if (validPk) {
-            out = out.replace(/%STRIPE_PUBLISHABLE_KEY%/g, pkRaw);
-          } else {
-            try { console.warn('checkout: Stripe publishable key missing/invalid in prod handler'); } catch(_){}
-          }
-        } catch(err) { try { console.error('checkout: pk injection error (prod)', err); } catch(_){} }
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        // Avoid caching HTML so key/script stays fresh
-        res.setHeader('Cache-Control', 'no-cache');
-        return res.send(out);
-      } catch (e) { return next(); }
-    });
-  });
-}
+app.get('/api/trips/:slug', async (req, res) => {
+  try {
+    const slug = sanitizeTripSlug(req.params.slug);
+    if (!slug) return res.status(400).json({ error: 'invalid_slug' });
+    const filePath = path.join(TRIPS_DATA_DIR, `${slug}.json`);
+    const data = await fs.promises.readFile(filePath, 'utf8');
+    const trip = JSON.parse(data);
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json({ trip });
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return res.status(404).json({ error: 'not_found' });
+    }
+    console.error('api/trips error:', err && err.stack ? err.stack : err);
+    return res.status(500).json({ error: 'server_error' });
+  }
+});
 
 // Serve Apple Pay domain association and other well-known files (explicitly allow dotfiles)
 app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known'), {

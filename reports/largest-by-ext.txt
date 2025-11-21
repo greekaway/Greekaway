@@ -29,7 +29,6 @@ tools/admin_functional_smoke.js	   13980
 routes/provider-availability.js	   13438
 tools/public_i18n_dryrun/el.json	   13417
 tools/public_i18n_backup_2025-10-23T17-37-41-290Z/el.json	   13417
-public/trips/trip.html	   13113
 public/css/theme.css	   12987
 public/i18n/ru.json	   12912
 locales/ru.json	   12884

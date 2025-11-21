@@ -714,6 +714,23 @@ body.overlay-open #aiOverlay { z-index: 20000 !important; }
     overflow: hidden;
   }
 
+  body.trip-page #trip-main,
+  body[data-view="trip"] #trip-main,
+  body.trip-page #trip-section,
+  body[data-view="trip"] #trip-section {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  body.trip-page #map,
+  body[data-view="trip"] #map,
+  body.trip-page .video-wrap,
+  body[data-view="trip"] .video-wrap {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
   /* slightly larger footer icons on mobile for tap targets */
   footer a i { font-size: 1.8rem; padding: 10px 12px; }
 }

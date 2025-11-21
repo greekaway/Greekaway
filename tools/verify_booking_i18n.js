@@ -7,7 +7,7 @@ const fs = require('fs');
   const results = [];
   for (const lang of langs) {
     try {
-      await page.goto(`http://localhost:3000/trips/trip.html?id=olympia`, { waitUntil: 'networkidle2' });
+      await page.goto(`http://localhost:3000/trip.html?trip=olympia`, { waitUntil: 'networkidle2' });
       // wait for i18n loader and set language
   await page.waitForFunction('window.setLanguage && typeof window.setLanguage === "function"', { timeout: 5000 });
   await page.evaluate((l)=>{ window.setLanguage(l); }, lang);

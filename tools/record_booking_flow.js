@@ -15,7 +15,7 @@ console.log('Started server (PID:', server.pid, ')');
   page.setViewport({ width: 1280, height: 900 });
   const sleep = (ms) => new Promise(res => setTimeout(res, ms));
   try {
-    await page.goto('http://localhost:3000/trips/trip.html?id=olympia', { waitUntil: 'networkidle2' });
+    await page.goto('http://localhost:3000/trip.html?trip=olympia', { waitUntil: 'networkidle2' });
     await page.waitForSelector('footer a.central-btn', { timeout: 5000 });
     await page.click('footer a.central-btn');
     await page.waitForSelector('#bookingOverlay .overlay-inner', { timeout: 5000 });

@@ -9,7 +9,7 @@ const viewports = [
 (async () => {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
-  const url = 'http://localhost:3000/trips/trip.html?id=olympia&smoke=1';
+  const url = 'http://localhost:3000/trip.html?trip=olympia&smoke=1';
   const results = [];
   for (const vp of viewports) {
     await page.setViewport({ width: vp.width, height: vp.height });

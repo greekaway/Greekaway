@@ -18,7 +18,7 @@ function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
       const page = await browser.newPage();
       await page.setViewport(d.viewport);
       try {
-        await page.goto('http://localhost:3000/trips/trip.html?id=olympia', { waitUntil: 'networkidle2' });
+        await page.goto('http://localhost:3000/trip.html?trip=olympia', { waitUntil: 'networkidle2' });
         await page.waitForSelector('footer a.central-btn', { timeout: 10000 });
         await page.click('footer a.central-btn');
         await page.waitForSelector('#bookingOverlay .overlay-inner', { timeout: 10000 });

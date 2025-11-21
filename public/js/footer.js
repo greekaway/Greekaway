@@ -40,7 +40,9 @@
       } catch(_){}
       // If we are on a trip page (booking overlay present), switch central button to Booking (bell)
       try {
-        const isTripPage = !!document.getElementById('bookingOverlay') || (location.pathname || '').includes('/trips/trip.html');
+        const body = document.body || null;
+        const pathname = (location && location.pathname) ? location.pathname : '';
+        const isTripPage = (body && body.classList && body.classList.contains('trip-view-page')) || pathname.endsWith('/trip.html');
         if (isTripPage) {
           const central = f.querySelector('a.central-btn');
           if (central) {

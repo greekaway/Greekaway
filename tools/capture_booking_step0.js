@@ -6,7 +6,7 @@ const puppeteer = require('puppeteer');
   try {
     // Use a tall mobile viewport to show the gradient nicely
     await page.setViewport({ width: 430, height: 932, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
-    await page.goto('http://localhost:3000/trips/trip.html?id=olympia', { waitUntil: 'networkidle2' });
+    await page.goto('http://localhost:3000/trip.html?trip=olympia', { waitUntil: 'networkidle2' });
     // Open the booking overlay via the central footer button
     await page.waitForSelector('footer a.central-btn', { timeout: 10000 });
     await page.click('footer a.central-btn');

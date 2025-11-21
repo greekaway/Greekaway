@@ -7,7 +7,7 @@ Backup removed: style.backup-2025-11-07.css (unused)
 All target CSS files exist under `public/css/` and are linked correctly in the corresponding HTML pages:
 - Global/base: `style.css` (present in all main pages and flow steps)
 - Theming layer: `theme.css` (used on pages with category/trip & booking flows)
-- Page‑specific: `welcome.css` (only `index.html`), `about.css` (`about.html`), `cards.css` (shared card visual layer), `trip.css` (`trips/trip.html` & trip/category contexts), `booking.css` (booking overlay calendar + step1), `step2.css`, `step3.css`, `checkout.css` (`checkout.html`).
+- Page‑specific: `welcome.css` (only `index.html`), `about.css` (`about.html`), `cards.css` (shared card visual layer), `trip.css` (`trip.html` & trip/category contexts), `booking.css` (booking overlay calendar + step1), `step2.css`, `step3.css`, `checkout.css` (`checkout.html`).
 - No HTML or JS references found to `style.backup-2025-11-07.css` (grep scan returned 0 matches). File safely deleted.
 
 ## 2. Layering & Responsibility

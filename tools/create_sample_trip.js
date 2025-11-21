@@ -141,7 +141,7 @@ function postJson(endpoint, data){
     console.log('> Trip saved. Slug:', tripResp.json.trip.slug);
     console.log('\nVerification URLs:');
     console.log(` - Category listing: http://${HOST}:${PORT}/category.html?slug=politismos`);
-    console.log(` - Trip detail: http://${HOST}:${PORT}/trips/trip.html?id=${tripResp.json.trip.slug}`);
+    console.log(` - Trip detail: http://${HOST}:${PORT}/trip.html?trip=${tripResp.json.trip.slug}`);
     console.log('\nDone.');
   } catch (e) {
     console.error('Script error:', e);

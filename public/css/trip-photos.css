@@ -1,17 +1,25 @@
 /* Trip Photos section */
 
 .trip-photos-root {
-  background: #e6f2ff;
-  border-radius: 18px;
-  padding: clamp(18px, 4vw, 32px);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
   box-shadow: none;
   border: none;
   display: flex;
   flex-direction: column;
   gap: clamp(16px, 4vw, 28px);
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 220ms ease, transform 220ms ease;
+}
+
+body.trip-page .trip-photos-root,
+body[data-view="trip"] .trip-photos-root {
+  align-self: stretch;
 }
 
 .trip-photos-root.is-ready {
@@ -23,10 +31,11 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
 }
 
 .trip-photo-stop-title {
-  color: #0b3557;
+  color: #f1f5f8;
   font-size: 1rem;
   font-weight: 600;
   margin: 0;

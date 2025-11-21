@@ -1,317 +1,217 @@
-(function(){
-  const MODE_TITLES = {
+(() => {
+  const MODE_ORDER = ['van', 'mercedes', 'bus'];
+  const MODE_LABELS = {
     van: 'Premium Van',
-    mercedes: 'Private Mercedes',
-    bus: 'Classic Bus Tour'
+    mercedes: 'Ιδιωτική Mercedes',
+    bus: 'All-Day Bus'
   };
-  const MODE_ORDER = ['van','mercedes','bus'];
   const CHARGE_LABELS = {
-    per_person: 'ανά άτομο',
-    per_vehicle: 'συνολική τιμή'
+    per_person: 'Ανά άτομο',
+    per_vehicle: 'Ιδιωτική κράτηση'
   };
-  let activeTripSlug = '';
 
-  document.addEventListener('DOMContentLoaded', initModeSelect);
+  const ModeSelect = {
+    mount(root, options = {}) {
+      if (!root) return;
+      const { trip, slug, selectedMode, onSelect } = options;
+      root.innerHTML = '';
+      root.classList.add('mode-select-grid', 'mode-card-grid');
+      if (!trip || !trip.mode_set) {
+        root.appendChild(renderMessage('Δεν υπάρχουν διαθέσιμες εμπειρίες για επιλογή.'));
+        return;
+      }
+      const entries = buildEntries(trip.mode_set, trip.currency);
+      if (!entries.length) {
+        root.appendChild(renderMessage('Δεν υπάρχουν διαθέσιμες εμπειρίες για επιλογή.'));
+        return;
+      }
+      const normalizedSelected = normalizeKey(selectedMode);
+      entries.forEach((entry) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'mode-option mode-card';
+        button.dataset.mode = entry.key;
+        const isActive = entry.key === normalizedSelected;
+        if (isActive) button.classList.add('is-selected');
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        button.innerHTML = buildOptionTemplate(entry);
+        button.addEventListener('click', () => {
+          const handler = typeof onSelect === 'function' ? onSelect : defaultNavigate;
+          handler(entry.key, Object.assign({ slug: slug || trip.slug || trip.id || '' }, entry));
+        });
+        root.appendChild(button);
+      });
+    }
+  };
 
-  async function initModeSelect(){
+  window.ModeSelect = ModeSelect;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (document.body && document.body.dataset && document.body.dataset.view === 'mode-select') {
+      bootstrapStandalone();
+    }
+  });
+
+  async function bootstrapStandalone() {
     const qs = new URLSearchParams(window.location.search);
-    const tripParam = (qs.get('trip') || '').trim();
-    if (!tripParam) {
-      window.location.href = '/trips.html';
+    const slug = (qs.get('trip') || '').trim();
+    const selectedMode = qs.get('mode') || '';
+    if (!slug) {
+      showStandaloneError('Δεν ορίστηκε εκδρομή για επιλογή εμπειρίας.');
       return;
     }
-    activeTripSlug = tripParam;
-    const preselectedMode = (qs.get('mode') || '').trim().toLowerCase();
     setStatus('Φόρτωση διαθέσιμων modes...');
     try {
-      const [trip, categories] = await Promise.all([
-        fetchTripPayload(tripParam),
-        fetchCategories()
-      ]);
-      if (!trip) throw new Error('Trip not found');
-      activeTripSlug = trip.slug || trip.id || tripParam;
-      const category = findCategoryMeta(categories, trip.category);
-      renderHero(trip, category);
-      renderModes(trip, category, preselectedMode);
+      const trip = await fetchTrip(slug);
+      updateStandaloneHero(trip);
       hideStatus();
-    } catch (err) {
-      console.error('mode-select: failed to load', err);
-      showError('Δεν μπορέσαμε να φορτώσουμε τα modes. Δοκίμασε ξανά σε λίγο.');
-    }
-  }
-
-  function canonicalMode(key){
-    const value = String(key || '').toLowerCase();
-    if (value === 'private' || value === 'mercedes/private') return 'mercedes';
-    if (value === 'multi' || value === 'shared') return 'van';
-    return ['van','mercedes','bus'].includes(value) ? value : '';
-  }
-
-  async function fetchTripPayload(tripId){
-    const slug = encodeURIComponent(tripId);
-    const attempts = [
-      `/api/trips/${slug}`,
-      `/api/public/trips/${slug}`,
-      `/data/trips/${slug}.json`
-    ];
-    for (const url of attempts) {
-      try {
-        const res = await fetch(url, { cache: 'no-store' });
-        if (res.ok) {
-          const json = await res.json();
-          if (json && typeof json === 'object') return json;
-        }
-      } catch(_) {
-        /* continue */
-      }
-    }
-    // final fallback: fetch list and locate trip
-    try {
-      const listRes = await fetch('/api/public/trips', { cache: 'no-store' });
-      if (listRes.ok) {
-        const list = await listRes.json();
-        if (Array.isArray(list)) {
-          const match = list.find(item => (item.slug || item.id) === tripId || item.id === tripId);
-          if (match) return match;
-        }
-      }
-    } catch(_){}
-    throw new Error('trip_not_found');
-  }
-
-  async function fetchCategories(){
-    try {
-      const res = await fetch('/api/categories?published=true', { cache: 'no-store' });
-      if (res.ok) {
-        const json = await res.json();
-        return Array.isArray(json) ? json : [];
-      }
-    } catch(_){}
-    return [];
-  }
-
-  function findCategoryMeta(categories, slug){
-    if (!slug || !Array.isArray(categories)) return null;
-    return categories.find(cat => (cat.slug || cat.id) === slug) || null;
-  }
-
-  function renderHero(trip, category){
-    try {
-      if (trip && trip.category) document.body.dataset.category = trip.category;
-    } catch(_){}
-    const titleEl = document.getElementById('modeCardTitle');
-    const descEl = document.getElementById('modeCardDescription');
-    const catCard = category && category.modeCard ? category.modeCard : null;
-    const tripTitle = trip && trip.title ? trip.title : '';
-    if (titleEl) titleEl.textContent = tripTitle || 'Επίλεξε εμπειρία';
-    if (descEl) descEl.textContent = (catCard && catCard.subtitle) || 'Διάλεξε όχημα και εμπειρία για την εκδρομή σου.';
-  }
-
-  function renderModes(trip, category, preselectedMode){
-    const container = document.getElementById('modeCards');
-    const errorEl = document.getElementById('modeError');
-    if (!container) return;
-    container.innerHTML = '';
-    if (errorEl) errorEl.hidden = true;
-    const durationLabel = deriveDurationLabel(trip);
-    const cards = [];
-    MODE_ORDER.forEach(key => {
-      const info = deriveModeInfo(trip, key);
-      if (!info) return;
-      cards.push({ key, info });
-    });
-    if (!cards.length) {
-      showError('Δεν βρέθηκαν ενεργά modes για αυτή την εκδρομή.');
-      return;
-    }
-    const catCard = category && category.modeCard ? category.modeCard : null;
-    const descMap = (catCard && catCard.desc) || {};
-    let selectedKey = canonicalMode(preselectedMode);
-    if (!selectedKey || !cards.find(card => card.key === selectedKey)) selectedKey = '';
-    cards.forEach(card => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'mode-card';
-      button.dataset.mode = card.key;
-      const title = MODE_TITLES[card.key] || card.key;
-      const desc = descMap[card.key] || '';
-      const descHtml = escapeHtml(desc || card.info.description || '').replace(/\n/g, '<br>');
-      button.innerHTML = `
-        <div class="mode-card-heading">
-          <span class="mode-card-title">${escapeHtml(title)}</span>
-          <span class="mode-card-price">${formatPrice(card.info.price, card.info.currency)}</span>
-        </div>
-        <p class="mode-card-desc">${descHtml}</p>
-        <div class="mode-card-meta">
-          <span><i class="fa-solid fa-user" aria-hidden="true"></i>${chargeLabel(card.info.chargeType)}</span>
-          ${card.info.capacity ? `<span><i class="fa-solid fa-users" aria-hidden="true"></i>Έως ${card.info.capacity} pax</span>` : ''}
-          ${durationLabel ? `<span><i class="fa-regular fa-clock" aria-hidden="true"></i>${escapeHtml(durationLabel)}</span>` : ''}
-        </div>`;
-      const handleNavigate = () => {
-        try { persistModeSelection(trip, card.key, card.info); } catch(_){ }
-        navigateToMode(card.key);
-      };
-      button.addEventListener('click', handleNavigate);
-      button.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter' || ev.key === ' ') {
-          ev.preventDefault();
-          handleNavigate();
-        }
+      ModeSelect.mount(document.getElementById('modeCards'), {
+        trip,
+        slug,
+        selectedMode,
+        onSelect: (modeKey) => defaultNavigate(modeKey, { slug })
       });
-      if (selectedKey && selectedKey === card.key) {
-        button.classList.add('selected');
-        try { persistModeSelection(trip, card.key, card.info); } catch(_){ }
-      }
-      container.appendChild(button);
-    });
-  }
-
-  function deriveModeInfo(trip, key){
-    if (!trip) return null;
-    const canonical = canonicalMode(key);
-    if (!canonical) return null;
-    const rawModes = (trip.modes && typeof trip.modes === 'object') ? trip.modes : {};
-    const rawMode = rawModes[canonical];
-    const modeSet = (trip.mode_set && typeof trip.mode_set === 'object') ? trip.mode_set[canonical] : null;
-    const activeFlag = resolveActive(modeSet && modeSet.active, rawMode && rawMode.active);
-    if (!activeFlag) return null;
-    const price = resolvePriceEuros(modeSet, rawMode);
-    if (price == null) return null;
-    const chargeType = resolveChargeType(modeSet, rawMode);
-    const capacity = resolveCapacity(modeSet, rawMode);
-    const currency = (trip.currency || 'EUR').toUpperCase();
-    const description = rawMode && rawMode.description ? rawMode.description : '';
-    return { price, chargeType, capacity, currency, description };
-  }
-
-  function resolveActive(primary, fallback){
-    const value = typeof primary !== 'undefined' ? primary : fallback;
-    if (typeof value === 'boolean') return value;
-    if (typeof value === 'number') return value !== 0;
-    if (typeof value === 'string') {
-      const normalized = value.trim().toLowerCase();
-      if (!normalized) return true;
-      if (['false','0','no','inactive','disabled'].includes(normalized)) return false;
-      if (['true','1','yes','active'].includes(normalized)) return true;
+    } catch (err) {
+      console.error('mode-select', err);
+      showStandaloneError('Δεν μπορέσαμε να φορτώσουμε τα διαθέσιμα modes.');
     }
-    return true;
   }
 
-  function resolvePriceEuros(modeSet, rawMode){
-    if (modeSet && typeof modeSet.price_cents === 'number') return modeSet.price_cents / 100;
-    const list = [rawMode && rawMode.price_per_person, rawMode && rawMode.price_total, rawMode && rawMode.price];
-    for (const candidate of list) {
-      if (candidate == null || candidate === '') continue;
-      const num = Number(candidate);
-      if (Number.isFinite(num)) return num;
+  function buildEntries(modeSet, currency) {
+    const entries = [];
+    const cur = (currency || 'EUR').toUpperCase();
+    for (const key of MODE_ORDER) {
+      const raw = modeSet[key];
+      if (!raw || !isActive(raw.active)) continue;
+      if (typeof raw.price_cents !== 'number') continue;
+      const normalized = normalizeKey(key);
+      entries.push({
+        key: normalized,
+        label: MODE_LABELS[normalized] || normalized,
+        priceCents: raw.price_cents,
+        priceText: formatPrice(raw.price_cents, cur),
+        capacity: validNumber(raw.default_capacity),
+        chargeType: normalizeCharge(raw.charge_type),
+        currency: cur
+      });
     }
-    return null;
+    return entries;
   }
 
-  function resolveChargeType(modeSet, rawMode){
-    const raw = (modeSet && modeSet.charge_type) || (rawMode && (rawMode.charge_type || rawMode.charging_type)) || 'per_person';
-    const lowered = String(raw).toLowerCase();
-    if (lowered === 'per_vehicle' || lowered === 'flat') return 'per_vehicle';
-    return 'per_person';
+  function buildOptionTemplate(entry) {
+    const capacityLabel = entry.capacity ? `Έως ${entry.capacity} άτομα` : '';
+    const chargeLabel = CHARGE_LABELS[entry.chargeType] || CHARGE_LABELS.per_person;
+    return `
+      <div class="mode-card-heading">
+        <span class="mode-option-title">${escapeHtml(entry.label)}</span>
+        <span class="mode-option-price">${escapeHtml(entry.priceText)}</span>
+      </div>
+      <div class="mode-option-meta">
+        <span><i class="fa-solid fa-tag" aria-hidden="true"></i>${escapeHtml(chargeLabel)}</span>
+        ${capacityLabel ? `<span><i class="fa-solid fa-users" aria-hidden="true"></i>${escapeHtml(capacityLabel)}</span>` : ''}
+      </div>`;
   }
 
-  function resolveCapacity(modeSet, rawMode){
-    const list = [
-      modeSet && modeSet.default_capacity,
-      rawMode && rawMode.default_capacity,
-      rawMode && rawMode.capacity
-    ];
-    for (const candidate of list) {
-      const num = Number(candidate);
-      if (Number.isFinite(num) && num > 0) return num;
-    }
-    return null;
+  function renderMessage(text) {
+    const p = document.createElement('p');
+    p.className = 'mode-select-empty';
+    p.textContent = text;
+    return p;
   }
 
-  function chargeLabel(type){
-    return CHARGE_LABELS[type] || CHARGE_LABELS.per_person;
+  function defaultNavigate(modeKey, payload) {
+    const slug = payload && payload.slug ? payload.slug : '';
+    if (!slug) return;
+    const target = new URL('/trip.html', window.location.origin || window.location.href);
+    target.searchParams.set('trip', slug);
+    target.searchParams.set('mode', modeKey);
+    window.location.assign(target.toString());
   }
 
-  function deriveDurationLabel(trip){
-    if (!trip) return '';
-    const daysRaw = trip.duration_days;
-    const hoursRaw = trip.duration_hours != null ? trip.duration_hours : trip.duration;
-    const days = Number(daysRaw);
-    if (Number.isFinite(days) && days > 0) {
-      const suffix = days === 1 ? 'ημέρα' : 'ημέρες';
-      return `${days} ${suffix}`;
-    }
-    const hours = Number(hoursRaw);
-    if (Number.isFinite(hours) && hours > 0) {
-      const suffix = hours === 1 ? 'ώρα' : 'ώρες';
-      return `${hours} ${suffix}`;
-    }
-    return '';
-  }
-
-  function persistModeSelection(trip, modeKey, info){
-    const canonical = canonicalMode(modeKey) || 'van';
-    const navMode = canonical === 'mercedes' ? 'private' : canonical;
-    try { localStorage.setItem('trip_mode', navMode); } catch(_){}
-    try {
-      sessionStorage.setItem('gw_trip_id', trip.slug || trip.id || '');
-      sessionStorage.setItem('selectedVehicleType', canonical);
-      if (info && typeof info.price === 'number') {
-        sessionStorage.setItem('selectedVehiclePrice', String(info.price));
-      }
-      sessionStorage.setItem('selectedVehicleCurrency', info.currency || (trip.currency || 'EUR'));
-      sessionStorage.setItem('selectedVehicleChargeType', info.chargeType || 'per_person');
-      if (info.capacity != null) sessionStorage.setItem('selectedVehicleCapacity', String(info.capacity));
-    } catch(_){}
-  }
-
-  function setStatus(text){
+  function setStatus(text) {
     const el = document.getElementById('modeStatus');
     if (!el) return;
     el.hidden = false;
     el.textContent = text;
   }
 
-  function hideStatus(){
+  function hideStatus() {
     const el = document.getElementById('modeStatus');
     if (!el) return;
     el.hidden = true;
   }
 
-  function showError(msg){
-    const el = document.getElementById('modeError');
-    if (!el) return;
-    el.textContent = msg;
-    el.hidden = false;
+  function showStandaloneError(message) {
     hideStatus();
-  }
-
-  function escapeHtml(str){
-    return String(str || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch] || ch));
-  }
-
-  function formatPrice(amount, currency){
-    const val = Number(amount || 0);
-    const cur = (currency || 'EUR').toUpperCase();
-    try {
-      if (cur === 'EUR') {
-        return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-      }
-      return val.toLocaleString(undefined, { style: 'currency', currency: cur });
-    } catch(_) {
-      return `${val.toFixed(2)} ${cur}`;
+    const el = document.getElementById('modeError');
+    if (el) {
+      el.hidden = false;
+      el.textContent = message;
     }
   }
 
-  function navigateToMode(modeKey){
-    const canonical = canonicalMode(modeKey);
-    if (!canonical) return;
-    const slug = activeTripSlug || (new URLSearchParams(window.location.search).get('trip') || '').trim();
-    if (!slug) return;
-    const target = new URL('/trips/trip.html', window.location.origin || window.location.href);
-    target.searchParams.set('trip', slug);
-    target.searchParams.set('id', slug);
-    target.searchParams.set('mode', canonical);
-    window.location.href = target.toString();
+  function normalizeKey(value) {
+    if (!value) return '';
+    const normalized = String(value).trim().toLowerCase();
+    if (normalized === 'private') return 'mercedes';
+    return MODE_ORDER.includes(normalized) ? normalized : '';
+  }
+
+  function normalizeCharge(raw) {
+    const normalized = String(raw || 'per_person').toLowerCase();
+    return normalized === 'per_vehicle' ? 'per_vehicle' : 'per_person';
+  }
+
+  function isActive(flag) {
+    if (typeof flag === 'boolean') return flag;
+    if (typeof flag === 'number') return flag !== 0;
+    if (typeof flag === 'string') {
+      const normalized = flag.trim().toLowerCase();
+      if (!normalized) return true;
+      if (['false', '0', 'inactive', 'off', 'no'].includes(normalized)) return false;
+    }
+    return true;
+  }
+
+  function validNumber(value) {
+    const num = Number(value);
+    return Number.isFinite(num) && num > 0 ? num : null;
+  }
+
+  function formatPrice(cents, currency) {
+    const amount = Number(cents || 0) / 100;
+    try {
+      return amount.toLocaleString(undefined, { style: 'currency', currency, minimumFractionDigits: 2 });
+    } catch (err) {
+      return `${amount.toFixed(2)} ${currency}`;
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;'
+    }[ch] || ch));
+  }
+
+  async function fetchTrip(slug) {
+    const encoded = encodeURIComponent(slug.toLowerCase());
+    const res = await fetch(`/api/trips/${encoded}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('trip_not_found');
+    const payload = await res.json();
+    if (payload && payload.trip) return payload.trip;
+    return payload;
+  }
+
+  function updateStandaloneHero(trip) {
+    try {
+      if (trip && trip.category) document.body.dataset.category = trip.category;
+    } catch (_) { /* noop */ }
+    const title = document.getElementById('modeCardTitle');
+    const desc = document.getElementById('modeCardDescription');
+    if (title) title.textContent = trip && trip.title ? trip.title : 'Επίλεξε εμπειρία';
+    if (desc) desc.textContent = trip && trip.teaser ? trip.teaser : 'Διάλεξε όχημα και εμπειρία πριν συνεχίσεις στην εκδρομή.';
   }
 })();

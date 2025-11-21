@@ -14,7 +14,7 @@ This document summarizes the current technical and visual progress of the Greeka
 
 - Server (`server.js`):
   - Serves static assets from `public/`.
-  - Injects Google Maps API key when serving `/trips/trip.html`.
+   - Injects Google Maps API key when serving `/trip.html`.
   - Injects Stripe publishable key into `/checkout.html` at response time.
   - Bookings API: `POST /api/bookings`, `GET /api/bookings/:id`, `GET /api/availability` with capacity checks (SQLite table `capacities`).
   - Payments: `POST /create-payment-intent` with idempotency; associates PaymentIntent to booking via metadata or DB.
@@ -30,7 +30,7 @@ This document summarizes the current technical and visual progress of the Greeka
   - Traveler profile upsert and simple co-travel stats update on success.
 
 - Frontend (public):
-  - Pages: `index.html` (welcome), `trips.html` (categories), `/categories/*.html`, `/trips/trip.html`, `checkout.html`, `admin.html`, `admin-groups.html`, step pages (`step2.html`, `step3.html`).
+   - Pages: `index.html` (welcome), `trips.html` (categories), `/categories/*.html`, `/trip.html`, `checkout.html`, `admin.html`, `admin-groups.html`, step pages (`step2.html`, `step3.html`).
   - JS: `main.js` (categories/trips/booking flows and Maps routes), `overlay-manager.js`, `i18n.js`, `payment-request.js`, `feedback.js`.
   - CSS: `style.css` (global and categories), `trip.css` (trip and booking overlay look), `booking.css` (calendar and steps overrides).
   - Data: `public/data/tripindex.json`, `public/data/categories.json`, and per-trip JSONs in `public/data/trips/`.

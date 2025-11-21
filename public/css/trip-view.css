@@ -1,0 +1,367 @@
+:root {
+  --trip-surface: #ffffff;
+  --trip-background: #f3f6fb;
+  --trip-text: #0f1f32;
+  --trip-muted: #566175;
+  --trip-border: rgba(7, 24, 55, 0.12);
+  --trip-shadow: 0 20px 40px rgba(10, 19, 40, 0.08);
+  --trip-radius: 20px;
+  --trip-accent: #0052cc;
+  --trip-accent-soft: #e9f1ff;
+  --trip-error: #c62828;
+}
+
+body.trip-view-page {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--trip-background);
+  color: var(--trip-text);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.trip-layout {
+  padding: clamp(32px, 6vw, 64px) clamp(16px, 6vw, 48px) 120px;
+}
+
+.trip-container {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.trip-breadcrumb {
+  text-decoration: none;
+  color: var(--trip-muted);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.trip-breadcrumb:hover {
+  color: var(--trip-text);
+}
+
+.trip-alert {
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(198, 40, 40, 0.08);
+  color: var(--trip-error);
+  font-weight: 600;
+  border: 1px solid rgba(198, 40, 40, 0.25);
+}
+
+.trip-card {
+  background: var(--trip-surface, #fff);
+  border-radius: var(--trip-radius);
+  box-shadow: var(--trip-shadow);
+  border: 1px solid var(--trip-border);
+  padding: clamp(20px, 3vw, 36px);
+}
+
+.trip-hero-head {
+  margin-bottom: 16px;
+}
+
+.trip-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  color: var(--trip-muted);
+}
+
+.trip-hero h1 {
+  margin: 8px 0 0;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1.2;
+}
+
+.trip-hero h1 {
+  margin: 8px 0 0;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1.2;
+}
+
+.trip-subtitle {
+  margin: 8px 0 0;
+  color: var(--trip-accent);
+  font-weight: 600;
+}
+
+.trip-description {
+  margin: 12px 0 24px;
+  line-height: 1.7;
+}
+
+.trip-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px;
+  margin: 0;
+}
+
+.trip-meta dt {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--trip-muted);
+  margin: 0 0 4px;
+}
+
+.trip-meta dd {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.trip-calendar-head h2 {
+  margin: 0;
+}
+
+.trip-calendar-head p {
+  margin: 6px 0 18px;
+  color: var(--trip-muted);
+}
+
+.trip-calendar-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.trip-date-field {
+  flex: 1;
+  min-width: 240px;
+}
+
+.trip-date-field label {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--trip-text);
+}
+
+#trip-date {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--trip-border);
+  padding: 14px 16px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: #fff;
+}
+
+#trip-booking-shortcut {
+  border: none;
+  border-radius: 999px;
+  padding: 14px 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: var(--trip-accent);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+#trip-booking-shortcut:hover {
+  transform: translateY(-1px);
+}
+
+#trip-booking-shortcut:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.trip-tabs-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trip-tab-buttons {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+}
+
+.trip-tab-button {
+  border: 1px solid var(--trip-border);
+  background: #f5f7fc;
+  border-radius: 24px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--trip-text);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  scroll-snap-align: start;
+}
+
+.trip-tab-button.is-active {
+  background: var(--trip-accent);
+  color: #fff;
+  border-color: var(--trip-accent);
+}
+
+.trip-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.trip-tab-panel {
+  display: none;
+  line-height: 1.7;
+  color: var(--trip-text);
+}
+
+.trip-tab-panel.is-active {
+  display: block;
+}
+
+.trip-overview-meta {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.trip-overview-meta li {
+  color: var(--trip-muted);
+  font-weight: 600;
+}
+
+.trip-panel-placeholder {
+  margin: 0;
+  color: var(--trip-muted);
+}
+
+.trip-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.trip-photo-grid img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.trip-list {
+  list-style: disc inside;
+  margin: 0;
+  padding-left: 16px;
+}
+
+.trip-list li {
+  margin-bottom: 6px;
+}
+
+.trip-experience-section {
+  border: 1px solid var(--trip-border);
+  border-radius: 16px;
+  padding: 18px;
+  background: #f8fbff;
+  margin-bottom: 16px;
+}
+
+.trip-faq-item {
+  border-bottom: 1px solid rgba(15, 31, 50, 0.08);
+  padding: 16px 0;
+}
+
+.trip-faq-item h4 {
+  margin: 0 0 6px;
+}
+
+.trip-stops-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.trip-stop {
+  border: 1px solid var(--trip-border);
+  border-radius: 16px;
+  padding: 18px;
+  background: #f9fbff;
+}
+
+.trip-stop h3 {
+  margin: 0 0 8px;
+}
+
+.trip-stop-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.trip-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--trip-accent-soft);
+  color: var(--trip-accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.trip-stop-photos {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.trip-stop-photos img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.trip-stop-video {
+  margin-top: 10px;
+  position: relative;
+  padding-top: 56.25%;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.trip-stop-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  .trip-card {
+    padding: 20px;
+  }
+
+  .trip-calendar-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #trip-booking-shortcut {
+    width: 100%;
+  }
+}

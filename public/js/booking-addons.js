@@ -106,7 +106,7 @@
     return new Promise((resolve, reject)=>{
       if (window.google && window.google.maps && window.google.maps.places) { googleReady=true; return resolve(); }
       // Fetch injected trip.html to extract key
-      fetch('/trips/trip.html', { cache: 'no-cache' })
+      fetch('/trip.html', { cache: 'no-cache' })
         .then(r => r.ok ? r.text() : Promise.reject(new Error('no-trip')))
         .then(html => {
           const m = html.match(/maps\.googleapis\.com\/maps\/api\/js\?key=([^"&]+)/i);

@@ -215,3 +215,100 @@ body.mode-select-page {
   50% { box-shadow: 0 0 0 6px rgba(220, 53, 69, 0.18); }
   100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
 }
+
+/* Trip view embed ------------------------------------------------------- */
+.trip-mode-select {
+  margin-top: 20px;
+  padding-bottom: 8px;
+}
+
+.trip-mode-select .trip-mode-select-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.trip-mode-select .trip-mode-select-head h2 {
+  font-size: 1.2rem;
+  margin: 0;
+  color: #0f2740;
+}
+
+.trip-mode-select .trip-mode-select-head p {
+  margin: 0;
+  color: #516273;
+  font-size: 0.95rem;
+}
+
+.trip-mode-select .mode-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.trip-mode-select .mode-card,
+.trip-mode-select .mode-option {
+  border-radius: 18px;
+  border: 1px solid rgba(13, 32, 53, 0.08);
+  padding: 16px 18px;
+  text-align: left;
+  background: linear-gradient(140deg, var(--mode-panel, #0e1520), var(--mode-panel-soft, #1b2a3a));
+  color: var(--mode-text, #f5f6f9);
+  box-shadow: 0 18px 30px rgba(3, 9, 20, 0.18);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trip-mode-select .mode-card:hover,
+.trip-mode-select .mode-option:hover {
+  transform: translateY(-1px);
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+.trip-mode-select .mode-card.is-selected,
+.trip-mode-select .mode-option.is-selected {
+  border-color: var(--mode-gold, #d4af37);
+  box-shadow: 0 24px 40px rgba(10, 10, 10, 0.32);
+}
+
+.trip-mode-select .mode-option-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.trip-mode-select .mode-option-price {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--mode-gold, #d4af37);
+}
+
+.trip-mode-select .mode-option-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.trip-mode-select .mode-option-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--mode-text-dim, rgba(245, 246, 249, 0.76));
+}
+
+.trip-mode-select .mode-select-placeholder,
+.trip-mode-select .mode-select-empty {
+  margin: 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(15, 39, 64, 0.08);
+  color: #2b3f50;
+  font-size: 0.95rem;
+}

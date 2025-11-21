@@ -13,7 +13,7 @@ This v3 snapshot summarizes the current technical and visual state of Greekaway 
 ## Architecture and key modules
 
 - Server (`server.js`)
-  - Serves static assets; injects Google Maps key into `/trips/trip.html` and Stripe publishable key into `/checkout.html` at response time.
+  - Serves static assets; injects Google Maps key into `/trip.html` and Stripe publishable key into `/checkout.html` at response time.
   - Bookings/availability endpoints; creates and persists bookings to SQLite (`data/db.sqlite3`).
   - Payments: `POST /create-payment-intent` (idempotency-aware); stores PaymentIntent linkage in booking.
   - Attaches `webhook.js` for Stripe event handling.
@@ -25,7 +25,7 @@ This v3 snapshot summarizes the current technical and visual state of Greekaway 
   - Test-only endpoint: `POST /webhook/test` (gated by `ALLOW_TEST_WEBHOOK=true`).
 
 - Frontend (under `public/`)
-  - Pages: `index.html`, `trips.html`, `/categories/*.html`, `/trips/trip.html`, `checkout.html`, admin pages (`admin.html`, `admin-groups.html`), booking step pages (`step2.html`, `step3.html`).
+  - Pages: `index.html`, `trips.html`, `/categories/*.html`, `/trip.html`, `checkout.html`, admin pages (`admin.html`, `admin-groups.html`), booking step pages (`step2.html`, `step3.html`).
   - JS: `main.js` (categories, trip rendering, maps, booking flow), `overlay-manager.js`, `i18n.js`, `payment-request.js`, `feedback.js`, `footer.js`.
   - CSS: `style.css` (global), `trip.css` (trip and overlays), `booking.css` (calendar and steps overrides).
   - Data: `public/data/tripindex.json`, `public/data/categories.json`, and per-trip JSONs under `public/data/trips/`.

@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 (async ()=>{
-  const url = 'http://localhost:3000/trips/trip.html?id=olympia';
+  const url = 'http://localhost:3000/trip.html?trip=olympia';
   const browser = await puppeteer.launch({args:['--no-sandbox'], headless: true});
   const page = await browser.newPage();
   page.on('console', msg => console.log('PAGELOG>', msg.text()));

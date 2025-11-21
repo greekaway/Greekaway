@@ -5,11 +5,19 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  /* let the global styles (body[data-category]) control the page background
-     so per-category gradients can show; avoid overriding here */
+  /* keep the base layer transparent; trip-specific navy is applied below */
   background: transparent;
   color: #ecf0f1;
   min-height: calc(var(--vh, 1vh) * 100);
+}
+
+html.trip-page,
+body.trip-page,
+html[data-view="trip"],
+body[data-view="trip"] {
+  background-color: #1B2A3A;
+  background-image: none;
+  color: #f1f5f8;
 }
 
 /* Ensure vertical page scrolling is always possible on mobile/tablet
@@ -17,6 +25,13 @@ body {
 html, body { -webkit-overflow-scrolling: touch; }
 body:not(.overlay-open) { overflow-y: auto; touch-action: pan-y; overscroll-behavior-y: contain; }
 body.trip-page { --site-header-height: 0px; }
+
+body.trip-page :is(.trip-section, .trip-content, .trip-card),
+body[data-view="trip"] :is(.trip-section, .trip-content, .trip-card) {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box;
+}
 
 #trip-section { touch-action: pan-y; }
 
@@ -86,13 +101,37 @@ main {
 
 body.trip-page main,
 body[data-view="trip"] main {
-  width: min(1180px, 100%);
-  margin: 0 auto;
-  padding: 110px clamp(24px, 6vw, 72px) calc(160px + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 0 calc(160px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
+  min-height: 100vh;
+  position: relative;
+}
+
+body.trip-page #trip-section,
+body[data-view="trip"] #trip-section {
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  padding: clamp(16px, 4vw, 32px) 0 clamp(140px, 12vw, 220px);
+  box-sizing: border-box;
+  background: transparent;
 }
 
 /* Κάρτες */
+body.trip-page :is(.card, .video-card),
+body[data-view="trip"] :is(.card, .video-card) {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  padding: clamp(16px, 4vw, 24px) clamp(16px, 4vw, 28px);
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .card {
   /* dark translucent card so the navy background shows through and card isn't bright white */
   background: rgba(12,22,30,0.7);
@@ -107,24 +146,7 @@ body[data-view="trip"] main {
   margin-bottom: 0.5rem;
 }
 
-/* --- Sea trip page: ensure the trip page background matches the category/home navy
-   and uses the same gradient depth so transitions feel seamless. This override
-   is intentionally placed in trip.css to keep trip-specific look adjustments close. */
-body[data-category="sea"][data-view="trip"], html[data-category="sea"][data-view="trip"] {
-  /* use the exact home/site gradient for sea trip pages */
-  background-image: var(--site-gradient);
-  background-color: var(--site-bg-color);
-  color: #ecf0f1;
-}
-
-/* Lighten the background of all trip pages slightly so video cards stand out more.
-   Uses a brighter navy gradient similar to the welcome/home page. */
-html[data-view="trip"], body[data-view="trip"] {
-  /* use the unified site gradient defined in style.css */
-  background-image: var(--site-gradient);
-  background-color: var(--site-bg-color);
-  color: #f1f5f8;
-}
+/* remove legacy per-category gradients so the trip view uses a single navy background */
 
 /* Video cards: wrap each video in a rounded card with soft shadow, padding and spacing.
    Use a slightly lighter background (#1c2430) behind cards to create contrast. */
@@ -139,6 +161,26 @@ html[data-view="trip"], body[data-view="trip"] {
 }
 
 .video-card + .video-card { margin-top: 18px; }
+
+body.trip-page :is(.video-card .video-wrap, #map),
+body[data-view="trip"] :is(.video-card .video-wrap, #map) {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body.trip-page #map,
+body[data-view="trip"] #map {
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+body.trip-page .video-wrap,
+body[data-view="trip"] .video-wrap {
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
 
 .video-card .video-wrap { border-radius: 10px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
 
@@ -164,7 +206,6 @@ html[data-view="trip"], body[data-view="trip"] {
 
 /* Trip info tabs (sticky row below header, footer-inspired look) */
 .trip-info-tabs {
-  --trip-tabs-offset: clamp(30px, 8vw, 90px);
   position: sticky;
   top: calc(env(safe-area-inset-top, 0px) + var(--site-header-height, 60px));
   z-index: 900;
@@ -173,33 +214,26 @@ html[data-view="trip"], body[data-view="trip"] {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   padding-top: 0;
-  padding-bottom: 14px;
-  padding-right: clamp(14px, 5vw, 30px);
-  padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset));
-  /* align snap paddings with visual paddings so first/last tabs settle fully visible */
-  scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset));
-  scroll-padding-right: clamp(14px, 5vw, 30px);
-  margin: 0 0 20px 0;
+  padding-bottom: clamp(10px, 3vw, 18px);
+  padding-left: calc(env(safe-area-inset-left, 0px) + clamp(10px, 4vw, 22px));
+  padding-right: calc(env(safe-area-inset-right, 0px) + clamp(10px, 4vw, 22px));
+  scroll-padding-left: calc(env(safe-area-inset-left, 0px) + clamp(10px, 4vw, 22px));
+  scroll-padding-right: calc(env(safe-area-inset-right, 0px) + clamp(10px, 4vw, 22px));
+  margin: 0 0 clamp(12px, 3vw, 24px);
   width: 100%;
   scrollbar-width: none;
   -ms-overflow-style: none;
   scroll-snap-type: x proximity;
-  /* prevent page body from being pulled when reaching ends */
   overscroll-behavior-x: contain;
   background: transparent;
   border: none;
   box-shadow: none;
 }
 
-.trip-info-tabs::before {
-  content: '';
-  flex: 0 0 var(--trip-tabs-offset);
-}
-
-/* end spacer so you can scroll far enough to see the last tab fully */
+.trip-info-tabs::before,
 .trip-info-tabs::after {
-  content: '';
-  flex: 0 0 var(--trip-tabs-offset);
+  content: none;
+  display: none;
 }
 
 .trip-info-tabs.is-floating { z-index: 15000; }
@@ -258,16 +292,14 @@ html[data-view="trip"], body[data-view="trip"] {
 
 @media (max-width: 640px) {
   .trip-info-tabs {
-    --trip-tabs-offset: clamp(26px, 12vw, 74px);
     gap: 8px;
     padding-top: 0;
-    padding-bottom: 12px;
-    padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 2px);
-    padding-right: clamp(12px, 5vw, 28px);
-    scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 2px);
-    scroll-padding-right: clamp(12px, 5vw, 28px);
+    padding-bottom: clamp(8px, 4vw, 14px);
+    padding-left: calc(env(safe-area-inset-left, 0px) + clamp(8px, 6vw, 18px));
+    padding-right: calc(env(safe-area-inset-right, 0px) + clamp(8px, 6vw, 18px));
+    scroll-padding-left: calc(env(safe-area-inset-left, 0px) + clamp(8px, 6vw, 18px));
+    scroll-padding-right: calc(env(safe-area-inset-right, 0px) + clamp(8px, 6vw, 18px));
   }
-  .trip-info-tabs::before { flex-basis: var(--trip-tabs-offset); }
   .trip-info-tab { min-width: 96px; font-size: 0.74rem; height: 44px; padding: 0 14px; }
 }
 
@@ -275,44 +307,75 @@ html[data-view="trip"], body[data-view="trip"] {
   .trip-info-tab { transition: none; }
 }
 
-#tripInfoOverlay .overlay-inner {
-  justify-content: flex-start;
+#tripInfoOverlay {
+  position: static;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
   align-items: stretch;
-  width: min(calc(100vw - 24px), 960px);
-  margin: calc(var(--site-header-height, 60px) + 28px) auto 3vh;
-  padding: clamp(18px, 4vw, 36px);
-  background: linear-gradient(160deg, #223345 0%, #1b2a3a 75%);
-  border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  justify-content: stretch;
+  display: none;
+}
+
+#tripInfoOverlay.active {
+  display: block;
+}
+
+#tripInfoOverlay .overlay-inner {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
 }
 
 .trip-info-overlay-inner {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - (var(--site-header-height, 60px) + 80px));
-  overflow: hidden;
-  background: transparent;
-  padding: 0;
+  gap: 0;
 }
 
 .trip-info-overlay-body {
-  flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  min-height: 0;
+  max-height: max(320px, calc(var(--vh, 1vh) * 100 - clamp(150px, 14vw, 260px)));
+  min-height: clamp(240px, 60vh, 640px);
   overscroll-behavior: contain;
   background: transparent;
-  margin-top: 24px;
-  padding-right: 8px;
-  padding-left: clamp(8px, 2vw, 18px);
-  padding-top: clamp(6px, 2vw, 14px);
-  padding-bottom: clamp(16px, 4vw, 36px);
+  margin: 0;
+  padding: clamp(20px, 5vw, 48px) clamp(14px, 6vw, 36px) calc(clamp(20px, 5vw, 48px) + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: clamp(20px, 4vw, 40px);
   color: #f1f5f8;
   line-height: 1.6;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+}
+
+.trip-info-overlay-body::-webkit-scrollbar {
+  display: none;
+}
+
+.trip-info-overlay-body > * {
+  width: 100%;
+  max-width: 100%;
 }
 
 .trip-info-overlay-body ul {
@@ -439,15 +502,15 @@ body.overlay-open::before { content:''; position:fixed; inset:0; background:rgba
 /* Trip page: style trip cards (listings) so they visually match category tiles
    — navy background, gradient overlay, rounded, and luxurious shadow.
    Use attribute selector specificity so we don't affect category listing CSS. */
+body.trip-page .trip-card,
 body[data-view="trip"] .trip-card {
-  background: linear-gradient(180deg, rgba(8,50,74,0.98), rgba(14,22,30,0.98));
-  color: #f9d65c;
-  border-radius: 20px;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.6), inset 0 6px 12px rgba(0,0,0,0.35);
-  padding: 12px 16px;
-  margin: 12px auto;
-  border: 1px solid rgba(255,255,255,0.02);
-  max-width: 820px; /* keep current alignment and size behaviour */
+  background: transparent;
+  color: inherit;
+  border-radius: 0;
+  box-shadow: none;
+  padding: clamp(16px, 4vw, 26px) clamp(16px, 4vw, 28px);
+  margin: 0 0 clamp(18px, 4vw, 32px);
+  border: none;
 }
 
 /* Ensure trip cards inside the category listing (e.g. Lefkada) look like category tiles
@@ -536,6 +599,7 @@ body[data-view="category"] #trips-container .trip-card[data-trip-id="lefkas"],
 }
 
 /* Ensure trip-card titles keep gold color and weight */
+body.trip-page .trip-card h3,
 body[data-view="trip"] .trip-card h3 {
   color: #d4af37;
   margin: 0;

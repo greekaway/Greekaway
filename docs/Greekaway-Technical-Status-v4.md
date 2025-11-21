@@ -15,7 +15,7 @@ This v4 snapshot summarizes the current technical and visual state of Greekaway 
 - Server (`server.js`)
   - Static serving from `public/`, plus locale exposure at `/locales/index.json` with cache tuning for dev/prod.
   - HTML response-time injection:
-    - Google Maps key into `/trips/trip.html`.
+    - Google Maps key into `/trip.html`.
     - Stripe publishable key into `/checkout.html`.
   - Bookings and availability (public-side):
     - `POST /api/bookings` creates bookings in SQLite (`data/db.sqlite3`).
@@ -61,7 +61,7 @@ This v4 snapshot summarizes the current technical and visual state of Greekaway 
 
 ## Frontend (under `public/`)
 
-- Pages: `index.html`, `trips.html`, `/categories/*.html`, `/trips/trip.html`, `checkout.html`, booking steps (`step2.html`, `step3.html`), admin pages (`admin.html`, `admin-groups.html`, `admin-availability.html`, `admin-payments.html`), partner flows (`partner-agreement.html`, `partner-manual-onboarding.html`), provider panel (`/provider/*.html`).
+- Pages: `index.html`, `trips.html`, `/categories/*.html`, `/trip.html`, `checkout.html`, booking steps (`step2.html`, `step3.html`), admin pages (`admin.html`, `admin-groups.html`, `admin-availability.html`, `admin-payments.html`), partner flows (`partner-agreement.html`, `partner-manual-onboarding.html`), provider panel (`/provider/*.html`).
 - JS: `main.js` (categories, trips, trip page with carousel, overlays), `overlay-manager.js`, `i18n.js`, `assistant.js`, `payment-request.js`, `feedback.js`, `footer.js`, `carousel-config.js`, `admin-*`, `manual-payments.js`, `theme.js`, `welcome.js`.
 - CSS: Centralized tokens and styles for cards, overlays, booking flow, and carousel.
 - Data: `public/data/tripindex.json`, `public/data/categories.json`, per-trip JSON in `public/data/trips/*.json`.
