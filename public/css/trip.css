@@ -250,7 +250,7 @@ html[data-view="trip"], body[data-view="trip"] {
     gap: 8px;
     padding-top: 0;
     padding-bottom: 12px;
-    padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset));
+    padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 2px);
     padding-right: clamp(12px, 5vw, 28px);
   }
   .trip-info-tabs::before { flex-basis: var(--trip-tabs-offset); }
