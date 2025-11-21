@@ -165,37 +165,30 @@ html[data-view="trip"], body[data-view="trip"] {
 /* Trip info tabs (sticky row below header, footer-inspired look) */
 .trip-info-tabs {
   --trip-tabs-offset: clamp(30px, 8vw, 90px);
-  /* small extra nudge so the first tab doesn’t hug the edge */
-  --trip-tabs-extra-left: 8px;
-  /* right-end spacer so the last tab is fully visible */
-  --trip-tabs-end-offset: clamp(22px, 6vw, 48px);
   position: sticky;
   top: calc(env(safe-area-inset-top, 0px) + var(--site-header-height, 60px));
   z-index: 900;
   display: flex;
   gap: 11px;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   padding-top: 0;
   padding-bottom: 14px;
-  padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
-  padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + var(--trip-tabs-extra-left));
-  /* ensure scroll-snap places first/last items fully inside the viewport */
-  scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + var(--trip-tabs-extra-left));
-  scroll-padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
+  padding-right: clamp(14px, 5vw, 30px);
+  padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset));
   margin: 0 0 20px 0;
   width: 100%;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  scroll-snap-type: x mandatory;
-  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
   background: transparent;
   border: none;
   box-shadow: none;
 }
 
-/* Remove scrollable pseudo-spacers; use padding instead so the first tab's
-   initial position is stable and cannot scroll further left than 0. */
+.trip-info-tabs::before {
+  content: '';
+  flex: 0 0 var(--trip-tabs-offset);
+}
 
 .trip-info-tabs.is-floating { z-index: 15000; }
 
@@ -254,34 +247,14 @@ html[data-view="trip"], body[data-view="trip"] {
 @media (max-width: 640px) {
   .trip-info-tabs {
     --trip-tabs-offset: clamp(26px, 12vw, 74px);
-    /* bring the strip slightly more to the left on phones */
-    --trip-tabs-extra-left: 2px;
-    /* slightly smaller right spacer so last tab still shows fully */
-    --trip-tabs-end-offset: clamp(16px, 6vw, 40px);
     gap: 8px;
     padding-top: 0;
     padding-bottom: 12px;
-    padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + var(--trip-tabs-extra-left));
-    padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
-    scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + var(--trip-tabs-extra-left));
-    scroll-padding-right: calc(env(safe-area-inset-right, 0px) + var(--trip-tabs-end-offset));
+    padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset));
+    padding-right: clamp(12px, 5vw, 28px);
   }
+  .trip-info-tabs::before { flex-basis: var(--trip-tabs-offset); }
   .trip-info-tab { min-width: 96px; font-size: 0.74rem; height: 44px; padding: 0 14px; }
-}
-
-/* On large screens, center the tabs when they don't overflow */
-@media (min-width: 1024px) {
-  .trip-info-tabs {
-    justify-content: center;
-    /* remove ghost spacers and extra paddings on desktop */
-    --trip-tabs-offset: 0px;
-    --trip-tabs-extra-left: 0px;
-    --trip-tabs-end-offset: 0px;
-    padding-left: clamp(12px, 3vw, 24px);
-    padding-right: clamp(12px, 3vw, 24px);
-    scroll-padding-left: 0;
-    scroll-padding-right: 0;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
