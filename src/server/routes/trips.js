@@ -8,6 +8,8 @@ const TRIPS_DIR = path.join(ROOT_DIR, "data", "trips");
 const TRIP_TEMPLATE_FILE = path.join(TRIPS_DIR, "_template.json");
 const UPLOAD_TRIPS_DIR = path.join(ROOT_DIR, "public", "uploads", "trips");
 const MODE_KEYS = ["van", "mercedes", "bus"];
+const MAX_TRIP_IMAGE_BYTES = 4 * 1024 * 1024;
+const MAX_TRIP_IMAGE_COUNT = 12;
 const MODE_DEFAULT_META = {
   van: { capacity: 7, charge_type: "per_person", label: "Premium Van" },
   mercedes: {
@@ -573,6 +575,27 @@ function ensureTripsDir() {
   }
 }
 
+function removeUploadedFiles(files) {
+  if (!files) return;
+  const list = Array.isArray(files) ? files : [files];
+  list.forEach((file) => {
+    if (!file || !file.path) return;
+    try {
+      fs.unlinkSync(file.path);
+    } catch (_) {
+      /* ignore */
+    }
+  });
+}
+
+function isAllowedImageFile(file) {
+  if (!file) return false;
+  const typeOk = /^image\//i.test(file.mimetype || "");
+  const sizeOk =
+    typeof file.size === "number" ? file.size <= MAX_TRIP_IMAGE_BYTES : true;
+  return typeOk && sizeOk;
+}
+
 function sanitizeSlug(raw) {
   return String(raw || "")
     .trim()
@@ -750,7 +773,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
           if (!ok) return cb(new Error("invalid_file_type"));
           cb(null, true);
         },
-        limits: { fileSize: 4 * 1024 * 1024 },
+        limits: { fileSize: MAX_TRIP_IMAGE_BYTES },
       })
     : null;
 
@@ -870,6 +893,36 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
 
   app.use("/api/admin/trips", adminRouter);
   if (upload) {
+    const stopImagesUpload = upload.array("images", MAX_TRIP_IMAGE_COUNT);
+    app.post("/api/upload-trip-image", (req, res) => {
+      if (!checkAdminAuth || !checkAdminAuth(req))
+        return res.status(403).json({ error: "Forbidden" });
+      stopImagesUpload(req, res, (err) => {
+        if (err)
+          return res.status(err.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
+            error: "upload_failed",
+            detail: err && err.message ? err.message : "upload_failed",
+          });
+        const files = Array.isArray(req.files) ? req.files : [];
+        if (!files.length) return res.status(400).json({ error: "no_files" });
+        const invalid = files.find((file) => !isAllowedImageFile(file));
+        if (invalid) {
+          removeUploadedFiles(files);
+          return res.status(400).json({
+            error: "invalid_file_type",
+            detail: "Μόνο εικόνες έως 4MB (JPG, PNG, WEBP, SVG).",
+          });
+        }
+        return res.json({
+          ok: true,
+          files: files.map((file) => ({
+            filename: file.filename,
+            url: `/uploads/trips/${file.filename}`,
+            size: file.size || 0,
+          })),
+        });
+      });
+    });
     app.post("/api/admin/upload-trip-image", (req, res) => {
       if (!checkAdminAuth || !checkAdminAuth(req))
         return res.status(403).json({ error: "Forbidden" });

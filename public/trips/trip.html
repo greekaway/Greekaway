@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/trip.css?v=20251121-3">
+  <link rel="stylesheet" href="/css/trip-photos.css">
   <link rel="stylesheet" href="/css/booking.css">
   <link rel="stylesheet" href="/css/notification-bubble.css?v=20251108">
   <link rel="manifest" href="/manifest.json">
@@ -84,6 +85,7 @@
 <body class="trip-page">
   <nav id="tripInfoTabs" class="trip-info-tabs" aria-label="Πληροφορίες εκδρομής" role="toolbar">
     <button type="button" class="trip-info-tab" data-info-key="home">Αρχική</button>
+    <button type="button" class="trip-info-tab" data-info-key="photos">Φωτογραφίες</button>
     <button type="button" class="trip-info-tab" data-info-key="includes">Περιλαμβάνεται</button>
     <button type="button" class="trip-info-tab" data-info-key="excludes">Δεν Περιλαμβάνεται</button>
     <button type="button" class="trip-info-tab" data-info-key="experience">Εμπειρία</button>
@@ -143,10 +145,7 @@
 
   <div id="tripInfoOverlay" class="overlay" role="dialog" aria-modal="true">
     <div class="overlay-inner trip-info-overlay-inner">
-      <div class="trip-info-overlay-content">
-        <h2 id="tripInfoOverlayTitle">Πληροφορίες</h2>
-        <div id="tripInfoOverlayBody" class="trip-info-overlay-body"></div>
-      </div>
+      <div id="tripInfoOverlayBody" class="trip-info-overlay-body"></div>
     </div>
   </div>
 
@@ -301,6 +300,7 @@
   <script src="/js/overlay-manager.js" defer></script>
   <script src="/js/footer.js?v=20251021" defer></script>
   <script src="/js/assistant.js" defer></script>
+  <script src="/js/trip-photos.js" defer></script>
   <script src="/js/trip.js?v=20251121" defer></script>
 
   <!-- Google Maps -->

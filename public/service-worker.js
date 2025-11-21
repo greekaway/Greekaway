@@ -3,7 +3,7 @@ self.skipWaiting();
 self.clientsClaim();
 
 // Explicit cache version to force fresh caches on deploys
-const CACHE_VERSION = 'v20251121-1';
+const CACHE_VERSION = 'v20251113';
 
 // Bump cache to invalidate old SW and ensure fresh checkout/network
 const CACHE_NAME = `greekaway-pwa-${CACHE_VERSION}`;

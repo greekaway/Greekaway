@@ -100,25 +100,10 @@
     } catch(_){}
     const titleEl = document.getElementById('modeCardTitle');
     const descEl = document.getElementById('modeCardDescription');
-    const breadcrumbEl = document.getElementById('modeTripBreadcrumb');
-    const metaEl = document.getElementById('modeTripMeta');
     const catCard = category && category.modeCard ? category.modeCard : null;
-    if (titleEl) titleEl.textContent = (catCard && catCard.title) || 'Επίλεξε εμπειρία';
+    const tripTitle = trip && trip.title ? trip.title : '';
+    if (titleEl) titleEl.textContent = tripTitle || 'Επίλεξε εμπειρία';
     if (descEl) descEl.textContent = (catCard && catCard.subtitle) || 'Διάλεξε όχημα και εμπειρία για την εκδρομή σου.';
-    if (breadcrumbEl) {
-      const catTitle = category ? (category.title || category.slug || '') : '';
-      breadcrumbEl.textContent = catTitle ? `${catTitle} → ${trip.title || ''}` : (trip.title || '');
-    }
-    if (metaEl) {
-      const chips = [];
-      if (trip && trip.duration) chips.push(`${trip.duration} ώρες`);
-      if (trip && trip.tags && trip.tags.length) chips.push(trip.tags[0]);
-      if (chips.length) {
-        metaEl.innerHTML = chips.map(text => `<span class="chip">${escapeHtml(text)}</span>`).join('');
-      } else {
-        metaEl.innerHTML = '';
-      }
-    }
   }
 
   function renderModes(trip, category, preselectedMode){
@@ -127,6 +112,7 @@
     if (!container) return;
     container.innerHTML = '';
     if (errorEl) errorEl.hidden = true;
+    const durationLabel = deriveDurationLabel(trip);
     const cards = [];
     MODE_ORDER.forEach(key => {
       const info = deriveModeInfo(trip, key);
@@ -158,6 +144,7 @@
         <div class="mode-card-meta">
           <span><i class="fa-solid fa-user" aria-hidden="true"></i>${chargeLabel(card.info.chargeType)}</span>
           ${card.info.capacity ? `<span><i class="fa-solid fa-users" aria-hidden="true"></i>Έως ${card.info.capacity} pax</span>` : ''}
+          ${durationLabel ? `<span><i class="fa-regular fa-clock" aria-hidden="true"></i>${escapeHtml(durationLabel)}</span>` : ''}
         </div>`;
       const handleNavigate = () => {
         try { persistModeSelection(trip, card.key, card.info); } catch(_){ }
@@ -242,6 +229,23 @@
 
   function chargeLabel(type){
     return CHARGE_LABELS[type] || CHARGE_LABELS.per_person;
+  }
+
+  function deriveDurationLabel(trip){
+    if (!trip) return '';
+    const daysRaw = trip.duration_days;
+    const hoursRaw = trip.duration_hours != null ? trip.duration_hours : trip.duration;
+    const days = Number(daysRaw);
+    if (Number.isFinite(days) && days > 0) {
+      const suffix = days === 1 ? 'ημέρα' : 'ημέρες';
+      return `${days} ${suffix}`;
+    }
+    const hours = Number(hoursRaw);
+    if (Number.isFinite(hours) && hours > 0) {
+      const suffix = hours === 1 ? 'ώρα' : 'ώρες';
+      return `${hours} ${suffix}`;
+    }
+    return '';
   }
 
   function persistModeSelection(trip, modeKey, info){

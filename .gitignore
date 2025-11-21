@@ -7,3 +7,11 @@ server.backup*.js
 *.tmp
 reports/repo-inventory*
 tools/inventory.js
+
+# Ignore runtime uploads generated via admin panel
+public/uploads/*
+public/uploads/**
+public/uploads/trips/*
+public/uploads/trips/**
+public/uploads/.cache/*
+public/uploads/.cache/**

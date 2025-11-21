@@ -112,6 +112,18 @@ header.sticky-bar .filters-toggle{align-self:flex-end;margin-left:0}
 #mapMarkers{min-height:120px}
 .repeatable-item textarea{min-height:80px}
 
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,1px,1px);white-space:nowrap;border:0}
+
+.stop-images-field{gap:6px}
+.stop-images-row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.stop-images-row textarea{flex:1 1 260px;min-height:120px}
+.stop-images-tools{display:flex;flex-direction:column;gap:6px;min-width:180px}
+.stop-images-tools input[type="file"]{font-size:.82rem}
+.stop-images-status{font-size:.75rem;color:#8aa0b8}
+.stop-images-status[data-state="uploading"]{color:#cfb560}
+.stop-images-status[data-state="error"]{color:#c84545}
+.stop-images-status[data-state="success"]{color:#3cb179}
+
 /* Layout polish: keep content visible above fixed bottom nav, remove extra bottoms */
 main.content-wrap{min-height:calc(100vh - 140px); padding-bottom:12px; margin-top:8px}
 .content-wrap .hint#tripsMessage.error{color:#c33}

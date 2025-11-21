@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <title>Trip Photos Template</title>
+</head>
+<body>
+  <template id="tripPhotosTemplate">
+    <div class="trip-photos-root" data-trip-photos-root></div>
+  </template>
+
+  <template id="tripPhotoViewerTemplate">
+    <div id="photoViewerOverlay" class="photo-viewer-overlay" role="dialog" aria-modal="true" hidden>
+      <div class="photo-viewer-content">
+        <button type="button" class="photo-viewer-close" aria-label="Κλείσιμο">&times;</button>
+        <div class="photo-viewer-meta">
+          <span class="photo-viewer-title" data-photo-viewer-title></span>
+          <span class="photo-viewer-counter" data-photo-viewer-counter></span>
+        </div>
+        <div class="photo-viewer-frame" data-photo-viewer-frame>
+          <img data-photo-viewer-image alt="Trip photo" />
+        </div>
+        <div class="photo-viewer-dots" data-photo-viewer-dots></div>
+        <button type="button" class="photo-viewer-nav prev" aria-label="Προηγούμενη" data-photo-viewer-prev>‹</button>
+        <button type="button" class="photo-viewer-nav next" aria-label="Επόμενη" data-photo-viewer-next>›</button>
+      </div>
+    </div>
+  </template>
+</body>
+</html>

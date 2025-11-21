@@ -22,20 +22,21 @@
   ready(function(){
     const tabsRoot = document.getElementById('tripInfoTabs');
     const overlay = document.getElementById('tripInfoOverlay');
-    const overlayTitle = document.getElementById('tripInfoOverlayTitle');
     const overlayBody = document.getElementById('tripInfoOverlayBody');
     const assistantOverlayId = 'aiOverlay';
-    if (!tabsRoot || !overlay || !overlayTitle || !overlayBody) return;
+    if (!tabsRoot || !overlay || !overlayBody) return;
 
     const buttons = Array.from(tabsRoot.querySelectorAll('.trip-info-tab'));
     const KEY_META = {
       includes: { title: 'Περιλαμβάνεται' },
       excludes: { title: 'Δεν Περιλαμβάνεται' },
+      photos: { title: 'Φωτογραφίες' },
       experience: { title: 'Εμπειρία' },
       faq: { title: 'Συχνές Ερωτήσεις' }
     };
 
     let activeKey = null;
+    let photosAvailable = queryPhotosAvailability();
 
     function setActiveKey(key){
       activeKey = key;
@@ -75,10 +76,6 @@
       }
     }
 
-    function wrapCard(inner){
-      return `<article class="trip-info-card">${inner}</article>`;
-    }
-
     function buildListFromColumn(selector){
       const column = document.querySelector(selector);
       if (!column) return '';
@@ -86,8 +83,8 @@
       if (!listItems.length) return '';
       const heading = column.querySelector('h4') ? column.querySelector('h4').textContent.trim() : '';
       const listHtml = `<ul>${listItems.map(li => `<li>${li.innerHTML.trim()}</li>`).join('')}</ul>`;
-      const headingHtml = heading ? `<h4>${heading}</h4>` : '';
-      return wrapCard(`${headingHtml}${listHtml}`);
+      const headingHtml = heading ? `<h3>${escapeHtml(heading)}</h3>` : '';
+      return `<section class="trip-info-block">${headingHtml}${listHtml}</section>`;
     }
 
     function buildExperience(){
@@ -97,8 +94,8 @@
         const title = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : '';
         const bodyEl = card.querySelector('p');
         const bodyHtml = bodyEl ? bodyEl.innerHTML : card.innerHTML;
-        const titleHtml = title ? `<h3>${title}</h3>` : '';
-        return wrapCard(`${titleHtml}${bodyHtml}`);
+        const titleHtml = title ? `<h3>${escapeHtml(title)}</h3>` : '';
+        return `<section class="trip-info-block">${titleHtml}${bodyHtml}</section>`;
       }).join('');
     }
 
@@ -109,9 +106,18 @@
         const question = item.querySelector('strong') ? item.querySelector('strong').textContent.trim() : '';
         const answerEl = item.querySelector('p');
         const answerHtml = answerEl ? answerEl.innerHTML : '';
-        const questionHtml = question ? `<h3>${question}</h3>` : '';
-        return wrapCard(`${questionHtml}${answerHtml}`);
+        const questionHtml = question ? `<h3>${escapeHtml(question)}</h3>` : '';
+        return `<section class="trip-info-block">${questionHtml}${answerHtml}</section>`;
       }).join('');
+    }
+
+    function buildPhotos(){
+      if (!window.TripPhotos || typeof window.TripPhotos.buildMarkup !== 'function') return '';
+      try {
+        return window.TripPhotos.buildMarkup() || '';
+      } catch(_){
+        return '';
+      }
     }
 
     function getContentPayload(key){
@@ -123,6 +129,12 @@
           return { title: KEY_META.includes.title, html: buildListFromColumn('#trip-includes .trip-inclusions-column:not(.is-excludes)') };
         case 'excludes':
           return { title: KEY_META.excludes.title, html: buildListFromColumn('#trip-includes .trip-inclusions-column.is-excludes') };
+        case 'photos': {
+          if (!photosAvailable) return { title: KEY_META.photos.title, html: '' };
+          const markup = buildPhotos();
+          const fallback = '<div class="trip-info-empty">Δεν βρέθηκαν φωτογραφίες για αυτή την εκδρομή.</div>';
+          return { title: KEY_META.photos.title, html: markup || fallback };
+        }
         case 'experience':
           return { title: KEY_META.experience.title, html: buildExperience() };
         case 'faq':
@@ -134,8 +146,8 @@
 
     function showContent(key){
       const payload = getContentPayload(key);
-      overlayTitle.textContent = payload.title || 'Πληροφορίες';
       overlayBody.innerHTML = payload.html || '<div class="trip-info-empty">Δεν υπάρχουν διαθέσιμα δεδομένα για αυτή την ενότητα.</div>';
+      runAfterRenderHook(key);
       openOverlaySafe('tripInfoOverlay');
       setActiveKey(key);
     }
@@ -158,8 +170,16 @@
         if (overlay.classList.contains('active')) closeOverlaySafe('tripInfoOverlay');
         return;
       }
-      overlayTitle.textContent = payload.title || 'Πληροφορίες';
       overlayBody.innerHTML = payload.html;
+      runAfterRenderHook(activeKey);
+    }
+
+    function runAfterRenderHook(key){
+      if (key !== 'photos') return;
+      if (!window.TripPhotos || typeof window.TripPhotos.afterRender !== 'function') return;
+      try {
+        window.TripPhotos.afterRender(overlayBody);
+      } catch(_){ }
     }
 
     function updateAvailability(){
@@ -170,7 +190,9 @@
           btn.classList.remove('is-disabled');
           return;
         }
-        const hasContent = !!getContentPayload(key).html;
+        const hasContent = key === 'photos'
+          ? photosAvailable
+          : !!getContentPayload(key).html;
         btn.disabled = !hasContent;
         btn.classList.toggle('is-disabled', !hasContent);
       });
@@ -209,7 +231,35 @@
       observer.observe(el, { childList: true, subtree: true, attributes: true });
     });
 
+    document.addEventListener('trip-photos:updated', (event) => {
+      if (event && event.detail && typeof event.detail.available === 'boolean') {
+        photosAvailable = Boolean(event.detail.available);
+      } else {
+        photosAvailable = queryPhotosAvailability();
+      }
+      updateAvailability();
+      refreshActiveContent();
+    });
+
     updateAvailability();
     setTimeout(updateAvailability, 1200);
   });
+
+  function queryPhotosAvailability(){
+    if (window.TripPhotos && typeof window.TripPhotos.hasPhotos === 'function') {
+      try { return Boolean(window.TripPhotos.hasPhotos()); }
+      catch(_){ }
+    }
+    return false;
+  }
+
+  function escapeHtml(str){
+    return String(str || '').replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[ch] || ch);
+  }
 })();

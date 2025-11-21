@@ -484,6 +484,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // store loaded trip and render localized fields via a function so we can re-render on language change
       window.__loadedTrip = trip;
+      try {
+        document.dispatchEvent(new CustomEvent('trip:data:ready', { detail: trip }));
+      } catch(_){ }
       const slugForRedirect = trip.slug || trip.id || tripId;
       function escapeHtml(str){
         return String(str || '').replace(/[&<>"']/g, (ch) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch] || ch));
