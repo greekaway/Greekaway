@@ -9,6 +9,7 @@
     per_person: 'ανά άτομο',
     per_vehicle: 'συνολική τιμή'
   };
+  let activeTripSlug = '';
 
   document.addEventListener('DOMContentLoaded', initModeSelect);
 
@@ -19,6 +20,7 @@
       window.location.href = '/trips.html';
       return;
     }
+    activeTripSlug = tripParam;
     const preselectedMode = (qs.get('mode') || '').trim().toLowerCase();
     setStatus('Φόρτωση διαθέσιμων modes...');
     try {
@@ -27,6 +29,7 @@
         fetchCategories()
       ]);
       if (!trip) throw new Error('Trip not found');
+      activeTripSlug = trip.slug || trip.id || tripParam;
       const category = findCategoryMeta(categories, trip.category);
       renderHero(trip, category);
       renderModes(trip, category, preselectedMode);
@@ -121,8 +124,7 @@
   function renderModes(trip, category, preselectedMode){
     const container = document.getElementById('modeCards');
     const errorEl = document.getElementById('modeError');
-    const continueBtn = document.getElementById('modeContinue');
-    if (!container || !continueBtn) return;
+    if (!container) return;
     container.innerHTML = '';
     if (errorEl) errorEl.hidden = true;
     const cards = [];
@@ -157,31 +159,23 @@
           <span><i class="fa-solid fa-user" aria-hidden="true"></i>${chargeLabel(card.info.chargeType)}</span>
           ${card.info.capacity ? `<span><i class="fa-solid fa-users" aria-hidden="true"></i>Έως ${card.info.capacity} pax</span>` : ''}
         </div>`;
-      button.addEventListener('click', () => {
-        container.querySelectorAll('.mode-card').forEach(el => el.classList.remove('selected'));
-        button.classList.add('selected');
-        continueBtn.disabled = false;
-        continueBtn.dataset.mode = card.key;
-        try { persistModeSelection(trip, card.key, card.info); } catch(_){}
+      const handleNavigate = () => {
+        try { persistModeSelection(trip, card.key, card.info); } catch(_){ }
+        navigateToMode(card.key);
+      };
+      button.addEventListener('click', handleNavigate);
+      button.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          handleNavigate();
+        }
       });
       if (selectedKey && selectedKey === card.key) {
         button.classList.add('selected');
-        continueBtn.disabled = false;
-        continueBtn.dataset.mode = card.key;
-        try { persistModeSelection(trip, card.key, card.info); } catch(_){}
+        try { persistModeSelection(trip, card.key, card.info); } catch(_){ }
       }
       container.appendChild(button);
     });
-    continueBtn.onclick = () => {
-      const chosen = continueBtn.dataset.mode;
-      if (!chosen) return;
-      const slug = trip.slug || trip.id || (new URLSearchParams(window.location.search).get('trip')) || '';
-      const target = new URL('/trips/trip.html', window.location.origin || window.location.href);
-      target.searchParams.set('trip', slug);
-      target.searchParams.set('id', slug);
-      target.searchParams.set('mode', chosen);
-      window.location.href = target.toString();
-    };
   }
 
   function deriveModeInfo(trip, key){
@@ -302,5 +296,17 @@
     } catch(_) {
       return `${val.toFixed(2)} ${cur}`;
     }
+  }
+
+  function navigateToMode(modeKey){
+    const canonical = canonicalMode(modeKey);
+    if (!canonical) return;
+    const slug = activeTripSlug || (new URLSearchParams(window.location.search).get('trip') || '').trim();
+    if (!slug) return;
+    const target = new URL('/trips/trip.html', window.location.origin || window.location.href);
+    target.searchParams.set('trip', slug);
+    target.searchParams.set('id', slug);
+    target.searchParams.set('mode', canonical);
+    window.location.href = target.toString();
   }
 })();

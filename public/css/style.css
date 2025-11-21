@@ -1415,7 +1415,7 @@ body.highlight-trip {
 @media (min-width: 1024px) {
   .trip-section {
     max-width: 1100px; /* slightly wider on desktop */
-    margin: 36px auto;
+    margin: 0 auto 64px;
     padding: 0 20px 64px;
     box-sizing: border-box;
   }

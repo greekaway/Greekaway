@@ -8,7 +8,7 @@
   <!-- Icons + βασικό style όπως στο welcome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/trip.css?v=20251019">
+  <link rel="stylesheet" href="/css/trip.css?v=20251123">
   <link rel="stylesheet" href="/css/booking.css">
   <link rel="stylesheet" href="/css/notification-bubble.css?v=20251108">
   <link rel="manifest" href="/manifest.json">
@@ -81,13 +81,17 @@
   </script>
 </head>
 
-<body>
-  <!-- Back to categories button (appears on trip view) -->
-  <button id="backToCatsBtn" class="back-btn" data-i18n-aria="trips_ui.backToCategories" style="display:none;">
-    <i class="fas fa-arrow-left"></i>
-  </button>
+<body class="trip-page">
+  <nav id="tripInfoTabs" class="trip-info-tabs" aria-label="Πληροφορίες εκδρομής" role="toolbar">
+    <button type="button" class="trip-info-tab" data-info-key="home">Αρχική</button>
+    <button type="button" class="trip-info-tab" data-info-key="includes">Περιλαμβάνεται</button>
+    <button type="button" class="trip-info-tab" data-info-key="excludes">Δεν Περιλαμβάνεται</button>
+    <button type="button" class="trip-info-tab" data-info-key="experience">Εμπειρία</button>
+    <button type="button" class="trip-info-tab" data-info-key="faq">Συχνές Ερωτήσεις</button>
+    <button type="button" class="trip-info-tab" data-info-key="assistant">Ρωτήστε τον Βοηθό</button>
+  </nav>
   <!-- Περιεχόμενο εκδρομής -->
-  <section id="trip-section" class="trip-section">
+  <section id="trip-section" class="trip-section" data-active-mode="">
     <h2 id="trip-title"></h2>
     <!-- Trip header capsules: populated dynamically (price & time on top row, location below) -->
     <div class="trip-header-capsules" id="trip-meta" style="display:none"></div>
@@ -98,11 +102,11 @@
     <div id="trip-tags" class="trip-tags" style="display:none"></div>
     <p id="trip-description"></p>
 
-    <div id="trip-includes" class="trip-card trip-inclusions" style="display:none"></div>
-    <div id="trip-sections" class="trip-sections"></div>
+    <div id="trip-includes" class="trip-card trip-inclusions trip-info-source" aria-hidden="true" data-info-source="includes" style="display:none"></div>
+    <div id="trip-sections" class="trip-sections trip-info-source" aria-hidden="true" data-info-source="experience"></div>
     <div id="trip-gallery" class="trip-card trip-gallery" style="display:none"></div>
     <div id="trip-video" class="trip-card trip-video" style="display:none"></div>
-    <div id="trip-faq" class="trip-card trip-faq" style="display:none"></div>
+    <div id="trip-faq" class="trip-card trip-faq trip-info-source" aria-hidden="true" data-info-source="faq" style="display:none"></div>
 
     <div id="trip-map-card" class="trip-card trip-map-card" style="display:none">
       <h3 data-i18n="trip.map_heading">Χάρτης & Διαδρομή</h3>
@@ -134,6 +138,15 @@
     <div class="overlay-inner">
       <h2 data-i18n="about.title">Σχετικά με εμάς</h2>
       <p data-i18n="about.text">Το Greekaway δημιουργήθηκε για να σας προσφέρει επιλεγμένες εκδρομές στην Ελλάδα με άνεση, τεχνολογία και στυλ.</p>
+    </div>
+  </div>
+
+  <div id="tripInfoOverlay" class="overlay" role="dialog" aria-modal="true">
+    <div class="overlay-inner trip-info-overlay-inner">
+      <div class="trip-info-overlay-content">
+        <h2 id="tripInfoOverlayTitle">Πληροφορίες</h2>
+        <div id="tripInfoOverlayBody" class="trip-info-overlay-body"></div>
+      </div>
     </div>
   </div>
 
@@ -288,6 +301,7 @@
   <script src="/js/overlay-manager.js" defer></script>
   <script src="/js/footer.js?v=20251021" defer></script>
   <script src="/js/assistant.js" defer></script>
+  <script src="/js/trip.js?v=20251121" defer></script>
 
   <!-- Google Maps -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>

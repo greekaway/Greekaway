@@ -375,15 +375,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const params = new URLSearchParams(window.location.search);
   const tripId = (params.get("trip") || params.get("id") || '').trim();
-  const requestedMode = (params.get("mode") || '').trim().toLowerCase();
+  let requestedMode = (params.get("mode") || '').trim().toLowerCase();
   const allowedModes = ['van','bus','mercedes','private'];
   if (!tripId) {
     window.location.href = '/index.html';
     return;
   }
   if (!requestedMode || !allowedModes.includes(requestedMode)) {
-    window.location.href = `/mode-select.html?trip=${encodeURIComponent(tripId)}`;
-    return;
+    requestedMode = '';
   }
 
   // Try to set category early from tripindex so per-category background
@@ -486,7 +485,6 @@ document.addEventListener("DOMContentLoaded", () => {
       // store loaded trip and render localized fields via a function so we can re-render on language change
       window.__loadedTrip = trip;
       const slugForRedirect = trip.slug || trip.id || tripId;
-      const initialModeKey = canonicalMode(requestedMode || getSelectedMode());
       function escapeHtml(str){
         return String(str || '').replace(/[&<>"']/g, (ch) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch] || ch));
       }
@@ -522,24 +520,32 @@ document.addEventListener("DOMContentLoaded", () => {
         try { document.dispatchEvent(new CustomEvent('gw:mode:changed', { detail: { mode: modeKey, info } })); } catch(_){ }
       }
 
-      const initialModeInfo = getTripModeInfo(trip, initialModeKey);
-      if (!initialModeInfo) {
-        window.location.href = `/mode-select.html?trip=${encodeURIComponent(slugForRedirect)}`;
-        return;
-      }
-      persistActiveMode(initialModeKey, initialModeInfo);
-
-      function resolveModePricingForTrip(tripData, modeOverride){
-        if (!tripData) return null;
-        const info = getTripModeInfo(tripData, modeOverride || getSelectedMode());
-        if (!info) return null;
-        return {
-          price: info.price,
-          chargeType: info.chargeType,
-          capacity: info.capacity,
-          currency: info.currency
+      function pickInitialModeKey(tripData){
+        if (!tripData || !tripData.modes) return canonicalMode(requestedMode || getSelectedMode() || 'van');
+        const ordered = [];
+        const pushUnique = (raw) => {
+          if (!raw) return;
+          const canonical = canonicalMode(raw);
+          if (!ordered.includes(canonical)) ordered.push(canonical);
         };
+        pushUnique(requestedMode);
+        pushUnique(getSelectedMode());
+        pushUnique(tripData.defaultMode);
+        AVAILABLE_MODES.forEach(pushUnique);
+        Object.keys(tripData.modes || {}).forEach(pushUnique);
+        for (const key of ordered) {
+          const rawMode = tripData.modes[key];
+          if (!rawMode) continue;
+          const modeSet = tripData.mode_set && tripData.mode_set[key];
+          if (resolveModeActive(modeSet && modeSet.active, rawMode && rawMode.active)) return key;
+        }
+        return ordered[0] || 'van';
       }
+
+      const initialModeKey = pickInitialModeKey(trip);
+      const initialModeInfo = getTripModeInfo(trip, initialModeKey) || null;
+      persistActiveMode(initialModeKey, initialModeInfo);
+      await renderMapForMode(initialModeKey);
 
       function formatMoney(amount, currency){
         const cur = (currency || 'EUR').toUpperCase();
@@ -568,9 +574,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return parts.join(' • ');
       }
 
-      function renderTags(tripData){
+      function renderTags(modeData){
         if (!tagsEl) return;
-        const tags = Array.isArray(tripData.tags) ? tripData.tags.filter(Boolean) : [];
+        const tags = Array.isArray(modeData.tags)
+          ? modeData.tags.map(tag => (typeof tag === 'string' ? tag : getLocalized(tag))).filter(Boolean)
+          : [];
         if (!tags.length) {
           tagsEl.style.display = 'none';
           tagsEl.innerHTML = '';
@@ -580,29 +588,38 @@ document.addEventListener("DOMContentLoaded", () => {
         tagsEl.style.display = '';
       }
 
-      function renderIncludesBlock(tripData){
+      function renderIncludesBlock(modeData){
         if (!includesWrap) return;
-        const includes = Array.isArray(tripData.includes) ? tripData.includes.filter(Boolean) : [];
-        const excludes = Array.isArray(tripData.excludes) ? tripData.excludes.filter(Boolean) : [];
+        const normalizeList = (list) => (Array.isArray(list)
+          ? list.map(item => (typeof item === 'string' ? item : getLocalized(item))).filter(Boolean)
+          : []);
+        const includes = normalizeList(modeData.includes);
+        const excludes = normalizeList(modeData.excludes);
         if (!includes.length && !excludes.length) {
           includesWrap.style.display = 'none';
           includesWrap.innerHTML = '';
           return;
         }
         const makeList = (items) => `<ul>${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+        const includesColumn = includes.length
+          ? `<div class="trip-inclusions-column"><h4>${tSafe('trip.includes','Περιλαμβάνονται')}</h4>${makeList(includes)}</div>`
+          : '';
+        const excludesColumn = excludes.length
+          ? `<div class="trip-inclusions-column is-excludes"><span id="excludes" class="trip-scroll-anchor" aria-hidden="true"></span><h4>${tSafe('trip.excludes','Δεν περιλαμβάνονται')}</h4>${makeList(excludes)}</div>`
+          : '';
         includesWrap.innerHTML = `
           <h3>${tSafe('trip.includes_heading','Τι περιλαμβάνεται')}</h3>
           <div class="trip-inclusions-grid">
-            ${includes.length ? `<div class="trip-inclusions-column"><h4>${tSafe('trip.includes','Περιλαμβάνονται')}</h4>${makeList(includes)}</div>` : ''}
-            ${excludes.length ? `<div class="trip-inclusions-column is-excludes"><h4>${tSafe('trip.excludes','Δεν περιλαμβάνονται')}</h4>${makeList(excludes)}</div>` : ''}
+            ${includesColumn}
+            ${excludesColumn}
           </div>`;
         includesWrap.style.display = '';
       }
 
-      function renderSectionsBlock(tripData){
+      function renderSectionsBlock(modeData){
         if (!sectionsWrap) return;
         sectionsWrap.innerHTML = '';
-        const sections = Array.isArray(tripData.sections) ? tripData.sections.filter(sec => (sec && (sec.title || sec.content || sec.text))) : [];
+        const sections = Array.isArray(modeData.sections) ? modeData.sections.filter(sec => (sec && (sec.title || sec.content || sec.text))) : [];
         if (!sections.length) {
           sectionsWrap.style.display = 'none';
           return;
@@ -626,46 +643,62 @@ document.addEventListener("DOMContentLoaded", () => {
         return `/uploads/trips/${raw}`;
       }
 
-      function renderGalleryBlock(tripData){
+      function renderGalleryBlock(modeData, fallbackTitle){
         if (!galleryWrap) return;
-        const items = Array.isArray(tripData.gallery) ? tripData.gallery.map(resolveMediaUrl).filter(Boolean) : [];
+        const items = Array.isArray(modeData.gallery) ? modeData.gallery.map(resolveMediaUrl).filter(Boolean) : [];
         if (!items.length) {
           galleryWrap.style.display = 'none';
           galleryWrap.innerHTML = '';
           return;
         }
-        galleryWrap.innerHTML = `<h3>${tSafe('trip.gallery','Gallery')}</h3><div class="trip-gallery-grid">${items.map(src => `<img src="${escapeHtml(src)}" alt="${escapeHtml(getLocalized(tripData.title) || 'Trip image')}" loading="lazy">`).join('')}</div>`;
+        const altText = fallbackTitle || tSafe('trip.gallery_alt','Trip image');
+        galleryWrap.innerHTML = `<h3>${tSafe('trip.gallery','Gallery')}</h3><div class="trip-gallery-grid">${items.map(src => `<img src="${escapeHtml(src)}" alt="${escapeHtml(altText)}" loading="lazy">`).join('')}</div>`;
         galleryWrap.style.display = '';
       }
 
-      function renderVideoBlock(tripData){
+      function renderVideoBlock(modeData, fallbackTitle){
         if (!videoWrap) return;
-        const videoObj = tripData.video || {};
-        const url = videoObj.url || videoObj.src || '';
-        if (!url) {
+        const videoObj = (modeData && modeData.video) || {};
+        const primaryUrl = videoObj.url || videoObj.src || '';
+        const list = Array.isArray(modeData && modeData.videos)
+          ? modeData.videos.map(v => (typeof v === 'string' ? v : (v && v.url) ? v.url : '')).filter(Boolean)
+          : [];
+        if (!primaryUrl && !list.length) {
           videoWrap.style.display = 'none';
           videoWrap.innerHTML = '';
           return;
         }
-        const thumb = videoObj.thumbnail || videoObj.thumb || '';
-        const safeUrl = escapeHtml(url);
+        const titleForAlt = fallbackTitle || tSafe('trip.video_alt','Trip video');
+        const buildEmbed = (url, thumb) => {
+          if (!url) return '';
+          if (/youtube.com|youtu.be|vimeo.com/i.test(url)) {
+            const embed = url.includes('embed') ? url : url.replace('watch?v=', 'embed/');
+            return `<iframe src="${escapeHtml(embed)}" title="${escapeHtml(titleForAlt)}" allowfullscreen loading="lazy"></iframe>`;
+          }
+          const safeUrl = escapeHtml(url);
+          if (url.match(/\.mp4|\.webm|\.ogg/i)) {
+            return `<video controls ${thumb ? `poster="${escapeHtml(thumb)}"` : ''}><source src="${safeUrl}"></video>`;
+          }
+          if (thumb) {
+            return `<a href="${safeUrl}" target="_blank" rel="noopener"><img src="${escapeHtml(thumb)}" alt="${escapeHtml(titleForAlt)}" loading="lazy"></a>`;
+          }
+          return `<a href="${safeUrl}" target="_blank" rel="noopener">${escapeHtml(titleForAlt)}</a>`;
+        };
         let content = '';
-        if (/youtube.com|youtu.be|vimeo.com/i.test(url)) {
-          const embed = url.includes('embed') ? url : url.replace('watch?v=', 'embed/');
-          content = `<iframe src="${escapeHtml(embed)}" title="${escapeHtml(getLocalized(tripData.title) || 'Trip video')}" allowfullscreen loading="lazy"></iframe>`;
-        } else {
-          content = `<video controls ${thumb ? `poster="${escapeHtml(thumb)}"` : ''}><source src="${safeUrl}"></video>`;
+        if (primaryUrl) {
+          content += buildEmbed(primaryUrl, videoObj.thumbnail || videoObj.thumb || '');
         }
-        if (!/iframe|video/.test(content) && thumb) {
-          content = `<a href="${safeUrl}" target="_blank" rel="noopener"><img src="${escapeHtml(thumb)}" alt="${escapeHtml(getLocalized(tripData.title) || 'Trip video')}" loading="lazy"></a>`;
+        if (list.length) {
+          const block = list.map((url, idx) => `<div class="trip-video-item" data-idx="${idx}">${buildEmbed(url)}</div>`).join('');
+          content += `<div class="trip-video-list">${block}</div>`;
         }
         videoWrap.innerHTML = `<h3>${tSafe('trip.video','Βίντεο')}</h3>${content}`;
         videoWrap.style.display = '';
       }
 
-      function renderFaqBlock(tripData){
+      function renderFaqBlock(modeData){
         if (!faqWrap) return;
-        const faq = Array.isArray(tripData.faq) ? tripData.faq.filter(item => item && (item.q || item.question)) : [];
+        const faq = Array.isArray(modeData.faq) ? modeData.faq.filter(item => item && (item.q || item.question)) : [];
         if (!faq.length) {
           faqWrap.style.display = 'none';
           faqWrap.innerHTML = '';
@@ -682,47 +715,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
       function renderTripLocalized() {
         const t = window.__loadedTrip || trip;
-        if (!t) return;
+        if (!t || !t.modes) return;
+        const selectedKey = canonicalMode(getSelectedMode());
+        const activeMode = t.modes[selectedKey] || null;
+        const fallbackKey = activeMode ? selectedKey : pickInitialModeKey(t);
+        const mode = activeMode || (t.modes && t.modes[fallbackKey]) || null;
+        if (!mode) return;
+        if (tripSection) tripSection.dataset.activeMode = fallbackKey;
+        document.body.dataset.tripMode = navModeFromCanonical(fallbackKey);
+
         const perPersonLabel = tSafe('trip.per_person','ανά άτομο');
         const perVehicleLabel = tSafe('trip.per_vehicle','ανά όχημα');
-        const selectedMode = canonicalMode(getSelectedMode());
-        const modeInfo = resolveModePricingForTrip(t, selectedMode);
-        let displayPriceCents = 0;
-        let displayCurrency = (t.currency || 'EUR').toUpperCase();
-        let displayChargeType = 'per_person';
-        if (modeInfo) {
-          displayPriceCents = Math.round(Number(modeInfo.price || 0) * 100);
-          displayCurrency = (modeInfo.currency || displayCurrency).toUpperCase();
-          displayChargeType = modeInfo.chargeType || 'per_person';
-        }
+        const chargeType = (String(mode.charge_type || '').toLowerCase() === 'per_vehicle') ? 'per_vehicle' : 'per_person';
+        const rawPrice = chargeType === 'per_vehicle' ? mode.price_total : mode.price_per_person;
+        const numericPrice = Number(rawPrice);
+        const displayPrice = Number.isFinite(numericPrice) ? numericPrice : null;
+        const displayCurrency = (t.currency || 'EUR').toUpperCase();
 
-        if (titleEl) titleEl.textContent = getLocalized(t.title) || '';
+        const localizedTitle = getLocalized(mode.title) || '';
+        if (titleEl) titleEl.textContent = localizedTitle;
         if (subtitleEl) {
-          const subtitle = getLocalized(t.subtitle) || t.subtitle || '';
+          const subtitle = getLocalized(mode.subtitle) || '';
           subtitleEl.textContent = subtitle;
           subtitleEl.style.display = subtitle ? '' : 'none';
         }
         if (durationEl) {
-          const dur = buildDurationText(t);
+          const dur = buildDurationText(mode);
           durationEl.textContent = dur;
           durationEl.style.display = dur ? '' : 'none';
         }
-        if (descEl) descEl.textContent = getLocalized(t.description) || '';
+        if (descEl) descEl.textContent = getLocalized(mode.description) || '';
 
-        renderTags(t);
-        renderIncludesBlock(t);
-        renderSectionsBlock(t);
-        renderGalleryBlock(t);
-        renderVideoBlock(t);
-        renderFaqBlock(t);
+        renderTags(mode);
+        renderIncludesBlock(mode);
+        renderSectionsBlock(mode);
+        const fallbackTitle = localizedTitle || '';
+        renderGalleryBlock(mode, fallbackTitle);
+        renderVideoBlock(mode, fallbackTitle);
+        renderFaqBlock(mode);
 
         try {
           if (metaWrap) {
             const topItems = [];
-            if (displayPriceCents) {
-              const priceEuros = displayPriceCents / 100;
-              const priceLabel = displayChargeType === 'per_vehicle' ? perVehicleLabel : perPersonLabel;
-              topItems.push(`<span class="capsule price">${formatMoney(priceEuros, displayCurrency)} / ${priceLabel}</span>`);
+            if (displayPrice !== null) {
+              const priceLabel = chargeType === 'per_vehicle' ? perVehicleLabel : perPersonLabel;
+              topItems.push(`<span class="capsule price">${formatMoney(displayPrice, displayCurrency)} / ${priceLabel}</span>`);
             }
             const timeLabel = tSafe('trip.departure_time_label','Αναχώρηση');
             const timeVal = t && t.departure && t.departure.departure_time;
@@ -746,9 +783,8 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           const legacyPriceEl = document.getElementById('trip-price');
           if (legacyPriceEl) {
-            if (displayPriceCents) {
-              const base = displayPriceCents / 100;
-              legacyPriceEl.textContent = formatMoney(base, displayCurrency);
+            if (displayPrice !== null) {
+              legacyPriceEl.textContent = formatMoney(displayPrice, displayCurrency);
               legacyPriceEl.style.display = (metaWrap ? 'none' : '');
               legacyPriceEl.classList.remove('animate');
               void legacyPriceEl.offsetWidth;
@@ -763,7 +799,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const stopsWrap = document.getElementById('stops');
         if (stopsWrap) {
           stopsWrap.innerHTML = '';
-          const stopsArr = Array.isArray(t.stops) ? t.stops : [];
+          const stopsArr = Array.isArray(mode.stops) ? mode.stops : [];
           if (stopsArr.length && typeof stopsArr[0] === 'string') {
             stopsArr.forEach((s, i) => {
               const stopEl = document.createElement('div');
@@ -779,24 +815,31 @@ document.addEventListener("DOMContentLoaded", () => {
               stopEl.className = 'trip-stop video-card';
               const stopLabelTemplate = (window.t && typeof window.t === 'function') ? window.t('stop.label') : 'Stop {n}';
               const stopLabel = stopLabelTemplate.replace('{n}', String(i + 1));
-              const titleHtml = `<h3 class="stop-title">${stopLabel}: ${escapeHtml(getLocalized(stop.name) || "")}</h3>`;
-              const videos = Array.isArray(stop.videos) && stop.videos.length ? stop.videos : (stop.video ? [stop.video] : []);
+              const stopTitle = getLocalized(stop && (stop.title || stop.name)) || '';
+              const titleHtml = `<h3 class="stop-title">${stopLabel}: ${escapeHtml(stopTitle)}</h3>`;
+              const videos = Array.isArray(stop && stop.videos) && stop.videos.length ? stop.videos : ((stop && stop.video) ? [stop.video] : []);
               let videoArea = '';
               if (videos.length <= 1) {
                 const v = videos[0] || '';
-                videoArea = v ? `
-                  <div class="video-wrap">
-                    <iframe src="${escapeHtml(v)}" title="${escapeHtml(getLocalized(stop.name) || 'video')}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" width="100%" height="315"></iframe>
-                  </div>` : '';
+                const safeUrl = typeof v === 'string' ? v : (v && v.url) ? v.url : '';
+                if (safeUrl) {
+                  videoArea = `
+                    <div class="video-wrap">
+                      <iframe src="${escapeHtml(safeUrl)}" title="${escapeHtml(stopTitle || 'video')}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" width="100%" height="315"></iframe>
+                    </div>`;
+                }
               } else {
-                const slides = videos.map((url, idx) => `
+                const slides = videos.map((url, idx) => {
+                  const rawUrl = typeof url === 'string' ? url : (url && url.url) ? url.url : '';
+                  return `
                   <div class="carousel-slide" data-idx="${idx}">
                     <div class="video-wrap">
-                      <iframe data-src="${escapeHtml(url)}" title="${escapeHtml((getLocalized(stop.name) || 'video') + ' — ' + (idx+1))}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" width="100%" height="315"></iframe>
+                      <iframe data-src="${escapeHtml(rawUrl)}" title="${escapeHtml((stopTitle || 'video') + ' — ' + (idx+1))}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" width="100%" height="315"></iframe>
                       <button class="slide-arrow left" type="button" data-i18n-aria="carousel.prev">&#10094;</button>
                       <button class="slide-arrow right" type="button" data-i18n-aria="carousel.next">&#10095;</button>
                     </div>
-                  </div>`).join('');
+                  </div>`;
+                }).join('');
                 videoArea = `
                   <div class="video-carousel peek" data-count="${videos.length}">
                     <div class="carousel-viewport" tabindex="0" aria-label="Video carousel">
@@ -830,6 +873,91 @@ document.addEventListener("DOMContentLoaded", () => {
             expEl.innerHTML = `<h3 class="stop-title">${expTitle}</h3><p>${escapeHtml(getLocalized(t.experience) || t.experience)}</p>`;
             stopsWrap.appendChild(expEl);
           }
+        }
+      }
+
+      async function ensureModeStopsGeocoded(modeData) {
+        if (!modeData || modeData.__gwGeoProcessed) return;
+        const stops = Array.isArray(modeData.stops) ? modeData.stops : [];
+        const stopsNeeding = stops.filter(s => s && s.address && (s.lat == null || s.lng == null));
+        if (!stopsNeeding.length) {
+          modeData.__gwGeoProcessed = true;
+          return;
+        }
+        const lang = getCurrentLang();
+        for (const stop of stopsNeeding) {
+          try {
+            const u = new URL(window.location.origin + '/api/geocode');
+            u.searchParams.set('q', stop.address);
+            u.searchParams.set('lang', lang);
+            const resp = await fetch(u.toString(), { headers: { Accept: 'application/json' } });
+            if (resp.ok) {
+              const j = await resp.json();
+              if (j && j.ok && typeof j.lat === 'number' && typeof j.lng === 'number') {
+                stop.lat = j.lat;
+                stop.lng = j.lng;
+              }
+            }
+          } catch(_){ }
+        }
+        modeData.__gwGeoProcessed = true;
+      }
+
+      async function renderMapForMode(modeKey) {
+        if (!mapCard) return;
+        const key = canonicalMode(modeKey || getSelectedMode());
+        const modeData = (trip.modes && trip.modes[key]) || null;
+        if (!modeData) {
+          mapCard.style.display = 'none';
+          return;
+        }
+        await ensureModeStopsGeocoded(modeData);
+        const stopsArr = Array.isArray(modeData.stops) ? modeData.stops : [];
+        const stopWaypoints = stopsArr
+          .filter(s => s && typeof s.lat === 'number' && typeof s.lng === 'number')
+          .map(s => ({ lat: s.lat, lng: s.lng }));
+        const stopsMeta = stopsArr
+          .filter(s => s && typeof s.lat === 'number' && typeof s.lng === 'number')
+          .map((s, idx) => ({
+            idx,
+            lat: s.lat,
+            lng: s.lng,
+            name: getLocalized(s.title || s.name) || '',
+            address: s.address || '',
+            time: s.time || ''
+          }));
+        const baseMap = Object.assign({}, modeData.map || {});
+        if (stopWaypoints.length >= 2) {
+          baseMap.waypoints = stopWaypoints;
+          baseMap.stopsMeta = stopsMeta;
+          if (!baseMap.center && stopWaypoints[0]) baseMap.center = stopWaypoints[0];
+          if (!baseMap.zoom) baseMap.zoom = 11;
+        }
+        const markerWaypoints = Array.isArray(baseMap.markers)
+          ? baseMap.markers.filter(m => m && typeof m.lat === 'number' && typeof m.lng === 'number')
+          : [];
+        if (!stopWaypoints.length && markerWaypoints.length) {
+          baseMap.waypoints = markerWaypoints.map(m => ({ lat: m.lat, lng: m.lng }));
+          baseMap.stopsMeta = markerWaypoints.map((m, idx) => ({
+            idx,
+            lat: m.lat,
+            lng: m.lng,
+            name: m.title || m.name || '',
+            address: m.description || m.address || '',
+            time: m.time || ''
+          }));
+        }
+        if (!baseMap.center && typeof baseMap.lat === 'number' && typeof baseMap.lng === 'number') {
+          baseMap.center = { lat: baseMap.lat, lng: baseMap.lng };
+        }
+        const effectiveMap = baseMap;
+        const hasRoute = effectiveMap && effectiveMap.waypoints && effectiveMap.waypoints.length >= 2;
+        const hasMarkerData = effectiveMap && ((effectiveMap.stopsMeta && effectiveMap.stopsMeta.length) || (effectiveMap.markers && effectiveMap.markers.length) || effectiveMap.center);
+        if (hasRoute || hasMarkerData) {
+          mapCard.style.display = '';
+          ensureGoogleMaps(() => renderRoute(effectiveMap));
+        } else {
+          mapCard.style.display = 'none';
         }
       }
 
@@ -1048,6 +1176,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try { renderTripLocalized(); } catch (e) { G.error('i18n render failed', e); }
         try { updatePrice(); } catch (e) { G.error('price rerender failed', e); }
         try { updateMiniPrice(); } catch (_) {}
+        try { renderMapForMode(); } catch(_){ }
       });
 
       // When the global UI language changes, ensure any open booking overlay or injected
@@ -1083,86 +1212,6 @@ document.addEventListener("DOMContentLoaded", () => {
           } catch(_){ }
         } catch(_){ }
       });
-
-      // Auto-enrich stops with coordinates if missing (server geocode), then build map from stops
-      try {
-        // If some stops are missing lat/lng but have addresses, geocode via /api/geocode
-        const stopsNeeding = (Array.isArray(trip.stops) ? trip.stops : []).filter(s => s && s.address && (s.lat == null || s.lng == null));
-        if (stopsNeeding.length) {
-          const lang = getCurrentLang();
-          for (const s of stopsNeeding) {
-            try {
-              const u = new URL(window.location.origin + '/api/geocode');
-              u.searchParams.set('q', s.address);
-              u.searchParams.set('lang', lang);
-              const r = await fetch(u.toString(), { headers: { 'Accept': 'application/json' } });
-              if (r.ok) {
-                const j = await r.json();
-                if (j && j.ok && typeof j.lat === 'number' && typeof j.lng === 'number') {
-                  s.lat = j.lat; s.lng = j.lng;
-                }
-              }
-            } catch(_){ /* non-fatal */ }
-          }
-        }
-
-        const stopsArr = Array.isArray(trip.stops) ? trip.stops : [];
-        const stopWaypoints = stopsArr
-          .filter(s => s && typeof s.lat === 'number' && typeof s.lng === 'number')
-          .map(s => ({ lat: s.lat, lng: s.lng }));
-        const stopsMeta = stopsArr
-          .filter(s => s && typeof s.lat === 'number' && typeof s.lng === 'number')
-          .map((s, idx) => ({
-            idx,
-            lat: s.lat,
-            lng: s.lng,
-            name: getLocalized(s.name) || '',
-            address: s.address || '',
-            time: s.time || ''
-          }));
-
-        const hasStopsRoute = stopWaypoints.length >= 2;
-        const baseMap = Object.assign({}, trip.map || {});
-        if (hasStopsRoute) {
-          baseMap.waypoints = stopWaypoints;
-          baseMap.stopsMeta = stopsMeta;
-          if (!baseMap.center && stopWaypoints[0]) baseMap.center = stopWaypoints[0];
-          if (!baseMap.zoom) baseMap.zoom = 11;
-        }
-        const markerWaypoints = Array.isArray(baseMap.markers)
-          ? baseMap.markers.filter(m => m && typeof m.lat === 'number' && typeof m.lng === 'number')
-          : [];
-        if (!hasStopsRoute && markerWaypoints.length) {
-          baseMap.waypoints = markerWaypoints.map(m => ({ lat: m.lat, lng: m.lng }));
-          baseMap.stopsMeta = markerWaypoints.map((m, idx) => ({
-            idx,
-            lat: m.lat,
-            lng: m.lng,
-            name: m.title || m.name || '',
-            address: m.description || m.address || '',
-            time: m.time || ''
-          }));
-        }
-        if (!baseMap.center && typeof baseMap.lat === 'number' && typeof baseMap.lng === 'number') {
-          baseMap.center = { lat: baseMap.lat, lng: baseMap.lng };
-        }
-        const effectiveMap = baseMap;
-        const hasRoute = effectiveMap && effectiveMap.waypoints && effectiveMap.waypoints.length >= 2;
-        const hasMarkerData = effectiveMap && ((effectiveMap.stopsMeta && effectiveMap.stopsMeta.length) || (effectiveMap.markers && effectiveMap.markers.length) || effectiveMap.center);
-        if (hasRoute || hasMarkerData) {
-          if (mapCard) mapCard.style.display = '';
-          ensureGoogleMaps(() => renderRoute(effectiveMap));
-        } else if (mapCard) {
-          mapCard.style.display = 'none';
-        }
-      } catch(_) {
-        if (trip.map && ((trip.map.waypoints && trip.map.waypoints.length >= 1) || (trip.map.markers && trip.map.markers.length))) {
-          if (mapCard) mapCard.style.display = '';
-          ensureGoogleMaps(() => renderRoute(trip.map));
-        } else if (mapCard) {
-          mapCard.style.display = 'none';
-        }
-      }
 
       // Show back-to-categories button when on a trip page
       const backBtn = document.getElementById('backToCatsBtn');
@@ -2035,9 +2084,10 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch(e){}
       }
 
-      document.addEventListener('gw:mode:changed', () => {
+      document.addEventListener('gw:mode:changed', (ev) => {
         try { updatePrice(); } catch(_){ }
         try { updateMiniPrice(); } catch(_){ }
+        try { renderMapForMode(ev && ev.detail && ev.detail.mode); } catch(_){ }
       });
 
       // Fetch availability for a trip/date and render into the availability block under the calendar
