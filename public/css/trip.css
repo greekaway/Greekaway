@@ -171,15 +171,20 @@ html[data-view="trip"], body[data-view="trip"] {
   display: flex;
   gap: 11px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   padding-top: 0;
   padding-bottom: 14px;
   padding-right: clamp(14px, 5vw, 30px);
-  padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset));
+  padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 3px);
+  /* snap cleanly with a slight left/right inset so first/last tabs are visible */
+  scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 3px);
+  scroll-padding-right: clamp(14px, 5vw, 30px);
   margin: 0 0 20px 0;
   width: 100%;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  scroll-snap-type: x proximity;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
   background: transparent;
   border: none;
   box-shadow: none;
@@ -219,6 +224,7 @@ html[data-view="trip"], body[data-view="trip"] {
   cursor: pointer;
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, color 140ms ease, background 140ms ease;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
   white-space: nowrap;
 }
 
@@ -256,8 +262,10 @@ html[data-view="trip"], body[data-view="trip"] {
     gap: 8px;
     padding-top: 0;
     padding-bottom: 12px;
-    padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 2px);
+    padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 3px);
+    scroll-padding-left: calc(env(safe-area-inset-left, 0px) + var(--trip-tabs-offset) + 3px);
     padding-right: clamp(12px, 5vw, 28px);
+    scroll-padding-right: clamp(12px, 5vw, 28px);
   }
   .trip-info-tabs::before { flex-basis: var(--trip-tabs-offset); }
   .trip-info-tab { min-width: 96px; font-size: 0.74rem; height: 44px; padding: 0 14px; }
