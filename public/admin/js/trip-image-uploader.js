@@ -1,4 +1,6 @@
 (function(){
+  const READY_EVENT = 'ga:trips:rendered';
+  const FALLBACK_BOOT_DELAY = 5000;
   const MAX_FILES_PER_BATCH = 12;
   const STOP_ITEM_SELECTOR = '.stop-item';
   const STOP_IMAGES_SELECTOR = '.stop-images';
@@ -8,14 +10,10 @@
   const CLASS_STOP_TOOLS = 'stop-images-tools';
   const CLASS_STOP_PICKER = 'stop-images-picker';
   const CLASS_STOP_STATUS = 'stop-images-status';
-  const announcer = document.getElementById('stopImageUploadAnnouncer');
+  let announcer = null;
   let observer = null;
-
-  if (!supportsUploads()) {
-    if (announcer) announcer.textContent = '';
-    window.TripImageUploader = { refresh: function(){} };
-    return;
-  }
+  let bootstrapped = false;
+  let fallbackTimer = null;
 
   function supportsUploads(){
     return typeof window !== 'undefined' && window.FormData && window.fetch;
@@ -35,6 +33,7 @@
   }
 
   function announce(message){
+    if (!announcer) announcer = document.getElementById('stopImageUploadAnnouncer');
     if (!announcer) return;
     announcer.textContent = message || '';
   }
@@ -82,17 +81,24 @@
     try {
       res = await fetch('/api/upload-trip-image', { method:'POST', body: fd, credentials:'same-origin' });
     } catch(err){
-      throw new Error('Αποτυχία δικτύου.');
+      console.warn('TripImageUploader: network error', err);
+      return { ok:false, error:'Αποτυχία δικτύου.' };
     }
     let data = null;
-    try { data = await res.json(); } catch(_){ data = null; }
+    try { data = await res.json(); } catch(err){ console.warn('TripImageUploader: invalid JSON', err); }
     if (!res.ok || !data || !data.ok) {
       const detail = data && (data.detail || data.error);
-      throw new Error(detail || 'Αποτυχία μεταφόρτωσης.');
+      console.warn('TripImageUploader: upload failed', detail || res.status);
+      return { ok:false, error: detail || 'Αποτυχία μεταφόρτωσης.' };
     }
-    const urls = Array.isArray(data.files) ? data.files.map((file) => file && (file.url || (file.filename ? `/uploads/trips/${file.filename}` : ''))).filter(Boolean) : [];
-    if (!urls.length) throw new Error('Δεν επιστράφηκαν αρχεία.');
-    return urls;
+    const urls = Array.isArray(data.files)
+      ? data.files.map((file) => file && (file.url || (file.filename ? `/uploads/trips/${file.filename}` : ''))).filter(Boolean)
+      : [];
+    if (!urls.length) {
+      console.warn('TripImageUploader: response missing files');
+      return { ok:false, error:'Δεν επιστράφηκαν αρχεία.' };
+    }
+    return { ok:true, urls };
   }
 
   function handleFilesChange(event){
@@ -112,12 +118,24 @@
     updateStatus(statusEl, 'Μεταφόρτωση...', 'uploading');
     input.disabled = true;
     uploadFiles(files, meta)
-      .then((urls) => {
-        appendPaths(textarea, urls);
-        updateStatus(statusEl, `Προστέθηκαν ${urls.length} εικόνες.`, 'success');
-        announce(`Προστέθηκαν ${urls.length} εικόνες${meta.stopTitle ? ` στη στάση ${meta.stopTitle}` : ''}.`);
+      .then((result) => {
+        if (!result || !result.ok || !Array.isArray(result.urls)) {
+          const msg = (result && result.error) || 'Αποτυχία μεταφόρτωσης.';
+          updateStatus(statusEl, msg, 'error');
+          announce(msg);
+          return;
+        }
+        appendPaths(textarea, result.urls);
+        try {
+          if (window.TripStopsDraftBridge && typeof window.TripStopsDraftBridge.syncFromTextarea === 'function') {
+            window.TripStopsDraftBridge.syncFromTextarea(textarea);
+          }
+        } catch(_){ }
+        updateStatus(statusEl, `Προστέθηκαν ${result.urls.length} εικόνες.`, 'success');
+        announce(`Προστέθηκαν ${result.urls.length} εικόνες${meta.stopTitle ? ` στη στάση ${meta.stopTitle}` : ''}.`);
       })
       .catch((err) => {
+        console.warn('TripImageUploader: unexpected error', err);
         const msg = err && err.message ? err.message : 'Αποτυχία μεταφόρτωσης.';
         updateStatus(statusEl, msg, 'error');
         announce(msg);
@@ -182,6 +200,10 @@
   }
 
   function observeStopLists(){
+    if (typeof MutationObserver !== 'function') {
+      console.warn('TripImageUploader: MutationObserver unavailable; automatic watch disabled.');
+      return;
+    }
     if (observer) observer.disconnect();
     observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
@@ -189,29 +211,71 @@
           if (!(node instanceof HTMLElement)) return;
           if (node.matches && node.matches(STOP_ITEM_SELECTOR)) {
             enhanceStopItem(node);
-          } else {
-            node.querySelectorAll && node.querySelectorAll(STOP_ITEM_SELECTOR).forEach(enhanceStopItem);
+          } else if (node.querySelectorAll) {
+            node.querySelectorAll(STOP_ITEM_SELECTOR).forEach(enhanceStopItem);
           }
         });
       });
     });
     document.querySelectorAll(STOP_LIST_SELECTOR).forEach((list) => {
-      observer.observe(list, { childList: true });
+      try {
+        observer.observe(list, { childList: true });
+      } catch(err){
+        console.warn('TripImageUploader: failed to observe stop list', err);
+      }
     });
   }
 
   function init(){
-    enhanceAllStopItems();
-    observeStopLists();
+    try {
+      enhanceAllStopItems();
+      observeStopLists();
+    } catch(err){ console.warn('TripImageUploader: init failed', err); }
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
+  function start(){
+    if (bootstrapped) return;
+    bootstrapped = true;
+    if (fallbackTimer) {
+      clearTimeout(fallbackTimer);
+      fallbackTimer = null;
+    }
+    announcer = announcer || document.getElementById('stopImageUploadAnnouncer');
+    if (!supportsUploads()) {
+      if (announcer) announcer.textContent = '';
+      window.TripImageUploader = { refresh: function(){} };
+      return;
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+      init();
+    }
+  }
+
+  function waitForTrips(){
+    if (window.__gaTripsTableRendered) {
+      start();
+      return;
+    }
+    const onRendered = () => {
+      window.removeEventListener(READY_EVENT, onRendered);
+      start();
+    };
+    window.addEventListener(READY_EVENT, onRendered);
+    fallbackTimer = setTimeout(() => {
+      if (!bootstrapped) start();
+    }, FALLBACK_BOOT_DELAY);
   }
 
   window.TripImageUploader = {
-    refresh: enhanceAllStopItems
+    refresh(){
+      if (!bootstrapped) start();
+      try {
+        enhanceAllStopItems();
+      } catch(err){ console.warn('TripImageUploader.refresh failed', err); }
+    }
   };
+
+  waitForTrips();
 })();

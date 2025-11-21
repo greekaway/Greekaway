@@ -42,7 +42,8 @@
 
   function canonicalMode(key){
     const value = String(key || '').toLowerCase();
-    if (value === 'private') return 'mercedes';
+    if (value === 'private' || value === 'mercedes/private') return 'mercedes';
+    if (value === 'multi' || value === 'shared') return 'van';
     return ['van','mercedes','bus'].includes(value) ? value : '';
   }
 

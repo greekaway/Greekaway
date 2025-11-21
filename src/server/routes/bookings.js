@@ -24,7 +24,13 @@ function registerBookings(app, deps) {
       return obj || null;
     } catch(_) { return null; }
   }
-  function normMode(m){ const x=String(m||'').toLowerCase(); if (x==='private') return 'mercedes'; if (x==='mercedes' || x==='van' || x==='bus') return x; return ''; }
+  function normMode(m){
+    const x = String(m || '').toLowerCase();
+    if (x === 'private' || x === 'mercedes/private') return 'mercedes';
+    if (x === 'multi' || x === 'shared') return 'van';
+    if (x === 'mercedes' || x === 'van' || x === 'bus') return x;
+    return '';
+  }
   function getDefaultCapacityForMode(trip, mode){
     try {
       const ms = trip && trip.mode_set ? trip.mode_set : null; if (!ms) return 0; const m = ms[mode]; if (!m) return 0;

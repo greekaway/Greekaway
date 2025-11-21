@@ -55,7 +55,8 @@ const AVAILABLE_MODES = ['van','mercedes','bus'];
 
 function canonicalMode(mode){
   const value = String(mode || '').toLowerCase();
-  if (value === 'private') return 'mercedes';
+  if (value === 'private' || value === 'mercedes/private') return 'mercedes';
+  if (value === 'multi' || value === 'shared') return 'van';
   if (AVAILABLE_MODES.includes(value)) return value;
   return 'van';
 }
@@ -64,12 +65,30 @@ function navModeFromCanonical(mode){
   return mode === 'mercedes' ? 'private' : mode;
 }
 
+function persistTripModeFromCanonical(mode){
+  if (!mode) return;
+  const navMode = navModeFromCanonical(mode);
+  if (!navMode) return;
+  try { localStorage.setItem('trip_mode', navMode); } catch(_){ }
+}
+
 function getSelectedMode(){
   try {
     const params = new URLSearchParams(window.location.search);
     const queryMode = params.get('mode');
-    const storedMode = localStorage.getItem('trip_mode');
-    return canonicalMode(queryMode || storedMode || 'van');
+    if (queryMode) {
+      const canonical = canonicalMode(queryMode);
+      persistTripModeFromCanonical(canonical);
+      return canonical;
+    }
+    let storedMode = null;
+    try { storedMode = localStorage.getItem('trip_mode'); } catch(_){ storedMode = null; }
+    const canonicalStored = canonicalMode(storedMode || 'van');
+    const expectedNav = navModeFromCanonical(canonicalStored);
+    if (!storedMode || storedMode !== expectedNav) {
+      persistTripModeFromCanonical(canonicalStored);
+    }
+    return canonicalStored;
   } catch(_) {
     return 'van';
   }

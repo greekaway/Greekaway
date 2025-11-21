@@ -14,7 +14,8 @@
 
   function canonicalMode(mode) {
     const value = String(mode || '').toLowerCase();
-    if (value === 'private') return 'mercedes';
+    if (value === 'private' || value === 'mercedes/private') return 'mercedes';
+    if (value === 'multi' || value === 'shared') return 'van';
     return MODE_ORDER.includes(value) ? value : 'van';
   }
 

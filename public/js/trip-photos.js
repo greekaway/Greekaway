@@ -26,7 +26,9 @@
     offsetX: 0,
     offsetY: 0,
     isVisible: false,
-    thumbHandler: null
+    thumbHandler: null,
+    tripRef: null,
+    activeModeKey: ''
   };
 
   function init(){
@@ -56,21 +58,48 @@
     document.addEventListener('trip:data:ready', (event) => {
       updateStops(event.detail || window.__loadedTrip || null);
     });
+    document.addEventListener('gw:mode:changed', (event) => {
+      const mode = event && event.detail && event.detail.mode;
+      updateStops(window.__loadedTrip || null, mode);
+    });
   }
 
-  function updateStops(trip){
-    if (!trip || !Array.isArray(trip.stops)) {
+  function updateStops(trip, overrideMode){
+    state.tripRef = trip || null;
+    if (!trip) {
+      state.activeModeKey = '';
       state.stops = [];
       dispatchUpdate();
       return;
     }
-    const mapped = trip.stops.map((stop, idx) => {
-      const photos = normalizePhotos(stop && stop.photos);
+    const modeKey = canonicalTripMode(overrideMode || resolveActiveModeKey(trip));
+    state.activeModeKey = modeKey;
+    const sourceStops = collectStopsForTrip(trip, modeKey);
+    if (!sourceStops.length) {
+      state.stops = [];
+      dispatchUpdate();
+      return;
+    }
+    const mapped = sourceStops.map((stop, idx) => {
+      const photos = collectStopPhotos(stop);
       if (!photos.length) return null;
       return { title: getStopTitle(stop, idx), photos };
     }).filter(Boolean);
     state.stops = mapped;
     dispatchUpdate();
+  }
+
+  function collectStopPhotos(stop){
+    if (!stop) return [];
+    const payload = [];
+    const ingest = (list) => {
+      if (!Array.isArray(list)) return;
+      list.forEach(item => payload.push(item));
+    };
+    ingest(stop.photos);
+    ingest(stop.images);
+    ingest(stop.photo_gallery);
+    return normalizePhotos(payload);
   }
 
   function normalizePhotos(list){
@@ -108,6 +137,50 @@
     try {
       document.dispatchEvent(new CustomEvent('trip-photos:updated', { detail: { available: state.stops.length > 0 } }));
     } catch(_){ }
+  }
+
+  function collectStopsForTrip(trip, preferredModeKey){
+    if (!trip) return [];
+    const modes = (trip.modes && typeof trip.modes === 'object') ? trip.modes : null;
+    if (modes) {
+      const stopsForMode = getModeStops(modes, preferredModeKey);
+      if (stopsForMode.length) return stopsForMode;
+    }
+    if (Array.isArray(trip.stops)) return trip.stops;
+    return [];
+  }
+
+  function getModeStops(modes, modeKey){
+    if (!modes || !modeKey) return [];
+    const canonical = canonicalTripMode(modeKey);
+    const mode = modes[canonical] || modes[modeKey];
+    if (!mode || !Array.isArray(mode.stops)) return [];
+    return mode.stops;
+  }
+
+  function resolveActiveModeKey(trip){
+    if (typeof window.getSelectedMode === 'function') {
+      try {
+        const selected = window.getSelectedMode();
+        if (selected) return canonicalTripMode(selected);
+      } catch(_){ }
+    }
+    const bodyMode = document.body && document.body.dataset ? document.body.dataset.tripMode : '';
+    if (bodyMode) return canonicalTripMode(bodyMode);
+    if (trip && trip.defaultMode) return canonicalTripMode(trip.defaultMode);
+    return '';
+  }
+
+  function canonicalTripMode(mode){
+    if (typeof window.canonicalMode === 'function') {
+      try { return window.canonicalMode(mode); } catch(_){ }
+    }
+    const value = String(mode || '').toLowerCase();
+    if (!value) return 'van';
+    if (value === 'private' || value === 'mercedes/private') return 'mercedes';
+    if (value === 'multi' || value === 'shared') return 'van';
+    if (['van','mercedes','bus'].includes(value)) return value;
+    return value;
   }
 
   function ensureViewerMounted(){
@@ -201,18 +274,34 @@
     ensureViewerMounted();
     hydrateLazyImages(root);
     if (!state.thumbHandler) {
-      state.thumbHandler = (event) => {
-        const btn = event.target.closest('.trip-photo-thumb');
-        if (!btn) return;
-        const stopIdx = parseInt(btn.dataset.stopIndex, 10);
-        const photoIdx = parseInt(btn.dataset.photoIndex, 10);
-        if (Number.isNaN(stopIdx) || Number.isNaN(photoIdx)) return;
-        openViewer(stopIdx, photoIdx);
-      };
+      state.thumbHandler = (event) => activatePhotoFromTarget(event.target);
     }
     root.removeEventListener('click', state.thumbHandler);
     root.addEventListener('click', state.thumbHandler);
+    bindDirectImageEvents(root);
     requestAnimationFrame(() => root.classList.add('is-ready'));
+  }
+
+  function activatePhotoFromTarget(target){
+    const btn = target && typeof target.closest === 'function' ? target.closest('.trip-photo-thumb') : null;
+    if (!btn) return;
+    const stopIdx = parseInt(btn.dataset.stopIndex, 10);
+    const photoIdx = parseInt(btn.dataset.photoIndex, 10);
+    if (Number.isNaN(stopIdx) || Number.isNaN(photoIdx)) return;
+    openViewer(stopIdx, photoIdx);
+  }
+
+  function bindDirectImageEvents(root){
+    const images = root.querySelectorAll('.trip-photo-thumb img');
+    images.forEach((img) => {
+      if (img.dataset.tripPhotoBound === '1') return;
+      img.dataset.tripPhotoBound = '1';
+      img.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        activatePhotoFromTarget(event.currentTarget);
+      });
+    });
   }
 
   function hydrateLazyImages(root){
@@ -416,8 +505,12 @@
   }
 
   function syncStops(){
-    if (state.stops.length || !window.__loadedTrip) return;
-    updateStops(window.__loadedTrip);
+    const trip = window.__loadedTrip || null;
+    if (!trip) return;
+    const modeKey = resolveActiveModeKey(trip);
+    if (!state.stops.length || state.tripRef !== trip || state.activeModeKey !== canonicalTripMode(modeKey)) {
+      updateStops(trip, modeKey);
+    }
   }
 
   function escapeHtml(str){

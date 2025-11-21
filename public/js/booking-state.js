@@ -12,7 +12,8 @@
   }
   function normalizeMode(mode){
     const m = String(mode || '').toLowerCase();
-    if (m === 'private') return 'mercedes';
+    if (m === 'private' || m === 'mercedes/private') return 'mercedes';
+    if (m === 'multi' || m === 'shared') return 'van';
     return ['van','bus','mercedes'].includes(m) ? m : 'van';
   }
   function resolveTripMode(trip, mode){
