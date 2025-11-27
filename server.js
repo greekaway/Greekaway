@@ -336,23 +336,25 @@ try {
   bookingsDb = null;
 }
 
-// Admin HTML guard: redirect to /admin-login if no session cookie
+// Admin HTML guard: require adminSession cookie and redirect to dedicated login page
 app.use((req, res, next) => {
   try {
     const p = req.path || '';
-    if (p === '/admin-login' || p === '/admin-logout') return next();
+    if (p === '/admin-login' || p === '/admin-login.html' || p === '/admin-logout') return next();
     const isAdminHtml = (
       p === '/admin' ||
       /\/admin\/.+\.html$/i.test(p) ||
       /^\/admin-[^\/]+\.html$/i.test(p)
     );
     if (!isAdminHtml) return next();
-    if (hasAdminSession(req)) return next();
-    // Allow Admin Home to load even without session (embedded login is on-page)
-    if (p === '/admin-home.html') return next();
-    const nextUrl = encodeURIComponent(req.originalUrl || p);
-    // Redirect unauthenticated admin pages to Admin Home (embedded login)
-    return res.redirect(`/admin-home.html?next=${nextUrl}`);
+    if (hasAdminSession(req)) {
+      if (p === '/admin' || p === '/admin/') {
+        return res.redirect('/admin-home.html');
+      }
+      return next();
+    }
+    const nextUrl = encodeURIComponent(req.originalUrl || p || '/admin-home.html');
+    return res.redirect(`/admin-login.html?next=${nextUrl}`);
   } catch(_) { return next(); }
 });
 
@@ -360,6 +362,7 @@ app.use((req, res, next) => {
 const CACHE_BUST_VERSION = computeCacheBust(__dirname);
 const TRIP_PAGE_FILE = path.join(__dirname, 'public', 'trip.html');
 const TRIPS_DATA_DIR = path.join(__dirname, 'data', 'trips');
+const ADMIN_LOGIN_FILE = path.join(__dirname, 'public', 'admin-login.html');
 
 const serveTripView = (req, res) => {
   try {
@@ -423,26 +426,6 @@ app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-kno
     res.setHeader('Cache-Control', 'public, max-age=300');
   }
 }));
-
-// Unified admin HTML protection (Basic/session auth) before static handler
-app.use((req, res, next) => {
-  try {
-    // Normalize path (strip query/hash)
-    const p = req.path || '';
-    const isAdminHtml = p.startsWith('/admin') && (p.endsWith('.html') || p === '/admin' || p === '/admin/');
-    if (isAdminHtml) {
-      if (!checkAdminAuth(req)) {
-        res.set('WWW-Authenticate', 'Basic realm="Greekaway Admin"');
-        return res.status(401).send('Auth required');
-      }
-      // If requesting /admin root, redirect to dashboard
-      if (p === '/admin' || p === '/admin/') {
-        return res.redirect('/admin/index.html');
-      }
-    }
-  } catch(_) { /* ignore */ }
-  return next();
-});
 
 // 1️⃣ Σερβίρουμε στατικά αρχεία από το /public με caching για non-HTML assets
 app.use(express.static(path.join(__dirname, "public"), {
@@ -1028,29 +1011,7 @@ app.get("/api/trips", (req, res) => {
 // Simple admin login/logout
 app.get('/admin-login', (req, res) => {
   try {
-    // Serve a minimal HTML login page
-    const nextUrl = (req.query && req.query.next) ? String(req.query.next) : '/admin';
-    const html = `<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Admin Login</title>
-      <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0b1b2b;color:#fff}
-      .card{background:#11263a;padding:20px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:360px;width:90%}
-      h1{font-size:18px;margin:0 0 10px}
-      label{display:block;margin:10px 0 4px}
-      input{width:100%;padding:8px;border-radius:8px;border:1px solid #223a51;background:#0e2032;color:#fff}
-      button{margin-top:12px;width:100%;padding:10px;border-radius:8px;border:none;background:#2a7ade;color:#fff;font-weight:600}
-      .hint{font-size:12px;color:#a8c0d8;margin-top:8px;text-align:center}
-      </style></head><body>
-      <form class="card" method="POST" action="/admin-login">
-        <h1>Greekaway – Admin Login</h1>
-        <input type="hidden" name="next" value="${nextUrl.replace(/"/g,'&quot;')}">
-        <label for="user">Username</label>
-        <input id="user" name="username" autocomplete="username" required />
-        <label for="pass">Password</label>
-        <input id="pass" type="password" name="password" autocomplete="current-password" required />
-        <button type="submit">Login</button>
-        <div class="hint">Credentials from server .env (ADMIN_USER / ADMIN_PASS)</div>
-      </form></body></html>`;
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.send(html);
+    return res.sendFile(ADMIN_LOGIN_FILE);
   } catch (e) { return res.status(500).send('Server error'); }
 });
 

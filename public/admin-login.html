@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Greekaway Admin – Login</title>
+  <link rel="stylesheet" href="/css/admin-common.css">
+  <style>
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at top,#0b2240,#030b18 65%); }
+    .login-card { width: min(420px, 92vw); background: rgba(6,14,26,.92); padding: 28px 26px; border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.35); color: #fff; font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif; }
+    .login-card h1 { margin: 0 0 6px; font-weight: 600; font-size: 22px; }
+    .login-card p.sub { margin: 0 0 18px; font-size: 14px; color: #8fb0dd; }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; margin-bottom: 14px; }
+    input { border-radius: 10px; border: 1px solid rgba(255,255,255,.18); background: rgba(5,16,32,.85); color: #fff; padding: 10px 12px; font-size: 15px; }
+    input:focus { outline: 2px solid rgba(85,147,255,.8); border-color: transparent; }
+    button { width: 100%; border: none; border-radius: 10px; padding: 11px; font-size: 16px; font-weight: 600; color: #03132a; background: linear-gradient(135deg,#47c0ff,#0074ff); cursor: pointer; transition: transform .12s ease, opacity .12s ease; }
+    button:disabled { opacity: .6; cursor: wait; }
+    #loginError { min-height: 1.25em; margin: 6px 0 0; font-size: 14px; color: #ff8a8a; }
+    .hint { margin-top: 14px; font-size: 12px; text-align: center; color: #9ab8de; opacity: .9; }
+  </style>
+</head>
+<body>
+  <main class="login-card">
+    <h1>Greekaway Admin</h1>
+    <p class="sub">Παρακαλώ συνδέσου για πρόσβαση στο διαχειριστικό.</p>
+    <form id="loginForm" method="POST" action="/admin-login" novalidate>
+      <input type="hidden" id="loginNext" name="next" value="/admin-home.html">
+      <label>Username
+        <input id="loginUser" name="username" type="text" autocomplete="username" required>
+      </label>
+      <label>Password
+        <input id="loginPass" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button id="loginBtn" type="submit">Login</button>
+      <div id="loginError"></div>
+      <p class="hint">Τα στοιχεία προέρχονται από το .env (ADMIN_USER / ADMIN_PASS).</p>
+    </form>
+  </main>
+  <script>
+  (function(){
+    const form = document.getElementById('loginForm');
+    if (!form) return;
+    const btn = document.getElementById('loginBtn');
+    const user = document.getElementById('loginUser');
+    const pass = document.getElementById('loginPass');
+    const err = document.getElementById('loginError');
+    const nextInput = document.getElementById('loginNext');
+
+    const params = new URLSearchParams(window.location.search);
+    const nextParam = params.get('next');
+    const nextTarget = (nextParam && nextParam.startsWith('/')) ? nextParam : '/admin-home.html';
+    if (nextInput) nextInput.value = nextTarget;
+
+    function setDisabled(state){
+      if (btn) btn.disabled = state;
+      if (user) user.disabled = state;
+      if (pass) pass.disabled = state;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (err) err.textContent = '';
+      setDisabled(true);
+      try {
+        const username = (user && user.value || '').trim();
+        const password = (pass && pass.value || '').trim();
+        if (!username || !password) {
+          if (err) err.textContent = 'Συμπλήρωσε user και password.';
+          setDisabled(false);
+          return;
+        }
+        const body = new URLSearchParams({ username, password, next: nextTarget });
+        const res = await fetch('/admin-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
+          credentials: 'same-origin',
+          redirect: 'follow'
+        });
+        if (!res.ok) {
+          if (err) err.textContent = 'Λάθος διαπιστευτήρια.';
+          setDisabled(false);
+          return;
+        }
+        window.location.href = nextTarget;
+      } catch (_) {
+        if (err) err.textContent = 'Σφάλμα σύνδεσης. Προσπάθησε ξανά.';
+        setDisabled(false);
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
