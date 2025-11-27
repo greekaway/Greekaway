@@ -17,34 +17,7 @@ if (typeof ADMIN_PASS === 'string') ADMIN_PASS = ADMIN_PASS.trim().replace(/^['"
 
 // Central admin auth check used by server and modules
 function checkAdminAuth(req){
-  // Session flag or legacy cookie
-  try { if (req && req.session && req.session.admin === true) return true; } catch(_){ }
-  if (hasAdminSession(req)) return true;
-  // Forwarded header support (base64 user:pass)
-  try {
-    const fwd = String(req.headers['x-forward-admin-auth'] || '');
-    if (fwd) {
-      const raw = Buffer.from(fwd, 'base64').toString('utf8');
-      const i = raw.indexOf(':');
-      if (i !== -1) {
-        const u = raw.slice(0,i);
-        const p = raw.slice(i+1);
-        if (u === ADMIN_USER && p === ADMIN_PASS) return true;
-      }
-    }
-  } catch(_){ }
-  // Basic Auth header fallback
-  if (!ADMIN_USER || !ADMIN_PASS) return false;
-  try {
-    const auth = String(req.headers.authorization || '');
-    if (!auth.startsWith('Basic ')) return false;
-    const creds = Buffer.from(auth.slice(6), 'base64').toString('utf8');
-    const j = creds.indexOf(':');
-    if (j === -1) return false;
-    const user = creds.slice(0,j);
-    const pass = creds.slice(j+1);
-    return (user === ADMIN_USER && pass === ADMIN_PASS);
-  } catch(_){ return false; }
+  return hasAdminSession(req);
 }
 
 function getCookies(req){
@@ -336,25 +309,26 @@ try {
   bookingsDb = null;
 }
 
-// Admin HTML guard: require adminSession cookie and redirect to dedicated login page
+// Admin HTML guard: rely on session/cookie state and route everything through admin home for login
 app.use((req, res, next) => {
   try {
     const p = req.path || '';
-    if (p === '/admin-login' || p === '/admin-login.html' || p === '/admin-logout') return next();
+    if (p === '/admin-login' || p === '/admin-logout') return next();
     const isAdminHtml = (
       p === '/admin' ||
       /\/admin\/.+\.html$/i.test(p) ||
       /^\/admin-[^\/]+\.html$/i.test(p)
     );
     if (!isAdminHtml) return next();
-    if (hasAdminSession(req)) {
+    if (checkAdminAuth(req)) {
       if (p === '/admin' || p === '/admin/') {
         return res.redirect('/admin-home.html');
       }
       return next();
     }
+    if (p === '/admin-home.html') return next();
     const nextUrl = encodeURIComponent(req.originalUrl || p || '/admin-home.html');
-    return res.redirect(`/admin-login.html?next=${nextUrl}`);
+    return res.redirect(`/admin-home.html?next=${nextUrl}`);
   } catch(_) { return next(); }
 });
 
@@ -362,7 +336,7 @@ app.use((req, res, next) => {
 const CACHE_BUST_VERSION = computeCacheBust(__dirname);
 const TRIP_PAGE_FILE = path.join(__dirname, 'public', 'trip.html');
 const TRIPS_DATA_DIR = path.join(__dirname, 'data', 'trips');
-const ADMIN_LOGIN_FILE = path.join(__dirname, 'public', 'admin-login.html');
+const ADMIN_HOME_FILE = path.join(__dirname, 'public', 'admin-home.html');
 
 const serveTripView = (req, res) => {
   try {
@@ -1011,7 +985,7 @@ app.get("/api/trips", (req, res) => {
 // Simple admin login/logout
 app.get('/admin-login', (req, res) => {
   try {
-    return res.sendFile(ADMIN_LOGIN_FILE);
+    return res.sendFile(ADMIN_HOME_FILE);
   } catch (e) { return res.status(500).send('Server error'); }
 });
 
@@ -1035,6 +1009,13 @@ app.post('/admin-login', (req, res) => {
     } catch(_){ }
     return res.status(500).send('Server error');
   }
+});
+
+app.get('/api/admin/session', (req, res) => {
+  if (!checkAdminAuth(req)) {
+    return res.status(401).json({ ok: false });
+  }
+  return res.json({ ok: true });
 });
 
 app.get('/admin-logout', (req, res) => {
