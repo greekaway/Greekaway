@@ -26,6 +26,14 @@ class TTLCache {
 
 const cache = new TTLCache();
 
+function parseDurationDays(value) {
+  if (value === null || typeof value === 'undefined') return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0) return null;
+  return Math.floor(num);
+}
+
 function safeReadJson(p) {
   try {
     const raw = fs.readFileSync(p, 'utf8');
@@ -107,26 +115,77 @@ function getLocalized(obj, lang, fallbackKeys = ['en','el']) {
   return vals.length ? vals[0] : null;
 }
 
+function resolveTextField(value, lang) {
+  if (value == null) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') return getLocalized(value, lang);
+  return null;
+}
+
+function pickPrimaryMode(trip) {
+  if (!trip || typeof trip !== 'object') return { key: null, data: null };
+  const modes = trip.modes && typeof trip.modes === 'object' ? trip.modes : null;
+  if (!modes) return { key: null, data: null };
+  const keys = Object.keys(modes);
+  if (!keys.length) return { key: null, data: null };
+  const defaultKey = trip.defaultMode && modes[trip.defaultMode] ? trip.defaultMode : null;
+  const candidateOrder = [];
+  if (defaultKey) candidateOrder.push(defaultKey);
+  candidateOrder.push(...keys.filter((k) => k !== defaultKey));
+  for (const key of candidateOrder) {
+    const block = modes[key];
+    if (block && block.active !== false) return { key, data: block };
+  }
+  const fallbackKey = defaultKey || keys[0];
+  return { key: fallbackKey, data: modes[fallbackKey] || null };
+}
+
+function formatDurationFromMode(mode, lang, legacyDuration) {
+  if (mode) {
+    const days = parseDurationDays(mode.duration_days);
+    if (days !== null) {
+      if (days >= 1) {
+        const isGreek = String(lang || '').toLowerCase().startsWith('el');
+        const unit = isGreek ? (days === 1 ? 'ημέρα' : 'ημέρες') : (days === 1 ? 'day' : 'days');
+        return `${days} ${unit}`;
+      }
+      // 0 σημαίνει μονοήμερη με ροή ωρών -> θα πέσουμε στο mode.duration
+    }
+    if (mode.duration) return String(mode.duration);
+  }
+  return legacyDuration || null;
+}
+
 // Build a minimal structured summary for assistant reply
 function buildTripSummary(trip, lang) {
   if (!trip) return null;
-  const title = getLocalized(trip.title || {}, lang) || trip.id || '';
-  const description = getLocalized(trip.description || {}, lang) || null;
-  const stops = Array.isArray(trip.stops) ? trip.stops.map(s => ({
-    name: getLocalized((s && s.name) || {}, lang),
-    description: getLocalized((s && s.description) || {}, lang)
-  })) : [];
-  const includes = Array.isArray(trip.includes) ? trip.includes.map(x => (typeof x === 'string' ? x : getLocalized(x, lang))) : null; // may be missing
+  const title = resolveTextField(trip.title, lang) || trip.id || '';
+  const { data: mode } = pickPrimaryMode(trip);
+  const description = resolveTextField(mode && mode.description, lang) || resolveTextField(trip.description, lang) || null;
+  const stopsSource = Array.isArray(mode && mode.stops) ? mode.stops : (Array.isArray(trip.stops) ? trip.stops : []);
+  const stops = stopsSource.map((s) => {
+    const name = resolveTextField((s && (s.title || s.name)), lang);
+    const desc = resolveTextField(s && s.description, lang);
+    return { name, description: desc };
+  });
+  const includesSource = Array.isArray(mode && mode.includes) ? mode.includes : trip.includes;
+  const includes = Array.isArray(includesSource)
+    ? includesSource.map((x) => (typeof x === 'string' ? x : resolveTextField(x, lang))).filter(Boolean)
+    : null;
   const unavailable = Array.isArray(trip.unavailable_dates) ? trip.unavailable_dates : [];
-  // duration: if present in JSON prefer it, else try to infer naive from description for Lefkada demo
-  let duration = trip.duration || null;
+  // duration: prefer per-mode data, fallback to legacy root or inference
+  let duration = formatDurationFromMode(mode, lang, trip.duration || null);
   if (!duration && description) {
     const d = String(description).toLowerCase();
     const isGreek = (lang && String(lang).toLowerCase().startsWith('el'));
     if (/two\s+days|2\s*days|δύο\s+μέρ|2\s*ημερ/.test(d)) duration = isGreek ? '2 μέρες' : '2 days';
     if (!duration && /day\s+trip|μονοημερη|μονοήμερη|1\s*day/.test(d)) duration = isGreek ? '1 μέρα' : '1 day';
   }
-  const priceCents = typeof trip.price_cents === 'number' ? trip.price_cents : null;
+  let priceCents = typeof trip.price_cents === 'number' ? trip.price_cents : null;
+  if (priceCents == null && mode) {
+    const rawPrice = mode.charge_type === 'per_vehicle' ? mode.price_total : mode.price_per_person;
+    if (Number.isFinite(rawPrice)) priceCents = Math.round(rawPrice * 100);
+  }
   const currency = typeof trip.currency === 'string' ? trip.currency : 'EUR';
   // New departure info (optional)
   let departureTime = null;

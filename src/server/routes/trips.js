@@ -8,16 +8,13 @@ const TRIPS_DIR = path.join(ROOT_DIR, "data", "trips");
 const TRIP_TEMPLATE_FILE = path.join(TRIPS_DIR, "_template.json");
 const UPLOAD_TRIPS_DIR = path.join(ROOT_DIR, "public", "uploads", "trips");
 const MODE_KEYS = ["van", "mercedes", "bus"];
+const LEGACY_DURATION_FIELDS = ["duration", "duration_hours", "duration_days"];
 const MAX_TRIP_IMAGE_BYTES = 4 * 1024 * 1024;
 const MAX_TRIP_IMAGE_COUNT = 12;
 const MODE_DEFAULT_META = {
-  van: { capacity: 7, charge_type: "per_person", label: "Premium Van" },
-  mercedes: {
-    capacity: 1,
-    charge_type: "per_vehicle",
-    label: "Private Mercedes",
-  },
-  bus: { capacity: 40, charge_type: "per_person", label: "Classic Bus" },
+  van: { capacity: 7, charge_type: "per_person" },
+  mercedes: { capacity: 1, charge_type: "per_vehicle" },
+  bus: { capacity: 40, charge_type: "per_person" },
 };
 let multer = null;
 try {
@@ -33,7 +30,6 @@ function baseModeTemplate(modeKey) {
   const meta = MODE_DEFAULT_META[modeKey] || {
     capacity: 0,
     charge_type: "per_person",
-    label: modeKey,
   };
   return {
     active: false,
@@ -41,7 +37,6 @@ function baseModeTemplate(modeKey) {
     subtitle: "",
     description: "",
     duration: "",
-    duration_hours: 0,
     duration_days: 0,
     price_per_person: 0,
     price_total: 0,
@@ -84,7 +79,6 @@ function loadTripTemplate() {
       title: "",
       subtitle: "",
       teaser: "",
-      description: "",
       category: "",
       defaultMode: "van",
       iconPath: "",
@@ -145,6 +139,18 @@ function applyTemplateDefaults(input) {
 function toInt(value, def) {
   const num = parseInt(value, 10);
   return Number.isFinite(num) ? num : (def ?? 0);
+}
+
+function parseDurationDaysValue(value) {
+  if (value === null || typeof value === "undefined") return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0) return null;
+  return Math.floor(num);
+}
+
+function hasDurationDaysValue(value) {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
 
 function toFloat(value) {
@@ -314,20 +320,16 @@ function normalizeChargeType(value, fallback) {
   return val === "per_vehicle" ? "per_vehicle" : "per_person";
 }
 
-function normalizeModeBlock(modeKey, input, fallbackTitle) {
-  const meta = MODE_DEFAULT_META[modeKey] || { label: modeKey };
+function normalizeModeBlock(modeKey, input) {
+  const meta = MODE_DEFAULT_META[modeKey] || {};
   const raw = input && typeof input === "object" ? input : {};
-  const defaultTitle = fallbackTitle
-    ? `${fallbackTitle} – ${meta.label}`
-    : meta.label;
   const block = {
     active: toBool(raw.active),
-    title: String(raw.title || defaultTitle || "").trim(),
+    title: String(raw.title || "").trim(),
     subtitle: String(raw.subtitle || "").trim(),
     description: String(raw.description || "").trim(),
     duration: String(raw.duration || "").trim(),
-    duration_hours: toInt(raw.duration_hours, 0),
-    duration_days: toInt(raw.duration_days, 0),
+    duration_days: parseDurationDaysValue(raw.duration_days),
     price_per_person: toMoney(raw.price_per_person ?? raw.price ?? null),
     price_total: toMoney(raw.price_total),
     charge_type: normalizeChargeType(raw.charge_type, meta.charge_type),
@@ -347,6 +349,10 @@ function normalizeModeBlock(modeKey, input, fallbackTitle) {
     block.video.url = String(raw.videoUrl).trim();
   if (!block.video.thumbnail && raw.videoThumbnail)
     block.video.thumbnail = String(raw.videoThumbnail).trim();
+  if (!block.duration) {
+    const legacyHours = toInt(raw.duration_hours, 0);
+    if (legacyHours > 0) block.duration = `${legacyHours}h`;
+  }
   return block;
 }
 
@@ -406,13 +412,13 @@ function projectBaseFieldsFromDefaultMode(trip) {
   const defaultMode = resolveDefaultMode(trip);
   const mode = trip.modes[defaultMode] || {};
   trip.defaultMode = defaultMode;
-  if (!trip.description) trip.description = mode.description || "";
   if (!trip.teaser) trip.teaser = mode.subtitle || "";
-  if (!trip.duration) trip.duration = mode.duration || "";
-  if (mode.duration_hours != null) trip.duration_hours = mode.duration_hours;
-  if (mode.duration_days != null) trip.duration_days = mode.duration_days;
   if ((!trip.tags || !trip.tags.length) && Array.isArray(mode.tags))
     trip.tags = mode.tags.slice();
+  delete trip.description;
+  delete trip.duration;
+  delete trip.duration_hours;
+  delete trip.duration_days;
   return trip;
 }
 
@@ -437,11 +443,7 @@ function migrateLegacyTrip(trip) {
   if (!trip || typeof trip !== "object") return trip;
   if (!trip.modes || typeof trip.modes !== "object") trip.modes = {};
   MODE_KEYS.forEach((key) => {
-    trip.modes[key] = normalizeModeBlock(
-      key,
-      trip.modes[key],
-      trip.title || trip.slug || "Trip",
-    );
+    trip.modes[key] = normalizeModeBlock(key, trip.modes[key]);
   });
   const copyArrayField = (field, transform) => {
     const source = transform ? transform(trip[field]) : trip[field];
@@ -482,16 +484,21 @@ function migrateLegacyTrip(trip) {
   if (legacyHours) {
     MODE_KEYS.forEach((key) => {
       const block = trip.modes[key];
-      if (!block.duration_hours) block.duration_hours = legacyHours;
+      if (!block.duration) block.duration = `${legacyHours}h`;
     });
   }
-  const legacyDays = toInt(trip.duration_days, 0);
-  if (legacyDays) {
+  const legacyDays = parseDurationDaysValue(trip.duration_days);
+  if (hasDurationDaysValue(legacyDays)) {
     MODE_KEYS.forEach((key) => {
       const block = trip.modes[key];
-      if (!block.duration_days) block.duration_days = legacyDays;
+      const existing = parseDurationDaysValue(block.duration_days);
+      if (!hasDurationDaysValue(existing)) block.duration_days = legacyDays;
     });
   }
+  delete trip.description;
+  delete trip.duration;
+  delete trip.duration_hours;
+  delete trip.duration_days;
   if (trip.video) {
     const normalized = normalizeVideoBlock(trip.video);
     MODE_KEYS.forEach((key) => {
@@ -546,6 +553,10 @@ function cleanupLegacyFields(trip) {
     "faq",
     "video",
     "map",
+    "description",
+    "duration",
+    "duration_hours",
+    "duration_days",
   ].forEach((field) => {
     if (field in trip) delete trip[field];
   });
@@ -604,6 +615,31 @@ function sanitizeSlug(raw) {
     .replace(/^-+|-+$/g, "");
 }
 
+function hasLegacyDurationFields(obj) {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return false;
+  return LEGACY_DURATION_FIELDS.some((field) =>
+    Object.prototype.hasOwnProperty.call(obj, field),
+  );
+}
+
+function normalizeTripFilePayload(rawObj, filePath, slugLabel) {
+  const normalized = ensureTripShape(rawObj);
+  if (!hasLegacyDurationFields(rawObj)) return normalized;
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(normalized, null, 2), "utf8");
+    if (slugLabel) {
+      console.log("trips: auto-cleaned legacy duration fields for", slugLabel);
+    }
+  } catch (err) {
+    console.warn(
+      "trips: failed to auto-clean legacy duration fields",
+      slugLabel || filePath,
+      err && err.message ? err.message : err,
+    );
+  }
+  return normalized;
+}
+
 function readTrip(slug) {
   ensureTripsDir();
   try {
@@ -613,7 +649,7 @@ function readTrip(slug) {
     if (!fs.existsSync(file)) return null;
     const raw = fs.readFileSync(file, "utf8");
     const obj = JSON.parse(raw || "null");
-    return ensureTripShape(obj);
+    return normalizeTripFilePayload(obj, file, safeSlug);
   } catch (e) {
     console.error("trips: readTrip failed", slug, e.message);
     return null;
@@ -660,7 +696,12 @@ function listTrips() {
         try {
           const raw = fs.readFileSync(path.join(TRIPS_DIR, fn), "utf8");
           const obj = JSON.parse(raw || "null");
-          return ensureTripShape(obj);
+          const slug = fn.replace(/\.json$/i, "");
+          return normalizeTripFilePayload(
+            obj,
+            path.join(TRIPS_DIR, fn),
+            slug,
+          );
         } catch (e) {
           console.error("trips: failed to parse", fn, e.message);
           return null;
@@ -683,7 +724,6 @@ function validateTrip(input) {
   const category = String(input.category || "").trim();
   const subtitle = String(input.subtitle || "").trim();
   const teaser = String(input.teaser || "").trim();
-  const description = String(input.description || "").trim();
   const coverImage = String(input.coverImage || "").trim();
   const iconPath = String(input.iconPath || "").trim();
   const currency = String(input.currency || "EUR")
@@ -692,7 +732,7 @@ function validateTrip(input) {
   const modesPayload = {};
   MODE_KEYS.forEach((key) => {
     const raw = input && input.modes ? input.modes[key] : {};
-    modesPayload[key] = normalizeModeBlock(key, raw, title);
+    modesPayload[key] = normalizeModeBlock(key, raw);
   });
   const activeModes = MODE_KEYS.filter((key) => modesPayload[key].active);
   if (!title) errors.push("missing_title");
@@ -703,7 +743,7 @@ function validateTrip(input) {
     const block = modesPayload[key];
     if (!block.title) errors.push(`mode_${key}_missing_title`);
     if (!block.description) errors.push(`mode_${key}_missing_description`);
-    if (!block.duration && !block.duration_hours && !block.duration_days)
+    if (!block.duration && !hasDurationDaysValue(block.duration_days))
       errors.push(`mode_${key}_missing_duration`);
     const charge =
       block.charge_type === "per_vehicle" ? "per_vehicle" : "per_person";
@@ -728,7 +768,6 @@ function validateTrip(input) {
       title,
       subtitle,
       teaser,
-      description,
       category,
       coverImage,
       iconPath,
@@ -812,7 +851,18 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
     const base = existing ? { ...existing } : applyTemplateDefaults({});
     const toWrite = { ...base, ...payload, slug: payload.slug };
     toWrite.modes = cloneJson(payload.modes);
+    MODE_KEYS.forEach((key) => {
+      const block = toWrite.modes[key];
+      if (!block || typeof block !== "object") return;
+      const parsed = parseDurationDaysValue(block.duration_days);
+      block.duration_days = hasDurationDaysValue(parsed) ? parsed : null;
+    });
     toWrite.mode_set = deriveModeSetFromModes(toWrite.modes);
+    ["description", "duration", "duration_hours", "duration_days"].forEach(
+      (legacyField) => {
+        if (legacyField in toWrite) delete toWrite[legacyField];
+      },
+    );
     const nowIso = new Date().toISOString();
     if (existing && existing.createdAt) {
       toWrite.createdAt = existing.createdAt;

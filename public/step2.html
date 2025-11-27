@@ -10,8 +10,6 @@
   <link id="ga-footer-rounded-css" rel="stylesheet" href="/css/footer-rounded.css">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/step2.css">
-  <!-- Trip mode dynamic disabling styles -->
-  <link rel="stylesheet" href="/css/mode-select.css">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#001f3f">
   <link rel="stylesheet" href="/pwa.css">
@@ -315,12 +313,21 @@
                 if (typeof field === 'object') return field[lang] || field['el'] || Object.values(field)[0] || '';
                 return '';
               };
+              const pickMode = () => {
+                if (!trip || !trip.modes) return null;
+                if (trip.defaultMode && trip.modes[trip.defaultMode]) return trip.modes[trip.defaultMode];
+                const entries = Object.keys(trip.modes);
+                const activeKey = entries.find((key) => trip.modes[key] && trip.modes[key].active);
+                if (activeKey) return trip.modes[activeKey];
+                return trip.modes[entries[0]] || null;
+              };
               const title = getLocalized(trip.title);
-              const desc = getLocalized(trip.description);
+              const mode = pickMode();
+              const desc = mode ? getLocalized(mode.description) : '';
               // cache loaded trip so i18n:changed can re-render it
               try { window.__loadedTrip = trip; } catch(_){ }
-              if (title) titleEl.textContent = title;
-              if (desc) descEl.textContent = desc;
+              if (titleEl) titleEl.textContent = title || '';
+              if (descEl) descEl.textContent = desc || '';
             } catch(_){ }
           })();
         }
@@ -642,13 +649,22 @@
                 if (typeof field === 'object') return field[lang] || field['el'] || Object.values(field)[0] || '';
                 return '';
               };
+              const pickMode = () => {
+                if (!t || !t.modes) return null;
+                if (t.defaultMode && t.modes[t.defaultMode]) return t.modes[t.defaultMode];
+                const keys = Object.keys(t.modes);
+                const activeKey = keys.find((key) => t.modes[key] && t.modes[key].active);
+                if (activeKey) return t.modes[activeKey];
+                return t.modes[keys[0]] || null;
+              };
               const title = getLocalized(t.title);
-              const desc = getLocalized(t.description);
+              const mode = pickMode();
+              const desc = mode ? getLocalized(mode.description) : '';
               // Re-select DOM nodes here to avoid scope issues with earlier IIFEs
               const titleEl = document.getElementById('s2TripTitle');
               const descEl = document.getElementById('s2TripDesc');
-              if (title && titleEl) titleEl.textContent = title;
-              if (desc && descEl) descEl.textContent = desc;
+              if (titleEl) titleEl.textContent = title || '';
+              if (descEl) descEl.textContent = desc || '';
             }
           } catch(_){ }
         });

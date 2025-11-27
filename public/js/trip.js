@@ -1,12 +1,10 @@
 (() => {
   const TAB_DEFAULT = 'trip-tab-main';
-  const MODE_SET_KEYS = ['van', 'mercedes', 'bus'];
+  const UNTITLED_MODE_LABEL = 'Χωρίς τίτλο';
   const state = {
     slug: '',
     activePanel: TAB_DEFAULT,
     trip: null,
-    modeKey: '',
-    mode: null,
   };
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -73,18 +71,14 @@
     if (trip.category) document.body.dataset.category = trip.category;
 
     const modeInfo = selectMode(trip);
-    state.modeKey = modeInfo.key;
-    state.mode = modeInfo.data;
-
     renderHero(trip, modeInfo);
-    renderModeSelect(trip, modeInfo);
     renderMainPanel(trip, modeInfo);
-    renderPhotos(trip, modeInfo);
-    renderListPanel('trip-tab-includes', gatherIncludes(trip, modeInfo), 'Δεν έχουν καταχωρηθεί ακόμη στοιχεία.');
-    renderListPanel('trip-tab-excludes', gatherExcludes(trip, modeInfo), 'Δεν έχουν καταχωρηθεί ακόμη στοιχεία.');
-    renderExperience(trip, modeInfo);
-    renderFaq(trip, modeInfo);
-    renderStops(trip, modeInfo);
+    renderPhotos(modeInfo);
+    renderListPanel('trip-tab-includes', gatherIncludes(modeInfo), 'Δεν έχουν καταχωρηθεί ακόμη στοιχεία.');
+    renderListPanel('trip-tab-excludes', gatherExcludes(modeInfo), 'Δεν έχουν καταχωρηθεί ακόμη στοιχεία.');
+    renderExperience(modeInfo);
+    renderFaq(modeInfo);
+    renderStops(modeInfo);
     setupCalendar(state.slug);
   }
 
@@ -111,14 +105,14 @@
 
   function renderHero(trip, modeInfo) {
     const mode = modeInfo.data || {};
-    const title = mode.title || trip.title || 'Εκδρομή';
-    const subtitle = mode.subtitle || trip.subtitle || trip.teaser || '';
+    const title = trip.title || mode.title || 'Εκδρομή';
+    const subtitle = trip.subtitle || '';
     document.title = `${title} – Greekaway`;
 
     setText('trip-title', title);
     setText('trip-subtitle', subtitle, '');
-    setText('trip-description', trip.description || mode.description || '', '');
-    setText('trip-duration', formatDuration(mode, trip));
+    setText('trip-description', mode.description || '', '');
+    setText('trip-duration', formatModeDuration(mode), '—');
     setText('trip-mode-label', formatMode(modeInfo));
     setText('trip-price', formatPrice(mode, trip.currency));
     setText('trip-category', (trip.category || 'Εκδρομή').toUpperCase());
@@ -129,15 +123,16 @@
     if (!panel) return;
     panel.innerHTML = '';
 
+    const mode = modeInfo.data || {};
     const paragraphs = dedupeStrings([
-      modeInfo.data && modeInfo.data.description,
-      trip.description,
-      trip.experience,
-      trip.teaser,
+      mode.description,
+      mode.long_description,
+      mode.details,
+      mode.experience,
     ]);
     paragraphs.forEach((text) => panel.appendChild(createParagraph(text)));
 
-    const highlights = collectHighlights(trip, modeInfo);
+    const highlights = collectHighlights(modeInfo);
     if (highlights.length) {
       const ul = document.createElement('ul');
       ul.className = 'trip-list trip-overview-meta';
@@ -154,15 +149,17 @@
     }
   }
 
-  function renderPhotos(trip, modeInfo) {
+  function renderPhotos(modeInfo) {
     const panel = document.getElementById('trip-tab-photos');
     if (!panel) return;
     panel.innerHTML = '';
+    const mode = modeInfo.data || {};
+    const media = (mode.media && typeof mode.media === 'object') ? mode.media : {};
     const items = dedupeStrings([
-      ...(modeInfo.data && modeInfo.data.photos) || [],
-      ...(modeInfo.data && modeInfo.data.gallery) || [],
-      ...(trip.photos || []),
-      ...(trip.gallery || []),
+      ...(Array.isArray(mode.photos) ? mode.photos : []),
+      ...(Array.isArray(mode.gallery) ? mode.gallery : []),
+      ...(Array.isArray(media.photos) ? media.photos : []),
+      ...(Array.isArray(media.images) ? media.images : []),
     ]);
     if (!items.length) {
       panel.appendChild(createPlaceholder('Δεν βρέθηκαν φωτογραφίες για αυτή την εκδρομή.'));
@@ -180,14 +177,14 @@
     panel.appendChild(grid);
   }
 
-  function gatherIncludes(trip, modeInfo) {
+  function gatherIncludes(modeInfo) {
     const mode = modeInfo.data || {};
-    return (Array.isArray(mode.includes) && mode.includes.length ? mode.includes : trip.includes) || [];
+    return Array.isArray(mode.includes) ? mode.includes : [];
   }
 
-  function gatherExcludes(trip, modeInfo) {
+  function gatherExcludes(modeInfo) {
     const mode = modeInfo.data || {};
-    return (Array.isArray(mode.excludes) && mode.excludes.length ? mode.excludes : trip.excludes) || [];
+    return Array.isArray(mode.excludes) ? mode.excludes : [];
   }
 
   function renderListPanel(panelId, entries, emptyText) {
@@ -209,17 +206,15 @@
     panel.appendChild(ul);
   }
 
-  function renderExperience(trip, modeInfo) {
+  function renderExperience(modeInfo) {
     const panel = document.getElementById('trip-tab-experience');
     if (!panel) return;
     panel.innerHTML = '';
     const mode = modeInfo.data || {};
-    const intro = trip.experience || mode.experience;
+    const intro = mode.experience;
     if (intro) panel.appendChild(createParagraph(intro));
 
-    const sections = []
-      .concat(Array.isArray(trip.sections) ? trip.sections : [])
-      .concat(Array.isArray(mode.sections) ? mode.sections : [])
+    const sections = (Array.isArray(mode.sections) ? mode.sections : [])
       .filter((section) => section && (section.title || section.content));
 
     if (!intro && !sections.length) {
@@ -240,14 +235,12 @@
     });
   }
 
-  function renderFaq(trip, modeInfo) {
+  function renderFaq(modeInfo) {
     const panel = document.getElementById('trip-tab-faq');
     if (!panel) return;
     panel.innerHTML = '';
     const mode = modeInfo.data || {};
-    const items = []
-      .concat(Array.isArray(mode.faq) ? mode.faq : [])
-      .concat(Array.isArray(trip.faq) ? trip.faq : [])
+    const items = (Array.isArray(mode.faq) ? mode.faq : [])
       .filter((item) => item && (item.q || item.question || item.a || item.answer));
 
     if (!items.length) {
@@ -270,14 +263,12 @@
     });
   }
 
-  function renderStops(trip, modeInfo) {
+  function renderStops(modeInfo) {
     const panel = document.getElementById('trip-tab-stops');
     if (!panel) return;
     panel.innerHTML = '';
     const mode = modeInfo.data || {};
-    const stops = []
-      .concat(Array.isArray(mode.stops) ? mode.stops : [])
-      .concat(Array.isArray(trip.stops) ? trip.stops : [])
+    const stops = (Array.isArray(mode.stops) ? mode.stops : [])
       .filter((stop) => stop && (stop.title || stop.description));
 
     if (!stops.length) {
@@ -342,15 +333,12 @@
     panel.appendChild(list);
   }
 
-  function collectHighlights(trip, modeInfo) {
+  function collectHighlights(modeInfo) {
     const highlights = [];
     const mode = modeInfo.data || {};
     if (Array.isArray(mode.highlights)) highlights.push(...mode.highlights);
-    if (Array.isArray(trip.highlights)) highlights.push(...trip.highlights);
-    const tags = mode.tags && mode.tags.length ? mode.tags : trip.tags;
-    if (Array.isArray(tags) && tags.length) highlights.push(`Tags: ${tags.join(', ')}`);
-    const capacity = mode.capacity || trip.capacity;
-    if (capacity) highlights.push(`Χωρητικότητα: έως ${capacity} άτομα`);
+    if (Array.isArray(mode.tags) && mode.tags.length) highlights.push(`Tags: ${mode.tags.join(', ')}`);
+    if (mode.capacity) highlights.push(`Χωρητικότητα: έως ${mode.capacity} άτομα`);
     return dedupeStrings(highlights);
   }
 
@@ -395,65 +383,75 @@
     });
   }
 
-  function formatDuration(mode, trip) {
-    if (mode.duration_hours) return `${mode.duration_hours} ώρες`;
-    if (mode.duration_days) return `${mode.duration_days} ημέρες`;
-    if (mode.duration) return `${mode.duration} ώρες`;
-    if (trip.duration_hours) return `${trip.duration_hours} ώρες`;
-    if (trip.duration_days) return `${trip.duration_days} ημέρες`;
-    return '—';
+  function formatModeDuration(mode) {
+    if (!mode) return '';
+    return buildDurationLabel(mode.duration_days, mode.duration) || '';
   }
 
-  function renderModeSelect(trip, modeInfo) {
-    const shell = document.querySelector('.trip-mode-select');
-    const mount = document.getElementById('trip-mode-select');
-    if (!shell || !mount) return;
-    if (!window.ModeSelect || !hasActiveModeSet(trip)) {
-      shell.hidden = true;
-      mount.innerHTML = '';
-      return;
+  function buildDurationLabel(durationDays, durationRaw) {
+    const daysValue = toPositiveInt(durationDays);
+    if (daysValue >= 2) return `${daysValue} ημέρες`;
+    if (daysValue === 1) return '1 ημέρα';
+    return parseDurationString(durationRaw);
+  }
+
+  function parseDurationString(raw) {
+    if (!raw) return '';
+    const compact = String(raw).trim().toLowerCase().replace(/\s+/g, '');
+    if (!compact) return '';
+    let days = 0;
+    let hours = 0;
+    let minutes = 0;
+    const tokenRegex = /(\d+(?:\.\d+)?)(d|h|m)/g;
+    let match;
+    while ((match = tokenRegex.exec(compact)) !== null) {
+      const value = parseFloat(match[1]);
+      if (!Number.isFinite(value)) continue;
+      if (match[2] === 'd') days += value;
+      else if (match[2] === 'h') hours += value;
+      else if (match[2] === 'm') minutes += value;
     }
-    shell.hidden = false;
-    window.ModeSelect.mount(mount, {
-      trip,
-      slug: state.slug,
-      selectedMode: modeInfo.key,
-      onSelect: handleModeSwitch
-    });
-  }
-
-  function hasActiveModeSet(trip) {
-    if (!trip || typeof trip !== 'object' || !trip.mode_set) return false;
-    return MODE_SET_KEYS.some((key) => isModeSetOptionActive(trip.mode_set[key]));
-  }
-
-  function isModeSetOptionActive(option) {
-    if (!option || typeof option !== 'object') return false;
-    if (typeof option.price_cents !== 'number') return false;
-    const flag = option.active;
-    if (typeof flag === 'boolean') return flag;
-    if (typeof flag === 'number') return flag !== 0;
-    if (typeof flag === 'string') {
-      const normalized = flag.trim().toLowerCase();
-      if (!normalized) return true;
-      if (['false', '0', 'inactive', 'off', 'no'].includes(normalized)) return false;
+    if (days === 0 && hours === 0 && minutes === 0) {
+      const numeric = parseFloat(compact);
+      if (Number.isFinite(numeric)) hours = numeric;
     }
-    return true;
+    if (days > 0) {
+      const dayLabel = `${stripTrailingZeros(days)} ${days === 1 ? 'ημέρα' : 'ημέρες'}`;
+      const hourTotal = hours + (minutes / 60);
+      const hourLabel = hourTotal > 0
+        ? `${stripTrailingZeros(Math.round(hourTotal * 10) / 10)} ${hourTotal === 1 ? 'ώρα' : 'ώρες'}`
+        : '';
+      return hourLabel ? `${dayLabel} ${hourLabel}` : dayLabel;
+    }
+    const totalHours = hours + (minutes / 60);
+    if (totalHours > 0) {
+      const rounded = Math.round(totalHours * 10) / 10;
+      const display = stripTrailingZeros(rounded);
+      const unit = rounded === 1 ? 'ώρα' : 'ώρες';
+      return `${display} ${unit}`;
+    }
+    if (minutes > 0) {
+      const mins = stripTrailingZeros(minutes);
+      return `${mins} λεπτά`;
+    }
+    return '';
   }
 
-  function handleModeSwitch(modeKey) {
-    if (!modeKey || !state.slug) return;
-    const url = new URL(window.location.href);
-    url.searchParams.set('trip', state.slug);
-    url.searchParams.set('mode', modeKey);
-    window.location.assign(url.toString());
+  function stripTrailingZeros(value) {
+    if (Number.isInteger(value)) return String(value);
+    return value.toFixed(1).replace(/\.0$/, '');
+  }
+
+  function toPositiveInt(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num) || num <= 0) return 0;
+    return Math.floor(num);
   }
 
   function formatMode(modeInfo) {
     const mode = modeInfo.data || {};
     const parts = [];
-    if (mode.title) parts.push(mode.title);
-    else if (modeInfo.key) parts.push(modeInfo.key.toUpperCase());
+    parts.push(mode.title || UNTITLED_MODE_LABEL);
     if (mode.capacity) parts.push(`• έως ${mode.capacity} άτομα`);
     if (mode.charge_type === 'per_vehicle') parts.push('• ιδιωτικό όχημα');
     if (mode.charge_type === 'per_person') parts.push('• ανά άτομο');

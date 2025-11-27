@@ -125,7 +125,7 @@
           btn.title = getLocalized(trip.title) || '';
           btn.addEventListener('click', () => {
             try { sessionStorage.setItem('highlightTrip', tripSlug); } catch(_) {}
-            window.location.href = `/mode-select.html?trip=${encodeURIComponent(tripSlug)}`;
+            window.location.href = `/booking/mode-select?trip=${encodeURIComponent(tripSlug)}`;
           });
           const iconWrapper = document.createElement('div');
           iconWrapper.className = 'category-icon';

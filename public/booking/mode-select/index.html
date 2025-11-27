@@ -1,44 +1,29 @@
 <!DOCTYPE html>
-<html lang="el" class="mode-select-root">
+<html lang="el">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Greekaway – Επιλογή εμπειρίας</title>
+  <title>Greekaway – Επιλογή οχήματος</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/theme.css">
-  <link rel="stylesheet" href="/css/mode-select.css">
+  <link rel="stylesheet" href="/booking/mode-select/mode-select.css?v=20251127">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#001f3f">
-  <link rel="stylesheet" href="/pwa.css">
-  <link rel="stylesheet" href="/css/pwa-fixes.css">
-  <script src="/js/i18n.js?v=20251022" defer></script>
-  <script src="/js/theme.js" defer></script>
-  <script src="/js/overlay-manager.js" defer></script>
-  <script src="/js/footer.js?v=20251021" defer></script>
-  <script src="/js/assistant.js" defer></script>
-  <script src="/pwa-install.js" defer></script>
-  <script src="/js/mode-select.js" defer></script>
+  <meta name="theme-color" content="#050d1f">
 </head>
-<body class="mode-select-page" data-view="mode-select">
-  <main class="mode-select-shell">
-    <section class="mode-select-hero" id="modeIntro">
-      <h1 id="modeCardTitle">Επίλεξε εμπειρία</h1>
-      <p id="modeCardDescription">Διάλεξε όχημα και εμπειρία πριν συνεχίσεις στην εκδρομή.</p>
-    </section>
+<body class="mode-select-page" data-view="booking-mode-select">
+  <main class="mode-select-shell" role="main">
+    <header class="mode-select-hero">
+      <p id="modeTripCategory" class="mode-select-eyebrow">Εκδρομή</p>
+      <h1 id="modeTripTitle">Επιλογή εμπειρίας</h1>
+      <p id="modeTripSubtitle" class="mode-select-subtitle"></p>
+    </header>
 
-    <section id="modeStatus" class="mode-select-status" aria-live="polite" hidden>
-      Φόρτωση διαθέσιμων modes...
-    </section>
+    <section id="modeStatus" class="mode-select-status" role="status" aria-live="polite" hidden></section>
 
-    <section id="modeCards" class="mode-card-grid" aria-live="polite"></section>
-
-    <div id="modeError" class="mode-select-error" hidden></div>
+    <section id="modeGrid" class="mode-card-grid" aria-live="polite"></section>
   </main>
 
-  <footer></footer>
-
-  <!-- Shared overlays -->
   <div id="aboutOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
     <button class="close-overlay" onclick="closeOverlay('aboutOverlay')" data-i18n-aria="ui.close">×</button>
     <div class="overlay-inner">
@@ -62,5 +47,14 @@
       <p data-i18n="profile.info">Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας.</p>
     </div>
   </div>
+
+  <footer></footer>
+
+  <script src="/js/i18n.js?v=20251022" defer></script>
+  <script src="/js/overlay-manager.js" defer></script>
+  <script src="/js/footer.js?v=20251021" defer></script>
+  <script src="/js/assistant.js" defer></script>
+  <script src="/pwa-install.js" defer></script>
+  <script src="/booking/mode-select/mode-select.js" type="module"></script>
 </body>
 </html>

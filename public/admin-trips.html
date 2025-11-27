@@ -23,12 +23,8 @@
           <label>Slug *<input type="text" id="slug" required></label>
           <label>Υπότιτλος (subtitle)<input type="text" id="subtitle" placeholder="π.χ. Premium εμπειρία"></label>
         </div>
-        <label class="full">Description *<textarea id="description" rows="3" required></textarea></label>
         <div class="form-group">
           <label>Category *<select id="category" required></select></label>
-          <label>Duration *<input type="text" id="duration" placeholder="π.χ. 4 ώρες" required></label>
-          <label>Διάρκεια (ώρες)<input type="number" id="duration_hours" min="0" step="1" placeholder="0"></label>
-          <label>Διάρκεια (ημέρες)<input type="number" id="duration_days" min="0" step="1" placeholder="0"></label>
         </div>
         <div class="form-group full-row file-row">
           <label class="file-input-wrapper">Trip Icon (SVG/PNG/WEBP)
@@ -49,16 +45,13 @@
           <div class="mode-stack">
             <article class="panel mode-card" data-mode-form="van">
               <div class="mode-header">
-                <strong>Premium Van</strong>
+                <strong data-mode-label="van">Ορίστε τίτλο οχήματος</strong>
                 <label class="mode-toggle"><input type="checkbox" data-field="active"> Active</label>
               </div>
               <div class="form-group stack-on-mobile">
-                <label>Mode Title<input type="text" data-field="title" placeholder="π.χ. Premium Van Tour"></label>
+                <label>Mode Title<input type="text" data-field="title" placeholder="π.χ. Deluxe Van Tour"></label>
                 <label>Mode Subtitle<input type="text" data-field="subtitle" placeholder="Περιγραφή για hero"></label>
                 <label>Duration (text)<input type="text" data-field="duration" placeholder="4 ώρες"></label>
-              </div>
-              <div class="form-group stack-on-mobile">
-                <label>Διάρκεια (ώρες)<input type="number" min="0" step="1" data-field="duration_hours"></label>
                 <label>Διάρκεια (ημέρες)<input type="number" min="0" step="1" data-field="duration_days"></label>
               </div>
               <label class="full">Mode Description<textarea data-field="description" rows="3" placeholder="Αναλυτική περιγραφή για το van mode"></textarea></label>
@@ -132,16 +125,13 @@
 
             <article class="panel mode-card" data-mode-form="mercedes">
               <div class="mode-header">
-                <strong>Private Mercedes</strong>
+                <strong data-mode-label="mercedes">Ορίστε τίτλο οχήματος</strong>
                 <label class="mode-toggle"><input type="checkbox" data-field="active"> Active</label>
               </div>
               <div class="form-group stack-on-mobile">
-                <label>Mode Title<input type="text" data-field="title" placeholder="Private Mercedes Tour"></label>
+                <label>Mode Title<input type="text" data-field="title" placeholder="π.χ. Luxury Private Ride"></label>
                 <label>Mode Subtitle<input type="text" data-field="subtitle"></label>
                 <label>Duration (text)<input type="text" data-field="duration"></label>
-              </div>
-              <div class="form-group stack-on-mobile">
-                <label>Διάρκεια (ώρες)<input type="number" min="0" step="1" data-field="duration_hours"></label>
                 <label>Διάρκεια (ημέρες)<input type="number" min="0" step="1" data-field="duration_days"></label>
               </div>
               <label class="full">Mode Description<textarea data-field="description" rows="3"></textarea></label>
@@ -213,16 +203,13 @@
 
             <article class="panel mode-card" data-mode-form="bus">
               <div class="mode-header">
-                <strong>Classic Bus Tour</strong>
+                <strong data-mode-label="bus">Ορίστε τίτλο οχήματος</strong>
                 <label class="mode-toggle"><input type="checkbox" data-field="active"> Active</label>
               </div>
               <div class="form-group stack-on-mobile">
-                <label>Mode Title<input type="text" data-field="title"></label>
+                <label>Mode Title<input type="text" data-field="title" placeholder="π.χ. Classic Group Tour"></label>
                 <label>Mode Subtitle<input type="text" data-field="subtitle"></label>
                 <label>Duration (text)<input type="text" data-field="duration"></label>
-              </div>
-              <div class="form-group stack-on-mobile">
-                <label>Διάρκεια (ώρες)<input type="number" min="0" step="1" data-field="duration_hours"></label>
                 <label>Διάρκεια (ημέρες)<input type="number" min="0" step="1" data-field="duration_days"></label>
               </div>
               <label class="full">Mode Description<textarea data-field="description" rows="3"></textarea></label>
@@ -313,7 +300,6 @@
             <th>Title</th>
             <th>Slug</th>
             <th>Category</th>
-            <th>Duration</th>
             <th>Modes</th>
             <th>Icon</th>
             <th>Actions</th>

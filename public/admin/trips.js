@@ -1,15 +1,10 @@
 (function(){
   const MODE_KEYS = ['van','mercedes','bus'];
-  const MODE_LABELS = {
-    van: 'Premium Van',
-    mercedes: 'Private Mercedes',
-    bus: 'Classic Bus'
-  };
+  const UNTITLED_MODE_TEXT = 'Χωρίς τίτλο';
 
   const els = {
     title: document.getElementById('title'),
     slug: document.getElementById('slug'),
-    description: document.getElementById('description'),
     subtitle: document.getElementById('subtitle'),
     category: document.getElementById('category'),
     tagsInput: document.getElementById('tagsInput'),
@@ -26,20 +21,104 @@
   };
 
   window.TripStopsDraftBridge = window.TripStopsDraftBridge || {};
-  const modeForms = initModeForms();
   let categories = [];
   let trips = [];
   let editingSlug = null;
   let slugManuallyEdited = false;
   let currentTripDraft = null;
+  const modeForms = initModeForms();
+  MODE_KEYS.forEach((key) => updateModeHeader(key));
   const TRIPS_RENDER_EVENT = 'ga:trips:rendered';
   let rowBindScheduled = false;
+
+  function getModeForm(modeKey, formsRef){
+    const registry = formsRef || modeForms;
+    if (!registry) return null;
+    return registry[modeKey] || null;
+  }
+
+  function resolveModeLabel(modeKey, formsRef){
+    const cfg = getModeForm(modeKey, formsRef);
+    const fieldValue = cfg && cfg.title && cfg.title.value ? cfg.title.value.trim() : '';
+    if (fieldValue) return fieldValue;
+    if (
+      currentTripDraft &&
+      currentTripDraft.modes &&
+      currentTripDraft.modes[modeKey] &&
+      currentTripDraft.modes[modeKey].title
+    ) {
+      return currentTripDraft.modes[modeKey].title;
+    }
+    return UNTITLED_MODE_TEXT;
+  }
+
+  function updateModeHeader(modeKey, formsRef){
+    const cfg = getModeForm(modeKey, formsRef);
+    if (!cfg || !cfg.root) return;
+    const labelNode = cfg.root.querySelector('[data-mode-label]');
+    if (!labelNode) return;
+    labelNode.textContent = resolveModeLabel(modeKey, formsRef);
+  }
+  
 
   function runSoon(fn){
     if (typeof queueMicrotask === 'function') {
       queueMicrotask(fn);
     } else {
       setTimeout(fn, 0);
+    }
+  }
+
+  function clearFieldErrors(){
+    document.querySelectorAll('.field-error').forEach((node) => {
+      node.classList.remove('field-error');
+    });
+    document.querySelectorAll('.field-error-block').forEach((node) => {
+      node.classList.remove('field-error-block');
+    });
+    document.querySelectorAll('.field-error-hint').forEach((node) => {
+      node.remove();
+    });
+  }
+
+  function markFieldError(element, message){
+    if (!element) return;
+    const control = element.matches && element.matches('input,textarea,select')
+      ? element
+      : (element.querySelector && element.querySelector('input,textarea,select'));
+    const target = control || element;
+    if (control) {
+      control.classList.add('field-error');
+    } else {
+      target.classList.add('field-error-block');
+    }
+    const host = control && control.closest ? control.closest('label') : null;
+    const hintHost = host || target;
+    if (!hintHost) return;
+    let hint = hintHost.querySelector('.field-error-hint');
+    if (!hint) {
+      hint = document.createElement('div');
+      hint.className = 'field-error-hint';
+      hintHost.appendChild(hint);
+    }
+    hint.textContent = message || 'Συμπλήρωσε το πεδίο.';
+  }
+
+  function focusFirstErrorElement(element){
+    if (!element) return;
+    const scrollTarget = element.closest ? (element.closest('.mode-card') || element) : element;
+    if (scrollTarget && scrollTarget.scrollIntoView) {
+      scrollTarget.scrollIntoView({ behavior:'smooth', block:'center' });
+    }
+    const focusTarget = element.matches && element.matches('input,textarea,select,button')
+      ? element
+      : (element.querySelector && element.querySelector('input,textarea,select,button'));
+    if (focusTarget && typeof focusTarget.focus === 'function') {
+      try {
+        focusTarget.focus({ preventScroll:true });
+      } catch(_){
+        focusTarget.focus();
+      }
     }
   }
 
@@ -63,7 +142,6 @@
         subtitle: root.querySelector('[data-field="subtitle"]'),
         description: root.querySelector('[data-field="description"]'),
         duration: root.querySelector('[data-field="duration"]'),
-        durationHours: root.querySelector('[data-field="duration_hours"]'),
         durationDays: root.querySelector('[data-field="duration_days"]'),
         pricePerPerson: root.querySelector('[data-field="price_per_person"]'),
         priceTotal: root.querySelector('[data-field="price_total"]'),
@@ -86,7 +164,11 @@
         mapEndLng: root.querySelector('[data-field="map_end_lng"]'),
         mapRoute: root.querySelector('[data-field="map_route"]')
       };
+      if (forms[key].title) {
+        forms[key].title.addEventListener('input', () => updateModeHeader(key));
+      }
     });
+    MODE_KEYS.forEach((key) => updateModeHeader(key, forms));
     document.querySelectorAll('[data-action="add-section"]').forEach((btn) => {
       btn.addEventListener('click', () => addSectionRow(btn.dataset.mode));
     });
@@ -164,6 +246,18 @@
     return getStopsDraft(modeKey)
       .map((stop)=>sanitizeStopEntry(stop))
       .filter((stop)=>stop.title || stop.description || stop.images.length || stop.videos.length);
+  }
+
+  function modeStopsHaveContent(stops){
+    if (!Array.isArray(stops)) return false;
+    return stops.some((stop) => {
+      if (!stop || typeof stop !== 'object') return false;
+      if ((stop.title || '').trim()) return true;
+      if ((stop.description || '').trim()) return true;
+      if (Array.isArray(stop.images) && stop.images.some(Boolean)) return true;
+      if (Array.isArray(stop.videos) && stop.videos.some(Boolean)) return true;
+      return false;
+    });
   }
   function readStopValuesFromItem(item){
     if (!item) return { title:'', description:'', images:[], videos:[] };
@@ -286,6 +380,18 @@
   }
   window.TripStopsDraftBridge.syncFromTextarea = syncStopTextareaExternal;
   function toPositiveInt(v){ const n = parseInt(v,10); return Number.isFinite(n) && n>=0 ? n : 0; }
+  function readDurationDaysInput(input){
+    if (!input) return null;
+    const raw = String(input.value || '').trim();
+    if (raw === '') return null;
+    const num = Number(raw);
+    if (!Number.isFinite(num) || num < 0) return null;
+    return Math.floor(num);
+  }
+
+  function isDurationDaysMissing(value){
+    return value === '' || value === null || typeof value === 'undefined';
+  }
   function toFloatOrNull(v){ const n = parseFloat(v); return Number.isFinite(n) ? n : null; }
   function eurosToNumber(v){ const n = parseFloat(String(v||'').replace(',','.')); return Number.isFinite(n) && n>=0 ? Math.round(n*100)/100 : null; }
   function numberToEuros(num){ if (!Number.isFinite(num) || num<=0) return ''; return num.toFixed(2); }
@@ -522,8 +628,7 @@
       subtitle: (cfg.subtitle && cfg.subtitle.value || '').trim(),
       description: (cfg.description && cfg.description.value || '').trim(),
       duration: (cfg.duration && cfg.duration.value || '').trim(),
-      duration_hours: cfg.durationHours ? toPositiveInt(cfg.durationHours.value) : 0,
-      duration_days: cfg.durationDays ? toPositiveInt(cfg.durationDays.value) : 0,
+      duration_days: readDurationDaysInput(cfg.durationDays),
       price_per_person: eurosToNumber(cfg.pricePerPerson && cfg.pricePerPerson.value),
       price_total: eurosToNumber(cfg.priceTotal && cfg.priceTotal.value),
       charge_type: (cfg.chargeType && cfg.chargeType.value === 'per_vehicle') ? 'per_vehicle' : 'per_person',
@@ -552,7 +657,6 @@
     if (cfg.subtitle) cfg.subtitle.value = mode.subtitle || '';
     if (cfg.description) cfg.description.value = mode.description || '';
     if (cfg.duration) cfg.duration.value = mode.duration || '';
-    if (cfg.durationHours) cfg.durationHours.value = mode.duration_hours != null ? String(mode.duration_hours) : '';
     if (cfg.durationDays) cfg.durationDays.value = mode.duration_days != null ? String(mode.duration_days) : '';
     if (cfg.pricePerPerson) cfg.pricePerPerson.value = numberToEuros(mode.price_per_person);
     if (cfg.priceTotal) cfg.priceTotal.value = numberToEuros(mode.price_total);
@@ -568,6 +672,7 @@
     renderFaqForMode(modeKey, mode.faq);
     renderStopsForMode(modeKey, mode.stops);
     renderMapForMode(modeKey, mode.map);
+    updateModeHeader(modeKey);
   }
 
   function autoSlugFromTitle(){
@@ -608,7 +713,7 @@
       const parts = code.split('_');
       const modeKey = parts[1];
       const issue = parts.slice(2).join('_');
-      const label = MODE_LABELS[modeKey] || modeKey;
+      const label = resolveModeLabel(modeKey);
       switch(issue){
         case 'missing_title': return `${label}: απαιτείται τίτλος`;
         case 'missing_description': return `${label}: απαιτείται περιγραφή`;
@@ -628,6 +733,53 @@
     }
   }
 
+  function validateTripForm(values){
+    const errors = [];
+    let firstInvalid = null;
+    const addError = (code, element, message) => {
+      if (!errors.includes(code)) errors.push(code);
+      if (element) {
+        markFieldError(element, message);
+        if (!firstInvalid) firstInvalid = element;
+      }
+    };
+    const payload = values || {};
+    if (!payload.title) addError('missing_title', els.title, 'Απαιτείται τίτλος');
+    if (!payload.slug) addError('missing_slug', els.slug, 'Απαιτείται slug');
+    if (!payload.category) addError('missing_category', els.category, 'Διάλεξε κατηγορία');
+    const modes = payload.modes || {};
+    const activeModes = MODE_KEYS.filter((key) => modes[key] && modes[key].active);
+    if (!activeModes.length) {
+      const toggle = MODE_KEYS.map((key) => modeForms[key] && modeForms[key].active).find(Boolean);
+      addError('missing_active_mode', toggle || (modeForms[MODE_KEYS[0]] && modeForms[MODE_KEYS[0]].root) || els.saveBtn, 'Ενεργοποίησε τουλάχιστον ένα mode');
+      return { ok:false, errors, firstInvalid };
+    }
+    activeModes.forEach((key) => {
+      const mode = modes[key] || {};
+      const cfg = modeForms[key] || {};
+      if (!mode.title) addError(`mode_${key}_missing_title`, cfg.title, 'Συμπλήρωσε τίτλο');
+      if (!mode.description) addError(`mode_${key}_missing_description`, cfg.description, 'Συμπλήρωσε περιγραφή');
+      const missingDurationDays = isDurationDaysMissing(mode.duration_days);
+      if (!mode.duration && missingDurationDays) {
+        addError(`mode_${key}_missing_duration`, cfg.durationDays || cfg.duration, 'Δώσε διάρκεια σε ημέρες ή κείμενο');
+      }
+      const charge = mode.charge_type === 'per_vehicle' ? 'per_vehicle' : 'per_person';
+      if (charge === 'per_person' && mode.price_per_person == null) {
+        addError(`mode_${key}_missing_price`, cfg.pricePerPerson, 'Συμπλήρωσε τιμή ανά άτομο');
+      }
+      if (charge === 'per_vehicle' && mode.price_total == null) {
+        addError(`mode_${key}_missing_price`, cfg.priceTotal, 'Συμπλήρωσε τιμή οχήματος');
+      }
+      if (!modeStopsHaveContent(mode.stops)) {
+        addError(`mode_${key}_missing_stops`, cfg.stopsList || cfg.root, 'Πρόσθεσε τουλάχιστον μία στάση');
+      }
+      if (!Array.isArray(mode.includes) || !mode.includes.length) {
+        addError(`mode_${key}_missing_includes`, cfg.includesInput, 'Περιέλαβε τι περιλαμβάνεται');
+      }
+    });
+    return { ok: errors.length === 0, errors, firstInvalid };
+  }
+
   function formData(){
     MODE_KEYS.forEach((key)=>rebuildStopsDraftFromDom(key));
     const modes = {};
@@ -636,7 +788,6 @@
       title: els.title ? els.title.value.trim() : '',
       slug: els.slug ? els.slug.value.trim() : '',
       subtitle: els.subtitle ? els.subtitle.value.trim() : '',
-      description: els.description ? els.description.value.trim() : '',
       category: els.category ? els.category.value.trim() : '',
       tags: linesToArray(els.tagsInput && els.tagsInput.value),
       modes
@@ -669,7 +820,6 @@
         <td>${escapeHtml(trip.title || '')}</td>
         <td>${escapeHtml(trip.slug || '')}</td>
         <td>${escapeHtml(trip.category || '')}</td>
-        <td>${escapeHtml(trip.duration || '')}</td>
         <td>${renderModeSummary(trip.modes)}</td>
         <td>${trip.iconPath ? '<span class="mono">yes</span>' : '—'}</td>
         <td>
@@ -692,7 +842,8 @@
       const charge = block.charge_type === 'per_vehicle' ? ' /vehicle' : ' /person';
       const price = block.charge_type === 'per_vehicle' ? block.price_total : block.price_per_person;
       const priceLabel = Number.isFinite(price) ? `${price.toFixed(2)}€${charge}` : '';
-      return `<div><strong>${MODE_LABELS[key]}:</strong> ${active}${priceLabel ? ` • ${priceLabel}` : ''}</div>`;
+      const label = escapeHtml(block.title || UNTITLED_MODE_TEXT);
+      return `<div><strong>${label}:</strong> ${active}${priceLabel ? ` • ${priceLabel}` : ''}</div>`;
     }).join('');
   }
 
@@ -765,7 +916,6 @@
     if (els.title) els.title.value = tripData.title || '';
     if (els.slug) els.slug.value = tripData.slug || '';
     if (els.subtitle) els.subtitle.value = tripData.subtitle || '';
-    if (els.description) els.description.value = tripData.description || '';
     if (els.category) els.category.value = tripData.category || '';
     if (els.tagsInput) els.tagsInput.value = arrayToLines(tripData.tags);
     MODE_KEYS.forEach((key) => renderModeForm(key, tripData.modes && tripData.modes[key]));
@@ -782,7 +932,6 @@
     if (els.title) els.title.value = '';
     if (els.slug) els.slug.value = '';
     if (els.subtitle) els.subtitle.value = draft.subtitle || '';
-    if (els.description) els.description.value = draft.description || '';
     if (els.category) els.category.value = categories.length ? (categories[0].slug || categories[0].id || '') : '';
     if (els.tagsInput) els.tagsInput.value = '';
     MODE_KEYS.forEach((key) => renderModeForm(key, draft.modes && draft.modes[key]));
@@ -852,13 +1001,17 @@
 
   async function saveTrip(){
     showErrors([]);
-    if (els.tripsMessage) { els.tripsMessage.className=''; els.tripsMessage.textContent='Αποθήκευση...'; }
+    clearFieldErrors();
+    if (els.tripsMessage) { els.tripsMessage.className=''; els.tripsMessage.textContent=''; }
     const formValues = formData();
-    const errs = [];
-    if(!formValues.title) errs.push('missing_title');
-    if(!formValues.slug) errs.push('missing_slug');
-    if(!formValues.category) errs.push('missing_category');
-    if (errs.length){ showErrors(errs); return; }
+    const validation = validateTripForm(formValues);
+    if (!validation.ok){
+      showErrors(validation.errors);
+      if (els.tripsMessage){ els.tripsMessage.className='error'; els.tripsMessage.textContent='❌ Συμπλήρωσε όλα τα υποχρεωτικά πεδία.'; }
+      focusFirstErrorElement(validation.firstInvalid);
+      return;
+    }
+    if (els.tripsMessage) { els.tripsMessage.className=''; els.tripsMessage.textContent='Αποθήκευση...'; }
     try {
       let iconFilename = (els.tripIcon && els.tripIcon.dataset.filename) ? els.tripIcon.dataset.filename : '';
       if (els.tripIcon && els.tripIcon.files && els.tripIcon.files[0]) {
