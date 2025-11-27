@@ -380,17 +380,29 @@
   }
   window.TripStopsDraftBridge.syncFromTextarea = syncStopTextareaExternal;
   function toPositiveInt(v){ const n = parseInt(v,10); return Number.isFinite(n) && n>=0 ? n : 0; }
-  function readDurationDaysInput(input){
-    if (!input) return null;
-    const raw = String(input.value || '').trim();
-    if (raw === '') return null;
-    const num = Number(raw);
+  function parseDurationDaysValue(value){
+    if (value === null || typeof value === 'undefined') return null;
+    const raw = typeof value === 'string' ? value : String(value);
+    const normalized = raw.trim();
+    if (normalized === '') return null;
+    const num = Number(normalized);
     if (!Number.isFinite(num) || num < 0) return null;
     return Math.floor(num);
   }
 
+  function readDurationDaysInput(input){
+    if (!input) return null;
+    return parseDurationDaysValue(input.value);
+  }
+
+  function hasDurationDaysValue(value){
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+  }
+
   function isDurationDaysMissing(value){
-    return value === '' || value === null || typeof value === 'undefined';
+    if (hasDurationDaysValue(value)) return false;
+    const parsed = parseDurationDaysValue(value);
+    return !hasDurationDaysValue(parsed);
   }
   function toFloatOrNull(v){ const n = parseFloat(v); return Number.isFinite(n) ? n : null; }
   function eurosToNumber(v){ const n = parseFloat(String(v||'').replace(',','.')); return Number.isFinite(n) && n>=0 ? Math.round(n*100)/100 : null; }
@@ -622,13 +634,14 @@
   function readModeForm(modeKey){
     const cfg = modeForms[modeKey];
     if (!cfg) return {};
+    const durationDaysValue = readDurationDaysInput(cfg.durationDays);
     return {
       active: !!(cfg.active && cfg.active.checked),
       title: (cfg.title && cfg.title.value || '').trim(),
       subtitle: (cfg.subtitle && cfg.subtitle.value || '').trim(),
       description: (cfg.description && cfg.description.value || '').trim(),
       duration: (cfg.duration && cfg.duration.value || '').trim(),
-      duration_days: readDurationDaysInput(cfg.durationDays),
+      duration_days: durationDaysValue,
       price_per_person: eurosToNumber(cfg.pricePerPerson && cfg.pricePerPerson.value),
       price_total: eurosToNumber(cfg.priceTotal && cfg.priceTotal.value),
       charge_type: (cfg.chargeType && cfg.chargeType.value === 'per_vehicle') ? 'per_vehicle' : 'per_person',
@@ -657,7 +670,10 @@
     if (cfg.subtitle) cfg.subtitle.value = mode.subtitle || '';
     if (cfg.description) cfg.description.value = mode.description || '';
     if (cfg.duration) cfg.duration.value = mode.duration || '';
-    if (cfg.durationDays) cfg.durationDays.value = mode.duration_days != null ? String(mode.duration_days) : '';
+    if (cfg.durationDays) {
+      const parsedDurationDays = parseDurationDaysValue(mode.duration_days);
+      cfg.durationDays.value = hasDurationDaysValue(parsedDurationDays) ? String(parsedDurationDays) : '';
+    }
     if (cfg.pricePerPerson) cfg.pricePerPerson.value = numberToEuros(mode.price_per_person);
     if (cfg.priceTotal) cfg.priceTotal.value = numberToEuros(mode.price_total);
     if (cfg.chargeType) cfg.chargeType.value = mode.charge_type === 'per_vehicle' ? 'per_vehicle' : 'per_person';
@@ -784,6 +800,12 @@
     MODE_KEYS.forEach((key)=>rebuildStopsDraftFromDom(key));
     const modes = {};
     MODE_KEYS.forEach((key) => { modes[key] = readModeForm(key); });
+    MODE_KEYS.forEach((key) => {
+      const mode = modes[key];
+      if (!mode) return;
+      const parsedDays = parseDurationDaysValue(mode.duration_days);
+      mode.duration_days = parsedDays;
+    });
     const payload = {
       title: els.title ? els.title.value.trim() : '',
       slug: els.slug ? els.slug.value.trim() : '',

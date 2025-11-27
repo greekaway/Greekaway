@@ -14,6 +14,15 @@
 
   let deferredPrompt = null;
   let bannerEl = null;
+  const promptClass = 'pwa-prompt-enabled';
+
+  function promptAllowed(){
+    try {
+      return !!(document.body && document.body.classList && document.body.classList.contains(promptClass));
+    } catch (_) {
+      return false;
+    }
+  }
 
   function alreadyInstalled(){
     try {
@@ -89,7 +98,7 @@
   // Events
   window.addEventListener('beforeinstallprompt', (e) => {
     // Only handle once and only if not installed
-    if (deferredPrompt || alreadyInstalled()) return;
+    if (!promptAllowed() || deferredPrompt || alreadyInstalled()) return;
     e.preventDefault();
     deferredPrompt = e;
     // Show banner
@@ -103,6 +112,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     registerSW();
+    if (!promptAllowed()) return;
     if (alreadyInstalled()) hideBanner();
   });
 })();

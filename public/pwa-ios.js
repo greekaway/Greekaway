@@ -1,7 +1,16 @@
 (function(){
+  const PROMPT_CLASS = 'pwa-prompt-enabled';
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
   const alreadyShown = typeof localStorage !== 'undefined' && localStorage.getItem('ga_ios_install_shown') === '1';
+
+  function promptAllowed(){
+    try {
+      return !!(document.body && document.body.classList && document.body.classList.contains(PROMPT_CLASS));
+    } catch(_) {
+      return false;
+    }
+  }
 
   function createPopup(){
     const el = document.createElement('div');
@@ -43,6 +52,7 @@
   }
 
   function shouldShow(){
+    if(!promptAllowed()) return false;
     if(!isIOS || !isSafari) return false;
     if(alreadyShown) return false;
     return true;

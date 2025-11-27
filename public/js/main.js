@@ -387,4 +387,4 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Trip view logic moved to /public/js/trip.js.
+// Trip view logic moved to /public/js/trip-core.js.
