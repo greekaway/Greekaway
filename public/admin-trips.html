@@ -39,6 +39,23 @@
         
         <label class="full">Tags (λέξεις-κλειδιά – μία ανά γραμμή)<textarea id="tagsInput" rows="3" placeholder="family\nfast-track"></textarea></label>
 
+        <div class="form-group full-row file-row featured-image-row">
+          <div class="featured-image-field">
+            <label for="featuredImageInput">Κεντρική Φωτογραφία (Featured Image)</label>
+            <p class="hint small">Εμφανίζεται επάνω από την εκδρομή. Χρησιμοποίησε εικόνα 1600px πλάτος.</p>
+            <div class="featured-image-controls">
+              <button type="button" class="btn secondary small" id="featuredImageTrigger">Επιλογή αρχείου</button>
+              <button type="button" class="btn danger small" id="featuredImageClear" hidden>Αφαίρεση</button>
+              <input type="file" id="featuredImageInput" accept="image/*" hidden aria-label="Κεντρική Φωτογραφία (Featured Image)">
+            </div>
+            <div id="featuredImageStatus" class="hint small" aria-live="polite"></div>
+            <div id="featuredImageName" class="filename small mono" aria-live="polite"></div>
+          </div>
+          <div class="featured-image-preview-wrap">
+            <img id="featuredImagePreview" alt="Προεπισκόπηση κεντρικής φωτογραφίας" hidden>
+          </div>
+        </div>
+
         <section aria-labelledby="modesTitle" class="modes-section">
           <h3 id="modesTitle" class="h1" style="margin-top:8px">Modes – Περιεχόμενο ανά όχημα</h3>
           <p class="hint" style="margin-bottom:12px">Κάθε mode έχει δικό του κείμενο, στάσεις, media και χάρτη. Συμπληρώστε τα πεδία για κάθε εμπειρία ξεχωριστά.</p>

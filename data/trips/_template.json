@@ -5,9 +5,11 @@
   "subtitle": "",
   "teaser": "",
   "category": "",
+  "active": true,
   "defaultMode": "van",
   "iconPath": "",
   "coverImage": "",
+  "featuredImage": "",
   "currency": "EUR",
   "tags": [],
   "modes": {
@@ -32,12 +34,21 @@
       "video": { "url": "", "thumbnail": "" },
       "videos": [],
       "stops": [
-        { "title": "", "description": "", "images": [], "videos": [] }
+        {
+          "title": "",
+          "description": "",
+          "lat": null,
+          "lng": null,
+          "images": [],
+          "videos": []
+        }
       ],
       "faq": [
         { "q": "", "a": "" }
       ],
       "map": {
+        "center": { "lat": null, "lng": null },
+        "zoom": null,
         "start": { "label": "", "lat": null, "lng": null },
         "end": { "label": "", "lat": null, "lng": null },
         "route": []
@@ -64,12 +75,21 @@
       "video": { "url": "", "thumbnail": "" },
       "videos": [],
       "stops": [
-        { "title": "", "description": "", "images": [], "videos": [] }
+        {
+          "title": "",
+          "description": "",
+          "lat": null,
+          "lng": null,
+          "images": [],
+          "videos": []
+        }
       ],
       "faq": [
         { "q": "", "a": "" }
       ],
       "map": {
+        "center": { "lat": null, "lng": null },
+        "zoom": null,
         "start": { "label": "", "lat": null, "lng": null },
         "end": { "label": "", "lat": null, "lng": null },
         "route": []
@@ -96,12 +116,21 @@
       "video": { "url": "", "thumbnail": "" },
       "videos": [],
       "stops": [
-        { "title": "", "description": "", "images": [], "videos": [] }
+        {
+          "title": "",
+          "description": "",
+          "lat": null,
+          "lng": null,
+          "images": [],
+          "videos": []
+        }
       ],
       "faq": [
         { "q": "", "a": "" }
       ],
       "map": {
+        "center": { "lat": null, "lng": null },
+        "zoom": null,
         "start": { "label": "", "lat": null, "lng": null },
         "end": { "label": "", "lat": null, "lng": null },
         "route": []

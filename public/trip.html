@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/trip-core.css?v=20251128">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-o9N1j7kT0LwFkwVzzwKWs0t1wXjsiAP+4BMnA8p1pFk=" crossorigin="anonymous">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#001f3f">
   <link rel="stylesheet" href="/pwa.css">
@@ -19,109 +18,90 @@
   <main id="trip-root" data-state="loading">
     <div id="trip-alert" class="trip-alert" role="alert" hidden></div>
 
-    <nav class="trip-section-nav" aria-label="Πλοήγηση ενότητας">
-      <button type="button" data-target="trip-includes-section">Περιλαμβάνεται</button>
-      <button type="button" data-target="trip-excludes-section">Δεν Περιλαμβάνεται</button>
-      <button type="button" data-target="trip-sections-section">Περιγραφές / Sections</button>
-      <button type="button" data-target="trip-stops-section">Στάσεις</button>
-      <button type="button" data-target="trip-faq-section">Συχνές Ερωτήσεις</button>
-      <button type="button" data-target="trip-media-section">Media</button>
-      <button type="button" data-target="trip-map-section">Χάρτης &amp; Διαδρομή</button>
+    <nav class="trip-section-nav" role="tablist" aria-label="Ενότητες εκδρομής">
+      <button type="button" role="tab" aria-selected="true" aria-controls="trip-section-description" data-target="trip-section-description">Περιγραφή</button>
+      <button type="button" role="tab" aria-selected="false" aria-controls="trip-section-route" data-target="trip-section-route">Στάσεις / Διαδρομή</button>
+      <button type="button" role="tab" aria-selected="false" aria-controls="trip-section-photos" data-target="trip-section-photos">Φωτογραφίες</button>
+      <button type="button" role="tab" aria-selected="false" aria-controls="trip-section-includes" data-target="trip-section-includes">Περιλαμβάνει</button>
+      <button type="button" role="tab" aria-selected="false" aria-controls="trip-section-excludes" data-target="trip-section-excludes">Δεν περιλαμβάνει</button>
+      <button type="button" role="tab" aria-selected="false" aria-controls="trip-section-faq" data-target="trip-section-faq">FAQ</button>
     </nav>
 
-    <section id="trip-hero" class="trip-section trip-hero" aria-live="polite">
-      <div class="trip-hero-media">
-        <div id="trip-hero-image" class="trip-hero-image" role="img" aria-label=""></div>
-      </div>
-      <div class="trip-hero-text">
-        <p id="trip-mode-label" class="trip-mode-label"></p>
-        <h1 id="trip-title">Εκδρομή</h1>
-        <p id="trip-tagline" class="trip-tagline"></p>
-        <p id="trip-description" class="trip-description"></p>
+    <section id="trip-section-description" class="trip-section trip-fullscreen-section" data-trip-panel="description">
+      <div class="trip-section-inner trip-description">
+        <div class="trip-description-stack">
+          <h1 id="trip-mode-title" class="trip-title">Εκδρομή</h1>
+          <p id="trip-mode-subtitle" class="trip-tagline"></p>
+          <div class="trip-description-keyinfo" aria-live="polite">
+            <article id="trip-duration-block" class="trip-metric">
+              <span class="trip-metric-label">Διάρκεια</span>
+              <strong id="trip-description-duration" class="trip-metric-value">—</strong>
+            </article>
+            <article class="trip-metric">
+              <span class="trip-metric-label">Τιμή</span>
+              <strong id="trip-description-price" class="trip-metric-value">—</strong>
+            </article>
+            <article class="trip-metric">
+              <span class="trip-metric-label">Τρόπος χρέωσης</span>
+              <strong id="trip-description-charge" class="trip-metric-value">—</strong>
+            </article>
+            <article class="trip-metric">
+              <span class="trip-metric-label">Χωρητικότητα</span>
+              <strong id="trip-description-capacity" class="trip-metric-value">—</strong>
+            </article>
+          </div>
+        </div>
+        <figure class="trip-featured-wrapper" hidden>
+          <button type="button" class="trip-featured-trigger" aria-label="Μεγέθυνση κεντρικής φωτογραφίας" disabled>
+            <img id="trip-featured-image" src="" alt="Κεντρική φωτογραφία εκδρομής" loading="lazy" />
+          </button>
+        </figure>
+        <div id="trip-description-text" class="trip-description-text"></div>
       </div>
     </section>
 
-    <section id="trip-overview" class="trip-section trip-overview">
-      <div class="metric-card">
-        <p class="metric-label">Διάρκεια</p>
-        <p id="trip-duration" class="metric-value">—</p>
-      </div>
-      <div class="metric-card">
-        <p class="metric-label">Τιμή</p>
-        <p id="trip-price" class="metric-value">—</p>
-      </div>
-      <div class="metric-card">
-        <p class="metric-label">Χωρητικότητα οχήματος</p>
-        <p id="trip-capacity" class="metric-value">—</p>
-      </div>
-    </section>
-
-    <section id="trip-highlights" class="trip-section" hidden>
+    <section id="trip-section-route" class="trip-section trip-fullscreen-section" data-trip-panel="route" hidden>
       <div class="section-head">
-        <h2>Σύνοψη εμπειρίας</h2>
-        <p id="trip-summary-text"></p>
+        <h2>Στάσεις / Διαδρομή</h2>
+        <p id="trip-map-label"></p>
       </div>
-      <ul id="trip-tags" class="pill-list"></ul>
+      <div class="trip-section-inner trip-route">
+        <div class="trip-map-panel">
+          <div id="route-map" class="route-map" role="img" aria-label="Χάρτης διαδρομής"></div>
+          <ul id="trip-route-list" class="route-list"></ul>
+        </div>
+        <div id="trip-stops-list" class="stop-list"></div>
+      </div>
     </section>
 
-    <section id="trip-gallery-section" class="trip-section" hidden>
+    <section id="trip-section-photos" class="trip-section trip-fullscreen-section" data-trip-panel="photos" hidden>
       <div class="section-head">
         <h2>Φωτογραφίες</h2>
       </div>
-      <div id="trip-gallery" class="media-gallery"></div>
+      <div class="trip-section-inner">
+        <div id="trip-photos-grid" class="trip-photo-grid"></div>
+      </div>
     </section>
 
-    <section id="trip-includes-section" class="trip-section" hidden>
+    <section id="trip-section-includes" class="trip-section trip-fullscreen-section" data-trip-panel="includes" hidden>
       <div class="section-head">
-        <h2>Περιλαμβάνονται</h2>
+        <h2>Περιλαμβάνει</h2>
       </div>
       <ul id="trip-includes-list" class="checklist"></ul>
     </section>
 
-    <section id="trip-excludes-section" class="trip-section" hidden>
+    <section id="trip-section-excludes" class="trip-section trip-fullscreen-section" data-trip-panel="excludes" hidden>
       <div class="section-head">
-        <h2>Δεν περιλαμβάνονται</h2>
+        <h2>Δεν περιλαμβάνει</h2>
       </div>
       <ul id="trip-excludes-list" class="checklist checklist-negative"></ul>
     </section>
 
-    <section id="trip-sections-section" class="trip-section" hidden>
+    <section id="trip-section-faq" class="trip-section trip-fullscreen-section" data-trip-panel="faq" hidden>
       <div class="section-head">
-        <h2>Ενότητες περιγραφής</h2>
-      </div>
-      <div id="trip-sections-grid" class="segment-grid"></div>
-    </section>
-
-    <section id="trip-stops-section" class="trip-section" hidden>
-      <div class="section-head">
-        <h2>Στάσεις</h2>
-      </div>
-      <div id="trip-stops-list" class="stop-list"></div>
-    </section>
-
-    <section id="trip-media-section" class="trip-section" hidden>
-      <div class="section-head">
-        <h2>Media &amp; Videos</h2>
-      </div>
-      <div id="trip-media-grid" class="media-grid"></div>
-    </section>
-
-    <section id="trip-faq-section" class="trip-section" hidden>
-      <div class="section-head">
-        <h2>Συχνές ερωτήσεις</h2>
+        <h2>FAQ</h2>
       </div>
       <div id="trip-faq-list" class="faq-list"></div>
-    </section>
-
-    <section id="trip-map-section" class="trip-section" hidden>
-      <div class="section-head">
-        <h2>Χάρτης &amp; Διαδρομή</h2>
-        <p id="trip-map-label"></p>
-      </div>
-      <div class="map-grid">
-        <div id="trip-map" role="img" aria-label="Χάρτης διαδρομής"></div>
-        <ul id="trip-route-list" class="route-list"></ul>
-      </div>
     </section>
   </main>
 
@@ -141,6 +121,14 @@
     </div>
   </div>
 
+  <div id="trip-featured-lightbox" class="trip-photo-lightbox" role="dialog" aria-modal="true" hidden>
+    <button type="button" class="trip-photo-lightbox__backdrop" data-trip-lightbox-close aria-label="Κλείσιμο προβολής"></button>
+    <div class="trip-photo-lightbox__inner" role="document">
+      <button type="button" class="trip-photo-lightbox__close" data-trip-lightbox-close aria-label="Κλείσιμο">×</button>
+      <img id="trip-featured-lightbox-img" src="" alt="Κεντρική φωτογραφία εκδρομής" loading="lazy">
+    </div>
+  </div>
+
   <footer></footer>
 
   <script src="/js/i18n.js" defer></script>
@@ -149,7 +137,6 @@
   <script src="/js/assistant.js" defer></script>
   <script src="/pwa-install.js" defer></script>
   <script src="/pwa-ios.js" defer></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1j7kT0LwFkwVzzwKWs0t1wXjsiAP+4BMnA8p1pFk=" crossorigin="anonymous" defer></script>
   <script src="/js/trip-core.js" defer></script>
 </body>
 </html>

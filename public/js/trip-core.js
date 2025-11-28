@@ -1,13 +1,19 @@
 (() => {
+  const DEFAULT_SECTION_ID = 'trip-section-description';
   const state = {
     slug: '',
     trip: null,
     modeKey: '',
     modeData: null,
     mapInstance: null,
-    navButtons: []
+    mapOverlays: [],
+    navButtons: [],
+    activeSection: DEFAULT_SECTION_ID,
+    stops: [],
+    routeMapInfo: null,
+    routeMapReady: false
   };
-  let sectionObserver = null;
+  let lightboxKeyListenerAttached = false;
 
   document.addEventListener('DOMContentLoaded', init);
 
@@ -15,6 +21,7 @@
     document.body.classList.add('trip-view-page');
     document.documentElement.classList.add('trip-view-root');
     setupSectionNav();
+    setupFeaturedImageLightboxControls();
     state.slug = readSlug();
     if (!state.slug) {
       showAlert('Δεν βρέθηκε εκδρομή με αυτό το αναγνωριστικό. Επιστρέψτε στις εκδρομές και δοκιμάστε ξανά.');
@@ -32,6 +39,7 @@
       const modeInfo = selectMode(trip);
       state.modeKey = modeInfo.key;
       state.modeData = modeInfo.data || {};
+      state.stops = collectStops(trip, modeInfo);
       renderTrip(trip, modeInfo);
       bindFooterCta();
       setRootState('ready');
@@ -89,98 +97,160 @@
     hideAlert();
     document.body.dataset.view = 'trip';
     if (trip.category) document.body.dataset.category = trip.category;
-    renderHero(trip, modeInfo);
-    renderOverview(modeInfo, trip.currency);
-    renderHighlights(trip, modeInfo);
-    renderGallery(trip, modeInfo);
-    renderChecklist('trip-includes-list', 'trip-includes-section', collectList(modeInfo.data && modeInfo.data.includes));
-    renderChecklist('trip-excludes-list', 'trip-excludes-section', collectList(modeInfo.data && modeInfo.data.excludes));
-    renderSections(modeInfo);
-    renderStops(modeInfo);
-    renderMedia(trip, modeInfo);
-    renderFaq(modeInfo);
-    renderMap(trip, modeInfo);
+    renderDescription(trip, modeInfo);
+    renderRouteSection(trip, modeInfo);
+    renderPhotosSection();
+    renderChecklist('trip-includes-list', 'trip-section-includes', collectList(state.modeData && state.modeData.includes));
+    renderChecklist('trip-excludes-list', 'trip-section-excludes', collectList(state.modeData && state.modeData.excludes));
+    renderFaq(trip, modeInfo);
+    state.activeSection = DEFAULT_SECTION_ID;
     updateSectionNavState();
   }
 
-  function renderHero(trip, modeInfo) {
+  function resolveTripSubtitle(trip, mode) {
+    const candidates = [trip && trip.subtitle, mode && mode.subtitle];
+    for (const entry of candidates) {
+      if (typeof entry !== 'string') continue;
+      const trimmed = entry.trim();
+      if (trimmed) return trimmed;
+    }
+    return '';
+  }
+
+  function renderDescription(trip, modeInfo) {
     const mode = modeInfo.data || {};
     const title = mode.title || trip.title || 'Εκδρομή';
-    const tagline = mode.subtitle || trip.subtitle || trip.teaser || '';
+    const subtitle = resolveTripSubtitle(trip, mode);
     const description = mode.description || trip.description || '';
-    const heroImage = selectHeroImage(trip, mode);
-    setText('trip-title', title);
-    setText('trip-tagline', tagline);
-    setText('trip-description', description);
-    const modeLabel = formatModeLabel(trip, modeInfo);
-    setText('trip-mode-label', modeLabel);
-    const heroEl = document.getElementById('trip-hero-image');
-    if (heroEl) {
-      if (heroImage) {
-        heroEl.style.backgroundImage = `url('${heroImage}')`;
-        heroEl.classList.add('has-image');
-        heroEl.setAttribute('aria-label', `${title}`);
-      } else {
-        heroEl.style.backgroundImage = '';
-        heroEl.classList.remove('has-image');
-        heroEl.setAttribute('aria-label', '');
-      }
+    const featured = trip.featuredImage || selectHeroImage(trip, mode);
+    setText('trip-mode-title', title);
+    setText('trip-mode-subtitle', subtitle);
+    toggleVisibility('trip-mode-subtitle', Boolean(subtitle));
+    const durationLabel = formatDuration(mode);
+    setText('trip-description-duration', durationLabel);
+    setText('trip-description-charge', formatChargeType(mode));
+    setText('trip-description-capacity', formatCapacity(mode));
+    setText('trip-description-price', formatPrice(mode, trip.currency));
+    setParagraphs('trip-description-text', description);
+    const img = document.getElementById('trip-featured-image');
+    const featuredFigure = img ? img.closest('.trip-featured-wrapper') : null;
+    if (img && featured) {
+      img.src = featured;
+      img.alt = trip && trip.title ? `Κεντρική φωτογραφία – ${trip.title}` : 'Κεντρική φωτογραφία εκδρομής';
+      if (featuredFigure) featuredFigure.removeAttribute('hidden');
+      updateFeaturedImageLightbox(featured, img.alt);
+    } else {
+      if (featuredFigure) featuredFigure.setAttribute('hidden', '');
+      updateFeaturedImageLightbox('', '');
+      closeFeaturedImageLightbox();
     }
     document.title = `${title} – Greekaway`;
   }
 
-  function renderOverview(modeInfo, currency) {
-    const mode = modeInfo.data || {};
-    setText('trip-duration', formatDuration(mode));
-    setText('trip-price', formatPrice(mode, currency));
-    setText('trip-capacity', formatCapacity(mode));
-  }
-
-  function renderHighlights(trip, modeInfo) {
-    const section = document.getElementById('trip-highlights');
-    if (!section) return;
-    const mode = modeInfo.data || {};
-    const summary = mode.tagline || mode.summary || mode.long_description || trip.teaser || '';
-    const tags = dedupeStrings([...(Array.isArray(trip.tags) ? trip.tags : []), ...(Array.isArray(mode.tags) ? mode.tags : [])]);
-    const summaryEl = document.getElementById('trip-summary-text');
-    if (summaryEl) summaryEl.textContent = summary || '';
-    const hasSummary = Boolean(summary);
-    const tagsList = document.getElementById('trip-tags');
-    if (tagsList) {
-      tagsList.innerHTML = '';
-      tags.forEach((tag) => {
-        const li = document.createElement('li');
-        li.textContent = tag;
-        tagsList.appendChild(li);
-      });
-    }
-    const hasTags = tags.length > 0;
-    section.hidden = !(hasSummary || hasTags);
-  }
-
-  function renderGallery(trip, modeInfo) {
-    const section = document.getElementById('trip-gallery-section');
-    const target = document.getElementById('trip-gallery');
+  function renderRouteSection(trip, modeInfo) {
+    const section = document.getElementById('trip-section-route');
+    const target = document.getElementById('trip-stops-list');
+    const mapLabel = document.getElementById('trip-map-label');
     if (!section || !target) return;
-    const mode = modeInfo.data || {};
-    const sources = dedupeStrings([
-      trip.coverImage,
-      trip.heroImage,
-      ...(Array.isArray(trip.gallery) ? trip.gallery : []),
-      ...(Array.isArray(mode.gallery) ? mode.gallery : []),
-      ...(Array.isArray(mode.photos) ? mode.photos : [])
-    ]).filter(Boolean);
     target.innerHTML = '';
-    if (!sources.length) {
+    const stops = state.stops || [];
+    stops.forEach((stop) => {
+      const card = document.createElement('article');
+      card.className = 'stop-card';
+      if (stop.title) {
+        const h3 = document.createElement('h3');
+        h3.textContent = stop.title;
+        card.appendChild(h3);
+      }
+      if (stop.description) {
+        const p = document.createElement('p');
+        p.textContent = stop.description;
+        card.appendChild(p);
+      }
+      if (isFiniteNumber(stop.lat) && isFiniteNumber(stop.lng)) {
+        const coords = document.createElement('p');
+        coords.className = 'stop-coords';
+        coords.textContent = `${Number(stop.lat).toFixed(4)}, ${Number(stop.lng).toFixed(4)}`;
+        card.appendChild(coords);
+      }
+      if (stop.photos.length) {
+        const gallery = document.createElement('div');
+        gallery.className = 'stop-gallery';
+        stop.photos.slice(0, 6).forEach((src) => {
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = stop.title ? `Στάση ${stop.title}` : 'Στάση εκδρομής';
+          img.loading = 'lazy';
+          gallery.appendChild(img);
+        });
+        card.appendChild(gallery);
+      }
+      const firstVideo = stop.videos[0];
+      if (firstVideo) {
+        const videoWrap = document.createElement('div');
+        videoWrap.className = 'stop-video';
+        const iframe = document.createElement('iframe');
+        iframe.src = toEmbedUrl(firstVideo);
+        iframe.loading = 'lazy';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        videoWrap.appendChild(iframe);
+        card.appendChild(videoWrap);
+      }
+      target.appendChild(card);
+    });
+    const hasStops = stops.length > 0;
+    const mapInfo = normalizeMapPoints(trip, modeInfo, stops);
+    const hasMap = mapInfo.points.length > 0;
+    state.routeMapInfo = mapInfo;
+    state.routeMapReady = false;
+    if (mapLabel) mapLabel.textContent = '';
+    resetRouteMapShell();
+    section.hidden = !(hasStops || hasMap);
+    if (state.activeSection === 'trip-section-route') {
+      ensureRouteMapReady();
+    }
+  }
+
+  function resetRouteMapShell() {
+    const mapContainer = document.getElementById('route-map');
+    const list = document.getElementById('trip-route-list');
+    state.mapInstance = null;
+    state.mapOverlays = [];
+    if (list) list.innerHTML = '';
+    if (mapContainer) mapContainer.innerHTML = '';
+  }
+
+  function renderPhotosSection() {
+    const section = document.getElementById('trip-section-photos');
+    const grid = document.getElementById('trip-photos-grid');
+    if (!section || !grid) return;
+    grid.innerHTML = '';
+    const photos = collectStopPhotos(state.stops || []);
+    if (!photos.length) {
       section.hidden = true;
       return;
     }
-    sources.forEach((src) => {
+    photos.forEach((entry) => {
+      const figure = document.createElement('figure');
+      figure.className = 'trip-photo-card';
       const img = document.createElement('img');
-      img.src = src;
+      img.src = entry.src;
       img.loading = 'lazy';
-      img.alt = 'Φωτογραφία εκδρομής';
-      target.appendChild(img);
+      img.alt = entry.title ? `Στάση ${entry.title}` : 'Φωτογραφία στάσης';
+      figure.appendChild(img);
+      const caption = document.createElement('figcaption');
+      if (entry.title) {
+        const strong = document.createElement('strong');
+        strong.textContent = entry.title;
+        caption.appendChild(strong);
+      }
+      if (entry.description) {
+        const small = document.createElement('small');
+        small.textContent = entry.description;
+        caption.appendChild(small);
+      }
+      figure.appendChild(caption);
+      grid.appendChild(figure);
     });
     section.hidden = false;
   }
@@ -202,145 +272,14 @@
     section.hidden = false;
   }
 
-  function renderSections(modeInfo) {
-    const section = document.getElementById('trip-sections-section');
-    const target = document.getElementById('trip-sections-grid');
-    if (!section || !target) return;
-    target.innerHTML = '';
-    const sections = (Array.isArray(modeInfo.data && modeInfo.data.sections) ? modeInfo.data.sections : [])
-      .filter((block) => block && (block.title || block.content));
-    if (!sections.length) {
-      section.hidden = true;
-      return;
-    }
-    sections.forEach((block) => {
-      const card = document.createElement('article');
-      card.className = 'segment-card';
-      if (block.title) {
-        const h3 = document.createElement('h3');
-        h3.textContent = block.title;
-        card.appendChild(h3);
-      }
-      if (block.content) {
-        const p = document.createElement('p');
-        p.textContent = block.content;
-        card.appendChild(p);
-      }
-      target.appendChild(card);
-    });
-    section.hidden = false;
-  }
-
-  function renderStops(modeInfo) {
-    const section = document.getElementById('trip-stops-section');
-    const target = document.getElementById('trip-stops-list');
-    if (!section || !target) return;
-    target.innerHTML = '';
-    const stops = (Array.isArray(modeInfo.data && modeInfo.data.stops) ? modeInfo.data.stops : [])
-      .filter((stop) => stop && (stop.title || stop.description));
-    if (!stops.length) {
-      section.hidden = true;
-      return;
-    }
-    stops.forEach((stop) => {
-      const card = document.createElement('article');
-      card.className = 'stop-card';
-      if (stop.title) {
-        const h3 = document.createElement('h3');
-        h3.textContent = stop.title;
-        card.appendChild(h3);
-      }
-      if (stop.description) {
-        const p = document.createElement('p');
-        p.textContent = stop.description;
-        card.appendChild(p);
-      }
-      const photos = Array.isArray(stop.images) ? stop.images.filter(Boolean).slice(0, 6) : [];
-      if (photos.length) {
-        const gallery = document.createElement('div');
-        gallery.className = 'stop-gallery';
-        photos.forEach((src) => {
-          const img = document.createElement('img');
-          img.src = src;
-          img.alt = stop.title ? `Στάση ${stop.title}` : 'Στάση εκδρομής';
-          img.loading = 'lazy';
-          gallery.appendChild(img);
-        });
-        card.appendChild(gallery);
-      }
-      const videos = Array.isArray(stop.videos) ? stop.videos.filter(Boolean) : [];
-      if (videos.length) {
-        const videoWrap = document.createElement('div');
-        videoWrap.className = 'stop-video';
-        const iframe = document.createElement('iframe');
-        iframe.src = toEmbedUrl(videos[0]);
-        iframe.loading = 'lazy';
-        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-        videoWrap.appendChild(iframe);
-        card.appendChild(videoWrap);
-      }
-      target.appendChild(card);
-    });
-    section.hidden = false;
-  }
-
-  function renderMedia(trip, modeInfo) {
-    const section = document.getElementById('trip-media-section');
-    const grid = document.getElementById('trip-media-grid');
-    if (!section || !grid) return;
-    grid.innerHTML = '';
-    const mode = modeInfo.data || {};
-    const tripMedia = trip && trip.media ? trip.media : {};
-    const videoLinks = dedupeStrings([
-      mode.video && mode.video.url,
-      ...(Array.isArray(mode.videos) ? mode.videos : []),
-      ...(mode.media && Array.isArray(mode.media.videos) ? mode.media.videos : []),
-      ...(Array.isArray(tripMedia.videos) ? tripMedia.videos : [])
-    ]).filter(Boolean);
-    const miscLinks = dedupeStrings([
-      ...(mode.media && Array.isArray(mode.media.links) ? mode.media.links : []),
-      ...(Array.isArray(tripMedia.links) ? tripMedia.links : [])
-    ]).filter(Boolean);
-    const cards = [];
-    videoLinks.slice(0, 6).forEach((url) => {
-      const card = document.createElement('article');
-      card.className = 'media-card';
-      const iframe = document.createElement('iframe');
-      iframe.src = toEmbedUrl(url);
-      iframe.loading = 'lazy';
-      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-      card.appendChild(iframe);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.target = '_blank';
-      anchor.rel = 'noopener noreferrer';
-      anchor.textContent = 'Άνοιγμα video';
-      card.appendChild(anchor);
-      cards.push(card);
-    });
-    miscLinks.slice(0, 6).forEach((url) => {
-      if (videoLinks.includes(url)) return;
-      const card = document.createElement('article');
-      card.className = 'media-card';
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.target = '_blank';
-      anchor.rel = 'noopener noreferrer';
-      anchor.textContent = 'Άνοιγμα συνδέσμου media';
-      card.appendChild(anchor);
-      cards.push(card);
-    });
-    cards.forEach((card) => grid.appendChild(card));
-    section.hidden = cards.length === 0;
-  }
-
-  function renderFaq(modeInfo) {
-    const section = document.getElementById('trip-faq-section');
+  function renderFaq(trip, modeInfo) {
+    const section = document.getElementById('trip-section-faq');
     const list = document.getElementById('trip-faq-list');
     if (!section || !list) return;
     list.innerHTML = '';
-    const faq = (Array.isArray(modeInfo.data && modeInfo.data.faq) ? modeInfo.data.faq : [])
-      .filter((item) => item && (item.q || item.question || item.a || item.answer));
+    const tripFaq = Array.isArray(trip.faq) ? trip.faq : [];
+    const modeFaq = Array.isArray(modeInfo.data && modeInfo.data.faq) ? modeInfo.data.faq : [];
+    const faq = (tripFaq.length ? tripFaq : modeFaq).filter((item) => item && (item.q || item.question || item.a || item.answer));
     if (!faq.length) {
       section.hidden = true;
       return;
@@ -363,72 +302,299 @@
     section.hidden = false;
   }
 
-  function renderMap(trip, modeInfo) {
-    const section = document.getElementById('trip-map-section');
+  function renderMap(trip, modeInfo, stops, mapInfoOverride) {
     const list = document.getElementById('trip-route-list');
     const mapLabel = document.getElementById('trip-map-label');
-    const mapContainer = document.getElementById('trip-map');
-    if (!section || !list || !mapContainer) return;
+    const mapEl = document.getElementById('route-map');
+    if (!list || !mapEl) return false;
     list.innerHTML = '';
-    mapContainer.innerHTML = '';
-    if (state.mapInstance) {
-      state.mapInstance.remove();
-      state.mapInstance = null;
-    }
-    const mapData = (modeInfo.data && modeInfo.data.map) || trip.map || {};
-    const points = [];
-    if (mapData.start) points.push({ label: mapData.start.label || 'Start', ...mapData.start, type: 'start' });
-    if (Array.isArray(mapData.route)) {
-      mapData.route.forEach((stop) => {
-        if (!stop) return;
-        points.push({ label: stop.label || 'Stop', ...stop, type: 'route' });
-      });
-    }
-    if (mapData.end) points.push({ label: mapData.end.label || 'End', ...mapData.end, type: 'end' });
-    if (!points.length) {
-      section.hidden = true;
-      return;
-    }
+    mapEl.innerHTML = '';
+    state.mapInstance = null;
+    state.mapOverlays = [];
+
+    const mapInfo = mapInfoOverride || normalizeMapPoints(trip, modeInfo, stops);
+    state.routeMapInfo = mapInfo;
+    const points = Array.isArray(mapInfo && mapInfo.points) ? mapInfo.points : [];
+    const routePath = Array.isArray(mapInfo && mapInfo.routePath) ? mapInfo.routePath : [];
+    const label = mapInfo ? mapInfo.label : '';
+    const zoomLevel = isFiniteNumber(mapInfo && mapInfo.zoom) ? Number(mapInfo.zoom) : 13;
+    const hasCenter = mapInfo && hasLatLng(mapInfo.center);
+    const markerPoints = points.filter((point) => hasLatLng(point));
+
     points.forEach((point) => {
       const li = document.createElement('li');
       li.className = 'route-item';
       const strong = document.createElement('strong');
       strong.textContent = labelWithPrefix(point);
       li.appendChild(strong);
-      if (point.lat && point.lng) {
-        const small = document.createElement('small');
-        small.textContent = `${Number(point.lat).toFixed(4)}, ${Number(point.lng).toFixed(4)}`;
-        li.appendChild(small);
-      }
       list.appendChild(li);
     });
-    section.hidden = false;
-    if (mapLabel) {
-      mapLabel.textContent = mapData.label || 'Προβολή διαδρομής και στάσεων.';
-    }
-    const latLngPoints = points.filter((point) => isFiniteNumber(point.lat) && isFiniteNumber(point.lng));
-    if (window.L && latLngPoints.length) {
-      const map = window.L.map(mapContainer, { zoomControl: false, scrollWheelZoom: false });
-      state.mapInstance = map;
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-      const latlngs = latLngPoints.map((point) => window.L.latLng(Number(point.lat), Number(point.lng)));
-      latlngs.forEach((latlng, idx) => {
-        const refPoint = latLngPoints[idx];
-        window.L.marker(latlng, { title: refPoint.label || 'Stop' }).addTo(map).bindPopup(refPoint.label || 'Stop');
-      });
-      if (latlngs.length >= 2) {
-        window.L.polyline(latlngs, { color: '#0052cc', weight: 4 }).addTo(map);
-      }
-      map.fitBounds(window.L.latLngBounds(latlngs), { padding: [24, 24] });
-    } else {
+
+    const hasGeoData = markerPoints.length > 0 || routePath.some((point) => hasLatLng(point)) || hasCenter;
+    if (!hasGeoData) {
+      if (mapLabel) mapLabel.textContent = '';
       const fallback = document.createElement('p');
-      fallback.textContent = 'Ο χάρτης δεν είναι διαθέσιμος αυτή τη στιγμή. Δείτε τις συντεταγμένες δίπλα.';
-      mapContainer.appendChild(fallback);
+      fallback.textContent = 'Δεν υπάρχουν δεδομένα διαδρομής για αυτή την εκδρομή.';
+      mapEl.appendChild(fallback);
+      return false;
+    }
+
+    if (mapLabel) {
+      mapLabel.textContent = label || 'Προβολή διαδρομής και στάσεων.';
+    }
+
+    const renderGoogleMap = () => {
+      if (!(window.google && window.google.maps)) return false;
+      const defaultCenter = resolveRouteMapCenter(mapInfo) || { lat: 37.9838, lng: 23.7278 };
+      const map = new window.google.maps.Map(mapEl, {
+        center: defaultCenter,
+        zoom: zoomLevel,
+        mapTypeId: 'roadmap',
+        disableDefaultUI: true,
+        zoomControl: true,
+        fullscreenControl: false,
+        streetViewControl: false
+      });
+
+      const overlays = [];
+      const effectiveMarkers = markerPoints.length ? markerPoints : routePath.filter((point) => hasLatLng(point));
+      effectiveMarkers.forEach((point) => {
+        const marker = new window.google.maps.Marker({
+          map,
+          position: { lat: Number(point.lat), lng: Number(point.lng) },
+          title: labelWithPrefix(point)
+        });
+        overlays.push(marker);
+      });
+
+      const polylinePath = routePath.filter((point) => hasLatLng(point)).map((point) => ({ lat: Number(point.lat), lng: Number(point.lng) }));
+      if (polylinePath.length >= 2) {
+        const polyline = new window.google.maps.Polyline({
+          map,
+          path: polylinePath,
+          strokeColor: '#0052cc',
+          strokeOpacity: 1,
+          strokeWeight: 4
+        });
+        overlays.push(polyline);
+      }
+
+      const boundsPoints = polylinePath.length >= 2
+        ? polylinePath
+        : effectiveMarkers.map((point) => ({ lat: Number(point.lat), lng: Number(point.lng) }));
+      if (boundsPoints.length >= 2) {
+        const bounds = new window.google.maps.LatLngBounds();
+        boundsPoints.forEach((point) => bounds.extend(point));
+        map.fitBounds(bounds, { top: 24, right: 24, bottom: 24, left: 24 });
+      } else if (boundsPoints.length === 1) {
+        map.setCenter(boundsPoints[0]);
+        map.setZoom(zoomLevel);
+      } else if (hasCenter) {
+        map.setCenter(defaultCenter);
+        map.setZoom(zoomLevel);
+      }
+
+      state.mapInstance = map;
+      state.mapOverlays = overlays;
+      state.routeMapReady = true;
+      setTimeout(() => scheduleRouteMapResize(), 150);
+      return true;
+    };
+
+    if (window.google && window.google.maps) {
+      return renderGoogleMap();
+    }
+
+    ensureGoogleMapsReady()
+      .then(() => {
+        const rendered = renderGoogleMap();
+        if (!rendered) {
+          mapEl.textContent = 'Δεν ήταν δυνατή η φόρτωση του χάρτη.';
+        }
+      })
+      .catch((error) => {
+        console.warn('[trip-core] google maps load failed', error && error.message ? error.message : error);
+        mapEl.textContent = 'Δεν ήταν δυνατή η φόρτωση του χάρτη.';
+      });
+
+    return false;
+  }
+
+  function normalizeMapPoints(trip, modeInfo, stops) {
+    const mapData = (modeInfo.data && modeInfo.data.map) || trip.map || {};
+    const points = [];
+    const routePath = [];
+    const center = readLatLng(mapData.center);
+    const zoom = isFiniteNumber(mapData.zoom) ? Number(mapData.zoom) : null;
+
+    const startPoint = buildMapPoint(mapData.start, 'start', 'Έναρξη');
+    const endPoint = buildMapPoint(mapData.end, 'end', 'Τερματισμός');
+    const routePoints = Array.isArray(mapData.route)
+      ? mapData.route
+          .map((entry, idx) => buildMapPoint(entry, 'route', entry && entry.label ? entry.label : `Σημείο ${idx + 1}`))
+          .filter(Boolean)
+      : [];
+    const stopPoints = (Array.isArray(stops) ? stops : [])
+      .map((stop, idx) => {
+        if (!isFiniteNumber(stop.lat) || !isFiniteNumber(stop.lng)) return null;
+        return {
+          label: stop.title || `Στάση ${idx + 1}`,
+          lat: Number(stop.lat),
+          lng: Number(stop.lng),
+          type: 'stop'
+        };
+      })
+      .filter(Boolean);
+
+    if (startPoint) points.push(startPoint);
+    if (stopPoints.length) points.push(...stopPoints);
+    else points.push(...routePoints);
+    if (endPoint) points.push(endPoint);
+    if (!points.length) {
+      points.push(...routePoints);
+    }
+    if (!points.length) {
+      points.push(...stopPoints);
+    }
+
+    const appendToPath = (point) => {
+      if (!point || !hasLatLng(point)) return;
+      routePath.push({ label: point.label, lat: Number(point.lat), lng: Number(point.lng), type: point.type });
+    };
+    appendToPath(startPoint);
+    routePoints.forEach(appendToPath);
+    appendToPath(endPoint);
+    if (!routePath.length) {
+      stopPoints.forEach(appendToPath);
+    }
+
+    return { points, routePath, center, zoom, label: mapData.label || '' };
+  }
+
+  function buildMapPoint(entry, type, fallbackLabel) {
+    if (!entry || typeof entry !== 'object') return null;
+    const coords = extractCoordinates(entry);
+    const label = entry.label || fallbackLabel;
+    return {
+      label,
+      lat: coords.lat,
+      lng: coords.lng,
+      type
+    };
+  }
+
+  function readLatLng(entry) {
+    if (!entry || typeof entry !== 'object') return null;
+    const coords = extractCoordinates(entry);
+    return hasLatLng(coords) ? { lat: Number(coords.lat), lng: Number(coords.lng) } : null;
+  }
+
+  function hasLatLng(point) {
+    return point && isFiniteNumber(point.lat) && isFiniteNumber(point.lng);
+  }
+
+  let googleMapsLoaderPromise = null;
+
+  function ensureGoogleMapsReady() {
+    if (window.google && window.google.maps) return Promise.resolve(window.google.maps);
+    if (googleMapsLoaderPromise) return googleMapsLoaderPromise;
+    googleMapsLoaderPromise = fetch('/api/maps-key', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('maps-key-missing'))))
+      .then((payload) => {
+        const key = payload && payload.key;
+        if (!key || key === 'YOUR_GOOGLE_MAPS_API_KEY') {
+          throw new Error('maps-key-missing');
+        }
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}`;
+          script.async = true;
+          script.defer = true;
+          script.onload = () => resolve(window.google.maps);
+          script.onerror = () => reject(new Error('maps-script-error'));
+          document.head.appendChild(script);
+        });
+      })
+      .catch((error) => {
+        googleMapsLoaderPromise = null;
+        throw error;
+      });
+    return googleMapsLoaderPromise;
+  }
+
+  function scheduleRouteMapResize() {
+    if (!(window.google && window.google.maps && state.mapInstance)) return;
+    const center = resolveRouteMapCenter(state.routeMapInfo);
+    window.google.maps.event.trigger(state.mapInstance, 'resize');
+    if (center) state.mapInstance.setCenter(center);
+  }
+
+  function resolveRouteMapCenter(mapInfo) {
+    const info = mapInfo || state.routeMapInfo;
+    if (!info) return null;
+    if (hasLatLng(info.center)) return { lat: Number(info.center.lat), lng: Number(info.center.lng) };
+    const fallback = (info.routePath && info.routePath.find((point) => hasLatLng(point))) ||
+      (info.points && info.points.find((point) => hasLatLng(point)));
+    return fallback ? { lat: Number(fallback.lat), lng: Number(fallback.lng) } : null;
+  }
+
+  function setupFeaturedImageLightboxControls() {
+    const trigger = document.querySelector('.trip-featured-trigger');
+    if (trigger && !trigger.dataset.tripLightboxBound) {
+      trigger.dataset.tripLightboxBound = '1';
+      trigger.addEventListener('click', () => openFeaturedImageLightbox());
+    }
+    const overlay = document.getElementById('trip-featured-lightbox');
+    if (overlay && !overlay.dataset.tripLightboxBound) {
+      overlay.dataset.tripLightboxBound = '1';
+      overlay.addEventListener('click', (event) => {
+        if (event.target.closest('[data-trip-lightbox-close]')) {
+          closeFeaturedImageLightbox();
+        }
+      });
+    }
+    if (!lightboxKeyListenerAttached) {
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeFeaturedImageLightbox();
+      });
+      lightboxKeyListenerAttached = true;
     }
   }
 
+  function updateFeaturedImageLightbox(src, altText) {
+    const trigger = document.querySelector('.trip-featured-trigger');
+    if (!trigger) return;
+    if (src) {
+      trigger.dataset.lightboxSrc = src;
+      trigger.dataset.lightboxAlt = altText || 'Κεντρική φωτογραφία εκδρομής';
+      trigger.removeAttribute('disabled');
+    } else {
+      trigger.dataset.lightboxSrc = '';
+      trigger.dataset.lightboxAlt = '';
+      trigger.setAttribute('disabled', 'disabled');
+    }
+  }
+
+  function openFeaturedImageLightbox() {
+    const trigger = document.querySelector('.trip-featured-trigger');
+    if (!trigger) return;
+    const src = trigger.dataset.lightboxSrc;
+    if (!src) return;
+    const overlay = document.getElementById('trip-featured-lightbox');
+    const img = document.getElementById('trip-featured-lightbox-img');
+    if (!overlay || !img) return;
+    img.src = src;
+    img.alt = trigger.dataset.lightboxAlt || 'Κεντρική φωτογραφία εκδρομής';
+    overlay.removeAttribute('hidden');
+    document.body.classList.add('trip-lightbox-open');
+  }
+
+  function closeFeaturedImageLightbox() {
+    const overlay = document.getElementById('trip-featured-lightbox');
+    if (!overlay || overlay.hasAttribute('hidden')) return;
+    overlay.setAttribute('hidden', '');
+    document.body.classList.remove('trip-lightbox-open');
+  }
   function bindFooterCta() {
     if (!state.trip) return;
     const tripId = state.trip.id || state.trip.slug || state.slug;
@@ -472,13 +638,6 @@
     if (el) el.hidden = true;
   }
 
-  function formatModeLabel(trip, modeInfo) {
-    const mode = modeInfo.data || {};
-    if (mode.charge_type === 'per_vehicle') return `${mode.title || trip.title} · Ιδιωτική εμπειρία`;
-    if (mode.charge_type === 'per_person') return `${mode.title || trip.title} · Ανά άτομο`;
-    return mode.title || trip.title || 'Εμπειρία';
-  }
-
   function formatDuration(mode) {
     const days = toPositiveInt(mode.duration_days || mode.durationDays);
     const hours = parseFloat(mode.duration || mode.duration_hours);
@@ -502,6 +661,14 @@
 
   function formatCapacity(mode) {
     if (isFiniteNumber(mode.capacity)) return `Έως ${mode.capacity} άτομα`;
+    return 'Κατόπιν συνεννόησης';
+  }
+
+  function formatChargeType(mode) {
+    const type = (mode.charge_type || mode.chargeType || '').toLowerCase();
+    if (type === 'per_vehicle') return 'Ανά όχημα';
+    if (type === 'per_person') return 'Ανά άτομο';
+    if (type === 'per_group') return 'Ανά γκρουπ';
     return 'Κατόπιν συνεννόησης';
   }
 
@@ -588,68 +755,151 @@
     state.navButtons.forEach((button) => {
       button.addEventListener('click', (event) => {
         event.preventDefault();
-        scrollToSection(button.dataset.target);
+        if (button.disabled) return;
+        activateSection(button.dataset.target);
       });
     });
-    if ('IntersectionObserver' in window) {
-      sectionObserver = new IntersectionObserver(handleSectionIntersection, {
-        rootMargin: '-45% 0px -45% 0px',
-        threshold: [0.05, 0.25, 0.5, 0.75]
-      });
-    }
+    activateSection(state.activeSection);
   }
 
-  function scrollToSection(sectionId) {
-    if (!sectionId) return;
-    const section = document.getElementById(sectionId);
-    if (!section) return;
-    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    try {
-      section.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
-    } catch (_) {
-      section.scrollIntoView(true);
-    }
-    highlightNavButton(sectionId);
-  }
-
-  function handleSectionIntersection(entries) {
-    const candidates = entries
-      .filter((entry) => entry.isIntersecting && entry.target && !entry.target.hidden)
-      .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-    if (!candidates.length) return;
-    highlightNavButton(candidates[0].target.id);
-  }
-
-  function highlightNavButton(sectionId) {
-    if (!state.navButtons.length || !sectionId) return;
+  function activateSection(sectionId) {
+    const requested = sectionId || DEFAULT_SECTION_ID;
+    const resolved = getAvailableSectionId(requested) || getFirstEnabledSectionId();
+    state.activeSection = resolved;
+    const panels = document.querySelectorAll('[data-trip-panel]');
+    panels.forEach((panel) => {
+      const isActive = !panel.hidden && panel.id === resolved;
+      panel.classList.toggle('is-active', isActive);
+      panel.setAttribute('aria-hidden', String(!isActive));
+    });
     state.navButtons.forEach((button) => {
-      const isActive = button.dataset.target === sectionId && !button.disabled;
+      const isActive = button.dataset.target === resolved && !button.disabled;
       button.classList.toggle('is-active', isActive);
-      if (isActive) button.setAttribute('aria-current', 'true');
-      else button.removeAttribute('aria-current');
+      button.setAttribute('aria-selected', String(isActive));
     });
+    if (resolved === 'trip-section-route') {
+      ensureRouteMapReady();
+    }
+  }
+
+  function ensureRouteMapReady() {
+    if (!state.trip) return false;
+    const modeInfo = { key: state.modeKey, data: state.modeData || {} };
+    if (!state.routeMapInfo) {
+      state.routeMapInfo = normalizeMapPoints(state.trip, modeInfo, state.stops || []);
+    }
+    if (!state.routeMapReady) {
+      return renderMap(state.trip, modeInfo, state.stops || [], state.routeMapInfo);
+    }
+    scheduleRouteMapResize();
+    return Boolean(state.routeMapInfo && state.routeMapInfo.points && state.routeMapInfo.points.length);
+  }
+
+  function getAvailableSectionId(sectionId) {
+    if (!sectionId) return '';
+    const panel = document.getElementById(sectionId);
+    if (!panel || panel.hidden) return '';
+    return sectionId;
+  }
+
+  function getFirstEnabledSectionId() {
+    const button = state.navButtons.find((item) => !item.disabled);
+    return (button && button.dataset.target) || DEFAULT_SECTION_ID;
   }
 
   function updateSectionNavState() {
     if (!state.navButtons.length) return;
-    let firstAvailable = null;
     state.navButtons.forEach((button) => {
-      const target = document.getElementById(button.dataset.target);
-      const available = Boolean(target && !target.hidden);
+      const panel = document.getElementById(button.dataset.target);
+      const available = Boolean(panel && !panel.hidden);
       button.disabled = !available;
       button.classList.toggle('is-disabled', !available);
-      if (available && !firstAvailable) firstAvailable = button.dataset.target;
+      if (!available) button.removeAttribute('aria-selected');
     });
-    refreshSectionObservers();
-    if (firstAvailable) highlightNavButton(firstAvailable);
+    activateSection(state.activeSection);
   }
 
-  function refreshSectionObservers() {
-    if (!sectionObserver) return;
-    sectionObserver.disconnect();
-    state.navButtons.forEach((button) => {
-      const target = document.getElementById(button.dataset.target);
-      if (target && !target.hidden) sectionObserver.observe(target);
+  function collectStops(trip, modeInfo) {
+    const tripStops = Array.isArray(trip.stops) ? trip.stops : [];
+    const modeStops = Array.isArray(modeInfo.data && modeInfo.data.stops) ? modeInfo.data.stops : [];
+    const source = tripStops.length ? tripStops : modeStops;
+    return source
+      .map((stop) => {
+        if (!stop || typeof stop !== 'object') return null;
+        const coords = extractCoordinates(stop);
+        const photos = dedupeStrings([
+          ...collectList(stop.photos),
+          ...collectList(stop.images)
+        ]);
+        const videos = dedupeStrings(collectList(stop.videos));
+        return {
+          title: stop.title || '',
+          description: stop.description || '',
+          photos,
+          videos,
+          lat: coords.lat,
+          lng: coords.lng
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function extractCoordinates(stop) {
+    const directLat = stop.lat ?? stop.latitude;
+    const directLng = stop.lng ?? stop.longitude;
+    if (isFiniteNumber(directLat) && isFiniteNumber(directLng)) {
+      return { lat: Number(directLat), lng: Number(directLng) };
+    }
+    const nested = stop.coordinates || stop.location || stop.position;
+    if (nested && isFiniteNumber(nested.lat) && isFiniteNumber(nested.lng)) {
+      return { lat: Number(nested.lat), lng: Number(nested.lng) };
+    }
+    if (Array.isArray(stop.coords) && stop.coords.length === 2) {
+      const [lat, lng] = stop.coords;
+      if (isFiniteNumber(lat) && isFiniteNumber(lng)) {
+        return { lat: Number(lat), lng: Number(lng) };
+      }
+    }
+    return { lat: null, lng: null };
+  }
+
+  function collectStopPhotos(stops) {
+    const photos = [];
+    stops.forEach((stop) => {
+      const gallery = Array.isArray(stop.photos) ? stop.photos : [];
+      gallery.forEach((src) => {
+        photos.push({ src, title: stop.title, description: stop.description });
+      });
     });
+    return photos;
+  }
+
+  function setParagraphs(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+    const text = typeof value === 'string' ? value.trim() : '';
+    if (!text) {
+      el.setAttribute('hidden', '');
+      return;
+    }
+    const parts = text.split(/\n{2,}/).map((part) => part.trim()).filter(Boolean);
+    if (!parts.length) {
+      el.setAttribute('hidden', '');
+      return;
+    }
+    parts.forEach((part) => {
+      const p = document.createElement('p');
+      p.textContent = part;
+      el.appendChild(p);
+    });
+    el.removeAttribute('hidden');
+  }
+
+  function toggleVisibility(target, visible) {
+    const el = typeof target === 'string' ? document.getElementById(target) : target;
+    if (!el) return;
+    if (visible) el.removeAttribute('hidden');
+    else el.setAttribute('hidden', '');
   }
 })();

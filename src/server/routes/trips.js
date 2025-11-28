@@ -80,9 +80,11 @@ function loadTripTemplate() {
       subtitle: "",
       teaser: "",
       category: "",
+      active: true,
       defaultMode: "van",
       iconPath: "",
       coverImage: "",
+      featuredImage: "",
       currency: "EUR",
       tags: [],
       modes: fallbackModes,
@@ -725,7 +727,18 @@ function validateTrip(input) {
   const subtitle = String(input.subtitle || "").trim();
   const teaser = String(input.teaser || "").trim();
   const coverImage = String(input.coverImage || "").trim();
+  const featuredImage = String(input.featuredImage || "").trim();
   const iconPath = String(input.iconPath || "").trim();
+  const hasActiveField =
+    input && Object.prototype.hasOwnProperty.call(input, "active");
+  let normalizedActive;
+  if (typeof input.active === "boolean") {
+    normalizedActive = input.active;
+  } else if (hasActiveField) {
+    normalizedActive = toBool(input.active);
+  } else {
+    normalizedActive = true;
+  }
   const currency = String(input.currency || "EUR")
     .trim()
     .toUpperCase();
@@ -769,7 +782,9 @@ function validateTrip(input) {
       subtitle,
       teaser,
       category,
+      active: normalizedActive !== false,
       coverImage,
+      featuredImage,
       iconPath,
       currency,
       defaultMode,

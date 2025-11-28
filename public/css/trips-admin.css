@@ -70,6 +70,13 @@ header.sticky-bar .filters-toggle{align-self:flex-end;margin-left:0}
 .file-input-wrapper{flex:1 1 100%}
 .file-input-wrapper input[type="file"]{margin-top:6px}
 .file-row .icon-preview-wrap{align-self:flex-start}
+.featured-image-row{align-items:stretch;gap:20px}
+.featured-image-field{flex:1 1 360px;display:flex;flex-direction:column;gap:8px}
+.featured-image-controls{display:flex;gap:10px;flex-wrap:wrap}
+.featured-image-preview-wrap{flex:0 0 320px;max-width:360px;min-height:180px;border:1px dashed rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(15,28,41,0.45);padding:8px}
+.featured-image-preview-wrap img{width:100%;height:100%;object-fit:cover;border-radius:10px;box-shadow:0 12px 24px rgba(0,0,0,0.25)}
+.featured-image-row img[hidden]{display:none}
+.featured-image-field .filename{min-height:16px}
 @media (min-width:768px){
 	.file-row{flex-direction:row;align-items:flex-end}
 	.file-input-wrapper{flex:1 1 auto}

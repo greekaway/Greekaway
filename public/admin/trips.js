@@ -17,7 +17,13 @@
     tripsMessage: document.getElementById('tripsMessage'),
     tripIcon: document.getElementById('tripIcon'),
     tripIconPreview: document.getElementById('tripIconPreview'),
-    tripIconName: document.getElementById('tripIconName')
+    tripIconName: document.getElementById('tripIconName'),
+    featuredImageInput: document.getElementById('featuredImageInput'),
+    featuredImageTrigger: document.getElementById('featuredImageTrigger'),
+    featuredImageClear: document.getElementById('featuredImageClear'),
+    featuredImagePreview: document.getElementById('featuredImagePreview'),
+    featuredImageName: document.getElementById('featuredImageName'),
+    featuredImageStatus: document.getElementById('featuredImageStatus')
   };
 
   window.TripStopsDraftBridge = window.TripStopsDraftBridge || {};
@@ -214,6 +220,9 @@
     if (!currentTripDraft) currentTripDraft = templateClone();
     if (!currentTripDraft.modes || typeof currentTripDraft.modes !== 'object') {
       currentTripDraft.modes = {};
+    }
+    if (typeof currentTripDraft.active !== 'boolean') {
+      currentTripDraft.active = true;
     }
     return currentTripDraft;
   }
@@ -806,12 +815,15 @@
       const parsedDays = parseDurationDaysValue(mode.duration_days);
       mode.duration_days = parsedDays;
     });
+    const tripDraft = ensureTripDraft();
     const payload = {
       title: els.title ? els.title.value.trim() : '',
       slug: els.slug ? els.slug.value.trim() : '',
       subtitle: els.subtitle ? els.subtitle.value.trim() : '',
       category: els.category ? els.category.value.trim() : '',
       tags: linesToArray(els.tagsInput && els.tagsInput.value),
+      active: typeof tripDraft.active === 'boolean' ? tripDraft.active : true,
+      featuredImage: getFeaturedImageValue(),
       modes
     };
     if (currentTripDraft && currentTripDraft.id) payload.id = currentTripDraft.id;
@@ -907,7 +919,11 @@
       }
       if (r.ok) {
         const data = await r.json();
-        trips = Array.isArray(data) ? data : [];
+        const incoming = Array.isArray(data) ? data : [];
+        trips = incoming.filter((trip) => {
+          if (!trip || typeof trip !== 'object') return false;
+          return trip.active !== false;
+        });
         renderTable();
         if (els.tripsMessage) els.tripsMessage.textContent = '';
       } else if (els.tripsMessage) {
@@ -933,24 +949,27 @@
   function populateForm(trip){
     const tripData = mergeWithTemplate(trip || {});
     currentTripDraft = tripData;
-    editingSlug = tripData.slug;
+    const draft = ensureTripDraft();
+    editingSlug = draft.slug;
     slugManuallyEdited = true;
-    if (els.title) els.title.value = tripData.title || '';
-    if (els.slug) els.slug.value = tripData.slug || '';
-    if (els.subtitle) els.subtitle.value = tripData.subtitle || '';
-    if (els.category) els.category.value = tripData.category || '';
-    if (els.tagsInput) els.tagsInput.value = arrayToLines(tripData.tags);
-    MODE_KEYS.forEach((key) => renderModeForm(key, tripData.modes && tripData.modes[key]));
+    if (els.title) els.title.value = draft.title || '';
+    if (els.slug) els.slug.value = draft.slug || '';
+    if (els.subtitle) els.subtitle.value = draft.subtitle || '';
+    if (els.category) els.category.value = draft.category || '';
+    if (els.tagsInput) els.tagsInput.value = arrayToLines(draft.tags);
+    MODE_KEYS.forEach((key) => renderModeForm(key, draft.modes && draft.modes[key]));
     if (els.deleteBtn) els.deleteBtn.disabled = false;
-    checkCategoryWarning(tripData.category);
-    renderTripIconPreview(tripData.iconPath);
+    checkCategoryWarning(draft.category);
+    setFeaturedImageValue(draft.featuredImage || '');
+    updateFeaturedImageStatus('', '');
+    renderTripIconPreview(draft.iconPath);
   }
 
   function resetForm(){
     editingSlug = null;
     slugManuallyEdited = false;
     currentTripDraft = templateClone();
-    const draft = currentTripDraft || {};
+    const draft = ensureTripDraft();
     if (els.title) els.title.value = '';
     if (els.slug) els.slug.value = '';
     if (els.subtitle) els.subtitle.value = draft.subtitle || '';
@@ -958,6 +977,9 @@
     if (els.tagsInput) els.tagsInput.value = '';
     MODE_KEYS.forEach((key) => renderModeForm(key, draft.modes && draft.modes[key]));
     if (els.deleteBtn) els.deleteBtn.disabled = true;
+    setFeaturedImageValue(draft.featuredImage || '');
+    updateFeaturedImageStatus('', '');
+    if (els.featuredImageInput) els.featuredImageInput.value = '';
     renderTripIconPreview('');
     showErrors([]);
     if (els.tripsMessage) els.tripsMessage.textContent = '';
@@ -1010,6 +1032,122 @@
       img.style.maxHeight = '48px';
       els.tripIconPreview.appendChild(img);
     }
+  }
+
+  function getFeaturedImageValue(){
+    const draft = ensureTripDraft();
+    const raw = draft.featuredImage;
+    const value = typeof raw === 'string'
+      ? raw.trim()
+      : (raw ? String(raw).trim() : '');
+    draft.featuredImage = value || '';
+    return draft.featuredImage;
+  }
+
+  function setFeaturedImageValue(value){
+    const draft = ensureTripDraft();
+    draft.featuredImage = value ? String(value).trim() : '';
+    renderFeaturedImagePreview(draft.featuredImage);
+  }
+
+  function renderFeaturedImagePreview(src){
+    const hasImage = !!src;
+    if (els.featuredImagePreview) {
+      if (hasImage) {
+        els.featuredImagePreview.removeAttribute('hidden');
+        els.featuredImagePreview.src = src;
+      } else {
+        els.featuredImagePreview.setAttribute('hidden', '');
+        els.featuredImagePreview.removeAttribute('src');
+      }
+    }
+    if (els.featuredImageName) {
+      els.featuredImageName.textContent = hasImage ? extractFilename(src) : '';
+    }
+    if (els.featuredImageClear) {
+      els.featuredImageClear.hidden = !hasImage;
+    }
+  }
+
+  function extractFilename(path){
+    try {
+      const list = String(path || '').split('/');
+      const tail = list[list.length - 1] || '';
+      return tail.split('?')[0].split('#')[0] || tail;
+    } catch(_){
+      return path || '';
+    }
+  }
+
+  function updateFeaturedImageStatus(message, state){
+    if (!els.featuredImageStatus) return;
+    els.featuredImageStatus.textContent = message || '';
+    if (state) {
+      els.featuredImageStatus.dataset.state = state;
+    } else {
+      delete els.featuredImageStatus.dataset.state;
+    }
+  }
+
+  function setFeaturedImageControlsDisabled(flag){
+    const disabled = !!flag;
+    if (els.featuredImageTrigger) els.featuredImageTrigger.disabled = disabled;
+    if (els.featuredImageClear) els.featuredImageClear.disabled = disabled;
+    if (els.featuredImageInput) els.featuredImageInput.disabled = disabled;
+  }
+
+  function handleFeaturedImageTrigger(event){
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    if (els.featuredImageInput && !els.featuredImageInput.disabled) {
+      els.featuredImageInput.click();
+    }
+  }
+
+  function handleFeaturedImageFileSelect(){
+    if (!els.featuredImageInput || !els.featuredImageInput.files) return;
+    const file = els.featuredImageInput.files[0];
+    if (!file) return;
+    if (file.type && !/^image\//i.test(file.type)) {
+      updateFeaturedImageStatus('Επίλεξε αρχείο εικόνας.', 'error');
+      els.featuredImageInput.value = '';
+      return;
+    }
+    uploadFeaturedImageFile(file);
+  }
+
+  async function uploadFeaturedImageFile(file){
+    if (!file) return;
+    setFeaturedImageControlsDisabled(true);
+    updateFeaturedImageStatus('Μεταφόρτωση...', 'uploading');
+    try {
+      const fd = new FormData();
+      fd.append('coverImageFile', file);
+      const res = await fetch('/api/admin/upload-trip-image', { method:'POST', body: fd });
+      let data = null;
+      try { data = await res.json(); }
+      catch(err){ console.warn('Trips Admin: featured image JSON parse failed', err); }
+      if (!res.ok || !data || !data.ok || (!data.url && !data.filename)) {
+        const detail = data && (data.detail || data.error);
+        throw new Error(detail || 'upload_failed');
+      }
+      const url = (data.url && data.url.trim()) || (data.filename ? `/uploads/trips/${data.filename}` : '');
+      setFeaturedImageValue(url);
+      updateFeaturedImageStatus('Η εικόνα ανέβηκε.', 'success');
+    } catch(err){
+      console.warn('Trips Admin: featured upload failed', err);
+      const msg = err && err.message ? err.message : 'Αποτυχία μεταφόρτωσης.';
+      updateFeaturedImageStatus(msg, 'error');
+    } finally {
+      setFeaturedImageControlsDisabled(false);
+      if (els.featuredImageInput) els.featuredImageInput.value = '';
+    }
+  }
+
+  function handleFeaturedImageClear(event){
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    setFeaturedImageValue('');
+    updateFeaturedImageStatus('Η εικόνα αφαιρέθηκε.', 'info');
+    if (els.featuredImageInput) els.featuredImageInput.value = '';
   }
 
   function checkCategoryWarning(catSlug){
@@ -1183,6 +1321,9 @@
   if (els.resetBtn) els.resetBtn.addEventListener('click', handleResetClick);
   if (els.deleteBtn) els.deleteBtn.addEventListener('click', handlePrimaryDeleteClick);
   if (els.category) els.category.addEventListener('change', handleCategoryChange);
+  if (els.featuredImageTrigger) els.featuredImageTrigger.addEventListener('click', handleFeaturedImageTrigger);
+  if (els.featuredImageInput) els.featuredImageInput.addEventListener('change', handleFeaturedImageFileSelect);
+  if (els.featuredImageClear) els.featuredImageClear.addEventListener('click', handleFeaturedImageClear);
 
   if (els.tripIcon) {
     els.tripIcon.addEventListener('change', () => {
