@@ -78,8 +78,6 @@
         {
           "title": "Ακρόπολη",
           "description": "Ελεύθερος χρόνος για επίσκεψη στον Ιερό Βράχο, πανοραμική θέα και φωτογραφίες στα σημαντικότερα μνημεία.",
-          "lat": 37.9715,
-          "lng": 23.7257,
           "images": [
             "/uploads/trips/file-1763717268129.jpg",
             "/uploads/trips/file-1763717268130.jpg",
@@ -101,8 +99,6 @@
         {
           "title": "Πλάκα – Αναφιώτικα",
           "description": "Μικρός περίπατος στη γραφική συνοικία, στενά με παραδοσιακή αρχιτεκτονική και σημεία φωτογραφίας.",
-          "lat": 37.9702,
-          "lng": 23.7323,
           "images": [
             "/uploads/trips/file-1763717292281.jpg",
             "/uploads/trips/file-1763717292282.jpg",
@@ -124,8 +120,6 @@
         {
           "title": "Στάδιο Καλλιμάρμαρο",
           "description": "Στάση για φωτογραφίες στο ιστορικό στάδιο των πρώτων σύγχρονων Ολυμπιακών Αγώνων.",
-          "lat": 37.9681,
-          "lng": 23.741,
           "images": [
             "/uploads/trips/file-1763717317860.jpg",
             "/uploads/trips/file-1763717317860.jpg",
@@ -147,8 +141,6 @@
         {
           "title": "Λόφος Φιλοπάππου",
           "description": "Πανόραμα Ακρόπολης και ιδανικό σημείο για φωτογραφίες.",
-          "lat": 37.9689,
-          "lng": 23.7167,
           "images": [
             "/uploads/trips/file-1763717337182.jpg",
             "/uploads/trips/file-1763717337183.jpg",
@@ -184,37 +176,54 @@
       ],
       "map": {
         "center": {
-          "lat": 37.9715,
-          "lng": 23.7323
+          "lat": null,
+          "lng": null
         },
-        "zoom": 13,
+        "zoom": 0,
         "label": "",
         "travelMode": "DRIVING",
         "waypoints": [
           {
-            "label": "Pickup σημείο",
-            "lat": 37.9755,
-            "lng": 23.7348
+            "label": "Acropolis Entrance",
+            "lat": 37.96863095396695,
+            "lng": 23.728595847546895
           },
           {
-            "label": "Acropolis",
-            "lat": 37.9715,
-            "lng": 23.7257
+            "label": "Parthenon Viewpoint",
+            "lat": 37.97535558697295,
+            "lng": 23.72196969701787
           },
           {
-            "label": "Plaka",
-            "lat": 37.9702,
-            "lng": 23.7323
+            "label": "Syntagma Square",
+            "lat": 37.96854536220971,
+            "lng": 23.74112390729074
+          }
+        ],
+        "start": {
+          "label": "Acropolis Entrance",
+          "lat": 37.96863095396695,
+          "lng": 23.728595847546895
+        },
+        "end": {
+          "label": "Syntagma Square",
+          "lat": 37.96854536220971,
+          "lng": 23.74112390729074
+        },
+        "route": [
+          {
+            "label": "Acropolis Entrance",
+            "lat": 37.96863095396695,
+            "lng": 23.728595847546895
           },
           {
-            "label": "Panathenaic Stadium",
-            "lat": 37.9681,
-            "lng": 23.741
+            "label": "Parthenon Viewpoint",
+            "lat": 37.97535558697295,
+            "lng": 23.72196969701787
           },
           {
-            "label": "Ακρόπολη",
-            "lat": 37.9715,
-            "lng": 23.7257
+            "label": "Syntagma Square",
+            "lat": 37.96854536220971,
+            "lng": 23.74112390729074
           }
         ]
       }
@@ -272,8 +281,6 @@
         {
           "title": "Ακρόπολη",
           "description": "Ιδιωτική επίσκεψη στον Ιερό Βράχο με χρόνο για φωτογραφίες, θέα και άνετη περιήγηση χωρίς πίεση χρόνου.",
-          "lat": 37.9715,
-          "lng": 23.7257,
           "images": [
             "/uploads/trips/file-1763717374662.jpg",
             "/uploads/trips/file-1763717374663.jpg",
@@ -295,8 +302,6 @@
         {
           "title": "Πλάκα – Αναφιώτικα",
           "description": "Χαλαρός περίπατος στα πιο γραφικά σοκάκια της Αθήνας, με ευέλικτες στάσεις για φωτογραφίες και μικρές στάσεις ενδιαφέροντος.",
-          "lat": 37.9702,
-          "lng": 23.7323,
           "images": [
             "/uploads/trips/file-1763717392642.jpg",
             "/uploads/trips/file-1763717392643.jpg",
@@ -318,8 +323,6 @@
         {
           "title": "Καλλιμάρμαρο",
           "description": "Στάση σε ένα από τα πιο ιστορικά σημεία της πόλης, ιδανικό για φωτογραφίες και σύντομη ξενάγηση από τον οδηγό.",
-          "lat": 37.9681,
-          "lng": 23.741,
           "images": [
             "/uploads/trips/file-1763717421797.jpg",
             "/uploads/trips/file-1763717421798.jpg",
@@ -355,37 +358,54 @@
       ],
       "map": {
         "center": {
-          "lat": 37.9715,
-          "lng": 23.7323
+          "lat": null,
+          "lng": null
         },
-        "zoom": 13,
+        "zoom": 0,
         "label": "",
         "travelMode": "DRIVING",
         "waypoints": [
           {
-            "label": "Ιδιωτικό pickup",
-            "lat": 37.9755,
-            "lng": 23.7348
+            "label": "Acropolis Entrance",
+            "lat": 37.96863095396695,
+            "lng": 23.728595847546895
           },
           {
-            "label": "Acropolis",
-            "lat": 37.9715,
-            "lng": 23.7257
+            "label": "Parthenon Viewpoint",
+            "lat": 37.97535558697295,
+            "lng": 23.72196969701787
           },
           {
-            "label": "Plaka",
-            "lat": 37.9702,
-            "lng": 23.7323
+            "label": "Syntagma Square",
+            "lat": 37.96854536220971,
+            "lng": 23.74112390729074
+          }
+        ],
+        "start": {
+          "label": "Acropolis Entrance",
+          "lat": 37.96863095396695,
+          "lng": 23.728595847546895
+        },
+        "end": {
+          "label": "Syntagma Square",
+          "lat": 37.96854536220971,
+          "lng": 23.74112390729074
+        },
+        "route": [
+          {
+            "label": "Acropolis Entrance",
+            "lat": 37.96863095396695,
+            "lng": 23.728595847546895
           },
           {
-            "label": "Panathenaic Stadium",
-            "lat": 37.9681,
-            "lng": 23.741
+            "label": "Parthenon Viewpoint",
+            "lat": 37.97535558697295,
+            "lng": 23.72196969701787
           },
           {
-            "label": "Ακρόπολη",
-            "lat": 37.9715,
-            "lng": 23.7257
+            "label": "Syntagma Square",
+            "lat": 37.96854536220971,
+            "lng": 23.74112390729074
           }
         ]
       }
@@ -453,8 +473,6 @@
         {
           "title": "Ακρόπολη",
           "description": "Στάση στο σημείο αποβίβασης για επίσκεψη στην Ακρόπολη. Ο συνοδός παρέχει βασικές πληροφορίες πριν την είσοδο. Χρόνος για φωτογραφίες και περιήγηση.",
-          "lat": 37.9715,
-          "lng": 23.7257,
           "images": [
             "/uploads/trips/file-1763717446283.jpg",
             "/uploads/trips/file-1763717446284.jpg",
@@ -476,8 +494,6 @@
         {
           "title": "Πλάκα",
           "description": "Σύντομη στάση στην περιοχή της Πλάκας για φωτογραφίες και ελεύθερο χρόνο. Ο συνοδός δίνει οδηγίες για το σημείο συνάντησης του λεωφορείου.",
-          "lat": 37.9702,
-          "lng": 23.7323,
           "images": [
             "/uploads/trips/file-1763717468762.jpg",
             "/uploads/trips/file-1763717468764.jpg",
@@ -499,8 +515,6 @@
         {
           "title": "Καλλιμάρμαρο",
           "description": "Ολιγόλεπτη στάση για φωτογραφίες στο ιστορικό Παναθηναϊκό Στάδιο. Μικρή ενημέρωση από τον συνοδό.",
-          "lat": 37.9681,
-          "lng": 23.741,
           "images": [
             "/uploads/trips/file-1763717487818.jpg",
             "/uploads/trips/file-1763717487819.jpg",
@@ -540,44 +554,61 @@
       ],
       "map": {
         "center": {
-          "lat": 37.9715,
-          "lng": 23.7323
+          "lat": null,
+          "lng": null
         },
-        "zoom": 13,
+        "zoom": 0,
         "label": "",
         "travelMode": "DRIVING",
         "waypoints": [
           {
-            "label": "Σημείο συνάντησης",
-            "lat": 37.9755,
-            "lng": 23.7348
+            "label": "Acropolis Entrance",
+            "lat": 37.96863095396695,
+            "lng": 23.728595847546895
           },
           {
-            "label": "Acropolis",
-            "lat": 37.9715,
-            "lng": 23.7257
+            "label": "Parthenon Viewpoint",
+            "lat": 37.97535558697295,
+            "lng": 23.72196969701787
           },
           {
-            "label": "Plaka",
-            "lat": 37.9702,
-            "lng": 23.7323
+            "label": "Syntagma Square",
+            "lat": 37.96854536220971,
+            "lng": 23.74112390729074
+          }
+        ],
+        "start": {
+          "label": "Acropolis Entrance",
+          "lat": 37.96863095396695,
+          "lng": 23.728595847546895
+        },
+        "end": {
+          "label": "Syntagma Square",
+          "lat": 37.96854536220971,
+          "lng": 23.74112390729074
+        },
+        "route": [
+          {
+            "label": "Acropolis Entrance",
+            "lat": 37.96863095396695,
+            "lng": 23.728595847546895
           },
           {
-            "label": "Panathenaic Stadium",
-            "lat": 37.9681,
-            "lng": 23.741
+            "label": "Parthenon Viewpoint",
+            "lat": 37.97535558697295,
+            "lng": 23.72196969701787
           },
           {
-            "label": "Ακρόπολη",
-            "lat": 37.9715,
-            "lng": 23.7257
+            "label": "Syntagma Square",
+            "lat": 37.96854536220971,
+            "lng": 23.74112390729074
           }
         ]
       }
     }
   },
   "createdAt": "2025-11-21T00:15:18.697Z",
-  "updatedAt": "2025-11-28T14:51:40.722Z",
+  "updatedAt": "2025-11-28T18:39:42.536Z",
   "mode_set": {
     "van": {
       "active": true,

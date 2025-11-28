@@ -57,6 +57,9 @@ function baseModeTemplate(modeKey) {
       label: "",
       travelMode: "DRIVING",
       waypoints: [],
+      start: { label: "", lat: null, lng: null },
+      end: { label: "", lat: null, lng: null },
+      route: [],
     },
   };
 }
@@ -328,6 +331,23 @@ function hasLatLng(point) {
   return point && point.lat !== null && point.lng !== null;
 }
 
+function clonePointForLegacy(point) {
+  if (!point || typeof point !== "object")
+    return { label: "", lat: null, lng: null };
+  const lat = hasLatLng(point) ? Number(point.lat) : null;
+  const lng = hasLatLng(point) ? Number(point.lng) : null;
+  return {
+    label: String(point.label || "").trim(),
+    lat,
+    lng,
+  };
+}
+
+function buildLegacyRoute(waypoints) {
+  if (!Array.isArray(waypoints) || !waypoints.length) return [];
+  return waypoints.map((point) => clonePointForLegacy(point));
+}
+
 function normalizeMapBlock(value) {
   const raw = value && typeof value === "object" ? value : {};
   const center = normalizeLatLng(raw.center);
@@ -351,12 +371,18 @@ function normalizeMapBlock(value) {
       .map(normalizeMapPoint)
       .filter((pt) => pt && (pt.label || hasLatLng(pt)));
   }
+  const startPoint = waypoints.length ? clonePointForLegacy(waypoints[0]) : { label: "", lat: null, lng: null };
+  const endPoint = waypoints.length >= 2 ? clonePointForLegacy(waypoints[waypoints.length - 1]) : { label: "", lat: null, lng: null };
+  const legacyRoute = buildLegacyRoute(waypoints);
   return {
     center,
     zoom,
     label,
     travelMode: normalizeTravelMode(raw.travelMode || raw.travel_mode),
     waypoints,
+    start: startPoint,
+    end: endPoint,
+    route: legacyRoute,
   };
 }
 
