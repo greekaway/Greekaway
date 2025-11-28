@@ -395,7 +395,11 @@
           .then(({ renderer, markers, bounds }) => {
             if (renderer) overlays.push(renderer);
             if (Array.isArray(markers) && markers.length) overlays.push(...markers);
-            if (bounds) map.fitBounds(bounds, { top: 24, right: 24, bottom: 24, left: 24 });
+            if (bounds) {
+              map.fitBounds(bounds, { top: 24, right: 24, bottom: 24, left: 24 });
+            } else {
+              fitBoundsToPoints(markerPoints.map((point) => ({ lat: Number(point.lat), lng: Number(point.lng) })));
+            }
             finalizeReady();
           })
           .catch((error) => {
