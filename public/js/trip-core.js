@@ -311,7 +311,8 @@
     const mapInfo = mapInfoOverride || normalizeMapPoints(trip, modeInfo, stops);
     state.routeMapInfo = mapInfo;
     const markerPoints = Array.isArray(mapInfo && mapInfo.points) ? mapInfo.points.filter((point) => hasLatLng(point)) : [];
-    const zoomLevel = isFiniteNumber(mapInfo && mapInfo.zoom) ? Number(mapInfo.zoom) : 13;
+    const zoomValue = Number(mapInfo && mapInfo.zoom);
+    const zoomLevel = Number.isFinite(zoomValue) && zoomValue > 0 ? zoomValue : 13;
     const hasCenter = mapInfo && hasLatLng(mapInfo.center);
     const label = mapInfo && mapInfo.label ? mapInfo.label : '';
 
@@ -430,7 +431,8 @@
   function normalizeMapPoints(trip, modeInfo, stops) {
     const mapData = (modeInfo.data && modeInfo.data.map) || trip.map || {};
     const center = readLatLng(mapData.center);
-    const zoom = isFiniteNumber(mapData.zoom) ? Number(mapData.zoom) : null;
+    const zoomValue = Number(mapData.zoom);
+    const zoom = Number.isFinite(zoomValue) && zoomValue > 0 ? zoomValue : null;
     const label = typeof mapData.label === 'string' ? mapData.label.trim() : '';
     const travelMode = normalizeTravelMode(mapData.travelMode || mapData.travel_mode);
     const points = collectMapWaypoints(mapData, stops);
@@ -646,6 +648,7 @@
         },
         (response, status) => {
           if (status === 'OK' && response) {
+            renderer.setDirections(response);
             const markers = addCustomMarkers(map, points);
             const bounds = response.routes && response.routes[0] ? response.routes[0].bounds : null;
             resolve({ renderer, markers, bounds });
