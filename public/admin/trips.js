@@ -162,13 +162,7 @@
         sectionsList: root.querySelector('[data-field="sectionsList"]'),
         faqList: root.querySelector('[data-field="faqList"]'),
         stopsList: root.querySelector('[data-field="stopsList"]'),
-        mapStartLabel: root.querySelector('[data-field="map_start_label"]'),
-        mapStartLat: root.querySelector('[data-field="map_start_lat"]'),
-        mapStartLng: root.querySelector('[data-field="map_start_lng"]'),
-        mapEndLabel: root.querySelector('[data-field="map_end_label"]'),
-        mapEndLat: root.querySelector('[data-field="map_end_lat"]'),
-        mapEndLng: root.querySelector('[data-field="map_end_lng"]'),
-        mapRoute: root.querySelector('[data-field="map_route"]')
+        mapWaypoints: root.querySelector('[data-field="map_waypoints"]')
       };
       if (forms[key].title) {
         forms[key].title.addEventListener('input', () => updateModeHeader(key));
@@ -587,7 +581,7 @@
     refreshImageUploader();
   }
 
-  function parseRouteTextarea(value){
+  function parseWaypointTextarea(value){
     return linesToArray(value).map((line) => {
       const parts = line.split(',').map((p)=>p.trim());
       if (!parts.length) return null;
@@ -599,31 +593,46 @@
     }).filter(Boolean);
   }
 
-  function routeArrayToTextarea(route){
+  function waypointsToTextarea(route){
     if (!Array.isArray(route) || !route.length) return '';
     return route.map((pt) => {
-      const lat = (pt.lat == null) ? '' : String(pt.lat);
-      const lng = (pt.lng == null) ? '' : String(pt.lng);
-      const label = pt.label || '';
+      const lat = (pt && pt.lat != null) ? String(pt.lat) : '';
+      const lng = (pt && pt.lng != null) ? String(pt.lng) : '';
+      const label = pt && pt.label ? pt.label : '';
       return [lat, lng, label].filter(Boolean).join(',');
     }).join('\n');
   }
 
+  function getModeMapDraft(modeKey){
+    if (!currentTripDraft || !currentTripDraft.modes) return null;
+    const mode = currentTripDraft.modes[modeKey];
+    if (!mode || typeof mode !== 'object') return null;
+    const map = mode.map;
+    return (map && typeof map === 'object') ? map : null;
+  }
+
+  function cloneLatLngOrNull(source){
+    const lat = toFloatOrNull(source && source.lat);
+    const lng = toFloatOrNull(source && source.lng);
+    return { lat, lng };
+  }
+
+  function normalizeTravelModeValue(value){
+    const allowed = ['DRIVING','WALKING','BICYCLING','TRANSIT'];
+    const normalized = String(value || '').trim().toUpperCase();
+    return allowed.includes(normalized) ? normalized : 'DRIVING';
+  }
+
   function readMapFromForm(modeKey){
     const cfg = modeForms[modeKey];
-    if (!cfg) return { start:{label:'',lat:null,lng:null}, end:{label:'',lat:null,lng:null}, route:[] };
+    const existing = getModeMapDraft(modeKey) || {};
+    const zoomValue = Number(existing.zoom);
     return {
-      start: {
-        label: (cfg.mapStartLabel && cfg.mapStartLabel.value || '').trim(),
-        lat: toFloatOrNull(cfg.mapStartLat && cfg.mapStartLat.value),
-        lng: toFloatOrNull(cfg.mapStartLng && cfg.mapStartLng.value)
-      },
-      end: {
-        label: (cfg.mapEndLabel && cfg.mapEndLabel.value || '').trim(),
-        lat: toFloatOrNull(cfg.mapEndLat && cfg.mapEndLat.value),
-        lng: toFloatOrNull(cfg.mapEndLng && cfg.mapEndLng.value)
-      },
-      route: parseRouteTextarea(cfg.mapRoute && cfg.mapRoute.value || '')
+      center: cloneLatLngOrNull(existing.center || {}),
+      zoom: Number.isFinite(zoomValue) ? zoomValue : null,
+      label: (existing.label || '').trim(),
+      travelMode: normalizeTravelModeValue(existing.travelMode || existing.travel_mode),
+      waypoints: parseWaypointTextarea(cfg && cfg.mapWaypoints ? cfg.mapWaypoints.value : '')
     };
   }
 
@@ -631,13 +640,14 @@
     const cfg = modeForms[modeKey];
     if (!cfg) return;
     const data = map && typeof map === 'object' ? map : {};
-    if (cfg.mapStartLabel) cfg.mapStartLabel.value = (data.start && data.start.label) || '';
-    if (cfg.mapStartLat) cfg.mapStartLat.value = data.start && data.start.lat != null ? String(data.start.lat) : '';
-    if (cfg.mapStartLng) cfg.mapStartLng.value = data.start && data.start.lng != null ? String(data.start.lng) : '';
-    if (cfg.mapEndLabel) cfg.mapEndLabel.value = (data.end && data.end.label) || '';
-    if (cfg.mapEndLat) cfg.mapEndLat.value = data.end && data.end.lat != null ? String(data.end.lat) : '';
-    if (cfg.mapEndLng) cfg.mapEndLng.value = data.end && data.end.lng != null ? String(data.end.lng) : '';
-    if (cfg.mapRoute) cfg.mapRoute.value = routeArrayToTextarea(data.route);
+    const serializedWaypoints = Array.isArray(data.waypoints) && data.waypoints.length
+      ? waypointsToTextarea(data.waypoints)
+      : waypointsToTextarea([
+          data.start || null,
+          ...(Array.isArray(data.route) ? data.route : []),
+          data.end || null
+        ].filter(Boolean));
+    if (cfg.mapWaypoints) cfg.mapWaypoints.value = serializedWaypoints;
   }
 
   function readModeForm(modeKey){

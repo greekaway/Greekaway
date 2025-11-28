@@ -52,9 +52,11 @@ function baseModeTemplate(modeKey) {
     stops: [{ title: "", description: "", images: [], videos: [] }],
     faq: [{ q: "", a: "" }],
     map: {
-      start: { label: "", lat: null, lng: null },
-      end: { label: "", lat: null, lng: null },
-      route: [],
+      center: { lat: null, lng: null },
+      zoom: null,
+      label: "",
+      travelMode: "DRIVING",
+      waypoints: [],
     },
   };
 }
@@ -261,25 +263,41 @@ function normalizeStopsList(value) {
     .filter(Boolean);
 }
 
+function normalizeLatLng(value) {
+  if (!value || typeof value !== "object")
+    return { lat: null, lng: null };
+  if (Array.isArray(value) && value.length >= 2) {
+    const lat = toFloat(value[0]);
+    const lng = toFloat(value[1]);
+    return { lat, lng };
+  }
+  return {
+    lat: toFloat(value.lat ?? value.latitude),
+    lng: toFloat(value.lng ?? value.longitude),
+  };
+}
+
 function normalizeMapPoint(value) {
   if (!value) return { label: "", lat: null, lng: null };
   if (typeof value === "string")
     return { label: value.trim(), lat: null, lng: null };
   if (typeof value === "object") {
+    const coords = normalizeLatLng(value);
     return {
       label: String(value.label || value.name || value.title || "").trim(),
-      lat: toFloat(value.lat ?? value.latitude),
-      lng: toFloat(value.lng ?? value.longitude),
+      lat: coords.lat,
+      lng: coords.lng,
     };
   }
   return { label: "", lat: null, lng: null };
 }
 
-function normalizeRouteList(value) {
-  if (Array.isArray(value))
+function normalizeWaypointList(value) {
+  if (Array.isArray(value)) {
     return value
       .map(normalizeMapPoint)
-      .filter((pt) => pt.label || (pt.lat !== null && pt.lng !== null));
+      .filter((pt) => pt && (pt.label || (pt.lat !== null && pt.lng !== null)));
+  }
   if (typeof value === "string") {
     return value
       .split(/\r?\n/g)
@@ -290,6 +308,7 @@ function normalizeRouteList(value) {
         const lat = toFloat(parts[0]);
         const lng = toFloat(parts[1]);
         const label = parts.slice(2).join(",").trim();
+        if (!label && lat === null && lng === null) return null;
         return { label, lat, lng };
       })
       .filter(Boolean);
@@ -297,21 +316,47 @@ function normalizeRouteList(value) {
   return [];
 }
 
+function normalizeTravelMode(value) {
+  const allowed = ["DRIVING", "WALKING", "BICYCLING", "TRANSIT"];
+  const normalized = String(value || "")
+    .trim()
+    .toUpperCase();
+  return allowed.includes(normalized) ? normalized : "DRIVING";
+}
+
+function hasLatLng(point) {
+  return point && point.lat !== null && point.lng !== null;
+}
+
 function normalizeMapBlock(value) {
   const raw = value && typeof value === "object" ? value : {};
-  const markers = Array.isArray(raw.markers) ? raw.markers : [];
-  const route = normalizeRouteList(raw.route);
-  if (!route.length && markers.length) {
-    route.push(
-      ...markers
-        .map(normalizeMapPoint)
-        .filter((pt) => pt.label || (pt.lat !== null && pt.lng !== null)),
+  const center = normalizeLatLng(raw.center);
+  const zoom = Number.isFinite(Number(raw.zoom)) ? Number(raw.zoom) : null;
+  const label = String(raw.label || "").trim();
+  let waypoints = normalizeWaypointList(raw.waypoints);
+  if (!waypoints.length) {
+    const start = normalizeMapPoint(raw.start);
+    const end = normalizeMapPoint(raw.end);
+    const legacyRoute = normalizeWaypointList(raw.route);
+    const assembled = [];
+    if (start.label || hasLatLng(start)) assembled.push(start);
+    if (legacyRoute.length) assembled.push(...legacyRoute);
+    if (end.label || hasLatLng(end)) assembled.push(end);
+    waypoints = assembled.filter(
+      (pt) => pt && (pt.label || hasLatLng(pt)),
     );
   }
+  if (!waypoints.length && Array.isArray(raw.markers)) {
+    waypoints = raw.markers
+      .map(normalizeMapPoint)
+      .filter((pt) => pt && (pt.label || hasLatLng(pt)));
+  }
   return {
-    start: normalizeMapPoint(raw.start),
-    end: normalizeMapPoint(raw.end),
-    route,
+    center,
+    zoom,
+    label,
+    travelMode: normalizeTravelMode(raw.travelMode || raw.travel_mode),
+    waypoints,
   };
 }
 
@@ -514,8 +559,9 @@ function migrateLegacyTrip(trip) {
     const normalizedMap = normalizeMapBlock(trip.map);
     MODE_KEYS.forEach((key) => {
       const block = trip.modes[key];
-      if (!block.map || !listHasMeaningfulEntries(block.map.route))
-        block.map = cloneJson(normalizedMap);
+      const hasWaypoints =
+        block.map && Array.isArray(block.map.waypoints) && block.map.waypoints.length > 0;
+      if (!block.map || !hasWaypoints) block.map = cloneJson(normalizedMap);
     });
     delete trip.map;
   }

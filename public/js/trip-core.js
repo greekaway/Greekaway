@@ -213,10 +213,8 @@
 
   function resetRouteMapShell() {
     const mapContainer = document.getElementById('route-map');
-    const list = document.getElementById('trip-route-list');
     state.mapInstance = null;
     state.mapOverlays = [];
-    if (list) list.innerHTML = '';
     if (mapContainer) mapContainer.innerHTML = '';
   }
 
@@ -303,35 +301,21 @@
   }
 
   function renderMap(trip, modeInfo, stops, mapInfoOverride) {
-    const list = document.getElementById('trip-route-list');
     const mapLabel = document.getElementById('trip-map-label');
     const mapEl = document.getElementById('route-map');
-    if (!list || !mapEl) return false;
-    list.innerHTML = '';
+    if (!mapEl) return false;
     mapEl.innerHTML = '';
     state.mapInstance = null;
     state.mapOverlays = [];
 
     const mapInfo = mapInfoOverride || normalizeMapPoints(trip, modeInfo, stops);
     state.routeMapInfo = mapInfo;
-    const points = Array.isArray(mapInfo && mapInfo.points) ? mapInfo.points : [];
-    const routePath = Array.isArray(mapInfo && mapInfo.routePath) ? mapInfo.routePath : [];
-    const label = mapInfo ? mapInfo.label : '';
+    const markerPoints = Array.isArray(mapInfo && mapInfo.points) ? mapInfo.points.filter((point) => hasLatLng(point)) : [];
     const zoomLevel = isFiniteNumber(mapInfo && mapInfo.zoom) ? Number(mapInfo.zoom) : 13;
     const hasCenter = mapInfo && hasLatLng(mapInfo.center);
-    const markerPoints = points.filter((point) => hasLatLng(point));
+    const label = mapInfo && mapInfo.label ? mapInfo.label : '';
 
-    points.forEach((point) => {
-      const li = document.createElement('li');
-      li.className = 'route-item';
-      const strong = document.createElement('strong');
-      strong.textContent = labelWithPrefix(point);
-      li.appendChild(strong);
-      list.appendChild(li);
-    });
-
-    const hasGeoData = markerPoints.length > 0 || routePath.some((point) => hasLatLng(point)) || hasCenter;
-    if (!hasGeoData) {
+    if (!markerPoints.length) {
       if (mapLabel) mapLabel.textContent = '';
       const fallback = document.createElement('p');
       fallback.textContent = 'Δεν υπάρχουν δεδομένα διαδρομής για αυτή την εκδρομή.';
@@ -357,47 +341,70 @@
       });
 
       const overlays = [];
-      const effectiveMarkers = markerPoints.length ? markerPoints : routePath.filter((point) => hasLatLng(point));
-      effectiveMarkers.forEach((point) => {
-        const marker = new window.google.maps.Marker({
-          map,
-          position: { lat: Number(point.lat), lng: Number(point.lng) },
-          title: labelWithPrefix(point)
-        });
-        overlays.push(marker);
-      });
+      const finalizeReady = () => {
+        state.mapInstance = map;
+        state.mapOverlays = overlays;
+        state.routeMapReady = true;
+        setTimeout(() => scheduleRouteMapResize(), 150);
+      };
 
-      const polylinePath = routePath.filter((point) => hasLatLng(point)).map((point) => ({ lat: Number(point.lat), lng: Number(point.lng) }));
-      if (polylinePath.length >= 2) {
-        const polyline = new window.google.maps.Polyline({
-          map,
-          path: polylinePath,
-          strokeColor: '#0052cc',
-          strokeOpacity: 1,
-          strokeWeight: 4
-        });
-        overlays.push(polyline);
-      }
-
-      const boundsPoints = polylinePath.length >= 2
-        ? polylinePath
-        : effectiveMarkers.map((point) => ({ lat: Number(point.lat), lng: Number(point.lng) }));
-      if (boundsPoints.length >= 2) {
+      const fitBoundsToPoints = (points) => {
+        if (!points.length) {
+          if (hasCenter) {
+            map.setCenter(defaultCenter);
+            map.setZoom(zoomLevel);
+          }
+          return;
+        }
+        if (points.length === 1) {
+          map.setCenter(points[0]);
+          map.setZoom(zoomLevel);
+          return;
+        }
         const bounds = new window.google.maps.LatLngBounds();
-        boundsPoints.forEach((point) => bounds.extend(point));
+        points.forEach((point) => bounds.extend(point));
         map.fitBounds(bounds, { top: 24, right: 24, bottom: 24, left: 24 });
-      } else if (boundsPoints.length === 1) {
-        map.setCenter(boundsPoints[0]);
-        map.setZoom(zoomLevel);
-      } else if (hasCenter) {
-        map.setCenter(defaultCenter);
-        map.setZoom(zoomLevel);
+      };
+
+      const drawFallbackRoute = () => {
+        const markers = addCustomMarkers(map, markerPoints);
+        overlays.push(...markers);
+        const polylinePath = (mapInfo.routePath || [])
+          .filter((point) => hasLatLng(point))
+          .map((point) => ({ lat: Number(point.lat), lng: Number(point.lng) }));
+        if (polylinePath.length >= 2) {
+          const polyline = new window.google.maps.Polyline({
+            map,
+            path: polylinePath,
+            strokeColor: '#0052cc',
+            strokeOpacity: 1,
+            strokeWeight: 4
+          });
+          overlays.push(polyline);
+          fitBoundsToPoints(polylinePath);
+        } else {
+          const boundsPoints = markerPoints.map((point) => ({ lat: Number(point.lat), lng: Number(point.lng) }));
+          fitBoundsToPoints(boundsPoints);
+        }
+        finalizeReady();
+      };
+
+      if (markerPoints.length >= 2) {
+        requestDirectionsRoute(map, markerPoints, mapInfo && mapInfo.travelMode)
+          .then(({ renderer, markers, bounds }) => {
+            if (renderer) overlays.push(renderer);
+            if (Array.isArray(markers) && markers.length) overlays.push(...markers);
+            if (bounds) map.fitBounds(bounds, { top: 24, right: 24, bottom: 24, left: 24 });
+            finalizeReady();
+          })
+          .catch((error) => {
+            console.warn('[trip-core] directions failed', error && error.message ? error.message : error);
+            drawFallbackRoute();
+          });
+      } else {
+        drawFallbackRoute();
       }
 
-      state.mapInstance = map;
-      state.mapOverlays = overlays;
-      state.routeMapReady = true;
-      setTimeout(() => scheduleRouteMapResize(), 150);
       return true;
     };
 
@@ -422,57 +429,115 @@
 
   function normalizeMapPoints(trip, modeInfo, stops) {
     const mapData = (modeInfo.data && modeInfo.data.map) || trip.map || {};
-    const points = [];
-    const routePath = [];
     const center = readLatLng(mapData.center);
     const zoom = isFiniteNumber(mapData.zoom) ? Number(mapData.zoom) : null;
+    const label = typeof mapData.label === 'string' ? mapData.label.trim() : '';
+    const travelMode = normalizeTravelMode(mapData.travelMode || mapData.travel_mode);
+    const points = collectMapWaypoints(mapData, stops);
+    return {
+      points,
+      routePath: points,
+      center,
+      zoom,
+      label,
+      travelMode
+    };
+  }
 
+  function collectMapWaypoints(mapData, stops) {
+    const buildDirectPoints = () => {
+      if (!Array.isArray(mapData.waypoints)) return [];
+      const total = mapData.waypoints.length;
+      return mapData.waypoints
+        .map((entry, idx) => {
+          const type = resolveWaypointType(idx, total);
+          return buildMapPoint(entry, type, entry && entry.label ? entry.label : `Σημείο ${idx + 1}`);
+        })
+        .filter(hasLatLng);
+    };
+
+    const directPoints = buildDirectPoints();
+    if (directPoints.length) return directPoints;
+
+    const legacyPoints = [];
     const startPoint = buildMapPoint(mapData.start, 'start', 'Έναρξη');
-    const endPoint = buildMapPoint(mapData.end, 'end', 'Τερματισμός');
-    const routePoints = Array.isArray(mapData.route)
+    if (hasLatLng(startPoint)) legacyPoints.push(startPoint);
+    const routeEntries = Array.isArray(mapData.route)
       ? mapData.route
-          .map((entry, idx) => buildMapPoint(entry, 'route', entry && entry.label ? entry.label : `Σημείο ${idx + 1}`))
-          .filter(Boolean)
-      : [];
-    const stopPoints = (Array.isArray(stops) ? stops : [])
+      : typeof mapData.route === 'string'
+        ? parseLegacyWaypointLines(mapData.route)
+        : [];
+    const routePoints = routeEntries
+      .map((entry, idx) => buildMapPoint(entry, 'waypoint', entry && entry.label ? entry.label : `Σημείο ${idx + 1}`))
+      .filter(hasLatLng);
+    if (routePoints.length) legacyPoints.push(...routePoints);
+    const endPoint = buildMapPoint(mapData.end, 'end', 'Τερματισμός');
+    if (hasLatLng(endPoint)) legacyPoints.push(endPoint);
+    if (legacyPoints.length) return legacyPoints;
+
+    const stopSource = Array.isArray(stops) ? stops : [];
+    const stopPoints = stopSource
       .map((stop, idx) => {
         if (!isFiniteNumber(stop.lat) || !isFiniteNumber(stop.lng)) return null;
         return {
           label: stop.title || `Στάση ${idx + 1}`,
           lat: Number(stop.lat),
           lng: Number(stop.lng),
-          type: 'stop'
+          type: idx === 0 ? 'start' : (idx === stopSource.length - 1 ? 'end' : 'stop')
         };
       })
+      .filter(hasLatLng);
+    return stopPoints;
+  }
+
+  function resolveWaypointType(index, total) {
+    if (!Number.isInteger(index) || !Number.isInteger(total) || total <= 0) return 'waypoint';
+    if (total === 1) return 'start';
+    if (index === 0) return 'start';
+    if (index === total - 1) return 'end';
+    return 'waypoint';
+  }
+
+  function parseLegacyWaypointLines(value) {
+    if (typeof value !== 'string') return [];
+    return value
+      .split(/\r?\n/g)
+      .map((line) => {
+        const trimmed = line.trim();
+        if (!trimmed) return null;
+        const parts = trimmed.split(',').map((part) => part.trim());
+        if (parts.length < 2) return null;
+        const lat = Number(parts[0]);
+        const lng = Number(parts[1]);
+        if (!isFiniteNumber(lat) || !isFiniteNumber(lng)) return null;
+        const label = parts.slice(2).join(',').trim();
+        return { lat, lng, label };
+      })
       .filter(Boolean);
-
-    if (startPoint) points.push(startPoint);
-    if (stopPoints.length) points.push(...stopPoints);
-    else points.push(...routePoints);
-    if (endPoint) points.push(endPoint);
-    if (!points.length) {
-      points.push(...routePoints);
-    }
-    if (!points.length) {
-      points.push(...stopPoints);
-    }
-
-    const appendToPath = (point) => {
-      if (!point || !hasLatLng(point)) return;
-      routePath.push({ label: point.label, lat: Number(point.lat), lng: Number(point.lng), type: point.type });
-    };
-    appendToPath(startPoint);
-    routePoints.forEach(appendToPath);
-    appendToPath(endPoint);
-    if (!routePath.length) {
-      stopPoints.forEach(appendToPath);
-    }
-
-    return { points, routePath, center, zoom, label: mapData.label || '' };
   }
 
   function buildMapPoint(entry, type, fallbackLabel) {
-    if (!entry || typeof entry !== 'object') return null;
+    if (!entry) return null;
+    if (typeof entry === 'string') {
+      const trimmed = entry.trim();
+      return {
+        label: trimmed || fallbackLabel,
+        lat: null,
+        lng: null,
+        type
+      };
+    }
+    if (Array.isArray(entry) && entry.length >= 2) {
+      const lat = Number(entry[0]);
+      const lng = Number(entry[1]);
+      return {
+        label: fallbackLabel,
+        lat: isFiniteNumber(lat) ? lat : null,
+        lng: isFiniteNumber(lng) ? lng : null,
+        type
+      };
+    }
+    if (typeof entry !== 'object') return null;
     const coords = extractCoordinates(entry);
     const label = entry.label || fallbackLabel;
     return {
@@ -484,13 +549,113 @@
   }
 
   function readLatLng(entry) {
-    if (!entry || typeof entry !== 'object') return null;
+    if (!entry) return null;
+    if (Array.isArray(entry) && entry.length >= 2) {
+      const lat = Number(entry[0]);
+      const lng = Number(entry[1]);
+      if (isFiniteNumber(lat) && isFiniteNumber(lng)) {
+        return { lat, lng };
+      }
+      return null;
+    }
+    if (typeof entry !== 'object') return null;
     const coords = extractCoordinates(entry);
     return hasLatLng(coords) ? { lat: Number(coords.lat), lng: Number(coords.lng) } : null;
   }
 
   function hasLatLng(point) {
     return point && isFiniteNumber(point.lat) && isFiniteNumber(point.lng);
+  }
+
+  function normalizeTravelMode(mode) {
+    const allowed = ['DRIVING', 'WALKING', 'BICYCLING', 'TRANSIT'];
+    const normalized = String(mode || '').trim().toUpperCase();
+    return allowed.includes(normalized) ? normalized : 'DRIVING';
+  }
+
+  function toGoogleTravelMode(mode) {
+    if (!(window.google && window.google.maps && window.google.maps.TravelMode)) {
+      return 'DRIVING';
+    }
+    const normalized = normalizeTravelMode(mode);
+    const TravelMode = window.google.maps.TravelMode;
+    switch (normalized) {
+      case 'WALKING':
+        return TravelMode.WALKING;
+      case 'BICYCLING':
+        return TravelMode.BICYCLING;
+      case 'TRANSIT':
+        return TravelMode.TRANSIT;
+      default:
+        return TravelMode.DRIVING;
+    }
+  }
+
+  function toLatLngLiteral(point) {
+    return { lat: Number(point.lat), lng: Number(point.lng) };
+  }
+
+  function addCustomMarkers(map, points) {
+    if (!(window.google && window.google.maps)) return [];
+    return points
+      .filter((point) => hasLatLng(point))
+      .map((point) => {
+        return new window.google.maps.Marker({
+          map,
+          position: toLatLngLiteral(point),
+          title: labelWithPrefix(point)
+        });
+      });
+  }
+
+  function requestDirectionsRoute(map, points, travelMode) {
+    return new Promise((resolve, reject) => {
+      if (!(window.google && window.google.maps)) {
+        reject(new Error('google-maps-unavailable'));
+        return;
+      }
+      if (!Array.isArray(points) || points.length < 2) {
+        reject(new Error('insufficient-waypoints'));
+        return;
+      }
+      const service = new window.google.maps.DirectionsService();
+      const renderer = new window.google.maps.DirectionsRenderer({
+        map,
+        suppressMarkers: true,
+        preserveViewport: true,
+        polylineOptions: {
+          strokeColor: '#0052cc',
+          strokeOpacity: 1,
+          strokeWeight: 4
+        }
+      });
+      const origin = toLatLngLiteral(points[0]);
+      const destination = toLatLngLiteral(points[points.length - 1]);
+      const waypoints = points
+        .slice(1, -1)
+        .filter((point) => hasLatLng(point))
+        .map((point) => ({ location: toLatLngLiteral(point), stopover: true }));
+      service.route(
+        {
+          origin,
+          destination,
+          waypoints,
+          travelMode: toGoogleTravelMode(travelMode),
+          provideRouteAlternatives: false,
+          optimizeWaypoints: false
+        },
+        (response, status) => {
+          if (status === 'OK' && response) {
+            const markers = addCustomMarkers(map, points);
+            const bounds = response.routes && response.routes[0] ? response.routes[0].bounds : null;
+            resolve({ renderer, markers, bounds });
+          } else {
+            renderer.setMap(null);
+            reject(new Error(status || 'directions_failed'));
+          }
+        }
+      );
+    });
   }
 
   let googleMapsLoaderPromise = null;

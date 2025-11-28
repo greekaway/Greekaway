@@ -304,24 +304,6 @@ body.trip-lightbox-open {
   overflow: hidden;
 }
 
-.route-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.route-item {
-  padding: 8px 0;
-}
-
-.route-item small {
-  display: block;
-  margin-top: 4px;
-  color: var(--trip-muted);
-}
 
 .stop-list {
   list-style: none;

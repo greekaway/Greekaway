@@ -188,17 +188,14 @@
           "lng": 23.7323
         },
         "zoom": 13,
-        "start": {
-          "label": "Pickup σημείο",
-          "lat": 37.9755,
-          "lng": 23.7348
-        },
-        "end": {
-          "label": "Ακρόπολη",
-          "lat": 37.9715,
-          "lng": 23.7257
-        },
-        "route": [
+        "label": "",
+        "travelMode": "DRIVING",
+        "waypoints": [
+          {
+            "label": "Pickup σημείο",
+            "lat": 37.9755,
+            "lng": 23.7348
+          },
           {
             "label": "Acropolis",
             "lat": 37.9715,
@@ -213,6 +210,11 @@
             "label": "Panathenaic Stadium",
             "lat": 37.9681,
             "lng": 23.741
+          },
+          {
+            "label": "Ακρόπολη",
+            "lat": 37.9715,
+            "lng": 23.7257
           }
         ]
       }
@@ -357,17 +359,14 @@
           "lng": 23.7323
         },
         "zoom": 13,
-        "start": {
-          "label": "Ιδιωτικό pickup",
-          "lat": 37.9755,
-          "lng": 23.7348
-        },
-        "end": {
-          "label": "Ακρόπολη",
-          "lat": 37.9715,
-          "lng": 23.7257
-        },
-        "route": [
+        "label": "",
+        "travelMode": "DRIVING",
+        "waypoints": [
+          {
+            "label": "Ιδιωτικό pickup",
+            "lat": 37.9755,
+            "lng": 23.7348
+          },
           {
             "label": "Acropolis",
             "lat": 37.9715,
@@ -382,6 +381,11 @@
             "label": "Panathenaic Stadium",
             "lat": 37.9681,
             "lng": 23.741
+          },
+          {
+            "label": "Ακρόπολη",
+            "lat": 37.9715,
+            "lng": 23.7257
           }
         ]
       }
@@ -540,17 +544,14 @@
           "lng": 23.7323
         },
         "zoom": 13,
-        "start": {
-          "label": "Σημείο συνάντησης",
-          "lat": 37.9755,
-          "lng": 23.7348
-        },
-        "end": {
-          "label": "Ακρόπολη",
-          "lat": 37.9715,
-          "lng": 23.7257
-        },
-        "route": [
+        "label": "",
+        "travelMode": "DRIVING",
+        "waypoints": [
+          {
+            "label": "Σημείο συνάντησης",
+            "lat": 37.9755,
+            "lng": 23.7348
+          },
           {
             "label": "Acropolis",
             "lat": 37.9715,
@@ -565,6 +566,11 @@
             "label": "Panathenaic Stadium",
             "lat": 37.9681,
             "lng": 23.741
+          },
+          {
+            "label": "Ακρόπολη",
+            "lat": 37.9715,
+            "lng": 23.7257
           }
         ]
       }

@@ -49,9 +49,9 @@
       "map": {
         "center": { "lat": null, "lng": null },
         "zoom": null,
-        "start": { "label": "", "lat": null, "lng": null },
-        "end": { "label": "", "lat": null, "lng": null },
-        "route": []
+        "label": "",
+        "travelMode": "DRIVING",
+        "waypoints": []
       }
     },
     "mercedes": {
@@ -90,9 +90,9 @@
       "map": {
         "center": { "lat": null, "lng": null },
         "zoom": null,
-        "start": { "label": "", "lat": null, "lng": null },
-        "end": { "label": "", "lat": null, "lng": null },
-        "route": []
+        "label": "",
+        "travelMode": "DRIVING",
+        "waypoints": []
       }
     },
     "bus": {
@@ -131,9 +131,9 @@
       "map": {
         "center": { "lat": null, "lng": null },
         "zoom": null,
-        "start": { "label": "", "lat": null, "lng": null },
-        "end": { "label": "", "lat": null, "lng": null },
-        "route": []
+        "label": "",
+        "travelMode": "DRIVING",
+        "waypoints": []
       }
     }
   },
