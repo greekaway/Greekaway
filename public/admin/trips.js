@@ -1,5 +1,6 @@
 (function(){
   const MODE_KEYS = ['van','mercedes','bus'];
+  const MAX_TRIP_MEDIA_BYTES = 10 * 1024 * 1024;
   const UNTITLED_MODE_TEXT = 'Χωρίς τίτλο';
 
   const els = {
@@ -159,6 +160,13 @@
         videosInput: root.querySelector('[data-field="videos"]'),
         videoUrl: root.querySelector('[data-field="video_url"]'),
         videoThumbnail: root.querySelector('[data-field="video_thumbnail"]'),
+        galleryTrigger: root.querySelector('[data-action="upload-mode-gallery"]'),
+        galleryUpload: root.querySelector('[data-field="galleryUpload"]'),
+        galleryStatus: root.querySelector('[data-field="galleryStatus"]'),
+        heroThumbnailTrigger: root.querySelector('[data-action="upload-mode-hero-thumb"]'),
+        heroThumbnailClear: root.querySelector('[data-action="clear-mode-hero-thumb"]'),
+        heroThumbnailUpload: root.querySelector('[data-field="heroThumbnailUpload"]'),
+        heroThumbnailStatus: root.querySelector('[data-field="heroThumbnailStatus"]'),
         sectionsList: root.querySelector('[data-field="sectionsList"]'),
         faqList: root.querySelector('[data-field="faqList"]'),
         stopsList: root.querySelector('[data-field="stopsList"]'),
@@ -166,6 +174,20 @@
       };
       if (forms[key].title) {
         forms[key].title.addEventListener('input', () => updateModeHeader(key));
+      }
+      if (forms[key].galleryTrigger && forms[key].galleryUpload) {
+        forms[key].galleryTrigger.addEventListener('click', (event) => handleModeGalleryTrigger(event, key));
+        forms[key].galleryUpload.addEventListener('change', () => handleModeGalleryFiles(key));
+      }
+      if (forms[key].heroThumbnailTrigger && forms[key].heroThumbnailUpload) {
+        forms[key].heroThumbnailTrigger.addEventListener('click', (event) => handleModeHeroThumbnailTrigger(event, key));
+        forms[key].heroThumbnailUpload.addEventListener('change', () => handleModeHeroThumbnailFiles(key));
+      }
+      if (forms[key].heroThumbnailClear) {
+        forms[key].heroThumbnailClear.addEventListener('click', (event) => {
+          event.preventDefault();
+          clearModeHeroThumbnail(key);
+        });
       }
     });
     MODE_KEYS.forEach((key) => updateModeHeader(key, forms));
@@ -209,6 +231,187 @@
   function arrayToLines(arr){
     if (!Array.isArray(arr) || !arr.length) return '';
     return arr.map((s)=>String(s||'').trim()).filter(Boolean).join('\n');
+  }
+
+  function normalizeMediaArray(value){
+    if (!Array.isArray(value)) value = linesToArray(value);
+    const seen = new Set();
+    return value
+      .map((entry) => String(entry || '').trim())
+      .filter((entry) => {
+        if (!entry || seen.has(entry)) return false;
+        seen.add(entry);
+        return true;
+      });
+  }
+
+  function dispatchInputEvent(node){
+    if (!node) return;
+    try {
+      node.dispatchEvent(new Event('input', { bubbles:true }));
+    } catch (_){
+      const legacyEvent = document.createEvent('Event');
+      legacyEvent.initEvent('input', true, true);
+      node.dispatchEvent(legacyEvent);
+    }
+  }
+
+  function mediaUploadSlug(){
+    const slugValue = (els.slug && els.slug.value) ? sanitizeSlug(els.slug.value) : '';
+    if (slugValue) return slugValue;
+    const titleValue = (els.title && els.title.value) ? generateSlugFromTitle(els.title.value) : '';
+    return titleValue || 'trip';
+  }
+
+  function validateGalleryFile(file){
+    if (!file) return 'no_file';
+    const type = String(file.type || '').toLowerCase();
+    const name = String(file.name || '').toLowerCase();
+    const isJpg = type === 'image/jpeg' || type === 'image/jpg' || /\.jpe?g$/i.test(name);
+    const isPng = type === 'image/png' || /\.png$/i.test(name);
+    if (!isJpg && !isPng) return 'type';
+    if (file.size > MAX_TRIP_MEDIA_BYTES) return 'size';
+    return '';
+  }
+
+  function galleryFileErrorMessage(code){
+    if (code === 'size') return 'Μέγιστο 10MB ανά εικόνα.';
+    if (code === 'type') return 'Επίλεξε JPG ή PNG.';
+    return 'Η επιλογή αρχείου απέτυχε.';
+  }
+
+  function setMediaStatus(el, message, state){
+    if (!el) return;
+    el.textContent = message || '';
+    if (state) el.dataset.state = state;
+    else delete el.dataset.state;
+  }
+
+  async function uploadTripMediaFiles(files){
+    const fd = new FormData();
+    fd.append('slug', mediaUploadSlug());
+    files.forEach((file) => fd.append('tripMediaFiles', file));
+    const res = await fetch('/api/upload-trip-media', { method: 'POST', body: fd, credentials: 'same-origin' });
+    let data = null;
+    try { data = await res.json(); } catch (_) { data = null; }
+    if (!res.ok || !data || !data.ok) {
+      const detail = data && (data.detail || data.error);
+      throw new Error(detail || 'Αποτυχία μεταφόρτωσης.');
+    }
+    return Array.isArray(data.files) ? data.files : [];
+  }
+
+  function appendModeGalleryUrls(modeKey, urls){
+    if (!modeKey || !Array.isArray(urls) || !urls.length) return;
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.galleryInput) return;
+    const current = linesToArray(cfg.galleryInput.value || '');
+    const merged = normalizeMediaArray([...current, ...urls]);
+    cfg.galleryInput.value = arrayToLines(merged);
+    dispatchInputEvent(cfg.galleryInput);
+  }
+
+  function setModeHeroThumbnailValue(modeKey, value){
+    if (!modeKey) return;
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.videoThumbnail) return;
+    cfg.videoThumbnail.value = value ? String(value).trim() : '';
+    dispatchInputEvent(cfg.videoThumbnail);
+  }
+
+  function setModeMediaStatus(modeKey, kind, message, state){
+    if (!modeKey) return;
+    const cfg = modeForms[modeKey];
+    if (!cfg) return;
+    const target = kind === 'hero' ? cfg.heroThumbnailStatus : cfg.galleryStatus;
+    setMediaStatus(target, message, state);
+  }
+
+  function setModeGalleryControlsDisabled(modeKey, disabled){
+    const cfg = modeForms[modeKey];
+    if (!cfg) return;
+    if (cfg.galleryTrigger) cfg.galleryTrigger.disabled = !!disabled;
+    if (cfg.galleryUpload) cfg.galleryUpload.disabled = !!disabled;
+  }
+
+  function setModeHeroThumbnailControlsDisabled(modeKey, disabled){
+    const cfg = modeForms[modeKey];
+    if (!cfg) return;
+    if (cfg.heroThumbnailTrigger) cfg.heroThumbnailTrigger.disabled = !!disabled;
+    if (cfg.heroThumbnailClear) cfg.heroThumbnailClear.disabled = !!disabled;
+    if (cfg.heroThumbnailUpload) cfg.heroThumbnailUpload.disabled = !!disabled;
+  }
+
+  function handleModeGalleryTrigger(event, modeKey){
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.galleryUpload || cfg.galleryUpload.disabled) return;
+    cfg.galleryUpload.click();
+  }
+
+  async function handleModeGalleryFiles(modeKey){
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.galleryUpload) return;
+    const files = Array.from(cfg.galleryUpload.files || []);
+    cfg.galleryUpload.value = '';
+    if (!files.length) return;
+    const invalid = files.map(validateGalleryFile).find(Boolean);
+    if (invalid) {
+      setModeMediaStatus(modeKey, 'gallery', galleryFileErrorMessage(invalid), 'error');
+      return;
+    }
+    setModeMediaStatus(modeKey, 'gallery', 'Μεταφόρτωση...', 'uploading');
+    setModeGalleryControlsDisabled(modeKey, true);
+    try {
+      const uploaded = await uploadTripMediaFiles(files);
+      const urls = uploaded.map((file) => file && file.url).filter(Boolean);
+      appendModeGalleryUrls(modeKey, urls);
+      setModeMediaStatus(modeKey, 'gallery', `Προστέθηκαν ${urls.length} εικόνες.`, 'success');
+    } catch (err) {
+      const message = err && err.message ? err.message : 'Αποτυχία μεταφόρτωσης.';
+      setModeMediaStatus(modeKey, 'gallery', message, 'error');
+    } finally {
+      setModeGalleryControlsDisabled(modeKey, false);
+    }
+  }
+
+  function handleModeHeroThumbnailTrigger(event, modeKey){
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.heroThumbnailUpload || cfg.heroThumbnailUpload.disabled) return;
+    cfg.heroThumbnailUpload.click();
+  }
+
+  async function handleModeHeroThumbnailFiles(modeKey){
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.heroThumbnailUpload) return;
+    const file = (cfg.heroThumbnailUpload.files || [])[0];
+    cfg.heroThumbnailUpload.value = '';
+    if (!file) return;
+    const validation = validateGalleryFile(file);
+    if (validation) {
+      setModeMediaStatus(modeKey, 'hero', galleryFileErrorMessage(validation), 'error');
+      return;
+    }
+    setModeMediaStatus(modeKey, 'hero', 'Μεταφόρτωση...', 'uploading');
+    setModeHeroThumbnailControlsDisabled(modeKey, true);
+    try {
+      const uploaded = await uploadTripMediaFiles([file]);
+      const first = uploaded && uploaded[0] && uploaded[0].url;
+      if (!first) throw new Error('Αποτυχία μεταφόρτωσης.');
+      setModeHeroThumbnailValue(modeKey, first);
+      setModeMediaStatus(modeKey, 'hero', 'Το thumbnail ανέβηκε.', 'success');
+    } catch (err) {
+      const message = err && err.message ? err.message : 'Αποτυχία μεταφόρτωσης.';
+      setModeMediaStatus(modeKey, 'hero', message, 'error');
+    } finally {
+      setModeHeroThumbnailControlsDisabled(modeKey, false);
+    }
+  }
+
+  function clearModeHeroThumbnail(modeKey){
+    setModeHeroThumbnailValue(modeKey, '');
+    setModeMediaStatus(modeKey, 'hero', 'Το thumbnail αφαιρέθηκε.', 'info');
   }
   function ensureTripDraft(){
     if (!currentTripDraft) currentTripDraft = templateClone();
@@ -340,6 +543,7 @@
       return;
     }
     rebuildStopsDraftFromDom(modeKey);
+    updateStopIndices(modeKey);
   }
   function bindStopItemEvents(modeKey, item){
     if (!item || item.dataset.stopBound === '1') return;
@@ -527,6 +731,9 @@
     item.className = 'repeatable-item stop-item';
     item.dataset.mode = modeKey;
     item.innerHTML = `
+      <div class="stop-item-head">
+        <span class="stop-index-label">Στάση</span>
+      </div>
       <label>Τίτλος στάσης
         <input type="text" class="stop-title" placeholder="Στάση">
       </label>
@@ -557,6 +764,16 @@
     return item;
   }
 
+  function updateStopIndices(modeKey){
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.stopsList) return;
+    const items = Array.from(cfg.stopsList.querySelectorAll('.stop-item'));
+    items.forEach((item, index) => {
+      const label = item.querySelector('.stop-index-label');
+      if (label) label.textContent = `Στάση ${index + 1}`;
+    });
+  }
+
   function addStopRow(modeKey, stop){
     const cfg = modeForms[modeKey];
     if (!cfg || !cfg.stopsList) return;
@@ -564,6 +781,7 @@
     cfg.stopsList.appendChild(el);
     bindStopItemEvents(modeKey, el);
     rebuildStopsDraftFromDom(modeKey);
+    updateStopIndices(modeKey);
     refreshImageUploader();
   }
 
@@ -578,6 +796,7 @@
       bindStopItemEvents(modeKey, el);
     });
     rebuildStopsDraftFromDom(modeKey);
+    updateStopIndices(modeKey);
     refreshImageUploader();
   }
 

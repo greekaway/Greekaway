@@ -9,7 +9,8 @@ const TRIP_TEMPLATE_FILE = path.join(TRIPS_DIR, "_template.json");
 const UPLOAD_TRIPS_DIR = path.join(ROOT_DIR, "public", "uploads", "trips");
 const MODE_KEYS = ["van", "mercedes", "bus"];
 const LEGACY_DURATION_FIELDS = ["duration", "duration_hours", "duration_days"];
-const MAX_TRIP_IMAGE_BYTES = 4 * 1024 * 1024;
+const MAX_TRIP_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_TRIP_VIDEO_BYTES = 10 * 1024 * 1024;
 const MAX_TRIP_IMAGE_COUNT = 12;
 const MODE_DEFAULT_META = {
   van: { capacity: 7, charge_type: "per_person" },
@@ -90,6 +91,10 @@ function loadTripTemplate() {
       iconPath: "",
       coverImage: "",
       featuredImage: "",
+      gallery: [],
+      videos: [],
+      heroVideoURL: "",
+      heroThumbnail: "",
       currency: "EUR",
       tags: [],
       modes: fallbackModes,
@@ -518,7 +523,7 @@ function migrateLegacyTrip(trip) {
   MODE_KEYS.forEach((key) => {
     trip.modes[key] = normalizeModeBlock(key, trip.modes[key]);
   });
-  const copyArrayField = (field, transform) => {
+  const copyArrayField = (field, transform, options = {}) => {
     const source = transform ? transform(trip[field]) : trip[field];
     const hasSource = Array.isArray(source)
       ? source.length > 0
@@ -532,15 +537,32 @@ function migrateLegacyTrip(trip) {
         : !!(target && Object.keys(target).length);
       if (!hasTarget) block[field] = cloneJson(source);
     });
-    delete trip[field];
+    if (!options.keepSource) delete trip[field];
   };
   copyArrayField("stops", normalizeStopsList);
   copyArrayField("sections", normalizeSectionsList);
   copyArrayField("includes", linesToArray);
   copyArrayField("excludes", linesToArray);
-  copyArrayField("gallery", normalizeMediaList);
-  copyArrayField("videos", normalizeMediaList);
+  copyArrayField("gallery", normalizeMediaList, { keepSource: true });
+  copyArrayField("videos", normalizeMediaList, { keepSource: true });
   copyArrayField("faq", normalizeFaqList);
+  trip.gallery = normalizeMediaList(trip.gallery);
+  trip.videos = normalizeMediaList(trip.videos);
+  const legacyHeroBlock = (trip.video && typeof trip.video === "object") ? trip.video : {};
+  const normalizedHeroUrl = String(
+    trip.heroVideoURL ||
+      trip.heroVideoUrl ||
+      (legacyHeroBlock && legacyHeroBlock.url) ||
+      ""
+  ).trim();
+  const normalizedHeroThumb = String(
+    trip.heroThumbnail ||
+      trip.heroVideoThumbnail ||
+      (legacyHeroBlock && legacyHeroBlock.thumbnail) ||
+      ""
+  ).trim();
+  trip.heroVideoURL = normalizedHeroUrl;
+  trip.heroThumbnail = normalizedHeroThumb;
   if (trip.description) {
     MODE_KEYS.forEach((key) => {
       const block = trip.modes[key];
@@ -622,10 +644,7 @@ function cleanupLegacyFields(trip) {
     "sections",
     "includes",
     "excludes",
-    "gallery",
-    "videos",
     "faq",
-    "video",
     "map",
     "description",
     "duration",
@@ -679,6 +698,27 @@ function isAllowedImageFile(file) {
   const sizeOk =
     typeof file.size === "number" ? file.size <= MAX_TRIP_IMAGE_BYTES : true;
   return typeOk && sizeOk;
+}
+
+function isAllowedTripGalleryFile(file) {
+  if (!file) return false;
+  const mime = String(file.mimetype || "").toLowerCase();
+  const name = String(file.originalname || "").toLowerCase();
+  const isJpg = mime === "image/jpeg" || mime === "image/jpg" || /\.jpe?g$/i.test(name);
+  const isPng = mime === "image/png" || /\.png$/i.test(name);
+  const sizeOk =
+    typeof file.size === "number" ? file.size <= MAX_TRIP_IMAGE_BYTES : true;
+  return sizeOk && (isJpg || isPng);
+}
+
+function isAllowedTripVideoFile(file) {
+  if (!file) return false;
+  const mime = String(file.mimetype || "").toLowerCase();
+  const name = String(file.originalname || "").toLowerCase();
+  const isMp4 = mime === "video/mp4" || /\.mp4$/i.test(name);
+  const sizeOk =
+    typeof file.size === "number" ? file.size <= MAX_TRIP_VIDEO_BYTES : true;
+  return sizeOk && isMp4;
 }
 
 function sanitizeSlug(raw) {
@@ -804,6 +844,22 @@ function validateTrip(input) {
   const hasActiveField =
     input && Object.prototype.hasOwnProperty.call(input, "active");
   let normalizedActive;
+  const gallery = normalizeMediaList(input.gallery);
+  const videos = normalizeMediaList(input.videos);
+  const heroVideoURL = String(
+    input.heroVideoURL ||
+      input.heroVideoUrl ||
+      (input.heroVideo && input.heroVideo.url) ||
+      (input.video && input.video.url) ||
+      ""
+  ).trim();
+  const heroThumbnail = String(
+    input.heroThumbnail ||
+      input.heroVideoThumbnail ||
+      (input.heroVideo && input.heroVideo.thumbnail) ||
+      (input.video && input.video.thumbnail) ||
+      ""
+  ).trim();
   if (typeof input.active === "boolean") {
     normalizedActive = input.active;
   } else if (hasActiveField) {
@@ -859,6 +915,10 @@ function validateTrip(input) {
       featuredImage,
       iconPath,
       currency,
+      gallery,
+      videos,
+      heroVideoURL,
+      heroThumbnail,
       defaultMode,
       modes: modesPayload,
       mode_set,
@@ -895,11 +955,11 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
         }),
         fileFilter: (req, file, cb) => {
           const name = String(file.originalname || "");
-          const ok = /(jpg|jpeg|png|webp|svg)$/i.test(name);
+          const ok = /(jpg|jpeg|png|webp|svg|mp4)$/i.test(name);
           if (!ok) return cb(new Error("invalid_file_type"));
           cb(null, true);
         },
-        limits: { fileSize: MAX_TRIP_IMAGE_BYTES },
+        limits: { fileSize: Math.max(MAX_TRIP_IMAGE_BYTES, MAX_TRIP_VIDEO_BYTES) },
       })
     : null;
 
@@ -1047,7 +1107,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
           removeUploadedFiles(files);
           return res.status(400).json({
             error: "invalid_file_type",
-            detail: "Μόνο εικόνες έως 4MB (JPG, PNG, WEBP, SVG).",
+            detail: "Μόνο εικόνες έως 10MB (JPG, PNG, WEBP, SVG).",
           });
         }
         return res.json({
@@ -1097,6 +1157,64 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
           ok: true,
           filename,
           url: `/uploads/trips/${filename}`,
+        });
+      });
+    });
+    const tripMediaUpload = upload.array("tripMediaFiles", MAX_TRIP_IMAGE_COUNT);
+    app.post("/api/upload-trip-media", (req, res) => {
+      if (!checkAdminAuth || !checkAdminAuth(req))
+        return res.status(403).json({ error: "Forbidden" });
+      tripMediaUpload(req, res, (err) => {
+        if (err)
+          return res.status(err.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
+            error: "upload_failed",
+            detail: err && err.message ? err.message : "upload_failed",
+          });
+        const files = Array.isArray(req.files) ? req.files : [];
+        if (!files.length) return res.status(400).json({ error: "no_files" });
+        const invalid = files.find((file) => !isAllowedTripGalleryFile(file));
+        if (invalid) {
+          removeUploadedFiles(files);
+          return res.status(400).json({
+            error: "invalid_file_type",
+            detail: "Μόνο εικόνες JPG/PNG έως 10MB.",
+          });
+        }
+        return res.json({
+          ok: true,
+          files: files.map((file) => ({
+            filename: file.filename,
+            url: `/uploads/trips/${file.filename}`,
+            size: file.size || 0,
+          })),
+        });
+      });
+    });
+    app.post("/api/upload-trip-video", (req, res) => {
+      if (!checkAdminAuth || !checkAdminAuth(req))
+        return res.status(403).json({ error: "Forbidden" });
+      upload.single("tripVideoFile")(req, res, (err) => {
+        if (err)
+          return res.status(err.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
+            error: "upload_failed",
+            detail: err && err.message ? err.message : "upload_failed",
+          });
+        const file = req.file;
+        if (!file) return res.status(400).json({ error: "no_file" });
+        if (!isAllowedTripVideoFile(file)) {
+          removeUploadedFiles(file);
+          return res.status(400).json({
+            error: "invalid_file_type",
+            detail: "Μόνο βίντεο .mp4 έως 10MB.",
+          });
+        }
+        return res.json({
+          ok: true,
+          file: {
+            filename: file.filename,
+            url: `/uploads/trips/${file.filename}`,
+            size: file.size || 0,
+          },
         });
       });
     });

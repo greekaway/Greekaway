@@ -55,7 +55,6 @@
             <img id="featuredImagePreview" alt="Προεπισκόπηση κεντρικής φωτογραφίας" hidden>
           </div>
         </div>
-
         <section aria-labelledby="modesTitle" class="modes-section">
           <h3 id="modesTitle" class="h1" style="margin-top:8px">Modes – Περιεχόμενο ανά όχημα</h3>
           <p class="hint" style="margin-bottom:12px">Κάθε mode έχει δικό του κείμενο, στάσεις, media και χάρτη. Συμπληρώστε τα πεδία για κάθε εμπειρία ξεχωριστά.</p>
@@ -117,9 +116,20 @@
                   <label>Gallery εικόνες<textarea rows="3" data-field="gallery" placeholder="/uploads/trips/van-1.jpg"></textarea></label>
                   <label>Videos (λίστα URL)<textarea rows="3" data-field="videos" placeholder="https://youtu.be/...\nhttps://cdn..."></textarea></label>
                 </div>
+                <div class="mode-media-tools" data-field="galleryTools">
+                  <button type="button" class="btn secondary small" data-action="upload-mode-gallery" data-mode="van">Επιλογή αρχείων</button>
+                  <input type="file" data-field="galleryUpload" data-mode="van" accept=".jpg,.jpeg,.png" multiple hidden>
+                  <div class="mode-media-status" data-field="galleryStatus" aria-live="polite"></div>
+                </div>
                 <div class="form-group stack-on-mobile">
                   <label>Hero Video URL<input type="text" data-field="video_url" placeholder="https://www.youtube.com/embed/..."></label>
                   <label>Hero Thumbnail<input type="text" data-field="video_thumbnail" placeholder="/uploads/trips/video-thumb.jpg"></label>
+                </div>
+                <div class="mode-media-tools" data-field="heroThumbnailTools">
+                  <button type="button" class="btn secondary small" data-action="upload-mode-hero-thumb" data-mode="van">Μεταφόρτωση thumbnail</button>
+                  <button type="button" class="btn danger small" data-action="clear-mode-hero-thumb" data-mode="van">Καθαρισμός</button>
+                  <input type="file" data-field="heroThumbnailUpload" data-mode="van" accept=".jpg,.jpeg,.png" hidden>
+                  <div class="mode-media-status" data-field="heroThumbnailStatus" aria-live="polite"></div>
                 </div>
               </section>
               <section class="panel form-panel">
@@ -188,9 +198,20 @@
                   <label>Gallery<textarea rows="3" data-field="gallery"></textarea></label>
                   <label>Videos<textarea rows="3" data-field="videos"></textarea></label>
                 </div>
+                <div class="mode-media-tools" data-field="galleryTools">
+                  <button type="button" class="btn secondary small" data-action="upload-mode-gallery" data-mode="mercedes">Επιλογή αρχείων</button>
+                  <input type="file" data-field="galleryUpload" data-mode="mercedes" accept=".jpg,.jpeg,.png" multiple hidden>
+                  <div class="mode-media-status" data-field="galleryStatus" aria-live="polite"></div>
+                </div>
                 <div class="form-group stack-on-mobile">
                   <label>Hero Video URL<input type="text" data-field="video_url"></label>
                   <label>Hero Thumbnail<input type="text" data-field="video_thumbnail"></label>
+                </div>
+                <div class="mode-media-tools" data-field="heroThumbnailTools">
+                  <button type="button" class="btn secondary small" data-action="upload-mode-hero-thumb" data-mode="mercedes">Μεταφόρτωση thumbnail</button>
+                  <button type="button" class="btn danger small" data-action="clear-mode-hero-thumb" data-mode="mercedes">Καθαρισμός</button>
+                  <input type="file" data-field="heroThumbnailUpload" data-mode="mercedes" accept=".jpg,.jpeg,.png" hidden>
+                  <div class="mode-media-status" data-field="heroThumbnailStatus" aria-live="polite"></div>
                 </div>
               </section>
               <section class="panel form-panel">
@@ -257,9 +278,20 @@
                   <label>Gallery<textarea rows="3" data-field="gallery"></textarea></label>
                   <label>Videos<textarea rows="3" data-field="videos"></textarea></label>
                 </div>
+                <div class="mode-media-tools" data-field="galleryTools">
+                  <button type="button" class="btn secondary small" data-action="upload-mode-gallery" data-mode="bus">Επιλογή αρχείων</button>
+                  <input type="file" data-field="galleryUpload" data-mode="bus" accept=".jpg,.jpeg,.png" multiple hidden>
+                  <div class="mode-media-status" data-field="galleryStatus" aria-live="polite"></div>
+                </div>
                 <div class="form-group stack-on-mobile">
                   <label>Hero Video URL<input type="text" data-field="video_url"></label>
                   <label>Hero Thumbnail<input type="text" data-field="video_thumbnail"></label>
+                </div>
+                <div class="mode-media-tools" data-field="heroThumbnailTools">
+                  <button type="button" class="btn secondary small" data-action="upload-mode-hero-thumb" data-mode="bus">Μεταφόρτωση thumbnail</button>
+                  <button type="button" class="btn danger small" data-action="clear-mode-hero-thumb" data-mode="bus">Καθαρισμός</button>
+                  <input type="file" data-field="heroThumbnailUpload" data-mode="bus" accept=".jpg,.jpeg,.png" hidden>
+                  <div class="mode-media-status" data-field="heroThumbnailStatus" aria-live="polite"></div>
                 </div>
               </section>
               <section class="panel form-panel">

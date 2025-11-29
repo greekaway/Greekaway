@@ -99,7 +99,6 @@
     if (trip.category) document.body.dataset.category = trip.category;
     renderDescription(trip, modeInfo);
     renderRouteSection(trip, modeInfo);
-    renderPhotosSection();
     renderChecklist('trip-includes-list', 'trip-section-includes', collectList(state.modeData && state.modeData.includes));
     renderChecklist('trip-excludes-list', 'trip-section-excludes', collectList(state.modeData && state.modeData.excludes));
     renderFaq(trip, modeInfo);
@@ -117,6 +116,38 @@
     return '';
   }
 
+  function resolveHeroVideoMeta(trip, mode) {
+    const modeGalleryFallback = dedupeStrings(collectList(mode && mode.gallery));
+    const tripGalleryFallback = dedupeStrings(collectList(trip && trip.gallery));
+    const tripVideoObj = (trip && (trip.heroVideo || trip.video)) || {};
+    const modeVideoObj = (mode && (mode.heroVideo || mode.video)) || {};
+    const modeHeroRaw = mode && mode.heroVideo;
+    const tripHeroRaw = trip && trip.heroVideo;
+    const url = pickFirstString([
+      mode && mode.heroVideoURL,
+      mode && mode.heroVideoUrl,
+      typeof modeHeroRaw === 'string' ? modeHeroRaw : '',
+      modeVideoObj && modeVideoObj.url,
+      trip && trip.heroVideoURL,
+      trip && trip.heroVideoUrl,
+      typeof tripHeroRaw === 'string' ? tripHeroRaw : '',
+      tripVideoObj && tripVideoObj.url
+    ]);
+    const thumbnail = pickFirstString([
+      mode && mode.heroThumbnail,
+      mode && mode.heroVideoThumbnail,
+      modeVideoObj && modeVideoObj.thumbnail,
+      modeGalleryFallback[0],
+      trip && trip.heroThumbnail,
+      trip && trip.heroVideoThumbnail,
+      tripVideoObj && tripVideoObj.thumbnail,
+      trip && trip.featuredImage,
+      tripGalleryFallback[0],
+      selectHeroImage(trip, mode)
+    ]);
+    return { url, thumbnail };
+  }
+
   function renderDescription(trip, modeInfo) {
     const mode = modeInfo.data || {};
     const title = mode.title || trip.title || 'Εκδρομή';
@@ -132,6 +163,9 @@
     setText('trip-description-capacity', formatCapacity(mode));
     setText('trip-description-price', formatPrice(mode, trip.currency));
     setParagraphs('trip-description-text', description);
+    renderHeroVideoBlock(trip, mode);
+    renderTripGallery(trip, mode);
+    renderTripVideosBlock(trip, mode);
     const img = document.getElementById('trip-featured-image');
     const featuredFigure = img ? img.closest('.trip-featured-wrapper') : null;
     if (img && featured) {
@@ -147,6 +181,166 @@
     document.title = `${title} – Greekaway`;
   }
 
+  function renderHeroVideoBlock(trip, mode) {
+    const container = document.getElementById('trip-hero-video');
+    const previewBtn = container && container.querySelector('[data-trip-hero-preview]');
+    const embedHost = container && container.querySelector('[data-trip-hero-embed]');
+    const thumbImg = document.getElementById('trip-hero-video-thumb');
+    if (!container || !previewBtn || !embedHost || !thumbImg) return;
+    const meta = resolveHeroVideoMeta(trip, mode);
+    const hasVideo = Boolean(meta.url);
+    container.dataset.videoUrl = hasVideo ? meta.url : '';
+    embedHost.innerHTML = '';
+    embedHost.setAttribute('hidden', '');
+    container.classList.remove('is-playing');
+    if (!hasVideo) {
+      container.setAttribute('hidden', '');
+      previewBtn.disabled = true;
+      previewBtn.hidden = false;
+      previewBtn.removeAttribute('aria-hidden');
+      thumbImg.removeAttribute('src');
+      return;
+    }
+    container.removeAttribute('hidden');
+    previewBtn.disabled = false;
+    previewBtn.hidden = false;
+    previewBtn.removeAttribute('aria-hidden');
+    previewBtn.setAttribute('aria-label', trip && trip.title ? `Αναπαραγωγή βίντεο για ${trip.title}` : 'Αναπαραγωγή βίντεο εκδρομής');
+    thumbImg.alt = trip && trip.title ? `Προεπισκόπηση βίντεο – ${trip.title}` : 'Προεπισκόπηση βίντεο εκδρομής';
+    if (meta.thumbnail) {
+      thumbImg.src = meta.thumbnail;
+    } else {
+      thumbImg.removeAttribute('src');
+    }
+    if (!previewBtn.dataset.heroVideoBound) {
+      previewBtn.addEventListener('click', () => activateHeroVideo(container));
+      previewBtn.dataset.heroVideoBound = '1';
+    }
+  }
+
+  function activateHeroVideo(container) {
+    if (!container) return;
+    const url = container.dataset.videoUrl || '';
+    const embedHost = container.querySelector('[data-trip-hero-embed]');
+    const previewBtn = container.querySelector('[data-trip-hero-preview]');
+    if (!url || !embedHost) return;
+    const embedNode = createVideoEmbed(url);
+    if (!embedNode) return;
+    embedHost.innerHTML = '';
+    embedHost.appendChild(embedNode);
+    embedHost.removeAttribute('hidden');
+    container.classList.add('is-playing');
+    if (previewBtn) {
+      previewBtn.hidden = true;
+      previewBtn.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function renderTripGallery(trip, mode) {
+    const container = document.getElementById('trip-description-gallery');
+    const track = container && container.querySelector('.trip-gallery-track');
+    if (!container || !track) return;
+    const modeGallery = dedupeStrings(collectList(mode && mode.gallery));
+    const tripGallery = dedupeStrings(collectList(trip && trip.gallery));
+    const gallery = modeGallery.length ? modeGallery : tripGallery;
+    track.innerHTML = '';
+    if (!gallery.length) {
+      container.setAttribute('hidden', '');
+      return;
+    }
+    gallery.forEach((src, index) => {
+      if (!src) return;
+      const figure = document.createElement('figure');
+      figure.className = 'trip-gallery-card';
+      const img = document.createElement('img');
+      img.src = src;
+      img.loading = 'lazy';
+      img.alt = trip && trip.title ? `${trip.title} – Gallery ${index + 1}` : 'Φωτογραφία εκδρομής';
+      figure.appendChild(img);
+      track.appendChild(figure);
+    });
+    container.removeAttribute('hidden');
+    track.scrollLeft = 0;
+    bindCarouselControls(container, track);
+  }
+
+  function renderTripVideosBlock(trip, mode) {
+    const container = document.getElementById('trip-description-videos');
+    const track = container && container.querySelector('.trip-videos-track');
+    if (!container || !track) return;
+    const modeVideos = dedupeStrings(collectList(mode && mode.videos));
+    const tripVideos = dedupeStrings(collectList(trip && trip.videos));
+    const videos = modeVideos.length ? modeVideos : tripVideos;
+    track.innerHTML = '';
+    if (!videos.length) {
+      container.setAttribute('hidden', '');
+      return;
+    }
+    videos.forEach((src, index) => {
+      if (!src) return;
+      const embed = createVideoEmbed(src);
+      if (!embed) return;
+      embed.title = trip && trip.title ? `${trip.title} – Video ${index + 1}` : `Trip video ${index + 1}`;
+      const card = document.createElement('article');
+      card.className = 'trip-video-card';
+      card.appendChild(embed);
+      track.appendChild(card);
+    });
+    if (!track.childElementCount) {
+      container.setAttribute('hidden', '');
+      return;
+    }
+    container.removeAttribute('hidden');
+    track.scrollLeft = 0;
+    bindCarouselControls(container, track);
+  }
+
+  function bindCarouselControls(container, track) {
+    if (!container || !track) return;
+    const controls = container.querySelector('.trip-carousel-controls');
+    const prev = controls && controls.querySelector('[data-carousel-prev]');
+    const next = controls && controls.querySelector('[data-carousel-next]');
+    if (!controls || !prev || !next) return;
+    const hasMultiple = track.childElementCount > 1;
+    controls.hidden = !hasMultiple;
+    if (!hasMultiple) {
+      prev.onclick = null;
+      next.onclick = null;
+      prev.disabled = true;
+      next.disabled = true;
+      track.onscroll = null;
+      track.scrollLeft = 0;
+      return;
+    }
+    const isRouteSection = Boolean(container.closest('.trip-route'));
+    const desktopPrefersControls = Boolean(isRouteSection && typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(min-width: 1024px)').matches);
+    controls.classList.toggle('trip-carousel-controls--force', desktopPrefersControls);
+    const scrollAmount = () => Math.max(track.clientWidth * 0.9, 240);
+    const updateButtons = () => {
+      const maxScroll = Math.max(0, Math.ceil(track.scrollWidth - track.clientWidth));
+      const canScroll = maxScroll > 0;
+      controls.hidden = !canScroll && !desktopPrefersControls;
+      if (!canScroll) {
+        prev.disabled = true;
+        next.disabled = true;
+        return;
+      }
+      prev.disabled = track.scrollLeft <= 2;
+      next.disabled = track.scrollLeft >= (maxScroll - 2);
+    };
+    prev.onclick = (event) => {
+      event.preventDefault();
+      track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
+    };
+    next.onclick = (event) => {
+      event.preventDefault();
+      track.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
+    };
+    track.onscroll = updateButtons;
+    updateButtons();
+    requestAnimationFrame(updateButtons);
+  }
+
   function renderRouteSection(trip, modeInfo) {
     const section = document.getElementById('trip-section-route');
     const target = document.getElementById('trip-stops-list');
@@ -154,48 +348,33 @@
     if (!section || !target) return;
     target.innerHTML = '';
     const stops = state.stops || [];
-    stops.forEach((stop) => {
+    stops.forEach((stop, index) => {
       const card = document.createElement('article');
       card.className = 'stop-card';
+
+      const head = document.createElement('div');
+      head.className = 'stop-card-head';
+      const indexLabel = document.createElement('span');
+      indexLabel.className = 'stop-card-index';
+      indexLabel.textContent = `Στάση ${index + 1}`;
+      head.appendChild(indexLabel);
       if (stop.title) {
-        const h3 = document.createElement('h3');
-        h3.textContent = stop.title;
-        card.appendChild(h3);
+        const title = document.createElement('h3');
+        title.className = 'stop-card-title';
+        title.textContent = stop.title;
+        head.appendChild(title);
       }
-      if (stop.description) {
-        const p = document.createElement('p');
-        p.textContent = stop.description;
-        card.appendChild(p);
-      }
-      if (isFiniteNumber(stop.lat) && isFiniteNumber(stop.lng)) {
-        const coords = document.createElement('p');
-        coords.className = 'stop-coords';
-        coords.textContent = `${Number(stop.lat).toFixed(4)}, ${Number(stop.lng).toFixed(4)}`;
-        card.appendChild(coords);
-      }
-      if (stop.photos.length) {
-        const gallery = document.createElement('div');
-        gallery.className = 'stop-gallery';
-        stop.photos.slice(0, 6).forEach((src) => {
-          const img = document.createElement('img');
-          img.src = src;
-          img.alt = stop.title ? `Στάση ${stop.title}` : 'Στάση εκδρομής';
-          img.loading = 'lazy';
-          gallery.appendChild(img);
-        });
-        card.appendChild(gallery);
-      }
-      const firstVideo = stop.videos[0];
-      if (firstVideo) {
-        const videoWrap = document.createElement('div');
-        videoWrap.className = 'stop-video';
-        const iframe = document.createElement('iframe');
-        iframe.src = toEmbedUrl(firstVideo);
-        iframe.loading = 'lazy';
-        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-        videoWrap.appendChild(iframe);
-        card.appendChild(videoWrap);
-      }
+      card.appendChild(head);
+
+      const galleryNode = buildStopGallery(stop, index);
+      if (galleryNode) card.appendChild(galleryNode);
+
+      const videosNode = buildStopVideos(stop, index);
+      if (videosNode) card.appendChild(videosNode);
+
+      const descriptionNode = createStopDescription(stop.description);
+      if (descriptionNode) card.appendChild(descriptionNode);
+
       target.appendChild(card);
     });
     const hasStops = stops.length > 0;
@@ -211,46 +390,105 @@
     }
   }
 
+  function createStopDescription(text) {
+    const value = typeof text === 'string' ? text.trim() : '';
+    if (!value) return null;
+    const container = document.createElement('div');
+    container.className = 'stop-card-description';
+    value.split(/\n{2,}/).map((part) => part.trim()).filter(Boolean).forEach((part) => {
+      const paragraph = document.createElement('p');
+      paragraph.textContent = part;
+      container.appendChild(paragraph);
+    });
+    return container;
+  }
+
+  function buildStopGallery(stop, stopIndex) {
+    const photos = Array.isArray(stop.photos) ? stop.photos.filter(Boolean) : [];
+    if (!photos.length) return null;
+    const container = document.createElement('div');
+    container.className = 'stop-media trip-gallery';
+    container.appendChild(createMediaHead('Gallery',
+      `Προηγούμενη φωτογραφία για στάση ${stopIndex + 1}`,
+      `Επόμενη φωτογραφία για στάση ${stopIndex + 1}`));
+    const track = document.createElement('div');
+    track.className = 'trip-gallery-track';
+    track.setAttribute('role', 'list');
+    photos.forEach((src, idx) => {
+      if (!src) return;
+      const figure = document.createElement('figure');
+      figure.className = 'trip-gallery-card';
+      const img = document.createElement('img');
+      img.src = src;
+      img.loading = 'lazy';
+      img.alt = stop.title ? `${stop.title} – Gallery ${idx + 1}` : `Φωτογραφία στάσης ${idx + 1}`;
+      figure.appendChild(img);
+      track.appendChild(figure);
+    });
+    if (!track.childElementCount) return null;
+    container.appendChild(track);
+    bindCarouselControls(container, track);
+    return container;
+  }
+
+  function buildStopVideos(stop, stopIndex) {
+    const videos = Array.isArray(stop.videos) ? stop.videos.filter(Boolean) : [];
+    if (!videos.length) return null;
+    const container = document.createElement('div');
+    container.className = 'stop-media trip-videos';
+    container.appendChild(createMediaHead('Βίντεο',
+      `Προηγούμενο βίντεο για στάση ${stopIndex + 1}`,
+      `Επόμενο βίντεο για στάση ${stopIndex + 1}`));
+    const track = document.createElement('div');
+    track.className = 'trip-videos-track';
+    track.setAttribute('role', 'list');
+    videos.forEach((src, idx) => {
+      const embed = createVideoEmbed(src);
+      if (!embed) return;
+      embed.title = stop.title ? `${stop.title} – Video ${idx + 1}` : `Video ${idx + 1}`;
+      const card = document.createElement('article');
+      card.className = 'trip-video-card';
+      card.appendChild(embed);
+      track.appendChild(card);
+    });
+    if (!track.childElementCount) return null;
+    container.appendChild(track);
+    bindCarouselControls(container, track);
+    return container;
+  }
+
+  function createMediaHead(labelText, prevLabel, nextLabel) {
+    const head = document.createElement('div');
+    head.className = 'trip-media-head';
+    const title = document.createElement('div');
+    title.className = 'trip-media-title';
+    title.textContent = labelText;
+    head.appendChild(title);
+    const controls = document.createElement('div');
+    controls.className = 'trip-carousel-controls';
+    const prev = document.createElement('button');
+    prev.type = 'button';
+    prev.className = 'trip-carousel-btn';
+    prev.setAttribute('data-carousel-prev', '');
+    prev.setAttribute('aria-label', prevLabel || 'Προηγούμενο');
+    prev.innerHTML = '<i class="fa-solid fa-chevron-left" aria-hidden="true"></i>';
+    const next = document.createElement('button');
+    next.type = 'button';
+    next.className = 'trip-carousel-btn';
+    next.setAttribute('data-carousel-next', '');
+    next.setAttribute('aria-label', nextLabel || 'Επόμενο');
+    next.innerHTML = '<i class="fa-solid fa-chevron-right" aria-hidden="true"></i>';
+    controls.appendChild(prev);
+    controls.appendChild(next);
+    head.appendChild(controls);
+    return head;
+  }
+
   function resetRouteMapShell() {
     const mapContainer = document.getElementById('route-map');
     state.mapInstance = null;
     state.mapOverlays = [];
     if (mapContainer) mapContainer.innerHTML = '';
-  }
-
-  function renderPhotosSection() {
-    const section = document.getElementById('trip-section-photos');
-    const grid = document.getElementById('trip-photos-grid');
-    if (!section || !grid) return;
-    grid.innerHTML = '';
-    const photos = collectStopPhotos(state.stops || []);
-    if (!photos.length) {
-      section.hidden = true;
-      return;
-    }
-    photos.forEach((entry) => {
-      const figure = document.createElement('figure');
-      figure.className = 'trip-photo-card';
-      const img = document.createElement('img');
-      img.src = entry.src;
-      img.loading = 'lazy';
-      img.alt = entry.title ? `Στάση ${entry.title}` : 'Φωτογραφία στάσης';
-      figure.appendChild(img);
-      const caption = document.createElement('figcaption');
-      if (entry.title) {
-        const strong = document.createElement('strong');
-        strong.textContent = entry.title;
-        caption.appendChild(strong);
-      }
-      if (entry.description) {
-        const small = document.createElement('small');
-        small.textContent = entry.description;
-        caption.appendChild(small);
-      }
-      figure.appendChild(caption);
-      grid.appendChild(figure);
-    });
-    section.hidden = false;
   }
 
   function renderChecklist(listId, sectionId, entries) {
@@ -845,7 +1083,18 @@
   }
 
   function collectList(source) {
-    return Array.isArray(source) ? source.filter(Boolean) : [];
+    if (Array.isArray(source)) {
+      return source
+        .map((entry) => typeof entry === 'string' ? entry.trim() : String(entry || '').trim())
+        .filter(Boolean);
+    }
+    if (typeof source === 'string') {
+      return source
+        .split(/\r?\n|,/g)
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+    }
+    return [];
   }
 
   function selectHeroImage(trip, mode) {
@@ -866,9 +1115,19 @@
       const key = String(item).trim();
       if (!key || seen.has(key)) return;
       seen.add(key);
-      result.push(item);
+      result.push(key);
     });
     return result;
+  }
+
+  function pickFirstString(list) {
+    if (!Array.isArray(list)) return '';
+    for (const entry of list) {
+      if (typeof entry !== 'string') continue;
+      const trimmed = entry.trim();
+      if (trimmed) return trimmed;
+    }
+    return '';
   }
 
   function toEmbedUrl(url) {
@@ -887,6 +1146,36 @@
       return parsed.toString();
     } catch (_) {
       return url;
+    }
+  }
+
+  function createVideoEmbed(url) {
+    if (!url) return null;
+    if (isMp4Url(url)) {
+      const video = document.createElement('video');
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = 'metadata';
+      video.src = url;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      return video;
+    }
+    const iframe = document.createElement('iframe');
+    iframe.src = toEmbedUrl(url);
+    iframe.loading = 'lazy';
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    iframe.allowFullscreen = true;
+    return iframe;
+  }
+
+  function isMp4Url(url) {
+    if (!url) return false;
+    try {
+      const parsed = new URL(url, window.location.origin);
+      return /\.mp4$/i.test(parsed.pathname || '');
+    } catch (_) {
+      return /\.mp4(\?|#|$)/i.test(String(url));
     }
   }
 
@@ -994,7 +1283,7 @@
   function collectStops(trip, modeInfo) {
     const tripStops = Array.isArray(trip.stops) ? trip.stops : [];
     const modeStops = Array.isArray(modeInfo.data && modeInfo.data.stops) ? modeInfo.data.stops : [];
-    const source = tripStops.length ? tripStops : modeStops;
+    const source = modeStops.length ? modeStops : tripStops;
     return source
       .map((stop) => {
         if (!stop || typeof stop !== 'object') return null;
@@ -1033,17 +1322,6 @@
       }
     }
     return { lat: null, lng: null };
-  }
-
-  function collectStopPhotos(stops) {
-    const photos = [];
-    stops.forEach((stop) => {
-      const gallery = Array.isArray(stop.photos) ? stop.photos : [];
-      gallery.forEach((src) => {
-        photos.push({ src, title: stop.title, description: stop.description });
-      });
-    });
-    return photos;
   }
 
   function setParagraphs(id, value) {

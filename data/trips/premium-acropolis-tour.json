@@ -9,7 +9,11 @@
   "defaultMode": "van",
   "iconPath": "/uploads/trips/file-1763749014535.svg",
   "coverImage": "",
-  "featuredImage": "/uploads/trips/file-1764331168282.webp",
+  "featuredImage": "/uploads/trips/file-1764362106088.jpg",
+  "gallery": [],
+  "videos": [],
+  "heroVideoURL": "",
+  "heroThumbnail": "",
   "currency": "EUR",
   "tags": [
     "acropolis",
@@ -61,18 +65,32 @@
         }
       ],
       "gallery": [
-        "/uploads/trips/acropolis-van-1.jpg",
-        "/uploads/trips/acropolis-van-2.jpg",
-        "/uploads/trips/acropolis-van-3.jpg"
+        "/uploads/trips/premium-acropolis-tour-1764366928995.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764366928997.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764366928999.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764366929000.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764366929001.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764366929002.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764366929003.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764366929004.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764366929005.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764366929006.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764366929007.jpg"
       ],
       "video": {
-        "url": "https://www.youtube.com/embed/xxxxxxx",
-        "thumbnail": "/uploads/trips/video-thumb.jpg"
+        "url": "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+        "thumbnail": "/uploads/trips/premium-acropolis-tour-1764368713100.jpg"
       },
       "videos": [
-        "https://www.youtube.com/watch?v=xxxxxxx",
-        "https://www.youtube.com/watch?v=yyyyyyy",
-        "https://www.youtube.com/watch?v=zzzzzzz"
+        "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+        "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+        "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+        "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+        "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+        "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+        "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+        "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+        "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
       ],
       "stops": [
         {
@@ -93,7 +111,15 @@
             "/uploads/trips/file-1763717268144.jpg"
           ],
           "videos": [
-            "https://www.youtube.com/watch?v=xxxxxxx"
+            "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+            "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+            "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+            "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+            "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+            "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+            "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+            "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+            "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
           ]
         },
         {
@@ -114,7 +140,15 @@
             "/uploads/trips/file-1763717292293.jpg"
           ],
           "videos": [
-            "https://www.youtube.com/watch?v=xxxxxxx"
+            "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+            "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+            "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+            "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+            "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+            "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+            "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+            "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+            "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
           ]
         },
         {
@@ -135,7 +169,15 @@
             "/uploads/trips/file-1763717317868.jpg"
           ],
           "videos": [
-            "https://www.youtube.com/watch?v=xxxxxxx"
+            "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+            "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+            "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+            "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+            "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+            "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+            "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+            "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+            "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
           ]
         },
         {
@@ -156,7 +198,15 @@
             "/uploads/trips/file-1763717337192.jpg"
           ],
           "videos": [
-            "https://www.youtube.com/watch?v=xxxxxxx"
+            "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+            "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+            "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+            "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+            "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+            "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+            "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+            "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+            "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
           ]
         }
       ],
@@ -265,17 +315,30 @@
         }
       ],
       "gallery": [
-        "/uploads/trips/acropolis-mercedes-1.jpg",
-        "/uploads/trips/acropolis-mercedes-2.jpg",
-        "/uploads/trips/acropolis-mercedes-3.jpg"
+        "/uploads/trips/premium-acropolis-tour-1764367186862.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367186863.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367186864.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367186866.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367186867.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367186868.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367186869.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367186870.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367186871.jpg"
       ],
       "video": {
-        "url": "https://www.youtube.com/embed/xxxxxxx",
-        "thumbnail": "/uploads/trips/mercedes-video-thumb.jpg"
+        "url": "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+        "thumbnail": "/uploads/trips/premium-acropolis-tour-1764368697634.jpg"
       },
       "videos": [
-        "https://www.youtube.com/watch?v=xxxxxxx",
-        "https://www.youtube.com/watch?v=yyyyyyy"
+        "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+        "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+        "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+        "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+        "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+        "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+        "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+        "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+        "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
       ],
       "stops": [
         {
@@ -296,7 +359,15 @@
             "/uploads/trips/file-1763717374671.jpg"
           ],
           "videos": [
-            "https://www.youtube.com/watch?v=xxxxxxx"
+            "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+            "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+            "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+            "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+            "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+            "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+            "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+            "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+            "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
           ]
         },
         {
@@ -317,7 +388,15 @@
             "/uploads/trips/file-1763717392651.jpg"
           ],
           "videos": [
-            "https://www.youtube.com/watch?v=xxxxxxx"
+            "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+            "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+            "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+            "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+            "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+            "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+            "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+            "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+            "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
           ]
         },
         {
@@ -338,7 +417,15 @@
             "/uploads/trips/file-1763717421807.jpg"
           ],
           "videos": [
-            "https://www.youtube.com/watch?v=xxxxxxx"
+            "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+            "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+            "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+            "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+            "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+            "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+            "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+            "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+            "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
           ]
         }
       ],
@@ -448,26 +535,28 @@
         }
       ],
       "gallery": [
-        "/uploads/trips/file-1763712840300.jpg",
-        "/uploads/trips/file-1763712840302.jpg",
-        "/uploads/trips/file-1763712840304.jpg",
-        "/uploads/trips/file-1763712840305.jpg",
-        "/uploads/trips/file-1763712840306.jpg",
-        "/uploads/trips/file-1763712840307.jpg",
-        "/uploads/trips/file-1763712840307.jpg",
-        "/uploads/trips/file-1763712840309.jpg",
-        "/uploads/trips/file-1763712840310.jpg",
-        "/uploads/trips/file-1763712840312.jpg",
-        "/uploads/trips/file-1763712840313.jpg",
-        "/uploads/trips/file-1763712840315.jpg"
+        "/uploads/trips/premium-acropolis-tour-1764367238648.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367238650.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367238651.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367238652.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367238653.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367238654.jpg",
+        "/uploads/trips/premium-acropolis-tour-1764367238655.jpg"
       ],
       "video": {
-        "url": "https://www.youtube.com/embed/xxxxxxx",
-        "thumbnail": "/uploads/trips/bus-video-thumb.jpg"
+        "url": "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+        "thumbnail": "/uploads/trips/premium-acropolis-tour-1764368618132.jpg"
       },
       "videos": [
-        "https://www.youtube.com/watch?v=xxxxxxx",
-        "https://www.youtube.com/watch?v=yyyyyyy"
+        "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+        "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+        "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+        "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+        "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+        "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+        "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+        "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+        "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
       ],
       "stops": [
         {
@@ -488,7 +577,15 @@
             "/uploads/trips/file-1763717446291.jpg"
           ],
           "videos": [
-            "https://www.youtube.com/watch?v=xxxxxxx"
+            "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+            "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+            "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+            "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+            "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+            "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+            "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+            "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+            "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
           ]
         },
         {
@@ -509,7 +606,15 @@
             "/uploads/trips/file-1763717468769.jpg"
           ],
           "videos": [
-            "https://www.youtube.com/watch?v=xxxxxxx"
+            "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+            "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+            "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+            "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+            "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+            "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+            "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+            "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+            "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
           ]
         },
         {
@@ -530,7 +635,15 @@
             "/uploads/trips/file-1763717487827.jpg"
           ],
           "videos": [
-            "https://www.youtube.com/watch?v=xxxxxxx"
+            "https://youtu.be/B8Z6BXJWBf0?si=c7ItDqw16eUs7gzL",
+            "https://youtu.be/2Ybqu_jn1OI?si=gnONN-ZcLUIOGGbn",
+            "https://youtu.be/klhK7ZJiHGI?si=-uLWzo7RRC53gnrn",
+            "https://youtu.be/Kc1RNbQOAXg?si=sY_qK1kVF19E-0MZ",
+            "https://youtu.be/16KarAMNimA?si=JQk5wydE0wE4GLak",
+            "https://youtu.be/uGG4gm1eX04?si=_p2zX0yUw0TXAHub",
+            "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
+            "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
+            "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
           ]
         }
       ],
@@ -608,7 +721,7 @@
     }
   },
   "createdAt": "2025-11-21T00:15:18.697Z",
-  "updatedAt": "2025-11-28T18:39:42.536Z",
+  "updatedAt": "2025-11-28T22:25:21.309Z",
   "mode_set": {
     "van": {
       "active": true,
