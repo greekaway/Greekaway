@@ -23,6 +23,43 @@
     }
   } catch(_) { /* ignore */ }
 
+  const UploadClient = window.GAUploadClient || null;
+  const RAW_UPLOADS_BASE = (UploadClient && UploadClient.UPLOADS_BASE) || window.UPLOADS_BASE_URL || window.PUBLIC_BASE_URL || (window.location && window.location.origin) || 'https://greekaway.com';
+  const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$/, '') || 'https://greekaway.com';
+
+  function fallbackToRelative(value){
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (raw.startsWith('uploads/')) return raw;
+    if (raw.startsWith('/uploads/')) return raw.slice(1);
+    if (/^https?:\/\//i.test(raw)) {
+      try {
+        const url = new URL(raw);
+        const path = String(url.pathname || '').replace(/^\/+/, '');
+        if (path.startsWith('uploads/')) return path;
+      } catch(_) {}
+    }
+    return raw;
+  }
+
+  function toRelativeUploads(value){
+    if (UploadClient && typeof UploadClient.toRelativeUploadsPath === 'function') {
+      return UploadClient.toRelativeUploadsPath(value);
+    }
+    return fallbackToRelative(value);
+  }
+
+  function absolutizeUploads(value){
+    if (UploadClient && typeof UploadClient.absolutizeUploadsPath === 'function') {
+      return UploadClient.absolutizeUploadsPath(value);
+    }
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (/^https?:\/\//i.test(raw)) return raw;
+    const rel = raw.startsWith('uploads/') ? raw : raw.startsWith('/uploads/') ? raw.slice(1) : '';
+    return rel ? `${UPLOADS_BASE}/${rel}` : raw;
+  }
+
   const rowsEl = document.getElementById('catRows');
   const msgEl = document.getElementById('catMessage');
   const saveBtn = document.getElementById('saveCategory');
@@ -44,6 +81,7 @@
   let userTouchedSlug = false;
 
   let categories = [];
+  let currentIconPath = '';
 
   function msg(text, kind){
     if (!msgEl) return;
@@ -66,6 +104,12 @@
   function generateSlugFromTitle(title){
     const base = transliterate(title).replace(/['"’]/g,'').replace(/&/g,'-and-');
     return sanitizeSlug(base);
+  }
+
+  function buildIconFolder(){
+    const source = (fSlug && fSlug.value) ? fSlug.value : (fTitle && fTitle.value) ? fTitle.value : 'category';
+    const slug = sanitizeSlug(source) || 'category';
+    return `categories/${slug}`;
   }
 
   let pendingDeleteSlug = null;
@@ -127,6 +171,74 @@
     if (fModeBusDescription) fModeBusDescription.value = (card.desc && card.desc.bus) || '';
   }
 
+  function renderIconPreviewFromUrl(path){
+    if (!previewEl) return;
+    previewEl.innerHTML = '';
+    const src = absolutizeUploads(path);
+    if (!src) return;
+    const isSvg = /\.svg(\?|$)/i.test(src);
+    if (isSvg) {
+      fetch(src, { cache:'no-store' })
+        .then((r) => (r.ok ? r.text() : Promise.reject(new Error('svg_fetch_failed'))))
+        .then((txt) => {
+          const cleaned = txt.replace(/<\?xml[^>]*>/ig,'').replace(/<!DOCTYPE[^>]*>/ig,'');
+          const div = document.createElement('div');
+          div.innerHTML = cleaned;
+          const svg = div.querySelector('svg');
+          if (svg) {
+            svg.removeAttribute('width');
+            svg.removeAttribute('height');
+            svg.classList.add('svg-icon');
+            previewEl.appendChild(svg);
+          }
+        })
+        .catch(() => {
+          const img = new Image();
+          img.src = src;
+          img.alt = 'Icon';
+          img.className = 'svg-icon';
+          previewEl.appendChild(img);
+        });
+    } else {
+      const img = new Image();
+      img.src = src;
+      img.alt = 'Icon';
+      img.className = 'svg-icon';
+      previewEl.appendChild(img);
+    }
+  }
+
+  function renderIconPreviewFromFile(file){
+    if (!previewEl) return;
+    previewEl.innerHTML = '';
+    if (!file) return;
+    const isSvg = /\.svg$/i.test(file.name || '') || file.type === 'image/svg+xml';
+    if (isSvg) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const txt = String(reader.result || '');
+          const cleaned = txt.replace(/<\?xml[^>]*>/ig,'').replace(/<!DOCTYPE[^>]*>/ig,'');
+          const tmp = document.createElement('div');
+          tmp.innerHTML = cleaned;
+          const svg = tmp.querySelector('svg');
+          if (svg) {
+            svg.removeAttribute('width');
+            svg.removeAttribute('height');
+            svg.classList.add('svg-icon');
+            previewEl.appendChild(svg);
+          }
+        } catch(_){}
+      };
+      reader.readAsText(file);
+    } else {
+      const img = new Image();
+      img.className = 'svg-icon';
+      img.src = URL.createObjectURL(file);
+      previewEl.appendChild(img);
+    }
+  }
+
   function highlightModePanel(){
     if (!modeCardPanel) return;
     modeCardPanel.classList.add('panel-active');
@@ -172,6 +284,8 @@
     if (fPublished) fPublished.checked=false;
     if (fIcon) fIcon.value='';
     fillModeCardFields({ title:'', subtitle:'', desc:{ van:'', mercedes:'', bus:'' } });
+    currentIconPath = '';
+    renderIconPreviewFromUrl('');
     msg('Φόρμα μηδενίστηκε');
   }
 
@@ -184,31 +298,8 @@
     if (fOrder) fOrder.value = c.order || 0;
     if (fPublished) fPublished.checked = !!c.published;
     fillModeCardFields(normalizeModeCard(c));
-    // Show existing icon preview if available
-    try {
-      if (previewEl) {
-        previewEl.innerHTML = '';
-        const icon = c.iconPath || '';
-        if (icon) {
-          const isSvg = /\.svg(\?|$)/i.test(icon);
-          if (isSvg) {
-            fetch(icon, { cache:'no-store' })
-              .then(r => r.ok ? r.text() : Promise.reject(new Error('svg_fetch_failed')))
-              .then(txt => {
-                const cleaned = txt.replace(/<\?xml[^>]*>/ig,'').replace(/<!DOCTYPE[^>]*>/ig,'');
-                const div = document.createElement('div');
-                div.innerHTML = cleaned;
-                const svg = div.querySelector('svg');
-                if (svg) { svg.removeAttribute('width'); svg.removeAttribute('height'); svg.classList.add('svg-icon'); previewEl.appendChild(svg); }
-              }).catch(()=>{
-                const img = new Image(); img.src = icon; img.alt = 'Icon'; img.className = 'svg-icon'; previewEl.appendChild(img);
-              });
-          } else {
-            const img = new Image(); img.src = icon; img.alt = 'Icon'; img.className = 'svg-icon'; previewEl.appendChild(img);
-          }
-        }
-      }
-    } catch(_) { /* ignore */ }
+    currentIconPath = toRelativeUploads(c.iconPath || '');
+    renderIconPreviewFromUrl(c.iconPath || '');
     msg('Edit mode: '+(c.slug||c.id));
   }
 
@@ -221,20 +312,24 @@
     if (!title){ msg('Απαιτείται τίτλος.', 'error'); return; }
     if (!slug){ msg('Απαιτείται slug.', 'error'); return; }
     msg('Αποθήκευση...', '');
-    const fd = new FormData();
-    fd.append('title', title);
-    fd.append('slug', slug);
-    fd.append('order', String(order));
-    fd.append('published', published ? 'true' : '');
-    if (fModeCardTitle) fd.append('mode_card_title', fModeCardTitle.value.trim());
-    if (fModeCardSubtitle) fd.append('mode_card_subtitle', fModeCardSubtitle.value.trim());
-    if (fModeVanDescription) fd.append('mode_van_description', fModeVanDescription.value.trim());
-    if (fModeMercedesDescription) fd.append('mode_mercedes_description', fModeMercedesDescription.value.trim());
-    if (fModeBusDescription) fd.append('mode_bus_description', fModeBusDescription.value.trim());
-    if (fIcon && fIcon.files && fIcon.files[0]) {
-      fd.append('iconFile', fIcon.files[0]);
-    }
-    fetch('/api/categories', { method:'POST', credentials:'same-origin', body: fd })
+    const payload = {
+      title,
+      slug,
+      order,
+      published,
+      mode_card_title: fModeCardTitle ? fModeCardTitle.value.trim() : '',
+      mode_card_subtitle: fModeCardSubtitle ? fModeCardSubtitle.value.trim() : '',
+      mode_van_description: fModeVanDescription ? fModeVanDescription.value.trim() : '',
+      mode_mercedes_description: fModeMercedesDescription ? fModeMercedesDescription.value.trim() : '',
+      mode_bus_description: fModeBusDescription ? fModeBusDescription.value.trim() : ''
+    };
+    if (currentIconPath) payload.iconPath = currentIconPath;
+    fetch('/api/categories', {
+      method:'POST',
+      credentials:'same-origin',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
+    })
       .then(r => r.json().then(j => ({ ok:r.ok, j })))
       .then(({ok,j}) => {
         if (!ok || !j || !j.ok){ throw new Error(j && j.error ? j.error : 'save_failed'); }
@@ -282,40 +377,33 @@
       });
     }
     if (fIcon && previewEl) {
-      const renderPreview = (file) => {
-        previewEl.innerHTML = '';
-        if (!file) return;
-        const isSvg = /\.svg$/i.test(file.name) || file.type === 'image/svg+xml';
-        if (isSvg) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            try {
-              const txt = String(reader.result||'');
-              const cleaned = txt.replace(/<\?xml[^>]*>/ig,'').replace(/<!DOCTYPE[^>]*>/ig,'');
-              const tmp = document.createElement('div');
-              tmp.innerHTML = cleaned;
-              const svg = tmp.querySelector('svg');
-              if (svg) {
-                svg.removeAttribute('width');
-                svg.removeAttribute('height');
-                svg.classList.add('svg-icon');
-                previewEl.appendChild(svg);
-              }
-            } catch(_) { /* ignore */ }
-          };
-          reader.readAsText(file);
-        } else {
-          const img = new Image();
-          img.className = 'svg-icon';
-          img.onload = () => { /* no-op */ };
-          img.src = URL.createObjectURL(file);
-          previewEl.appendChild(img);
-        }
-      };
-      fIcon.addEventListener('change', () => {
-        const f = fIcon.files && fIcon.files[0];
-        renderPreview(f || null);
-      });
+      fIcon.addEventListener('change', handleIconFileChange);
+    }
+  }
+
+  async function handleIconFileChange(){
+    const file = fIcon && fIcon.files && fIcon.files[0];
+    if (!file) {
+      renderIconPreviewFromUrl(currentIconPath);
+      return;
+    }
+    renderIconPreviewFromFile(file);
+    if (!UploadClient || typeof UploadClient.uploadFile !== 'function') {
+      msg('❌ Το upload δεν είναι διαθέσιμο.', 'error');
+      return;
+    }
+    try {
+      msg('Μεταφόρτωση icon...', '');
+      const folder = buildIconFolder();
+      const result = await UploadClient.uploadFile(file, { folder });
+      currentIconPath = result && result.relativePath ? result.relativePath : '';
+      renderIconPreviewFromUrl(result && (result.absoluteUrl || result.relativePath) || '');
+      msg('✅ Το icon ανέβηκε.', 'ok');
+    } catch (err) {
+      console.warn('Categories: icon upload failed', err);
+      msg('❌ Σφάλμα μεταφόρτωσης icon.', 'error');
+    } finally {
+      if (fIcon) fIcon.value = '';
     }
   }
 

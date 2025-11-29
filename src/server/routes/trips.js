@@ -5,8 +5,8 @@ const crypto = require("crypto");
 
 const {
   getTripsDir: getUploadsTripsDir,
-  buildUploadsUrl,
   absolutizeUploadsUrl,
+  toRelativeUploadsPath,
 } = require("../lib/uploads");
 
 const ROOT_DIR = path.join(__dirname, "..", "..", "..");
@@ -14,20 +14,11 @@ const TRIPS_DIR = path.join(ROOT_DIR, "data", "trips");
 const TRIP_TEMPLATE_FILE = path.join(TRIPS_DIR, "_template.json");
 const MODE_KEYS = ["van", "mercedes", "bus"];
 const LEGACY_DURATION_FIELDS = ["duration", "duration_hours", "duration_days"];
-const MAX_TRIP_IMAGE_BYTES = 10 * 1024 * 1024;
-const MAX_TRIP_VIDEO_BYTES = 10 * 1024 * 1024;
-const MAX_TRIP_IMAGE_COUNT = 12;
 const MODE_DEFAULT_META = {
   van: { capacity: 7, charge_type: "per_person" },
   mercedes: { capacity: 1, charge_type: "per_vehicle" },
   bus: { capacity: 40, charge_type: "per_person" },
 };
-let multer = null;
-try {
-  multer = require("multer");
-} catch (_) {
-  multer = null;
-}
 const TEMPLATE_FILENAME = path.basename(TRIP_TEMPLATE_FILE);
 
 let tripTemplateCache = null;
@@ -113,6 +104,28 @@ function loadTripTemplate() {
 function cloneJson(value) {
   if (value === undefined) return undefined;
   return JSON.parse(JSON.stringify(value));
+}
+
+function normalizeUploadsPathsMutable(value) {
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeUploadsPathsMutable(entry));
+  }
+  if (value && typeof value === "object") {
+    Object.keys(value).forEach((key) => {
+      value[key] = normalizeUploadsPathsMutable(value[key]);
+    });
+    return value;
+  }
+  if (typeof value === "string") {
+    return toRelativeUploadsPath(value);
+  }
+  return value;
+}
+
+function prepareTripForStorage(trip) {
+  if (!trip || typeof trip !== "object") return trip;
+  const copy = cloneJson(trip);
+  return normalizeUploadsPathsMutable(copy);
 }
 
 function applyTemplateDefaults(input) {
@@ -681,48 +694,6 @@ function ensureTripsDir() {
   getUploadsTripsDir();
 }
 
-function removeUploadedFiles(files) {
-  if (!files) return;
-  const list = Array.isArray(files) ? files : [files];
-  list.forEach((file) => {
-    if (!file || !file.path) return;
-    try {
-      fs.unlinkSync(file.path);
-    } catch (_) {
-      /* ignore */
-    }
-  });
-}
-
-function isAllowedImageFile(file) {
-  if (!file) return false;
-  const typeOk = /^image\//i.test(file.mimetype || "");
-  const sizeOk =
-    typeof file.size === "number" ? file.size <= MAX_TRIP_IMAGE_BYTES : true;
-  return typeOk && sizeOk;
-}
-
-function isAllowedTripGalleryFile(file) {
-  if (!file) return false;
-  const mime = String(file.mimetype || "").toLowerCase();
-  const name = String(file.originalname || "").toLowerCase();
-  const isJpg = mime === "image/jpeg" || mime === "image/jpg" || /\.jpe?g$/i.test(name);
-  const isPng = mime === "image/png" || /\.png$/i.test(name);
-  const sizeOk =
-    typeof file.size === "number" ? file.size <= MAX_TRIP_IMAGE_BYTES : true;
-  return sizeOk && (isJpg || isPng);
-}
-
-function isAllowedTripVideoFile(file) {
-  if (!file) return false;
-  const mime = String(file.mimetype || "").toLowerCase();
-  const name = String(file.originalname || "").toLowerCase();
-  const isMp4 = mime === "video/mp4" || /\.mp4$/i.test(name);
-  const sizeOk =
-    typeof file.size === "number" ? file.size <= MAX_TRIP_VIDEO_BYTES : true;
-  return sizeOk && isMp4;
-}
-
 function sanitizeSlug(raw) {
   return String(raw || "")
     .trim()
@@ -779,7 +750,8 @@ function writeTrip(data) {
     if (!safeSlug || safeSlug === "_template") return false;
     const file = path.join(TRIPS_DIR, safeSlug + ".json");
     const prepared = ensureTripShape({ ...data, slug: safeSlug }) || {};
-    fs.writeFileSync(file, JSON.stringify(prepared, null, 2), "utf8");
+    const stored = prepareTripForStorage(prepared) || {};
+    fs.writeFileSync(file, JSON.stringify(stored, null, 2), "utf8");
     return true;
   } catch (e) {
     console.error("trips: writeTrip failed", data.slug, e.message);
@@ -933,33 +905,6 @@ function validateTrip(input) {
 
 function registerTripsRoutes(app, { checkAdminAuth }) {
   ensureTripsDir();
-  const upload = multer
-    ? multer({
-        storage: multer.diskStorage({
-          destination: (req, file, cb) => {
-            const dir = getUploadsTripsDir();
-            cb(null, dir);
-          },
-          filename: (req, file, cb) => {
-            const orig = String(file.originalname || "").toLowerCase();
-            const extMatch = orig.match(/\.([a-z0-9]+)$/);
-            const ext = extMatch ? extMatch[1] : "jpg";
-            const stem = sanitizeSlug(
-              (req.body && (req.body.slug || req.body.title)) || "file",
-            );
-            const fname = `${stem}-${Date.now()}.${ext}`;
-            cb(null, fname);
-          },
-        }),
-        fileFilter: (req, file, cb) => {
-          const name = String(file.originalname || "");
-          const ok = /(jpg|jpeg|png|webp|svg|mp4)$/i.test(name);
-          if (!ok) return cb(new Error("invalid_file_type"));
-          cb(null, true);
-        },
-        limits: { fileSize: Math.max(MAX_TRIP_IMAGE_BYTES, MAX_TRIP_VIDEO_BYTES) },
-      })
-    : null;
 
   const adminRouter = express.Router();
   const jsonParser = express.json({ limit: "400kb" });
@@ -1040,183 +985,8 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
   adminRouter.delete("/:slug", handleDeleteTrip);
   adminRouter.post("/delete", jsonParser, handleDeleteTrip);
 
-  adminRouter.post("/upload-trip-image", (req, res) => {
-    if (!checkAdminAuth || !checkAdminAuth(req))
-      return res.status(403).json({ error: "Forbidden" });
-    if (!upload) return res.status(500).json({ error: "upload_unavailable" });
-    upload.single("coverImageFile")(req, res, (err) => {
-      if (err) {
-        return res
-          .status(400)
-          .json({
-            error: "upload_failed",
-            detail: err && err.message ? err.message : String(err),
-          });
-      }
-      const filename = req.file && req.file.filename ? req.file.filename : "";
-      if (!filename) return res.status(400).json({ error: "no_file" });
-      return res.json({
-        ok: true,
-        filename,
-        url: buildUploadsUrl("trips", filename),
-      });
-    });
-  });
-
-  adminRouter.post("/upload-trip-icon", (req, res) => {
-    if (!checkAdminAuth || !checkAdminAuth(req))
-      return res.status(403).json({ error: "Forbidden" });
-    if (!upload) return res.status(500).json({ error: "upload_unavailable" });
-    upload.single("tripIconFile")(req, res, (err) => {
-      if (err) {
-        return res
-          .status(400)
-          .json({
-            error: "upload_failed",
-            detail: err && err.message ? err.message : String(err),
-          });
-      }
-      const filename = req.file && req.file.filename ? req.file.filename : "";
-      if (!filename) return res.status(400).json({ error: "no_file" });
-      return res.json({
-        ok: true,
-        filename,
-        url: buildUploadsUrl("trips", filename),
-      });
-    });
-  });
-
   app.use("/api/admin/trips", adminRouter);
-  if (upload) {
-    const stopImagesUpload = upload.array("images", MAX_TRIP_IMAGE_COUNT);
-    app.post("/api/upload-trip-image", (req, res) => {
-      if (!checkAdminAuth || !checkAdminAuth(req))
-        return res.status(403).json({ error: "Forbidden" });
-      stopImagesUpload(req, res, (err) => {
-        if (err)
-          return res.status(err.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
-            error: "upload_failed",
-            detail: err && err.message ? err.message : "upload_failed",
-          });
-        const files = Array.isArray(req.files) ? req.files : [];
-        if (!files.length) return res.status(400).json({ error: "no_files" });
-        const invalid = files.find((file) => !isAllowedImageFile(file));
-        if (invalid) {
-          removeUploadedFiles(files);
-          return res.status(400).json({
-            error: "invalid_file_type",
-            detail: "Μόνο εικόνες έως 10MB (JPG, PNG, WEBP, SVG).",
-          });
-        }
-        return res.json({
-          ok: true,
-          files: files.map((file) => ({
-            filename: file.filename,
-            url: buildUploadsUrl("trips", file.filename),
-            size: file.size || 0,
-          })),
-        });
-      });
-    });
-    app.post("/api/admin/upload-trip-image", (req, res) => {
-      if (!checkAdminAuth || !checkAdminAuth(req))
-        return res.status(403).json({ error: "Forbidden" });
-      upload.single("coverImageFile")(req, res, (err) => {
-        if (err)
-          return res
-            .status(400)
-            .json({
-              error: "upload_failed",
-              detail: err && err.message ? err.message : String(err),
-            });
-        const filename = req.file && req.file.filename ? req.file.filename : "";
-        if (!filename) return res.status(400).json({ error: "no_file" });
-        return res.json({
-          ok: true,
-          filename,
-          url: buildUploadsUrl("trips", filename),
-        });
-      });
-    });
-    app.post("/api/admin/upload-trip-icon", (req, res) => {
-      if (!checkAdminAuth || !checkAdminAuth(req))
-        return res.status(403).json({ error: "Forbidden" });
-      upload.single("tripIconFile")(req, res, (err) => {
-        if (err)
-          return res
-            .status(400)
-            .json({
-              error: "upload_failed",
-              detail: err && err.message ? err.message : String(err),
-            });
-        const filename = req.file && req.file.filename ? req.file.filename : "";
-        if (!filename) return res.status(400).json({ error: "no_file" });
-        return res.json({
-          ok: true,
-          filename,
-          url: buildUploadsUrl("trips", filename),
-        });
-      });
-    });
-    const tripMediaUpload = upload.array("tripMediaFiles", MAX_TRIP_IMAGE_COUNT);
-    app.post("/api/upload-trip-media", (req, res) => {
-      if (!checkAdminAuth || !checkAdminAuth(req))
-        return res.status(403).json({ error: "Forbidden" });
-      tripMediaUpload(req, res, (err) => {
-        if (err)
-          return res.status(err.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
-            error: "upload_failed",
-            detail: err && err.message ? err.message : "upload_failed",
-          });
-        const files = Array.isArray(req.files) ? req.files : [];
-        if (!files.length) return res.status(400).json({ error: "no_files" });
-        const invalid = files.find((file) => !isAllowedTripGalleryFile(file));
-        if (invalid) {
-          removeUploadedFiles(files);
-          return res.status(400).json({
-            error: "invalid_file_type",
-            detail: "Μόνο εικόνες JPG/PNG έως 10MB.",
-          });
-        }
-        return res.json({
-          ok: true,
-          files: files.map((file) => ({
-            filename: file.filename,
-            url: buildUploadsUrl("trips", file.filename),
-            size: file.size || 0,
-          })),
-        });
-      });
-    });
-    app.post("/api/upload-trip-video", (req, res) => {
-      if (!checkAdminAuth || !checkAdminAuth(req))
-        return res.status(403).json({ error: "Forbidden" });
-      upload.single("tripVideoFile")(req, res, (err) => {
-        if (err)
-          return res.status(err.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
-            error: "upload_failed",
-            detail: err && err.message ? err.message : "upload_failed",
-          });
-        const file = req.file;
-        if (!file) return res.status(400).json({ error: "no_file" });
-        if (!isAllowedTripVideoFile(file)) {
-          removeUploadedFiles(file);
-          return res.status(400).json({
-            error: "invalid_file_type",
-            detail: "Μόνο βίντεο .mp4 έως 10MB.",
-          });
-        }
-        return res.json({
-          ok: true,
-          file: {
-            filename: file.filename,
-            url: buildUploadsUrl("trips", file.filename),
-            size: file.size || 0,
-          },
-        });
-      });
-    });
-  }
+  app.use("/api/admin/trips", adminRouter);
 
   app.get("/api/public/trips", (req, res) => {
     return res.json(listTrips());
@@ -1232,4 +1002,4 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
   console.log("trips: routes registered");
 }
 
-module.exports = { registerTripsRoutes };
+module.exports = { registerTripsRoutes, readTrip, listTrips };

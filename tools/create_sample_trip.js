@@ -8,8 +8,8 @@
  *   (or set env vars in your shell beforehand)
  *
  * Steps:
- * 1. Upload a tiny SVG icon (generated inline) via /api/admin/upload-trip-icon
- * 2. Upload a tiny PNG cover image (generated in-memory) via /api/admin/upload-trip-image
+ * 1. Upload a tiny SVG icon (generated inline) via /api/admin/upload (folder=trips/icons)
+ * 2. Upload a tiny PNG cover image (generated in-memory) via /api/admin/upload (folder=trips/sample/featured)
  * 3. POST /api/admin/trips to create/update the trip JSON with iconPath + coverImage.
  * 4. Print public URL to view (trip list via category and direct trip detail).
  */
@@ -27,6 +27,7 @@ const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$/, '') || 'http
 function buildTripUploadsUrl(filename){
   if (!filename) return '';
   const clean = String(filename).replace(/^\/+/, '');
+  if (clean.startsWith('uploads/')) return `${UPLOADS_BASE}/${clean}`;
   return `${UPLOADS_BASE}/uploads/trips/${clean}`;
 }
 
@@ -107,28 +108,32 @@ function postJson(endpoint, data){
   try {
     console.log('> Uploading sample trip icon...');
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#1e5179"/><text x="32" y="38" font-size="20" text-anchor="middle" fill="#fff">T</text></svg>';
-    const iconResp = await postMultipart('/api/admin/upload-trip-icon', [
-      { type:'file', name:'tripIconFile', filename:'sample-icon.svg', contentType:'image/svg+xml', content: svg }
+    const iconResp = await postMultipart('/api/admin/upload', [
+      { type:'text', name:'folder', value:'trips/icons' },
+      { type:'file', name:'file', filename:'sample-icon.svg', contentType:'image/svg+xml', content: svg }
     ]);
-    if (iconResp.status !== 200 || !iconResp.json || !iconResp.json.ok) {
+    if (iconResp.status !== 200 || !iconResp.json || !iconResp.json.success) {
       console.error('Icon upload failed', iconResp);
       return process.exit(1);
     }
-    const iconPath = iconResp.json.url || (iconResp.json.filename ? buildTripUploadsUrl(iconResp.json.filename) : '');
-    console.log('> Icon uploaded:', iconPath);
+    const iconRelative = iconResp.json.filename || '';
+    const iconAbsolute = iconResp.json.absoluteUrl || buildTripUploadsUrl(iconRelative);
+    console.log('> Icon uploaded:', iconAbsolute || iconRelative);
 
     console.log('> Uploading sample cover image...');
     // Tiny 1x1 PNG (transparent) base64
     const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
-    const coverResp = await postMultipart('/api/admin/upload-trip-image', [
-      { type:'file', name:'coverImageFile', filename:'sample-cover.png', contentType:'image/png', content: Buffer.from(pngBase64,'base64') }
+    const coverResp = await postMultipart('/api/admin/upload', [
+      { type:'text', name:'folder', value:'trips/sample/featured' },
+      { type:'file', name:'file', filename:'sample-cover.png', contentType:'image/png', content: Buffer.from(pngBase64,'base64') }
     ]);
-    if (coverResp.status !== 200 || !coverResp.json || !coverResp.json.ok) {
+    if (coverResp.status !== 200 || !coverResp.json || !coverResp.json.success) {
       console.error('Cover upload failed', coverResp);
       return process.exit(1);
     }
-    const coverUrl = coverResp.json.url || (coverResp.json.filename ? buildTripUploadsUrl(coverResp.json.filename) : '');
-    console.log('> Cover uploaded:', coverUrl);
+    const coverRelative = coverResp.json.filename || '';
+    const coverAbsolute = coverResp.json.absoluteUrl || buildTripUploadsUrl(coverRelative);
+    console.log('> Cover uploaded:', coverAbsolute || coverRelative);
 
     console.log('> Creating / updating sample trip...');
     const tripPayload = {
@@ -138,8 +143,8 @@ function postJson(endpoint, data){
       category: 'politismos',
       duration: '4 ώρες',
       stops: ['Ακρόπολη','Μουσείο','Πλάκα'],
-      coverImage: coverUrl,
-      iconPath: iconPath
+      coverImage: coverRelative,
+      iconPath: iconRelative
     };
     const tripResp = await postJson('/api/admin/trips', tripPayload);
     if (tripResp.status !== 200 || !tripResp.json || !tripResp.json.ok) {

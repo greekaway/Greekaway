@@ -107,6 +107,12 @@ const PROCESS_STARTED_AT = new Date().toISOString();
 const VERSION_FILE_PATH = path.join(__dirname, 'version.json');
 const { readVersionFile, formatBuild } = require('./src/server/lib/version');
 const { buildLiveRulesPrompt } = require('./src/server/lib/prompts');
+let tripsModule = null;
+try {
+  tripsModule = require('./src/server/routes/trips');
+} catch (e) {
+  console.warn('trips: module preload failed', e && e.message ? e.message : e);
+}
 // Environment detection: treat non-production and non-Render as local dev
 const IS_RENDER = !!process.env.RENDER;
 const IS_DEV = (process.env.NODE_ENV !== 'production') && !IS_RENDER;
@@ -378,6 +384,13 @@ app.get('/api/trips/:slug', async (req, res) => {
   try {
     const slug = sanitizeTripSlug(req.params.slug);
     if (!slug) return res.status(400).json({ error: 'invalid_slug' });
+    const readTripFn = tripsModule && typeof tripsModule.readTrip === 'function' ? tripsModule.readTrip : null;
+    if (readTripFn) {
+      const trip = readTripFn(slug);
+      if (!trip) return res.status(404).json({ error: 'not_found' });
+      res.setHeader('Cache-Control', 'no-store');
+      return res.json({ trip });
+    }
     const filePath = path.join(TRIPS_DATA_DIR, `${slug}.json`);
     const data = await fs.promises.readFile(filePath, 'utf8');
     const trip = JSON.parse(data);
@@ -817,6 +830,12 @@ try {
   console.log('admin-travelers-groups: routes registered');
 } catch (e) { console.warn('admin-travelers-groups: failed', e && e.message ? e.message : e); }
 
+// Upload routes (admin protected, shared by CMS UIs)
+try {
+  const { registerUploadRoutes } = require('./src/server/routes/upload');
+  registerUploadRoutes(app, { checkAdminAuth: (r)=>checkAdminAuth(r) });
+} catch (e) { console.warn('upload: failed to register', e && e.message ? e.message : e); }
+
 // Category CMS MVP routes (admin protected)
 try {
   const { registerCategoriesRoutes } = require('./src/server/routes/categories');
@@ -826,8 +845,10 @@ try {
 
 // Trip CMS MVP routes (admin + public)
 try {
-  const { registerTripsRoutes } = require('./src/server/routes/trips');
-  registerTripsRoutes(app, { checkAdminAuth: (r)=>checkAdminAuth(r) });
+  if (!tripsModule || typeof tripsModule.registerTripsRoutes !== 'function') {
+    throw new Error('registerTripsRoutes unavailable');
+  }
+  tripsModule.registerTripsRoutes(app, { checkAdminAuth: (r)=>checkAdminAuth(r) });
   console.log('trips: routes registered');
 } catch (e) { console.warn('trips: failed to register', e && e.message ? e.message : e); }
 

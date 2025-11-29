@@ -37,13 +37,116 @@
   MODE_KEYS.forEach((key) => updateModeHeader(key));
   const TRIPS_RENDER_EVENT = 'ga:trips:rendered';
   let rowBindScheduled = false;
-  const RAW_UPLOADS_BASE = (window.UPLOADS_BASE_URL || window.PUBLIC_BASE_URL || (window.location && window.location.origin) || 'https://greekaway.com');
+  const UploadClient = window.GAUploadClient || null;
+  const RAW_UPLOADS_BASE = (UploadClient && UploadClient.UPLOADS_BASE) || window.UPLOADS_BASE_URL || window.PUBLIC_BASE_URL || (window.location && window.location.origin) || 'https://greekaway.com';
   const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$/, '') || 'https://greekaway.com';
+  const KNOWN_UPLOAD_HOSTS = new Set(['greekaway.com','www.greekaway.com','localhost','127.0.0.1','0.0.0.0']);
 
-  function buildTripUploadsUrl(filename){
-    if (!filename) return '';
-    const clean = String(filename).replace(/^\/+/, '');
-    return `${UPLOADS_BASE}/uploads/trips/${clean}`;
+  function fallbackToRelativeUploadsPath(value){
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (raw.startsWith('uploads/')) return raw;
+    if (raw.startsWith('/uploads/')) return raw.replace(/^\/+/, '');
+    if (/^https?:\/\//i.test(raw)) {
+      try {
+        const url = new URL(raw);
+        const path = String(url.pathname || '').replace(/^\/+/, '');
+        if (!path.startsWith('uploads/')) return raw;
+        const host = (url.hostname || '').toLowerCase();
+        if (KNOWN_UPLOAD_HOSTS.has(host)) return path;
+        try {
+          const baseHost = new URL(UPLOADS_BASE).hostname.toLowerCase();
+          if (baseHost === host) return path;
+        } catch (_) {
+          // ignore parsing error
+        }
+        return raw;
+      } catch (_) {
+        return raw;
+      }
+    }
+    return raw;
+  }
+
+  function fallbackAbsolutizeUploadsPath(value){
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (/^https?:\/\//i.test(raw)) return raw;
+    const normalized = raw.startsWith('uploads/') ? raw : (raw.startsWith('/uploads/') ? raw.slice(1) : '');
+    if (!normalized) return raw;
+    return `${UPLOADS_BASE}/${normalized}`;
+  }
+
+  function toRelativeUploadsValue(value){
+    if (UploadClient && typeof UploadClient.toRelativeUploadsPath === 'function') {
+      return UploadClient.toRelativeUploadsPath(value);
+    }
+    return fallbackToRelativeUploadsPath(value);
+  }
+
+  function absolutizeUploadsValue(value){
+    if (UploadClient && typeof UploadClient.absolutizeUploadsPath === 'function') {
+      return UploadClient.absolutizeUploadsPath(value);
+    }
+    return fallbackAbsolutizeUploadsPath(value);
+  }
+
+  async function uploadAdminFile(file, folder){
+    if (UploadClient && typeof UploadClient.uploadFile === 'function') {
+      return UploadClient.uploadFile(file, { folder });
+    }
+    return fallbackUploadFile(file, folder);
+  }
+
+  async function fallbackUploadFile(file, folder){
+    if (!file) throw new Error('no_file');
+    const fd = new FormData();
+    fd.append('file', file);
+    if (folder) fd.append('folder', folder);
+    let response;
+    try {
+      response = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: fd,
+        credentials: 'same-origin'
+      });
+    } catch (err) {
+      throw new Error('network_error');
+    }
+    let data = null;
+    try {
+      data = await response.json();
+    } catch (_) {
+      data = null;
+    }
+    if (!response.ok || !data || !data.success) {
+      const detail = data && (data.detail || data.error);
+      throw new Error(detail || 'upload_failed');
+    }
+    const relativePath = toRelativeUploadsValue(data.filename || data.path || '');
+    return {
+      relativePath,
+      absoluteUrl: data.absoluteUrl || absolutizeUploadsValue(relativePath || data.filename)
+    };
+  }
+
+  function buildUploadFolder(kind, modeKey){
+    const slug = mediaUploadSlug() || 'trip';
+    const modeSegment = sanitizeSlug(modeKey || '') || 'mode';
+    switch (kind) {
+      case 'icon':
+        return 'trips/icons';
+      case 'featured':
+        return `trips/${slug}/featured`;
+      case 'gallery':
+        return `trips/${slug}/${modeSegment}/gallery`;
+      case 'hero':
+        return `trips/${slug}/${modeSegment}/hero`;
+      case 'stops':
+        return `trips/${slug}/${modeSegment}/stops`;
+      default:
+        return `trips/${slug}`;
+    }
   }
 
   function getModeForm(modeKey, formsRef){
@@ -295,26 +398,22 @@
     else delete el.dataset.state;
   }
 
-  async function uploadTripMediaFiles(files){
-    const fd = new FormData();
-    fd.append('slug', mediaUploadSlug());
-    files.forEach((file) => fd.append('tripMediaFiles', file));
-    const res = await fetch('/api/upload-trip-media', { method: 'POST', body: fd, credentials: 'same-origin' });
-    let data = null;
-    try { data = await res.json(); } catch (_) { data = null; }
-    if (!res.ok || !data || !data.ok) {
-      const detail = data && (data.detail || data.error);
-      throw new Error(detail || 'Αποτυχία μεταφόρτωσης.');
+  async function uploadTripMediaFiles(files, folder){
+    const results = [];
+    for (const file of files) {
+      const uploadResult = await uploadAdminFile(file, folder);
+      results.push(uploadResult);
     }
-    return Array.isArray(data.files) ? data.files : [];
+    return results;
   }
 
-  function appendModeGalleryUrls(modeKey, urls){
-    if (!modeKey || !Array.isArray(urls) || !urls.length) return;
+  function appendModeGalleryPaths(modeKey, paths){
+    if (!modeKey || !Array.isArray(paths) || !paths.length) return;
     const cfg = modeForms[modeKey];
     if (!cfg || !cfg.galleryInput) return;
     const current = linesToArray(cfg.galleryInput.value || '');
-    const merged = normalizeMediaArray([...current, ...urls]);
+    const incoming = paths.map((value) => toRelativeUploadsValue(value)).filter(Boolean);
+    const merged = normalizeMediaArray([...current, ...incoming]);
     cfg.galleryInput.value = arrayToLines(merged);
     dispatchInputEvent(cfg.galleryInput);
   }
@@ -323,7 +422,8 @@
     if (!modeKey) return;
     const cfg = modeForms[modeKey];
     if (!cfg || !cfg.videoThumbnail) return;
-    cfg.videoThumbnail.value = value ? String(value).trim() : '';
+    const relative = toRelativeUploadsValue(value);
+    cfg.videoThumbnail.value = relative ? relative : '';
     dispatchInputEvent(cfg.videoThumbnail);
   }
 
@@ -371,10 +471,10 @@
     setModeMediaStatus(modeKey, 'gallery', 'Μεταφόρτωση...', 'uploading');
     setModeGalleryControlsDisabled(modeKey, true);
     try {
-      const uploaded = await uploadTripMediaFiles(files);
-      const urls = uploaded.map((file) => file && file.url).filter(Boolean);
-      appendModeGalleryUrls(modeKey, urls);
-      setModeMediaStatus(modeKey, 'gallery', `Προστέθηκαν ${urls.length} εικόνες.`, 'success');
+      const uploaded = await uploadTripMediaFiles(files, buildUploadFolder('gallery', modeKey));
+      const paths = uploaded.map((file) => file && file.relativePath).filter(Boolean);
+      appendModeGalleryPaths(modeKey, paths);
+      setModeMediaStatus(modeKey, 'gallery', `Προστέθηκαν ${paths.length} εικόνες.`, 'success');
     } catch (err) {
       const message = err && err.message ? err.message : 'Αποτυχία μεταφόρτωσης.';
       setModeMediaStatus(modeKey, 'gallery', message, 'error');
@@ -404,8 +504,8 @@
     setModeMediaStatus(modeKey, 'hero', 'Μεταφόρτωση...', 'uploading');
     setModeHeroThumbnailControlsDisabled(modeKey, true);
     try {
-      const uploaded = await uploadTripMediaFiles([file]);
-      const first = uploaded && uploaded[0] && uploaded[0].url;
+      const uploaded = await uploadTripMediaFiles([file], buildUploadFolder('hero', modeKey));
+      const first = uploaded && uploaded[0] && uploaded[0].relativePath;
       if (!first) throw new Error('Αποτυχία μεταφόρτωσης.');
       setModeHeroThumbnailValue(modeKey, first);
       setModeMediaStatus(modeKey, 'hero', 'Το thumbnail ανέβηκε.', 'success');
@@ -438,6 +538,33 @@
       draft.modes[modeKey].stops = [];
     }
     return draft.modes[modeKey];
+  }
+
+  function normalizeTripModeUploads(mode){
+    if (!mode || typeof mode !== 'object') return;
+    const galleryList = Array.isArray(mode.gallery) ? mode.gallery : linesToArray(mode.gallery);
+    mode.gallery = normalizeMediaArray(galleryList).map((entry) => toRelativeUploadsValue(entry));
+    const videoBlock = mode.video && typeof mode.video === 'object' ? { ...mode.video } : {};
+    videoBlock.url = (videoBlock.url || '').trim();
+    videoBlock.thumbnail = toRelativeUploadsValue(videoBlock.thumbnail);
+    mode.video = videoBlock;
+    if (Array.isArray(mode.stops)) {
+      mode.stops = mode.stops.map((stop) => {
+        const source = stop && typeof stop === 'object' ? { ...stop } : {};
+        const images = Array.isArray(source.images) ? source.images : linesToArray(source.images);
+        source.images = normalizeMediaArray(images).map((entry) => toRelativeUploadsValue(entry));
+        return source;
+      });
+    }
+  }
+
+  function normalizeTripDraftUploads(draft){
+    if (!draft || typeof draft !== 'object') return draft;
+    draft.iconPath = toRelativeUploadsValue(draft.iconPath);
+    draft.featuredImage = toRelativeUploadsValue(draft.featuredImage);
+    draft.coverImage = toRelativeUploadsValue(draft.coverImage);
+    MODE_KEYS.forEach((key) => normalizeTripModeUploads(draft.modes && draft.modes[key]));
+    return draft;
   }
   function getStopsDraft(modeKey){
     return ensureModeDraft(modeKey).stops;
@@ -1051,6 +1178,7 @@
       if (!mode) return;
       const parsedDays = parseDurationDaysValue(mode.duration_days);
       mode.duration_days = parsedDays;
+      normalizeTripModeUploads(mode);
     });
     const tripDraft = ensureTripDraft();
     const payload = {
@@ -1063,10 +1191,12 @@
       featuredImage: getFeaturedImageValue(),
       modes
     };
+    payload.featuredImage = toRelativeUploadsValue(payload.featuredImage);
     if (currentTripDraft && currentTripDraft.id) payload.id = currentTripDraft.id;
     if (currentTripDraft && currentTripDraft.createdAt) payload.createdAt = currentTripDraft.createdAt;
     if (currentTripDraft && currentTripDraft.iconPath) payload.iconPath = currentTripDraft.iconPath;
     if (currentTripDraft && currentTripDraft.coverImage) payload.coverImage = currentTripDraft.coverImage;
+    payload.coverImage = toRelativeUploadsValue(payload.coverImage);
     return payload;
   }
 
@@ -1184,7 +1314,7 @@
   }
 
   function populateForm(trip){
-    const tripData = mergeWithTemplate(trip || {});
+    const tripData = normalizeTripDraftUploads(mergeWithTemplate(trip || {}));
     currentTripDraft = tripData;
     const draft = ensureTripDraft();
     editingSlug = draft.slug;
@@ -1205,7 +1335,7 @@
   function resetForm(){
     editingSlug = null;
     slugManuallyEdited = false;
-    currentTripDraft = templateClone();
+    currentTripDraft = normalizeTripDraftUploads(templateClone());
     const draft = ensureTripDraft();
     if (els.title) els.title.value = '';
     if (els.slug) els.slug.value = '';
@@ -1222,22 +1352,39 @@
     if (els.tripsMessage) els.tripsMessage.textContent = '';
   }
 
+  function setTripIconStatus(message, state){
+    if (!els.tripIconName) return;
+    els.tripIconName.textContent = message || '';
+    if (state) {
+      els.tripIconName.dataset.state = state;
+    } else {
+      delete els.tripIconName.dataset.state;
+    }
+  }
+
   function renderTripIconPreview(iconPath){
     if (!els.tripIconPreview) return;
+    const normalized = toRelativeUploadsValue(iconPath);
+    const storedValue = normalized || '';
+    if (els.tripIcon) {
+      if (storedValue) {
+        els.tripIcon.dataset.filename = storedValue;
+      } else {
+        delete els.tripIcon.dataset.filename;
+      }
+    }
+    const draft = ensureTripDraft();
+    draft.iconPath = storedValue;
     els.tripIconPreview.innerHTML = '';
-    if (!iconPath) {
-      if (els.tripIcon) delete els.tripIcon.dataset.filename;
-      if (els.tripIconName) els.tripIconName.textContent = '';
+    if (!storedValue) {
+      setTripIconStatus('', '');
       return;
     }
-    if (els.tripIcon) els.tripIcon.dataset.filename = iconPath;
-    if (els.tripIconName) {
-      try { els.tripIconName.textContent = iconPath.split('/').pop() || ''; }
-      catch(_) { els.tripIconName.textContent = iconPath; }
-    }
-    const isSvg = /\.svg(\?|$)/i.test(iconPath);
+    setTripIconStatus(`Icon: ${extractFilename(storedValue)}`, 'info');
+    const resolvedSrc = absolutizeUploadsValue(storedValue) || storedValue;
+    const isSvg = /\.svg(\?|$)/i.test(resolvedSrc);
     if (isSvg) {
-      fetch(iconPath, { cache:'no-store' })
+      fetch(resolvedSrc, { cache:'no-store' })
         .then((r)=>r.ok ? r.text() : Promise.reject(new Error('svg_fetch_failed')))
         .then((txt) => {
           const cleaned = txt.replace(/<\?xml[^>]*>/ig,'').replace(/<!DOCTYPE[^>]*>/ig,'');
@@ -1253,7 +1400,7 @@
         })
         .catch(() => {
           const img = new Image();
-          img.src = iconPath;
+          img.src = resolvedSrc;
           img.alt = 'Icon';
           img.className = 'svg-icon';
           img.style.maxWidth = '48px';
@@ -1262,12 +1409,90 @@
         });
     } else {
       const img = new Image();
-      img.src = iconPath;
+      img.src = resolvedSrc;
       img.alt = 'Icon';
       img.className = 'svg-icon';
       img.style.maxWidth = '48px';
       img.style.maxHeight = '48px';
       els.tripIconPreview.appendChild(img);
+    }
+  }
+
+  function previewLocalTripIcon(file){
+    if (!file || !els.tripIconPreview) return;
+    els.tripIconPreview.innerHTML = '';
+    const isSvg = /\.svg$/i.test(file.name || '') || file.type === 'image/svg+xml';
+    if (isSvg) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const txt = String(reader.result || '');
+          const cleaned = txt.replace(/<\?xml[^>]*>/ig,'').replace(/<!DOCTYPE[^>]*>/ig,'');
+          const div = document.createElement('div');
+          div.innerHTML = cleaned;
+          const svg = div.querySelector('svg');
+          if (svg) {
+            svg.removeAttribute('width');
+            svg.removeAttribute('height');
+            svg.classList.add('svg-icon');
+            els.tripIconPreview.appendChild(svg);
+          }
+        } catch(_){}
+      };
+      reader.readAsText(file);
+    } else {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.alt = 'Icon';
+      img.className = 'svg-icon';
+      img.style.maxWidth = '48px';
+      img.style.maxHeight = '48px';
+      els.tripIconPreview.appendChild(img);
+    }
+  }
+
+  function validateIconFile(file){
+    if (!file) return 'no_file';
+    const name = String(file.name || '').toLowerCase();
+    const type = String(file.type || '').toLowerCase();
+    const allowed = ['.svg', '.png', '.webp'];
+    const hasExt = allowed.some((ext) => name.endsWith(ext));
+    const isImage = type.startsWith('image/');
+    if (!hasExt && !isImage) return 'invalid_type';
+    if (file.size > 15 * 1024 * 1024) return 'size';
+    return '';
+  }
+
+  async function handleTripIconChange(){
+    const file = (els.tripIcon && els.tripIcon.files && els.tripIcon.files[0]) ? els.tripIcon.files[0] : null;
+    if (!file) {
+      renderTripIconPreview('');
+      return;
+    }
+    const validation = validateIconFile(file);
+    if (validation === 'invalid_type') {
+      setTripIconStatus('Επίλεξε SVG, PNG ή WEBP.', 'error');
+      if (els.tripIcon) els.tripIcon.value = '';
+      return;
+    }
+    if (validation === 'size') {
+      setTripIconStatus('Μέγιστο 15MB ανά αρχείο.', 'error');
+      if (els.tripIcon) els.tripIcon.value = '';
+      return;
+    }
+    previewLocalTripIcon(file);
+    setTripIconStatus('Μεταφόρτωση...', 'uploading');
+    try {
+      const uploaded = await uploadAdminFile(file, buildUploadFolder('icon'));
+      if (!uploaded || !uploaded.relativePath) throw new Error('upload_failed');
+      renderTripIconPreview(uploaded.relativePath);
+      setTripIconStatus(`Ανέβηκε: ${extractFilename(uploaded.relativePath)}`, 'success');
+    } catch (err) {
+      console.warn('Trips Admin: icon upload failed', err);
+      const message = err && err.message ? err.message : 'Αποτυχία μεταφόρτωσης.';
+      setTripIconStatus(message, 'error');
+    } finally {
+      if (els.tripIcon) els.tripIcon.value = '';
     }
   }
 
@@ -1277,22 +1502,23 @@
     const value = typeof raw === 'string'
       ? raw.trim()
       : (raw ? String(raw).trim() : '');
-    draft.featuredImage = value || '';
+    draft.featuredImage = toRelativeUploadsValue(value);
     return draft.featuredImage;
   }
 
   function setFeaturedImageValue(value){
     const draft = ensureTripDraft();
-    draft.featuredImage = value ? String(value).trim() : '';
+    draft.featuredImage = toRelativeUploadsValue(value);
     renderFeaturedImagePreview(draft.featuredImage);
   }
 
   function renderFeaturedImagePreview(src){
     const hasImage = !!src;
+    const resolvedSrc = hasImage ? (absolutizeUploadsValue(src) || src) : '';
     if (els.featuredImagePreview) {
       if (hasImage) {
         els.featuredImagePreview.removeAttribute('hidden');
-        els.featuredImagePreview.src = src;
+        els.featuredImagePreview.src = resolvedSrc;
       } else {
         els.featuredImagePreview.setAttribute('hidden', '');
         els.featuredImagePreview.removeAttribute('src');
@@ -1357,18 +1583,9 @@
     setFeaturedImageControlsDisabled(true);
     updateFeaturedImageStatus('Μεταφόρτωση...', 'uploading');
     try {
-      const fd = new FormData();
-      fd.append('coverImageFile', file);
-      const res = await fetch('/api/admin/upload-trip-image', { method:'POST', body: fd });
-      let data = null;
-      try { data = await res.json(); }
-      catch(err){ console.warn('Trips Admin: featured image JSON parse failed', err); }
-      if (!res.ok || !data || !data.ok || (!data.url && !data.filename)) {
-        const detail = data && (data.detail || data.error);
-        throw new Error(detail || 'upload_failed');
-      }
-      const url = (data.url && data.url.trim()) || (data.filename ? buildTripUploadsUrl(data.filename) : '');
-      setFeaturedImageValue(url);
+      const uploaded = await uploadAdminFile(file, buildUploadFolder('featured'));
+      if (!uploaded || !uploaded.relativePath) throw new Error('upload_failed');
+      setFeaturedImageValue(uploaded.relativePath);
       updateFeaturedImageStatus('Η εικόνα ανέβηκε.', 'success');
     } catch(err){
       console.warn('Trips Admin: featured upload failed', err);
@@ -1410,16 +1627,9 @@
     }
     if (els.tripsMessage) { els.tripsMessage.className=''; els.tripsMessage.textContent='Αποθήκευση...'; }
     try {
-      let iconFilename = (els.tripIcon && els.tripIcon.dataset.filename) ? els.tripIcon.dataset.filename : '';
-      if (els.tripIcon && els.tripIcon.files && els.tripIcon.files[0]) {
-        const fd = new FormData();
-        fd.append('tripIconFile', els.tripIcon.files[0]);
-        const up = await fetch('/api/admin/upload-trip-icon', { method:'POST', body: fd });
-        const uj = await up.json();
-        if (up.ok && uj && uj.ok && uj.filename) iconFilename = buildTripUploadsUrl(uj.filename);
-      }
       const payload = buildTripPayload(formValues);
-      if (iconFilename) payload.iconPath = iconFilename;
+      const iconPath = toRelativeUploadsValue((els.tripIcon && els.tripIcon.dataset.filename) || (currentTripDraft && currentTripDraft.iconPath) || '');
+      if (iconPath) payload.iconPath = iconPath;
       const res = await fetch('/api/admin/trips', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
       const json = await res.json();
       if (!res.ok || !json.ok){
@@ -1563,40 +1773,7 @@
   if (els.featuredImageClear) els.featuredImageClear.addEventListener('click', handleFeaturedImageClear);
 
   if (els.tripIcon) {
-    els.tripIcon.addEventListener('change', () => {
-      const f = els.tripIcon.files && els.tripIcon.files[0];
-      els.tripIconPreview && (els.tripIconPreview.innerHTML = '');
-      if (els.tripIconName) els.tripIconName.textContent = f ? (f.name || '') : '';
-      if (!f) { delete els.tripIcon.dataset.filename; return; }
-      const isSvg = /\.svg$/i.test(f.name) || f.type === 'image/svg+xml';
-      if (isSvg) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            const txt = String(reader.result||'');
-            const cleaned = txt.replace(/<\?xml[^>]*>/ig,'').replace(/<!DOCTYPE[^>]*>/ig,'');
-            const div = document.createElement('div');
-            div.innerHTML = cleaned;
-            const svg = div.querySelector('svg');
-            if (svg) {
-              svg.removeAttribute('width');
-              svg.removeAttribute('height');
-              svg.classList.add('svg-icon');
-              els.tripIconPreview && els.tripIconPreview.appendChild(svg);
-            }
-          } catch(_){ }
-        };
-        reader.readAsText(f);
-      } else {
-        const img = new Image();
-        img.src = URL.createObjectURL(f);
-        img.alt = 'Icon';
-        img.className = 'svg-icon';
-        img.style.maxWidth = '48px';
-        img.style.maxHeight = '48px';
-        els.tripIconPreview && els.tripIconPreview.appendChild(img);
-      }
-    });
+    els.tripIcon.addEventListener('change', handleTripIconChange);
   }
 
   init();

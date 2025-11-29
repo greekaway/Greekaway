@@ -14,21 +14,20 @@
   let observer = null;
   let bootstrapped = false;
   let fallbackTimer = null;
-  const RAW_UPLOADS_BASE = (window.UPLOADS_BASE_URL || window.PUBLIC_BASE_URL || (window.location && window.location.origin) || 'https://greekaway.com');
-  const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$/, '') || 'https://greekaway.com';
-
-  function buildTripUploadsUrl(filename){
-    if (!filename) return '';
-    const clean = String(filename).replace(/^\/+/, '');
-    return `${UPLOADS_BASE}/uploads/trips/${clean}`;
-  }
+  const UploadClient = window.GAUploadClient || null;
 
   function supportsUploads(){
-    return typeof window !== 'undefined' && window.FormData && window.fetch;
+    return typeof window !== 'undefined' && window.FormData && window.fetch && UploadClient && typeof UploadClient.uploadFile === 'function';
   }
 
   function sanitizeSlug(raw){
     return String(raw || '').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  }
+
+  function buildStopFolder(meta){
+    const slug = sanitizeSlug(meta && meta.slug) || 'trip';
+    const mode = sanitizeSlug(meta && meta.modeKey) || 'mode';
+    return `trips/${slug}/${mode}/stops`;
   }
 
   function getCurrentSlug(){
@@ -80,33 +79,24 @@
   }
 
   async function uploadFiles(files, meta){
-    const fd = new FormData();
-    files.forEach((file) => fd.append('images', file));
-    if (meta.slug) fd.append('slug', meta.slug);
-    if (meta.modeKey) fd.append('modeKey', meta.modeKey);
-    if (meta.stopTitle) fd.append('stopTitle', meta.stopTitle);
-    let res;
-    try {
-      res = await fetch('/api/upload-trip-image', { method:'POST', body: fd, credentials:'same-origin' });
-    } catch(err){
-      console.warn('TripImageUploader: network error', err);
-      return { ok:false, error:'Αποτυχία δικτύου.' };
+    if (!UploadClient || typeof UploadClient.uploadFile !== 'function') {
+      return { ok:false, error:'Το upload δεν είναι διαθέσιμο.' };
     }
-    let data = null;
-    try { data = await res.json(); } catch(err){ console.warn('TripImageUploader: invalid JSON', err); }
-    if (!res.ok || !data || !data.ok) {
-      const detail = data && (data.detail || data.error);
-      console.warn('TripImageUploader: upload failed', detail || res.status);
-      return { ok:false, error: detail || 'Αποτυχία μεταφόρτωσης.' };
+    const folder = buildStopFolder(meta);
+    const uploaded = [];
+    for (const file of files) {
+      try {
+        const result = await UploadClient.uploadFile(file, { folder });
+        if (result && result.relativePath) uploaded.push(result.relativePath);
+      } catch (err) {
+        console.warn('TripImageUploader: upload failed', err);
+        return { ok:false, error: err && err.message ? err.message : 'Αποτυχία μεταφόρτωσης.' };
+      }
     }
-    const urls = Array.isArray(data.files)
-      ? data.files.map((file) => file && (file.url || (file.filename ? buildTripUploadsUrl(file.filename) : ''))).filter(Boolean)
-      : [];
-    if (!urls.length) {
-      console.warn('TripImageUploader: response missing files');
+    if (!uploaded.length) {
       return { ok:false, error:'Δεν επιστράφηκαν αρχεία.' };
     }
-    return { ok:true, urls };
+    return { ok:true, urls: uploaded };
   }
 
   function handleFilesChange(event){

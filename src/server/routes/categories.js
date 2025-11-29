@@ -7,12 +7,14 @@ const {
   getIconsDir,
   buildUploadsUrl,
   absolutizeUploadsUrl,
+  toRelativeUploadsPath,
 } = require('../lib/uploads');
 
 const ROOT_DIR = path.join(__dirname, '..', '..', '..');
 const CATEGORIES_PATH = path.join(ROOT_DIR, 'data', 'categories.json');
 const PUBLIC_CATEGORIES_DIR = path.join(ROOT_DIR, 'public', 'categories');
 const DEFAULT_ICON_URL = buildUploadsUrl('icons', 'default.svg');
+const jsonParser = express.json({ limit: '1mb' });
 const LEGACY_MODE_TEXT_FIELDS = [
   'mode_card_title',
   'mode_card_subtitle',
@@ -20,8 +22,6 @@ const LEGACY_MODE_TEXT_FIELDS = [
   'mode_mercedes_description',
   'mode_bus_description'
 ];
-let multer = null;
-try { multer = require('multer'); } catch(_) { multer = null; }
 
 function emptyModeCard(){
   return {
@@ -133,38 +133,6 @@ function upsertCategory(list, input){
   applyModeCardPayload(existing, input);
   return existing;
 }
-// Legacy inline SVG save (kept for backward compatibility if still sent)
-function saveIconIfProvided(category, iconSvg){
-  if (!iconSvg || typeof iconSvg !== 'string') return;
-  const catDir = path.join(PUBLIC_CATEGORIES_DIR, category.slug);
-  try { fs.mkdirSync(catDir, { recursive:true }); } catch(_){ }
-  const iconPathDisk = path.join(catDir, 'icon.svg');
-  try { fs.writeFileSync(iconPathDisk, iconSvg, 'utf8'); category.iconPath = `/categories/${category.slug}/icon.svg`; } catch(_){ }
-}
-
-// Multer storage (filename: slug + timestamp + ext)
-const upload = multer ? multer({
-  storage: multer.diskStorage({
-    destination: (req,file,cb) => {
-      const destination = getIconsDir();
-      cb(null, destination);
-    },
-    filename: (req,file,cb) => {
-      const orig = String(file.originalname||'').toLowerCase();
-      const extMatch = orig.match(/\.([a-z0-9]+)$/);
-      const ext = extMatch ? extMatch[1] : 'svg';
-      const slugRaw = sanitizeSlug((req.body && (req.body.slug||req.body.title)) || 'icon');
-      const fname = `${slugRaw}-${Date.now()}.${ext}`;
-      cb(null, fname);
-    }
-  }),
-  fileFilter: (req,file,cb) => {
-    const ok = /(svg|png|webp)$/i.test(file.originalname||'');
-    if (!ok) return cb(new Error('invalid_file_type'));
-    cb(null,true);
-  },
-  limits: { fileSize: 512 * 1024 }
-}) : null; // 512KB limit
 
 function buildCategoriesRouter({ checkAdminAuth }){
   ensureCategoriesFile();
@@ -196,56 +164,25 @@ function buildCategoriesRouter({ checkAdminAuth }){
       return res.json(enriched);
     } catch(e){ console.error('categories: unexpected GET', e); return res.status(500).json({ error:'read_failed' }); }
   });
-  // Multipart handler inlined to capture and log Multer errors explicitly
-  router.post('/', (req,res) => {
+  router.post('/', jsonParser, (req,res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });
-    const resolvedUploadDir = path.resolve(getIconsDir());
-    console.log('categories: POST start', { resolvedUploadDir, bodyKeys: Object.keys(req.body||{}) });
-    function proceed(){
-      try {
-        const body = (req.body && typeof req.body==='object') ? req.body : null;
-        if (!body) return res.status(400).json({ error:'invalid_body' });
-        const list = safeReadCategories();
-        let updated; try { updated = upsertCategory(list, body); } catch(err){ return res.status(400).json({ error: err.message||'upsert_failed' }); }
-        if (req.file && req.file.filename) {
-          updated.iconPath = buildUploadsUrl('icons', req.file.filename);
-        } else if (body.iconPath && typeof body.iconPath === 'string' && body.iconPath.trim()) {
-          updated.iconPath = absolutizeUploadsUrl(body.iconPath.trim());
-        } else if (body.iconSvg) {
-          saveIconIfProvided(updated, body.iconSvg);
-        } else if (!updated.iconPath) {
-          updated.iconPath = DEFAULT_ICON_URL;
-        }
-        list.sort((a,b)=>(a.order-b.order)||a.title.localeCompare(b.title));
-        if (!writeCategories(list)) return res.status(500).json({ error:'write_failed' });
-        console.log('categories: POST saved', { slug: updated.slug, iconPath: updated.iconPath, file: req.file ? req.file.filename : null });
-        return res.json({ ok:true, category:updated, total:list.length });
-      } catch(e){
-        console.error('categories: POST error', e && e.stack ? e.stack : e);
-        return res.status(500).json({ error:'write_failed', detail: e && e.message ? e.message : String(e) });
+    try {
+      const body = (req.body && typeof req.body==='object') ? req.body : null;
+      if (!body) return res.status(400).json({ error:'invalid_body' });
+      const list = safeReadCategories();
+      let updated; try { updated = upsertCategory(list, body); } catch(err){ return res.status(400).json({ error: err.message||'upsert_failed' }); }
+      if (typeof body.iconPath === 'string' && body.iconPath.trim()) {
+        updated.iconPath = toRelativeUploadsPath(body.iconPath.trim());
+      } else {
+        updated.iconPath = toRelativeUploadsPath(updated.iconPath);
       }
-    }
-    // If multer available, run it and capture errors; else proceed without file
-    if (upload) {
-      try {
-        upload.single('iconFile')(req,res,(err)=>{
-          if (err) {
-            console.error('categories: multer error', {
-              message: err && err.message ? err.message : err,
-              code: err && err.code ? err.code : undefined,
-              dest: resolvedUploadDir
-            });
-            return res.status(400).json({ error:'upload_failed', detail: err && err.message ? err.message : String(err) });
-          }
-          proceed();
-        });
-      } catch(e){
-        console.error('categories: multer invocation failed', e && e.message ? e.message : e);
-        return res.status(500).json({ error:'upload_failed', detail: e && e.message ? e.message : String(e) });
-      }
-    } else {
-      console.warn('categories: multer not available, proceeding without file handling');
-      proceed();
+      list.sort((a,b)=>(a.order-b.order)||a.title.localeCompare(b.title));
+      if (!writeCategories(list)) return res.status(500).json({ error:'write_failed' });
+      console.log('categories: POST saved', { slug: updated.slug, iconPath: updated.iconPath });
+      return res.json({ ok:true, category:updated, total:list.length });
+    } catch(e){
+      console.error('categories: POST error', e && e.stack ? e.stack : e);
+      return res.status(500).json({ error:'write_failed', detail: e && e.message ? e.message : String(e) });
     }
   });
   router.delete('/:slug', (req, res) => {
