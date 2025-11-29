@@ -14,71 +14,6 @@ const CATEGORIES_PATH = path.join(ROOT_DIR, 'data', 'categories.json');
 const PUBLIC_CATEGORIES_DIR = path.join(ROOT_DIR, 'public', 'categories');
 const DEFAULT_ICON_PATH = 'uploads/icons/default.svg';
 const jsonParser = express.json({ limit: '1mb' });
-const LEGACY_MODE_TEXT_FIELDS = [
-  'mode_card_title',
-  'mode_card_subtitle',
-  'mode_van_description',
-  'mode_mercedes_description',
-  'mode_bus_description'
-];
-
-function emptyModeCard(){
-  return {
-    title: '',
-    subtitle: '',
-    desc: {
-      van: '',
-      mercedes: '',
-      bus: ''
-    }
-  };
-}
-
-function hydrateModeCard(raw, legacySource){
-  const base = emptyModeCard();
-  const src = (raw && typeof raw === 'object') ? raw : {};
-  const desc = (src.desc && typeof src.desc === 'object') ? src.desc : {};
-  if (typeof src.title === 'string') base.title = src.title;
-  if (typeof src.subtitle === 'string') base.subtitle = src.subtitle;
-  if (typeof desc.van === 'string') base.desc.van = desc.van;
-  if (typeof desc.mercedes === 'string') base.desc.mercedes = desc.mercedes;
-  if (typeof desc.bus === 'string') base.desc.bus = desc.bus;
-  const legacy = legacySource && typeof legacySource === 'object' ? legacySource : {};
-  if (!base.title && typeof legacy.mode_card_title === 'string') base.title = legacy.mode_card_title;
-  if (!base.subtitle && typeof legacy.mode_card_subtitle === 'string') base.subtitle = legacy.mode_card_subtitle;
-  if (!base.desc.van && typeof legacy.mode_van_description === 'string') base.desc.van = legacy.mode_van_description;
-  if (!base.desc.mercedes && typeof legacy.mode_mercedes_description === 'string') base.desc.mercedes = legacy.mode_mercedes_description;
-  if (!base.desc.bus && typeof legacy.mode_bus_description === 'string') base.desc.bus = legacy.mode_bus_description;
-  return base;
-}
-
-function stripLegacyModeCardFields(obj){
-  LEGACY_MODE_TEXT_FIELDS.forEach((field) => {
-    if (Object.prototype.hasOwnProperty.call(obj, field)) delete obj[field];
-  });
-}
-
-function applyModeCardPayload(target, payload){
-  const card = hydrateModeCard(target.modeCard, target);
-  const assign = (key, value) => {
-    const text = typeof value === 'string' ? value.trim() : '';
-    if (key === 'title') card.title = text;
-    else if (key === 'subtitle') card.subtitle = text;
-    else if (key === 'van') card.desc.van = text;
-    else if (key === 'mercedes') card.desc.mercedes = text;
-    else if (key === 'bus') card.desc.bus = text;
-  };
-  if (payload && typeof payload === 'object') {
-    if (Object.prototype.hasOwnProperty.call(payload, 'mode_card_title')) assign('title', payload.mode_card_title);
-    if (Object.prototype.hasOwnProperty.call(payload, 'mode_card_subtitle')) assign('subtitle', payload.mode_card_subtitle);
-    if (Object.prototype.hasOwnProperty.call(payload, 'mode_van_description')) assign('van', payload.mode_van_description);
-    if (Object.prototype.hasOwnProperty.call(payload, 'mode_mercedes_description')) assign('mercedes', payload.mode_mercedes_description);
-    if (Object.prototype.hasOwnProperty.call(payload, 'mode_bus_description')) assign('bus', payload.mode_bus_description);
-  }
-  target.modeCard = card;
-  stripLegacyModeCardFields(target);
-  return card;
-}
 
 function ensureCategoriesFile(){
   try { fs.mkdirSync(path.dirname(CATEGORIES_PATH), { recursive: true }); } catch(_){ }
@@ -129,7 +64,6 @@ function upsertCategory(list, input){
   existing.slug = slug;
   existing.order = Number.isFinite(input.order) ? input.order : parseInt(input.order,10) || 0;
   existing.published = !!input.published;
-  applyModeCardPayload(existing, input);
   return existing;
 }
 
@@ -157,8 +91,7 @@ function buildCategoriesRouter({ checkAdminAuth }){
           if (fs.existsSync(legacy)) iconPath = `/categories/${slug}/icon.svg`;
         }
         if (!iconPath) iconPath = absolutizeUploadsUrl(DEFAULT_ICON_PATH, req);
-        const modeCard = hydrateModeCard(c.modeCard, c);
-        return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath, modeCard };
+        return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath };
       });
       return res.json(enriched);
     } catch(e){ console.error('categories: unexpected GET', e); return res.status(500).json({ error:'read_failed' }); }
@@ -221,8 +154,7 @@ function registerCategoriesRoutes(app, { checkAdminAuth }){
             if (fs.existsSync(legacy)) iconPath = `/categories/${slug}/icon.svg`;
           }
           if (!iconPath) iconPath = absolutizeUploadsUrl(DEFAULT_ICON_PATH, req);
-          const modeCard = hydrateModeCard(c.modeCard, c);
-          return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath, modeCard };
+          return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath };
         });
         return res.json(out);
       } catch(e){ console.error('categories: public GET failed', e); return res.status(500).json({ error: 'read_failed' }); }

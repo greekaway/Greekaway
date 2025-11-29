@@ -5,16 +5,7 @@
     "slug": "city-by-night",
     "iconPath": "uploads/categories/city-by-night/1764416921648-4766c9fd341e.svg",
     "order": 1,
-    "published": true,
-    "modeCard": {
-      "title": "",
-      "subtitle": "",
-      "desc": {
-        "van": "",
-        "mercedes": "",
-        "bus": ""
-      }
-    }
+    "published": true
   },
   {
     "id": "65fd1809-31c7-4626-a5d4-cc02d058eb31",
@@ -22,16 +13,7 @@
     "slug": "athina",
     "iconPath": "uploads/icons/athina-1763560564929.svg",
     "order": 1,
-    "published": true,
-    "modeCard": {
-      "title": "",
-      "subtitle": "",
-      "desc": {
-        "van": "",
-        "mercedes": "",
-        "bus": ""
-      }
-    }
+    "published": true
   },
   {
     "id": "d57e6f6a-854e-4418-b70a-1492f295da19",
@@ -39,16 +21,7 @@
     "slug": "boyno",
     "iconPath": "uploads/icons/boyno-1763552980857.svg",
     "order": 1,
-    "published": true,
-    "modeCard": {
-      "title": "",
-      "subtitle": "",
-      "desc": {
-        "van": "",
-        "mercedes": "",
-        "bus": ""
-      }
-    }
+    "published": true
   },
   {
     "id": "b75a1099-8401-4108-8e43-6939e88f913a",
@@ -56,16 +29,7 @@
     "slug": "giogka",
     "iconPath": "uploads/icons/giogka-1763583478795.svg",
     "order": 1,
-    "published": true,
-    "modeCard": {
-      "title": "",
-      "subtitle": "",
-      "desc": {
-        "van": "",
-        "mercedes": "",
-        "bus": ""
-      }
-    }
+    "published": true
   },
   {
     "id": "f8e73b5d-2967-4c73-ac9c-bebe660d9fda",
@@ -73,16 +37,7 @@
     "slug": "estiatoria",
     "iconPath": "uploads/categories/estiatoria/1764416892741-efd97ace7d53.svg",
     "order": 1,
-    "published": true,
-    "modeCard": {
-      "title": "",
-      "subtitle": "",
-      "desc": {
-        "van": "",
-        "mercedes": "",
-        "bus": ""
-      }
-    }
+    "published": true
   },
   {
     "id": "b96e4fa7-3755-4830-bb62-d20823e24a5b",
@@ -90,16 +45,7 @@
     "slug": "thalassa",
     "iconPath": "uploads/icons/thalassa-1763552452977.svg",
     "order": 1,
-    "published": true,
-    "modeCard": {
-      "title": "",
-      "subtitle": "",
-      "desc": {
-        "van": "",
-        "mercedes": "",
-        "bus": ""
-      }
-    }
+    "published": true
   },
   {
     "id": "795e65b4-e45b-4dd4-9903-8800b03ef458",
@@ -107,15 +53,6 @@
     "slug": "politismos",
     "iconPath": "uploads/icons/politismos-1763552850472.svg",
     "order": 1,
-    "published": true,
-    "modeCard": {
-      "title": "",
-      "subtitle": "",
-      "desc": {
-        "van": "",
-        "mercedes": "",
-        "bus": ""
-      }
-    }
+    "published": true
   }
 ]
