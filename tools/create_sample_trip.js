@@ -21,6 +21,14 @@ const HOST = process.env.HOST || '127.0.0.1';
 const PORT = process.env.PORT || 3101; // matches dev server output
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'pass';
+const RAW_UPLOADS_BASE = (process.env.UPLOADS_BASE_URL || process.env.PUBLIC_BASE_URL || 'https://greekaway.com');
+const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$, '') || 'https://greekaway.com';
+
+function buildTripUploadsUrl(filename){
+  if (!filename) return '';
+  const clean = String(filename).replace(/^\/+/, '');
+  return `${UPLOADS_BASE}/uploads/trips/${clean}`;
+}
 
 function basicAuthHeader(){
   return 'Basic ' + Buffer.from(`${ADMIN_USER}:${ADMIN_PASS}`).toString('base64');
@@ -106,7 +114,7 @@ function postJson(endpoint, data){
       console.error('Icon upload failed', iconResp);
       return process.exit(1);
     }
-    const iconPath = iconResp.json.filename ? `/uploads/trips/${iconResp.json.filename}` : iconResp.json.url;
+    const iconPath = iconResp.json.url || (iconResp.json.filename ? buildTripUploadsUrl(iconResp.json.filename) : '');
     console.log('> Icon uploaded:', iconPath);
 
     console.log('> Uploading sample cover image...');
@@ -119,8 +127,8 @@ function postJson(endpoint, data){
       console.error('Cover upload failed', coverResp);
       return process.exit(1);
     }
-    const coverName = coverResp.json.filename || path.basename(coverResp.json.url||'');
-    console.log('> Cover uploaded:', coverName);
+    const coverUrl = coverResp.json.url || (coverResp.json.filename ? buildTripUploadsUrl(coverResp.json.filename) : '');
+    console.log('> Cover uploaded:', coverUrl);
 
     console.log('> Creating / updating sample trip...');
     const tripPayload = {
@@ -130,7 +138,7 @@ function postJson(endpoint, data){
       category: 'politismos',
       duration: '4 ώρες',
       stops: ['Ακρόπολη','Μουσείο','Πλάκα'],
-      coverImage: coverName,
+      coverImage: coverUrl,
       iconPath: iconPath
     };
     const tripResp = await postJson('/api/admin/trips', tripPayload);

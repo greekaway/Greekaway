@@ -270,6 +270,9 @@ async function getDataVersionEnsure(){
 }
 
 window.__GW_DATA_VER = '';
+const RAW_UPLOADS_BASE = (window.UPLOADS_BASE_URL || window.PUBLIC_BASE_URL || (window.location && window.location.origin) || 'https://greekaway.com');
+const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$, '') || 'https://greekaway.com';
+const DEFAULT_CATEGORY_ICON = `${UPLOADS_BASE}/uploads/icons/default.svg`;
 
 // ---------- [A] Λίστα Κατηγοριών (trips.html) ----------
 document.addEventListener("DOMContentLoaded", () => {
@@ -306,7 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const slug = cat.slug || cat.id;
         const catTitle = getLocalized(cat.title) || '';
         let iconPath = cat.iconPath || (`/categories/${slug}/icon.svg`);
-        if (!iconPath) iconPath = '/uploads/category-icons/default.svg';
+        if (!iconPath) iconPath = DEFAULT_CATEGORY_ICON;
         const tile = document.createElement('div');
         tile.className = 'category-tile';
         const btn = document.createElement('button');

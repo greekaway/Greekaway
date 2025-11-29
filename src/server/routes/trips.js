@@ -3,10 +3,15 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
+const {
+  getTripsDir: getUploadsTripsDir,
+  buildUploadsUrl,
+  absolutizeUploadsUrl,
+} = require("../lib/uploads");
+
 const ROOT_DIR = path.join(__dirname, "..", "..", "..");
 const TRIPS_DIR = path.join(ROOT_DIR, "data", "trips");
 const TRIP_TEMPLATE_FILE = path.join(TRIPS_DIR, "_template.json");
-const UPLOAD_TRIPS_DIR = path.join(ROOT_DIR, "public", "uploads", "trips");
 const MODE_KEYS = ["van", "mercedes", "bus"];
 const LEGACY_DURATION_FIELDS = ["duration", "duration_hours", "duration_days"];
 const MAX_TRIP_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -204,10 +209,11 @@ function linesToArray(value) {
 }
 
 function normalizeMediaList(value) {
+  let list = [];
   if (Array.isArray(value))
-    return value.map((v) => String(v || "").trim()).filter(Boolean);
-  if (typeof value === "string") return linesToArray(value);
-  return [];
+    list = value.map((v) => String(v || "").trim()).filter(Boolean);
+  else if (typeof value === "string") list = linesToArray(value);
+  return list.map((entry) => absolutizeUploadsUrl(entry));
 }
 
 function normalizeVideoBlock(value) {
@@ -672,11 +678,7 @@ function ensureTripsDir() {
   } catch (_) {
     /* ignore */
   }
-  try {
-    fs.mkdirSync(UPLOAD_TRIPS_DIR, { recursive: true });
-  } catch (_) {
-    /* ignore */
-  }
+  getUploadsTripsDir();
 }
 
 function removeUploadedFiles(files) {
@@ -838,9 +840,9 @@ function validateTrip(input) {
   const category = String(input.category || "").trim();
   const subtitle = String(input.subtitle || "").trim();
   const teaser = String(input.teaser || "").trim();
-  const coverImage = String(input.coverImage || "").trim();
-  const featuredImage = String(input.featuredImage || "").trim();
-  const iconPath = String(input.iconPath || "").trim();
+  const coverImage = absolutizeUploadsUrl(String(input.coverImage || "").trim());
+  const featuredImage = absolutizeUploadsUrl(String(input.featuredImage || "").trim());
+  const iconPath = absolutizeUploadsUrl(String(input.iconPath || "").trim());
   const hasActiveField =
     input && Object.prototype.hasOwnProperty.call(input, "active");
   let normalizedActive;
@@ -853,13 +855,13 @@ function validateTrip(input) {
       (input.video && input.video.url) ||
       ""
   ).trim();
-  const heroThumbnail = String(
+  const heroThumbnail = absolutizeUploadsUrl(String(
     input.heroThumbnail ||
       input.heroVideoThumbnail ||
       (input.heroVideo && input.heroVideo.thumbnail) ||
       (input.video && input.video.thumbnail) ||
       ""
-  ).trim();
+  ).trim());
   if (typeof input.active === "boolean") {
     normalizedActive = input.active;
   } else if (hasActiveField) {
@@ -935,12 +937,8 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
     ? multer({
         storage: multer.diskStorage({
           destination: (req, file, cb) => {
-            try {
-              fs.mkdirSync(UPLOAD_TRIPS_DIR, { recursive: true });
-            } catch (_) {
-              /* ignore */
-            }
-            cb(null, UPLOAD_TRIPS_DIR);
+            const dir = getUploadsTripsDir();
+            cb(null, dir);
           },
           filename: (req, file, cb) => {
             const orig = String(file.originalname || "").toLowerCase();
@@ -1060,7 +1058,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
       return res.json({
         ok: true,
         filename,
-        url: `/uploads/trips/${filename}`,
+        url: buildUploadsUrl("trips", filename),
       });
     });
   });
@@ -1083,7 +1081,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
       return res.json({
         ok: true,
         filename,
-        url: `/uploads/trips/${filename}`,
+        url: buildUploadsUrl("trips", filename),
       });
     });
   });
@@ -1114,7 +1112,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
           ok: true,
           files: files.map((file) => ({
             filename: file.filename,
-            url: `/uploads/trips/${file.filename}`,
+            url: buildUploadsUrl("trips", file.filename),
             size: file.size || 0,
           })),
         });
@@ -1136,7 +1134,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
         return res.json({
           ok: true,
           filename,
-          url: `/uploads/trips/${filename}`,
+          url: buildUploadsUrl("trips", filename),
         });
       });
     });
@@ -1156,7 +1154,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
         return res.json({
           ok: true,
           filename,
-          url: `/uploads/trips/${filename}`,
+          url: buildUploadsUrl("trips", filename),
         });
       });
     });
@@ -1184,7 +1182,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
           ok: true,
           files: files.map((file) => ({
             filename: file.filename,
-            url: `/uploads/trips/${file.filename}`,
+            url: buildUploadsUrl("trips", file.filename),
             size: file.size || 0,
           })),
         });
@@ -1212,7 +1210,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
           ok: true,
           file: {
             filename: file.filename,
-            url: `/uploads/trips/${file.filename}`,
+            url: buildUploadsUrl("trips", file.filename),
             size: file.size || 0,
           },
         });

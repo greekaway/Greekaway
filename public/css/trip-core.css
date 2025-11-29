@@ -412,6 +412,27 @@ body.trip-lightbox-open {
   margin-top: clamp(18px, 3vw, 32px);
 }
 
+/* Edge-to-edge media rails inside the main description section */
+#trip-section-description .trip-gallery,
+#trip-section-description .trip-videos {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: max(clamp(8px, 2vw, 24px), env(safe-area-inset-left, 0px));
+  padding-right: max(clamp(8px, 2vw, 24px), env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+}
+
+#trip-section-route .trip-gallery,
+#trip-section-route .trip-videos {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: max(clamp(8px, 2vw, 24px), env(safe-area-inset-left, 0px));
+  padding-right: max(clamp(8px, 2vw, 24px), env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+}
+
 .trip-videos-track {
   display: grid;
   grid-auto-flow: column;

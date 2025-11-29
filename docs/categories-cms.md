@@ -4,8 +4,8 @@ The Categories CMS now supports image-based icons (SVG/PNG/WEBP) via uploads.
 
 ## Storage
 - Metadata stored in `data/categories.json` with fields: `id,title,slug,order,published,iconPath`.
-- Icons saved under `public/uploads/category-icons/`.
-- Fallback default icon: `/uploads/category-icons/default.svg` automatically created if missing.
+- Icons saved under the persistent `/uploads/icons/` directory (outside `public/`).
+- Fallback default icon: `https://greekaway.com/uploads/icons/default.svg` automatically created if missing.
 - Legacy inline SVG and legacy path `/public/categories/<slug>/icon.svg` still accepted as fallback for existing categories.
 
 ## Admin Panel Changes

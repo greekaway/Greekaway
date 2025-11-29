@@ -14,6 +14,14 @@
   let observer = null;
   let bootstrapped = false;
   let fallbackTimer = null;
+  const RAW_UPLOADS_BASE = (window.UPLOADS_BASE_URL || window.PUBLIC_BASE_URL || (window.location && window.location.origin) || 'https://greekaway.com');
+  const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$, '') || 'https://greekaway.com';
+
+  function buildTripUploadsUrl(filename){
+    if (!filename) return '';
+    const clean = String(filename).replace(/^\/+/, '');
+    return `${UPLOADS_BASE}/uploads/trips/${clean}`;
+  }
 
   function supportsUploads(){
     return typeof window !== 'undefined' && window.FormData && window.fetch;
@@ -92,7 +100,7 @@
       return { ok:false, error: detail || 'Αποτυχία μεταφόρτωσης.' };
     }
     const urls = Array.isArray(data.files)
-      ? data.files.map((file) => file && (file.url || (file.filename ? `/uploads/trips/${file.filename}` : ''))).filter(Boolean)
+      ? data.files.map((file) => file && (file.url || (file.filename ? buildTripUploadsUrl(file.filename) : ''))).filter(Boolean)
       : [];
     if (!urls.length) {
       console.warn('TripImageUploader: response missing files');

@@ -37,6 +37,14 @@
   MODE_KEYS.forEach((key) => updateModeHeader(key));
   const TRIPS_RENDER_EVENT = 'ga:trips:rendered';
   let rowBindScheduled = false;
+  const RAW_UPLOADS_BASE = (window.UPLOADS_BASE_URL || window.PUBLIC_BASE_URL || (window.location && window.location.origin) || 'https://greekaway.com');
+  const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$, '') || 'https://greekaway.com';
+
+  function buildTripUploadsUrl(filename){
+    if (!filename) return '';
+    const clean = String(filename).replace(/^\/+/, '');
+    return `${UPLOADS_BASE}/uploads/trips/${clean}`;
+  }
 
   function getModeForm(modeKey, formsRef){
     const registry = formsRef || modeForms;
@@ -741,7 +749,7 @@
         <textarea class="stop-description" rows="2" placeholder="Περιγραφή εμπειρίας"></textarea>
       </label>
       <label>Εικόνες (μία ανά γραμμή)
-        <textarea class="stop-images" rows="2" placeholder="/uploads/trips/van-stop1.jpg"></textarea>
+        <textarea class="stop-images" rows="2" placeholder="https://greekaway.com/uploads/trips/van-stop1.jpg"></textarea>
         <div class="stop-asset-count hint small" data-asset="images">0 Εικόνες</div>
       </label>
       <label>Videos (μία ανά γραμμή)
@@ -1359,7 +1367,7 @@
         const detail = data && (data.detail || data.error);
         throw new Error(detail || 'upload_failed');
       }
-      const url = (data.url && data.url.trim()) || (data.filename ? `/uploads/trips/${data.filename}` : '');
+      const url = (data.url && data.url.trim()) || (data.filename ? buildTripUploadsUrl(data.filename) : '');
       setFeaturedImageValue(url);
       updateFeaturedImageStatus('Η εικόνα ανέβηκε.', 'success');
     } catch(err){
@@ -1408,7 +1416,7 @@
         fd.append('tripIconFile', els.tripIcon.files[0]);
         const up = await fetch('/api/admin/upload-trip-icon', { method:'POST', body: fd });
         const uj = await up.json();
-        if (up.ok && uj && uj.ok && uj.filename) iconFilename = `/uploads/trips/${uj.filename}`;
+        if (up.ok && uj && uj.ok && uj.filename) iconFilename = buildTripUploadsUrl(uj.filename);
       }
       const payload = buildTripPayload(formValues);
       if (iconFilename) payload.iconPath = iconFilename;

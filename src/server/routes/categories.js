@@ -3,10 +3,16 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+const {
+  getIconsDir,
+  buildUploadsUrl,
+  absolutizeUploadsUrl,
+} = require('../lib/uploads');
+
 const ROOT_DIR = path.join(__dirname, '..', '..', '..');
 const CATEGORIES_PATH = path.join(ROOT_DIR, 'data', 'categories.json');
 const PUBLIC_CATEGORIES_DIR = path.join(ROOT_DIR, 'public', 'categories');
-const UPLOAD_ICONS_DIR = path.join(ROOT_DIR, 'public', 'uploads', 'category-icons');
+const DEFAULT_ICON_URL = buildUploadsUrl('icons', 'default.svg');
 const LEGACY_MODE_TEXT_FIELDS = [
   'mode_card_title',
   'mode_card_subtitle',
@@ -78,24 +84,24 @@ function applyModeCardPayload(target, payload){
 function ensureCategoriesFile(){
   try { fs.mkdirSync(path.dirname(CATEGORIES_PATH), { recursive: true }); } catch(_){ }
   try { fs.mkdirSync(PUBLIC_CATEGORIES_DIR, { recursive: true }); } catch(_){ }
-  try { fs.mkdirSync(UPLOAD_ICONS_DIR, { recursive: true }); } catch(_){ }
+  const ICONS_DIR = getIconsDir();
   if (!fs.existsSync(CATEGORIES_PATH)) {
     try { fs.writeFileSync(CATEGORIES_PATH, '[]', 'utf8'); } catch(_){ }
   }
   // Ensure a default.svg exists for fallback
-  const defaultIconPath = path.join(UPLOAD_ICONS_DIR, 'default.svg');
+  const defaultIconPath = path.join(ICONS_DIR, 'default.svg');
   if (!fs.existsSync(defaultIconPath)) {
     const fallbackSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><rect x="4" y="4" width="56" height="56" rx="12" fill="#1e5179"/><text x="32" y="38" font-size="18" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif">CAT</text></svg>';
     try { fs.writeFileSync(defaultIconPath, fallbackSvg, 'utf8'); } catch(_){ }
   }
   try {
     // Check write access and log absolute path resolutions
-    const resolved = path.resolve(UPLOAD_ICONS_DIR);
+    const resolved = path.resolve(ICONS_DIR);
     fs.accessSync(resolved, fs.constants.W_OK);
     console.log('categories: upload dir ready:', resolved);
   } catch(e){
     console.error('categories: upload dir not writable', {
-      dir: path.resolve(UPLOAD_ICONS_DIR),
+      dir: path.resolve(ICONS_DIR),
       error: e && e.message ? e.message : e
     });
   }
@@ -140,8 +146,8 @@ function saveIconIfProvided(category, iconSvg){
 const upload = multer ? multer({
   storage: multer.diskStorage({
     destination: (req,file,cb) => {
-      try { fs.mkdirSync(UPLOAD_ICONS_DIR, { recursive:true }); } catch(_){ }
-      cb(null, UPLOAD_ICONS_DIR);
+      const destination = getIconsDir();
+      cb(null, destination);
     },
     filename: (req,file,cb) => {
       const orig = String(file.originalname||'').toLowerCase();
@@ -178,11 +184,12 @@ function buildCategoriesRouter({ checkAdminAuth }){
         const slug = c.slug || '';
         // Priority: stored iconPath -> legacy /categories/<slug>/icon.svg if exists -> default fallback
         let iconPath = (c.iconPath && c.iconPath.trim()) ? c.iconPath.trim() : '';
+        iconPath = absolutizeUploadsUrl(iconPath);
         if (!iconPath) {
           const legacy = path.join(PUBLIC_CATEGORIES_DIR, slug, 'icon.svg');
           if (fs.existsSync(legacy)) iconPath = `/categories/${slug}/icon.svg`;
         }
-        if (!iconPath) iconPath = '/uploads/category-icons/default.svg';
+        if (!iconPath) iconPath = DEFAULT_ICON_URL;
         const modeCard = hydrateModeCard(c.modeCard, c);
         return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath, modeCard };
       });
@@ -192,7 +199,7 @@ function buildCategoriesRouter({ checkAdminAuth }){
   // Multipart handler inlined to capture and log Multer errors explicitly
   router.post('/', (req,res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });
-    const resolvedUploadDir = path.resolve(UPLOAD_ICONS_DIR);
+    const resolvedUploadDir = path.resolve(getIconsDir());
     console.log('categories: POST start', { resolvedUploadDir, bodyKeys: Object.keys(req.body||{}) });
     function proceed(){
       try {
@@ -201,13 +208,13 @@ function buildCategoriesRouter({ checkAdminAuth }){
         const list = safeReadCategories();
         let updated; try { updated = upsertCategory(list, body); } catch(err){ return res.status(400).json({ error: err.message||'upsert_failed' }); }
         if (req.file && req.file.filename) {
-          updated.iconPath = `/uploads/category-icons/${req.file.filename}`;
+          updated.iconPath = buildUploadsUrl('icons', req.file.filename);
         } else if (body.iconPath && typeof body.iconPath === 'string' && body.iconPath.trim()) {
-          updated.iconPath = body.iconPath.trim();
+          updated.iconPath = absolutizeUploadsUrl(body.iconPath.trim());
         } else if (body.iconSvg) {
           saveIconIfProvided(updated, body.iconSvg);
         } else if (!updated.iconPath) {
-          updated.iconPath = '/uploads/category-icons/default.svg';
+          updated.iconPath = DEFAULT_ICON_URL;
         }
         list.sort((a,b)=>(a.order-b.order)||a.title.localeCompare(b.title));
         if (!writeCategories(list)) return res.status(500).json({ error:'write_failed' });
@@ -272,11 +279,12 @@ function registerCategoriesRoutes(app, { checkAdminAuth }){
         const out = list.map(c => {
           const slug = c.slug || '';
           let iconPath = (c.iconPath && c.iconPath.trim()) ? c.iconPath.trim() : '';
+          iconPath = absolutizeUploadsUrl(iconPath);
           if (!iconPath) {
             const legacy = path.join(PUBLIC_CATEGORIES_DIR, slug, 'icon.svg');
             if (fs.existsSync(legacy)) iconPath = `/categories/${slug}/icon.svg`;
           }
-            if (!iconPath) iconPath = '/uploads/category-icons/default.svg';
+          if (!iconPath) iconPath = DEFAULT_ICON_URL;
           const modeCard = hydrateModeCard(c.modeCard, c);
           return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath, modeCard };
         });

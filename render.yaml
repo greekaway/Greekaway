@@ -20,7 +20,13 @@ services:
         sync: false
       - key: ADMIN_PASS
         sync: false
+      - key: UPLOADS_BASE_URL
+        value: https://greekaway.com
     healthCheckPath: /health
+    disk:
+      name: uploads
+      mountPath: /opt/render/project/src/uploads
+      sizeGB: 5
     routes:
       - type: rewrite
         source: /trips/trip.html
