@@ -39,6 +39,7 @@
       "videos": [],
       "stops": [
         {
+          "arrivalTime": "",
           "title": "",
           "description": "",
           "lat": null,
@@ -47,6 +48,7 @@
           "videos": []
         }
       ],
+      "busPickupPoints": [],
       "faq": [
         { "q": "", "a": "" }
       ],
@@ -83,6 +85,7 @@
       "videos": [],
       "stops": [
         {
+          "arrivalTime": "",
           "title": "",
           "description": "",
           "lat": null,
@@ -91,6 +94,7 @@
           "videos": []
         }
       ],
+      "busPickupPoints": [],
       "faq": [
         { "q": "", "a": "" }
       ],
@@ -127,6 +131,7 @@
       "videos": [],
       "stops": [
         {
+          "arrivalTime": "",
           "title": "",
           "description": "",
           "lat": null,
@@ -135,6 +140,7 @@
           "videos": []
         }
       ],
+      "busPickupPoints": [],
       "faq": [
         { "q": "", "a": "" }
       ],

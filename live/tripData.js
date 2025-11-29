@@ -156,6 +156,28 @@ function formatDurationFromMode(mode, lang, legacyDuration) {
   return legacyDuration || null;
 }
 
+function normalizeStopTime(value) {
+  if (value === null || typeof value === 'undefined') return '';
+  let raw = typeof value === 'number' ? String(value) : String(value || '');
+  raw = raw.trim();
+  if (!raw) return '';
+  const colonMatch = raw.match(/^(\d{1,2}):(\d{2})$/);
+  let hours;
+  let minutes;
+  if (colonMatch) {
+    hours = parseInt(colonMatch[1], 10);
+    minutes = parseInt(colonMatch[2], 10);
+  } else if (/^\d{3,4}$/.test(raw)) {
+    hours = parseInt(raw.slice(0, raw.length - 2), 10);
+    minutes = parseInt(raw.slice(-2), 10);
+  } else {
+    return '';
+  }
+  if (!Number.isFinite(hours) || hours < 0 || hours > 23) return '';
+  if (!Number.isFinite(minutes) || minutes < 0 || minutes > 59) return '';
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
 // Build a minimal structured summary for assistant reply
 function buildTripSummary(trip, lang) {
   if (!trip) return null;
@@ -166,7 +188,8 @@ function buildTripSummary(trip, lang) {
   const stops = stopsSource.map((s) => {
     const name = resolveTextField((s && (s.title || s.name)), lang);
     const desc = resolveTextField(s && s.description, lang);
-    return { name, description: desc };
+    const time = normalizeStopTime(s && (s.arrivalTime || s.arrival_time || s.time));
+    return { name, description: desc, time };
   });
   const includesSource = Array.isArray(mode && mode.includes) ? mode.includes : trip.includes;
   const includes = Array.isArray(includesSource)
@@ -195,7 +218,18 @@ function buildTripSummary(trip, lang) {
     const rpName = trip.departure.reference_point && trip.departure.reference_point.name;
     if (rpName) departurePlace = String(rpName);
   }
-  return { title, description, stops, includes, unavailable, duration, priceCents, currency, departureTime, departurePlace };
+  const pickupPointsSource = Array.isArray(mode && mode.busPickupPoints) ? mode.busPickupPoints : [];
+  const busPickupPoints = pickupPointsSource
+    .map((point) => {
+      if (!point || typeof point !== 'object') return null;
+      const title = resolveTextField(point.title, lang) || '';
+      const address = resolveTextField(point.address, lang) || '';
+      const departure = normalizeStopTime(point.departureTime || point.time);
+      if (!title && !address && !departure) return null;
+      return { title, address, departureTime: departure };
+    })
+    .filter(Boolean);
+  return { title, description, stops, busPickupPoints, includes, unavailable, duration, priceCents, currency, departureTime, departurePlace };
 }
 
 module.exports = {

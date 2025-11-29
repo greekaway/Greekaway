@@ -43,7 +43,7 @@
   function clear(){ clearKey(STORAGE_KEY); }
   function ensureBaseFromUrl(existing){
     const p = getParams();
-    const trip_id = (p.get('id') || (existing && existing.trip_id) || '').trim();
+    const trip_id = (p.get('trip') || p.get('id') || (existing && existing.trip_id) || '').trim();
     const mode = (p.get('mode') || (existing && existing.mode) || localStorage.getItem('trip_mode') || 'van').toLowerCase();
     const date = (p.get('date') || (existing && existing.date) || '').trim();
     return Object.assign({}, existing || {}, { trip_id, mode, date });

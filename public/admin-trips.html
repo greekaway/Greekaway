@@ -60,9 +60,23 @@
           <p class="hint" style="margin-bottom:12px">Κάθε mode έχει δικό του κείμενο, στάσεις, media και χάρτη. Συμπληρώστε τα πεδία για κάθε εμπειρία ξεχωριστά.</p>
           <div class="mode-stack">
             <article class="panel mode-card" data-mode-form="van">
-              <div class="mode-header">
-                <strong data-mode-label="van">Ορίστε τίτλο οχήματος</strong>
-                <label class="mode-toggle"><input type="checkbox" data-field="active"> Active</label>
+              <div class="mode-header-bar">
+                <div class="mode-title">
+                  <strong data-mode-label="van">Ορίστε τίτλο οχήματος</strong>
+                  <span class="mode-title-hint">Premium Van – Μόνο ομαδικές premium εκδρομές</span>
+                </div>
+                <div class="mode-toggle">
+                  <span class="mode-toggle-label">Ενεργό Mode</span>
+                  <label class="mode-switch" aria-label="Ενεργό Mode">
+                    <input type="checkbox" data-field="active">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="mode-guidance">
+                <p><strong>Αυτό είναι το Premium Van (5–7 άτομα).</strong></p>
+                <p>Εδώ συμπληρώνουμε μόνο στοιχεία για τις ομαδικές premium εκδρομές.</p>
+                <p>Δεν προσθέτουμε δεδομένα λεωφορείου ή ιδιωτικών μεταφορών.</p>
               </div>
               <div class="form-group stack-on-mobile">
                 <label>Mode Title<input type="text" data-field="title" placeholder="π.χ. Deluxe Van Tour"></label>
@@ -142,9 +156,23 @@
             </article>
 
             <article class="panel mode-card" data-mode-form="mercedes">
-              <div class="mode-header">
-                <strong data-mode-label="mercedes">Ορίστε τίτλο οχήματος</strong>
-                <label class="mode-toggle"><input type="checkbox" data-field="active"> Active</label>
+              <div class="mode-header-bar">
+                <div class="mode-title">
+                  <strong data-mode-label="mercedes">Ορίστε τίτλο οχήματος</strong>
+                  <span class="mode-title-hint">Private Mercedes – Μόνο ιδιωτικές κρατήσεις</span>
+                </div>
+                <div class="mode-toggle">
+                  <span class="mode-toggle-label">Ενεργό Mode</span>
+                  <label class="mode-switch" aria-label="Ενεργό Mode">
+                    <input type="checkbox" data-field="active">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="mode-guidance">
+                <p><strong>Αυτό είναι το Private Mercedes (1–3 άτομα).</strong></p>
+                <p>Εδώ συμπληρώνουμε μόνο στοιχεία για τις ιδιωτικές κρατήσεις.</p>
+                <p>Δεν προσθέτουμε στάσεις λεωφορείου ή ομαδικές πληροφορίες.</p>
               </div>
               <div class="form-group stack-on-mobile">
                 <label>Mode Title<input type="text" data-field="title" placeholder="π.χ. Luxury Private Ride"></label>
@@ -222,9 +250,24 @@
             </article>
 
             <article class="panel mode-card" data-mode-form="bus">
-              <div class="mode-header">
-                <strong data-mode-label="bus">Ορίστε τίτλο οχήματος</strong>
-                <label class="mode-toggle"><input type="checkbox" data-field="active"> Active</label>
+              <div class="mode-header-bar">
+                <div class="mode-title">
+                  <strong data-mode-label="bus">Ορίστε τίτλο οχήματος</strong>
+                  <span class="mode-title-hint">Bus – Pickup points & ώρες αναχώρησης</span>
+                </div>
+                <div class="mode-toggle">
+                  <span class="mode-toggle-label">Ενεργό Mode</span>
+                  <label class="mode-switch" aria-label="Ενεργό Mode">
+                    <input type="checkbox" data-field="active">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="mode-guidance">
+                <p><strong>Αυτό είναι το BUS (30–50 άτομα).</strong></p>
+                <p>Εδώ συμπληρώνουμε τις στάσεις όπου θα πάει ο πελάτης να βρει το λεωφορείο (Bus Pickup Points),</p>
+                <p>καθώς και τις αντίστοιχες ώρες αναχώρησης.</p>
+                <p>Δεν προσθέτουμε εδώ στοιχεία van ή private.</p>
               </div>
               <div class="form-group stack-on-mobile">
                 <label>Mode Title<input type="text" data-field="title" placeholder="π.χ. Classic Group Tour"></label>
@@ -257,6 +300,14 @@
                   <button type="button" class="btn secondary small" data-action="add-stop" data-mode="bus">+ Προσθήκη στάσης</button>
                 </div>
                 <div class="repeatable-list" data-field="stopsList" aria-live="polite"></div>
+              </section>
+              <section class="panel form-panel">
+                <div class="panel-header">
+                  <h4>Bus Pickup Points</h4>
+                  <button type="button" class="btn secondary small" data-action="add-bus-pickup" data-mode="bus">+ Προσθήκη pickup</button>
+                </div>
+                <p class="hint small">Ορίστε όσα σημεία χρειάζονται. Η ώρα αναχώρησης είναι υποχρεωτική.</p>
+                <div class="repeatable-list" data-field="busPickupList" aria-live="polite"></div>
               </section>
               <section class="panel form-panel">
                 <div class="panel-header">

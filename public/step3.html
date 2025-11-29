@@ -97,7 +97,7 @@
       // Normalize URL params into sessionStorage so Step 3 can render even on direct opens
       try {
         const p = new URLSearchParams(window.location.search);
-        const qId = (p.get('id') || '').trim();
+        const qId = (p.get('trip') || p.get('id') || '').trim();
         const qDate = (p.get('date') || '').trim();
         const qAdults = (p.get('adults') || p.get('seats') || '').trim();
         if (qId && !sessionStorage.getItem('gw_trip_id')) sessionStorage.setItem('gw_trip_id', qId);

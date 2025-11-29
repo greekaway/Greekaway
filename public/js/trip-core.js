@@ -10,6 +10,7 @@
     navButtons: [],
     activeSection: DEFAULT_SECTION_ID,
     stops: [],
+    busPickupPoints: [],
     routeMapInfo: null,
     routeMapReady: false
   };
@@ -40,6 +41,7 @@
       state.modeKey = modeInfo.key;
       state.modeData = modeInfo.data || {};
       state.stops = collectStops(trip, modeInfo);
+      state.busPickupPoints = collectBusPickupPoints(modeInfo);
       renderTrip(trip, modeInfo);
       bindFooterCta();
       setRootState('ready');
@@ -358,6 +360,21 @@
       indexLabel.className = 'stop-card-index';
       indexLabel.textContent = `Στάση ${index + 1}`;
       head.appendChild(indexLabel);
+      if (stop.arrivalTime) {
+        const arrival = document.createElement('span');
+        arrival.className = 'stop-card-arrival';
+        const icon = document.createElement('span');
+        icon.className = 'stop-time-icon';
+        icon.textContent = '🕒';
+        icon.setAttribute('aria-hidden', 'true');
+        const timeValue = document.createElement('span');
+        timeValue.className = 'stop-time-value';
+        timeValue.textContent = stop.arrivalTime;
+        arrival.appendChild(icon);
+        arrival.appendChild(timeValue);
+        arrival.setAttribute('aria-label', `Ώρα άφιξης ${stop.arrivalTime}`);
+        head.appendChild(arrival);
+      }
       if (stop.title) {
         const title = document.createElement('h3');
         title.className = 'stop-card-title';
@@ -1009,22 +1026,29 @@
     if (!state.trip) return;
     const tripId = state.trip.id || state.trip.slug || state.slug;
     const target = `/booking/step1?trip=${encodeURIComponent(tripId)}&mode=${encodeURIComponent(state.modeKey || '')}`;
-    const apply = () => {
-      const button = document.querySelector('footer a.central-btn');
-      if (!button) return false;
-      button.href = target;
-      if (!button.dataset.tripCtaBound) {
-        button.dataset.tripCtaBound = '1';
-        button.addEventListener('click', (event) => {
+    const bindAction = (node) => {
+      if (!node) return false;
+      if (node.tagName && node.tagName.toLowerCase() === 'a') {
+        node.href = target;
+      }
+      node.dataset.tripReserveTarget = target;
+      if (!node.dataset.tripCtaBound) {
+        node.dataset.tripCtaBound = '1';
+        node.addEventListener('click', (event) => {
           event.preventDefault();
           window.location.assign(target);
         });
       }
       return true;
     };
-    if (!apply()) {
+    document.querySelectorAll('[data-trip-reserve-btn]').forEach((node) => bindAction(node));
+    const applyFooterCta = () => {
+      const button = document.querySelector('footer a.central-btn');
+      return bindAction(button);
+    };
+    if (!applyFooterCta()) {
       const observer = new MutationObserver(() => {
-        if (apply()) observer.disconnect();
+        if (applyFooterCta()) observer.disconnect();
       });
       observer.observe(document.body, { childList: true, subtree: true });
       setTimeout(() => observer.disconnect(), 10000);
@@ -1280,6 +1304,44 @@
     activateSection(state.activeSection);
   }
 
+  function normalizeStopTime(value) {
+    if (value === null || typeof value === 'undefined') return '';
+    let raw = typeof value === 'number' ? String(value) : String(value || '');
+    raw = raw.trim();
+    if (!raw) return '';
+    const colonMatch = raw.match(/^(\d{1,2}):(\d{2})$/);
+    let hours;
+    let minutes;
+    if (colonMatch) {
+      hours = parseInt(colonMatch[1], 10);
+      minutes = parseInt(colonMatch[2], 10);
+    } else if (/^\d{3,4}$/.test(raw)) {
+      hours = parseInt(raw.slice(0, raw.length - 2), 10);
+      minutes = parseInt(raw.slice(-2), 10);
+    } else {
+      return '';
+    }
+    if (!Number.isFinite(hours) || hours < 0 || hours > 23) return '';
+    if (!Number.isFinite(minutes) || minutes < 0 || minutes > 59) return '';
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
+  function collectBusPickupPoints(modeInfo) {
+    const list = modeInfo && modeInfo.data && Array.isArray(modeInfo.data.busPickupPoints)
+      ? modeInfo.data.busPickupPoints
+      : [];
+    return list
+      .map((point) => {
+        if (!point || typeof point !== 'object') return null;
+        const title = point.title || '';
+        const address = point.address || '';
+        const departureTime = normalizeStopTime(point.departureTime || point.time);
+        if (!title && !address && !departureTime) return null;
+        return { title, address, departureTime };
+      })
+      .filter(Boolean);
+  }
+
   function collectStops(trip, modeInfo) {
     const tripStops = Array.isArray(trip.stops) ? trip.stops : [];
     const modeStops = Array.isArray(modeInfo.data && modeInfo.data.stops) ? modeInfo.data.stops : [];
@@ -1293,11 +1355,13 @@
           ...collectList(stop.images)
         ]);
         const videos = dedupeStrings(collectList(stop.videos));
+        const arrivalTime = normalizeStopTime(stop.arrivalTime || stop.arrival_time || stop.time);
         return {
           title: stop.title || '',
           description: stop.description || '',
           photos,
           videos,
+          arrivalTime,
           lat: coords.lat,
           lng: coords.lng
         };

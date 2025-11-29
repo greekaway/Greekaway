@@ -342,6 +342,9 @@ app.use((req, res, next) => {
 // Precompute a stable cache-busting version (used in HTML to version CSS/JS/manifest)
 const CACHE_BUST_VERSION = computeCacheBust(__dirname);
 const TRIP_PAGE_FILE = path.join(__dirname, 'public', 'trip.html');
+const STEP1_PAGE_FILE = path.join(__dirname, 'public', 'booking', 'step1.html');
+const STEP2_PAGE_FILE = path.join(__dirname, 'public', 'step2.html');
+const STEP3_PAGE_FILE = path.join(__dirname, 'public', 'step3.html');
 const TRIPS_DATA_DIR = path.join(__dirname, 'data', 'trips');
 const ADMIN_HOME_FILE = path.join(__dirname, 'public', 'admin-home.html');
 const LOCAL_UPLOADS_DIR = path.join(__dirname, 'uploads');
@@ -372,6 +375,19 @@ app.get(['/trips/trip.html', '/trips/trip'], (req, res) => {
   } catch (err) {
     return res.redirect(301, '/trip.html');
   }
+});
+
+app.get('/booking/step1', (req, res) => {
+  try { return res.sendFile(STEP1_PAGE_FILE); }
+  catch (err) { return res.status(500).send('Step 1 unavailable'); }
+});
+app.get('/booking/step2', (req, res) => {
+  try { return res.sendFile(STEP2_PAGE_FILE); }
+  catch (err) { return res.status(500).send('Step 2 unavailable'); }
+});
+app.get('/booking/step3', (req, res) => {
+  try { return res.sendFile(STEP3_PAGE_FILE); }
+  catch (err) { return res.status(500).send('Step 3 unavailable'); }
 });
 
 function sanitizeTripSlug(value) {

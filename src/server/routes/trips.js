@@ -46,7 +46,8 @@ function baseModeTemplate(modeKey) {
     gallery: [],
     video: { url: "", thumbnail: "" },
     videos: [],
-    stops: [{ title: "", description: "", images: [], videos: [] }],
+    stops: [{ arrivalTime: "", title: "", description: "", images: [], videos: [] }],
+    busPickupPoints: [],
     faq: [{ q: "", a: "" }],
     map: {
       center: { lat: null, lng: null },
@@ -263,6 +264,30 @@ function normalizeFaqList(value) {
     .filter(Boolean);
 }
 
+function normalizeStopTime(value) {
+  if (value === null || typeof value === "undefined") return "";
+  let raw = "";
+  if (typeof value === "number") raw = String(value);
+  else raw = String(value || "");
+  raw = raw.trim();
+  if (!raw) return "";
+  const colonMatch = raw.match(/^(\d{1,2}):(\d{2})$/);
+  let hours;
+  let minutes;
+  if (colonMatch) {
+    hours = parseInt(colonMatch[1], 10);
+    minutes = parseInt(colonMatch[2], 10);
+  } else if (/^\d{3,4}$/.test(raw)) {
+    hours = parseInt(raw.slice(0, raw.length - 2), 10);
+    minutes = parseInt(raw.slice(-2), 10);
+  } else {
+    return "";
+  }
+  if (!Number.isFinite(hours) || hours < 0 || hours > 23) return "";
+  if (!Number.isFinite(minutes) || minutes < 0 || minutes > 59) return "";
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
 function normalizeStopsList(value) {
   if (typeof value === "string") {
     return value
@@ -283,9 +308,28 @@ function normalizeStopsList(value) {
       const description = String(entry.description || entry.text || "").trim();
       const images = normalizeMediaList(entry.images);
       const videos = normalizeMediaList(entry.videos);
-      if (!title && !description && !images.length && !videos.length)
+      const arrivalTime = normalizeStopTime(
+        entry.arrivalTime || entry.arrival_time || entry.time,
+      );
+      if (!title && !description && !images.length && !videos.length && !arrivalTime)
         return null;
-      return { title, description, images, videos };
+      return { title, description, images, videos, arrivalTime };
+    })
+    .filter(Boolean);
+}
+
+function normalizeBusPickupPointsList(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") return null;
+      const title = String(entry.title || entry.name || "").trim();
+      const address = String(entry.address || "").trim();
+      const departureTime = normalizeStopTime(
+        entry.departureTime || entry.departure_time || entry.time,
+      );
+      if (!title && !address && !departureTime) return null;
+      return { title, address, departureTime };
     })
     .filter(Boolean);
 }
@@ -439,6 +483,7 @@ function normalizeModeBlock(modeKey, input) {
     video: normalizeVideoBlock(raw.video),
     videos: normalizeMediaList(raw.videos),
     stops: normalizeStopsList(raw.stops),
+    busPickupPoints: normalizeBusPickupPointsList(raw.busPickupPoints),
     faq: normalizeFaqList(raw.faq),
     map: normalizeMapBlock(raw.map),
   };
@@ -900,6 +945,14 @@ function validateTrip(input) {
       errors.push(`mode_${key}_missing_price`);
     if (!listHasMeaningfulEntries(block.stops))
       errors.push(`mode_${key}_missing_stops`);
+    const missingArrival = Array.isArray(block.stops)
+      && block.stops.some((stop) => stop && !stop.arrivalTime);
+    if (missingArrival) errors.push(`mode_${key}_missing_stop_arrival_time`);
+    if (key === "bus") {
+      const invalidPickup = Array.isArray(block.busPickupPoints)
+        && block.busPickupPoints.some((pickup) => pickup && !pickup.departureTime);
+      if (invalidPickup) errors.push("mode_bus_missing_pickup_time");
+    }
     if (!block.includes.length) errors.push(`mode_${key}_missing_includes`);
   });
   const defaultMode = activeModes.includes(sanitizeModeKey(input.defaultMode))

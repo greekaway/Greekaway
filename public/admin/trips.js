@@ -52,7 +52,6 @@
         const url = new URL(raw);
         const path = String(url.pathname || '').replace(/^\/+/, '');
         if (!path.startsWith('uploads/')) return raw;
-        const host = (url.hostname || '').toLowerCase();
         if (KNOWN_UPLOAD_HOSTS.has(host)) return path;
         try {
           const baseHost = new URL(UPLOADS_BASE).hostname.toLowerCase();
@@ -290,6 +289,7 @@
         sectionsList: root.querySelector('[data-field="sectionsList"]'),
         faqList: root.querySelector('[data-field="faqList"]'),
         stopsList: root.querySelector('[data-field="stopsList"]'),
+        busPickupList: root.querySelector('[data-field="busPickupList"]'),
         mapWaypoints: root.querySelector('[data-field="map_waypoints"]')
       };
       if (forms[key].title) {
@@ -319,6 +319,9 @@
     });
     document.querySelectorAll('[data-action="add-stop"]').forEach((btn) => {
       btn.addEventListener('click', () => addStopRow(btn.dataset.mode));
+    });
+    document.querySelectorAll('[data-action="add-bus-pickup"]').forEach((btn) => {
+      btn.addEventListener('click', () => addBusPickupRow(btn.dataset.mode));
     });
     return forms;
   }
@@ -351,6 +354,28 @@
   function arrayToLines(arr){
     if (!Array.isArray(arr) || !arr.length) return '';
     return arr.map((s)=>String(s||'').trim()).filter(Boolean).join('\n');
+  }
+
+  function normalizeTimeString(value){
+    if (value === null || typeof value === 'undefined') return '';
+    let raw = typeof value === 'number' ? String(value) : String(value || '');
+    raw = raw.trim();
+    if (!raw) return '';
+    const colonMatch = raw.match(/^(\d{1,2}):(\d{2})$/);
+    let hours;
+    let minutes;
+    if (colonMatch) {
+      hours = parseInt(colonMatch[1], 10);
+      minutes = parseInt(colonMatch[2], 10);
+    } else if (/^\d{3,4}$/.test(raw)) {
+      hours = parseInt(raw.slice(0, raw.length - 2), 10);
+      minutes = parseInt(raw.slice(-2), 10);
+    } else {
+      return '';
+    }
+    if (!Number.isFinite(hours) || hours < 0 || hours > 23) return '';
+    if (!Number.isFinite(minutes) || minutes < 0 || minutes > 59) return '';
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   }
 
   function normalizeMediaArray(value){
@@ -546,6 +571,9 @@
     if (!Array.isArray(draft.modes[modeKey].stops)) {
       draft.modes[modeKey].stops = [];
     }
+    if (!Array.isArray(draft.modes[modeKey].busPickupPoints)) {
+      draft.modes[modeKey].busPickupPoints = [];
+    }
     return draft.modes[modeKey];
   }
 
@@ -558,12 +586,21 @@
     videoBlock.thumbnail = toRelativeUploadsValue(videoBlock.thumbnail);
     mode.video = videoBlock;
     if (Array.isArray(mode.stops)) {
-      mode.stops = mode.stops.map((stop) => {
-        const source = stop && typeof stop === 'object' ? { ...stop } : {};
-        const images = Array.isArray(source.images) ? source.images : linesToArray(source.images);
-        source.images = normalizeMediaArray(images).map((entry) => toRelativeUploadsValue(entry));
-        return source;
-      });
+      mode.stops = mode.stops
+        .map((stop) => {
+          const sanitized = sanitizeStopEntry(stop);
+          sanitized.images = normalizeMediaArray(sanitized.images).map((entry) => toRelativeUploadsValue(entry));
+          sanitized.videos = normalizeMediaArray(sanitized.videos);
+          return sanitized;
+        })
+        .filter((stop) => stop.title || stop.description || stop.images.length || stop.videos.length);
+    }
+    if (Array.isArray(mode.busPickupPoints)) {
+      mode.busPickupPoints = mode.busPickupPoints
+        .map((entry) => sanitizeBusPickupEntry(entry))
+        .filter(Boolean);
+    } else {
+      mode.busPickupPoints = [];
     }
   }
 
@@ -585,7 +622,9 @@
       if (typeof value === 'string') return linesToArray(value);
       return [];
     };
+    const arrivalTime = normalizeTimeString(source.arrivalTime || source.arrival_time || source.time);
     return {
+      arrivalTime,
       title: (source.title || '').trim(),
       description: (source.description || '').trim(),
       images: cleanLines(source.images),
@@ -596,6 +635,27 @@
     return getStopsDraft(modeKey)
       .map((stop)=>sanitizeStopEntry(stop))
       .filter((stop)=>stop.title || stop.description || stop.images.length || stop.videos.length);
+  }
+
+  function getBusPickupDraft(modeKey){
+    const mode = ensureModeDraft(modeKey);
+    if (!Array.isArray(mode.busPickupPoints)) mode.busPickupPoints = [];
+    return mode.busPickupPoints;
+  }
+
+  function sanitizeBusPickupEntry(entry){
+    const source = entry && typeof entry === 'object' ? entry : {};
+    const title = String(source.title || source.name || '').trim();
+    const address = String(source.address || '').trim();
+    const departureTime = normalizeTimeString(source.departureTime || source.departure_time || source.time);
+    if (!title && !address && !departureTime) return null;
+    return { title, address, departureTime };
+  }
+
+  function cloneBusPickupDraft(modeKey){
+    return getBusPickupDraft(modeKey)
+      .map((entry) => sanitizeBusPickupEntry(entry))
+      .filter(Boolean);
   }
 
   function modeStopsHaveContent(stops){
@@ -610,12 +670,15 @@
     });
   }
   function readStopValuesFromItem(item){
-    if (!item) return { title:'', description:'', images:[], videos:[] };
+    if (!item) return { arrivalTime:'', title:'', description:'', images:[], videos:[] };
     const titleInput = item.querySelector('.stop-title');
+    const arrivalInput = item.querySelector('.stop-arrival-time');
     const descriptionInput = item.querySelector('.stop-description');
     const imagesInput = item.querySelector('.stop-images');
     const videosInput = item.querySelector('.stop-videos');
+    const normalizedTime = normalizeTimeString(arrivalInput && arrivalInput.value);
     return {
+      arrivalTime: normalizedTime,
       title: (titleInput && titleInput.value || '').trim(),
       description: (descriptionInput && descriptionInput.value || '').trim(),
       images: linesToArray(imagesInput && imagesInput.value || ''),
@@ -641,7 +704,7 @@
     const stops = getStopsDraft(modeKey);
     const sanitized = sanitizeStopEntry(readStopValuesFromItem(stopItem));
     while (stops.length <= index) {
-      stops.push({ title:'', description:'', images:[], videos:[] });
+      stops.push({ arrivalTime:'', title:'', description:'', images:[], videos:[] });
     }
     stops[index] = sanitized;
     if (options && options.showStatus) showStopSavedStatus(stopItem);
@@ -694,11 +757,13 @@
     item.dataset.stopBound = '1';
     item.dataset.mode = modeKey;
     const titleInput = item.querySelector('.stop-title');
+    const arrivalInput = item.querySelector('.stop-arrival-time');
     const descInput = item.querySelector('.stop-description');
     const imagesInput = item.querySelector('.stop-images');
     const videosInput = item.querySelector('.stop-videos');
     const saveBtn = item.querySelector('.save-stop-btn');
     const removeBtn = item.querySelector('.remove-stop-btn');
+    if (arrivalInput) arrivalInput.addEventListener('input', () => updateStopDraftFromItem(item));
     if (titleInput) titleInput.addEventListener('input', () => updateStopDraftFromItem(item));
     if (descInput) descInput.addEventListener('input', () => updateStopDraftFromItem(item));
     if (imagesInput) {
@@ -730,6 +795,133 @@
     updateStopDraftFromItem(stopItem);
   }
   window.TripStopsDraftBridge.syncFromTextarea = syncStopTextareaExternal;
+
+  function readBusPickupValuesFromItem(item){
+    if (!item) return { title:'', address:'', departureTime:'' };
+    const titleInput = item.querySelector('.bus-pickup-title');
+    const addressInput = item.querySelector('.bus-pickup-address');
+    const timeInput = item.querySelector('.bus-pickup-time');
+    return {
+      title: (titleInput && titleInput.value || '').trim(),
+      address: (addressInput && addressInput.value || '').trim(),
+      departureTime: normalizeTimeString(timeInput && timeInput.value)
+    };
+  }
+
+  function rebuildBusPickupDraftFromDom(modeKey){
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.busPickupList) return;
+    const items = Array.from(cfg.busPickupList.querySelectorAll('.bus-pickup-item'));
+    const entries = items.map((item) => readBusPickupValuesFromItem(item));
+    ensureModeDraft(modeKey).busPickupPoints = entries;
+  }
+
+  function updateBusPickupDraftFromItem(item){
+    if (!item) return;
+    const modeKey = item.dataset.mode || '';
+    if (!modeKey) return;
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.busPickupList) return;
+    const items = Array.from(cfg.busPickupList.querySelectorAll('.bus-pickup-item'));
+    const index = items.indexOf(item);
+    if (index === -1) return;
+    const list = getBusPickupDraft(modeKey);
+    while (list.length <= index) list.push({ title:'', address:'', departureTime:'' });
+    list[index] = readBusPickupValuesFromItem(item);
+  }
+
+  function updateBusPickupIndices(modeKey){
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.busPickupList) return;
+    const items = Array.from(cfg.busPickupList.querySelectorAll('.bus-pickup-item'));
+    items.forEach((item, index) => {
+      const label = item.querySelector('.bus-pickup-index');
+      if (label) label.textContent = `Pickup ${index + 1}`;
+    });
+  }
+
+  function removeBusPickupItem(modeKey, item){
+    if (!item) return;
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.busPickupList) return;
+    item.remove();
+    rebuildBusPickupDraftFromDom(modeKey);
+    if (!cfg.busPickupList.querySelector('.bus-pickup-item')) {
+      addBusPickupRow(modeKey, {});
+      return;
+    }
+    updateBusPickupIndices(modeKey);
+  }
+
+  function bindBusPickupItemEvents(modeKey, item){
+    if (!item || item.dataset.busPickupBound === '1') return;
+    item.dataset.busPickupBound = '1';
+    item.dataset.mode = modeKey;
+    const titleInput = item.querySelector('.bus-pickup-title');
+    const addressInput = item.querySelector('.bus-pickup-address');
+    const timeInput = item.querySelector('.bus-pickup-time');
+    const removeBtn = item.querySelector('.remove-bus-pickup-btn');
+    if (titleInput) titleInput.addEventListener('input', () => updateBusPickupDraftFromItem(item));
+    if (addressInput) addressInput.addEventListener('input', () => updateBusPickupDraftFromItem(item));
+    if (timeInput) timeInput.addEventListener('input', () => updateBusPickupDraftFromItem(item));
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => removeBusPickupItem(modeKey, item));
+    }
+  }
+
+  function createBusPickupItem(modeKey, entry){
+    const item = document.createElement('div');
+    item.className = 'repeatable-item bus-pickup-item';
+    item.dataset.mode = modeKey;
+    item.innerHTML = `
+      <div class="bus-pickup-item-head">
+        <span class="bus-pickup-index">Pickup</span>
+      </div>
+      <label>Τίτλος pickup
+        <input type="text" class="bus-pickup-title" placeholder="Σημείο">
+      </label>
+      <label>Διεύθυνση
+        <textarea class="bus-pickup-address" rows="2" placeholder="Οδός, πόλη, σημείο αναφοράς"></textarea>
+      </label>
+      <label>Ώρα αναχώρησης (HH:MM)
+        <input type="time" class="bus-pickup-time" placeholder="07:30" required>
+        <div class="hint small">Υποχρεωτική για κάθε pickup</div>
+      </label>
+      <div class="inline-actions">
+        <button type="button" class="btn danger small remove-bus-pickup-btn">Διαγραφή</button>
+      </div>`;
+    const titleInput = item.querySelector('.bus-pickup-title');
+    const addressInput = item.querySelector('.bus-pickup-address');
+    const timeInput = item.querySelector('.bus-pickup-time');
+    if (titleInput) titleInput.value = entry && entry.title ? entry.title : '';
+    if (addressInput) addressInput.value = entry && entry.address ? entry.address : '';
+    if (timeInput) timeInput.value = entry && entry.departureTime ? entry.departureTime : '';
+    return item;
+  }
+
+  function addBusPickupRow(modeKey, entry){
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.busPickupList) return;
+    const el = createBusPickupItem(modeKey, entry || {});
+    cfg.busPickupList.appendChild(el);
+    bindBusPickupItemEvents(modeKey, el);
+    rebuildBusPickupDraftFromDom(modeKey);
+    updateBusPickupIndices(modeKey);
+  }
+
+  function renderBusPickupForMode(modeKey, list){
+    const cfg = modeForms[modeKey];
+    if (!cfg || !cfg.busPickupList) return;
+    cfg.busPickupList.innerHTML = '';
+    const data = Array.isArray(list) && list.length ? list : [{}];
+    data.forEach((entry) => {
+      const el = createBusPickupItem(modeKey, entry);
+      cfg.busPickupList.appendChild(el);
+      bindBusPickupItemEvents(modeKey, el);
+    });
+    rebuildBusPickupDraftFromDom(modeKey);
+    updateBusPickupIndices(modeKey);
+  }
   function toPositiveInt(v){ const n = parseInt(v,10); return Number.isFinite(n) && n>=0 ? n : 0; }
   function parseDurationDaysValue(value){
     if (value === null || typeof value === 'undefined') return null;
@@ -878,6 +1070,10 @@
       <div class="stop-item-head">
         <span class="stop-index-label">Στάση</span>
       </div>
+      <label>Ώρα άφιξης (HH:MM)
+        <input type="time" class="stop-arrival-time" placeholder="12:30" required>
+        <div class="hint small">Υποχρεωτικό, 24ωρη μορφή</div>
+      </label>
       <label>Τίτλος στάσης
         <input type="text" class="stop-title" placeholder="Στάση">
       </label>
@@ -898,10 +1094,13 @@
         <span class="stop-save-status hint small" aria-live="polite"></span>
       </div>`;
     const titleInput = item.querySelector('.stop-title');
+    const arrivalInput = item.querySelector('.stop-arrival-time');
     const descInput = item.querySelector('.stop-description');
     const imagesInput = item.querySelector('.stop-images');
     const videosInput = item.querySelector('.stop-videos');
     if (titleInput) titleInput.value = stop && stop.title ? stop.title : '';
+    if (arrivalInput) arrivalInput.value = stop && stop.arrivalTime ? stop.arrivalTime : '';
+    if (arrivalInput) arrivalInput.value = stop && stop.arrivalTime ? stop.arrivalTime : '';
     if (descInput) descInput.value = stop && stop.description ? stop.description : '';
     if (imagesInput) imagesInput.value = arrayToLines(stop && stop.images);
     if (videosInput) videosInput.value = arrayToLines(stop && stop.videos);
@@ -1039,6 +1238,7 @@
         url: (cfg.videoUrl && cfg.videoUrl.value || '').trim(),
         thumbnail: (cfg.videoThumbnail && cfg.videoThumbnail.value || '').trim()
       },
+      busPickupPoints: cloneBusPickupDraft(modeKey),
       map: readMapFromForm(modeKey)
     };
   }
@@ -1069,6 +1269,7 @@
     renderSectionsForMode(modeKey, mode.sections);
     renderFaqForMode(modeKey, mode.faq);
     renderStopsForMode(modeKey, mode.stops);
+    renderBusPickupForMode(modeKey, mode.busPickupPoints);
     renderMapForMode(modeKey, mode.map);
     updateModeHeader(modeKey);
   }
@@ -1118,7 +1319,9 @@
         case 'missing_duration': return `${label}: συμπλήρωσε διάρκεια`;
         case 'missing_price': return `${label}: απαιτείται τιμή`;
         case 'missing_stops': return `${label}: συμπλήρωσε στάσεις`;
+        case 'missing_stop_arrival_time': return `${label}: δώσε ώρα άφιξης για κάθε στάση`;
         case 'missing_includes': return `${label}: συμπλήρωσε τι περιλαμβάνεται`;
+        case 'missing_pickup_time': return `${label}: συμπλήρωσε ώρες αναχώρησης στα pickups`;
         default: return `${label}: ${issue}`;
       }
     }
@@ -1171,6 +1374,16 @@
       if (!modeStopsHaveContent(mode.stops)) {
         addError(`mode_${key}_missing_stops`, cfg.stopsList || cfg.root, 'Πρόσθεσε τουλάχιστον μία στάση');
       }
+      const missingArrival = Array.isArray(mode.stops) && mode.stops.some((stop) => stop && !stop.arrivalTime);
+      if (missingArrival) {
+        addError(`mode_${key}_missing_stop_arrival_time`, cfg.stopsList || cfg.root, 'Συμπλήρωσε ώρα άφιξης για κάθε στάση');
+      }
+      if (key === 'bus') {
+        const invalidPickup = Array.isArray(mode.busPickupPoints) && mode.busPickupPoints.some((pickup) => pickup && !pickup.departureTime);
+        if (invalidPickup) {
+          addError('mode_bus_missing_pickup_time', cfg.busPickupList || cfg.root, 'Συμπλήρωσε ώρα αναχώρησης για κάθε pickup');
+        }
+      }
       if (!Array.isArray(mode.includes) || !mode.includes.length) {
         addError(`mode_${key}_missing_includes`, cfg.includesInput, 'Περιέλαβε τι περιλαμβάνεται');
       }
@@ -1179,7 +1392,10 @@
   }
 
   function formData(){
-    MODE_KEYS.forEach((key)=>rebuildStopsDraftFromDom(key));
+    MODE_KEYS.forEach((key)=>{
+      rebuildStopsDraftFromDom(key);
+      rebuildBusPickupDraftFromDom(key);
+    });
     const modes = {};
     MODE_KEYS.forEach((key) => { modes[key] = readModeForm(key); });
     MODE_KEYS.forEach((key) => {

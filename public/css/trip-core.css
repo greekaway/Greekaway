@@ -191,9 +191,47 @@ body.trip-lightbox-open {
   margin-top: 4px;
 }
 
+.trip-description-reserve {
+  margin-top: 14px;
+  width: 100%;
+  border: none;
+  border-radius: 18px;
+  padding: 16px 22px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fefefe;
+  background: linear-gradient(120deg, #0a3925 0%, #0d452b 60%, #0a3925 100%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 10px 20px rgba(7, 40, 25, 0.4);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.trip-description-reserve:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 3px;
+}
+
+.trip-description-reserve:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(4, 26, 16, 0.6);
+}
+
+.trip-description-reserve:active {
+  transform: translateY(0);
+  filter: brightness(0.9);
+}
+
 @media (min-width: 640px) {
   .trip-description-keyinfo {
     grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
+  .trip-description-reserve {
+    padding: 18px 26px;
+    font-size: 1.05rem;
   }
 }
 
@@ -608,6 +646,7 @@ body.trip-lightbox-open {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .stop-card-index {
@@ -624,6 +663,34 @@ body.trip-lightbox-open {
 .stop-card-title {
   margin: 0;
   font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  flex: 1 1 160px;
+}
+
+.stop-card-arrival {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--trip-accent);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  min-width: 92px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.stop-time-icon {
+  font-size: 1.05em;
+  line-height: 1;
+}
+
+.stop-time-value {
+  line-height: 1;
 }
 
 .stop-card-description {

@@ -120,7 +120,8 @@
             "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
             "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
             "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
-          ]
+          ],
+          "arrivalTime": "10:30"
         },
         {
           "title": "Πλάκα – Αναφιώτικα",
@@ -147,7 +148,8 @@
             "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
             "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
             "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
-          ]
+          ],
+          "arrivalTime": "22:30"
         },
         {
           "title": "Στάδιο Καλλιμάρμαρο",
@@ -173,7 +175,8 @@
             "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
             "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
             "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
-          ]
+          ],
+          "arrivalTime": "14:30"
         },
         {
           "title": "Λόφος Φιλοπάππου",
@@ -200,9 +203,11 @@
             "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
             "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
             "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
-          ]
+          ],
+          "arrivalTime": "16:00"
         }
       ],
+      "busPickupPoints": [],
       "faq": [
         {
           "q": "Τι να έχω μαζί μου;",
@@ -358,7 +363,8 @@
             "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
             "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
             "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
-          ]
+          ],
+          "arrivalTime": "10:30"
         },
         {
           "title": "Πλάκα – Αναφιώτικα",
@@ -385,7 +391,8 @@
             "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
             "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
             "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
-          ]
+          ],
+          "arrivalTime": "12:30"
         },
         {
           "title": "Καλλιμάρμαρο",
@@ -413,9 +420,11 @@
             "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
             "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
             "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
-          ]
+          ],
+          "arrivalTime": "14:30"
         }
       ],
+      "busPickupPoints": [],
       "faq": [
         {
           "q": "Πόσα άτομα χωράει το όχημα;",
@@ -570,7 +579,8 @@
             "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
             "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
             "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
-          ]
+          ],
+          "arrivalTime": "10:30"
         },
         {
           "title": "Πλάκα",
@@ -594,7 +604,8 @@
             "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
             "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
             "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
-          ]
+          ],
+          "arrivalTime": "12:30"
         },
         {
           "title": "Καλλιμάρμαρο",
@@ -621,7 +632,15 @@
             "https://youtu.be/HOYJtEtsHLc?si=0g_41zOTrsfaJzDW",
             "https://youtu.be/zDexBN0JpFA?si=5jzQWp2RJi1B2IrD",
             "https://youtu.be/CVfycwh7iec?si=CgRXp8j1wuksL842"
-          ]
+          ],
+          "arrivalTime": "14:30"
+        }
+      ],
+      "busPickupPoints": [
+        {
+          "title": "ομονοια",
+          "address": "Πανεπιστημίου 35, Αθήνα",
+          "departureTime": "09:00"
         }
       ],
       "faq": [
@@ -698,7 +717,7 @@
     }
   },
   "createdAt": "2025-11-21T00:15:18.697Z",
-  "updatedAt": "2025-11-29T13:02:55.408Z",
+  "updatedAt": "2025-11-29T20:56:20.743Z",
   "mode_set": {
     "van": {
       "active": true,

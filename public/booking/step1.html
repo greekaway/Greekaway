@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="el" class="booking-step1-root">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Greekaway – Βήμα 1</title>
+  <meta name="theme-color" content="#1B2A3A" />
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/pwa-fixes.css">
+  <link rel="stylesheet" href="/booking/step1.css">
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body class="booking-step booking-step1">
+  <main id="step1Root" class="step1-shell" data-state="loading" aria-live="polite">
+    <header class="step1-head">
+      <div class="step-head-top">
+        <div class="step-chip" data-i18n="booking.step1_of3">Βήμα 1 από 3</div>
+        <div id="priceLine" class="price-line" aria-live="polite">—</div>
+      </div>
+      <p class="step-sub">Διάλεξε την ημερομηνία που σε βολεύει</p>
+      <h1 id="tripTitle">Φόρτωση εκδρομής…</h1>
+      <p id="tripSubtitle" class="trip-subtitle">&nbsp;</p>
+      <div id="headError" class="head-error" hidden></div>
+    </header>
+
+    <section class="calendar-wrapper" aria-label="Ημερολόγιο διαθεσιμότητας">
+      <div class="calendar-head">
+        <button type="button" id="prevMonth" aria-label="Προηγούμενος μήνας" disabled>
+          <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        </button>
+        <div id="monthLabel" class="month-label">—</div>
+        <button type="button" id="nextMonth" aria-label="Επόμενος μήνας" disabled>
+          <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="weekday-row" aria-hidden="true">
+        <span>Δ</span><span>Τρ</span><span>Τε</span><span>Πε</span><span>Πα</span><span>Σα</span><span>Κυ</span>
+      </div>
+      <div id="calendarGrid" class="calendar-grid" role="grid"></div>
+      <div class="calendar-status">
+        <div class="legend">
+          <span class="legend-item"><span class="dot dot-available"></span> Διαθέσιμη</span>
+          <span class="legend-item"><span class="dot dot-limited"></span> Λίγες θέσεις</span>
+          <span class="legend-item"><span class="dot dot-full"></span> Πλήρης</span>
+        </div>
+        <div id="availabilityNote" class="availability-note">Φόρτωση διαθέσιμων ημερών…</div>
+      </div>
+    </section>
+
+    <section class="selection-panel" aria-live="polite">
+      <div>
+        <span class="label">Ημερομηνία</span>
+        <strong id="selectedDateLabel">—</strong>
+      </div>
+      <div>
+        <span class="label">Θέσεις</span>
+        <strong id="selectedAvailability">—</strong>
+      </div>
+    </section>
+
+    <div class="cta-bar">
+      <button type="button" id="backToTrip" class="btn-secondary">Επιστροφή</button>
+      <button type="button" id="continueBtn" class="btn-primary" disabled>Συνέχεια</button>
+    </div>
+  </main>
+
+  <footer></footer>
+  <script src="/js/i18n.js" defer></script>
+  <script src="/js/overlay-manager.js" defer></script>
+  <script src="/js/assistant.js" defer></script>
+  <script src="/pwa-install.js" defer></script>
+  <script src="/js/footer.js" defer></script>
+  <script src="/booking/step1.js" defer></script>
+</body>
+</html>
