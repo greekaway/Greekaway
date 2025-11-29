@@ -108,7 +108,7 @@ function postJson(endpoint, data){
   try {
     console.log('> Uploading sample trip icon...');
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#1e5179"/><text x="32" y="38" font-size="20" text-anchor="middle" fill="#fff">T</text></svg>';
-    const iconResp = await postMultipart('/api/admin/upload', [
+    const iconResp = await postMultipart('/api/admin/upload?folder=trips/icons', [
       { type:'text', name:'folder', value:'trips/icons' },
       { type:'file', name:'file', filename:'sample-icon.svg', contentType:'image/svg+xml', content: svg }
     ]);
@@ -116,14 +116,14 @@ function postJson(endpoint, data){
       console.error('Icon upload failed', iconResp);
       return process.exit(1);
     }
-    const iconRelative = iconResp.json.filename || '';
+    const iconRelative = iconResp.json.relativePath || iconResp.json.filename || '';
     const iconAbsolute = iconResp.json.absoluteUrl || buildTripUploadsUrl(iconRelative);
     console.log('> Icon uploaded:', iconAbsolute || iconRelative);
 
     console.log('> Uploading sample cover image...');
     // Tiny 1x1 PNG (transparent) base64
     const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
-    const coverResp = await postMultipart('/api/admin/upload', [
+    const coverResp = await postMultipart('/api/admin/upload?folder=trips/sample/featured', [
       { type:'text', name:'folder', value:'trips/sample/featured' },
       { type:'file', name:'file', filename:'sample-cover.png', contentType:'image/png', content: Buffer.from(pngBase64,'base64') }
     ]);
@@ -131,7 +131,7 @@ function postJson(endpoint, data){
       console.error('Cover upload failed', coverResp);
       return process.exit(1);
     }
-    const coverRelative = coverResp.json.filename || '';
+    const coverRelative = coverResp.json.relativePath || coverResp.json.filename || '';
     const coverAbsolute = coverResp.json.absoluteUrl || buildTripUploadsUrl(coverRelative);
     console.log('> Cover uploaded:', coverAbsolute || coverRelative);
 

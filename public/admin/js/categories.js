@@ -50,8 +50,8 @@
   }
 
   function absolutizeUploads(value){
-    if (UploadClient && typeof UploadClient.absolutizeUploadsPath === 'function') {
-      return UploadClient.absolutizeUploadsPath(value);
+    if (UploadClient && typeof UploadClient.absolutizeUploadsUrl === 'function') {
+      return UploadClient.absolutizeUploadsUrl(value);
     }
     const raw = String(value || '').trim();
     if (!raw) return '';
@@ -176,6 +176,7 @@
     previewEl.innerHTML = '';
     const src = absolutizeUploads(path);
     if (!src) return;
+    console.log('[Categories] icon preview src', src);
     const isSvg = /\.svg(\?|$)/i.test(src);
     if (isSvg) {
       fetch(src, { cache:'no-store' })
@@ -213,6 +214,7 @@
     previewEl.innerHTML = '';
     if (!file) return;
     const isSvg = /\.svg$/i.test(file.name || '') || file.type === 'image/svg+xml';
+            console.log('[Categories] icon preview src (inline svg)', file && file.name);
     if (isSvg) {
       const reader = new FileReader();
       reader.onload = () => {
@@ -221,6 +223,7 @@
           const cleaned = txt.replace(/<\?xml[^>]*>/ig,'').replace(/<!DOCTYPE[^>]*>/ig,'');
           const tmp = document.createElement('div');
           tmp.innerHTML = cleaned;
+      console.log('[Categories] icon preview src (object URL)', img.src);
           const svg = tmp.querySelector('svg');
           if (svg) {
             svg.removeAttribute('width');

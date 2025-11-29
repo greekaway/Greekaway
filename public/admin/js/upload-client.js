@@ -33,7 +33,7 @@
     return raw;
   }
 
-  function absolutizeUploadsPath(value){
+  function absolutizeUploadsUrl(value){
     const raw = String(value || '').trim();
     if (!raw) return '';
     if (/^https?:\/\//i.test(raw)) return raw;
@@ -42,18 +42,30 @@
     return `${UPLOADS_BASE}/${rel}`;
   }
 
+  function buildUploadUrl(folder){
+    let url = '/api/admin/upload';
+    if (folder) {
+      const encoded = encodeURIComponent(folder);
+      url += (url.includes('?') ? '&' : '?') + `folder=${encoded}`;
+    }
+    return url;
+  }
+
   async function uploadFile(file, options){
     if (!file) throw new Error('no_file');
     const fd = new FormData();
     fd.append('file', file);
     const folder = options && typeof options.folder === 'string' ? options.folder.trim() : '';
     if (folder) fd.append('folder', folder);
+    const headers = {};
+    if (folder) headers['X-Upload-Folder'] = folder;
     let response;
     try {
-      response = await fetch('/api/admin/upload', {
+      response = await fetch(buildUploadUrl(folder), {
         method: 'POST',
         body: fd,
-        credentials: 'same-origin'
+        credentials: 'same-origin',
+        headers
       });
     } catch (err) {
       throw new Error('network_error');
@@ -68,8 +80,8 @@
       const detail = data && (data.detail || data.error);
       throw new Error(detail || 'upload_failed');
     }
-    const relativePath = toRelativeUploadsPath(data.filename || data.path || '');
-    const absoluteUrl = data.absoluteUrl || absolutizeUploadsPath(relativePath || data.filename);
+    const relativePath = toRelativeUploadsPath(data.relativePath || data.filename || data.path || '');
+    const absoluteUrl = data.absoluteUrl || absolutizeUploadsUrl(relativePath || data.filename);
     return {
       relativePath,
       absoluteUrl,
@@ -80,7 +92,8 @@
   window.GAUploadClient = {
     uploadFile,
     toRelativeUploadsPath,
-    absolutizeUploadsPath,
+    absolutizeUploadsUrl,
+    absolutizeUploadsPath: absolutizeUploadsUrl,
     UPLOADS_BASE
   };
 })();

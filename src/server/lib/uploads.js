@@ -4,9 +4,15 @@ const fs = require('fs');
 const ROOT_DIR = path.join(__dirname, '..', '..', '..');
 const FALLBACK_UPLOADS_ROOT = path.join(ROOT_DIR, 'uploads');
 const RENDER_PERSISTENT_ROOT = '/opt/render/project/src/uploads';
+const DEFAULT_DEV_PORT = (() => {
+  const fromEnv = Number(process.env.PORT || process.env.APP_PORT || process.env.DEV_SERVER_PORT);
+  if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv;
+  return 3101;
+})();
+const DEFAULT_DEV_ORIGIN = `http://localhost:${DEFAULT_DEV_PORT}`;
 const DEFAULT_ORIGIN = process.env.NODE_ENV === 'production'
   ? 'https://greekaway.com'
-  : 'http://localhost:3000';
+  : DEFAULT_DEV_ORIGIN;
 const KNOWN_UPLOAD_HOSTS = new Set([
   'greekaway.com',
   'www.greekaway.com',
@@ -30,18 +36,24 @@ let cachedUploadsRoot = null;
 function resolveUploadsRoot() {
   if (cachedUploadsRoot) return cachedUploadsRoot;
   const envDir = (process.env.UPLOADS_DIR || '').trim();
-  const candidates = [envDir, process.env.RENDER ? RENDER_PERSISTENT_ROOT : null, RENDER_PERSISTENT_ROOT, FALLBACK_UPLOADS_ROOT];
-  for (const candidate of candidates) {
-    if (!candidate) continue;
-    const resolved = path.isAbsolute(candidate) ? candidate : path.join(ROOT_DIR, candidate);
-    const ensured = ensureDir(resolved);
+  if (envDir) {
+    const candidate = path.isAbsolute(envDir) ? envDir : path.join(ROOT_DIR, envDir);
+    const ensured = ensureDir(candidate);
     if (ensured) {
       cachedUploadsRoot = ensured;
       return cachedUploadsRoot;
     }
   }
-  cachedUploadsRoot = FALLBACK_UPLOADS_ROOT;
-  ensureDir(cachedUploadsRoot);
+  if (!process.env.RENDER) {
+    cachedUploadsRoot = ensureDir(FALLBACK_UPLOADS_ROOT) || FALLBACK_UPLOADS_ROOT;
+    return cachedUploadsRoot;
+  }
+  const ensuredRenderPath = ensureDir(RENDER_PERSISTENT_ROOT);
+  if (ensuredRenderPath) {
+    cachedUploadsRoot = ensuredRenderPath;
+    return cachedUploadsRoot;
+  }
+  cachedUploadsRoot = ensureDir(FALLBACK_UPLOADS_ROOT) || FALLBACK_UPLOADS_ROOT;
   return cachedUploadsRoot;
 }
 

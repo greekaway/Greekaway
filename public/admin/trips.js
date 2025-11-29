@@ -85,10 +85,16 @@
   }
 
   function absolutizeUploadsValue(value){
-    if (UploadClient && typeof UploadClient.absolutizeUploadsPath === 'function') {
-      return UploadClient.absolutizeUploadsPath(value);
+    if (UploadClient && typeof UploadClient.absolutizeUploadsUrl === 'function') {
+      return UploadClient.absolutizeUploadsUrl(value);
     }
     return fallbackAbsolutizeUploadsPath(value);
+  }
+
+  function buildUploadUrl(folder){
+    if (!folder) return '/api/admin/upload';
+    const encoded = encodeURIComponent(folder);
+    return `/api/admin/upload?folder=${encoded}`;
   }
 
   async function uploadAdminFile(file, folder){
@@ -103,12 +109,15 @@
     const fd = new FormData();
     fd.append('file', file);
     if (folder) fd.append('folder', folder);
+    const headers = {};
+    if (folder) headers['X-Upload-Folder'] = folder;
     let response;
     try {
-      response = await fetch('/api/admin/upload', {
+      response = await fetch(buildUploadUrl(folder), {
         method: 'POST',
         body: fd,
-        credentials: 'same-origin'
+        credentials: 'same-origin',
+        headers
       });
     } catch (err) {
       throw new Error('network_error');
@@ -123,7 +132,7 @@
       const detail = data && (data.detail || data.error);
       throw new Error(detail || 'upload_failed');
     }
-    const relativePath = toRelativeUploadsValue(data.filename || data.path || '');
+    const relativePath = toRelativeUploadsValue(data.relativePath || data.filename || data.path || '');
     return {
       relativePath,
       absoluteUrl: data.absoluteUrl || absolutizeUploadsValue(relativePath || data.filename)
@@ -173,6 +182,7 @@
   function updateModeHeader(modeKey, formsRef){
     const cfg = getModeForm(modeKey, formsRef);
     if (!cfg || !cfg.root) return;
+            console.log('[Trips Admin] icon preview src (inline svg)', file && file.name);
     const labelNode = cfg.root.querySelector('[data-mode-label]');
     if (!labelNode) return;
     labelNode.textContent = resolveModeLabel(modeKey, formsRef);
@@ -180,6 +190,7 @@
   
 
   function runSoon(fn){
+      console.log('[Trips Admin] icon preview src (object URL)', img.src);
     if (typeof queueMicrotask === 'function') {
       queueMicrotask(fn);
     } else {
@@ -1382,6 +1393,7 @@
     }
     setTripIconStatus(`Icon: ${extractFilename(storedValue)}`, 'info');
     const resolvedSrc = absolutizeUploadsValue(storedValue) || storedValue;
+    console.log('[Trips Admin] icon preview src', resolvedSrc);
     const isSvg = /\.svg(\?|$)/i.test(resolvedSrc);
     if (isSvg) {
       fetch(resolvedSrc, { cache:'no-store' })

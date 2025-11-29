@@ -12,11 +12,31 @@ const {
   getUploadsRoot,
   ensureDir,
   buildUploadsPath,
-  buildUploadsUrl,
+  absolutizeUploadsUrl,
 } = require('../lib/uploads');
 
 const MAX_FILE_BYTES = 15 * 1024 * 1024; // 15MB per requirements
 const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.svg']);
+
+function resolveFolderInput(req) {
+  if (req && typeof req.uploadResolvedFolder === 'string') {
+    return req.uploadResolvedFolder;
+  }
+  const candidates = [];
+  if (req && req.query && typeof req.query.folder === 'string') {
+    candidates.push(req.query.folder);
+  }
+  if (req && req.headers && typeof req.headers['x-upload-folder'] === 'string') {
+    candidates.push(req.headers['x-upload-folder']);
+  }
+  if (req && req.body && typeof req.body.folder === 'string') {
+    candidates.push(req.body.folder);
+  }
+  const raw = candidates.find((value) => typeof value === 'string' && value.trim());
+  const sanitized = sanitizeFolder(raw);
+  if (req) req.uploadResolvedFolder = sanitized;
+  return sanitized;
+}
 
 function sanitizeFolder(raw) {
   const value = String(raw || '').trim().toLowerCase();
@@ -62,10 +82,11 @@ function registerUploadRoutes(app, { checkAdminAuth }) {
   const router = express.Router();
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      const folder = sanitizeFolder((req.body && req.body.folder) || '');
+      const folder = resolveFolderInput(req);
       const root = getUploadsRoot();
       const dest = folder ? ensureDir(path.join(root, folder)) : root;
       if (!dest) return cb(new Error('uploads_dir_unavailable'));
+      console.log('[upload] multer destination', { root, folder, dest });
       cb(null, dest);
     },
     filename: (req, file, cb) => {
@@ -103,10 +124,11 @@ function registerUploadRoutes(app, { checkAdminAuth }) {
       if (!file) {
         return res.status(400).json({ success: false, error: 'no_file' });
       }
-      const folder = sanitizeFolder((req.body && req.body.folder) || '');
+      const folder = resolveFolderInput(req);
       const relativePath = buildUploadsPath(folder, file.filename);
-      const absoluteUrl = buildUploadsUrl(folder, file.filename);
-      return res.json({ success: true, filename: relativePath, absoluteUrl });
+      const absoluteUrl = absolutizeUploadsUrl(relativePath);
+      console.log('[upload] api response', { folder, relativePath, absoluteUrl });
+      return res.json({ success: true, relativePath, filename: relativePath, absoluteUrl });
     });
   });
 

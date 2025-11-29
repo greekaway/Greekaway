@@ -131,7 +131,7 @@ try { session = require('express-session'); } catch(_) { session = null; }
 const SESSION_SECRET = (process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || crypto.randomBytes(24).toString('hex')).trim();
 // Moved asset/version scanners to lib/assets.js
 const { computeLocalesVersion, computeDataVersion, computeAssetsVersion } = require('./src/server/lib/assets');
-const { getUploadsRoot } = require('./src/server/lib/uploads');
+const { getUploadsRoot, ensureDir } = require('./src/server/lib/uploads');
 const { computeCacheBust } = require('./src/server/lib/cacheBust');
 
 // Read Maps API key from environment. If not provided, the placeholder remains.
@@ -344,7 +344,8 @@ const CACHE_BUST_VERSION = computeCacheBust(__dirname);
 const TRIP_PAGE_FILE = path.join(__dirname, 'public', 'trip.html');
 const TRIPS_DATA_DIR = path.join(__dirname, 'data', 'trips');
 const ADMIN_HOME_FILE = path.join(__dirname, 'public', 'admin-home.html');
-const UPLOADS_DIR = getUploadsRoot();
+const LOCAL_UPLOADS_DIR = path.join(__dirname, 'uploads');
+const UPLOADS_DIR = process.env.RENDER ? getUploadsRoot() : (ensureDir(LOCAL_UPLOADS_DIR) || LOCAL_UPLOADS_DIR);
 
 const serveTripView = (req, res) => {
   try {
@@ -442,7 +443,8 @@ app.use(express.static(path.join(__dirname, "public"), {
 }));
 
 // Serve uploaded media from persistent disk so CMS assets survive deployments
-app.use('/uploads', express.static(UPLOADS_DIR, {
+const uploadsStaticDir = process.env.RENDER ? UPLOADS_DIR : path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadsStaticDir, {
   etag: !IS_DEV,
   lastModified: true,
   setHeaders: (res) => {
