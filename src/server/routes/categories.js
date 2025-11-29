@@ -5,7 +5,6 @@ const crypto = require('crypto');
 
 const {
   getIconsDir,
-  buildUploadsUrl,
   absolutizeUploadsUrl,
   toRelativeUploadsPath,
 } = require('../lib/uploads');
@@ -13,7 +12,7 @@ const {
 const ROOT_DIR = path.join(__dirname, '..', '..', '..');
 const CATEGORIES_PATH = path.join(ROOT_DIR, 'data', 'categories.json');
 const PUBLIC_CATEGORIES_DIR = path.join(ROOT_DIR, 'public', 'categories');
-const DEFAULT_ICON_URL = buildUploadsUrl('icons', 'default.svg');
+const DEFAULT_ICON_PATH = 'uploads/icons/default.svg';
 const jsonParser = express.json({ limit: '1mb' });
 const LEGACY_MODE_TEXT_FIELDS = [
   'mode_card_title',
@@ -152,12 +151,12 @@ function buildCategoriesRouter({ checkAdminAuth }){
         const slug = c.slug || '';
         // Priority: stored iconPath -> legacy /categories/<slug>/icon.svg if exists -> default fallback
         let iconPath = (c.iconPath && c.iconPath.trim()) ? c.iconPath.trim() : '';
-        iconPath = absolutizeUploadsUrl(iconPath);
+        iconPath = absolutizeUploadsUrl(iconPath, req);
         if (!iconPath) {
           const legacy = path.join(PUBLIC_CATEGORIES_DIR, slug, 'icon.svg');
           if (fs.existsSync(legacy)) iconPath = `/categories/${slug}/icon.svg`;
         }
-        if (!iconPath) iconPath = DEFAULT_ICON_URL;
+        if (!iconPath) iconPath = absolutizeUploadsUrl(DEFAULT_ICON_PATH, req);
         const modeCard = hydrateModeCard(c.modeCard, c);
         return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath, modeCard };
       });
@@ -216,12 +215,12 @@ function registerCategoriesRoutes(app, { checkAdminAuth }){
         const out = list.map(c => {
           const slug = c.slug || '';
           let iconPath = (c.iconPath && c.iconPath.trim()) ? c.iconPath.trim() : '';
-          iconPath = absolutizeUploadsUrl(iconPath);
+          iconPath = absolutizeUploadsUrl(iconPath, req);
           if (!iconPath) {
             const legacy = path.join(PUBLIC_CATEGORIES_DIR, slug, 'icon.svg');
             if (fs.existsSync(legacy)) iconPath = `/categories/${slug}/icon.svg`;
           }
-          if (!iconPath) iconPath = DEFAULT_ICON_URL;
+          if (!iconPath) iconPath = absolutizeUploadsUrl(DEFAULT_ICON_PATH, req);
           const modeCard = hydrateModeCard(c.modeCard, c);
           return { id: c.id, title: c.title, slug, order: c.order||0, published: !!c.published, iconPath, modeCard };
         });

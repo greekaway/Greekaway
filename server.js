@@ -386,17 +386,22 @@ app.get('/api/trips/:slug', async (req, res) => {
     const slug = sanitizeTripSlug(req.params.slug);
     if (!slug) return res.status(400).json({ error: 'invalid_slug' });
     const readTripFn = tripsModule && typeof tripsModule.readTrip === 'function' ? tripsModule.readTrip : null;
+    const formatTripFn = tripsModule && typeof tripsModule.formatTripForResponse === 'function'
+      ? tripsModule.formatTripForResponse
+      : null;
     if (readTripFn) {
       const trip = readTripFn(slug);
       if (!trip) return res.status(404).json({ error: 'not_found' });
       res.setHeader('Cache-Control', 'no-store');
-      return res.json({ trip });
+      const projected = formatTripFn ? formatTripFn(trip, req) : trip;
+      return res.json({ trip: projected });
     }
     const filePath = path.join(TRIPS_DATA_DIR, `${slug}.json`);
     const data = await fs.promises.readFile(filePath, 'utf8');
     const trip = JSON.parse(data);
+    const projected = formatTripFn ? formatTripFn(trip, req) : trip;
     res.setHeader('Cache-Control', 'no-store');
-    return res.json({ trip });
+    return res.json({ trip: projected });
   } catch (err) {
     if (err.code === 'ENOENT') {
       return res.status(404).json({ error: 'not_found' });

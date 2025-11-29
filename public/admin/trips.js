@@ -182,7 +182,6 @@
   function updateModeHeader(modeKey, formsRef){
     const cfg = getModeForm(modeKey, formsRef);
     if (!cfg || !cfg.root) return;
-            console.log('[Trips Admin] icon preview src (inline svg)', file && file.name);
     const labelNode = cfg.root.querySelector('[data-mode-label]');
     if (!labelNode) return;
     labelNode.textContent = resolveModeLabel(modeKey, formsRef);
@@ -190,7 +189,6 @@
   
 
   function runSoon(fn){
-      console.log('[Trips Admin] icon preview src (object URL)', img.src);
     if (typeof queueMicrotask === 'function') {
       queueMicrotask(fn);
     } else {

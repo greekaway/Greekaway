@@ -805,6 +805,38 @@ function listTrips() {
   }
 }
 
+function retargetUploadsValue(value, req) {
+  if (typeof value !== 'string') return value;
+  const relative = toRelativeUploadsPath(value);
+  if (relative && relative.startsWith('uploads/')) {
+    return absolutizeUploadsUrl(relative, req);
+  }
+  return value;
+}
+
+function retargetUploadsTree(node, req) {
+  if (!node) return node;
+  if (Array.isArray(node)) return node.map((entry) => retargetUploadsTree(entry, req));
+  if (typeof node === 'object') {
+    Object.keys(node).forEach((key) => {
+      node[key] = retargetUploadsTree(node[key], req);
+    });
+    return node;
+  }
+  return retargetUploadsValue(node, req);
+}
+
+function formatTripForResponse(trip, req) {
+  if (!trip) return trip;
+  const clone = cloneJson(trip);
+  return retargetUploadsTree(clone, req);
+}
+
+function formatTripListForResponse(list, req) {
+  if (!Array.isArray(list)) return [];
+  return list.map((trip) => formatTripForResponse(trip, req)).filter(Boolean);
+}
+
 function validateTrip(input) {
   const errors = [];
   const title = String(input.title || "").trim();
@@ -911,7 +943,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
   adminRouter.get("/", (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req))
       return res.status(403).json({ error: "Forbidden" });
-    return res.json(listTrips());
+    return res.json(formatTripListForResponse(listTrips(), req));
   });
   adminRouter.get("/template", (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req))
@@ -925,7 +957,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
     if (!slug) return res.status(400).json({ error: "invalid_slug" });
     const trip = readTrip(slug);
     if (!trip) return res.status(404).json({ error: "not_found" });
-    return res.json(trip);
+    return res.json(formatTripForResponse(trip, req));
   });
   const handleSaveTrip = (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req))
@@ -963,7 +995,8 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
     if (!toWrite.id) toWrite.id = crypto.randomUUID();
     if (!writeTrip(toWrite))
       return res.status(500).json({ error: "write_failed" });
-    return res.json({ ok: true, trip: ensureTripShape(toWrite) });
+    const shaped = ensureTripShape(toWrite);
+    return res.json({ ok: true, trip: formatTripForResponse(shaped, req) });
   };
 
   const handleDeleteTrip = (req, res) => {
@@ -989,17 +1022,23 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
   app.use("/api/admin/trips", adminRouter);
 
   app.get("/api/public/trips", (req, res) => {
-    return res.json(listTrips());
+    return res.json(formatTripListForResponse(listTrips(), req));
   });
   app.get("/api/public/trips/:slug", (req, res) => {
     const slug = sanitizeSlug(req.params.slug || "");
     if (!slug) return res.status(400).json({ error: "invalid_slug" });
     const trip = readTrip(slug);
     if (!trip) return res.status(404).json({ error: "not_found" });
-    return res.json(trip);
+    return res.json(formatTripForResponse(trip, req));
   });
 
   console.log("trips: routes registered");
 }
 
-module.exports = { registerTripsRoutes, readTrip, listTrips };
+module.exports = {
+  registerTripsRoutes,
+  readTrip,
+  listTrips,
+  formatTripForResponse,
+  formatTripListForResponse,
+};

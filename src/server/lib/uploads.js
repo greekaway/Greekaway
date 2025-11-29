@@ -4,6 +4,7 @@ const fs = require('fs');
 const ROOT_DIR = path.join(__dirname, '..', '..', '..');
 const FALLBACK_UPLOADS_ROOT = path.join(ROOT_DIR, 'uploads');
 const RENDER_PERSISTENT_ROOT = '/opt/render/project/src/uploads';
+const IPV4_REGEX = /^(?:\d{1,3}\.){3}\d{1,3}$/;
 const DEFAULT_DEV_PORT = (() => {
   const fromEnv = Number(process.env.PORT || process.env.APP_PORT || process.env.DEV_SERVER_PORT);
   if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv;
@@ -20,6 +21,17 @@ const KNOWN_UPLOAD_HOSTS = new Set([
   '127.0.0.1',
   '0.0.0.0'
 ]);
+
+function normalizeOrigin(value) {
+  return String(value || '').trim().replace(/\/+$/, '');
+}
+
+function isLanHost(hostname) {
+  if (!hostname) return false;
+  const lowered = hostname.toLowerCase();
+  if (IPV4_REGEX.test(lowered)) return true;
+  return lowered.endsWith('.local');
+}
 
 function ensureDir(dirPath) {
   if (!dirPath) return dirPath;
@@ -72,17 +84,56 @@ function resolveUploadsOrigin() {
     process.env.RENDER_EXTERNAL_URL,
   ];
   const raw = candidates.find((value) => typeof value === 'string' && value.trim());
-  const normalized = (raw || DEFAULT_ORIGIN).trim().replace(/\/+$/, '');
+  const normalized = normalizeOrigin(raw || DEFAULT_ORIGIN);
   cachedOrigin = normalized || DEFAULT_ORIGIN;
   return cachedOrigin;
+}
+
+function resolveUploadsOriginFromOptions(options) {
+  if (!options) return resolveUploadsOrigin();
+  if (typeof options === 'string') {
+    const hinted = normalizeOrigin(options);
+    return hinted || resolveUploadsOrigin();
+  }
+  if (options && typeof options.origin === 'string') {
+    const explicit = normalizeOrigin(options.origin);
+    if (explicit) return explicit;
+  }
+  const req = options && (options.req || options.request)
+    ? (options.req || options.request)
+    : (options.headers || typeof options.get === 'function' ? options : null);
+  if (req) {
+    const readHeader = (name) => {
+      if (typeof req.get === 'function') {
+        try {
+          return req.get(name) || req.get(name.toLowerCase()) || '';
+        } catch (_) {
+          return '';
+        }
+      }
+      const headers = req.headers || {};
+      const key = name.toLowerCase();
+      return headers[name] || headers[key] || '';
+    };
+    const forwardedProto = String(readHeader('x-forwarded-proto') || '').split(',')[0].trim();
+    const forwardedHost = String(readHeader('x-forwarded-host') || '').split(',')[0].trim();
+    const hostHeader = String(readHeader('host') || '').split(',')[0].trim();
+    const host = forwardedHost || hostHeader;
+    if (host) {
+      const proto = forwardedProto || req.protocol || 'http';
+      const origin = normalizeOrigin(`${proto}://${host}`);
+      if (origin) return origin;
+    }
+  }
+  return resolveUploadsOrigin();
 }
 
 function cleanSegment(value) {
   return String(value || '').replace(/^\/+|\/+$/g, '');
 }
 
-function buildUploadsUrl(group, filename) {
-  const origin = resolveUploadsOrigin();
+function buildUploadsUrl(group, filename, originOptions) {
+  const origin = resolveUploadsOriginFromOptions(originOptions);
   const subFolder = cleanSegment(group) || '';
   const filePart = cleanSegment(filename);
   const basePath = subFolder ? `uploads/${subFolder}` : 'uploads';
@@ -97,13 +148,13 @@ function buildUploadsPath(group, filename) {
   return filePart ? `${basePath}/${filePart}` : basePath;
 }
 
-function absolutizeUploadsUrl(value) {
+function absolutizeUploadsUrl(value, originOptions) {
   const raw = String(value || '').trim();
   if (!raw) return '';
   if (/^https?:\/\//i.test(raw)) return raw;
   const normalized = raw.replace(/^\/+/, '');
   if (!normalized.startsWith('uploads/')) return raw;
-  return `${resolveUploadsOrigin()}/${normalized}`;
+  return `${resolveUploadsOriginFromOptions(originOptions)}/${normalized}`;
 }
 
 function toRelativeUploadsPath(value) {
@@ -124,7 +175,7 @@ function toRelativeUploadsPath(value) {
         } catch (_) {
           resolvedHost = '';
         }
-        if (host === resolvedHost || KNOWN_UPLOAD_HOSTS.has(host)) {
+        if (host === resolvedHost || KNOWN_UPLOAD_HOSTS.has(host) || isLanHost(host)) {
           return path;
         }
       }

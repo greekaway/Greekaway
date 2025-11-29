@@ -126,7 +126,7 @@ function registerUploadRoutes(app, { checkAdminAuth }) {
       }
       const folder = resolveFolderInput(req);
       const relativePath = buildUploadsPath(folder, file.filename);
-      const absoluteUrl = absolutizeUploadsUrl(relativePath);
+      const absoluteUrl = absolutizeUploadsUrl(relativePath, req);
       console.log('[upload] api response', { folder, relativePath, absoluteUrl });
       return res.json({ success: true, relativePath, filename: relativePath, absoluteUrl });
     });
