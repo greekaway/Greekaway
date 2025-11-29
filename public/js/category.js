@@ -16,7 +16,7 @@
     let currentCategoryMeta = null;
     let categoryMetaPromise = null;
     const RAW_UPLOADS_BASE = (window.UPLOADS_BASE_URL || window.PUBLIC_BASE_URL || (window.location && window.location.origin) || 'https://greekaway.com');
-    const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$, '') || 'https://greekaway.com';
+    const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$/, '') || 'https://greekaway.com';
     const DEFAULT_CATEGORY_ICON = `${UPLOADS_BASE}/uploads/icons/default.svg`;
 
     let category = '';

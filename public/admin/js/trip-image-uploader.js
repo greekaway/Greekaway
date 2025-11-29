@@ -15,7 +15,7 @@
   let bootstrapped = false;
   let fallbackTimer = null;
   const RAW_UPLOADS_BASE = (window.UPLOADS_BASE_URL || window.PUBLIC_BASE_URL || (window.location && window.location.origin) || 'https://greekaway.com');
-  const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$, '') || 'https://greekaway.com';
+  const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$/, '') || 'https://greekaway.com';
 
   function buildTripUploadsUrl(filename){
     if (!filename) return '';

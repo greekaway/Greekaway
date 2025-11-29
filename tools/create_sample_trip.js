@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 3101; // matches dev server output
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'pass';
 const RAW_UPLOADS_BASE = (process.env.UPLOADS_BASE_URL || process.env.PUBLIC_BASE_URL || 'https://greekaway.com');
-const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$, '') || 'https://greekaway.com';
+const UPLOADS_BASE = String(RAW_UPLOADS_BASE || '').replace(/\/+$/, '') || 'https://greekaway.com';
 
 function buildTripUploadsUrl(filename){
   if (!filename) return '';
