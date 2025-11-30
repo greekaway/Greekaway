@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="/css/admin-tables.css">
   <link rel="stylesheet" href="/css/admin-theme-toggle.css">
   <link rel="stylesheet" href="/css/trips-admin.css">
+  <link rel="stylesheet" href="/css/admin-modes.css">
+  <link rel="stylesheet" href="/css/admin-modes-tabs.css">
+  <link rel="stylesheet" href="/css/admin-modes-toggle.css">
+  <link rel="stylesheet" href="/css/admin-bus-pickups.css">
   <link rel="manifest" href="/manifest-admin.json">
   <meta name="theme-color" content="#001f3f">
   <link rel="stylesheet" href="/pwa.css">
@@ -58,6 +62,11 @@
         <section aria-labelledby="modesTitle" class="modes-section">
           <h3 id="modesTitle" class="h1" style="margin-top:8px">Modes – Περιεχόμενο ανά όχημα</h3>
           <p class="hint" style="margin-bottom:12px">Κάθε mode έχει δικό του κείμενο, στάσεις, media και χάρτη. Συμπληρώστε τα πεδία για κάθε εμπειρία ξεχωριστά.</p>
+          <div class="modes-tabs" role="tablist" aria-label="Εναλλαγή mode">
+            <button type="button" class="modes-tab" data-mode="van" role="tab" aria-selected="false">Van</button>
+            <button type="button" class="modes-tab" data-mode="mercedes" role="tab" aria-selected="false">Mercedes</button>
+            <button type="button" class="modes-tab" data-mode="bus" role="tab" aria-selected="false">Bus</button>
+          </div>
           <div class="mode-stack">
             <article class="panel mode-card" data-mode-form="van">
               <div class="mode-header-bar">
@@ -66,11 +75,16 @@
                   <span class="mode-title-hint">Premium Van – Μόνο ομαδικές premium εκδρομές</span>
                 </div>
                 <div class="mode-toggle">
-                  <span class="mode-toggle-label">Ενεργό Mode</span>
-                  <label class="mode-switch" aria-label="Ενεργό Mode">
-                    <input type="checkbox" data-field="active">
-                    <span class="slider"></span>
-                  </label>
+                  <div class="mode-active-control" data-state="inactive">
+                    <button type="button" class="mode-active-toggle" aria-pressed="false" aria-label="Toggle mode activation">
+                      <span class="mode-active-symbol" aria-hidden="true"></span>
+                    </button>
+                    <span class="mode-active-state" aria-live="polite">
+                      <span class="state-text state-text-inactive">Ανενεργό</span>
+                      <span class="state-text state-text-active">Ενεργό</span>
+                    </span>
+                    <input type="checkbox" data-field="active" class="mode-active-input">
+                  </div>
                 </div>
               </div>
               <div class="mode-guidance">
@@ -162,11 +176,16 @@
                   <span class="mode-title-hint">Private Mercedes – Μόνο ιδιωτικές κρατήσεις</span>
                 </div>
                 <div class="mode-toggle">
-                  <span class="mode-toggle-label">Ενεργό Mode</span>
-                  <label class="mode-switch" aria-label="Ενεργό Mode">
-                    <input type="checkbox" data-field="active">
-                    <span class="slider"></span>
-                  </label>
+                  <div class="mode-active-control" data-state="inactive">
+                    <button type="button" class="mode-active-toggle" aria-pressed="false" aria-label="Toggle mode activation">
+                      <span class="mode-active-symbol" aria-hidden="true"></span>
+                    </button>
+                    <span class="mode-active-state" aria-live="polite">
+                      <span class="state-text state-text-inactive">Ανενεργό</span>
+                      <span class="state-text state-text-active">Ενεργό</span>
+                    </span>
+                    <input type="checkbox" data-field="active" class="mode-active-input">
+                  </div>
                 </div>
               </div>
               <div class="mode-guidance">
@@ -256,11 +275,16 @@
                   <span class="mode-title-hint">Bus – Pickup points & ώρες αναχώρησης</span>
                 </div>
                 <div class="mode-toggle">
-                  <span class="mode-toggle-label">Ενεργό Mode</span>
-                  <label class="mode-switch" aria-label="Ενεργό Mode">
-                    <input type="checkbox" data-field="active">
-                    <span class="slider"></span>
-                  </label>
+                  <div class="mode-active-control" data-state="inactive">
+                    <button type="button" class="mode-active-toggle" aria-pressed="false" aria-label="Toggle mode activation">
+                      <span class="mode-active-symbol" aria-hidden="true"></span>
+                    </button>
+                    <span class="mode-active-state" aria-live="polite">
+                      <span class="state-text state-text-inactive">Ανενεργό</span>
+                      <span class="state-text state-text-active">Ενεργό</span>
+                    </span>
+                    <input type="checkbox" data-field="active" class="mode-active-input">
+                  </div>
                 </div>
               </div>
               <div class="mode-guidance">
@@ -409,8 +433,11 @@
   <script src="/js/admin-theme-toggle.js"></script>
   <script src="/admin/js/trip-template-loader.js"></script>
   <script src="/admin/js/upload-client.js"></script>
+  <script src="/admin/js/admin-bus-pickups.js"></script>
   <script src="/admin/trips.js"></script>
   <script src="/admin/js/trip-image-uploader.js"></script>
+  <script src="/js/admin-modes-toggle.js"></script>
+  <script src="/js/admin-modes-tabs.js"></script>
   <script src="/pwa-install.js" defer></script>
   <script src="/js/main.js"></script>
   <script>

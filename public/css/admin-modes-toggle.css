@@ -1,0 +1,65 @@
+/* Mode active toggle button */
+.mode-active-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.mode-active-toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: #555;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.mode-active-toggle:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.7);
+  outline-offset: 3px;
+}
+
+.mode-active-toggle.is-active {
+  background: #2ecc71;
+}
+
+.mode-active-toggle:active {
+  transform: scale(0.96);
+}
+
+.mode-active-symbol {
+  line-height: 1;
+}
+
+.mode-active-state {
+  font-weight: 600;
+  min-width: 80px;
+}
+
+.mode-active-state .state-text {
+  display: none;
+}
+
+.mode-active-control[data-state="inactive"] .state-text-inactive {
+  display: inline;
+  color: #9fb4d6;
+}
+
+.mode-active-control[data-state="active"] .state-text-active {
+  display: inline;
+  color: #dde7ff;
+}
+
+.mode-active-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}

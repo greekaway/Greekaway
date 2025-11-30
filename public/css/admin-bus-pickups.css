@@ -1,0 +1,22 @@
+.bus-pickup-item .bus-pickup-geo-status {
+  min-height: 16px;
+  margin-top: 4px;
+  display: block;
+  color: #555;
+}
+
+.bus-pickup-item .bus-pickup-geo-status[data-state="ok"] {
+  color: #0a7b30;
+}
+
+.bus-pickup-item .bus-pickup-geo-status[data-state="pending"] {
+  color: #9c6500;
+}
+
+.bus-pickup-item .bus-pickup-geo-status[data-state="error"] {
+  color: #b00020;
+}
+
+.bus-pickup-item .bus-pickup-geo-status[data-state="loading"] {
+  color: #0a4cc2;
+}

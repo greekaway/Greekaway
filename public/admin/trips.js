@@ -648,8 +648,10 @@
     const title = String(source.title || source.name || '').trim();
     const address = String(source.address || '').trim();
     const departureTime = normalizeTimeString(source.departureTime || source.departure_time || source.time);
+    const lat = toFloatOrNull(source.lat);
+    const lng = toFloatOrNull(source.lng);
     if (!title && !address && !departureTime) return null;
-    return { title, address, departureTime };
+    return { title, address, departureTime, lat, lng };
   }
 
   function cloneBusPickupDraft(modeKey){
@@ -797,14 +799,18 @@
   window.TripStopsDraftBridge.syncFromTextarea = syncStopTextareaExternal;
 
   function readBusPickupValuesFromItem(item){
-    if (!item) return { title:'', address:'', departureTime:'' };
+    if (!item) return { title:'', address:'', departureTime:'', lat:null, lng:null };
     const titleInput = item.querySelector('.bus-pickup-title');
     const addressInput = item.querySelector('.bus-pickup-address');
     const timeInput = item.querySelector('.bus-pickup-time');
+    const latInput = item.querySelector('.bus-pickup-lat');
+    const lngInput = item.querySelector('.bus-pickup-lng');
     return {
       title: (titleInput && titleInput.value || '').trim(),
       address: (addressInput && addressInput.value || '').trim(),
-      departureTime: normalizeTimeString(timeInput && timeInput.value)
+      departureTime: normalizeTimeString(timeInput && timeInput.value),
+      lat: toFloatOrNull(latInput && latInput.value),
+      lng: toFloatOrNull(lngInput && lngInput.value)
     };
   }
 
@@ -826,7 +832,7 @@
     const index = items.indexOf(item);
     if (index === -1) return;
     const list = getBusPickupDraft(modeKey);
-    while (list.length <= index) list.push({ title:'', address:'', departureTime:'' });
+    while (list.length <= index) list.push({ title:'', address:'', departureTime:'', lat:null, lng:null });
     list[index] = readBusPickupValuesFromItem(item);
   }
 
@@ -837,6 +843,13 @@
     items.forEach((item, index) => {
       const label = item.querySelector('.bus-pickup-index');
       if (label) label.textContent = `Pickup ${index + 1}`;
+      const latInput = item.querySelector('.bus-pickup-lat');
+      const lngInput = item.querySelector('.bus-pickup-lng');
+      if (latInput) latInput.name = `pickupPoints[${index}].lat`;
+      if (lngInput) lngInput.name = `pickupPoints[${index}].lng`;
+      if (window.AdminBusPickups && typeof window.AdminBusPickups.updateIndex === 'function') {
+        window.AdminBusPickups.updateIndex(item, index);
+      }
     });
   }
 
@@ -867,6 +880,9 @@
     if (removeBtn) {
       removeBtn.addEventListener('click', () => removeBusPickupItem(modeKey, item));
     }
+    if (window.AdminBusPickups && typeof window.AdminBusPickups.bindItem === 'function') {
+      window.AdminBusPickups.bindItem(item);
+    }
   }
 
   function createBusPickupItem(modeKey, entry){
@@ -881,21 +897,28 @@
         <input type="text" class="bus-pickup-title" placeholder="Σημείο">
       </label>
       <label>Διεύθυνση
-        <textarea class="bus-pickup-address" rows="2" placeholder="Οδός, πόλη, σημείο αναφοράς"></textarea>
+        <input type="text" class="bus-pickup-address" placeholder="Οδός, πόλη, σημείο αναφοράς" autocomplete="off">
+        <div class="bus-pickup-geo-status hint small" aria-live="polite"></div>
       </label>
       <label>Ώρα αναχώρησης (HH:MM)
         <input type="time" class="bus-pickup-time" placeholder="07:30" required>
         <div class="hint small">Υποχρεωτική για κάθε pickup</div>
       </label>
+      <input type="hidden" class="bus-pickup-lat" value="">
+      <input type="hidden" class="bus-pickup-lng" value="">
       <div class="inline-actions">
         <button type="button" class="btn danger small remove-bus-pickup-btn">Διαγραφή</button>
       </div>`;
     const titleInput = item.querySelector('.bus-pickup-title');
     const addressInput = item.querySelector('.bus-pickup-address');
     const timeInput = item.querySelector('.bus-pickup-time');
+    const latInput = item.querySelector('.bus-pickup-lat');
+    const lngInput = item.querySelector('.bus-pickup-lng');
     if (titleInput) titleInput.value = entry && entry.title ? entry.title : '';
     if (addressInput) addressInput.value = entry && entry.address ? entry.address : '';
     if (timeInput) timeInput.value = entry && entry.departureTime ? entry.departureTime : '';
+    if (latInput) latInput.value = (entry && entry.lat != null) ? String(entry.lat) : '';
+    if (lngInput) lngInput.value = (entry && entry.lng != null) ? String(entry.lng) : '';
     return item;
   }
 

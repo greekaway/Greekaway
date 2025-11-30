@@ -328,8 +328,10 @@ function normalizeBusPickupPointsList(value) {
       const departureTime = normalizeStopTime(
         entry.departureTime || entry.departure_time || entry.time,
       );
+      const lat = toFloat(entry.lat ?? entry.latitude);
+      const lng = toFloat(entry.lng ?? entry.longitude);
       if (!title && !address && !departureTime) return null;
-      return { title, address, departureTime };
+      return { title, address, departureTime, lat, lng };
     })
     .filter(Boolean);
 }

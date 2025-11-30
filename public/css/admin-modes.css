@@ -1,0 +1,8 @@
+/* Dedicated spacing between admin mode sections */
+.modes-section .mode-card {
+  margin-bottom: 72px;
+}
+
+.modes-section .mode-card:last-child {
+  margin-bottom: 0;
+}

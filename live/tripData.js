@@ -178,6 +178,14 @@ function normalizeStopTime(value) {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
+function toFloat(value) {
+  if (value === null || typeof value === 'undefined') return null;
+  const normalized = typeof value === 'string' ? value.trim() : value;
+  if (normalized === '' || normalized === null || typeof normalized === 'undefined') return null;
+  const num = Number(normalized);
+  return Number.isFinite(num) ? num : null;
+}
+
 // Build a minimal structured summary for assistant reply
 function buildTripSummary(trip, lang) {
   if (!trip) return null;
@@ -225,8 +233,10 @@ function buildTripSummary(trip, lang) {
       const title = resolveTextField(point.title, lang) || '';
       const address = resolveTextField(point.address, lang) || '';
       const departure = normalizeStopTime(point.departureTime || point.time);
-      if (!title && !address && !departure) return null;
-      return { title, address, departureTime: departure };
+      const lat = toFloat(point.lat ?? point.latitude);
+      const lng = toFloat(point.lng ?? point.longitude);
+      if (!title && !address && !departure && lat == null && lng == null) return null;
+      return { title, address, departureTime: departure, lat, lng };
     })
     .filter(Boolean);
   return { title, description, stops, busPickupPoints, includes, unavailable, duration, priceCents, currency, departureTime, departurePlace };
