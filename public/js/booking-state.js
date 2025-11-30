@@ -18,8 +18,8 @@
   }
   function normalizeMode(mode){
     const m = String(mode || '').toLowerCase();
-    if (m === 'private' || m === 'mercedes/private') return 'mercedes';
-    if (m === 'multi' || m === 'shared') return 'van';
+    if (m === 'private' || m === 'mercedes/private' || m === 'vip') return 'mercedes';
+    if (m === 'multi' || m === 'shared' || m === 'minivan') return 'van';
     return ['van','bus','mercedes'].includes(m) ? m : 'van';
   }
   function resolveTripMode(trip, mode){
@@ -28,10 +28,24 @@
     const currency = (trip.currency || 'EUR').toUpperCase();
     const fromNewSchema = trip.modes && trip.modes[normalized];
     if (fromNewSchema) {
-      const price = Number(fromNewSchema.price || 0);
-      const chargeType = fromNewSchema.charging_type || fromNewSchema.charge_type || 'per_person';
+      const pricePerPerson = Number(fromNewSchema.price_per_person ?? fromNewSchema.pricePerPerson ?? 0);
+      const priceTotal = Number(fromNewSchema.price_total ?? fromNewSchema.priceTotal ?? 0);
+      const rawCharge = (fromNewSchema.charging_type || fromNewSchema.charge_type || '').toLowerCase().trim();
+      const inferredCharge = priceTotal > 0 && !pricePerPerson ? 'per_vehicle' : 'per_person';
+      const chargeType = rawCharge || inferredCharge;
+      let unitPrice = chargeType === 'per_vehicle' ? priceTotal : pricePerPerson;
+      if (!(unitPrice > 0)) {
+        unitPrice = pricePerPerson || priceTotal || Number(fromNewSchema.price || 0) || 0;
+      }
       const capacity = fromNewSchema.capacity != null ? fromNewSchema.capacity : fromNewSchema.default_capacity;
-      return { price, chargeType, capacity, currency };
+      return { price: unitPrice, chargeType, capacity, currency };
+    }
+    const modeSet = trip.mode_set && trip.mode_set[normalized];
+    if (modeSet && typeof modeSet.price_cents === 'number') {
+      const unitPrice = Math.max(0, Number(modeSet.price_cents) / 100);
+      const chargeType = (modeSet.charge_type || 'per_person').toLowerCase();
+      const capacity = modeSet.default_capacity != null ? modeSet.default_capacity : null;
+      return { price: unitPrice, chargeType, capacity, currency };
     }
     if (typeof trip.price_cents === 'number') {
       return { price: trip.price_cents / 100, chargeType: 'per_person', capacity: null, currency };
@@ -54,11 +68,23 @@
     const date = (p.get('date') || (existing && existing.date) || '').trim();
     return Object.assign({}, existing || {}, { trip_id, mode, date });
   }
+  function getSeatLimitFromSession(){
+    try {
+      const raw = sessionStorage.getItem('gw_seats_available');
+      if (raw == null || raw === '') return null;
+      const num = parseInt(raw, 10);
+      if (Number.isFinite(num) && num > 0) return num;
+      return null;
+    } catch(_){ return null; }
+  }
   function getSeatsFromSession(){
     try {
       const a = parseInt(sessionStorage.getItem('gw_adults')||'0',10)||0;
       const ages = JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]') || [];
-      return Math.max(1, a + (ages.length||0));
+      let seats = Math.max(1, a + (ages.length||0));
+      const limit = getSeatLimitFromSession();
+      if (limit && seats > limit) seats = limit;
+      return seats;
     } catch(_){ return 1; }
   }
   function getSuitcasesFromSession(){
@@ -100,6 +126,7 @@
   async function buildFromStep2(){
     const base = ensureBaseFromUrl(load());
     const seats = getSeatsFromSession();
+    const seatLimit = getSeatLimitFromSession();
     const pickup = getPickupFromSession();
     const busPickupPoint = getBusPickupFromSession();
     const suitcases = getSuitcasesFromSession();
@@ -151,6 +178,7 @@
       traveler_profile,
       price_cents,
       currency,
+      seat_limit: seatLimit || null,
       address: pickup && pickup.address ? pickup.address : '',
       busPickupPoint: normalizedMode === 'bus' ? (busPickupPoint || null) : null
     });

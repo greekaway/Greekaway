@@ -116,6 +116,7 @@
     "step2_of3": "Schritt 2 von 3",
     "step3_of3": "Schritt 3 von 3",
     "next": "Weiter",
+    "return_button": "Zurück",
     "error_create": "Fehler beim Erstellen der Buchung",
     "error_network": "Netzwerkfehler bei der Buchung",
     "error_availability": "Fehler bei der Verfügbarkeitsprüfung",

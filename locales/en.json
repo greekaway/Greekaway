@@ -203,6 +203,7 @@
     "step2_of3": "Step 2 of 3",
     "step3_of3": "Step 3 of 3",
     "next": "Next",
+    "return_button": "Return",
     "error_create": "Error creating booking",
     "error_network": "Network error creating booking",
     "error_availability": "Error checking availability",

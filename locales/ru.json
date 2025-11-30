@@ -125,6 +125,7 @@
     "step2_of3": "Шаг 2 из 3",
   "step3_of3": "Шаг 3 из 3",
   "next": "Далее",
+    "return_button": "Вернуться",
     "error_create": "Error creating booking",
     "error_network": "Network error creating booking",
     "error_availability": "Error checking availability",

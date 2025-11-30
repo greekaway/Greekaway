@@ -124,6 +124,7 @@
     "step2_of3": "Steg 2 av 3",
   "step3_of3": "Steg 3 av 3",
   "next": "Nästa",
+    "return_button": "Tillbaka",
     "error_create": "Error creating booking",
     "error_network": "Network error creating booking",
     "error_availability": "Error checking availability",

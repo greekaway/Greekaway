@@ -650,6 +650,41 @@
     return mode.busPickupPoints;
   }
 
+  function formatCoordinateNumber(value){
+    const normalized = Number(value);
+    if (!Number.isFinite(normalized)) return '';
+    const fixed = normalized.toFixed(6);
+    const trimmed = fixed.replace(/\.0+$/, '').replace(/(\.\d*?[1-9])0+$/, '$1');
+    const result = trimmed === '-0' ? '0' : trimmed;
+    return result || '0';
+  }
+
+  function formatBusPickupCoordinates(lat, lng){
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return '';
+    return `${formatCoordinateNumber(lat)},${formatCoordinateNumber(lng)}`;
+  }
+
+  function parseBusPickupCoordinates(raw){
+    const text = String(raw || '').trim();
+    if (!text) return { lat:null, lng:null, error:'missing' };
+    const parts = text.split(',').map((part) => part.trim());
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+      return { lat:null, lng:null, error:'format' };
+    }
+    const lat = parseFloat(parts[0]);
+    const lng = parseFloat(parts[1]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return { lat:null, lng:null, error:'nan' };
+    }
+    if (lat < -90 || lat > 90) return { lat:null, lng:null, error:'lat_range' };
+    if (lng < -180 || lng > 180) return { lat:null, lng:null, error:'lng_range' };
+    return { lat, lng, error:null };
+  }
+
+  window.TripBusPickups = window.TripBusPickups || {};
+  window.TripBusPickups.parseCoordinates = parseBusPickupCoordinates;
+  window.TripBusPickups.formatCoordinates = formatBusPickupCoordinates;
+
   function sanitizeBusPickupEntry(entry){
     const source = entry && typeof entry === 'object' ? entry : {};
     const title = String(source.title || source.name || '').trim();
@@ -810,14 +845,14 @@
     const titleInput = item.querySelector('.bus-pickup-title');
     const addressInput = item.querySelector('.bus-pickup-address');
     const timeInput = item.querySelector('.bus-pickup-time');
-    const latInput = item.querySelector('.bus-pickup-lat');
-    const lngInput = item.querySelector('.bus-pickup-lng');
+    const coordsInput = item.querySelector('.bus-pickup-coordinates');
+    const parsedCoords = parseBusPickupCoordinates(coordsInput && coordsInput.value);
     return {
       title: (titleInput && titleInput.value || '').trim(),
       address: (addressInput && addressInput.value || '').trim(),
       departureTime: normalizeTimeString(timeInput && timeInput.value),
-      lat: toFloatOrNull(latInput && latInput.value),
-      lng: toFloatOrNull(lngInput && lngInput.value)
+      lat: parsedCoords && !parsedCoords.error ? parsedCoords.lat : null,
+      lng: parsedCoords && !parsedCoords.error ? parsedCoords.lng : null
     };
   }
 
@@ -850,10 +885,6 @@
     items.forEach((item, index) => {
       const label = item.querySelector('.bus-pickup-index');
       if (label) label.textContent = `Pickup ${index + 1}`;
-      const latInput = item.querySelector('.bus-pickup-lat');
-      const lngInput = item.querySelector('.bus-pickup-lng');
-      if (latInput) latInput.name = `pickupPoints[${index}].lat`;
-      if (lngInput) lngInput.name = `pickupPoints[${index}].lng`;
       if (window.AdminBusPickups && typeof window.AdminBusPickups.updateIndex === 'function') {
         window.AdminBusPickups.updateIndex(item, index);
       }
@@ -880,10 +911,12 @@
     const titleInput = item.querySelector('.bus-pickup-title');
     const addressInput = item.querySelector('.bus-pickup-address');
     const timeInput = item.querySelector('.bus-pickup-time');
+    const coordsInput = item.querySelector('.bus-pickup-coordinates');
     const removeBtn = item.querySelector('.remove-bus-pickup-btn');
     if (titleInput) titleInput.addEventListener('input', () => updateBusPickupDraftFromItem(item));
     if (addressInput) addressInput.addEventListener('input', () => updateBusPickupDraftFromItem(item));
     if (timeInput) timeInput.addEventListener('input', () => updateBusPickupDraftFromItem(item));
+    if (coordsInput) coordsInput.addEventListener('input', () => updateBusPickupDraftFromItem(item));
     if (removeBtn) {
       removeBtn.addEventListener('click', () => removeBusPickupItem(modeKey, item));
     }
@@ -905,27 +938,27 @@
       </label>
       <label>Διεύθυνση
         <input type="text" class="bus-pickup-address" placeholder="Οδός, πόλη, σημείο αναφοράς" autocomplete="off">
+      </label>
+      <label>Συντεταγμένες (lat,lng)
+        <input type="text" class="bus-pickup-coordinates" placeholder="37.97535,23.73558" autocomplete="off" inputmode="decimal">
+        <div class="hint small">Χώρισε τα δύο νούμερα με κόμμα και δεκαδικά.</div>
         <div class="bus-pickup-geo-status hint small" aria-live="polite"></div>
       </label>
       <label>Ώρα αναχώρησης (HH:MM)
         <input type="time" class="bus-pickup-time" placeholder="07:30" required>
         <div class="hint small">Υποχρεωτική για κάθε pickup</div>
       </label>
-      <input type="hidden" class="bus-pickup-lat" value="">
-      <input type="hidden" class="bus-pickup-lng" value="">
       <div class="inline-actions">
         <button type="button" class="btn danger small remove-bus-pickup-btn">Διαγραφή</button>
       </div>`;
     const titleInput = item.querySelector('.bus-pickup-title');
     const addressInput = item.querySelector('.bus-pickup-address');
     const timeInput = item.querySelector('.bus-pickup-time');
-    const latInput = item.querySelector('.bus-pickup-lat');
-    const lngInput = item.querySelector('.bus-pickup-lng');
+    const coordsInput = item.querySelector('.bus-pickup-coordinates');
     if (titleInput) titleInput.value = entry && entry.title ? entry.title : '';
     if (addressInput) addressInput.value = entry && entry.address ? entry.address : '';
     if (timeInput) timeInput.value = entry && entry.departureTime ? entry.departureTime : '';
-    if (latInput) latInput.value = (entry && entry.lat != null) ? String(entry.lat) : '';
-    if (lngInput) lngInput.value = (entry && entry.lng != null) ? String(entry.lng) : '';
+    if (coordsInput) coordsInput.value = formatBusPickupCoordinates(entry && entry.lat, entry && entry.lng);
     return item;
   }
 
@@ -1352,6 +1385,7 @@
         case 'missing_stop_arrival_time': return `${label}: δώσε ώρα άφιξης για κάθε στάση`;
         case 'missing_includes': return `${label}: συμπλήρωσε τι περιλαμβάνεται`;
         case 'missing_pickup_time': return `${label}: συμπλήρωσε ώρες αναχώρησης στα pickups`;
+        case 'missing_pickup_coordinates': return `${label}: συμπλήρωσε συντεταγμένες (lat,lng) στα pickups`;
         default: return `${label}: ${issue}`;
       }
     }
@@ -1412,6 +1446,11 @@
         const invalidPickup = Array.isArray(mode.busPickupPoints) && mode.busPickupPoints.some((pickup) => pickup && !pickup.departureTime);
         if (invalidPickup) {
           addError('mode_bus_missing_pickup_time', cfg.busPickupList || cfg.root, 'Συμπλήρωσε ώρα αναχώρησης για κάθε pickup');
+        }
+        const invalidPickupCoords = Array.isArray(mode.busPickupPoints)
+          && mode.busPickupPoints.some((pickup) => pickup && (!Number.isFinite(pickup.lat) || !Number.isFinite(pickup.lng)));
+        if (invalidPickupCoords) {
+          addError('mode_bus_missing_pickup_coordinates', cfg.busPickupList || cfg.root, 'Συμπλήρωσε έγκυρες συντεταγμένες (lat,lng) για κάθε pickup');
         }
       }
       if (!Array.isArray(mode.includes) || !mode.includes.length) {

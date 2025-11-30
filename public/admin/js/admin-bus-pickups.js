@@ -1,15 +1,5 @@
 (function(){
-  const state = {
-    boundItems: new WeakSet(),
-    autocompleteMap: new WeakMap(),
-    scriptPromise: null,
-    keyPromise: null
-  };
-
-  function parseFloatSafe(value){
-    const num = parseFloat(value);
-    return Number.isFinite(num) ? num : null;
-  }
+  const state = { boundItems: new WeakSet() };
 
   function setStatus(item, status, message){
     const el = item && item.querySelector('.bus-pickup-geo-status');
@@ -19,143 +9,77 @@
     el.textContent = message || '';
   }
 
+  function fallbackParseCoordinates(raw){
+    const text = String(raw || '').trim();
+    if (!text) return { lat:null, lng:null, error:'missing' };
+    const parts = text.split(',').map((part) => part.trim());
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+      return { lat:null, lng:null, error:'format' };
+    }
+    const lat = parseFloat(parts[0]);
+    const lng = parseFloat(parts[1]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return { lat:null, lng:null, error:'nan' };
+    }
+    if (lat < -90 || lat > 90) return { lat:null, lng:null, error:'lat_range' };
+    if (lng < -180 || lng > 180) return { lat:null, lng:null, error:'lng_range' };
+    return { lat, lng, error:null };
+  }
+
+  function parseCoordinates(raw){
+    if (window.TripBusPickups && typeof window.TripBusPickups.parseCoordinates === 'function') {
+      return window.TripBusPickups.parseCoordinates(raw);
+    }
+    return fallbackParseCoordinates(raw);
+  }
+
+  function messageFor(errorCode){
+    switch (errorCode) {
+      case 'format':
+        return 'Χρησιμοποίησε μορφή lat,lng με ένα κόμμα.';
+      case 'nan':
+        return 'Τα δύο νούμερα πρέπει να είναι δεκαδικοί αριθμοί.';
+      case 'lat_range':
+        return 'Το πλάτος (lat) πρέπει να είναι μεταξύ -90 και 90.';
+      case 'lng_range':
+        return 'Το μήκος (lng) πρέπει να είναι μεταξύ -180 και 180.';
+      case 'missing':
+      default:
+        return 'Συμπλήρωσε συντεταγμένες lat,lng (π.χ. 37.97535,23.73558).';
+    }
+  }
+
   function refreshStatus(item){
     if (!item) return;
-    const addressInput = item.querySelector('.bus-pickup-address');
-    const lat = parseFloatSafe((item.querySelector('.bus-pickup-lat')||{}).value);
-    const lng = parseFloatSafe((item.querySelector('.bus-pickup-lng')||{}).value);
-    const address = (addressInput && addressInput.value || '').trim();
-    if (!address) {
-      setStatus(item, 'empty', 'Πληκτρολόγησε διεύθυνση και επίλεξε από τη λίστα.');
+    const input = item.querySelector('.bus-pickup-coordinates');
+    if (!input) {
+      setStatus(item, 'error', 'Το πεδίο συντεταγμένων δεν βρέθηκε.');
       return;
     }
-    if (lat == null || lng == null) {
-      setStatus(item, 'pending', 'Επίλεξε πρόταση ώστε να αποθηκευτούν οι συντεταγμένες.');
+    const value = input.value || '';
+    if (!value.trim()) {
+      setStatus(item, 'empty', messageFor('missing'));
       return;
     }
-    setStatus(item, 'ok', '✔ Συντεταγμένες αποθηκεύτηκαν.');
-  }
-
-  function updateLatLngInputs(item, lat, lng){
-    if (!item) return;
-    const latInput = item.querySelector('.bus-pickup-lat');
-    const lngInput = item.querySelector('.bus-pickup-lng');
-    const addressInput = item.querySelector('.bus-pickup-address');
-    if (latInput) latInput.value = (lat != null) ? String(lat) : '';
-    if (lngInput) lngInput.value = (lng != null) ? String(lng) : '';
-    if (addressInput) addressInput.dataset.geoSynced = (lat != null && lng != null) ? '1' : '0';
-    refreshStatus(item);
-  }
-
-  function fetchTripHtmlKey(){
-    return fetch('/trip.html', { cache: 'no-store' })
-      .then((res) => (res.ok ? res.text() : ''))
-      .then((html) => {
-        if (!html) return '';
-        const match = html.match(/maps\.googleapis\.com\/maps\/api\/js\?key=([^"&]+)/i);
-        if (match && match[1] && match[1] !== 'YOUR_GOOGLE_MAPS_API_KEY') return match[1];
-        return '';
-      })
-      .catch(() => '');
-  }
-
-  function resolveMapsKey(){
-    if (state.keyPromise) return state.keyPromise;
-    state.keyPromise = (async () => {
-      const htmlKey = await fetchTripHtmlKey();
-      if (htmlKey) return htmlKey;
-      const res = await fetch('/api/maps-key', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.key) return data.key;
-      }
-      throw new Error('no-google-key');
-    })();
-    return state.keyPromise;
-  }
-
-  function ensureGooglePlaces(){
-    if (window.google && window.google.maps && window.google.maps.places) {
-      return Promise.resolve();
+    const parsed = parseCoordinates(value);
+    if (parsed && parsed.error) {
+      setStatus(item, 'error', messageFor(parsed.error));
+      return;
     }
-    if (state.scriptPromise) return state.scriptPromise;
-    state.scriptPromise = resolveMapsKey()
-      .then((key) => {
-        if (!key) throw new Error('missing-google-key');
-        return new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.async = true;
-          script.defer = true;
-          script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places`;
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error('google-maps-load-failed'));
-          document.head.appendChild(script);
-        });
-      })
-      .catch((err) => {
-        console.warn('[BusPickup] Google Maps load failed:', err && err.message ? err.message : err);
-        throw err;
-      });
-    return state.scriptPromise;
-  }
-
-  function attachAutocomplete(input, item){
-    if (!input || state.autocompleteMap.has(input)) return;
-    setStatus(item, 'loading', 'Φόρτωση Google Places...');
-    ensureGooglePlaces()
-      .then(() => {
-        const autocomplete = new google.maps.places.Autocomplete(input, {
-          fields: ['formatted_address','geometry','name','place_id'],
-          types: ['geocode']
-        });
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-          const formatted = (place && (place.formatted_address || place.name)) || input.value || '';
-          if (formatted) input.value = formatted;
-          const location = place && place.geometry && place.geometry.location;
-          const lat = location && typeof location.lat === 'function' ? location.lat() : null;
-          const lng = location && typeof location.lng === 'function' ? location.lng() : null;
-          updateLatLngInputs(item, lat, lng);
-          try {
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-          } catch (_){
-            const legacy = document.createEvent('Event');
-            legacy.initEvent('input', true, true);
-            input.dispatchEvent(legacy);
-          }
-          const pac = document.querySelector('.pac-container');
-          if (pac) pac.style.display = 'none';
-          input.blur();
-        });
-        state.autocompleteMap.set(input, autocomplete);
-        refreshStatus(item);
-      })
-      .catch(() => {
-        setStatus(item, 'error', 'Δεν φορτώθηκε το Google Places. Μπορείς να γράψεις τη διεύθυνση χειροκίνητα.');
-      });
+    setStatus(item, 'ok', '✔ Έγκυρες συντεταγμένες.');
   }
 
   function bindItem(item){
     if (!item || state.boundItems.has(item)) return;
     state.boundItems.add(item);
-    const addressInput = item.querySelector('.bus-pickup-address');
-    if (!addressInput) return;
-    addressInput.setAttribute('autocomplete', 'off');
-    const lat = parseFloatSafe((item.querySelector('.bus-pickup-lat')||{}).value);
-    const lng = parseFloatSafe((item.querySelector('.bus-pickup-lng')||{}).value);
-    addressInput.dataset.geoSynced = (lat != null && lng != null) ? '1' : '0';
-    addressInput.addEventListener('input', () => {
-      if (addressInput.dataset.geoSynced === '1') {
-        updateLatLngInputs(item, null, null);
-      } else if (!addressInput.value.trim()) {
-        updateLatLngInputs(item, null, null);
-      } else {
-        refreshStatus(item);
-      }
-    });
-    addressInput.addEventListener('focus', () => attachAutocomplete(addressInput, item));
-    attachAutocomplete(addressInput, item);
-    refreshStatus(item);
+    const coordsInput = item.querySelector('.bus-pickup-coordinates');
+    if (coordsInput) {
+      coordsInput.addEventListener('input', () => refreshStatus(item));
+      coordsInput.addEventListener('blur', () => refreshStatus(item));
+      refreshStatus(item);
+    } else {
+      setStatus(item, 'error', 'Δεν βρέθηκε πεδίο συντεταγμένων.');
+    }
   }
 
   window.AdminBusPickups = {

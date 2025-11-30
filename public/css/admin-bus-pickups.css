@@ -13,6 +13,10 @@
   color: #9c6500;
 }
 
+.bus-pickup-item .bus-pickup-geo-status[data-state="empty"] {
+  color: #9c6500;
+}
+
 .bus-pickup-item .bus-pickup-geo-status[data-state="error"] {
   color: #b00020;
 }

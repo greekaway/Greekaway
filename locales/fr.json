@@ -117,6 +117,7 @@
     "step2_of3": "Étape 2 sur 3",
     "step3_of3": "Étape 3 sur 3",
     "next": "Suivant",
+    "return_button": "Retour",
     "error_create": "Erreur lors de la création de la réservation",
     "error_network": "Erreur réseau lors de la création de la réservation",
     "error_availability": "Erreur lors de la vérification de la disponibilité",

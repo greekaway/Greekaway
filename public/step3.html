@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="el">
+<html lang="el" class="booking-step2-root booking-step3-root">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
@@ -9,44 +9,110 @@
   <!-- Unified footer: keep single injection via footer.js; prevent double load by adding id -->
   <link id="ga-footer-rounded-css" rel="stylesheet" href="/css/footer-rounded.css">
   <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/step2.css">
   <link rel="stylesheet" href="/css/step3.css">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#001f3f">
+  <meta name="theme-color" content="#1B2A3A">
   <link rel="stylesheet" href="/pwa.css">
   <link rel="stylesheet" href="/css/pwa-fixes.css">
 </head>
-<body class="site-gradient">
-  
-  <div class="step3-header">
-    <div class="trip-title" id="s3TripTitle">&nbsp;</div>
-    <div class="step-indicator" style="margin-top:6px;color:var(--color-gold,#d9b85f);font-weight:700;opacity:.9" data-i18n="booking.step3_of3">Βήμα 3 από 3</div>
-  </div>
+<body class="booking-step booking-step2 booking-step3">
+  <main id="step3Root" class="step2-shell step3-shell" aria-live="polite">
+    <header class="step2-head step3-head">
+      <div class="step-head-top">
+        <div class="step-chip" data-i18n="booking.step3_of3">Βήμα 3 από 3</div>
+        <div id="s3PriceLine" class="price-line">—</div>
+      </div>
+      <h1 id="s3TripTitle">Φόρτωση εκδρομής…</h1>
+      <div class="step2-meta">
+        <span id="s3TripDate" class="meta-pill">—</span>
+        <span id="s3ModeLabel" class="meta-pill" hidden>—</span>
+      </div>
+    </header>
 
-  <div class="step3-band" aria-hidden="true">
-    <div class="step3-card"></div>
-  </div>
+    <div id="s3Error" class="step3-inline-error" hidden data-i18n="booking.traveler_profile_incomplete">Συμπλήρωσε το προφίλ ταξιδιώτη για να συνεχίσεις.</div>
 
-  <div id="s3Error" hidden data-i18n="booking.traveler_profile_incomplete">Please complete your traveler profile before continuing.</div>
-  <div class="s3-summary">
-    <div class="s3-card">
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.adults">Ενήλικες</div><div class="s3-value" id="vAdults">–</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.children">Παιδιά</div><div class="s3-value" id="vChildren">–</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.suitcases">Αποσκευές</div><div class="s3-value" id="vBags">–</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.preferred_language">Γλώσσα επικοινωνίας</div><div class="s3-value" id="vLang">–</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.pickup_location">Σημείο Παραλαβής</div><div class="s3-value" id="vPickup">–</div></div>
-  <div class="s3-row" id="vNotesInfoRow" hidden><div class="s3-label"></div><div class="s3-value" id="vNotesInfo">—</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.age_group">Ηλικιακή ομάδα</div><div class="s3-value" id="vAgeGroup">–</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.traveler_type">Τύπος ταξιδιώτη</div><div class="s3-value" id="vTravelerType">–</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.interests">Ενδιαφέροντα</div><div class="s3-value" id="vInterest">–</div></div>
-  <div class="s3-row"><div class="s3-label" data-i18n="booking.sociality">Κοινωνικότητα</div><div class="s3-value" id="vSocial">–</div></div>
-  <div class="s3-row emph"><div class="s3-label" data-i18n="booking.trip_cost">Κόστος εκδρομής</div><div class="s3-value" id="vTripCost">–</div></div>
+    <section class="step2-panels s2-fields step3-panels" role="group" aria-label="Περίληψη κράτησης">
+      <article class="step2-card step3-card" id="summaryTravelersCard">
+        <div class="card-head">
+          <p class="card-kicker">Επιβάτες</p>
+          <h2>Επιβεβαίωση ταξιδιωτών</h2>
+          <p class="card-sub">Δες ξανά όσους δήλωσες στο Βήμα 2.</p>
+        </div>
+        <div class="card-body step3-summary">
+          <div class="s2-row s3-row">
+            <div class="s3-label" data-i18n="booking.adults">Ενήλικες</div>
+            <div class="s3-value" id="vAdults">—</div>
+          </div>
+          <div class="s2-row s3-row">
+            <div class="s3-label" data-i18n="booking.children">Παιδιά</div>
+            <div class="s3-value" id="vChildren">—</div>
+          </div>
+          <div class="s2-row s3-row">
+            <div class="s3-label" data-i18n="booking.suitcases">Αποσκευές</div>
+            <div class="s3-value" id="vBags">—</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="step2-card step3-card" id="summaryPickupCard">
+        <div class="card-head">
+          <p class="card-kicker">Παραλαβή &amp; επικοινωνία</p>
+          <h2>Σημείο &amp; γλώσσα</h2>
+          <p class="card-sub">Το σύστημα μεταφέρει αυτόματα τις επιλογές σου.</p>
+        </div>
+        <div class="card-body step3-summary">
+          <div class="s2-row s3-row">
+            <div class="s3-label" data-i18n="booking.preferred_language">Γλώσσα επικοινωνίας</div>
+            <div class="s3-value" id="vLang">—</div>
+          </div>
+          <div class="s2-row s3-row">
+            <div class="s3-label" data-i18n="booking.pickup_location">Σημείο Παραλαβής</div>
+            <div class="s3-value" id="vPickup">—</div>
+          </div>
+          <div class="s2-row s3-row" id="vNotesInfoRow" hidden>
+            <div class="s3-label" data-i18n="booking.driver_message">Μήνυμα στον οδηγό</div>
+            <div class="s3-value" id="vNotesInfo">—</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="step2-card step3-card" id="summaryProfileCard">
+        <div class="card-head">
+          <p class="card-kicker">Προτιμήσεις</p>
+          <h2>Προφίλ ταξιδιώτη</h2>
+          <p class="card-sub">Καθρέφτης του προφίλ που όρισες.</p>
+        </div>
+        <div class="card-body step3-summary">
+          <div class="s2-row s3-row">
+            <div class="s3-label" data-i18n="booking.age_group">Ηλικιακή ομάδα</div>
+            <div class="s3-value" id="vAgeGroup">—</div>
+          </div>
+          <div class="s2-row s3-row">
+            <div class="s3-label" data-i18n="booking.traveler_type">Τύπος ταξιδιώτη</div>
+            <div class="s3-value" id="vTravelerType">—</div>
+          </div>
+          <div class="s2-row s3-row">
+            <div class="s3-label" data-i18n="booking.interests">Ενδιαφέροντα</div>
+            <div class="s3-value" id="vInterest">—</div>
+          </div>
+          <div class="s2-row s3-row">
+            <div class="s3-label" data-i18n="booking.sociality">Κοινωνικότητα</div>
+            <div class="s3-value" id="vSocial">—</div>
+          </div>
+          <div class="s2-row s3-row emph">
+            <div class="s3-label" data-i18n="booking.trip_cost">Κόστος εκδρομής</div>
+            <div class="s3-value" id="vTripCost">—</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="cta-bar step2-cta step3-cta">
+      <button id="s3Back" class="btn-secondary" data-i18n="booking.return_button">Επιστροφή</button>
+      <button id="s3ProceedPay" class="btn-primary" data-i18n="booking.proceed_payment">Πληρωμή</button>
     </div>
-  </div>
-
-  <div class="s3-actions">
-    <button id="s3Back" class="btn" data-i18n="ui.back">Πίσω</button>
-    <button id="s3ProceedPay" class="btn" data-i18n="booking.proceed_payment">Πληρωμή</button>
-  </div>
+  </main>
 
   <!-- Overlays: About, AI, Profile for consistent footer actions -->
   <div id="aboutOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
@@ -62,14 +128,6 @@
     <div class="overlay-inner">
       <h2 data-i18n="nav.ai">Βοηθός AI</h2>
       <p data-i18n="welcome.ask">Ρωτήστε μας ό,τι θέλετε για την εκδρομή σας!</p>
-    </div>
-  </div>
-
-  <div id="profileOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
-    <button class="close-overlay" onclick="closeOverlay('profileOverlay')" aria-label="Κλείσιμο">×</button>
-    <div class="overlay-inner">
-      <h2 data-i18n="nav.profile">Το Προφίλ μου</h2>
-      <p data-i18n="profile.info">Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας.</p>
     </div>
   </div>
 
@@ -92,6 +150,64 @@
       // Safe i18n accessor: if translation not ready or equals key, return fallback
       function tSafe(key, fallback){
         try { const v = (window.t && window.t(key)) || ''; return (v && v !== key) ? v : fallback; } catch(_){ return fallback; }
+      }
+
+      const modeLabels = { bus: 'Ομαδικό λεωφορείο', van: 'Mini van', mercedes: 'Ιδιωτική μεταφορά' };
+      function normalizeModeKey(mode){
+        const normalized = String(mode || '').toLowerCase().trim();
+        if (!normalized) return '';
+        if (normalized === 'mercedes/private' || normalized === 'private' || normalized === 'vip') return 'mercedes';
+        if (normalized === 'multi' || normalized === 'shared' || normalized === 'minivan') return 'van';
+        return normalized;
+      }
+      function hydrateStep3HeaderMeta(){
+        const dateEl = document.getElementById('s3TripDate');
+        const modeEl = document.getElementById('s3ModeLabel');
+        const dateVal = (sessionStorage.getItem('gw_trip_date') || '').trim();
+        if (dateEl) dateEl.textContent = dateVal || '—';
+        let modeKey = normalizeModeKey(sessionStorage.getItem('gw_trip_mode') || '');
+        if (!modeKey && window.__loadedTrip && window.__loadedTrip.defaultMode) {
+          modeKey = normalizeModeKey(window.__loadedTrip.defaultMode);
+        }
+        if (modeEl) {
+          if (modeKey) {
+            const friendly = modeLabels[modeKey] || modeKey.toUpperCase();
+            modeEl.textContent = friendly;
+            modeEl.hidden = false;
+          } else {
+            modeEl.hidden = true;
+          }
+        }
+      }
+
+      function pickModeBlock(trip, key){
+        if (!trip || !trip.modes) return null;
+        const normalized = normalizeModeKey(key);
+        if (normalized && trip.modes[normalized]) return trip.modes[normalized];
+        if (trip.defaultMode && trip.modes[trip.defaultMode]) return trip.modes[trip.defaultMode];
+        const activeKey = Object.keys(trip.modes || {}).find((mode)=>trip.modes[mode] && trip.modes[mode].active);
+        if (activeKey) return trip.modes[activeKey];
+        const firstKey = Object.keys(trip.modes)[0];
+        return firstKey ? trip.modes[firstKey] : null;
+      }
+
+      function computeModePrice(modeBlock, adultsCount){
+        if (!modeBlock) return 0;
+        const pricePerPerson = Number(modeBlock.price_per_person) || 0;
+        const priceTotal = Number(modeBlock.price_total) || 0;
+        if (pricePerPerson > 0) {
+          return pricePerPerson * Math.max(1, adultsCount || 1);
+        }
+        if (priceTotal > 0) return priceTotal;
+        return 0;
+      }
+
+      function getAdultsForPrice(){
+        try {
+          const stored = parseInt(sessionStorage.getItem('gw_adults') || '0', 10);
+          if (Number.isFinite(stored) && stored > 0) return stored;
+        } catch(_){ }
+        return 1;
       }
 
       // Normalize URL params into sessionStorage so Step 3 can render even on direct opens
@@ -117,6 +233,17 @@
         if (qId && !sessionStorage.getItem('gw_trip_id')) sessionStorage.setItem('gw_trip_id', qId);
         if (qDate && !sessionStorage.getItem('gw_trip_date')) sessionStorage.setItem('gw_trip_date', qDate);
         if (qAdults && !sessionStorage.getItem('gw_adults')) sessionStorage.setItem('gw_adults', String(parseInt(qAdults,10)||1));
+      } catch(_){ }
+
+      hydrateStep3HeaderMeta();
+      try {
+        const storedTitle = sessionStorage.getItem('gw_trip_title') || '';
+        if (storedTitle) {
+          const titleEl = document.getElementById('s3TripTitle');
+          if (titleEl && (!titleEl.textContent || titleEl.textContent.includes('Φόρτωση'))) {
+            titleEl.textContent = storedTitle;
+          }
+        }
       } catch(_){ }
 
       // Small helpers missing in original script
@@ -203,27 +330,73 @@
             const title = getLocalized(trip.title);
             if (title && titleEl) titleEl.textContent = title;
           } catch(_){ }
-          try { renderTripCost(); } catch(_){ }
+          try {
+            hydrateStep3HeaderMeta();
+            renderTripCost();
+          } catch(_){ }
           return trip;
         } catch(_){ return null; }
+      }
+
+      function resolvePriceLocale(){
+        try {
+          const lang = ((window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el').toLowerCase();
+          const map = { en:'en-US', fr:'fr-FR', it:'it-IT', es:'es-ES', de:'de-DE' };
+          return map[lang] || 'el-GR';
+        } catch(_){ return 'el-GR'; }
+      }
+
+      function formatCurrency(amount, currency){
+        if (!(amount >= 0)) return '—';
+        try {
+          return new Intl.NumberFormat(resolvePriceLocale(), { style:'currency', currency: currency || 'EUR' }).format(amount);
+        } catch(_){
+          return `${amount.toFixed(2)} ${currency || 'EUR'}`;
+        }
       }
 
       function renderTripCost(){
         try {
           const state = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
-          let cents = state && typeof state.price_cents === 'number' ? state.price_cents : null;
+          let cents = (state && typeof state.price_cents === 'number' && state.price_cents > 0) ? state.price_cents : null;
           let cur = (state && state.currency) ? String(state.currency).toUpperCase() : 'EUR';
           if (cents == null) {
-            // fallback: quick compute from trip JSON if needed
-            const seats = (()=>{ try { const a=parseInt(sessionStorage.getItem('gw_adults')||'0',10)||0; const ages=JSON.parse(sessionStorage.getItem('gw_children_ages')||'[]')||[]; return Math.max(1, a + (ages.length||0)); } catch(_){ return 1; } })();
-            if (window.__loadedTrip && typeof window.__loadedTrip.price_cents === 'number') {
-              cents = Math.max(0, (parseInt(window.__loadedTrip.price_cents,10)||0) * seats);
-              cur = (window.__loadedTrip.currency ? String(window.__loadedTrip.currency).toUpperCase() : cur);
+            try {
+              const storedCents = parseInt(sessionStorage.getItem('gw_amount_cents') || '0', 10);
+              if (storedCents > 0) {
+                cents = storedCents;
+                const storedCur = sessionStorage.getItem('gw_amount_currency');
+                if (storedCur) cur = String(storedCur).toUpperCase();
+              }
+            } catch(_){ }
+          }
+          if (cents == null) {
+            const trip = window.__loadedTrip || null;
+            if (trip && trip.modes) {
+              const modeKey = normalizeModeKey(sessionStorage.getItem('gw_trip_mode') || trip.defaultMode || '');
+              const modeBlock = pickModeBlock(trip, modeKey);
+              const adultsCount = getAdultsForPrice();
+              const amount = computeModePrice(modeBlock, adultsCount);
+              if (amount > 0) {
+                cents = Math.round(amount * 100);
+                cur = (trip.currency ? String(trip.currency).toUpperCase() : cur);
+                try {
+                  sessionStorage.setItem('gw_amount_cents', String(cents));
+                  sessionStorage.setItem('gw_amount_currency', cur);
+                } catch(_){ }
+              }
             }
           }
+          const priceLineEl = document.getElementById('s3PriceLine');
+          const totalEl = document.getElementById('vTripCost');
           if (cents != null) {
-            const val = (cents/100).toLocaleString((window.currentI18n && window.currentI18n.lang) || (navigator.language||'el'), { style:'currency', currency: cur });
-            const el = document.getElementById('vTripCost'); if (el) el.textContent = val;
+            const amount = cents / 100;
+            const val = formatCurrency(amount, cur);
+            if (totalEl) totalEl.textContent = val;
+            if (priceLineEl) priceLineEl.textContent = val;
+          } else {
+            if (totalEl) totalEl.textContent = '—';
+            if (priceLineEl) priceLineEl.textContent = '—';
           }
         } catch(_){ }
       }
@@ -259,12 +432,17 @@
               const title = getLocalized(trip.title);
               if (title) titleEl.textContent = title;
             }
-            try { renderTripCost(); } catch(_) {}
+            try {
+              renderTripCost();
+              hydrateStep3HeaderMeta();
+            } catch(_){ }
           } catch(_){ }
         });
       } catch(_){ }
-  renderValuesFromState();
-  try { translateTripCostLabel(); } catch(_){}
+      renderValuesFromState();
+      try { renderTripCost(); } catch(_){ }
+      try { translateTripCostLabel(); } catch(_){ }
+      try { validateProfile(); } catch(_){ }
 
       document.getElementById('s3Back')?.addEventListener('click', ()=> history.back());
 
@@ -309,6 +487,11 @@
   try { setTimeout(()=>{ try { if (window.currentI18n && window.setLanguage) { window.setLanguage(window.currentI18n.lang); translateTripCostLabel(); } } catch(_){ } }, 60); } catch(_){ }
       try {
         window.addEventListener('i18n:changed', ()=>{ try { renderValuesFromState(); renderTripCost(); translateTripCostLabel(); } catch(_){ } });
+      } catch(_){ }
+
+      try {
+        const tripId = sessionStorage.getItem('gw_trip_id') || '';
+        if (tripId) loadTripAndUpdate(tripId);
       } catch(_){ }
     });
   </script>

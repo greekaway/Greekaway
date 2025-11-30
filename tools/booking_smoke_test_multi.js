@@ -56,16 +56,22 @@ function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
         await page.waitForSelector('.s3-summary', { timeout: 12000 });
         await sleep(300);
         await page.screenshot({ path: `${d.name}_step3_summary.png` });
-  // Also test Help and Profile overlays from trip page footer
-  await page.click('footer a:nth-child(4)');
-  await page.waitForSelector('#aiOverlay .overlay-inner', { timeout: 8000 });
-  await page.screenshot({ path: `${d.name}_help_overlay.png` });
-  await page.evaluate(() => { if (window.closeOverlay) window.closeOverlay('aiOverlay'); });
-  await page.click('footer a:nth-child(5)');
-  await page.waitForSelector('#profileOverlay .overlay-inner', { timeout: 8000 });
-  await page.screenshot({ path: `${d.name}_profile_overlay.png` });
-  await page.evaluate(() => { if (window.closeOverlay) window.closeOverlay('profileOverlay'); });
-  await page.close();
+
+        // Validate footer actions: AI overlay still works, Profile now full-page route
+        await page.click('footer a:nth-child(4)');
+        await page.waitForSelector('#aiOverlay .overlay-inner', { timeout: 8000 });
+        await page.screenshot({ path: `${d.name}_help_overlay.png` });
+        await page.evaluate(() => { if (window.closeOverlay) window.closeOverlay('aiOverlay'); });
+
+        await Promise.all([
+          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 12000 }).catch(() => {}),
+          page.click('footer a:nth-child(5)')
+        ]);
+        await page.waitForSelector('main.profile-page', { timeout: 8000 });
+        await page.screenshot({ path: `${d.name}_profile_page.png` });
+        try { await page.goBack({ waitUntil: 'networkidle2', timeout: 12000 }); } catch(_) {}
+
+        await page.close();
       } catch (e) {
         console.error(`[${d.name}] failed`, e.message);
         try { await page.close(); } catch (_) {}

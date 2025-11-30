@@ -116,6 +116,7 @@
     "step2_of3": "שלב 2 מתוך 3",
     "step3_of3": "שלב 3 מתוך 3",
     "next": "הבא",
+    "return_button": "חזרה",
     "error_create": "שגיאה ביצירת הזמנה",
     "error_network": "שגיאת רשת בעת יצירת הזמנה",
     "error_availability": "שגיאה בבדיקת זמינות",

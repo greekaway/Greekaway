@@ -654,6 +654,14 @@ app.get('/about', (req, res) => {
   }
 });
 
+app.get('/profile', (req, res) => {
+  try {
+    res.sendFile(path.join(__dirname, 'public', 'profile.html'));
+  } catch (e) {
+    res.status(404).send('Not found');
+  }
+});
+
 // Mock checkout endpoint (POST) — simulates a payment processor response
 app.post('/mock-checkout', express.urlencoded({ extended: true }), (req, res) => {
   try {

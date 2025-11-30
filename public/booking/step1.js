@@ -7,7 +7,6 @@
   const dom = {
     root: document.getElementById('step1Root'),
     tripTitle: document.getElementById('tripTitle'),
-    tripSubtitle: document.getElementById('tripSubtitle'),
     priceLine: document.getElementById('priceLine'),
     headError: document.getElementById('headError'),
     monthLabel: document.getElementById('monthLabel'),
@@ -29,6 +28,8 @@
     modeKey: '',
     modeBlock: null,
     selectedDate: '',
+    selectedAvailability: null,
+    selectedSeatsAvailable: 0,
     monthCursor: MIN_MONTH,
     availabilityByMonth: new Map(),
     availabilityByDate: new Map(),
@@ -60,6 +61,7 @@
     if (!state.tripSlug) state.tripSlug = state.trip.id || state.tripParam;
     hydrateHeader();
     persistTripSession();
+    persistSeatsAvailable(null);
     attachHandlers();
     try {
       await ensureMonthLoaded(state.monthCursor);
@@ -84,6 +86,10 @@
         mode: state.modeKey,
         date: state.selectedDate
       });
+      const seatsAvailable = getSelectedSeatsAvailable();
+      if (seatsAvailable > 0) {
+        search.set('seatsAvailable', String(seatsAvailable));
+      }
       window.location.assign(`/booking/step2?${search.toString()}`);
     });
     dom.backBtn?.addEventListener('click', () => {
@@ -107,6 +113,8 @@
     dom.monthLabel.textContent = capitalize(MONTH_FORMATTER.format(state.monthCursor));
     dom.prevMonth.disabled = state.monthCursor.getTime() === MIN_MONTH.getTime();
     dom.nextMonth.disabled = state.monthCursor >= MAX_MONTH;
+    const isMercedesMode = state.modeKey === 'mercedes';
+    const limitedThreshold = getLimitedThreshold(state.modeBlock, state.modeKey);
     const firstDay = startOfMonth(state.monthCursor);
     const start = new Date(firstDay);
     const firstDow = toMondayIndex(firstDay.getDay());
@@ -131,7 +139,9 @@
       const availabilityLabel = formatAvailabilityLabel(available, capacity, state.modeKey === 'mercedes');
       if (available <= 0) cell.classList.add('is-full');
       if (available > 0) cell.classList.add('has-availability');
-      if (available > 0 && available <= 4) cell.classList.add('is-limited');
+      if (!isMercedesMode && limitedThreshold > 0 && available > 0 && available <= limitedThreshold) {
+        cell.classList.add('is-limited');
+      }
       if (!isCurrentMonth || isPast || available <= 0) {
         cell.classList.add('is-disabled');
         cell.disabled = true;
@@ -141,10 +151,12 @@
       }
       cell.dataset.date = iso;
       cell.dataset.available = String(available);
+      const [badgeTop, badgeBottom] = splitBadgeValue(availabilityLabel.value);
+      const badgeAttrs = `data-badge-top="${escapeAttr(badgeTop)}" data-badge-bottom="${escapeAttr(badgeBottom)}"`;
       cell.innerHTML = `
         <span class="day-number">${date.getDate()}</span>
         <span class="day-badge">
-          <span class="badge-value">${availabilityLabel.value}</span>
+          <span class="badge-value" ${badgeAttrs}>${availabilityLabel.value}</span>
           <span class="badge-label">${availabilityLabel.label}</span>
         </span>
       `;
@@ -173,6 +185,9 @@
       dom.selectedDateLabel.textContent = '—';
       dom.selectedAvailability.textContent = '—';
       dom.continueBtn.disabled = true;
+      state.selectedAvailability = null;
+      state.selectedSeatsAvailable = 0;
+      persistSeatsAvailable(null);
     } else {
       selectDate(state.selectedDate);
     }
@@ -181,6 +196,7 @@
   function selectDate(iso) {
     state.selectedDate = iso;
     const info = state.availabilityByDate.get(iso) || null;
+    state.selectedAvailability = info;
     dom.selectedDateLabel.textContent = capitalize(HUMAN_FORMATTER.format(parseISODate(iso)));
     const isMercedes = state.modeKey === 'mercedes';
     if (isMercedes) {
@@ -200,6 +216,9 @@
         : '—';
       dom.continueBtn.disabled = !info;
     }
+    const seatsAvailable = computeSeatsAvailable(info);
+    state.selectedSeatsAvailable = seatsAvailable;
+    persistSeatsAvailable(seatsAvailable);
     Array.from(dom.calendarGrid.querySelectorAll('.day-cell')).forEach((btn) => {
       btn.classList.toggle('is-selected', btn.dataset.date === iso);
     });
@@ -207,8 +226,6 @@
 
   function hydrateHeader() {
     if (dom.tripTitle) dom.tripTitle.textContent = state.modeBlock.title || state.trip.title || 'Εκδρομή';
-    const subtitle = state.modeBlock.subtitle || state.trip.subtitle || '';
-    dom.tripSubtitle.textContent = subtitle || ' ';
     dom.priceLine.textContent = formatPriceLine();
   }
 
@@ -256,6 +273,48 @@
       return { value: `${available}`, label: 'διαθέσιμες' };
     }
     return { value: '', label: 'Μη διαθέσιμη' };
+  }
+
+  function computeSeatsAvailable(info) {
+    if (!info) return 0;
+    const raw = info.available != null ? Number(info.available) : Number(info.remaining_fleet);
+    if (!Number.isFinite(raw)) return 0;
+    return Math.max(0, raw);
+  }
+
+  function getSelectedSeatsAvailable() {
+    if (state.selectedSeatsAvailable && state.selectedSeatsAvailable > 0) {
+      return state.selectedSeatsAvailable;
+    }
+    return computeSeatsAvailable(state.selectedAvailability);
+  }
+
+  function persistSeatsAvailable(value) {
+    try {
+      const num = Number(value);
+      if (Number.isFinite(num) && num >= 0) {
+        sessionStorage.setItem('gw_seats_available', String(num));
+      } else {
+        sessionStorage.removeItem('gw_seats_available');
+      }
+    } catch (_) {}
+  }
+
+  function splitBadgeValue(value) {
+    if (!value) return ['', ''];
+    const parts = String(value).split('/');
+    if (parts.length >= 2) {
+      return [parts[0].trim(), parts[1].trim()];
+    }
+    return [String(value).trim(), ''];
+  }
+
+  function escapeAttr(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
   async function ensureMonthLoaded(date) {
@@ -380,6 +439,15 @@
 
   function monthKey(date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  // Allow per-mode tuning of the low availability threshold.
+  function getLimitedThreshold(modeBlock, modeKey) {
+    if (String(modeKey).toLowerCase() === 'mercedes') return 0;
+    const defined = Number(modeBlock && modeBlock.low_stock_threshold);
+    if (!Number.isNaN(defined) && defined > 0) return defined;
+    if (String(modeKey).toLowerCase() === 'bus') return 8;
+    return 4;
   }
 
   function formatISO(date) {

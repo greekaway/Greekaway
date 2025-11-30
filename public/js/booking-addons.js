@@ -22,9 +22,30 @@
     social: { titleSelector: '#socialityRow .title', buttonSelector: '#socialSelectBtn' }
   };
   const PROFILE_FIELD_KEYS = Object.keys(PROFILE_FIELD_UI);
-  const busPickupCache = { raw: null, localized: [], lang: null, map: new Map(), selectedId: '', suggestionId: '' };
+  const busPickupCache = {
+    raw: null,
+    localized: [],
+    lang: null,
+    map: new Map(),
+    selectedId: '',
+    suggestionId: '',
+    recommendedId: '',
+    userOverride: ''
+  };
   let tripDataPromise = null;
   const EARTH_RADIUS_KM = 6371;
+
+  function toggleBusExtrasContainer(visible){
+    const container = $('#busExtrasContainer');
+    if (!container) return;
+    if (visible) {
+      container.style.display = '';
+      container.removeAttribute('hidden');
+    } else {
+      container.style.display = 'none';
+      container.setAttribute('hidden','');
+    }
+  }
 
   function currentLang(){
     try { return (window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el'; }
@@ -47,9 +68,11 @@
   async function fetchTripById(tripId){
     if (!tripId) return null;
     try {
-      const res = await fetch(`/data/trips/${encodeURIComponent(tripId)}.json`, { cache: 'no-store' });
+      const res = await fetch(`/api/trips/${encodeURIComponent(tripId)}`, { cache: 'no-store' });
       if (!res.ok) return null;
-      return await res.json();
+      const data = await res.json();
+      if (data && data.trip) return data.trip;
+      return null;
     } catch(_){ return null; }
   }
 
@@ -112,6 +135,11 @@
     const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return EARTH_RADIUS_KM * c;
+  }
+
+  function busStopsHaveCoordinates(points){
+    if (!Array.isArray(points) || !points.length) return false;
+    return points.every((stop) => Number.isFinite(stop.lat) && Number.isFinite(stop.lng));
   }
 
   function localizeBusPickupPoints(rawList, lang){
@@ -189,9 +217,44 @@
     if (row) row.classList.add('error');
   }
 
+  function hideBusSuggestion(row){
+    if (row) row.setAttribute('hidden','');
+    const hadRecommendation = !!busPickupCache.recommendedId;
+    busPickupCache.suggestionId = '';
+    busPickupCache.recommendedId = '';
+    busPickupCache.userOverride = '';
+    if (hadRecommendation) rerenderBusStopsIfPossible();
+  }
+
+  function rerenderBusStopsIfPossible(){
+    if (detectTripMode() !== 'bus') return;
+    if (!Array.isArray(busPickupCache.localized) || !busPickupCache.localized.length) return;
+    renderBusPickupPoints(busPickupCache.localized);
+  }
+
+  function maybeAutoSelectRecommended(){
+    const recommendedId = busPickupCache.recommendedId;
+    if (!recommendedId) return;
+    const hasOverride = !!busPickupCache.userOverride
+      && busPickupCache.userOverride === recommendedId;
+    if (hasOverride) return;
+    if (busPickupCache.selectedId === recommendedId) return;
+    busPickupCache.selectedId = recommendedId;
+    busPickupCache.userOverride = '';
+    const recommendedStop = busPickupCache.map.get(recommendedId);
+    if (recommendedStop) persistBusSelection(recommendedStop);
+    hideBusStopError();
+    updateNextVisualState();
+  }
+
   function selectBusStop(stopId){
     if (!stopId) return;
     busPickupCache.selectedId = stopId;
+    if (busPickupCache.recommendedId && stopId !== busPickupCache.recommendedId) {
+      busPickupCache.userOverride = busPickupCache.recommendedId;
+    } else {
+      busPickupCache.userOverride = '';
+    }
     hideBusStopError();
     const listEl = $('#busStopList');
     if (listEl) {
@@ -209,16 +272,30 @@
     const row = $('#busStopsRow');
     const listEl = $('#busStopList');
     if (!row || !listEl) return;
-    if (!Array.isArray(points) || !points.length) {
+    const mode = detectTripMode();
+    const source = Array.isArray(points) ? points : (Array.isArray(busPickupCache.localized) ? busPickupCache.localized : []);
+    if (mode !== 'bus' || !source.length) {
       row.setAttribute('hidden','');
       hideBusStopError();
-      const suggestion = $('#busSuggestionRow');
-      if (suggestion) suggestion.setAttribute('hidden','');
+      hideBusSuggestion($('#busSuggestionRow'));
+      listEl.innerHTML = '';
+      toggleBusExtrasContainer(false);
       return;
     }
+    toggleBusExtrasContainer(true);
     row.removeAttribute('hidden');
+    const recommendedId = busPickupCache.recommendedId;
+    const sorted = recommendedId
+      ? [...source].sort((a, b) => {
+          if (a.id === recommendedId && b.id !== recommendedId) return -1;
+          if (b.id === recommendedId && a.id !== recommendedId) return 1;
+          const aOrder = Number.isFinite(a.order) ? a.order : source.indexOf(a);
+          const bOrder = Number.isFinite(b.order) ? b.order : source.indexOf(b);
+          return aOrder - bOrder;
+        })
+      : [...source];
     listEl.innerHTML = '';
-    points.forEach((point) => {
+    sorted.forEach((point) => {
       const label = document.createElement('label');
       label.className = 'bus-stop-item';
       label.dataset.stopId = point.id;
@@ -232,12 +309,11 @@
       details.className = 'bus-stop-details';
       const title = document.createElement('div');
       title.className = 'bus-stop-title';
-      title.textContent = point.title || point.address || 'Στάση';
-      const addr = document.createElement('div');
-      addr.className = 'bus-stop-address';
-      addr.textContent = point.address || '';
+      const combinedLabel = point.address
+        ? `${point.title || point.address} — ${point.address}`
+        : (point.title || point.address || 'Στάση');
+      title.textContent = combinedLabel;
       details.appendChild(title);
-      if (point.address) details.appendChild(addr);
       if (point.time) {
         const time = document.createElement('div');
         time.className = 'bus-stop-time';
@@ -246,6 +322,7 @@
       }
       label.appendChild(input);
       label.appendChild(details);
+      if (point.id === busPickupCache.recommendedId) label.classList.add('recommended');
       if (point.id === busPickupCache.selectedId) label.classList.add('selected');
       listEl.appendChild(label);
     });
@@ -257,13 +334,15 @@
       const row = $('#busStopsRow');
       if (row) row.setAttribute('hidden','');
       const suggestionRow = $('#busSuggestionRow');
-      if (suggestionRow) suggestionRow.setAttribute('hidden','');
+      hideBusSuggestion(suggestionRow);
       hideBusStopError();
+      toggleBusExtrasContainer(false);
       return;
     }
     const force = options && options.force;
     const points = await resolveBusPickupPointList(Boolean(force));
     renderBusPickupPoints(points);
+    toggleBusExtrasContainer(true);
     updateNextVisualState();
   }
 
@@ -277,23 +356,39 @@
     const row = $('#busSuggestionRow');
     const valueEl = $('#busSuggestionValue');
     if (!row || !valueEl) return;
-    if (detectTripMode() !== 'bus') { row.setAttribute('hidden',''); return; }
-    if (!chosenPlace || chosenPlace.lat == null || chosenPlace.lng == null) {
-      row.setAttribute('hidden','');
+    if (detectTripMode() !== 'bus') {
+      toggleBusExtrasContainer(false);
+      hideBusSuggestion(row);
+      return;
+    }
+    toggleBusExtrasContainer(true);
+    const pickupLat = chosenPlace ? Number(chosenPlace.lat) : null;
+    const pickupLng = chosenPlace ? Number(chosenPlace.lng) : null;
+    if (!Number.isFinite(pickupLat) || !Number.isFinite(pickupLng)) {
+      hideBusSuggestion(row);
       return;
     }
     const points = await resolveBusPickupPointList(false);
-    if (!points.length) { row.setAttribute('hidden',''); return; }
+    if (!busStopsHaveCoordinates(points)) {
+      hideBusSuggestion(row);
+      return;
+    }
     let nearest = null;
     let nearestDist = Infinity;
     points.forEach((stop) => {
-      const dist = haversineKm(chosenPlace.lat, chosenPlace.lng, stop.lat, stop.lng);
+      const dist = haversineKm(pickupLat, pickupLng, stop.lat, stop.lng);
       if (dist == null) return;
       if (dist < nearestDist) { nearestDist = dist; nearest = stop; }
     });
-    if (!nearest) { row.setAttribute('hidden',''); return; }
+    if (!nearest) { hideBusSuggestion(row); return; }
     busPickupCache.suggestionId = nearest.id;
-    valueEl.textContent = nearest.address ? `${nearest.title} – ${nearest.address}` : nearest.title;
+    busPickupCache.recommendedId = nearest.id;
+    maybeAutoSelectRecommended();
+    renderBusPickupPoints(points);
+    const suggestionLabel = nearest.address
+      ? `${nearest.title || nearest.address} — ${nearest.address}`
+      : (nearest.title || nearest.address || '');
+    valueEl.textContent = suggestionLabel;
     row.removeAttribute('hidden');
   }
 
@@ -811,6 +906,7 @@
     setTimeout(() => { loadBusPickupPointsIfNeeded().catch(()=>{}); }, 0);
     bindSpecialRequests();
     guardNext();
+    toggleBusExtrasContainer(detectTripMode() === 'bus');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

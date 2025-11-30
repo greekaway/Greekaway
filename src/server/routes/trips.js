@@ -957,6 +957,11 @@ function validateTrip(input) {
       const invalidPickup = Array.isArray(block.busPickupPoints)
         && block.busPickupPoints.some((pickup) => pickup && !pickup.departureTime);
       if (invalidPickup) errors.push("mode_bus_missing_pickup_time");
+      const invalidPickupCoords = Array.isArray(block.busPickupPoints)
+        && block.busPickupPoints.some(
+          (pickup) => pickup && (!Number.isFinite(pickup.lat) || !Number.isFinite(pickup.lng))
+        );
+      if (invalidPickupCoords) errors.push("mode_bus_missing_pickup_coordinates");
     }
     if (!block.includes.length) errors.push(`mode_${key}_missing_includes`);
   });

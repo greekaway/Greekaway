@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="el">
+<html lang="el" class="booking-step2-root">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
@@ -11,195 +11,216 @@
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/step2.css">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#001f3f">
+  <meta name="theme-color" content="#1B2A3A">
   <link rel="stylesheet" href="/pwa.css">
   <link rel="stylesheet" href="/css/pwa-fixes.css">
 </head>
-<body class="site-gradient">
-  
-  <div class="step2-header">
-    <div class="trip-title" id="s2TripTitle">&nbsp;</div>
-    <div class="trip-desc" id="s2TripDesc">&nbsp;</div>
-    <div class="trip-date" id="s2TripDate" style="margin-top:6px;color:var(--color-muted,#ccd);font-weight:500"></div>
-  <div class="step-indicator" style="margin-top:14px;color:var(--color-gold,#d9b85f);font-weight:700;opacity:.9" data-i18n="booking.step2_of3">Βήμα 2 από 3</div>
-  </div>
-
-  <!-- Centered dark panel like Step 1 calendar host (empty for now) -->
-  <div class="step2-band" aria-hidden="true">
-    <div class="step2-card"></div>
-  </div>
-
-  <!-- Adults / Children counters -->
-  <div class="s2-fields" role="group" data-i18n-aria="booking.traveler_options">
-    <div class="s2-row">
-      <div class="s2-labels">
-        <div class="title" data-i18n="booking.adults">Ενήλικες</div>
+<body class="booking-step booking-step2">
+  <main id="step2Root" class="step2-shell" aria-live="polite">
+    <header class="step2-head step2-header">
+      <div class="step-head-top">
+        <div class="step-chip" data-i18n="booking.step2_of3">Βήμα 2 από 3</div>
+        <div id="s2PriceLine" class="price-line">—</div>
       </div>
-      <div class="s2-counter">
-        <button class="btn-round" id="adultsDec" data-i18n-aria="booking.decrease_adults">−</button>
-        <div class="count" id="adultsCount">2</div>
-        <button class="btn-round" id="adultsInc" data-i18n-aria="booking.increase_adults">+</button>
+      <h1 id="s2TripTitle">Φόρτωση εκδρομής…</h1>
+      <div class="step2-meta">
+        <span id="s2TripDate" class="meta-pill">—</span>
+        <span id="s2ModeLabel" class="meta-pill" hidden>—</span>
       </div>
+      <div id="s2HeadError" class="head-error" hidden></div>
+    </header>
+
+    <section class="step2-panels s2-fields" role="group" data-i18n-aria="booking.traveler_options">
+      <article class="step2-card" id="passengersCard">
+        <div class="card-head">
+          <p class="card-kicker">Πληροφορίες ταξιδιωτών</p>
+          <h2>Επιβάτες &amp; αποσκευές</h2>
+        </div>
+        <div class="card-body">
+          <div class="s2-row">
+            <div class="s2-labels">
+              <div class="title" data-i18n="booking.adults">Ενήλικες</div>
+            </div>
+            <div class="s2-counter">
+              <button class="btn-round" id="adultsDec" data-i18n-aria="booking.decrease_adults">−</button>
+              <div class="count" id="adultsCount">2</div>
+              <button class="btn-round" id="adultsInc" data-i18n-aria="booking.increase_adults">+</button>
+            </div>
+          </div>
+          <div class="s2-row">
+            <div class="s2-labels">
+              <div class="title" data-i18n="booking.children">Παιδιά</div>
+              <div class="sub" data-i18n="booking.children_age_range">0 – 17 ετών</div>
+            </div>
+            <div class="s2-ages" id="childrenAges"><span class="hint" data-i18n="booking.pick_ages">Επιλέξτε ηλικίες</span></div>
+            <div class="s2-counter">
+              <button class="btn-round" id="childrenDec" data-i18n-aria="booking.decrease_children">−</button>
+              <div class="count" id="childrenCount">0</div>
+              <button class="btn-round" id="childrenInc" data-i18n-aria="booking.increase_children">+</button>
+            </div>
+            <div class="age-picker" id="agePicker" hidden></div>
+          </div>
+          <div class="s2-row" id="suitcasesRow">
+            <div class="s2-labels">
+              <div class="title" data-i18n="booking.suitcases">Αποσκευές</div>
+              <div class="sub" id="suitcaseSummary">—</div>
+            </div>
+            <div class="s2-counter">
+              <button class="btn-round" id="suitcasesDec" aria-label="−">−</button>
+              <div class="count" id="suitcasesCount">0</div>
+              <button class="btn-round" id="suitcasesInc" aria-label="+">+</button>
+            </div>
+          </div>
+          <div class="seat-limit-notice" id="seatLimitNotice" hidden>
+            <div class="seat-limit-chip" id="seatLimitMessage">—</div>
+          </div>
+          <div class="field-inline-error" id="seatLimitError" hidden></div>
+        </div>
+      </article>
+
+      <article class="step2-card" id="pickupCard">
+        <div class="card-head">
+          <p class="card-kicker">Σημείο παραλαβής</p>
+          <h2>Παραλαβή &amp; στάσεις</h2>
+          <p class="card-sub">Δώσε τη διεύθυνση και επέλεξε στάση λεωφορείου (αν χρειάζεται).</p>
+        </div>
+        <div class="card-body">
+          <div class="s2-row pickup-required" id="pickupRow">
+            <div class="s2-labels">
+              <label for="pickupInput" id="pickupLabel" class="title" data-i18n="booking.pickup_location">Σημείο Παραλαβής</label>
+            </div>
+            <div class="s2-input-group pickup-reordered">
+              <button type="button" id="pickupMapBtn" class="s2-map-btn" title="Χάρτης" data-i18n-title="booking.map_btn_title" aria-label="Χάρτης">
+                <i class="fa-solid fa-map-pin icon" aria-hidden="true"></i>
+              </button>
+              <input type="text" id="pickupInput" class="s2-input" data-i18n-placeholder="booking.pickup_placeholder" placeholder="Αρχίστε να πληκτρολογείτε διεύθυνση" autocomplete="off" />
+            </div>
+            <div class="places-dropdown" id="pickupSuggest" hidden></div>
+          </div>
+
+          <div id="busExtrasContainer" class="bus-extras-container" hidden>
+            <div class="s2-row bus-suggestion-row" id="busSuggestionRow" hidden>
+              <div class="bus-suggestion-label">Προτεινόμενη στάση</div>
+              <div class="bus-suggestion-value" id="busSuggestionValue">—</div>
+            </div>
+
+            <div class="s2-row vertical bus-stops-row" id="busStopsRow" hidden>
+              <div class="s2-labels">
+                <div class="title">Στάση λεωφορείου</div>
+                <div class="sub">Επιλέξτε σημείο επιβίβασης</div>
+                <div class="field-inline-error" id="busStopError" hidden>Επιλέξτε στάση</div>
+              </div>
+              <div class="bus-stop-list" id="busStopList" role="radiogroup" aria-label="Διαθέσιμες στάσεις"></div>
+            </div>
+          </div>
+
+          <div class="s2-row" id="specialRequestsRow">
+            <div class="s2-labels">
+              <div class="title" data-i18n="booking.driver_message">Μήνυμα στον οδηγό</div>
+            </div>
+            <div class="s2-input-group">
+              <textarea id="specialRequests" class="s2-textarea" rows="1" data-i18n-placeholder="booking.driver_message_placeholder" placeholder="Μήνυμα προς τον οδηγό (προαιρετικά)"></textarea>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="step2-card" id="profileCard">
+        <div class="card-head">
+          <p class="card-kicker">Προτιμήσεις</p>
+          <h2>Προφίλ ταξιδιώτη</h2>
+          <p class="card-sub">Επέλεξε ηλικιακή ομάδα και ενδιαφέροντα για πιο στοχευμένες προτάσεις.</p>
+        </div>
+        <div class="card-body">
+          <div class="s2-row" id="ageGroupRow">
+            <div class="s2-labels">
+              <div class="title" id="ageGroupTitle" data-i18n="booking.age_group">Ηλικιακή ομάδα</div>
+              <div class="field-inline-error" id="ageGroupError" hidden data-i18n="booking.choose_category">Επιλέξτε κατηγορία</div>
+            </div>
+            <div class="s2-ages"></div>
+            <div class="s2-right">
+              <button type="button" class="lang-select" id="ageSelectBtn">
+                <span class="flag placeholder">🇬🇷</span>
+                <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
+                <span class="caret">▾</span>
+              </button>
+            </div>
+            <div class="lang-menu" id="ageMenu" hidden>
+              <button type="button" data-code="20-30"><span>👤</span><span>20–30</span></button>
+              <button type="button" data-code="30-40"><span>👤</span><span>30–40</span></button>
+              <button type="button" data-code="40-55"><span>👤</span><span>40–55</span></button>
+              <button type="button" data-code="55+"><span>👤</span><span>55+</span></button>
+            </div>
+          </div>
+
+          <div class="s2-row" id="travTypeRow">
+            <div class="s2-labels">
+              <div class="title" id="travTypeTitle" data-i18n="booking.traveler_type">Τύπος ταξιδιώτη</div>
+              <div class="field-inline-error" id="travTypeError" hidden data-i18n="booking.choose_category">Επιλέξτε κατηγορία</div>
+            </div>
+            <div class="s2-ages"></div>
+            <div class="s2-right">
+              <button type="button" class="lang-select" id="travTypeSelectBtn">
+                <span class="flag placeholder">🏷️</span>
+                <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
+                <span class="caret">▾</span>
+              </button>
+            </div>
+            <div class="lang-menu" id="travTypeMenu" hidden>
+              <button type="button" data-code="explore"><span>🧭</span><span data-i18n="booking.traveler_type_options.explore">Εξερευνητές – δραστήριοι</span></button>
+              <button type="button" data-code="relax"><span>🧘</span><span data-i18n="booking.traveler_type_options.relax">Χαλαροί ταξιδιώτες</span></button>
+              <button type="button" data-code="family"><span>👨‍👩‍👧</span><span data-i18n="booking.traveler_type_options.family">Οικογενειακό ύφος</span></button>
+              <button type="button" data-code="solo"><span>🧍</span><span data-i18n="booking.traveler_type_options.solo">Μοναχικοί ταξιδιώτες</span></button>
+            </div>
+          </div>
+
+          <div class="s2-row" id="interestsRow">
+            <div class="s2-labels">
+              <div class="title" data-i18n="booking.interests">Ενδιαφέροντα</div>
+            </div>
+            <div class="s2-ages"></div>
+            <div class="s2-right">
+              <button type="button" class="lang-select" id="interestSelectBtn">
+                <span class="flag placeholder">🏷️</span>
+                <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
+                <span class="caret">▾</span>
+              </button>
+            </div>
+            <div class="lang-menu" id="interestMenu" hidden>
+              <button type="button" data-code="nature"><span>🌿</span><span data-i18n="booking.interests_options.nature">Φύση</span></button>
+              <button type="button" data-code="culture"><span>🏛️</span><span data-i18n="booking.interests_options.culture">Πολιτισμός</span></button>
+              <button type="button" data-code="mountain"><span>⛰️</span><span data-i18n="booking.interests_options.mountain">Βουνό</span></button>
+              <button type="button" data-code="sea"><span>🌊</span><span data-i18n="booking.interests_options.sea">Θάλασσα</span></button>
+              <button type="button" data-code="gastronomy"><span>🍽️</span><span data-i18n="booking.interests_options.gastronomy">Γαστρονομία</span></button>
+            </div>
+          </div>
+
+          <div class="s2-row" id="socialityRow">
+            <div class="s2-labels">
+              <div class="title" data-i18n="booking.sociality">Κοινωνικότητα</div>
+            </div>
+            <div class="s2-ages"></div>
+            <div class="s2-right">
+              <button type="button" class="lang-select" id="socialSelectBtn">
+                <span class="flag placeholder">🏷️</span>
+                <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
+                <span class="caret">▾</span>
+              </button>
+            </div>
+            <div class="lang-menu" id="socialMenu" hidden>
+              <button type="button" data-code="social"><span>😊</span><span data-i18n="booking.sociality_options.social">Κοινωνικός</span></button>
+              <button type="button" data-code="quiet"><span>🤫</span><span data-i18n="booking.sociality_options.quiet">Ήσυχος</span></button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="cta-bar step2-cta">
+      <button id="s2Back" class="btn-secondary" data-i18n="booking.return_button">Επιστροφή</button>
+      <button id="s2Next" class="btn-primary" data-i18n="booking.next">Επόμενο</button>
     </div>
-    <div class="s2-row">
-      <div class="s2-labels">
-        <div class="title" data-i18n="booking.children">Παιδιά</div>
-        <div class="sub" data-i18n="booking.children_age_range">0 – 17 ετών</div>
-      </div>
-      <div class="s2-ages" id="childrenAges"><span class="hint" data-i18n="booking.pick_ages">Επιλέξτε ηλικίες</span></div>
-      <div class="s2-counter">
-        <button class="btn-round" id="childrenDec" data-i18n-aria="booking.decrease_children">−</button>
-        <div class="count" id="childrenCount">0</div>
-        <button class="btn-round" id="childrenInc" data-i18n-aria="booking.increase_children">+</button>
-      </div>
-      <!-- Popover age picker -->
-      <div class="age-picker" id="agePicker" hidden></div>
-    </div>
-
-    <!-- Suitcases (single field with popup) -->
-    <div class="s2-row" id="suitcasesRow">
-      <div class="s2-labels">
-        <div class="title" data-i18n="booking.suitcases">Αποσκευές</div>
-        <div class="sub" id="suitcaseSummary">—</div>
-      </div>
-      <div class="s2-counter">
-        <button class="btn-round" id="suitcasesDec" aria-label="−">−</button>
-        <div class="count" id="suitcasesCount">0</div>
-        <button class="btn-round" id="suitcasesInc" aria-label="+">+</button>
-      </div>
-    </div>
-
-    <!-- Pick-up Location reordered: title then map pin (left) then address input (right) -->
-    <div class="s2-row pickup-required" id="pickupRow">
-      <div class="s2-labels">
-        <label for="pickupInput" id="pickupLabel" class="title" data-i18n="booking.pickup_location">Σημείο Παραλαβής</label>
-      </div>
-      <div class="s2-input-group pickup-reordered">
-        <button type="button" id="pickupMapBtn" class="s2-map-btn" title="Χάρτης" data-i18n-title="booking.map_btn_title" aria-label="Χάρτης">
-          <i class="fa-solid fa-map-pin icon" aria-hidden="true"></i>
-        </button>
-        <input type="text" id="pickupInput" class="s2-input" data-i18n-placeholder="booking.pickup_placeholder" placeholder="Αρχίστε να πληκτρολογείτε διεύθυνση" autocomplete="off" />
-      </div>
-      <div class="places-dropdown" id="pickupSuggest" hidden></div>
-    </div>
-
-    <div class="s2-row bus-suggestion-row" id="busSuggestionRow" hidden>
-      <div class="bus-suggestion-label">Προτεινόμενη στάση</div>
-      <div class="bus-suggestion-value" id="busSuggestionValue">—</div>
-    </div>
-
-    <div class="s2-row vertical bus-stops-row" id="busStopsRow" hidden>
-      <div class="s2-labels">
-        <div class="title">Στάση λεωφορείου</div>
-        <div class="sub">Επιλέξτε σημείο επιβίβασης</div>
-        <div class="field-inline-error" id="busStopError" hidden>Επιλέξτε στάση</div>
-      </div>
-      <div class="bus-stop-list" id="busStopList" role="radiogroup" aria-label="Διαθέσιμες στάσεις"></div>
-    </div>
-
-    <!-- Message to Driver (instead of Preferred language) -->
-    <div class="s2-row" id="specialRequestsRow">
-      <div class="s2-labels">
-  <div class="title" data-i18n="booking.driver_message">Μήνυμα στον οδηγό</div>
-      </div>
-      <div class="s2-input-group">
-  <textarea id="specialRequests" class="s2-textarea" rows="1" data-i18n-placeholder="booking.driver_message_placeholder" placeholder="Μήνυμα προς τον οδηγό (προαιρετικά)"></textarea>
-      </div>
-    </div>
-
-    
-
-    <!-- Age Group -->
-  <div class="s2-row" id="ageGroupRow">
-      <div class="s2-labels">
-        <div class="title" id="ageGroupTitle" data-i18n="booking.age_group">Ηλικιακή ομάδα</div>
-    <div class="field-inline-error" id="ageGroupError" hidden data-i18n="booking.choose_category">Επιλέξτε κατηγορία</div>
-      </div>
-      <div class="s2-ages"></div>
-      <div class="s2-right">
-        <button type="button" class="lang-select" id="ageSelectBtn">
-          <span class="flag placeholder">🇬🇷</span>
-          <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
-          <span class="caret">▾</span>
-        </button>
-      </div>
-      <div class="lang-menu" id="ageMenu" hidden>
-        <button type="button" data-code="20-30"><span>👤</span><span>20–30</span></button>
-        <button type="button" data-code="30-40"><span>👤</span><span>30–40</span></button>
-        <button type="button" data-code="40-55"><span>👤</span><span>40–55</span></button>
-        <button type="button" data-code="55+"><span>👤</span><span>55+</span></button>
-      </div>
-    </div>
-
-    <!-- Traveler Type -->
-  <div class="s2-row" id="travTypeRow">
-      <div class="s2-labels">
-        <div class="title" id="travTypeTitle" data-i18n="booking.traveler_type">Τύπος ταξιδιώτη</div>
-    <div class="field-inline-error" id="travTypeError" hidden data-i18n="booking.choose_category">Επιλέξτε κατηγορία</div>
-      </div>
-      <div class="s2-ages"></div>
-      <div class="s2-right">
-        <button type="button" class="lang-select" id="travTypeSelectBtn">
-          <span class="flag placeholder">🏷️</span>
-          <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
-          <span class="caret">▾</span>
-        </button>
-      </div>
-      <div class="lang-menu" id="travTypeMenu" hidden>
-        <button type="button" data-code="explore"><span>🧭</span><span data-i18n="booking.traveler_type_options.explore">Εξερευνητές – δραστήριοι</span></button>
-        <button type="button" data-code="relax"><span>🧘</span><span data-i18n="booking.traveler_type_options.relax">Χαλαροί ταξιδιώτες</span></button>
-        <button type="button" data-code="family"><span>👨‍👩‍👧</span><span data-i18n="booking.traveler_type_options.family">Οικογενειακό ύφος</span></button>
-        <button type="button" data-code="solo"><span>🧍</span><span data-i18n="booking.traveler_type_options.solo">Μοναχικοί ταξιδιώτες</span></button>
-      </div>
-    </div>
-
-    <!-- Interests -->
-  <div class="s2-row" id="interestsRow">
-      <div class="s2-labels">
-        <div class="title" data-i18n="booking.interests">Ενδιαφέροντα</div>
-      </div>
-      <div class="s2-ages"></div>
-      <div class="s2-right">
-        <button type="button" class="lang-select" id="interestSelectBtn">
-          <span class="flag placeholder">🏷️</span>
-          <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
-          <span class="caret">▾</span>
-        </button>
-      </div>
-      <div class="lang-menu" id="interestMenu" hidden>
-        <button type="button" data-code="nature"><span>🌿</span><span data-i18n="booking.interests_options.nature">Φύση</span></button>
-        <button type="button" data-code="culture"><span>🏛️</span><span data-i18n="booking.interests_options.culture">Πολιτισμός</span></button>
-        <button type="button" data-code="mountain"><span>⛰️</span><span data-i18n="booking.interests_options.mountain">Βουνό</span></button>
-        <button type="button" data-code="sea"><span>🌊</span><span data-i18n="booking.interests_options.sea">Θάλασσα</span></button>
-        <button type="button" data-code="gastronomy"><span>🍽️</span><span data-i18n="booking.interests_options.gastronomy">Γαστρονομία</span></button>
-      </div>
-    </div>
-
-    <!-- Sociality -->
-  <div class="s2-row" id="socialityRow">
-      <div class="s2-labels">
-        <div class="title" data-i18n="booking.sociality">Κοινωνικότητα</div>
-      </div>
-      <div class="s2-ages"></div>
-      <div class="s2-right">
-        <button type="button" class="lang-select" id="socialSelectBtn">
-          <span class="flag placeholder">🏷️</span>
-          <span class="label" data-i18n="ui.choose">Επιλέξτε</span>
-          <span class="caret">▾</span>
-        </button>
-      </div>
-      <div class="lang-menu" id="socialMenu" hidden>
-        <button type="button" data-code="social"><span>😊</span><span data-i18n="booking.sociality_options.social">Κοινωνικός</span></button>
-        <button type="button" data-code="quiet"><span>🤫</span><span data-i18n="booking.sociality_options.quiet">Ήσυχος</span></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom actions like Step 1 -->
-  <div class="s2-actions">
-    <button id="s2Back" class="btn" data-i18n="ui.back">Πίσω</button>
-  <button id="s2Next" class="btn" data-i18n="booking.next">Επόμενο</button>
-  </div>
+  </main>
 
   <!-- Overlays: About, AI Assistant, Profile -->
   <div id="aboutOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
@@ -215,14 +236,6 @@
     <div class="overlay-inner">
       <h2 data-i18n="nav.ai">Βοηθός AI</h2>
       <p data-i18n="welcome.ask">Ρωτήστε μας ό,τι θέλετε για την εκδρομή σας!</p>
-    </div>
-  </div>
-
-  <div id="profileOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
-    <button class="close-overlay" onclick="closeOverlay('profileOverlay')" data-i18n-aria="ui.close">×</button>
-    <div class="overlay-inner">
-      <h2 data-i18n="nav.profile">Το Προφίλ μου</h2>
-      <p data-i18n="profile.info">Εδώ θα δείτε τις εκδρομές που έχετε κάνει και τις κρατήσεις σας.</p>
     </div>
   </div>
 
@@ -294,69 +307,220 @@
     // Optional: lightweight behaviour — Πίσω γυρίζει στην προηγούμενη σελίδα
     try { document.getElementById('s2Back').addEventListener('click', () => history.back()); } catch(_){ }
     // Populate header from sessionStorage (set in Step 1)
-    (function() {
+    (function hydrateStep2Header() {
       const headerEl = document.querySelector('.step2-header');
       const titleEl = document.getElementById('s2TripTitle');
-      const descEl = document.getElementById('s2TripDesc');
       const dateEl = document.getElementById('s2TripDate');
+      const priceEl = document.getElementById('s2PriceLine');
+      const modeEl = document.getElementById('s2ModeLabel');
+      const storedTitle = sessionStorage.getItem('gw_trip_title') || '';
+      const tripId = sessionStorage.getItem('gw_trip_id') || '';
+      const modeKey = normalizeModeKey(sessionStorage.getItem('gw_trip_mode') || '');
+      const modeLabels = { bus: 'Ομαδικό λεωφορείο', van: 'Mini van', mercedes: 'Ιδιωτική μεταφορά' };
+      const priceCtx = {
+        trip: null,
+        modeKey,
+        locale: resolvePriceLocale(),
+        latestAdults: 1
+      };
+      priceCtx.latestAdults = Math.max(1, getAdultsForPricing());
+      const cachedTrip = (window.__loadedTrip && typeof window.__loadedTrip === 'object') ? window.__loadedTrip : null;
+      if (cachedTrip && !priceCtx.trip) {
+        priceCtx.trip = cachedTrip;
+        if (!priceCtx.modeKey) priceCtx.modeKey = normalizeModeKey(cachedTrip.defaultMode || priceCtx.modeKey || '');
+        try { updatePriceLine(priceCtx.latestAdults); } catch(_){}
+      }
+      let tripDate = sessionStorage.getItem('gw_trip_date') || '';
       try {
-        const t = sessionStorage.getItem('gw_trip_title') || '';
-        const d = sessionStorage.getItem('gw_trip_desc') || '';
-        const id = sessionStorage.getItem('gw_trip_id') || '';
-        let tripDate = sessionStorage.getItem('gw_trip_date') || '';
-        try {
-          const urlDate = (new URLSearchParams(window.location.search)).get('date');
-          if (!tripDate && urlDate) { sessionStorage.setItem('gw_trip_date', urlDate); tripDate = urlDate; }
-        } catch(_){ }
-        if (t) {
-          titleEl.textContent = t;
-        } else if (id) {
-          // fetch trip json and localize based on current UI lang (or stored gw_lang)
-          (async function(){
-            try {
-              const lang = (localStorage.getItem('gw_lang') || 'el');
-              // get data version
-              let dv = '';
-              try { const rv = await fetch('/version.json', { cache: 'no-cache' }); if (rv.ok) { const j = await rv.json(); dv = j && j.dataVersion ? ('?v='+encodeURIComponent(String(j.dataVersion))) : ''; } } catch(_){ }
-              const r = await fetch(`/data/trips/${encodeURIComponent(id)}.json${dv}`, { cache: 'no-cache' });
-              if (!r.ok) return;
-              const trip = await r.json();
-              const getLocalized = (field) => {
-                if (!field) return '';
-                if (typeof field === 'string') return field;
-                if (typeof field === 'object') return field[lang] || field['el'] || Object.values(field)[0] || '';
-                return '';
-              };
-              const pickMode = () => {
-                if (!trip || !trip.modes) return null;
-                if (trip.defaultMode && trip.modes[trip.defaultMode]) return trip.modes[trip.defaultMode];
-                const entries = Object.keys(trip.modes);
-                const activeKey = entries.find((key) => trip.modes[key] && trip.modes[key].active);
-                if (activeKey) return trip.modes[activeKey];
-                return trip.modes[entries[0]] || null;
-              };
-              const title = getLocalized(trip.title);
-              const mode = pickMode();
-              const desc = mode ? getLocalized(mode.description) : '';
-              // cache loaded trip so i18n:changed can re-render it
-              try { window.__loadedTrip = trip; } catch(_){ }
-              if (titleEl) titleEl.textContent = title || '';
-              if (descEl) descEl.textContent = desc || '';
-            } catch(_){ }
-          })();
+        const urlDate = (new URLSearchParams(window.location.search)).get('date');
+        if (!tripDate && urlDate) {
+          sessionStorage.setItem('gw_trip_date', urlDate);
+          tripDate = urlDate;
         }
-        // Render date if present
+      } catch (_) {}
+      if (storedTitle && titleEl) titleEl.textContent = storedTitle;
+      if (dateEl) dateEl.textContent = tripDate || '—';
+      if (modeEl) {
+        const friendly = modeLabels[modeKey] || (modeKey ? modeKey.toUpperCase() : '');
+        if (friendly) {
+          modeEl.textContent = friendly;
+          modeEl.hidden = false;
+        } else {
+          modeEl.hidden = true;
+        }
+      }
+      if (priceEl) priceEl.textContent = priceEl.textContent && priceEl.textContent.trim() !== '' ? priceEl.textContent : '—';
+      if (!storedTitle && !tripId && headerEl) {
+        headerEl.style.display = 'none';
+        return;
+      }
+      if (!tripId) return;
+
+      (async function loadTripForHeader() {
         try {
-          if (tripDate && dateEl) {
-            dateEl.textContent = tripDate;
-          } else if (dateEl) {
-            dateEl.textContent = '';
+          const lang = (localStorage.getItem('gw_lang') || 'el');
+          const trip = await fetchTripPayload(tripId);
+          if (!trip) return;
+          try { window.__loadedTrip = trip; } catch (_) {}
+          const title = getLocalized(trip.title, lang) || storedTitle;
+          priceCtx.trip = trip;
+          priceCtx.modeKey = modeKey || priceCtx.modeKey;
+          try { window.__step2PriceCtx = priceCtx; } catch(_){}
+          const modeBlock = pickModeBlock(trip, priceCtx.modeKey);
+          if (title && titleEl) titleEl.textContent = title;
+          updatePriceLine(priceCtx.latestAdults);
+        } catch (err) {
+          console.error('[step2] header hydrate failed', err);
+        }
+      })();
+
+      async function fetchTripPayload(id) {
+        if (!id) return null;
+        let dv = '';
+        try {
+          const rv = await fetch('/version.json', { cache: 'no-cache' });
+          if (rv.ok) {
+            const meta = await rv.json();
+            if (meta && meta.dataVersion) dv = '?v=' + encodeURIComponent(String(meta.dataVersion));
+          }
+        } catch (_) {}
+
+        const staticUrl = `/data/trips/${encodeURIComponent(id)}.json${dv}`;
+        const staticTrip = await tryFetchJSON(staticUrl, { cache: 'no-cache' });
+        if (staticTrip) return staticTrip;
+
+        const apiUrl = `/api/trips/${encodeURIComponent(id)}`;
+        const apiTrip = await tryFetchJSON(apiUrl, { cache: 'no-store' }, true);
+        if (apiTrip && apiTrip.trip) return apiTrip.trip;
+        return apiTrip;
+      }
+
+      async function tryFetchJSON(url, options, treat404AsNull) {
+        try {
+          const res = await fetch(url, options || {});
+          if (!res.ok) {
+            if (treat404AsNull && res.status === 404) return null;
+            return null;
+          }
+          return res.json();
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function getLocalized(field, lang) {
+        if (!field) return '';
+        if (typeof field === 'string') return field;
+        if (typeof field === 'object') return field[lang] || field.el || Object.values(field)[0] || '';
+        return '';
+      }
+
+      function pickModeBlock(trip, key) {
+        if (!trip || !trip.modes) return null;
+        const normalized = normalizeModeKey(key);
+        if (normalized && trip.modes[normalized]) return trip.modes[normalized];
+        if (trip.defaultMode && trip.modes[trip.defaultMode]) return trip.modes[trip.defaultMode];
+        const activeKey = Object.keys(trip.modes).find((mode) => trip.modes[mode] && trip.modes[mode].active);
+        if (activeKey) return trip.modes[activeKey];
+        const firstKey = Object.keys(trip.modes)[0];
+        return firstKey ? trip.modes[firstKey] : null;
+      }
+
+      function formatPriceLine(trip, modeBlock, adultsOverride) {
+        if (!trip || !modeBlock) return '';
+        const currency = (trip.currency || 'EUR').toUpperCase();
+        const adultsCount = Math.max(1, adultsOverride || getAdultsForPricing());
+        const amount = computePriceAmount(modeBlock, adultsCount);
+        if (!amount) return '';
+        return formatCurrency(amount, currency, priceCtx.locale);
+      }
+
+      function computePriceAmount(modeBlock, adultsCount) {
+        if (!modeBlock) return 0;
+        const charge = String(modeBlock.charge_type || '').toLowerCase();
+        const pricePerPerson = Number(modeBlock.price_per_person) || 0;
+        const priceTotal = Number(modeBlock.price_total) || 0;
+        if (pricePerPerson > 0) {
+          return pricePerPerson * Math.max(1, adultsCount || 1);
+        }
+        if (priceTotal > 0) return priceTotal;
+        if (charge === 'per_vehicle' && priceTotal > 0) return priceTotal;
+        return 0;
+      }
+
+      function formatCurrency(amount, currency, locale) {
+        if (!(amount > 0)) return '';
+        try {
+          return new Intl.NumberFormat(locale || 'el-GR', {
+            style: 'currency',
+            currency: currency || 'EUR'
+          }).format(amount);
+        } catch (_) {
+          return `${amount.toFixed(2)} ${currency || 'EUR'}`;
+        }
+      }
+
+      function getAdultsForPricing() {
+        const el = document.getElementById('adultsCount');
+        if (el) {
+          const val = parseInt((el.textContent || '').trim(), 10);
+          if (Number.isFinite(val) && val > 0) return val;
+        }
+        try {
+          const fromSession = parseInt(sessionStorage.getItem('gw_adults') || '0', 10);
+          if (Number.isFinite(fromSession) && fromSession > 0) return fromSession;
+        } catch (_) {}
+        return 1;
+      }
+
+      function normalizeModeKey(mode) {
+        const normalized = String(mode || '').toLowerCase().trim();
+        if (!normalized) return '';
+        if (normalized === 'mercedes/private' || normalized === 'private' || normalized === 'vip') return 'mercedes';
+        if (normalized === 'multi' || normalized === 'shared') return 'van';
+        if (normalized === 'minivan') return 'van';
+        return normalized;
+      }
+
+      function resolvePriceLocale() {
+        try {
+          const lang = (localStorage.getItem('gw_lang') || 'el').toLowerCase();
+          if (lang === 'en') return 'en-US';
+          if (lang === 'fr') return 'fr-FR';
+          if (lang === 'it') return 'it-IT';
+          if (lang === 'es') return 'es-ES';
+          if (lang === 'de') return 'de-DE';
+          return 'el-GR';
+        } catch (_) {
+          return 'el-GR';
+        }
+      }
+
+      function updatePriceLine(adultsOverride) {
+        priceCtx.latestAdults = Math.max(1, adultsOverride || getAdultsForPricing());
+        if (!priceCtx.trip || !priceEl) {
+          if (priceEl) priceEl.textContent = '—';
+          return;
+        }
+        const modeBlock = pickModeBlock(priceCtx.trip, priceCtx.modeKey);
+        const amountValue = computePriceAmount(modeBlock, priceCtx.latestAdults);
+        const priceText = formatPriceLine(priceCtx.trip, modeBlock, priceCtx.latestAdults);
+        priceEl.textContent = priceText || '—';
+        try {
+          if (amountValue > 0) {
+            sessionStorage.setItem('gw_amount_cents', String(Math.round(amountValue * 100)));
+            sessionStorage.setItem('gw_amount_currency', (priceCtx.trip.currency || 'EUR').toUpperCase());
+          } else {
+            sessionStorage.removeItem('gw_amount_cents');
+            sessionStorage.removeItem('gw_amount_currency');
           }
         } catch(_){ }
-        if (!t && !d && !id && headerEl) headerEl.style.display = 'none';
-      } catch(_) {
-        if (headerEl) headerEl.style.display = 'none';
       }
+
+      try {
+        window.updateStep2Price = (adultsOverride) => updatePriceLine(adultsOverride);
+        window.__step2PriceCtx = priceCtx;
+      } catch (_) {}
     })();
 
     // Force-apply translations to all nodes inside Step 2 area
@@ -398,9 +562,8 @@
       } catch(_){}
     }
 
-    // Simple counters logic (limits: adults 1..10, children 0..10)
+    // Passenger counters with seat-limit enforcement
     (function(){
-        // Safe i18n accessor to avoid rendering raw keys before i18n is ready
         function tSafe(key, fallback){
           try { const v = (window.t && window.t(key)) || ''; return (v && v !== key) ? v : fallback; } catch(_){ return fallback; }
         }
@@ -408,45 +571,245 @@
       const childrenCount = document.getElementById('childrenCount');
       const childrenAgesEl = document.getElementById('childrenAges');
       const agePicker = document.getElementById('agePicker');
+      const seatLimitNotice = document.getElementById('seatLimitNotice');
+      const seatLimitMessageEl = document.getElementById('seatLimitMessage');
+      const seatLimitErrorEl = document.getElementById('seatLimitError');
+      const headErrorEl = document.getElementById('s2HeadError');
+      const nextBtn = document.getElementById('s2Next');
       const ages = [];
-      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+      const MAX_TOTAL_PASSENGERS = 50;
+      const urlParams = (()=>{ try { return new URLSearchParams(window.location.search); } catch(_){ return new URLSearchParams(''); } })();
+      const seatLimitState = { limit: null };
       const getN = (el) => parseInt((el && el.textContent) || '0', 10) || 0;
       const setN = (el, n) => { if (el) el.textContent = String(n); };
+
+      function parseSeatLimit(value){
+        if (value == null || value === '') return null;
+        const num = Number(value);
+        if (!Number.isFinite(num)) return null;
+        return Math.max(0, Math.floor(num));
+      }
+      function getSeatLimit(){ return seatLimitState.limit; }
+      function persistSeatLimit(val){
+        try {
+          if (val == null) { sessionStorage.removeItem('gw_seats_available'); return; }
+          sessionStorage.setItem('gw_seats_available', String(val));
+        } catch(_){ }
+      }
+      function restoreNextButton(){
+        if (nextBtn && nextBtn.dataset.userDisabled === 'seat-limit') {
+          nextBtn.disabled = false;
+          delete nextBtn.dataset.userDisabled;
+        }
+      }
+      function showHeadNoSeats(){
+        if (!headErrorEl) return;
+        headErrorEl.dataset.seatLimit = '1';
+        headErrorEl.textContent = 'Δεν υπάρχουν διαθέσιμες θέσεις για αυτή την ημερομηνία.';
+        headErrorEl.removeAttribute('hidden');
+      }
+      function clearHeadSeatError(){
+        if (headErrorEl && headErrorEl.dataset.seatLimit === '1') {
+          headErrorEl.setAttribute('hidden','');
+          delete headErrorEl.dataset.seatLimit;
+        }
+      }
+      function updateSeatLimitNotice(){
+        const limit = getSeatLimit();
+        if (!seatLimitNotice) return;
+        if (limit == null) {
+          seatLimitNotice.setAttribute('hidden','');
+          clearHeadSeatError();
+          restoreNextButton();
+          return;
+        }
+        seatLimitNotice.removeAttribute('hidden');
+        if (seatLimitMessageEl) {
+          seatLimitMessageEl.textContent = limit > 0
+            ? `Διαθέσιμες θέσεις: ${limit}`
+            : 'Δεν υπάρχουν διαθέσιμες θέσεις για αυτή την ημερομηνία.';
+        }
+        if (limit <= 0) {
+          showHeadNoSeats();
+          if (nextBtn) {
+            nextBtn.disabled = true;
+            nextBtn.dataset.userDisabled = 'seat-limit';
+          }
+        } else {
+          restoreNextButton();
+          clearHeadSeatError();
+        }
+      }
+      function setSeatLimit(value, opts = {}){
+        const normalized = value == null ? null : parseSeatLimit(value);
+        seatLimitState.limit = normalized;
+        if (!opts.skipPersist) persistSeatLimit(normalized);
+        updateSeatLimitNotice();
+        if (!opts.skipClamp) clampPassengersToLimit(false);
+      }
+      function readSeatLimitFromSources(){
+        let picked = null;
+        try {
+          picked = parseSeatLimit(urlParams.get('seatsAvailable'));
+        } catch(_){ picked = null; }
+        if (picked == null) {
+          try { picked = parseSeatLimit(sessionStorage.getItem('gw_seats_available')); } catch(_){ picked = null; }
+        }
+        setSeatLimit(picked, { skipClamp: true });
+      }
+      function showSeatLimitError(limitOverride){
+        const limit = (limitOverride != null ? limitOverride : getSeatLimit());
+        if (!seatLimitErrorEl || limit == null) return;
+        seatLimitErrorEl.textContent = `Ο μέγιστος αριθμός επιβατών για αυτή την ημερομηνία είναι ${limit}.`;
+        seatLimitErrorEl.removeAttribute('hidden');
+      }
+      function clearSeatLimitError(){
+        seatLimitErrorEl?.setAttribute('hidden','');
+      }
+      function persistAdults(n){
+        try { sessionStorage.setItem('gw_adults', String(n)); } catch(_){ }
+      }
+      function totalPassengers(adultsOverride, childrenOverride){
+        const adultsVal = Number.isFinite(adultsOverride) ? adultsOverride : getN(adultsCount);
+        const childVal = Number.isFinite(childrenOverride) ? childrenOverride : ages.length;
+        return Math.max(0, adultsVal) + Math.max(0, childVal);
+      }
+      function remainingSeats(){
+        const limit = getSeatLimit();
+        if (limit == null) return Infinity;
+        return limit - totalPassengers();
+      }
+      function clampAdultsValue(value){
+        const limit = getSeatLimit();
+        const hardMax = limit == null ? MAX_TOTAL_PASSENGERS : Math.min(MAX_TOTAL_PASSENGERS, limit);
+        return Math.max(1, Math.min(value, hardMax));
+      }
+      function wouldExceedLimit(nextAdults, nextChildren){
+        const limit = getSeatLimit();
+        if (limit == null) return false;
+        return (nextAdults + nextChildren) > limit;
+      }
+      function clampPassengersToLimit(showMessage){
+        let changed = false;
+        const limit = getSeatLimit();
+        const hardMax = limit == null ? MAX_TOTAL_PASSENGERS : Math.min(MAX_TOTAL_PASSENGERS, limit);
+        let adultsVal = clampAdultsValue(getN(adultsCount));
+        if (adultsVal !== getN(adultsCount)) {
+          setN(adultsCount, adultsVal);
+          changed = true;
+        }
+        let allowedChildren = Math.max(0, hardMax - adultsVal);
+        if (ages.length > allowedChildren) {
+          ages.splice(allowedChildren);
+          setN(childrenCount, ages.length);
+          changed = true;
+        }
+        if (limit === 0) {
+          if (showMessage) showSeatLimitError(0);
+          return true;
+        }
+        if (changed) {
+          renderAges();
+          persistAdults(adultsVal);
+          try { window.updateStep2Price && window.updateStep2Price(adultsVal); } catch(_){ }
+          if (showMessage && limit != null) showSeatLimitError(limit);
+        }
+        return changed;
+      }
+      function deriveSeatLimitFromPayload(payload){
+        if (!payload) return null;
+        if (payload.available != null) {
+          const parsed = parseSeatLimit(payload.available);
+          if (parsed != null) return parsed;
+        }
+        if (payload.remaining_fleet != null) {
+          const parsedFleet = parseSeatLimit(payload.remaining_fleet);
+          if (parsedFleet != null) return parsedFleet;
+        }
+        return null;
+      }
+      function getBookingMeta(){
+        return {
+          tripId: (sessionStorage.getItem('gw_trip_id') || urlParams.get('trip') || '').trim(),
+          date: (sessionStorage.getItem('gw_trip_date') || urlParams.get('date') || '').trim(),
+          mode: (sessionStorage.getItem('gw_trip_mode') || urlParams.get('mode') || '').trim()
+        };
+      }
+      async function refreshSeatLimitFromApi(options = {}){
+        const meta = getBookingMeta();
+        if (!meta.tripId || !meta.date || !meta.mode) return null;
+        try {
+          const url = `/api/availability?trip_id=${encodeURIComponent(meta.tripId)}&mode=${encodeURIComponent(meta.mode)}&date=${encodeURIComponent(meta.date)}`;
+          const res = await fetch(url, { cache: 'no-store' });
+          if (!res.ok) return null;
+          const data = await res.json();
+          const apiLimit = deriveSeatLimitFromPayload(data);
+          if (apiLimit == null) return null;
+          setSeatLimit(apiLimit, { skipClamp: true });
+          const changed = clampPassengersToLimit(options.forceMessage === true);
+          if (options.forceMessage && (changed || totalPassengers() > apiLimit)) {
+            showSeatLimitError(apiLimit);
+          }
+          return apiLimit;
+        } catch(_){ return null; }
+      }
+      async function ensureSeatAvailabilityBeforeNext(){
+        await refreshSeatLimitFromApi({ forceMessage: true });
+        const limit = getSeatLimit();
+        if (limit == null) return true;
+        if (limit <= 0) {
+          showSeatLimitError(limit);
+          return false;
+        }
+        if (totalPassengers() > limit) {
+          clampPassengersToLimit(true);
+          showSeatLimitError(limit);
+          return false;
+        }
+        return true;
+      }
       const renderAges = () => {
         if (!childrenAgesEl) return;
         if (ages.length === 0) {
-          // Show translatable hint; fallback if t() not ready
           const hint = (window.t ? window.t('booking.pick_ages') : 'Επιλέξτε ηλικίες');
           childrenAgesEl.innerHTML = '<span class="hint" data-i18n="booking.pick_ages"></span>';
-          // Also set immediate text for UX
           const span = childrenAgesEl.querySelector('.hint');
           if (span) span.textContent = hint;
-            try { sessionStorage.setItem('gw_children_ages', JSON.stringify([])); } catch(_){ }
+          try { sessionStorage.setItem('gw_children_ages', JSON.stringify([])); } catch(_){ }
         } else {
           childrenAgesEl.textContent = ages.join(', ');
-            try { sessionStorage.setItem('gw_children_ages', JSON.stringify(ages)); } catch(_){ }
+          try { sessionStorage.setItem('gw_children_ages', JSON.stringify(ages)); } catch(_){ }
         }
       };
       const openPicker = () => {
         if (!agePicker) return;
-        if (ages.length >= 10) return; // respect max children
+        if (remainingSeats() <= 0) {
+          showSeatLimitError();
+          return;
+        }
+        if (ages.length >= MAX_TOTAL_PASSENGERS) return;
         if (agePicker.childElementCount === 0) {
-          for (let i=1; i<=17; i++) {
+          for (let i = 1; i <= 17; i++) {
             const b = document.createElement('button');
-            b.type = 'button'; b.textContent = String(i);
+            b.type = 'button';
+            b.textContent = String(i);
             b.addEventListener('click', ()=>{
-              if (ages.length < 10) {
-                ages.push(i);
-                setN(childrenCount, ages.length);
-                renderAges();
+              const currentAdults = getN(adultsCount);
+              if (wouldExceedLimit(currentAdults, ages.length + 1)) {
+                showSeatLimitError();
+                closePicker();
+                return;
               }
+              ages.push(i);
+              setN(childrenCount, ages.length);
+              renderAges();
+              clearSeatLimitError();
               closePicker();
             });
             agePicker.appendChild(b);
           }
         }
         agePicker.hidden = false;
-        // decide drop direction
         const row = agePicker.closest('.s2-row');
         if (row) {
           const rect = row.getBoundingClientRect();
@@ -458,24 +821,60 @@
             if (!agePicker.contains(ev.target)) { closePicker(); document.removeEventListener('click', onDoc); }
           };
           document.addEventListener('click', onDoc);
-        },0);
+        }, 0);
       };
       const closePicker = () => { if (agePicker) agePicker.hidden = true; };
 
-  document.getElementById('adultsDec')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)-1,1,10); setN(adultsCount,n); try { sessionStorage.setItem('gw_adults', String(n)); } catch(_){ } });
-    document.getElementById('adultsInc')?.addEventListener('click', ()=>{ const n=clamp(getN(adultsCount)+1,1,10); setN(adultsCount,n); try { sessionStorage.setItem('gw_adults', String(n)); } catch(_){ } });
+      document.getElementById('adultsDec')?.addEventListener('click', ()=>{
+        const current = getN(adultsCount);
+        if (current <= 1) return;
+        const next = Math.max(1, current - 1);
+        setN(adultsCount, next);
+        persistAdults(next);
+        clearSeatLimitError();
+        try { window.updateStep2Price && window.updateStep2Price(next); } catch(_){ }
+      });
+      document.getElementById('adultsInc')?.addEventListener('click', ()=>{
+        const proposed = getN(adultsCount) + 1;
+        if (wouldExceedLimit(proposed, ages.length)) {
+          showSeatLimitError();
+          return;
+        }
+        const next = clampAdultsValue(proposed);
+        setN(adultsCount, next);
+        persistAdults(next);
+        clearSeatLimitError();
+        try { window.updateStep2Price && window.updateStep2Price(next); } catch(_){ }
+      });
       document.getElementById('childrenDec')?.addEventListener('click', ()=>{
-          if (ages.length > 0) { ages.pop(); setN(childrenCount, ages.length); renderAges(); }
-        else { const n=clamp(getN(childrenCount)-1,0,10); setN(childrenCount,n); }
+        if (!ages.length) return;
+        ages.pop();
+        setN(childrenCount, ages.length);
+        renderAges();
+        clearSeatLimitError();
       });
       document.getElementById('childrenInc')?.addEventListener('click', (e)=>{
         e.stopPropagation();
+        if (remainingSeats() <= 0) {
+          showSeatLimitError();
+          return;
+        }
         openPicker();
       });
+
+      readSeatLimitFromSources();
+      clampPassengersToLimit(false);
+      updateSeatLimitNotice();
+      refreshSeatLimitFromApi();
       renderAges();
-        // Initialize persisted adults/ages on load
-        try { const curAdults = getN(adultsCount); sessionStorage.setItem('gw_adults', String(curAdults)); } catch(_){ }
-        renderAges();
+      (function syncAdults(){
+        const current = Math.max(1, getN(adultsCount) || 1);
+        persistAdults(current);
+        try { window.updateStep2Price && window.updateStep2Price(current); } catch(_){ }
+      })();
+
+      // expose validator for Next button handler
+      window.__ensureSeatAvailabilityBeforeNext = ensureSeatAvailabilityBeforeNext;
 
       // Suitcases field: handled in booking-addons.js
 
@@ -612,6 +1011,12 @@
       // Persist all values as a single bookingState and go to Step 3
       document.getElementById('s2Next')?.addEventListener('click', async (ev)=>{
         try { ev.preventDefault(); } catch(_){ }
+        if (window.__ensureSeatAvailabilityBeforeNext) {
+          try {
+            const ok = await window.__ensureSeatAvailabilityBeforeNext();
+            if (!ok) return;
+          } catch(_){ }
+        }
         try {
           // sync counters to session for compatibility with existing UI helpers
           sessionStorage.setItem('gw_adults', String(getN(adultsCount)));
@@ -661,33 +1066,56 @@
           } catch(_){ }
           // Ages hint may need re-translation
           try { renderAges(); } catch(_){ }
+
+          const modeLabels = { bus: 'Ομαδικό λεωφορείο', van: 'Mini van', mercedes: 'Ιδιωτική μεταφορά' };
+          const normalizeMode = (mode) => {
+            const normalized = String(mode || '').toLowerCase().trim();
+            if (!normalized) return '';
+            if (normalized === 'mercedes/private' || normalized === 'private' || normalized === 'vip') return 'mercedes';
+            if (normalized === 'multi' || normalized === 'shared') return 'van';
+            if (normalized === 'minivan') return 'van';
+            return normalized;
+          };
+          const localize = (field, lang) => {
+            if (!field) return '';
+            if (typeof field === 'string') return field;
+            if (typeof field === 'object') return field[lang] || field.el || Object.values(field)[0] || '';
+            return '';
+          };
+
           // Re-render trip title/description if we have cached trip JSON
           try {
             const t = window.__loadedTrip || null;
             if (t) {
-              const lang = (window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el';
-              const getLocalized = (field) => {
-                if (!field) return '';
-                if (typeof field === 'string') return field;
-                if (typeof field === 'object') return field[lang] || field['el'] || Object.values(field)[0] || '';
-                return '';
-              };
-              const pickMode = () => {
-                if (!t || !t.modes) return null;
-                if (t.defaultMode && t.modes[t.defaultMode]) return t.modes[t.defaultMode];
-                const keys = Object.keys(t.modes);
-                const activeKey = keys.find((key) => t.modes[key] && t.modes[key].active);
-                if (activeKey) return t.modes[activeKey];
-                return t.modes[keys[0]] || null;
-              };
-              const title = getLocalized(t.title);
-              const mode = pickMode();
-              const desc = mode ? getLocalized(mode.description) : '';
-              // Re-select DOM nodes here to avoid scope issues with earlier IIFEs
+              const lang = ((window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el');
+              const storedMode = normalizeMode(sessionStorage.getItem('gw_trip_mode') || '');
+              const title = localize(t.title, lang);
               const titleEl = document.getElementById('s2TripTitle');
-              const descEl = document.getElementById('s2TripDesc');
-              if (titleEl) titleEl.textContent = title || '';
-              if (descEl) descEl.textContent = desc || '';
+              const priceEl = document.getElementById('s2PriceLine');
+              const modeEl = document.getElementById('s2ModeLabel');
+              if (titleEl && title) titleEl.textContent = title;
+              try {
+                const localeKey = String(lang || 'el').toLowerCase();
+                const localeMap = { en: 'en-US', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', de: 'de-DE' };
+                if (window.__step2PriceCtx) {
+                  window.__step2PriceCtx.locale = localeMap[localeKey] || 'el-GR';
+                }
+              } catch(_){}
+              if (typeof window.updateStep2Price === 'function') {
+                try {
+                  window.__step2PriceCtx = window.__step2PriceCtx || {};
+                  window.__step2PriceCtx.trip = t;
+                  window.__step2PriceCtx.modeKey = storedMode || window.__step2PriceCtx.modeKey;
+                } catch(_){ }
+                window.updateStep2Price();
+              } else if (priceEl) {
+                priceEl.textContent = '—';
+              }
+              if (modeEl) {
+                const friendly = modeLabels[storedMode] || (storedMode ? storedMode.toUpperCase() : '');
+                modeEl.hidden = !friendly;
+                if (friendly) modeEl.textContent = friendly;
+              }
             }
           } catch(_){ }
         });

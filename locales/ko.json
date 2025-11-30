@@ -124,6 +124,7 @@
     "step2_of3": "2단계 / 3단계",
   "step3_of3": "3단계 중 3단계",
   "next": "다음",
+    "return_button": "돌아가기",
     "error_create": "Error creating booking",
     "error_network": "Network error creating booking",
     "error_availability": "Error checking availability",

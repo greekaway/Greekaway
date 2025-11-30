@@ -122,6 +122,7 @@
     "step2_of3": "Passo 2 di 3",
   "step3_of3": "Passo 3 di 3",
   "next": "Avanti",
+    "return_button": "Indietro",
     "error_create": "Error creating booking",
     "error_network": "Network error creating booking",
     "error_availability": "Error checking availability",

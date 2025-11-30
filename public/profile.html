@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Προφίλ Χρήστη • Greekaway</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/footer-rounded.css?v=20251113">
+  <link rel="stylesheet" href="/css/profile.css">
+</head>
+<body>
+  <main class="profile-page">
+    <header class="profile-header">
+      <div class="profile-avatar" aria-hidden="true">GA</div>
+      <div class="profile-info">
+        <p class="profile-name">Όνομα Χρήστη</p>
+        <p class="profile-email">user@example.com</p>
+      </div>
+      <a class="profile-edit" href="#" aria-label="Επεξεργασία προφίλ">Επεξεργασία προφίλ</a>
+    </header>
+
+    <section class="profile-cards" aria-label="Γρήγορες επιλογές προφίλ">
+      <div class="profile-card" id="profile-account" data-link="/profile/account">
+        <div>
+          <h2>Προφίλ</h2>
+          <p>Στοιχεία λογαριασμού</p>
+        </div>
+        <span aria-hidden="true">›</span>
+      </div>
+
+      <div class="profile-card" id="profile-history" data-link="/profile/history">
+        <div>
+          <h2>Ιστορικό Κρατήσεων</h2>
+          <p>Όλες οι προηγούμενες διαδρομές</p>
+        </div>
+        <span aria-hidden="true">›</span>
+      </div>
+
+      <div class="profile-card" id="profile-tickets" data-link="/profile/tickets">
+        <div>
+          <h2>Τα Εισιτήριά μου</h2>
+          <p>Ενεργές κρατήσεις και QR</p>
+        </div>
+        <span aria-hidden="true">›</span>
+      </div>
+
+      <div class="profile-card" id="profile-settings" data-link="/profile/settings">
+        <div>
+          <h2>Ρυθμίσεις</h2>
+          <p>Εμφάνιση • Νόμισμα • Ειδοποιήσεις</p>
+        </div>
+        <span aria-hidden="true">›</span>
+      </div>
+
+      <div class="profile-card" id="profile-support" data-link="/profile/support">
+        <div>
+          <h2>Υποστήριξη</h2>
+          <p>Συχνές ερωτήσεις &amp; live chat</p>
+        </div>
+        <span aria-hidden="true">›</span>
+      </div>
+
+      <div class="profile-card" id="profile-legal" data-link="/profile/legal">
+        <div>
+          <h2>Νομικά</h2>
+          <p>Όροι &amp; πολιτικές</p>
+        </div>
+        <span aria-hidden="true">›</span>
+      </div>
+
+      <div class="profile-card profile-card--danger" id="profile-logout" data-link="/logout">
+        <div>
+          <h2>Αποσύνδεση</h2>
+          <p>Κλείσιμο τρέχουσας συνεδρίας</p>
+        </div>
+        <span aria-hidden="true">›</span>
+      </div>
+    </section>
+  </main>
+
+  <footer></footer>
+
+  <script src="/js/i18n.js" defer></script>
+  <script src="/js/footer.js" defer></script>
+  <script src="/js/profile.js" defer></script>
+</body>
+</html>

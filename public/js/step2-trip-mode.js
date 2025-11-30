@@ -6,6 +6,17 @@
   const PRIVATE_MAX_PAX = 3; // adults + children
 
   function qs(id){ return document.getElementById(id); }
+  function toggleBusExtras(show){
+    const block = document.getElementById('busExtrasContainer');
+    if (!block) return;
+    if (show) {
+      block.style.display = '';
+      block.removeAttribute('hidden');
+    } else {
+      block.style.display = 'none';
+      block.setAttribute('hidden','');
+    }
+  }
   function disableRow(row){
     if (!row) return;
     row.classList.add('disabled-field');
@@ -92,6 +103,7 @@
     ['ageGroupRow','travTypeRow','interestsRow','socialityRow','specialRequestsRow','pickupRow','suitcasesRow'].forEach(id=> enableRow(qs(id)));
     setPickupEnabled();
     // No capacity limit beyond existing (1..10 adults / 0..10 children)
+    toggleBusExtras(false);
   }
 
   function applyPrivateMode(){
@@ -101,6 +113,7 @@
     // Enforce total pax <= 3
     attachPrivateCapacityGuards();
     enforcePrivateCapacity();
+    toggleBusExtras(false);
   }
 
   function applyBusMode(){
@@ -113,6 +126,7 @@
     [adultsRow, childrenRow].forEach(r=> enableRow(r));
     // Notify other scripts to refresh Next button visual state
     try { document.dispatchEvent(new CustomEvent('gw:step2:fieldsChanged')); } catch(_){ }
+    toggleBusExtras(true);
   }
 
   // Step 1 (trip.html) occupancy/availability greying when private or bus

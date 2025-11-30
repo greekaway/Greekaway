@@ -123,6 +123,7 @@
     "step2_of3": "第二步 / 共三步",
   "step3_of3": "第3步，共3步",
   "next": "下一步",
+    "return_button": "返回",
     "error_create": "Error creating booking",
     "error_network": "Network error creating booking",
     "error_availability": "Error checking availability",
