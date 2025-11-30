@@ -104,32 +104,10 @@
   }
 
   function applyBusMode(){
-    // Disable profile & message
-    ['ageGroupRow','travTypeRow','interestsRow','socialityRow','specialRequestsRow'].forEach(id=> disableRow(qs(id)));
-    // Pickup auto-filled from trip page (localStorage) or fallback
-    const busAddr = (function(){
-      // Prefer trip JSON fixed start location if available
-      try {
-        const trip = (window.__loadedTrip || null);
-        const depName = trip && trip.departure && trip.departure.reference_point && trip.departure.reference_point.name;
-        if (depName && String(depName).trim()) return String(depName).trim();
-      } catch(_){ }
-      // Fallback to value persisted by trip page
-      try { const v = localStorage.getItem('bus_pickup_address'); if (v && v.trim()) return v.trim(); } catch(_) { }
-      // Last resort: any session value from a previous pass
-      try { const v2 = sessionStorage.getItem('gw_pickup_address'); if (v2 && v2.trim()) return v2.trim(); } catch(_){ }
-      return DEFAULT_BUS_ADDRESS;
-    })();
-    setPickupDisabled(busAddr);
-    // Persist to session for Step 3 consumption
-    try {
-      sessionStorage.setItem('gw_pickup_address', busAddr);
-      sessionStorage.setItem('gw_dropoff_same', 'true');
-      sessionStorage.setItem('gw_dropoff_address', busAddr);
-      sessionStorage.removeItem('gw_pickup_place_id');
-    } catch(_){ }
-    // Enable pax counters & suitcases
-    ['suitcasesRow'].forEach(id=> enableRow(qs(id)));
+    // Keep all profile fields available (optional stats only)
+    ['ageGroupRow','travTypeRow','interestsRow','socialityRow','specialRequestsRow','pickupRow','suitcasesRow'].forEach(id=> enableRow(qs(id)));
+    setPickupEnabled();
+    // Make sure existing manual inputs remain intact; no auto-overrides here
     const adultsRow = qs('adultsCount')?.closest('.s2-row');
     const childrenRow = qs('childrenCount')?.closest('.s2-row');
     [adultsRow, childrenRow].forEach(r=> enableRow(r));

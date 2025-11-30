@@ -83,6 +83,20 @@
       <div class="places-dropdown" id="pickupSuggest" hidden></div>
     </div>
 
+    <div class="s2-row bus-suggestion-row" id="busSuggestionRow" hidden>
+      <div class="bus-suggestion-label">Προτεινόμενη στάση</div>
+      <div class="bus-suggestion-value" id="busSuggestionValue">—</div>
+    </div>
+
+    <div class="s2-row vertical bus-stops-row" id="busStopsRow" hidden>
+      <div class="s2-labels">
+        <div class="title">Στάση λεωφορείου</div>
+        <div class="sub">Επιλέξτε σημείο επιβίβασης</div>
+        <div class="field-inline-error" id="busStopError" hidden>Επιλέξτε στάση</div>
+      </div>
+      <div class="bus-stop-list" id="busStopList" role="radiogroup" aria-label="Διαθέσιμες στάσεις"></div>
+    </div>
+
     <!-- Message to Driver (instead of Preferred language) -->
     <div class="s2-row" id="specialRequestsRow">
       <div class="s2-labels">
@@ -562,6 +576,7 @@
           const code = btn.getAttribute('data-code') || '';
           setInterest(code);
           if (interestMenu) interestMenu.hidden = true;
+          try { document.dispatchEvent(new CustomEvent('gw:step2:fieldsChanged')); } catch(_){ }
         });
       });
       document.addEventListener('click', (e)=>{
@@ -587,6 +602,7 @@
           const code = btn.getAttribute('data-code') || '';
           setSocial(code);
           if (socialMenu) socialMenu.hidden = true;
+          try { document.dispatchEvent(new CustomEvent('gw:step2:fieldsChanged')); } catch(_){ }
         });
       });
       document.addEventListener('click', (e)=>{
@@ -608,12 +624,19 @@
             try { console.log('[step2] bookingState saved', st); } catch(_){ }
           }
         } catch(_){ }
+        const canonicalPath = '/booking/step3';
+        const legacyPath = '/step3.html';
         try {
           const origin = (window.location && window.location.origin) || (window.location.protocol + '//' + window.location.host) || '';
-          const absUrl = origin ? (new URL('/step3.html', origin).href) : '/step3.html';
-          try { window.location.assign(absUrl); }
-          catch(_e1){ try { window.location.href = absUrl; } catch(_e2){ setTimeout(()=>{ window.location.href = '/step3.html'; }, 0); } }
-        } catch(_){ window.location.href = '/step3.html'; }
+          const buildUrl = (path) => origin ? (new URL(path, origin).href) : path;
+          const targetUrl = buildUrl(canonicalPath);
+          const fallbackUrl = buildUrl(legacyPath);
+          try { window.location.assign(targetUrl); }
+          catch(_e1){
+            try { window.location.href = targetUrl; }
+            catch(_e2){ setTimeout(()=>{ window.location.href = fallbackUrl; }, 0); }
+          }
+        } catch(_){ window.location.href = legacyPath; }
       });
       // Re-apply selected labels when language changes
       try {

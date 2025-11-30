@@ -100,7 +100,13 @@
 
   async function saveCurrent(){
     const trip = tripSel.value.trim(); const mode = modeSel.value.trim(); const dateStr = selectedDate;
-    if (!trip || !mode || !dateStr) return;
+    if (!trip || !mode || !dateStr) {
+      if (saveMsg) {
+        saveMsg.textContent = 'Επίλεξε συγκεκριμένη ημερομηνία στο ημερολόγιο πριν αποθηκεύσεις.';
+        saveMsg.style.color = '#f55';
+      }
+      return;
+    }
     const capacity = parseInt(capInput.value,10) || 0;
     const taken = parseInt(takenInput.value,10) || 0;
     try {
@@ -108,7 +114,7 @@
       const r = await fetch('/api/availability', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ trip_id: trip, date: dateStr, mode, capacity, taken }) });
       const j = await r.json().catch(()=>({}));
       if (r.ok && j && j.ok){
-        updateCache(trip, mode, dateStr, (mode==='mercedes')?1:capacity, taken); // enforce mercedes capacity=1
+        updateCache(trip, mode, dateStr, capacity, taken);
         saveMsg.textContent = '✅ Αποθηκεύτηκε'; saveMsg.style.color = '#2a7';
         // Immediate calendar refresh to reflect new availability without extra click
         try { renderCalendar(); } catch(_){ }

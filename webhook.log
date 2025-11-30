@@ -1,0 +1,11 @@
+2025-11-30T14:36:29.371Z debug.allow_test_env=true
+2025-11-30T14:36:29.372Z event.test-received id=evt_sca_1764513389354_created type=payment_intent.created
+2025-11-30T14:36:29.377Z debug.allow_test_env=true
+2025-11-30T14:36:29.377Z event.test-received id=evt_sca_1764513389354_succeeded type=payment_intent.succeeded
+2025-11-30T14:36:29.379Z payment.recorded id=pi_sca_1764513389354
+2025-11-30T14:36:29.387Z debug.allow_test_env=true
+2025-11-30T14:36:29.387Z event.test-received id=evt_fail_1764513389387 type=payment_intent.payment_failed
+2025-11-30T14:36:29.388Z payment.failed id=pi_fail_1764513389387
+2025-11-30T14:36:29.389Z debug.allow_test_env=true
+2025-11-30T14:36:29.389Z event.test-received id=evt_succ_1764513389387 type=payment_intent.succeeded
+2025-11-30T14:36:29.390Z payment.recorded id=pi_fail_1764513389387

@@ -15,6 +15,378 @@
     getJSON(key){ try { const v = sessionStorage.getItem(key); return v ? JSON.parse(v) : null; } catch(_){ return null; } }
   };
 
+  const PROFILE_FIELD_UI = {
+    age: { titleSelector: '#ageGroupTitle', errorSelector: '#ageGroupError', buttonSelector: '#ageSelectBtn' },
+    traveler: { titleSelector: '#travTypeTitle', errorSelector: '#travTypeError', buttonSelector: '#travTypeSelectBtn' },
+    interest: { titleSelector: '#interestsRow .title', buttonSelector: '#interestSelectBtn' },
+    social: { titleSelector: '#socialityRow .title', buttonSelector: '#socialSelectBtn' }
+  };
+  const PROFILE_FIELD_KEYS = Object.keys(PROFILE_FIELD_UI);
+  const busPickupCache = { raw: null, localized: [], lang: null, map: new Map(), selectedId: '', suggestionId: '' };
+  let tripDataPromise = null;
+  const EARTH_RADIUS_KM = 6371;
+
+  function currentLang(){
+    try { return (window.currentI18n && window.currentI18n.lang) || localStorage.getItem('gw_lang') || 'el'; }
+    catch(_){ return 'el'; }
+  }
+
+  function getTripIdFromContext(){
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      const fromQuery = params.get('trip');
+      if (fromQuery) return fromQuery.trim();
+    } catch(_){ }
+    try {
+      const stored = sessionStorage.getItem('gw_trip_id');
+      if (stored) return stored.trim();
+    } catch(_){ }
+    return '';
+  }
+
+  async function fetchTripById(tripId){
+    if (!tripId) return null;
+    try {
+      const res = await fetch(`/data/trips/${encodeURIComponent(tripId)}.json`, { cache: 'no-store' });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch(_){ return null; }
+  }
+
+  async function ensureTripData(){
+    if (window.__loadedTrip) return window.__loadedTrip;
+    if (!tripDataPromise) {
+      const tripId = getTripIdFromContext();
+      if (!tripId) return null;
+      tripDataPromise = fetchTripById(tripId).then((trip) => {
+        if (trip) {
+          try { window.__loadedTrip = trip; } catch(_){ }
+        }
+        return trip;
+      });
+    }
+    return tripDataPromise;
+  }
+
+  function localizeField(field, lang){
+    if (!field) return '';
+    if (typeof field === 'string') return field;
+    if (typeof field === 'object') {
+      if (field[lang]) return field[lang];
+      if (field.el) return field.el;
+      const first = Object.values(field).find(Boolean);
+      return first || '';
+    }
+    return '';
+  }
+
+  function normalizeStopTime(value){
+    if (value == null) return '';
+    let raw = typeof value === 'number' ? String(value) : String(value || '').trim();
+    if (!raw) return '';
+    const colon = raw.match(/^(\d{1,2}):(\d{2})$/);
+    if (colon) {
+      const hh = Math.min(23, Math.max(0, parseInt(colon[1], 10)));
+      const mm = Math.min(59, Math.max(0, parseInt(colon[2], 10)));
+      return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+    }
+    if (/^\d{3,4}$/.test(raw)) {
+      const hh = Math.min(23, Math.max(0, parseInt(raw.slice(0, raw.length-2), 10)));
+      const mm = Math.min(59, Math.max(0, parseInt(raw.slice(-2), 10)));
+      return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+    }
+    return '';
+  }
+
+  function toNumber(value){
+    if (value == null) return null;
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function haversineKm(lat1, lng1, lat2, lng2){
+    if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) return null;
+    const toRad = (deg) => deg * (Math.PI / 180);
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return EARTH_RADIUS_KM * c;
+  }
+
+  function localizeBusPickupPoints(rawList, lang){
+    if (!Array.isArray(rawList)) return [];
+    return rawList.map((point, index) => {
+      if (!point || typeof point !== 'object') return null;
+      const id = String(point.id || point.uuid || point.slug || `bus-stop-${index}`).trim();
+      const title = localizeField(point.title, lang) || localizeField(point.label, lang) || '';
+      const address = localizeField(point.address, lang) || '';
+      const time = normalizeStopTime(point.departureTime || point.time || point.departure_time);
+      const lat = toNumber(point.lat ?? point.latitude);
+      const lng = toNumber(point.lng ?? point.longitude);
+      if (!id && !title && !address && lat == null && lng == null) return null;
+      return { id: id || `bus-stop-${index}`, title: title || address || `Στάση ${index + 1}`, address, time, lat, lng, order: index };
+    }).filter(Boolean);
+  }
+
+  async function resolveBusPickupPointList(forceRelocalize = false){
+    const lang = currentLang();
+    if (!forceRelocalize && busPickupCache.localized.length && busPickupCache.lang === lang) {
+      return busPickupCache.localized;
+    }
+    if (!busPickupCache.raw || forceRelocalize) {
+      const trip = await ensureTripData();
+      const busMode = trip && trip.modes && trip.modes.bus;
+      busPickupCache.raw = Array.isArray(busMode && busMode.busPickupPoints) ? busMode.busPickupPoints : [];
+    }
+    busPickupCache.localized = localizeBusPickupPoints(busPickupCache.raw, lang);
+    busPickupCache.lang = lang;
+    busPickupCache.map = new Map(busPickupCache.localized.map((point) => [point.id, point]));
+    if (!busPickupCache.selectedId) {
+      const stored = getStoredBusSelection();
+      if (stored && stored.id) busPickupCache.selectedId = stored.id;
+    }
+    return busPickupCache.localized;
+  }
+
+  function getStoredBusSelection(){
+    try {
+      const raw = sessionStorage.getItem('gw_bus_pickup_point');
+      return raw ? JSON.parse(raw) : null;
+    } catch(_){ return null; }
+  }
+
+  function persistBusSelection(point){
+    if (!point) return;
+    persist.setJSON('gw_bus_pickup_point', {
+      id: point.id,
+      title: point.title,
+      address: point.address,
+      time: point.time || '',
+      lat: point.lat,
+      lng: point.lng
+    });
+  }
+
+  function getSelectedBusStop(){
+    const id = busPickupCache.selectedId || (getStoredBusSelection()?.id) || '';
+    if (!id) return null;
+    if (busPickupCache.map && busPickupCache.map.has(id)) return busPickupCache.map.get(id);
+    return getStoredBusSelection();
+  }
+
+  function hideBusStopError(){
+    const err = $('#busStopError');
+    if (err) err.setAttribute('hidden', '');
+    const row = $('#busStopsRow');
+    if (row) row.classList.remove('error');
+  }
+
+  function showBusStopError(){
+    const err = $('#busStopError');
+    if (err) err.removeAttribute('hidden');
+    const row = $('#busStopsRow');
+    if (row) row.classList.add('error');
+  }
+
+  function selectBusStop(stopId){
+    if (!stopId) return;
+    busPickupCache.selectedId = stopId;
+    hideBusStopError();
+    const listEl = $('#busStopList');
+    if (listEl) {
+      listEl.querySelectorAll('.bus-stop-item').forEach((item) => {
+        item.classList.toggle('selected', item.dataset.stopId === stopId);
+      });
+    }
+    const stop = busPickupCache.map.get(stopId);
+    if (stop) persistBusSelection(stop);
+    try { document.dispatchEvent(new CustomEvent('gw:step2:fieldsChanged')); } catch(_){ }
+    updateNextVisualState();
+  }
+
+  function renderBusPickupPoints(points){
+    const row = $('#busStopsRow');
+    const listEl = $('#busStopList');
+    if (!row || !listEl) return;
+    if (!Array.isArray(points) || !points.length) {
+      row.setAttribute('hidden','');
+      hideBusStopError();
+      const suggestion = $('#busSuggestionRow');
+      if (suggestion) suggestion.setAttribute('hidden','');
+      return;
+    }
+    row.removeAttribute('hidden');
+    listEl.innerHTML = '';
+    points.forEach((point) => {
+      const label = document.createElement('label');
+      label.className = 'bus-stop-item';
+      label.dataset.stopId = point.id;
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'busStopOption';
+      input.value = point.id;
+      input.checked = point.id === busPickupCache.selectedId;
+      input.addEventListener('change', () => selectBusStop(point.id));
+      const details = document.createElement('div');
+      details.className = 'bus-stop-details';
+      const title = document.createElement('div');
+      title.className = 'bus-stop-title';
+      title.textContent = point.title || point.address || 'Στάση';
+      const addr = document.createElement('div');
+      addr.className = 'bus-stop-address';
+      addr.textContent = point.address || '';
+      details.appendChild(title);
+      if (point.address) details.appendChild(addr);
+      if (point.time) {
+        const time = document.createElement('div');
+        time.className = 'bus-stop-time';
+        time.textContent = `Αναχώρηση: ${point.time}`;
+        details.appendChild(time);
+      }
+      label.appendChild(input);
+      label.appendChild(details);
+      if (point.id === busPickupCache.selectedId) label.classList.add('selected');
+      listEl.appendChild(label);
+    });
+  }
+
+  async function loadBusPickupPointsIfNeeded(options){
+    const mode = detectTripMode();
+    if (mode !== 'bus') {
+      const row = $('#busStopsRow');
+      if (row) row.setAttribute('hidden','');
+      const suggestionRow = $('#busSuggestionRow');
+      if (suggestionRow) suggestionRow.setAttribute('hidden','');
+      hideBusStopError();
+      return;
+    }
+    const force = options && options.force;
+    const points = await resolveBusPickupPointList(Boolean(force));
+    renderBusPickupPoints(points);
+    updateNextVisualState();
+  }
+
+  async function refreshBusStopsForLanguage(){
+    if (detectTripMode() !== 'bus') return;
+    await loadBusPickupPointsIfNeeded({ force: true });
+    await updateBusSuggestion();
+  }
+
+  async function updateBusSuggestion(){
+    const row = $('#busSuggestionRow');
+    const valueEl = $('#busSuggestionValue');
+    if (!row || !valueEl) return;
+    if (detectTripMode() !== 'bus') { row.setAttribute('hidden',''); return; }
+    if (!chosenPlace || chosenPlace.lat == null || chosenPlace.lng == null) {
+      row.setAttribute('hidden','');
+      return;
+    }
+    const points = await resolveBusPickupPointList(false);
+    if (!points.length) { row.setAttribute('hidden',''); return; }
+    let nearest = null;
+    let nearestDist = Infinity;
+    points.forEach((stop) => {
+      const dist = haversineKm(chosenPlace.lat, chosenPlace.lng, stop.lat, stop.lng);
+      if (dist == null) return;
+      if (dist < nearestDist) { nearestDist = dist; nearest = stop; }
+    });
+    if (!nearest) { row.setAttribute('hidden',''); return; }
+    busPickupCache.suggestionId = nearest.id;
+    valueEl.textContent = nearest.address ? `${nearest.title} – ${nearest.address}` : nearest.title;
+    row.removeAttribute('hidden');
+  }
+
+  function normalizeModeInput(mode){
+    const m = String(mode || '').toLowerCase();
+    if (m === 'bus') return 'bus';
+    if (m === 'mercedes' || m === 'private' || m === 'mercedes/private' || m === 'vip') return 'mercedes';
+    if (m === 'multi' || m === 'shared') return 'van';
+    return (m === 'van' || m === 'bus' || m === 'mercedes') ? m : 'van';
+  }
+
+  function detectTripMode(){
+    const candidates = [];
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      const paramMode = params.get('mode');
+      if (paramMode) candidates.push(paramMode);
+    } catch(_){ }
+    try {
+      if (document && document.body) {
+        const attrMode = document.body.getAttribute('data-trip-mode');
+        if (attrMode) candidates.push(attrMode);
+      }
+    } catch(_){ }
+    try {
+      const stored = localStorage.getItem('trip_mode');
+      if (stored) candidates.push(stored);
+    } catch(_){ }
+    try {
+      const sessionMode = sessionStorage.getItem('gw_trip_mode');
+      if (sessionMode) candidates.push(sessionMode);
+    } catch(_){ }
+    try {
+      if (window.GWBookingState && typeof window.GWBookingState.get === 'function') {
+        const stateMode = (window.GWBookingState.get() || {}).mode;
+        if (stateMode) candidates.push(stateMode);
+      }
+    } catch(_){ }
+    const chosen = candidates.find(Boolean) || 'van';
+    return normalizeModeInput(chosen);
+  }
+
+  function getProfileFieldValues(){
+    return {
+      age: persist.get('gw_age_group') || '',
+      traveler: persist.get('gw_traveler_type') || '',
+      interest: persist.get('gw_interest') || '',
+      social: persist.get('gw_sociality') || ''
+    };
+  }
+
+  function selectedProfileCount(values){
+    if (!values) return 0;
+    let count = 0;
+    PROFILE_FIELD_KEYS.forEach((key) => { if (values[key]) count += 1; });
+    return count;
+  }
+
+  function requiredProfileSelectionCount(mode){
+    if (mode === 'bus') return 0;
+    if (mode === 'van' || mode === 'mercedes') return 2;
+    return 2;
+  }
+
+  function hasEnoughProfileSelections(mode, values){
+    const required = requiredProfileSelectionCount(mode);
+    if (required <= 0) return true;
+    return selectedProfileCount(values) >= required;
+  }
+
+  function toggleProfileFieldError(fieldKey, show){
+    const cfg = PROFILE_FIELD_UI[fieldKey];
+    if (!cfg) return;
+    const titleEl = cfg.titleSelector ? document.querySelector(cfg.titleSelector) : null;
+    if (titleEl) titleEl.classList.toggle('required', !!show);
+    const btnEl = cfg.buttonSelector ? document.querySelector(cfg.buttonSelector) : null;
+    if (btnEl) btnEl.classList.toggle('error', !!show);
+    if (cfg.errorSelector) {
+      const errEl = document.querySelector(cfg.errorSelector);
+      if (errEl) {
+        if (show) errEl.removeAttribute('hidden');
+        else errEl.setAttribute('hidden','');
+      }
+    }
+  }
+
+  function applyProfileValidationState(values, highlightMissing){
+    PROFILE_FIELD_KEYS.forEach((key) => {
+      const hasValue = !!(values && values[key]);
+      toggleProfileFieldError(key, highlightMissing && !hasValue);
+    });
+  }
+
   // Auto-assign preferred language from current locale
   function assignPreferredLanguage(){
     try {
@@ -139,6 +511,7 @@
 
   // Autocomplete state
   let acService = null; let placesService = null; let chosenPlace = null; let mapInstance = null; let mapMarker = null;
+  let updateNextVisualState = () => {};
 
   function setNextEnabled(on){ try { const b = $('#s2Next'); if (b) { b.disabled = false; // keep enabled for click validation
       b.classList.toggle('disabled', !on);
@@ -182,6 +555,7 @@
       persist.set('gw_dropoff_same', 'true');
       persist.set('gw_dropoff_address', input.value);
       updateNextVisualState();
+      updateBusSuggestion().catch(()=>{});
     };
 
     function ensureServices(cb){
@@ -222,7 +596,7 @@
     // Debounced search for Google Places predictions (adjusted to ~480ms per requirement)
     const doSearch = debounce(() => {
       const q = String(input.value || '').trim();
-      if (q.length < 3) { dropdown.hidden = true; dropdown.innerHTML=''; setNextEnabled(false); return; }
+      if (q.length < 3) { dropdown.hidden = true; dropdown.innerHTML=''; updateNextVisualState(); return; }
       ensureServices(() => {
         try {
           // Simple 60s memoization layer to avoid repeated identical queries hitting Google Places.
@@ -271,24 +645,24 @@
       });
     }, 480);
 
-    function updateNextVisualState(){
-      // Bus mode: always allow proceed visually
-      try {
-        const qsMode = (new URLSearchParams(window.location.search)).get('mode');
-        const mode = (qsMode || localStorage.getItem('trip_mode') || 'van').toLowerCase();
-        if (mode === 'bus') { setNextEnabled(true); return; }
-      } catch(_){}
+    updateNextVisualState = function(){
+      const mode = detectTripMode();
+      if (mode === 'bus') {
+        const busReady = !!getSelectedBusStop();
+        setNextEnabled(busReady);
+        return;
+      }
       const val = (input.value||'').trim();
-      const ageOk = !!(persist.get('gw_age_group')||'');
-      const travOk = !!(persist.get('gw_traveler_type')||'');
+      const profileValues = getProfileFieldValues();
+      const profileOk = hasEnoughProfileSelections(mode, profileValues);
       let pickupOk = false;
       if (strictPickupActive()) {
-        pickupOk = !!chosenPlace?.place_id;
+        pickupOk = !!(chosenPlace && chosenPlace.place_id);
       } else {
         pickupOk = val.length>0;
       }
-      setNextEnabled(!!(pickupOk && ageOk && travOk));
-    }
+      setNextEnabled(!!(pickupOk && profileOk));
+    };
 
     input.addEventListener('input', () => {
       chosenPlace=null; persist.set('gw_pickup_place_id','');
@@ -299,6 +673,7 @@
         $('#pickupLabel')?.classList.remove('required');
       }
       updateNextVisualState();
+      updateBusSuggestion().catch(()=>{});
       doSearch();
     });
     input.addEventListener('focus', () => { if (dropdown.childElementCount>0) dropdown.hidden=false; });
@@ -331,13 +706,20 @@
     if (savedPid) {
       chosenPlace = { place_id: savedPid, formatted_address: savedAddr || '', lat: savedLat?Number(savedLat):null, lng: savedLng?Number(savedLng):null };
       updateNextVisualState();
+      updateBusSuggestion().catch(()=>{});
     } else {
       updateNextVisualState();
+      updateBusSuggestion().catch(()=>{});
     }
 
     // Listen for field changes from other scripts (age/traveler selections) to refresh Next button visual state
     try {
-      document.addEventListener('gw:step2:fieldsChanged', () => { try { updateNextVisualState(); } catch(_){ } });
+      document.addEventListener('gw:step2:fieldsChanged', () => {
+        try {
+          updateNextVisualState();
+          applyProfileValidationState(getProfileFieldValues(), false);
+        } catch(_){ }
+      });
     } catch(_){ }
   }
 
@@ -358,44 +740,36 @@
   function guardNext(){
     const btn = $('#s2Next'); if (!btn) return;
     btn.addEventListener('click', (ev)=>{
-      // Bus mode: bypass all validations and persist the auto pickup
-      try {
-        const qsMode = (new URLSearchParams(window.location.search)).get('mode');
-        const mode = (qsMode || localStorage.getItem('trip_mode') || 'van').toLowerCase();
-        if (mode === 'bus') {
-          const input = $('#pickupInput');
-          const val = (input && input.value || '').trim();
-          try {
-            persist.set('gw_pickup_address', val);
-            persist.set('gw_dropoff_same','true');
-            persist.set('gw_dropoff_address', val);
-            // place_id not required for bus
-            persist.set('gw_pickup_place_id','');
-          } catch(_){ }
-          assignPreferredLanguage();
-          return true;
-        }
-      } catch(_){ }
       const input = $('#pickupInput');
       const val = (input && input.value || '').trim();
-      // validate age group & traveler type inline on Step 2
-      const ageCode = persist.get('gw_age_group') || '';
-      const travCode = persist.get('gw_traveler_type') || '';
-      let block = false;
-      const ageRowTitle = document.querySelector('#ageGroupRow .s2-labels .title');
-      const travRowTitle = document.querySelector('#travTypeRow .s2-labels .title');
-      const ageErr = document.getElementById('ageGroupError');
-      const travErr = document.getElementById('travTypeError');
-      const ageBtn = document.getElementById('ageSelectBtn');
-      const travBtn = document.getElementById('travTypeSelectBtn');
-      if (!ageCode) { block = true; ageRowTitle && ageRowTitle.classList.add('required'); ageErr && ageErr.removeAttribute('hidden'); }
-      else { ageRowTitle && ageRowTitle.classList.remove('required'); ageErr && ageErr.setAttribute('hidden',''); }
-      // Apply red border on dropdown trigger when missing
-      if (!ageCode) { ageBtn && ageBtn.classList.add('error'); } else { ageBtn && ageBtn.classList.remove('error'); }
-      if (!travCode) { block = true; travRowTitle && travRowTitle.classList.add('required'); travErr && travErr.removeAttribute('hidden'); }
-      else { travRowTitle && travRowTitle.classList.remove('required'); travErr && travErr.setAttribute('hidden',''); }
-      if (!travCode) { travBtn && travBtn.classList.add('error'); } else { travBtn && travBtn.classList.remove('error'); }
-      if (block) {
+      const mode = detectTripMode();
+      if (mode === 'bus') {
+        const selectedStop = getSelectedBusStop();
+        if (!selectedStop) {
+          ev.preventDefault(); ev.stopPropagation();
+          showBusStopError();
+          try { document.getElementById('busStopsRow')?.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_){ }
+          return false;
+        }
+        hideBusStopError();
+        persistBusSelection(selectedStop);
+        try {
+          persist.set('gw_pickup_address', val);
+          persist.set('gw_dropoff_same','true');
+          persist.set('gw_dropoff_address', val);
+          if (!chosenPlace || !chosenPlace.place_id) {
+            persist.set('gw_pickup_place_id','');
+            persist.set('gw_pickup_lat','');
+            persist.set('gw_pickup_lng','');
+          }
+        } catch(_){ }
+        assignPreferredLanguage();
+        return true;
+      }
+      const profileValues = getProfileFieldValues();
+      const profileOk = hasEnoughProfileSelections(mode, profileValues);
+      applyProfileValidationState(profileValues, !profileOk);
+      if (!profileOk) {
         ev.preventDefault(); ev.stopPropagation();
         try { document.getElementById('ageGroupRow').scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_){ }
         return false;
@@ -433,6 +807,8 @@
     assignPreferredLanguage();
     bindSuitcases();
     bindPickup();
+    loadBusPickupPointsIfNeeded().catch(()=>{});
+    setTimeout(() => { loadBusPickupPointsIfNeeded().catch(()=>{}); }, 0);
     bindSpecialRequests();
     guardNext();
   }
@@ -441,7 +817,12 @@
   else init();
 
   // Re-translate summary on language change
-  try { window.addEventListener('i18n:changed', updateSuitcaseSummary); } catch(_){ }
+  try {
+    window.addEventListener('i18n:changed', () => {
+      try { updateSuitcaseSummary(); } catch(_){ }
+      try { refreshBusStopsForLanguage(); } catch(_){ }
+    });
+  } catch(_){ }
   // Reflow summary on resize to switch compact/full rendering
   try { window.addEventListener('resize', debounce(updateSuitcaseSummary, 140)); } catch(_){ }
 })();

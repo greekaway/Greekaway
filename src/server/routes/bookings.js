@@ -36,12 +36,60 @@ function registerBookings(app, deps) {
       const ms = trip && trip.mode_set ? trip.mode_set : null; if (!ms) return 0; const m = ms[mode]; if (!m) return 0;
       let n = parseInt(m.default_capacity,10);
       if (!Number.isFinite(n) || n <= 0) n = 0;
-      // Business rule: mercedes always treated as capacity 1 (single vehicle per day)
-      if (mode === 'mercedes') return 1;
+      if (mode === 'mercedes') return getMercedesFleetSize(trip);
       return n > 0 ? n : 0;
     } catch(_){ return 0; }
   }
   function isModeActive(trip, mode){ try { return !!(trip && trip.mode_set && trip.mode_set[mode] && trip.mode_set[mode].active); } catch(_){ return false; } }
+
+  function getMercedesFleetSize(trip){
+    const direct = parseInt(trip && trip.modeSettings && trip.modeSettings.mercedes && trip.modeSettings.mercedes.fleetSize, 10);
+    if (Number.isFinite(direct) && direct > 0) return direct;
+    const modeSetVal = parseInt(trip && trip.mode_set && trip.mode_set.mercedes && trip.mode_set.mercedes.default_capacity, 10);
+    if (Number.isFinite(modeSetVal) && modeSetVal > 0) return modeSetVal;
+    const modeBlock = trip && trip.modes && trip.modes.mercedes;
+    const capacityFromMode = parseInt(modeBlock && modeBlock.capacity, 10);
+    if (Number.isFinite(capacityFromMode) && capacityFromMode > 0) return capacityFromMode;
+    return 1;
+  }
+
+  function readMercedesAvailabilityRow(tripId, dateStr){
+    if (!bookingsDb || !tripId || !dateStr) return null;
+    try {
+      const row = bookingsDb.prepare('SELECT id, trip_id, date, total_fleet, remaining_fleet, updatedAt FROM mercedes_availability WHERE trip_id = ? AND date = ?').get(tripId, dateStr);
+      return row || null;
+    } catch(_){ return null; }
+  }
+
+  function ensureMercedesAvailabilityRow(tripId, dateStr, trip){
+    if (!bookingsDb || !tripId || !dateStr) return null;
+    const targetTotal = Math.max(0, parseInt(getMercedesFleetSize(trip), 10) || 0);
+    let row = readMercedesAvailabilityRow(tripId, dateStr);
+    if (!row) {
+      const now = new Date().toISOString();
+      const id = (crypto && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : `${tripId}-${dateStr}-${Date.now()}`;
+      try {
+        bookingsDb.prepare('INSERT OR IGNORE INTO mercedes_availability (id, trip_id, date, total_fleet, remaining_fleet, updatedAt) VALUES (?,?,?,?,?,?)').run(id, tripId, dateStr, targetTotal, targetTotal, now);
+      } catch(_){ }
+      row = readMercedesAvailabilityRow(tripId, dateStr);
+      if (row) return row;
+      return { id, trip_id: tripId, date: dateStr, total_fleet: targetTotal, remaining_fleet: targetTotal, updatedAt: now };
+    }
+    const storedTotal = Number.isFinite(parseInt(row.total_fleet, 10)) ? parseInt(row.total_fleet, 10) : 0;
+    if (storedTotal !== targetTotal) {
+      const now = new Date().toISOString();
+      const remaining = Number.isFinite(parseInt(row.remaining_fleet, 10)) ? parseInt(row.remaining_fleet, 10) : 0;
+      const delta = targetTotal - storedTotal;
+      const adjustedRemaining = Math.max(0, remaining + delta);
+      try {
+        bookingsDb.prepare('UPDATE mercedes_availability SET total_fleet = ?, remaining_fleet = ?, updatedAt = ? WHERE trip_id = ? AND date = ?').run(targetTotal, adjustedRemaining, now, tripId, dateStr);
+        row.total_fleet = targetTotal;
+        row.remaining_fleet = adjustedRemaining;
+        row.updatedAt = now;
+      } catch(_){ }
+    }
+    return row;
+  }
 
   // Ensure per-mode availability table exists
   try {
@@ -85,6 +133,55 @@ function registerBookings(app, deps) {
   }
   function addMinutes(hhmm, minutes){
     try { const [h,m]=(String(hhmm||'00:00')).split(':').map(x=>parseInt(x,10)||0); const d=new Date(); d.setHours(h,m,0,0); d.setMinutes(d.getMinutes()+minutes); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); } catch(_){ return hhmm; }
+  }
+
+  const SUITCASE_LABELS = { small: 'Small', medium: 'Medium', large: 'Large' };
+  function formatSuitcaseLabel(type){
+    const key = String(type || '').toLowerCase();
+    if (SUITCASE_LABELS[key]) return SUITCASE_LABELS[key];
+    if (!key) return 'Bag';
+    return key.charAt(0).toUpperCase() + key.slice(1);
+  }
+  function normalizeSuitcasesArray(value){
+    const tokens = [];
+    const pushToken = (text) => {
+      const cleaned = (text == null) ? '' : String(text).trim();
+      if (cleaned) tokens.push(cleaned);
+    };
+    const pushCount = (type, count) => {
+      const qty = Number(count);
+      if (!Number.isFinite(qty) || qty <= 0) return;
+      const label = formatSuitcaseLabel(type);
+      tokens.push(`${qty}×${label}`);
+    };
+    const coerce = (input) => {
+      if (Array.isArray(input)) {
+        input.forEach((item) => {
+          if (typeof item === 'string' || typeof item === 'number') pushToken(item);
+          else if (item && typeof item === 'object') {
+            if ('type' in item && 'count' in item) pushCount(item.type, item.count);
+            else Object.entries(item).forEach(([k, v]) => pushCount(k, v));
+          }
+        });
+        return;
+      }
+      if (!input) return;
+      if (typeof input === 'string') {
+        const trimmed = input.trim();
+        if (!trimmed) return;
+        if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+          try { coerce(JSON.parse(trimmed)); return; } catch(_){ }
+        }
+        pushToken(trimmed);
+        return;
+      }
+      if (typeof input === 'number') { pushToken(input); return; }
+      if (typeof input === 'object') {
+        Object.entries(input).forEach(([k, v]) => pushCount(k, v));
+      }
+    };
+    coerce(value);
+    return tokens;
   }
 
   // Create booking (verbatim port of original complex logic)
@@ -300,7 +397,8 @@ function registerBookings(app, deps) {
       const pickup_lat = toNum(body.pickup_lat ?? metaObj.pickup_lat);
       const pickup_lng = toNum(body.pickup_lng ?? metaObj.pickup_lng);
       const suitcases_raw = (body.suitcases ?? metaObj.suitcases ?? metaObj.luggage);
-      const suitcases_json = Array.isArray(suitcases_raw) ? JSON.stringify(suitcases_raw) : (suitcases_raw && typeof suitcases_raw === 'object' ? JSON.stringify(suitcases_raw) : JSON.stringify(suitcases_raw == null || suitcases_raw === '' ? [] : [String(suitcases_raw)]));
+      const suitcases_list = normalizeSuitcasesArray(suitcases_raw);
+      const suitcases_json = JSON.stringify(suitcases_list);
       const special_requests = pickStr(body.special_requests, body.notes, metaObj.special_requests, metaObj.notes);
       const sourceVal = (typeof body.source === 'string' && body.source.trim()) ? String(body.source).trim() : (metaObj.source && String(metaObj.source).trim()) || null;
       const looksDemo = (() => { const m = (s) => (s||'').toString().toLowerCase(); const hasDemo = (s) => /demo|test|example\.com/.test(m(s)); return !!(hasDemo(user_email) || hasDemo(user_name) || hasDemo(sourceVal) || (metaObj && (metaObj.is_demo === true || metaObj.demo === true))); })();
@@ -376,6 +474,7 @@ function registerBookings(app, deps) {
       const currency = (b.currency || 'eur').toString().toLowerCase();
       const pickup = b.pickup || {};
       const suitcases = b.suitcases || {};
+      const suitcases_list = normalizeSuitcasesArray(suitcases);
       const special_requests = (b.special_requests || '').toString();
       const traveler_profile = b.traveler_profile || {};
       if (!trip_id || !seats || !price_cents) return res.status(400).json({ error: 'Missing required fields' });
@@ -395,7 +494,7 @@ function registerBookings(app, deps) {
       };
       try {
         const stmt = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,vehicle_type,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-        stmt.run(id, 'pending', null, null, null, null, trip_id, seats, vehType || null, price_cents, currency, JSON.stringify(metadata), now, now, date, 0, null, null, null, null, null, null, 0, 'unified_flow', (pickup.address||''), (pickup.lat||null), (pickup.lng||null), JSON.stringify(suitcases||{}), special_requests || '');
+        stmt.run(id, 'pending', null, null, null, null, trip_id, seats, vehType || null, price_cents, currency, JSON.stringify(metadata), now, now, date, 0, null, null, null, null, null, null, 0, 'unified_flow', (pickup.address||''), (pickup.lat||null), (pickup.lng||null), JSON.stringify(suitcases_list), special_requests || '');
       } catch(e) {
         // Minimal legacy insert fallback
         const stmt = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
@@ -416,6 +515,41 @@ function registerBookings(app, deps) {
       const { bookingId, payment_intent_id } = req.body || {};
       if (!bookingId) return res.status(400).json({ error: 'Missing bookingId' });
       if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
+      const bookingRow = (() => {
+        try {
+          const row = bookingsDb.prepare('SELECT id, status, trip_id, date, metadata, vehicle_type FROM bookings WHERE id = ?').get(bookingId);
+          if (row && row.metadata && typeof row.metadata === 'string') {
+            try { row.metadata = JSON.parse(row.metadata); } catch(_){ row.metadata = null; }
+          }
+          return row || null;
+        } catch(_){ return null; }
+      })();
+      if (!bookingRow) return res.status(404).json({ error: 'Booking not found' });
+      const metaMode = (() => {
+        try {
+          const meta = bookingRow.metadata || {};
+          return meta.trip_mode || meta.mode || meta.vehicle_type || bookingRow.vehicle_type || '';
+        } catch(_){ return bookingRow.vehicle_type || ''; }
+      })();
+      const normalizedMode = normMode(metaMode);
+      const alreadyConfirmed = String(bookingRow.status || '').toLowerCase() === 'confirmed';
+      if (normalizedMode === 'mercedes' && !alreadyConfirmed) {
+        const tripId = bookingRow.trip_id;
+        const date = bookingRow.date ? String(bookingRow.date) : null;
+        if (!tripId || !date) return res.status(409).json({ error: 'No fleet available' });
+        const tripData = readTrip(tripId) || {};
+        const ensureRow = ensureMercedesAvailabilityRow(tripId, date, tripData);
+        const totalFleet = ensureRow && Number.isFinite(parseInt(ensureRow.total_fleet, 10)) ? parseInt(ensureRow.total_fleet, 10) : getMercedesFleetSize(tripData);
+        if (!totalFleet) return res.status(409).json({ error: 'No fleet available' });
+        const nowFleet = new Date().toISOString();
+        let updateResult = null;
+        try {
+          updateResult = bookingsDb.prepare('UPDATE mercedes_availability SET remaining_fleet = remaining_fleet - 1, updatedAt = ? WHERE trip_id = ? AND date = ? AND remaining_fleet > 0').run(nowFleet, tripId, date);
+        } catch(_){ updateResult = null; }
+        if (!updateResult || !updateResult.changes) {
+          return res.status(409).json({ error: 'No fleet available' });
+        }
+      }
       const now = new Date().toISOString();
       try {
         const stmt = bookingsDb.prepare('UPDATE bookings SET status = ?, payment_intent_id = COALESCE(?, payment_intent_id), updated_at = ? WHERE id = ?');
@@ -441,7 +575,23 @@ function registerBookings(app, deps) {
       if (!trip_id) return res.status(400).json({ error: 'Missing trip_id' });
       if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
       const trip = readTrip(trip_id) || {};
-      const computeForMode = (mode, dateStr) => {
+      const computeForMode = (mode, dateStr, options = {}) => {
+        if (mode === 'mercedes') {
+          const shouldEnsure = options.ensureMercedesRow === true;
+          const tripData = trip || {};
+          const row = shouldEnsure
+            ? ensureMercedesAvailabilityRow(trip_id, dateStr, tripData)
+            : readMercedesAvailabilityRow(trip_id, dateStr);
+          const fallbackFleet = Math.max(0, getMercedesFleetSize(tripData));
+          const totalFleet = row && Number.isFinite(parseInt(row.total_fleet, 10))
+            ? Math.max(0, parseInt(row.total_fleet, 10))
+            : fallbackFleet;
+          const remainingFleet = row && Number.isFinite(parseInt(row.remaining_fleet, 10))
+            ? Math.max(0, parseInt(row.remaining_fleet, 10))
+            : totalFleet;
+          const takenFleet = Math.max(0, totalFleet - remainingFleet);
+          return { capacity: totalFleet, taken: takenFleet, available: remainingFleet, total_fleet: totalFleet, remaining_fleet: remainingFleet };
+        }
         let capacity = 0;
         let takenOverride = null;
         try {
@@ -450,8 +600,6 @@ function registerBookings(app, deps) {
           if (typeof row.taken_custom === 'number' && row.taken_custom >= 0) takenOverride = row.taken_custom;
         } catch(_){ }
         if (!capacity) capacity = getDefaultCapacityForMode(trip, mode) || 0;
-        // Enforce mercedes hard cap = 1 regardless of stored override (safety)
-        if (mode === 'mercedes') capacity = 1;
         let taken = 0;
         try {
           const rows = bookingsDb.prepare("SELECT seats, metadata, status FROM bookings WHERE trip_id = ? AND date = ? AND status != 'canceled'").all(trip_id, dateStr) || [];
@@ -475,50 +623,74 @@ function registerBookings(app, deps) {
         const year = parseInt(ym[1],10);
         const monthIndex = parseInt(ym[2],10) - 1; // 0-based
         if (!Number.isFinite(year) || !Number.isFinite(monthIndex) || monthIndex < 0 || monthIndex > 11) return res.status(400).json({ error: 'Invalid month range' });
-        // Bulk read any stored overrides to minimize queries
-        let stored = [];
-        try {
-          stored = bookingsDb.prepare('SELECT date, capacity, taken_custom FROM mode_availability WHERE trip_id = ? AND mode = ? AND date LIKE ?').all(trip_id, modeParam, monthParam + '%');
-        } catch(_){ stored = []; }
-        const byDate = {};
-        stored.forEach(r => { if (r && r.date) byDate[r.date] = r; });
         const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
         const days = [];
-        for (let d=1; d<=daysInMonth; d++) {
-          const dayStr = String(d).padStart(2,'0');
-          const dateStr = `${monthParam}-${dayStr}`;
-          const row = byDate[dateStr];
-          let cap = 0; let takenOver = null;
-          if (row && typeof row.capacity === 'number' && row.capacity > 0) cap = row.capacity;
-          if (!cap) cap = getDefaultCapacityForMode(trip, modeParam) || 0;
-          if (modeParam === 'mercedes') cap = 1;
-          if (row && typeof row.taken_custom === 'number' && row.taken_custom >= 0) takenOver = row.taken_custom;
-          // Compute taken from bookings unless override present
-          let taken = 0;
+        if (modeParam === 'mercedes') {
+          for (let d=1; d<=daysInMonth; d++) {
+            const dayStr = String(d).padStart(2,'0');
+            const dateStr = `${monthParam}-${dayStr}`;
+            const stats = computeForMode('mercedes', dateStr, { ensureMercedesRow: false });
+            days.push({
+              date: dateStr,
+              capacity: stats.capacity || 0,
+              taken: stats.taken || 0,
+              available: stats.available || 0,
+              total_fleet: stats.total_fleet || stats.capacity || 0,
+              remaining_fleet: stats.remaining_fleet || stats.available || 0
+            });
+          }
+        } else {
+          // Bulk read any stored overrides to minimize queries
+          let stored = [];
           try {
-            if (takenOver == null) {
-              const rows = bookingsDb.prepare("SELECT seats, metadata, status FROM bookings WHERE trip_id = ? AND date = ? AND status != 'canceled'").all(trip_id, dateStr) || [];
-              rows.forEach(r => {
-                let m = '';
-                try { const meta = r && r.metadata ? JSON.parse(r.metadata) : null; const mm = (meta && (meta.trip_mode || meta.mode || meta.vehicle_type)) || ''; m = normMode(mm); } catch(_){ m=''; }
-                if (m !== modeParam) return;
-                if (modeParam === 'mercedes') taken += 1; else taken += (parseInt(r.seats,10) || 0);
-              });
-            } else {
-              taken = takenOver;
-            }
-          } catch(_){ }
-          const available = Math.max(0, (cap || 0) - (taken || 0));
-          days.push({ date: dateStr, capacity: cap || 0, taken: taken || 0, available });
+            stored = bookingsDb.prepare('SELECT date, capacity, taken_custom FROM mode_availability WHERE trip_id = ? AND mode = ? AND date LIKE ?').all(trip_id, modeParam, monthParam + '%');
+          } catch(_){ stored = []; }
+          const byDate = {};
+          stored.forEach(r => { if (r && r.date) byDate[r.date] = r; });
+          for (let d=1; d<=daysInMonth; d++) {
+            const dayStr = String(d).padStart(2,'0');
+            const dateStr = `${monthParam}-${dayStr}`;
+            const row = byDate[dateStr];
+            let cap = 0; let takenOver = null;
+            if (row && typeof row.capacity === 'number' && row.capacity > 0) cap = row.capacity;
+            if (!cap) cap = getDefaultCapacityForMode(trip, modeParam) || 0;
+            if (row && typeof row.taken_custom === 'number' && row.taken_custom >= 0) takenOver = row.taken_custom;
+            // Compute taken from bookings unless override present
+            let taken = 0;
+            try {
+              if (takenOver == null) {
+                const rows = bookingsDb.prepare("SELECT seats, metadata, status FROM bookings WHERE trip_id = ? AND date = ? AND status != 'canceled'").all(trip_id, dateStr) || [];
+                rows.forEach(r => {
+                  let m = '';
+                  try { const meta = r && r.metadata ? JSON.parse(r.metadata) : null; const mm = (meta && (meta.trip_mode || meta.mode || meta.vehicle_type)) || ''; m = normMode(mm); } catch(_){ m=''; }
+                  if (m !== modeParam) return;
+                  if (modeParam === 'mercedes') taken += 1; else taken += (parseInt(r.seats,10) || 0);
+                });
+              } else {
+                taken = takenOver;
+              }
+            } catch(_){ }
+            const available = Math.max(0, (cap || 0) - (taken || 0));
+            days.push({ date: dateStr, capacity: cap || 0, taken: taken || 0, available });
+          }
         }
         return res.json({ trip_id, mode: modeParam, month: monthParam, days });
       }
       if (modeParam) {
-        const out = computeForMode(modeParam, dateParam);
-        return res.json({ trip_id, date: dateParam, mode: modeParam, capacity: out.capacity, taken: out.taken, available: out.available });
+        const ensureRow = (modeParam === 'mercedes') && !monthParam;
+        const out = computeForMode(modeParam, dateParam, { ensureMercedesRow: ensureRow });
+        const payload = { trip_id, date: dateParam, mode: modeParam, capacity: out.capacity, taken: out.taken, available: out.available };
+        if (modeParam === 'mercedes') {
+          payload.total_fleet = out.total_fleet || out.capacity || 0;
+          payload.remaining_fleet = out.remaining_fleet || out.available || 0;
+        }
+        return res.json(payload);
       }
       const modes = {};
-      ['bus','van','mercedes'].forEach(m => { modes[m] = computeForMode(m, dateParam); });
+      ['bus','van','mercedes'].forEach(m => {
+        const stats = computeForMode(m, dateParam, { ensureMercedesRow: false });
+        modes[m] = stats;
+      });
       return res.json({ trip_id, date: dateParam, modes });
     } catch (e) { console.error('Availability error', e); return res.status(500).json({ error: 'Server error' }); }
   });
@@ -537,12 +709,39 @@ function registerBookings(app, deps) {
       if (takenCustom!=null && (!Number.isFinite(takenCustom) || takenCustom < 0)) return res.status(400).json({ error: 'Invalid taken' });
       if (typeof checkAdminAuth === 'function' && !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
       if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
-      // Enforce mercedes capacity always 1 regardless of provided value
-      const finalCapacity = (mode === 'mercedes') ? 1 : capacity;
+      if (mode === 'mercedes') {
+        const tripData = readTrip(trip_id) || {};
+        const fallbackFleet = getMercedesFleetSize(tripData);
+        const totalFleet = Number.isFinite(capacity) && capacity > 0 ? capacity : fallbackFleet;
+        const normalizedTaken = (takenCustom != null && Number.isFinite(takenCustom) && takenCustom >= 0)
+          ? Math.min(totalFleet, takenCustom)
+          : null;
+        const remainingFleet = normalizedTaken != null
+          ? Math.max(0, totalFleet - normalizedTaken)
+          : totalFleet;
+        const now = new Date().toISOString();
+        const existingRow = readMercedesAvailabilityRow(trip_id, date);
+        const rowId = existingRow && existingRow.id
+          ? existingRow.id
+          : (crypto && typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : `${trip_id}-${date}-${Date.now()}`);
+        const stmt = bookingsDb.prepare(`
+          INSERT INTO mercedes_availability (id, trip_id, date, total_fleet, remaining_fleet, updatedAt)
+          VALUES (?, ?, ?, ?, ?, ?)
+          ON CONFLICT(trip_id, date) DO UPDATE SET
+            total_fleet = excluded.total_fleet,
+            remaining_fleet = excluded.remaining_fleet,
+            updatedAt = excluded.updatedAt
+        `);
+        stmt.run(rowId, trip_id, date, totalFleet, remainingFleet, now);
+        try { console.log('[availability-upsert:mercedes]', { trip_id, date, totalFleet, remainingFleet }); } catch(_){ }
+        return res.json({ ok: true, total_fleet: totalFleet, remaining_fleet: remainingFleet });
+      }
       const now = new Date().toISOString();
       const stmt = bookingsDb.prepare('INSERT INTO mode_availability (trip_id,date,mode,capacity,taken_custom,updated_at) VALUES (?,?,?,?,?,?) ON CONFLICT(trip_id,date,mode) DO UPDATE SET capacity=excluded.capacity, taken_custom=excluded.taken_custom, updated_at=excluded.updated_at');
-      stmt.run(trip_id, date, mode, finalCapacity, takenCustom!=null?takenCustom:null, now);
-      try { console.log('[availability-upsert]', { trip_id, date, mode, finalCapacity }); } catch(_){ }
+      stmt.run(trip_id, date, mode, capacity, takenCustom!=null?takenCustom:null, now);
+      try { console.log('[availability-upsert]', { trip_id, date, mode, capacity }); } catch(_){ }
       return res.json({ ok: true });
     } catch (e) { console.error('availability upsert error', e && e.message ? e.message : e); return res.status(500).json({ error: 'Server error' }); }
   });

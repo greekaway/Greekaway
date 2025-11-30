@@ -86,7 +86,7 @@ const fs = require('fs');
       page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }),
       page.$eval('#s2Next', el => el && el.click())
     ]);
-    // Step 3 is standalone page (/step3.html)
+    // Step 3 now lives at the canonical /booking/step3 route
     await page.waitForSelector('.s3-summary', { timeout: 10000 });
   await sleep(300);
     await page.screenshot({ path: 'smoke_step3_summary.png' });

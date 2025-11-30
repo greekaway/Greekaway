@@ -294,6 +294,15 @@ try {
     comment TEXT,
     created_at TEXT
   )`);
+  bookingsDb.exec(`CREATE TABLE IF NOT EXISTS mercedes_availability (
+    id TEXT PRIMARY KEY,
+    trip_id TEXT NOT NULL,
+    date TEXT NOT NULL,
+    total_fleet INTEGER NOT NULL,
+    remaining_fleet INTEGER NOT NULL,
+    updatedAt TEXT NOT NULL
+  )`);
+  bookingsDb.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_mercedes_availability_trip_date ON mercedes_availability (trip_id, date)`);
   bookingsDb.exec(`CREATE TABLE IF NOT EXISTS groups (
     id TEXT PRIMARY KEY,
     trip_id TEXT,
@@ -716,6 +725,50 @@ function mockAssistantReply(message) {
   return `(δοκιμαστική απάντηση) Σε κατάλαβα: "${m}". Πες μου λίγες περισσότερες λεπτομέρειες για να βοηθήσω καλύτερα.`;
 }
 
+const FALLBACK_SUITCASE_LABELS = { small: 'Small', medium: 'Medium', large: 'Large' };
+function normalizeSuitcasesTokens(value){
+  const tokens = [];
+  const pushToken = (text) => {
+    const cleaned = (text == null) ? '' : String(text).trim();
+    if (cleaned) tokens.push(cleaned);
+  };
+  const pushCount = (type, count) => {
+    const qty = Number(count);
+    if (!Number.isFinite(qty) || qty <= 0) return;
+    const key = String(type || '').toLowerCase();
+    const label = FALLBACK_SUITCASE_LABELS[key] || (key ? key.charAt(0).toUpperCase() + key.slice(1) : 'Bag');
+    tokens.push(`${qty}×${label}`);
+  };
+  const parseValue = (input) => {
+    if (Array.isArray(input)) {
+      input.forEach((item) => {
+        if (typeof item === 'string' || typeof item === 'number') pushToken(item);
+        else if (item && typeof item === 'object') {
+          if ('type' in item && 'count' in item) pushCount(item.type, item.count);
+          else Object.entries(item).forEach(([k, v]) => pushCount(k, v));
+        }
+      });
+      return;
+    }
+    if (input && typeof input === 'object') {
+      Object.entries(input).forEach(([k, v]) => pushCount(k, v));
+      return;
+    }
+    if (typeof input === 'number') { pushToken(input); return; }
+    if (typeof input === 'string') {
+      const trimmed = input.trim();
+      if (!trimmed) return;
+      if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+        try { parseValue(JSON.parse(trimmed)); return; } catch(_){ }
+      }
+      pushToken(trimmed);
+    }
+  };
+  if (value === null || value === undefined) return [];
+  parseValue(value);
+  return tokens;
+}
+
 // Assistant routes moved to module (Phase 4)
 try {
   const { registerAssistantRoutes } = require('./src/server/assistant/routes');
@@ -775,6 +828,7 @@ try {
         const currency = (b.currency || 'eur').toString().toLowerCase();
         const pickup = b.pickup || {};
         const suitcases = b.suitcases || {};
+        const suitcases_list = normalizeSuitcasesTokens(suitcases);
         const special_requests = (b.special_requests || '').toString();
         const traveler_profile = b.traveler_profile || {};
         if (!trip_id || !seats || !price_cents) return res.status(400).json({ error: 'Missing required fields' });
@@ -794,7 +848,7 @@ try {
         };
         try {
           const stmt = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          stmt.run(id, 'pending', null, null, null, null, trip_id, seats, price_cents, currency, JSON.stringify(metadata), now, now, date, 0, null, null, null, null, null, null, 0, 'unified_flow', (pickup.address||''), (pickup.lat||null), (pickup.lng||null), JSON.stringify(suitcases||{}), special_requests || '');
+          stmt.run(id, 'pending', null, null, null, null, trip_id, seats, price_cents, currency, JSON.stringify(metadata), now, now, date, 0, null, null, null, null, null, null, 0, 'unified_flow', (pickup.address||''), (pickup.lat||null), (pickup.lng||null), JSON.stringify(suitcases_list), special_requests || '');
         } catch(e2) {
           const stmt2 = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
           stmt2.run(id, 'pending', date, null, null, null, null, trip_id, seats, price_cents, currency, JSON.stringify(metadata), now, now);

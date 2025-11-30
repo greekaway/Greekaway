@@ -36,6 +36,16 @@
     try { window.addEventListener('i18n:changed', showAmount); } catch(_){ }
     try {
       const st = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
+      if (st && st.traveler_profile) {
+        if (!st.traveler_profile.interest) {
+          try {
+            st.traveler_profile.interest = (sessionStorage.getItem('gw_interest') || '').trim();
+            window.GWBookingState && window.GWBookingState.save && window.GWBookingState.save(st);
+          } catch(_) {
+            st.traveler_profile.interest = '';
+          }
+        }
+      }
       let PR_AMOUNT_CENTS = null;
       try {
         const summaryBox = document.getElementById('checkoutSummary');
@@ -215,7 +225,21 @@
         const body = { price_cents: (CHECKOUT_AMOUNT_CENTS != null ? CHECKOUT_AMOUNT_CENTS : 0), currency: (CHECKOUT_CURRENCY || 'eur'), tripId: CHECKOUT_TRIP_ID, duration: CHECKOUT_DURATION, vehicleType: CHECKOUT_VEHICLE_TYPE, seats: (CHECKOUT_SEATS || 1) };
         body.email = emailTrim; body.customerEmail = emailTrim;
         if (!body.vehicleType) body.vehicleType = CHECKOUT_VEHICLE_TYPE;
-        try { const stFull = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null; if (stFull){ body.trip_id = stFull.trip_id || CHECKOUT_TRIP_ID || null; body.mode = stFull.mode || null; body.date = stFull.date || null; body.seats = stFull.seats || CHECKOUT_SEATS || 1; body.pickup = stFull.pickup || null; body.traveler_profile = stFull.traveler_profile || null; if (typeof stFull.price_cents === 'number') body.price_cents = stFull.price_cents; } } catch(_){ }
+        try {
+          const stFull = (window.GWBookingState && window.GWBookingState.get && window.GWBookingState.get()) || null;
+          if (stFull){
+            if (stFull.traveler_profile && !stFull.traveler_profile.interest) {
+              try { stFull.traveler_profile.interest = (sessionStorage.getItem('gw_interest') || '').trim(); window.GWBookingState.save && window.GWBookingState.save(stFull); } catch(_){ stFull.traveler_profile.interest = ''; }
+            }
+            body.trip_id = stFull.trip_id || CHECKOUT_TRIP_ID || null;
+            body.mode = stFull.mode || null;
+            body.date = stFull.date || null;
+            body.seats = stFull.seats || CHECKOUT_SEATS || 1;
+            body.pickup = stFull.pickup || null;
+            body.traveler_profile = stFull.traveler_profile || null;
+            if (typeof stFull.price_cents === 'number') body.price_cents = stFull.price_cents;
+          }
+        } catch(_){ }
         if (CHECKOUT_BOOKING_ID) body.booking_id = CHECKOUT_BOOKING_ID;
         let resp, data; try { resp = await fetch('/api/partners/create-payment-intent', { method:'POST', cache:'no-store', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }); } catch(err){ console.error('[checkout] network error', err); return showResult('i18n:checkout.payment_error', false); }
         try { data = await resp.json(); } catch(_){ data = {}; }

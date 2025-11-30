@@ -1024,8 +1024,8 @@
   }
   function bindFooterCta() {
     if (!state.trip) return;
-    const tripId = state.trip.id || state.trip.slug || state.slug;
-    const target = `/booking/step1?trip=${encodeURIComponent(tripId)}&mode=${encodeURIComponent(state.modeKey || '')}`;
+    const tripSlug = resolveTripSlug();
+    const target = `/booking/step1?trip=${encodeURIComponent(tripSlug)}&mode=${encodeURIComponent(state.modeKey || '')}`;
     const bindAction = (node) => {
       if (!node) return false;
       if (node.tagName && node.tagName.toLowerCase() === 'a') {
@@ -1053,6 +1053,24 @@
       observer.observe(document.body, { childList: true, subtree: true });
       setTimeout(() => observer.disconnect(), 10000);
     }
+  }
+
+  function resolveTripSlug(){
+    const tryVal = (val) => {
+      if (val == null) return '';
+      const str = String(val).trim();
+      return str;
+    };
+    const candidates = [
+      tryVal(state.trip && state.trip.slug),
+      tryVal(state.slug),
+      tryVal(state.tripParam),
+      tryVal(state.trip && state.trip.id)
+    ].filter(Boolean);
+    if (!candidates.length) return '';
+    const looksUuid = (val) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+    const slugMatch = candidates.find((val) => !looksUuid(val));
+    return slugMatch || candidates[0];
   }
 
   function setRootState(next) {

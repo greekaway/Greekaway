@@ -57,6 +57,50 @@ function authMiddleware(req, res, next){
   } catch (e) { return res.status(401).json({ error: 'Invalid token' }); }
 }
 
+const SUITCASE_LABELS = { small: 'Small', medium: 'Medium', large: 'Large' };
+function formatSuitcasesDisplay(raw){
+  const tokens = [];
+  const pushToken = (text) => {
+    const cleaned = (text == null) ? '' : String(text).trim();
+    if (cleaned) tokens.push(cleaned);
+  };
+  const pushCount = (type, count) => {
+    const qty = Number(count);
+    if (!Number.isFinite(qty) || qty <= 0) return;
+    const key = String(type || '').toLowerCase();
+    const label = SUITCASE_LABELS[key] || (key ? key.charAt(0).toUpperCase() + key.slice(1) : 'Bag');
+    tokens.push(`${qty}×${label}`);
+  };
+  const coerce = (input) => {
+    if (Array.isArray(input)) {
+      input.forEach((item) => {
+        if (typeof item === 'string' || typeof item === 'number') pushToken(item);
+        else if (item && typeof item === 'object') {
+          if ('type' in item && 'count' in item) pushCount(item.type, item.count);
+          else Object.entries(item).forEach(([k, v]) => pushCount(k, v));
+        }
+      });
+      return;
+    }
+    if (input && typeof input === 'object') {
+      Object.entries(input).forEach(([k, v]) => pushCount(k, v));
+      return;
+    }
+    if (typeof input === 'number') { pushToken(input); return; }
+    if (typeof input === 'string') {
+      const trimmed = input.trim();
+      if (!trimmed) return;
+      if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+        try { coerce(JSON.parse(trimmed)); return; } catch(_){ }
+      }
+      pushToken(trimmed);
+    }
+  };
+  if (raw === null || raw === undefined) return '';
+  coerce(raw);
+  return tokens.length ? tokens.join(' · ') : (typeof raw === 'string' ? raw : '');
+}
+
 // ---------------- Drivers helper (DB schema + utility) ----------------
 function ensurePartnersSqlite(db){
   try {
@@ -431,7 +475,7 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
         pickup_time: (b.metadata && (b.metadata.pickup_time || b.metadata.time)) || 'N/A',
         customer_name: b.user_name,
         customer_phone: (b.metadata && b.metadata.customer_phone) || null,
-        luggage: (() => { try { const arr = b.suitcases_json ? JSON.parse(b.suitcases_json) : []; return Array.isArray(arr) ? arr.join(', ') : (arr ? String(arr) : null); } catch(_) { return null; } })(),
+        luggage: formatSuitcasesDisplay(b.suitcases_json || b.suitcases || null),
         special_requests: b.special_requests || null,
         status: badgeStatus(b.status),
         dispatch: dispatch[b.id] || null,
@@ -455,7 +499,7 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
           pickup_time: (()=>{ let meta={}; try{ meta=b.metadata?JSON.parse(b.metadata):{} }catch(_){} return meta.pickup_time || meta.time || 'N/A'; })(),
           customer_name: b.user_name,
           customer_phone: (()=>{ let meta={}; try{ meta=b.metadata?JSON.parse(b.metadata):{} }catch(_){} return meta.customer_phone || null; })(),
-          luggage: (()=>{ try { const arr = b.suitcases_json ? JSON.parse(b.suitcases_json) : []; return Array.isArray(arr) ? arr.join(', ') : (arr ? String(arr) : null); } catch(_) { return null; } })(),
+          luggage: formatSuitcasesDisplay(b.suitcases_json || b.suitcases || null),
           special_requests: b.special_requests || null,
           map_link: null,
           status: badgeStatus(b.status),

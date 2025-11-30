@@ -215,8 +215,18 @@
   function readSlug() {
     try {
       const params = new URLSearchParams(window.location.search);
-      const slug = params.get('trip') || params.get('id');
-      return slug ? slug.trim() : '';
+      const slug = params.get('trip');
+      if (slug && slug.trim()) return slug.trim();
+      const legacy = params.get('id');
+      if (legacy && legacy.trim()) {
+        try {
+          params.set('trip', legacy.trim());
+          params.delete('id');
+          replaceSearch(params);
+        } catch (_) {}
+        return legacy.trim();
+      }
+      return '';
     } catch (_) {
       return '';
     }
@@ -367,6 +377,15 @@
       default:
         return 'fa-user';
     }
+  }
+
+  function replaceSearch(params) {
+    try {
+      const query = params.toString();
+      const hash = window.location.hash || '';
+      const next = query ? `${window.location.pathname}?${query}${hash}` : `${window.location.pathname}${hash}`;
+      window.history.replaceState({}, '', next);
+    } catch (_) {}
   }
 
 })();

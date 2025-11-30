@@ -97,7 +97,21 @@
       // Normalize URL params into sessionStorage so Step 3 can render even on direct opens
       try {
         const p = new URLSearchParams(window.location.search);
-        const qId = (p.get('trip') || p.get('id') || '').trim();
+        const qId = (function(params){
+          const tripVal = (params.get('trip') || '').trim();
+          if (tripVal) return tripVal;
+          const legacy = (params.get('id') || '').trim();
+          if (!legacy) return '';
+          try {
+            params.set('trip', legacy);
+            params.delete('id');
+            const query = params.toString();
+            const hash = window.location.hash || '';
+            const next = query ? `${window.location.pathname}?${query}${hash}` : `${window.location.pathname}${hash}`;
+            window.history.replaceState({}, '', next);
+          } catch(_){ }
+          return legacy;
+        })(p);
         const qDate = (p.get('date') || '').trim();
         const qAdults = (p.get('adults') || p.get('seats') || '').trim();
         if (qId && !sessionStorage.getItem('gw_trip_id')) sessionStorage.setItem('gw_trip_id', qId);
@@ -122,7 +136,7 @@
         const langC = (state && state.traveler_profile && state.traveler_profile.language) ? state.traveler_profile.language : (localStorage.getItem('gw_lang')||'el');
         const ageG = (state && state.traveler_profile && state.traveler_profile.age_group) || '';
         const travT = (state && state.traveler_profile && state.traveler_profile.type) || '';
-        const interest = (function(){ try { return sessionStorage.getItem('gw_interest')||''; } catch(_){ return ''; } })();
+        const interest = (function(){ try { return sessionStorage.getItem('gw_interest')||''; } catch(_){ return ''; } })() || (state && state.traveler_profile && state.traveler_profile.interest) || '';
         const social = (state && state.traveler_profile && state.traveler_profile.social) || '';
 
         document.getElementById('vAdults').textContent = String(adults || 0);

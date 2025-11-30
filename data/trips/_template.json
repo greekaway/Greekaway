@@ -156,6 +156,11 @@
       }
     }
   },
+  "modeSettings": {
+    "mercedes": {
+      "fleetSize": 1
+    }
+  },
   "createdAt": "",
   "updatedAt": ""
 }

@@ -39,7 +39,7 @@
 
   async function init() {
     const params = new URLSearchParams(window.location.search);
-    state.tripParam = safeValue(params.get('trip'));
+    state.tripParam = deriveTripParam(params);
     state.modeParam = safeValue(params.get('mode'));
     if (!state.tripParam || !state.modeParam) {
       renderFatal('Χρειαζόμαστε ταξίδι και mode για να συνεχίσουμε. Δοκίμασε ξανά από την εκδρομή.');
@@ -78,10 +78,9 @@
       event.preventDefault();
       if (!state.selectedDate) return;
       try { sessionStorage.setItem('gw_trip_date', state.selectedDate); } catch (_) {}
-      const queryValue = state.tripSlug || state.tripParam;
+      const tripSlug = state.tripSlug || sanitizeSlug(state.tripParam);
       const search = new URLSearchParams({
-        trip: queryValue,
-        id: queryValue,
+        trip: tripSlug,
         mode: state.modeKey,
         date: state.selectedDate
       });
@@ -129,7 +128,7 @@
       const isPast = date < today;
       const available = info ? Number(info.available || 0) : 0;
       const capacity = info ? Number(info.capacity || 0) : 0;
-      const availabilityLabel = formatAvailabilityLabel(available, capacity);
+      const availabilityLabel = formatAvailabilityLabel(available, capacity, state.modeKey === 'mercedes');
       if (available <= 0) cell.classList.add('is-full');
       if (available > 0) cell.classList.add('has-availability');
       if (available > 0 && available <= 4) cell.classList.add('is-limited');
@@ -159,10 +158,23 @@
     dom.availabilityNote.textContent = availableCount
       ? `Αυτόν τον μήνα υπάρχουν ${availableCount} διαθέσιμες ημέρες.`
       : 'Δεν υπάρχουν διαθέσιμες ημέρες σε αυτόν τον μήνα. Δοκίμασε επόμενο μήνα.';
+    if (state.selectedDate) {
+      const info = state.availabilityByDate.get(state.selectedDate) || null;
+      const isMercedes = state.modeKey === 'mercedes';
+      const remainingSource = info && isMercedes
+        ? (info.remaining_fleet != null ? info.remaining_fleet : info.available)
+        : (info && info.available);
+      const remaining = Number(remainingSource) || 0;
+      if (!info || remaining <= 0) {
+        state.selectedDate = '';
+      }
+    }
     if (!state.selectedDate) {
       dom.selectedDateLabel.textContent = '—';
       dom.selectedAvailability.textContent = '—';
       dom.continueBtn.disabled = true;
+    } else {
+      selectDate(state.selectedDate);
     }
   }
 
@@ -170,10 +182,24 @@
     state.selectedDate = iso;
     const info = state.availabilityByDate.get(iso) || null;
     dom.selectedDateLabel.textContent = capitalize(HUMAN_FORMATTER.format(parseISODate(iso)));
-    dom.selectedAvailability.textContent = info && info.available > 0
-      ? `${info.available} διαθέσιμες`
-      : '—';
-    dom.continueBtn.disabled = false;
+    const isMercedes = state.modeKey === 'mercedes';
+    if (isMercedes) {
+      const totalSource = info && (info.total_fleet != null ? info.total_fleet : info.capacity);
+      const totalFleet = Number(totalSource) || 0;
+      const remainingSource = info && (info.remaining_fleet != null ? info.remaining_fleet : info.available);
+      const remainingFleet = Number(remainingSource) || 0;
+      if (info) {
+        dom.selectedAvailability.textContent = `Διαθέσιμα Mercedes: ${remainingFleet} από ${totalFleet}`;
+      } else {
+        dom.selectedAvailability.textContent = '—';
+      }
+      dom.continueBtn.disabled = !(info && remainingFleet > 0);
+    } else {
+      dom.selectedAvailability.textContent = info && info.available > 0
+        ? `${info.available} διαθέσιμες`
+        : '—';
+      dom.continueBtn.disabled = !info;
+    }
     Array.from(dom.calendarGrid.querySelectorAll('.day-cell')).forEach((btn) => {
       btn.classList.toggle('is-selected', btn.dataset.date === iso);
     });
@@ -216,7 +242,13 @@
     try { window.__loadedTrip = state.trip; } catch (_) {}
   }
 
-  function formatAvailabilityLabel(available, capacity) {
+  function formatAvailabilityLabel(available, capacity, isMercedes) {
+    if (isMercedes) {
+      if (capacity && capacity > 0) {
+        return { value: `${available}/${capacity}`, label: 'όχημα' };
+      }
+      return { value: '', label: '' };
+    }
     if (capacity && available > 0) {
       return { value: `${available}/${capacity}`, label: 'θέσεις' };
     }
@@ -322,6 +354,28 @@
 
   function safeValue(value) {
     return value ? String(value).trim() : '';
+  }
+
+  function deriveTripParam(params) {
+    const current = safeValue(params.get('trip'));
+    if (current) return current;
+    const legacy = safeValue(params.get('id'));
+    if (!legacy) return '';
+    try {
+      params.set('trip', legacy);
+      params.delete('id');
+      replaceSearch(params);
+    } catch (_) {}
+    return legacy;
+  }
+
+  function replaceSearch(params) {
+    try {
+      const query = params.toString();
+      const hash = window.location.hash || '';
+      const next = query ? `${window.location.pathname}?${query}${hash}` : `${window.location.pathname}${hash}`;
+      window.history.replaceState({}, '', next);
+    } catch (_) {}
   }
 
   function monthKey(date) {

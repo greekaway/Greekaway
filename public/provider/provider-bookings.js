@@ -7,6 +7,50 @@
     return String(str).replace(/[&<>"']/g, (s) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s] || s));
   }
 
+  function formatSuitcasesDisplay(raw){
+    const tokens = [];
+    const pushToken = (text) => {
+      const cleaned = (text == null) ? '' : String(text).trim();
+      if (cleaned) tokens.push(cleaned);
+    };
+    const pushCount = (type, count) => {
+      const qty = Number(count);
+      if (!Number.isFinite(qty) || qty <= 0) return;
+      const key = String(type || '').toLowerCase();
+      const map = { small: 'Small', medium: 'Medium', large: 'Large' };
+      const label = map[key] || (key ? key.charAt(0).toUpperCase() + key.slice(1) : 'Bag');
+      tokens.push(`${qty}×${label}`);
+    };
+    const parseValue = (value) => {
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          if (typeof item === 'string' || typeof item === 'number') pushToken(item);
+          else if (item && typeof item === 'object') {
+            if ('type' in item && 'count' in item) pushCount(item.type, item.count);
+            else Object.entries(item).forEach(([k, v]) => pushCount(k, v));
+          }
+        });
+        return;
+      }
+      if (value && typeof value === 'object') {
+        Object.entries(value).forEach(([k, v]) => pushCount(k, v));
+        return;
+      }
+      if (typeof value === 'number') { pushToken(value); return; }
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return;
+        if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+          try { parseValue(JSON.parse(trimmed)); return; } catch(_){ }
+        }
+        pushToken(trimmed);
+      }
+    };
+    if (raw === null || raw === undefined) return '';
+    parseValue(raw);
+    return tokens.length ? tokens.join(' · ') : (typeof raw === 'string' ? raw : '');
+  }
+
   function ensureModal(){
     let wrap = document.getElementById('booking-modal-wrapper');
     if (!wrap){
@@ -84,11 +128,8 @@
       const pickupsHtml = pickupPoints.length ? (
         '<ul class="pickups">' + pickupPoints.map((p,i)=> `<li><b>Στάση ${i+1}:</b> ${escapeHtml(String(p.address||'—'))} <span class="muted">(${parseInt(p.pax||1,10)} άτομα)</span></li>`).join('') + '</ul>'
       ) : '<div class="muted">—</div>';
-      let suitcasesText = '';
-      if (bk.suitcases_json){
-        try { const arr = JSON.parse(bk.suitcases_json); if (Array.isArray(arr)) suitcasesText = arr.join(', '); else if (arr) suitcasesText = String(arr); } catch(_) {}
-      } else if (bk.suitcases && Array.isArray(bk.suitcases)) { suitcasesText = bk.suitcases.join(', '); }
-      const luggageDisplay = suitcasesText || (meta.luggage || meta.suitcases ? String(meta.luggage || meta.suitcases) : '') || '—';
+      const suitcasesText = formatSuitcasesDisplay(bk.suitcases_json || bk.suitcases || meta.luggage || meta.suitcases || '');
+      const luggageDisplay = suitcasesText || '—';
       const special = bk.special_requests || meta.special_requests || meta.notes || '—';
       const pickup = bk.pickup_location || bk.pickup_point || meta.pickup_point || meta.pickup || '—';
       const pickupTime = meta.pickup_time || meta.time || '—';

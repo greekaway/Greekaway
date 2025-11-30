@@ -123,6 +123,9 @@
             legacy.initEvent('input', true, true);
             input.dispatchEvent(legacy);
           }
+          const pac = document.querySelector('.pac-container');
+          if (pac) pac.style.display = 'none';
+          input.blur();
         });
         state.autocompleteMap.set(input, autocomplete);
         refreshStatus(item);

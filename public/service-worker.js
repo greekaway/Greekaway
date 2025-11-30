@@ -1,6 +1,5 @@
 // Greekaway PWA – 2025-11-13
 self.skipWaiting();
-self.clientsClaim();
 
 // Explicit cache version to force fresh caches on deploys
 const CACHE_VERSION = 'v20251113';
@@ -9,10 +8,19 @@ const CACHE_VERSION = 'v20251113';
 const CACHE_NAME = `greekaway-pwa-${CACHE_VERSION}`;
 
 // Core assets to pre-cache for fast, offline-first navigation
+const FALLBACK_TRIP_IMAGE = '/images/logo.png';
+const FALLBACK_I18N_INDEX = {
+  languages: ['el','en','fr','de','it','es','pt','ru','nl','sv','he','ko','zh'],
+  version: 'dev-local'
+};
+
 const CORE_ASSETS = [
   '/',
   '/index.html',
   '/trips.html',
+  '/booking/step1',
+  '/booking/step2',
+  '/booking/step3',
   // Checkout MUST NOT be precached to avoid stale Stripe placeholders
   // '/checkout.html',
   '/step2.html',
@@ -63,13 +71,37 @@ const CORE_ASSETS = [
   '/js/i18n.js',
   '/js/footer.js',
   '/js/trip-core.js',
-  '/js/admin-home.js',
   '/js/admin-bookings.js',
   '/js/admin-payments.js',
+  FALLBACK_TRIP_IMAGE,
   '/offline.html',
   '/pwa.css',
   '/css/pwa-fixes.css'
 ];
+
+function buildFallbackI18nResponse() {
+  try {
+    return new Response(JSON.stringify(FALLBACK_I18N_INDEX), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+    });
+  } catch (_) {
+    return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+}
+
+async function getFallbackTripImage() {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(FALLBACK_TRIP_IMAGE);
+    if (cached) return cached.clone();
+  } catch (_) {}
+  try {
+    return await fetch(FALLBACK_TRIP_IMAGE, { cache: 'no-cache' });
+  } catch (_) {
+    return new Response('', { status: 204 });
+  }
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -96,6 +128,28 @@ self.addEventListener('fetch', (event) => {
 
   const isHtmlNavigation = request.mode === 'navigate' ||
     (request.headers.get('accept') || '').includes('text/html');
+
+  try {
+    const url = new URL(request.url);
+    if (url.origin === self.location.origin) {
+      if (url.pathname === '/i18n/index.json') {
+        event.respondWith(
+          fetch(request)
+            .then((res) => (res && res.ok) ? res : buildFallbackI18nResponse())
+            .catch(() => buildFallbackI18nResponse())
+        );
+        return;
+      }
+      if (url.pathname.startsWith('/uploads/trips/')) {
+        event.respondWith(
+          fetch(request)
+            .then((res) => (res && res.ok) ? res : getFallbackTripImage())
+            .catch(() => getFallbackTripImage())
+        );
+        return;
+      }
+    }
+  } catch (_) {}
 
   // Network-only for sensitive endpoints and third-party payment scripts
   try {

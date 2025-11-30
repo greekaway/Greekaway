@@ -597,12 +597,8 @@ body.booking-step1 {
 }
 
 @media (max-width: 520px) {
-	/* Στα κινητά κρατάμε μόνο τον αριθμό διαθεσιμότητας */
-	.day-cell .badge-value {
-		font-size: 0.7em;
-	}
-
-	.day-cell .badge-label {
+	/* Σε κινητά κρύβουμε εντελώς το badge διαθεσιμότητας */
+	.day-cell .day-badge {
 		display: none;
 	}
 }

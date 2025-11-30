@@ -95,6 +95,9 @@ function loadTripTemplate() {
       currency: "EUR",
       tags: [],
       modes: fallbackModes,
+      modeSettings: {
+        mercedes: { fleetSize: 1 },
+      },
       createdAt: "",
       updatedAt: "",
     };

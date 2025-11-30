@@ -3,7 +3,13 @@
   function readJSON(k){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(_){ return null; } }
   function writeJSON(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(_){ } }
   function clearKey(k){ try { localStorage.removeItem(k); } catch(_){ } }
-  function getParams(){ try { return new URLSearchParams(window.location.search); } catch(_){ return new URLSearchParams(''); } }
+  function getParams(){
+    try {
+      const params = new URLSearchParams(window.location.search);
+      normalizeTripParam(params);
+      return params;
+    } catch(_){ return new URLSearchParams(''); }
+  }
   function getLang(){ try { return (window.currentI18n && window.currentI18n.lang) || (localStorage.getItem('gw_lang') || 'el'); } catch(_){ return 'el'; } }
   function computePriceCents(basePricePerPersonCents, seats){
     const b = Math.max(0, parseInt(basePricePerPersonCents || 0, 10) || 0);
@@ -43,7 +49,7 @@
   function clear(){ clearKey(STORAGE_KEY); }
   function ensureBaseFromUrl(existing){
     const p = getParams();
-    const trip_id = (p.get('trip') || p.get('id') || (existing && existing.trip_id) || '').trim();
+    const trip_id = (p.get('trip') || (existing && existing.trip_id) || '').trim();
     const mode = (p.get('mode') || (existing && existing.mode) || localStorage.getItem('trip_mode') || 'van').toLowerCase();
     const date = (p.get('date') || (existing && existing.date) || '').trim();
     return Object.assign({}, existing || {}, { trip_id, mode, date });
@@ -72,23 +78,36 @@
       return { address: addr, place_id, lat, lng };
     } catch(_){ return { address:'', place_id:'', lat:'', lng:'' }; }
   }
+  function getBusPickupFromSession(){
+    try {
+      const raw = sessionStorage.getItem('gw_bus_pickup_point');
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      return obj && obj.id ? obj : null;
+    } catch(_){ return null; }
+  }
   function getTravelerProfileFromSession(){
     try {
       return {
         age_group: sessionStorage.getItem('gw_age_group') || '',
         type: sessionStorage.getItem('gw_traveler_type') || '',
         social: sessionStorage.getItem('gw_sociality') || '',
+        interest: sessionStorage.getItem('gw_interest') || '',
         language: (sessionStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_pref_lang') || localStorage.getItem('gw_lang') || getLang())
       };
-    } catch(_){ return { age_group:'', type:'', social:'', language:getLang() }; }
+    } catch(_){ return { age_group:'', type:'', social:'', interest:'', language:getLang() }; }
   }
   async function buildFromStep2(){
     const base = ensureBaseFromUrl(load());
     const seats = getSeatsFromSession();
     const pickup = getPickupFromSession();
+    const busPickupPoint = getBusPickupFromSession();
     const suitcases = getSuitcasesFromSession();
     const special_requests = (function(){ try { return (sessionStorage.getItem('gw_notes')||'').trim(); } catch(_){ return ''; } })();
     const traveler_profile = getTravelerProfileFromSession();
+    if (!traveler_profile.interest) {
+      try { traveler_profile.interest = sessionStorage.getItem('gw_interest') || ''; } catch(_){ traveler_profile.interest = ''; }
+    }
     let price_cents = 0;
     let currency = 'eur';
     let chargeType = 'per_person';
@@ -124,10 +143,36 @@
       } catch(_){ }
       if (!price_cents) { try { price_cents = parseInt(sessionStorage.getItem('gw_amount_cents')||'0',10)||0; } catch(_){ price_cents = 0; } }
     }
-    const state = Object.assign({}, base, { seats, pickup, suitcases, special_requests, traveler_profile, price_cents, currency });
+    const state = Object.assign({}, base, {
+      seats,
+      pickup,
+      suitcases,
+      special_requests,
+      traveler_profile,
+      price_cents,
+      currency,
+      address: pickup && pickup.address ? pickup.address : '',
+      busPickupPoint: normalizedMode === 'bus' ? (busPickupPoint || null) : null
+    });
     save(state);
     return state;
   }
   function get(){ return load() || null; }
   window.GWBookingState = { key: STORAGE_KEY, load, save, clear, ensureBaseFromUrl, computePriceCents, buildFromStep2, get, getParams };
+
+  function normalizeTripParam(params){
+    try {
+      if (!params) return;
+      const current = (params.get('trip') || '').trim();
+      if (current) return;
+      const legacy = (params.get('id') || '').trim();
+      if (!legacy) return;
+      params.set('trip', legacy);
+      params.delete('id');
+      const query = params.toString();
+      const hash = window.location.hash || '';
+      const next = query ? `${window.location.pathname}?${query}${hash}` : `${window.location.pathname}${hash}`;
+      window.history.replaceState({}, '', next);
+    } catch(_){ }
+  }
 })();
