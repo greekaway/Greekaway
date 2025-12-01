@@ -620,12 +620,40 @@ body.trip-lightbox-open {
 
 
 .stop-list {
+  position: relative;
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: clamp(18px, 3vw, 28px);
   margin: 0;
-  padding: 0;
+  padding: clamp(18px, 2vw, 28px) 0 clamp(24px, 3vw, 36px);
+}
+
+.stop-list::before,
+.stop-list::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: clamp(14px, 3vw, 24px);
+  pointer-events: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.05) 65%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0) 80%);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  opacity: 0.9;
+}
+
+.stop-list::before {
+  top: clamp(0px, 1vw, 12px);
+  transform: translateY(-50%);
+}
+
+.stop-list::after {
+  bottom: clamp(0px, 1vw, 12px);
+  transform: translateY(50%);
 }
 
 .stop-card {
@@ -638,7 +666,24 @@ body.trip-lightbox-open {
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+}
+
+.stop-card:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(-12px, -2vw, -6px);
+  height: clamp(14px, 3vw, 24px);
+  pointer-events: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.05) 65%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0) 80%);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  opacity: 0.9;
 }
 
 .stop-card-head {
@@ -685,8 +730,39 @@ body.trip-lightbox-open {
 }
 
 .stop-time-icon {
-  font-size: 1.05em;
-  line-height: 1;
+  position: relative;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--trip-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+}
+
+.stop-time-icon::before,
+.stop-time-icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: var(--trip-accent);
+  transform-origin: center bottom;
+  border-radius: 999px;
+}
+
+.stop-time-icon::before {
+  width: 1.2px;
+  height: 6px;
+  transform: translate(-50%, -80%) rotate(35deg);
+}
+
+.stop-time-icon::after {
+  width: 1.2px;
+  height: 8px;
+  transform: translate(-50%, -90%) rotate(300deg);
 }
 
 .stop-time-value {

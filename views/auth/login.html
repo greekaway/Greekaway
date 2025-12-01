@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Σύνδεση | Greekaway</title>
+    <link rel="stylesheet" href="/css/auth.css" />
+    <script defer src="/js/auth.js"></script>
+  </head>
+  <body class="auth-body">
+    <header class="auth-hero">
+      <div class="auth-hero__content">
+        <h1>Καλωσήρθατε στο Greekaway</h1>
+        <p>Συνδεθείτε για να συνεχίσετε με τις κρατήσεις σας.</p>
+        <button type="button" class="auth-primary-btn" data-auth-open>Άνοιγμα login</button>
+      </div>
+    </header>
+
+    <section class="auth-modal is-visible" data-auth-modal>
+      <div class="auth-modal__dialog">
+        <button class="auth-modal__close" aria-label="Κλείσιμο" type="button" data-auth-close>&times;</button>
+        <div class="auth-modal__header">
+          <h2>Σύνδεση</h2>
+          <p>Διαλέξτε την προτιμώμενη μέθοδο.</p>
+        </div>
+        <div class="auth-option-grid">
+          <button type="button" class="auth-option" data-auth-method="google">Google</button>
+          <button type="button" class="auth-option" data-auth-method="email">Email</button>
+          <button type="button" class="auth-option" data-auth-method="sms">SMS</button>
+          <button type="button" class="auth-option is-muted" data-auth-method="apple">Apple (soon)</button>
+        </div>
+
+        <form id="email-login-form" class="auth-panel is-hidden" data-auth-panel="email" novalidate>
+          <label for="email-input">Email</label>
+          <input id="email-input" name="email" type="email" placeholder="name@example.com" required />
+          <button type="submit" class="auth-primary-btn">Αποστολή κωδικού</button>
+        </form>
+
+        <form id="sms-login-form" class="auth-panel is-hidden" data-auth-panel="sms" novalidate>
+          <label for="sms-input">Κινητό (π.χ. 3069...)</label>
+          <input id="sms-input" name="phone" type="tel" placeholder="3069XXXXXXX" required />
+          <button type="submit" class="auth-primary-btn">Αποστολή SMS</button>
+        </form>
+
+        <p class="auth-helper">Οι κωδικοί λήγουν σε 10 λεπτά. Ολοκληρώστε την επαλήθευση εγκαίρως.</p>
+        <div class="auth-status" data-auth-status>Επιλέξτε τρόπο σύνδεσης.</div>
+      </div>
+    </section>
+  </body>
+</html>

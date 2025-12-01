@@ -1022,6 +1022,14 @@ try {
 } catch (err) {
   console.warn('partnerOnboarding: failed', err && err.message ? err.message : err);
 }
+// Customer auth routes (email / SMS / Google)
+try {
+  app.use('/auth', require('./routes/auth'));
+  console.log('auth: routes mounted at /auth');
+} catch (err) {
+  console.warn('auth: failed to mount', err && err.message ? err.message : err);
+}
+
 // Partners router (existing legacy routes)
 try {
   app.use('/api/partners', require('./routes/partners'));

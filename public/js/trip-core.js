@@ -365,7 +365,6 @@
         arrival.className = 'stop-card-arrival';
         const icon = document.createElement('span');
         icon.className = 'stop-time-icon';
-        icon.textContent = '🕒';
         icon.setAttribute('aria-hidden', 'true');
         const timeValue = document.createElement('span');
         timeValue.className = 'stop-time-value';

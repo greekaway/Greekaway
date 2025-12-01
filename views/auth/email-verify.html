@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Επαλήθευση Email | Greekaway</title>
+    <link rel="stylesheet" href="/css/auth.css" />
+    <script defer src="/js/auth.js"></script>
+  </head>
+  <body class="auth-body">
+    <section class="auth-card">
+      <a class="auth-back" href="/auth/login">&larr; Επιστροφή στο login</a>
+      <h1>Επαλήθευση Email</h1>
+      <p>Πληκτρολογήστε τον 6-ψήφιο κωδικό που λάβατε στο email.</p>
+      <form id="email-verify-form" class="auth-panel" novalidate>
+        <label for="verify-email">Email</label>
+        <input id="verify-email" name="email" type="email" placeholder="name@example.com" required />
+
+        <label for="verify-code">Κωδικός</label>
+        <input id="verify-code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required />
+
+        <button type="submit" class="auth-primary-btn">Επαλήθευση &amp; σύνδεση</button>
+      </form>
+      <div class="auth-status" data-auth-status>Πληκτρολογήστε τον κωδικό.</div>
+    </section>
+  </body>
+</html>

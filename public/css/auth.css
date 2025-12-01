@@ -1,0 +1,200 @@
+:root {
+  --ga-primary: #1d3557;
+  --ga-secondary: #457b9d;
+  --ga-bg: #f5f7fb;
+  --ga-border: #dbe2ef;
+  --ga-success: #2f9e44;
+  --ga-error: #c92a2a;
+  --ga-info: #364fc7;
+  --ga-muted: #6c757d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body.auth-body {
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--ga-bg);
+  color: #1c1c1c;
+  min-height: 100vh;
+}
+
+.auth-hero {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  background: linear-gradient(120deg, var(--ga-primary), var(--ga-secondary));
+  color: #fff;
+}
+
+.auth-hero__content {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.auth-primary-btn {
+  background: var(--ga-primary);
+  border: none;
+  color: #fff;
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.auth-primary-btn:hover {
+  background: #102a43;
+}
+
+.auth-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 1rem;
+  z-index: 1000;
+}
+
+.auth-modal.is-visible {
+  display: flex;
+}
+
+.auth-modal__dialog {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  width: min(480px, 100%);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
+  position: relative;
+}
+
+.auth-modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--ga-muted);
+}
+
+.auth-modal__header h2 {
+  margin: 0 0 0.5rem;
+}
+
+.auth-option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.auth-option {
+  border: 1px solid var(--ga-border);
+  border-radius: 10px;
+  padding: 0.85rem;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-option.is-active {
+  border-color: var(--ga-primary);
+  box-shadow: 0 0 0 2px rgba(29, 53, 87, 0.15);
+}
+
+.auth-option.is-muted {
+  color: var(--ga-muted);
+}
+
+.auth-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.auth-panel label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.auth-panel input {
+  padding: 0.75rem;
+  border: 1px solid var(--ga-border);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.auth-helper {
+  font-size: 0.9rem;
+  color: var(--ga-muted);
+}
+
+.auth-status {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--ga-border);
+  background: #fff;
+  font-size: 0.95rem;
+}
+
+.auth-status[data-state="error"] {
+  border-color: var(--ga-error);
+  color: var(--ga-error);
+}
+
+.auth-status[data-state="success"] {
+  border-color: var(--ga-success);
+  color: var(--ga-success);
+}
+
+.auth-status[data-state="info"] {
+  border-color: var(--ga-info);
+  color: var(--ga-info);
+}
+
+.auth-status[data-state="loading"] {
+  border-style: dashed;
+  color: var(--ga-secondary);
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+.auth-card {
+  background: #fff;
+  max-width: 420px;
+  margin: 4rem auto;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 15px 40px rgba(15, 23, 42, 0.12);
+}
+
+.auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--ga-secondary);
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .auth-modal__dialog {
+    padding: 1.5rem;
+  }
+  .auth-card {
+    margin: 2rem 1rem;
+    padding: 1.5rem;
+  }
+}
