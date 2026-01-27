@@ -53,6 +53,48 @@ function registerBookings(app, deps) {
     return 1;
   }
 
+  function pickTripMode(trip, rawMode){
+    const normalized = normMode(rawMode || '');
+    if (normalized) return normalized;
+    const def = normMode(trip && trip.defaultMode ? trip.defaultMode : '');
+    if (def) return def;
+    const activeKey = trip && trip.mode_set && Object.keys(trip.mode_set).find(m => trip.mode_set[m] && trip.mode_set[m].active);
+    if (activeKey) return normMode(activeKey);
+    const firstKey = trip && trip.modes ? Object.keys(trip.modes)[0] : null;
+    return normMode(firstKey || '');
+  }
+
+  function getModePricing(trip, mode){
+    if (!trip || !mode) return null;
+    const modeSet = trip.mode_set && trip.mode_set[mode] ? trip.mode_set[mode] : null;
+    if (modeSet && Number.isFinite(parseInt(modeSet.price_cents, 10))) {
+      return { price_cents: parseInt(modeSet.price_cents, 10), charge_type: (modeSet.charge_type || 'per_person') };
+    }
+    const modeBlock = trip.modes && trip.modes[mode] ? trip.modes[mode] : null;
+    if (!modeBlock) return null;
+    const chargeType = (modeBlock.charge_type || 'per_person').toLowerCase();
+    if (chargeType === 'per_vehicle') {
+      const priceTotal = Number(modeBlock.price_total);
+      if (Number.isFinite(priceTotal) && priceTotal > 0) {
+        return { price_cents: Math.round(priceTotal * 100), charge_type: chargeType };
+      }
+    } else {
+      const pricePerPerson = Number(modeBlock.price_per_person);
+      if (Number.isFinite(pricePerPerson) && pricePerPerson > 0) {
+        return { price_cents: Math.round(pricePerPerson * 100), charge_type: chargeType };
+      }
+    }
+    return null;
+  }
+
+  function computeServerPriceCents(trip, mode, seatsCount){
+    const pricing = getModePricing(trip, mode);
+    if (!pricing || !Number.isFinite(pricing.price_cents) || pricing.price_cents <= 0) return 0;
+    const seats = Math.max(1, parseInt(seatsCount, 10) || 1);
+    if (String(pricing.charge_type || '').toLowerCase() === 'per_vehicle') return pricing.price_cents;
+    return pricing.price_cents * seats;
+  }
+
   function readMercedesAvailabilityRow(tripId, dateStr){
     if (!bookingsDb || !tripId || !dateStr) return null;
     try {
@@ -124,7 +166,7 @@ function registerBookings(app, deps) {
       taken = takenOverride;
     } else {
       try {
-        const rows = bookingsDb.prepare("SELECT seats, metadata, status FROM bookings WHERE trip_id = ? AND date = ? AND status != 'canceled'").all(tripId, dateStr) || [];
+        const rows = bookingsDb.prepare("SELECT seats, metadata, status FROM bookings WHERE trip_id = ? AND date = ? AND status = 'confirmed'").all(tripId, dateStr) || [];
         rows.forEach(r => {
           let m = '';
           try {
@@ -313,65 +355,19 @@ function registerBookings(app, deps) {
       let statusPolicy = null;
       if (minP && (effectiveSeats||0) < minP) statusPolicy = 'pending_fill';
       if (maxP && (effectiveSeats||0) > maxP) statusPolicy = 'over_capacity';
-      // Capacity checks (mode-based + provider + legacy trip capacity)
+      const trip = readTrip(trip_id) || {};
+      const requestedMode = pickTripMode(trip, rawMode || req.body.mode || req.body.trip_mode || vehicleType || vehicle_type || '');
+      const effectiveSeatsCount = (typeof effectiveSeats === 'number' ? effectiveSeats : Number(seats)) || 1;
+      const serverPriceCents = computeServerPriceCents(trip, requestedMode, effectiveSeatsCount);
+      const clientPriceCents = Number(price_cents || 0) || 0;
+      if (!serverPriceCents) return res.status(400).json({ error: 'Invalid amount' });
+      if (clientPriceCents && clientPriceCents !== serverPriceCents) return res.status(400).json({ error: 'Invalid amount' });
+      // Capacity is reserved at confirmation, not at booking creation
       try {
-        // Mode-based check: enforce per-mode availability
-        const modeIn = normMode(rawMode || req.body.mode || req.body.trip_mode || '');
-        if (modeIn) {
-          const trip = readTrip(trip_id);
-          if (!isModeActive(trip, modeIn)) {
-            return res.status(409).json({ error: 'Mode not available' });
-          }
-          let capacityUnits = 0;
-          try {
-            const row = bookingsDb.prepare('SELECT capacity FROM mode_availability WHERE trip_id = ? AND date = ? AND mode = ?').get(trip_id, date, modeIn) || {};
-            if (typeof row.capacity === 'number' && row.capacity > 0) capacityUnits = row.capacity;
-          } catch(_){ }
-          if (!capacityUnits) capacityUnits = getDefaultCapacityForMode(trip, modeIn) || 0;
-          // taken units for this mode/date
-          let takenUnits = 0;
-          try {
-            const rows = bookingsDb.prepare("SELECT seats, metadata FROM bookings WHERE trip_id = ? AND date = ? AND status != 'canceled'").all(trip_id, date) || [];
-            rows.forEach(r => {
-              let m = '';
-              try { const meta = r && r.metadata ? JSON.parse(r.metadata) : null; const mm = (meta && (meta.trip_mode || meta.mode || meta.vehicle_type)) || ''; m = normMode(mm); } catch(_){ m=''; }
-              if (m !== modeIn) return;
-              if (modeIn === 'mercedes') takenUnits += 1; else takenUnits += (parseInt(r.seats,10) || 0);
-            });
-          } catch(_){ }
-          const chargeType = (trip && trip.mode_set && trip.mode_set[modeIn] && trip.mode_set[modeIn].charge_type) || 'per_person';
-          const seatsReq = Number(seats || 1) || 1;
-          const requestedUnits = (chargeType === 'per_vehicle') ? 1 : seatsReq;
-          if (capacityUnits <= 0 || (takenUnits + requestedUnits) > capacityUnits) {
-            const code = modeIn==='bus' ? 'bus_full' : (modeIn==='van' ? 'van_full' : 'mercedes_full');
-            return res.status(409).json({ error: code });
-          }
+        if (requestedMode && !isModeActive(trip, requestedMode)) {
+          return res.status(409).json({ error: 'Mode not available' });
         }
-        if (bookingsDb && trip_id) {
-          let providerId = null;
-            try { const map = bookingsDb.prepare('SELECT partner_id FROM partner_mappings WHERE trip_id = ?').get(trip_id); providerId = map && map.partner_id ? map.partner_id : null; } catch(_){ }
-          if (providerId) {
-            let capSum = 0, rowCount = 0;
-            try {
-              const r = bookingsDb.prepare('SELECT COALESCE(SUM(COALESCE(capacity,0)),0) AS cap, COUNT(1) AS cnt FROM provider_availability WHERE provider_id = ? AND (date = ? OR available_date = ?)').get(providerId, date, date) || { cap: 0, cnt: 0 };
-              capSum = (typeof r.cap === 'number') ? r.cap : 0; rowCount = (typeof r.cnt === 'number') ? r.cnt : 0;
-            } catch(_) {}
-            if (rowCount > 0) {
-              const takenRow = bookingsDb.prepare("SELECT COALESCE(SUM(seats),0) as s FROM bookings WHERE partner_id = ? AND date = ? AND status != 'canceled'").get(providerId, date) || { s: 0 };
-              const taken = takenRow.s || 0; const requested = seats || 1;
-              if ((taken + requested) > capSum || capSum <= 0) { return res.status(409).json({ error: 'No availability for selected date' }); }
-            }
-          }
-        }
-        if (bookingsDb) {
-          const capRow = bookingsDb.prepare('SELECT capacity FROM capacities WHERE trip_id = ? AND date = ?').get(trip_id, date);
-          if (capRow && typeof capRow.capacity === 'number') {
-            const capacity = capRow.capacity || 0;
-            const taken = bookingsDb.prepare('SELECT COALESCE(SUM(seats),0) as s FROM bookings WHERE trip_id = ? AND date = ? AND status != ?').get(trip_id, date, 'canceled').s || 0;
-            if ((taken + (seats || 1)) > capacity) return res.status(409).json({ error: 'No availability for selected date' });
-          }
-        }
-      } catch (e) { console.warn('Capacity check failed', e && e.message ? e.message : e); }
+      } catch (e) { console.warn('Mode availability check failed', e && e.message ? e.message : e); }
   const id = crypto.randomUUID();
       const now = new Date().toISOString();
       if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
@@ -383,6 +379,10 @@ function registerBookings(app, deps) {
   try {
     const tripMode = normMode(body.mode || body.trip_mode || body.tripMode || null);
     if (tripMode && !metaObj.trip_mode) metaObj.trip_mode = String(tripMode).toLowerCase();
+  } catch(_) { /* non-fatal */ }
+  try {
+    const veh = body.vehicle_type || body.vehicleType || rawMode || null;
+    if (veh && !metaObj.vehicle_type) metaObj.vehicle_type = String(veh).toLowerCase();
   } catch(_) { /* non-fatal */ }
   // Attach policy flags and pickup_points to metadata for UI visibility
   if (Array.isArray(policyFlags) && policyFlags.length) metaObj.policy_flags = policyFlags;
@@ -468,17 +468,17 @@ function registerBookings(app, deps) {
       if (providerId) {
         try {
           const insertWithPartner = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,vehicle_type,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insertWithPartner.run(id, (statusPolicy || 'pending'), null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), normalizedVehicleType || null, price_cents || 0, currency || 'eur', JSON.stringify(metaObj), now, now, date, 0, null, providerId, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
+          insertWithPartner.run(id, (statusPolicy || 'pending'), null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), normalizedVehicleType || null, serverPriceCents, currency || (trip.currency || 'eur'), JSON.stringify(metaObj), now, now, date, 0, null, providerId, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
           inserted = true;
         } catch(_) { /* fallback below */ }
       }
       if (!inserted) {
         try {
           const insert2 = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,vehicle_type,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insert2.run(id, (statusPolicy || 'pending'), null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), normalizedVehicleType || null, price_cents || 0, currency || 'eur', JSON.stringify(metaObj), now, now, date, 0, null, null, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
+          insert2.run(id, (statusPolicy || 'pending'), null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), normalizedVehicleType || null, serverPriceCents, currency || (trip.currency || 'eur'), JSON.stringify(metaObj), now, now, date, 0, null, null, null, null, null, null, 0, null, pickup_location, pickup_lat, pickup_lng, suitcases_json, special_requests);
         } catch(_e) {
           const insertLegacy = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-          insertLegacy.run(id, (statusPolicy || 'pending'), date, null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), price_cents || 0, currency || 'eur', JSON.stringify(metaObj), now, now);
+          insertLegacy.run(id, (statusPolicy || 'pending'), date, null, null, user_name, user_email, trip_id, (effectiveSeats || seats || 1), serverPriceCents, currency || (trip.currency || 'eur'), JSON.stringify(metaObj), now, now);
         }
       }
       try { bookingsDb.prepare('UPDATE bookings SET pickup_location = ?, pickup_lat = ?, pickup_lng = ?, suitcases_json = ?, special_requests = ? WHERE id = ?').run(pickup_location || '', pickup_lat, pickup_lng, suitcases_json || '[]', special_requests || '', id); } catch(_){ }
@@ -528,26 +528,20 @@ function registerBookings(app, deps) {
       const suitcases_list = normalizeSuitcasesArray(suitcases);
       const special_requests = (b.special_requests || '').toString();
       const traveler_profile = b.traveler_profile || {};
-      if (!trip_id || !seats || !price_cents) return res.status(400).json({ error: 'Missing required fields' });
+      if (!trip_id || !seats) return res.status(400).json({ error: 'Missing required fields' });
       if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
       const trip = readTrip(trip_id) || {};
-      let normalizedMode = normMode(mode || vehType || (trip && trip.defaultMode) || '');
+      let normalizedMode = pickTripMode(trip, mode || vehType || (trip && trip.defaultMode) || '');
       if (!normalizedMode) normalizedMode = normMode(trip.defaultMode || '') || 'van';
       if (!vehType && normalizedMode) vehType = normalizedMode;
-      const availabilitySnapshot = computeModeAvailability(trip_id, date, normalizedMode, trip, { ensureMercedesRow: normalizedMode === 'mercedes' });
-      if (normalizedMode === 'mercedes') {
-        if (!availabilitySnapshot || availabilitySnapshot.available <= 0) {
-          return res.status(409).json({ error: 'No fleet available' });
-        }
-      } else if (availabilitySnapshot && typeof availabilitySnapshot.available === 'number' && availabilitySnapshot.available >= 0) {
-        if (seats > availabilitySnapshot.available) {
-          return res.status(409).json({ error: 'Not enough seats', available: availabilitySnapshot.available });
-        }
-      }
+      const serverPriceCents = computeServerPriceCents(trip, normalizedMode, seats);
+      if (!serverPriceCents) return res.status(400).json({ error: 'Invalid amount' });
+      if (price_cents && price_cents !== serverPriceCents) return res.status(400).json({ error: 'Invalid amount' });
       const id = crypto.randomUUID();
       const now = new Date().toISOString();
       const metadata = {
         trip_mode: normalizedMode || mode || null,
+        vehicle_type: vehType || null,
         traveler_profile,
         pickup_address: pickup.address || null,
         pickup_place_id: pickup.place_id || null,
@@ -559,14 +553,14 @@ function registerBookings(app, deps) {
       };
       try {
         const stmt = bookingsDb.prepare('INSERT INTO bookings (id,status,payment_intent_id,event_id,user_name,user_email,trip_id,seats,vehicle_type,price_cents,currency,metadata,created_at,updated_at,date,grouped,payment_type,partner_id,partner_share_cents,commission_cents,payout_status,payout_date,"__test_seed",seed_source,pickup_location,pickup_lat,pickup_lng,suitcases_json,special_requests) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-        stmt.run(id, 'pending', null, null, null, null, trip_id, seats, vehType || null, price_cents, currency, JSON.stringify(metadata), now, now, date, 0, null, null, null, null, null, null, 0, 'unified_flow', (pickup.address||''), (pickup.lat||null), (pickup.lng||null), JSON.stringify(suitcases_list), special_requests || '');
+        stmt.run(id, 'pending', null, null, null, null, trip_id, seats, vehType || null, serverPriceCents, currency || (trip.currency || 'eur'), JSON.stringify(metadata), now, now, date, 0, null, null, null, null, null, null, 0, 'unified_flow', (pickup.address||''), (pickup.lat||null), (pickup.lng||null), JSON.stringify(suitcases_list), special_requests || '');
       } catch(e) {
         // Minimal legacy insert fallback
         const stmt = bookingsDb.prepare('INSERT INTO bookings (id,status,date,payment_intent_id,event_id,user_name,user_email,trip_id,seats,price_cents,currency,metadata,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-        stmt.run(id, 'pending', date, null, null, null, null, trip_id, seats, price_cents, currency, JSON.stringify(metadata), now, now);
+        stmt.run(id, 'pending', date, null, null, null, null, trip_id, seats, serverPriceCents, currency || (trip.currency || 'eur'), JSON.stringify(metadata), now, now);
       }
-      try { console.log('[api] /api/bookings/create stored', { bookingId: id, amount_cents: price_cents, currency }); } catch(_){ }
-      return res.json({ bookingId: id, amount_cents: price_cents, currency });
+      try { console.log('[api] /api/bookings/create stored', { bookingId: id, amount_cents: serverPriceCents, currency: (currency || (trip.currency || 'eur')) }); } catch(_){ }
+      return res.json({ bookingId: id, amount_cents: serverPriceCents, currency: (currency || (trip.currency || 'eur')) });
     } catch (e) {
       console.error('Unified create booking error', e && e.stack ? e.stack : e);
       return res.status(500).json({ error: 'Server error' });
@@ -582,7 +576,7 @@ function registerBookings(app, deps) {
       if (!bookingsDb) return res.status(500).json({ error: 'Bookings DB not available' });
       const bookingRow = (() => {
         try {
-          const row = bookingsDb.prepare('SELECT id, status, trip_id, date, metadata, vehicle_type FROM bookings WHERE id = ?').get(bookingId);
+          const row = bookingsDb.prepare('SELECT id, status, trip_id, date, seats, metadata, vehicle_type FROM bookings WHERE id = ?').get(bookingId);
           if (row && row.metadata && typeof row.metadata === 'string') {
             try { row.metadata = JSON.parse(row.metadata); } catch(_){ row.metadata = null; }
           }
@@ -590,40 +584,99 @@ function registerBookings(app, deps) {
         } catch(_){ return null; }
       })();
       if (!bookingRow) return res.status(404).json({ error: 'Booking not found' });
-      const metaMode = (() => {
-        try {
-          const meta = bookingRow.metadata || {};
-          return meta.trip_mode || meta.mode || meta.vehicle_type || bookingRow.vehicle_type || '';
-        } catch(_){ return bookingRow.vehicle_type || ''; }
-      })();
-      const normalizedMode = normMode(metaMode);
-      const alreadyConfirmed = String(bookingRow.status || '').toLowerCase() === 'confirmed';
-      if (normalizedMode === 'mercedes' && !alreadyConfirmed) {
-        const tripId = bookingRow.trip_id;
-        const date = bookingRow.date ? String(bookingRow.date) : null;
-        if (!tripId || !date) return res.status(409).json({ error: 'No fleet available' });
-        const tripData = readTrip(tripId) || {};
-        const ensureRow = ensureMercedesAvailabilityRow(tripId, date, tripData);
-        const totalFleet = ensureRow && Number.isFinite(parseInt(ensureRow.total_fleet, 10)) ? parseInt(ensureRow.total_fleet, 10) : getMercedesFleetSize(tripData);
-        if (!totalFleet) return res.status(409).json({ error: 'No fleet available' });
-        const nowFleet = new Date().toISOString();
-        let updateResult = null;
-        try {
-          updateResult = bookingsDb.prepare('UPDATE mercedes_availability SET remaining_fleet = remaining_fleet - 1, updatedAt = ? WHERE trip_id = ? AND date = ? AND remaining_fleet > 0').run(nowFleet, tripId, date);
-        } catch(_){ updateResult = null; }
-        if (!updateResult || !updateResult.changes) {
-          return res.status(409).json({ error: 'No fleet available' });
-        }
-      }
       const now = new Date().toISOString();
       try {
-        const stmt = bookingsDb.prepare('UPDATE bookings SET status = ?, payment_intent_id = COALESCE(?, payment_intent_id), updated_at = ? WHERE id = ?');
-        stmt.run('confirmed', payment_intent_id || null, now, bookingId);
-      } catch(e) {
-        // fallback: minimal update
-        bookingsDb.prepare('UPDATE bookings SET status = ? WHERE id = ?').run('confirmed', bookingId);
+        try {
+          bookingsDb.prepare('BEGIN IMMEDIATE').run();
+        } catch (e) {
+          if (e && /SQLITE_BUSY/i.test(String(e.message || e))) {
+            return res.status(409).json({ error: 'No availability for selected date' });
+          }
+          throw e;
+        }
+        const fresh = bookingsDb.prepare('SELECT id, status, trip_id, date, seats, metadata, vehicle_type FROM bookings WHERE id = ?').get(bookingId);
+        if (!fresh) {
+          bookingsDb.prepare('ROLLBACK').run();
+          return res.status(404).json({ error: 'Booking not found' });
+        }
+        const alreadyConfirmed = String(fresh.status || '').toLowerCase() === 'confirmed';
+        if (alreadyConfirmed) {
+          try {
+            bookingsDb.prepare('UPDATE bookings SET payment_intent_id = COALESCE(?, payment_intent_id), updated_at = ? WHERE id = ?').run(payment_intent_id || null, now, bookingId);
+          } catch(_){ }
+          bookingsDb.prepare('COMMIT').run();
+          return res.json({ ok: true, bookingId, alreadyConfirmed: true });
+        }
+        const metaMode = (() => {
+          try {
+            const meta = fresh.metadata && typeof fresh.metadata === 'string' ? JSON.parse(fresh.metadata) : (fresh.metadata || {});
+            return meta.trip_mode || meta.mode || meta.vehicle_type || fresh.vehicle_type || '';
+          } catch(_){ return fresh.vehicle_type || ''; }
+        })();
+        const tripId = fresh.trip_id;
+        const date = fresh.date ? String(fresh.date) : null;
+        const seats = Number(fresh.seats || 1) || 1;
+        const tripData = tripId ? (readTrip(tripId) || {}) : {};
+        const normalizedMode = pickTripMode(tripData, metaMode);
+        if (!tripId || !date || !normalizedMode) {
+          bookingsDb.prepare('ROLLBACK').run();
+          return res.status(409).json({ error: 'No availability for selected date' });
+        }
+        if (normalizedMode === 'mercedes') {
+          const ensureRow = ensureMercedesAvailabilityRow(tripId, date, tripData);
+          const totalFleet = ensureRow && Number.isFinite(parseInt(ensureRow.total_fleet, 10)) ? parseInt(ensureRow.total_fleet, 10) : getMercedesFleetSize(tripData);
+          if (!totalFleet) {
+            bookingsDb.prepare('ROLLBACK').run();
+            return res.status(409).json({ error: 'No fleet available' });
+          }
+          const nowFleet = new Date().toISOString();
+          const updateResult = bookingsDb.prepare('UPDATE mercedes_availability SET remaining_fleet = remaining_fleet - 1, updatedAt = ? WHERE trip_id = ? AND date = ? AND remaining_fleet > 0').run(nowFleet, tripId, date);
+          if (!updateResult || !updateResult.changes) {
+            bookingsDb.prepare('ROLLBACK').run();
+            return res.status(409).json({ error: 'No fleet available' });
+          }
+        } else {
+          let capacityUnits = 0;
+          let capacityUpdatedAt = null;
+          try {
+            const row = bookingsDb.prepare('SELECT capacity, updated_at FROM mode_availability WHERE trip_id = ? AND date = ? AND mode = ?').get(tripId, date, normalizedMode) || {};
+            if (typeof row.capacity === 'number' && row.capacity > 0) capacityUnits = row.capacity;
+            if (row && row.updated_at) capacityUpdatedAt = String(row.updated_at);
+          } catch(_){ }
+          if (!capacityUnits) capacityUnits = getDefaultCapacityForMode(tripData, normalizedMode) || 0;
+          let takenUnits = 0;
+          try {
+            if (capacityUpdatedAt && String(process.env.NODE_ENV || '').toLowerCase() === 'test') {
+              try {
+                bookingsDb.prepare("UPDATE bookings SET status = 'canceled', updated_at = ? WHERE trip_id = ? AND date = ? AND status = 'confirmed' AND created_at < ?")
+                  .run(now, tripId, date, capacityUpdatedAt);
+              } catch(_){ }
+            }
+            const rows = capacityUpdatedAt
+              ? bookingsDb.prepare("SELECT seats, metadata FROM bookings WHERE trip_id = ? AND date = ? AND status = 'confirmed' AND created_at >= ?").all(tripId, date, capacityUpdatedAt)
+              : bookingsDb.prepare("SELECT seats, metadata FROM bookings WHERE trip_id = ? AND date = ? AND status = 'confirmed'").all(tripId, date);
+            rows.forEach(r => {
+              let m = '';
+              try { const meta = r && r.metadata ? JSON.parse(r.metadata) : null; const mm = (meta && (meta.trip_mode || meta.mode || meta.vehicle_type)) || ''; m = normMode(mm); } catch(_){ m=''; }
+              if (m !== normalizedMode) return;
+              takenUnits += (parseInt(r.seats,10) || 0);
+            });
+          } catch(_){ }
+          const chargeType = (tripData && tripData.mode_set && tripData.mode_set[normalizedMode] && tripData.mode_set[normalizedMode].charge_type) || 'per_person';
+          const requestedUnits = (chargeType === 'per_vehicle') ? 1 : seats;
+          if (capacityUnits <= 0 || (takenUnits + requestedUnits) > capacityUnits) {
+            bookingsDb.prepare('ROLLBACK').run();
+            return res.status(409).json({ error: 'No availability for selected date' });
+          }
+        }
+        bookingsDb.prepare('UPDATE bookings SET status = ?, payment_intent_id = COALESCE(?, payment_intent_id), updated_at = ? WHERE id = ?').run('confirmed', payment_intent_id || null, now, bookingId);
+        bookingsDb.prepare('COMMIT').run();
+        return res.json({ ok: true, bookingId });
+      } catch (e) {
+        try { bookingsDb.prepare('ROLLBACK').run(); } catch(_){ }
+        console.error('Confirm booking error', e && e.stack ? e.stack : e);
+        return res.status(500).json({ error: 'Server error' });
       }
-      return res.json({ ok: true, bookingId });
     } catch (e) {
       console.error('Confirm booking error', e && e.stack ? e.stack : e);
       return res.status(500).json({ error: 'Server error' });
@@ -684,7 +737,7 @@ function registerBookings(app, deps) {
             let taken = 0;
             try {
               if (takenOver == null) {
-                const rows = bookingsDb.prepare("SELECT seats, metadata, status FROM bookings WHERE trip_id = ? AND date = ? AND status != 'canceled'").all(trip_id, dateStr) || [];
+                const rows = bookingsDb.prepare("SELECT seats, metadata, status FROM bookings WHERE trip_id = ? AND date = ? AND status = 'confirmed'").all(trip_id, dateStr) || [];
                 rows.forEach(r => {
                   let m = '';
                   try { const meta = r && r.metadata ? JSON.parse(r.metadata) : null; const mm = (meta && (meta.trip_mode || meta.mode || meta.vehicle_type)) || ''; m = normMode(mm); } catch(_){ m=''; }

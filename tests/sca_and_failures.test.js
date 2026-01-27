@@ -23,6 +23,8 @@ function fetch(url, opts) {
 }
 
 const CWD = path.join(__dirname, '..');
+const PORT = process.env.TEST_PORT || '4103';
+const BASE_URL = `http://localhost:${PORT}`;
 jest.setTimeout(30000);
 
 describe('SCA and failed payment handling', () => {
@@ -31,6 +33,7 @@ describe('SCA and failed payment handling', () => {
     const env = Object.assign({}, process.env);
     env.STRIPE_WEBHOOK_SECRET = '';
     env.ALLOW_TEST_WEBHOOK = 'true';
+    env.PORT = String(PORT);
     server = spawn('node', ['server.js'], { cwd: CWD, env, stdio: ['ignore','pipe','pipe'] });
     await new Promise(resolve => setTimeout(resolve, 1200));
   });
@@ -43,9 +46,9 @@ describe('SCA and failed payment handling', () => {
     const succeeded = { id: evtId + '_succeeded', type: 'payment_intent.succeeded', data: { object: { id: piId, amount: 2500, currency: 'eur' } } };
 
     // post created (not required to persist), then succeeded
-    const p1 = await fetch('http://localhost:3000/webhook/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(created) });
+    const p1 = await fetch(`${BASE_URL}/webhook/test`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(created) });
     expect(p1.status).toBe(200);
-    const p2 = await fetch('http://localhost:3000/webhook/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(succeeded) });
+    const p2 = await fetch(`${BASE_URL}/webhook/test`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(succeeded) });
     expect(p2.status).toBe(200);
 
     // check DB
@@ -66,7 +69,7 @@ describe('SCA and failed payment handling', () => {
     const evtFail = { id: 'evt_fail_' + base, type: 'payment_intent.payment_failed', data: { object: { id: piFail, amount: 1800, currency: 'eur' } } };
     const evtSucc = { id: 'evt_succ_' + base, type: 'payment_intent.succeeded', data: { object: { id: piFail, amount: 1800, currency: 'eur' } } };
 
-    const rFail = await fetch('http://localhost:3000/webhook/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(evtFail) });
+    const rFail = await fetch(`${BASE_URL}/webhook/test`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(evtFail) });
     expect(rFail.status).toBe(200);
 
     // check failed
@@ -79,7 +82,7 @@ describe('SCA and failed payment handling', () => {
     db.close();
 
     // Now send succeeded event (out-of-order resolution)
-    const rSucc = await fetch('http://localhost:3000/webhook/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(evtSucc) });
+    const rSucc = await fetch(`${BASE_URL}/webhook/test`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(evtSucc) });
     expect(rSucc.status).toBe(200);
 
     const db2 = new Database(dbPath, { readonly: true });

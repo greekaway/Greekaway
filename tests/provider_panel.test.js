@@ -37,6 +37,8 @@ function fetchLite(url, opts) {
 }
 
 const CWD = path.join(__dirname, '..');
+const PORT = process.env.TEST_PORT || '4105';
+const BASE_URL = `http://localhost:${PORT}`;
 jest.setTimeout(30000);
 
 // Demo seeding has been removed from the repo. Only run this suite if explicitly enabled
@@ -61,6 +63,7 @@ describeMaybe('provider panel API', () => {
     env.ALLOW_TEST_WEBHOOK = 'true';
     env.DISPATCH_ENABLED = 'false';
     env.JWT_SECRET = 'jest-secret';
+    env.PORT = String(PORT);
     server = spawn('node', ['server.js'], { cwd: CWD, env, stdio: ['ignore', 'pipe', 'pipe'] });
     await new Promise((resolve) => setTimeout(resolve, 1200));
   });
@@ -70,7 +73,7 @@ describeMaybe('provider panel API', () => {
   });
 
   test('login and list bookings', async () => {
-    const login = await fetchLite('http://localhost:3000/provider/auth/login', {
+    const login = await fetchLite(`${BASE_URL}/provider/auth/login`, {
       method: 'POST',
       body: JSON.stringify({ email: process.env.TEST_DRIVER_EMAIL || 'driver@example.com', password: 'TestPass123' }),
     });
@@ -79,7 +82,7 @@ describeMaybe('provider panel API', () => {
     expect(j && j.ok).toBe(true);
     expect(j && j.token).toBeDefined();
 
-    const list = await fetchLite('http://localhost:3000/provider/api/bookings', {
+    const list = await fetchLite(`${BASE_URL}/provider/api/bookings`, {
       method: 'GET',
       headers: { Authorization: 'Bearer ' + j.token },
     });
@@ -99,7 +102,7 @@ describeMaybe('provider panel API', () => {
   });
 
   test('provider page serves HTML with footer placeholder', async () => {
-    const page = await fetchLite('http://localhost:3000/provider/bookings');
+    const page = await fetchLite(`${BASE_URL}/provider/bookings`);
     expect(page.status).toBe(200);
     const html = await page.text();
     expect(typeof html).toBe('string');

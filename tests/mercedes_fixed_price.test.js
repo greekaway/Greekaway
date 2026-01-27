@@ -1,59 +1,57 @@
-// Test fixed-price logic for mercedes/private on Acropolis.
-// Ensures serverComputedCents = 2000 regardless of seats.
-process.env.NODE_ENV = 'test';
-process.env.ALLOW_LIVE_STRIPE_IN_DEV = '1'; // allow PI if live key present
-process.env.ADMIN_USER = process.env.ADMIN_USER || 'admin';
-process.env.ADMIN_PASS = process.env.ADMIN_PASS || 'pass';
+const { spawn } = require('child_process');
+const path = require('path');
+const http = require('http');
 
-require('../server.js');
-const assert = require('assert');
-
-function postJson(path, body){
-  return fetch(`http://127.0.0.1:3000${path}`, {
-    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
-  }).then(r => r.json().then(j => ({ ok:r.ok, status:r.status, data:j })));
-}
-function getJson(path, opts={}){
-  return fetch(`http://127.0.0.1:3000${path}`, opts).then(r => r.json().then(j => ({ ok:r.ok, status:r.status, data:j })));
-}
-
-async function scenario(seats){
-  const price_cents = 2000; // client submitted fixed price
-  const piReq = { tripId:'acropolis', vehicleType:'mercedes', seats, price_cents, currency:'eur', customerEmail:`m_${seats}@example.com` };
-  const diagAuth = Buffer.from(`${process.env.ADMIN_USER}:${process.env.ADMIN_PASS}`).toString('base64');
-  // Diagnose endpoint first (does not create PI)
-  const auth = Buffer.from(`${process.env.ADMIN_USER}:${process.env.ADMIN_PASS}`).toString('base64');
-  const diagResp = await fetch('http://127.0.0.1:3000/api/partners/admin/payment-diagnose', {
-    method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Basic ${auth}` }, body: JSON.stringify({ tripId:'acropolis', vehicleType:'mercedes', seats, price_cents, currency:'eur' })
+function postJson(url, body, headers = {}){
+  return new Promise((resolve, reject) => {
+    try {
+      const u = new URL(url);
+      const data = JSON.stringify(body);
+      const req = http.request({ hostname: u.hostname, port: u.port, path: u.pathname + (u.search || ''), method:'POST', headers: { 'Content-Type':'application/json', ...headers } }, (res) => {
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => (body += chunk));
+        res.on('end', () => {
+          let json = null;
+          try { json = JSON.parse(body); } catch(_){ json = null; }
+          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data: json });
+        });
+      });
+      req.on('error', reject);
+      req.write(data);
+      req.end();
+    } catch (e) { reject(e); }
   });
-  const diag = await diagResp.json().catch(()=>({}));
-  assert(diagResp.ok, 'Diagnose failed');
-  const serverComputed = diag.server_computed_price_cents;
-  const finalAmount = diag.final_amount_cents;
-  assert(serverComputed === 2000, `Expected serverComputed 2000 got ${serverComputed}`);
-  assert(finalAmount === 2000, `Expected finalAmount 2000 got ${finalAmount}`);
-  // Create PaymentIntent to verify amount (may require test or allowed live key)
-  const pi = await postJson('/api/partners/create-payment-intent', piReq);
-  if (!pi.ok) {
-    console.warn('[TEST] Skipping PI amount assertion seats', seats, pi.data);
-    return { seats, serverComputed, finalAmount, paymentIntentAmount:null };
-  }
-  const paymentIntentId = pi.data.paymentIntentId;
-  let paymentIntentAmount = null;
-  if (paymentIntentId) {
-    const detail = await getJson(`/api/partners/admin/payment-intent/${paymentIntentId}`, { headers:{ Authorization:`Basic ${diagAuth}` } });
-    if (detail.ok) paymentIntentAmount = detail.data && detail.data.amount || null;
-  }
-  return { seats, serverComputed, finalAmount, paymentIntentAmount };
 }
 
-(async()=>{
-  const results = [];
-  for (const s of [1,2,3]) results.push(await scenario(s));
-  results.forEach(r => {
-    console.log('[TEST:mercedes]', r);
-    if (r.paymentIntentAmount != null) assert(r.paymentIntentAmount === 2000, 'PI amount mismatch '+r.paymentIntentAmount);
+const CWD = path.join(__dirname, '..');
+const PORT = process.env.TEST_PORT || '4107';
+const BASE_URL = `http://127.0.0.1:${PORT}`;
+jest.setTimeout(30000);
+
+describe('mercedes pricing from trip config', () => {
+  let server;
+  beforeAll(async () => {
+    const env = Object.assign({}, process.env);
+    env.NODE_ENV = 'test';
+    env.ALLOW_LIVE_STRIPE_IN_DEV = '1';
+    env.ADMIN_USER = env.ADMIN_USER || 'admin';
+    env.ADMIN_PASS = env.ADMIN_PASS || 'pass';
+    process.env.ADMIN_USER = env.ADMIN_USER;
+    process.env.ADMIN_PASS = env.ADMIN_PASS;
+    env.PORT = String(PORT);
+    server = spawn('node', ['server.js'], { cwd: CWD, env, stdio: ['ignore','pipe','pipe'] });
+    await new Promise(resolve => setTimeout(resolve, 1200));
   });
-  console.log('[TEST] Mercedes fixed-price scenarios passed');
-  process.exit(0);
-})().catch(err => { console.error('Test failure', err); process.exit(1); });
+  afterAll(() => { if (server) server.kill(); });
+
+  test('mercedes per-vehicle price is taken from trip config', async () => {
+    const tripId = 'premium-acropolis-tour';
+    const price_cents = 22000;
+    const auth = Buffer.from(`${process.env.ADMIN_USER}:${process.env.ADMIN_PASS}`).toString('base64');
+    const diagResp = await postJson(`${BASE_URL}/api/partners/admin/payment-diagnose`, { tripId, vehicleType:'mercedes', seats:1, price_cents, currency:'eur' }, { Authorization:`Basic ${auth}` });
+    expect(diagResp.ok).toBe(true);
+    expect(diagResp.data.server_computed_price_cents).toBe(22000);
+    expect(diagResp.data.final_amount_cents).toBe(22000);
+  });
+});

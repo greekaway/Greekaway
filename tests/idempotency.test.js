@@ -23,6 +23,8 @@ function fetch(url, opts) {
 }
 
 const CWD = path.join(__dirname, '..');
+const PORT = process.env.TEST_PORT || '4102';
+const BASE_URL = `http://localhost:${PORT}`;
 
 jest.setTimeout(30000);
 
@@ -32,6 +34,7 @@ describe('idempotency and webhook replay', () => {
     const env = Object.assign({}, process.env);
     env.STRIPE_WEBHOOK_SECRET = '';
     env.ALLOW_TEST_WEBHOOK = 'true';
+    env.PORT = String(PORT);
     server = spawn('node', ['server.js'], { cwd: CWD, env, stdio: ['ignore','pipe','pipe'] });
     // wait briefly for server to be ready
     await new Promise(resolve => setTimeout(resolve, 1200));
@@ -43,10 +46,10 @@ describe('idempotency and webhook replay', () => {
 
   test('create-payment-intent idempotency and webhook replay handling', async () => {
     const key = 'jest-test-key-' + Date.now();
-    const body = JSON.stringify({ amount: 1000, currency: 'eur' });
-  const r1 = await fetch('http://localhost:3000/api/partners/create-payment-intent', { method:'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': key }, body });
+    const body = JSON.stringify({ amount: 14000, price_cents: 14000, currency: 'eur', tripId: 'premium-acropolis-tour', vehicleType: 'van', seats: 1, customerEmail: 'jest-idempotency@example.com' });
+  const r1 = await fetch(`${BASE_URL}/api/partners/create-payment-intent`, { method:'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': key }, body });
     const j1 = await r1.json();
-  const r2 = await fetch('http://localhost:3000/api/partners/create-payment-intent', { method:'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': key }, body });
+  const r2 = await fetch(`${BASE_URL}/api/partners/create-payment-intent`, { method:'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': key }, body });
     const j2 = await r2.json();
     expect(j1.clientSecret).toBeDefined();
     expect(j1.clientSecret).toEqual(j2.clientSecret);
@@ -57,10 +60,14 @@ describe('idempotency and webhook replay', () => {
       data: { object: { id: 'pi_jest_replay_' + Date.now(), amount: 1234, currency: 'eur' } }
     };
 
-    const post1 = await fetch('http://localhost:3000/webhook/test', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(testEvent) });
+    const post1 = await fetch(`${BASE_URL}/webhook/test`, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(testEvent) });
     expect(post1.status).toBe(200);
-    const post2 = await fetch('http://localhost:3000/webhook/test', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(testEvent) });
+    const post2 = await fetch(`${BASE_URL}/webhook/test`, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(testEvent) });
     expect(post2.status).toBe(200);
+
+      const badBody = JSON.stringify({ amount: 1000, price_cents: 1000, currency: 'eur', tripId: 'premium-acropolis-tour', vehicleType: 'van', seats: 1, customerEmail: 'jest-idempotency@example.com' });
+      const badResp = await fetch(`${BASE_URL}/api/partners/create-payment-intent`, { method:'POST', headers: { 'Content-Type':'application/json', 'Idempotency-Key': 'bad-'+Date.now() }, body: badBody });
+      expect(badResp.status).toBe(400);
 
     // verify DB has exactly one entry for the payment intent id
     const Database = require('better-sqlite3');

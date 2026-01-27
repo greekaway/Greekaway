@@ -51,18 +51,11 @@
         const summaryBox = document.getElementById('checkoutSummary');
         if (summaryBox) {
           const tripId = st.trip_id || '';
-          const vehRaw = (st.vehicleType || st.vehicle_type || st.mode || '').toLowerCase();
-          const isMercedes = (tripId === 'acropolis') && (vehRaw === 'mercedes' || vehRaw === 'private');
           let displayCents = null;
-          if (isMercedes) {
-            displayCents = 2000; // fixed 20€ for Comfort/private
-            PR_AMOUNT_CENTS = 2000;
-            CHECKOUT_AMOUNT_CENTS = 2000;
-          } else {
-            if (typeof st.price_cents === 'number' && st.price_cents > 0) {
-              displayCents = st.price_cents;
-              PR_AMOUNT_CENTS = st.price_cents;
-            }
+          if (typeof st.price_cents === 'number' && st.price_cents > 0) {
+            displayCents = st.price_cents;
+            PR_AMOUNT_CENTS = st.price_cents;
+            CHECKOUT_AMOUNT_CENTS = st.price_cents;
           }
           const fmtPrice = (typeof displayCents === 'number')
             ? (displayCents/100).toLocaleString(getLang(), { style:'currency', currency: (st.currency||'eur').toUpperCase() })

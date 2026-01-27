@@ -139,6 +139,130 @@ async function savePayments(payments) {
 const dispatchService = require('./services/dispatchService');
 
 module.exports = function attachWebhook(app, stripe) {
+  function normMode(m){
+    const x = String(m || '').toLowerCase();
+    if (x === 'private' || x === 'mercedes/private') return 'mercedes';
+    if (x === 'multi' || x === 'shared' || x === 'minivan') return 'van';
+    if (x === 'mercedes' || x === 'van' || x === 'bus') return x;
+    return '';
+  }
+
+  function readTripConfig(tripId){
+    try {
+      const id = String(tripId || '').trim();
+      if (!id) return null;
+      const candidates = [
+        path.join(__dirname, 'data', 'trips', `${id}.json`),
+        path.join(__dirname, 'public', 'data', 'trips', `${id}.json`)
+      ];
+      for (const p of candidates) {
+        if (fs.existsSync(p)) {
+          const raw = fs.readFileSync(p, 'utf8');
+          return JSON.parse(raw);
+        }
+      }
+    } catch(_) {}
+    return null;
+  }
+
+  function getDefaultCapacityForMode(trip, mode){
+    try {
+      const ms = trip && trip.mode_set ? trip.mode_set : null; if (!ms) return 0; const m = ms[mode]; if (!m) return 0;
+      let n = parseInt(m.default_capacity,10);
+      if (!Number.isFinite(n) || n <= 0) n = 0;
+      if (mode === 'mercedes') return getMercedesFleetSize(trip);
+      return n > 0 ? n : 0;
+    } catch(_){ return 0; }
+  }
+
+  function getMercedesFleetSize(trip){
+    const direct = parseInt(trip && trip.modeSettings && trip.modeSettings.mercedes && trip.modeSettings.mercedes.fleetSize, 10);
+    if (Number.isFinite(direct) && direct > 0) return direct;
+    const modeSetVal = parseInt(trip && trip.mode_set && trip.mode_set.mercedes && trip.mode_set.mercedes.default_capacity, 10);
+    if (Number.isFinite(modeSetVal) && modeSetVal > 0) return modeSetVal;
+    const modeBlock = trip && trip.modes && trip.modes.mercedes;
+    const capacityFromMode = parseInt(modeBlock && modeBlock.capacity, 10);
+    if (Number.isFinite(capacityFromMode) && capacityFromMode > 0) return capacityFromMode;
+    return 1;
+  }
+
+  function ensureMercedesAvailabilityRow(dbConn, tripId, dateStr, trip){
+    if (!dbConn || !tripId || !dateStr) return null;
+    const targetTotal = Math.max(0, parseInt(getMercedesFleetSize(trip), 10) || 0);
+    let row = null;
+    try { row = dbConn.prepare('SELECT id, trip_id, date, total_fleet, remaining_fleet FROM mercedes_availability WHERE trip_id = ? AND date = ?').get(tripId, dateStr); } catch(_){ row = null; }
+    if (!row) {
+      const now = new Date().toISOString();
+      const id = `${tripId}-${dateStr}-${Date.now()}`;
+      try {
+        dbConn.prepare('INSERT OR IGNORE INTO mercedes_availability (id, trip_id, date, total_fleet, remaining_fleet, updatedAt) VALUES (?,?,?,?,?,?)').run(id, tripId, dateStr, targetTotal, targetTotal, now);
+      } catch(_){ }
+    }
+    try { return dbConn.prepare('SELECT id, trip_id, date, total_fleet, remaining_fleet FROM mercedes_availability WHERE trip_id = ? AND date = ?').get(tripId, dateStr); } catch(_){ return null; }
+  }
+
+  function reserveAndConfirmBooking(bookingsDb, bookingId, eventId){
+    const now = new Date().toISOString();
+    try {
+      bookingsDb.prepare('BEGIN IMMEDIATE').run();
+      const row = bookingsDb.prepare('SELECT id, status, trip_id, date, seats, metadata, vehicle_type FROM bookings WHERE id = ?').get(bookingId);
+      if (!row) { bookingsDb.prepare('ROLLBACK').run(); return { ok: false, error: 'not_found' }; }
+      if (row.metadata && typeof row.metadata === 'string') { try { row.metadata = JSON.parse(row.metadata); } catch(_) { row.metadata = null; } }
+      if (String(row.status || '').toLowerCase() === 'confirmed') {
+        bookingsDb.prepare('COMMIT').run();
+        return { ok: true, alreadyConfirmed: true };
+      }
+      const tripId = row.trip_id;
+      const date = row.date ? String(row.date) : null;
+      const seats = Number(row.seats || 1) || 1;
+      const meta = row.metadata || {};
+      const mode = normMode(meta.trip_mode || meta.mode || meta.vehicle_type || row.vehicle_type || '');
+      const trip = tripId ? (readTripConfig(tripId) || {}) : {};
+      const resolvedMode = mode || normMode(trip && trip.defaultMode ? trip.defaultMode : '') || 'van';
+
+      if (!tripId || !date) { bookingsDb.prepare('ROLLBACK').run(); return { ok: false, error: 'no_date' }; }
+
+      if (resolvedMode === 'mercedes') {
+        ensureMercedesAvailabilityRow(bookingsDb, tripId, date, trip);
+        const updateResult = bookingsDb.prepare('UPDATE mercedes_availability SET remaining_fleet = remaining_fleet - 1, updatedAt = ? WHERE trip_id = ? AND date = ? AND remaining_fleet > 0').run(now, tripId, date);
+        if (!updateResult || !updateResult.changes) {
+          bookingsDb.prepare('ROLLBACK').run();
+          return { ok: false, error: 'no_fleet' };
+        }
+      } else {
+        let capacityUnits = 0;
+        try {
+          const capRow = bookingsDb.prepare('SELECT capacity FROM mode_availability WHERE trip_id = ? AND date = ? AND mode = ?').get(tripId, date, resolvedMode) || {};
+          if (typeof capRow.capacity === 'number' && capRow.capacity > 0) capacityUnits = capRow.capacity;
+        } catch(_){ }
+        if (!capacityUnits) capacityUnits = getDefaultCapacityForMode(trip, resolvedMode) || 0;
+        let takenUnits = 0;
+        try {
+          const rows = bookingsDb.prepare("SELECT seats, metadata FROM bookings WHERE trip_id = ? AND date = ? AND status = 'confirmed'").all(tripId, date) || [];
+          rows.forEach(r => {
+            let m = '';
+            try { const meta = r && r.metadata ? JSON.parse(r.metadata) : null; const mm = (meta && (meta.trip_mode || meta.mode || meta.vehicle_type)) || ''; m = normMode(mm); } catch(_){ m=''; }
+            if (m !== resolvedMode) return;
+            takenUnits += (parseInt(r.seats,10) || 0);
+          });
+        } catch(_){ }
+        const chargeType = (trip && trip.mode_set && trip.mode_set[resolvedMode] && trip.mode_set[resolvedMode].charge_type) || 'per_person';
+        const requestedUnits = (chargeType === 'per_vehicle') ? 1 : seats;
+        if (capacityUnits <= 0 || (takenUnits + requestedUnits) > capacityUnits) {
+          bookingsDb.prepare('ROLLBACK').run();
+          return { ok: false, error: 'no_capacity' };
+        }
+      }
+
+      bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?').run('confirmed', eventId || null, now, bookingId);
+      bookingsDb.prepare('COMMIT').run();
+      return { ok: true };
+    } catch (e) {
+      try { bookingsDb.prepare('ROLLBACK').run(); } catch(_) {}
+      return { ok: false, error: 'error' };
+    }
+  }
+
   function upsertTravelerFromMetadata(meta) {
     try {
       if (!meta) return;
@@ -219,18 +343,21 @@ module.exports = function attachWebhook(app, stripe) {
                 const path = require('path');
                 const Database = require('better-sqlite3');
                 const bookingsDb = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
-                const now = new Date().toISOString();
-                const stmt = bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?');
-                stmt.run('confirmed', event.id || null, now, bookingId);
-                try { await dispatchService.queue(bookingId); } catch(_) {}
-                try {
-                  // If this booking used Stripe Connect transfer_data (set at PI creation time), mark payout as sent
-                  const ext = bookingsDb.prepare('SELECT payment_type, partner_id FROM bookings WHERE id = ?').get(bookingId) || {};
-                  if (ext && ext.payment_type === 'stripe' && ext.partner_id) {
-                    bookingsDb.prepare('UPDATE bookings SET payout_status = ?, payout_date = ?, updated_at = ? WHERE id = ?').run('sent', now, now, bookingId);
-                  }
-                } catch (_) {}
-                safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${bookingId} for_pi=${pid}`);
+                const reserve = reserveAndConfirmBooking(bookingsDb, bookingId, event.id || null);
+                if (!reserve || !reserve.ok) {
+                  safeAppendLog(`${new Date().toISOString()} booking.confirm_failed id=${bookingId} for_pi=${pid} reason=${reserve && reserve.error ? reserve.error : 'unknown'}`);
+                } else {
+                  const now = new Date().toISOString();
+                  try { await dispatchService.queue(bookingId); } catch(_) {}
+                  try {
+                    // If this booking used Stripe Connect transfer_data (set at PI creation time), mark payout as sent
+                    const ext = bookingsDb.prepare('SELECT payment_type, partner_id FROM bookings WHERE id = ?').get(bookingId) || {};
+                    if (ext && ext.payment_type === 'stripe' && ext.partner_id) {
+                      bookingsDb.prepare('UPDATE bookings SET payout_status = ?, payout_date = ?, updated_at = ? WHERE id = ?').run('sent', now, now, bookingId);
+                    }
+                  } catch (_) {}
+                  safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${bookingId} for_pi=${pid}`);
+                }
                 // read booking to capture metadata for traveler upsert and co-travel stats
                 try {
                   const row = bookingsDb.prepare('SELECT * FROM bookings WHERE id = ?').get(bookingId);
@@ -255,15 +382,20 @@ module.exports = function attachWebhook(app, stripe) {
                 const bookingsDb = new Database(path.join(__dirname, 'data', 'db.sqlite3'));
                 const b = bookingsDb.prepare('SELECT * FROM bookings WHERE payment_intent_id = ? LIMIT 1').get(pid);
                 if (b && b.id) {
-                  const now = new Date().toISOString();
-                  bookingsDb.prepare('UPDATE bookings SET status = ?, event_id = ?, updated_at = ? WHERE id = ?').run('confirmed', event.id || null, now, b.id);
-                  try {
-                    const ext = bookingsDb.prepare('SELECT payment_type, partner_id FROM bookings WHERE id = ?').get(b.id) || {};
-                    if (ext && ext.payment_type === 'stripe' && ext.partner_id) {
-                      bookingsDb.prepare('UPDATE bookings SET payout_status = ?, payout_date = ?, updated_at = ? WHERE id = ?').run('sent', now, now, b.id);
-                    }
-                  } catch (_) {}
-                  safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${b.id} for_pi=${pid}`);
+                  const reserve = reserveAndConfirmBooking(bookingsDb, b.id, event.id || null);
+                  if (!reserve || !reserve.ok) {
+                    safeAppendLog(`${new Date().toISOString()} booking.confirm_failed id=${b.id} for_pi=${pid} reason=${reserve && reserve.error ? reserve.error : 'unknown'}`);
+                  } else {
+                    const now = new Date().toISOString();
+                    try {
+                      const ext = bookingsDb.prepare('SELECT payment_type, partner_id FROM bookings WHERE id = ?').get(b.id) || {};
+                      if (ext && ext.payment_type === 'stripe' && ext.partner_id) {
+                        bookingsDb.prepare('UPDATE bookings SET payout_status = ?, payout_date = ?, updated_at = ? WHERE id = ?').run('sent', now, now, b.id);
+                      }
+                    } catch (_) {}
+                    safeAppendLog(`${new Date().toISOString()} booking.confirmed id=${b.id} for_pi=${pid}`);
+                    try { await dispatchService.queue(b.id); } catch(_) {}
+                  }
                   // upsert traveler from booking metadata as well
                   try {
                     const meta = b.metadata ? (typeof b.metadata === 'string' ? JSON.parse(b.metadata) : b.metadata) : {};
@@ -274,7 +406,6 @@ module.exports = function attachWebhook(app, stripe) {
                     const all = Array.from(new Set([b.user_email, ...others].map(e => (e||'').trim()).filter(Boolean)));
                     updateCoTravel(all, b.trip_id, b.date);
                   } catch (e) { /* ignore */ }
-                  try { await dispatchService.queue(b.id); } catch(_) {}
                 }
                 bookingsDb.close();
               } catch (e) { /* non-fatal */ }
@@ -335,7 +466,8 @@ module.exports = function attachWebhook(app, stripe) {
 
     let event = null;
     try {
-      if (webhookSecret && stripe) {
+      if (webhookSecret) {
+        if (!stripe) throw new Error('Stripe not configured');
         event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
       } else {
         // dev fallback: parse body as JSON (unsigned)
@@ -343,8 +475,8 @@ module.exports = function attachWebhook(app, stripe) {
       }
     } catch (err) {
       console.error('Webhook signature verification failed.', err && err.message ? err.message : err);
-      safeAppendLog(`${new Date().toISOString()} webhook.error ${err && err.message ? err.message : err}`);
-      return res.status(400).send(`Webhook Error: ${err && err.message ? err.message : err}`);
+      safeAppendLog(`${new Date().toISOString()} webhook.invalid_signature ${err && err.message ? err.message : err}`);
+      return res.status(400).send('Webhook Error: invalid signature');
     }
 
     // Log event to file for audit/debug

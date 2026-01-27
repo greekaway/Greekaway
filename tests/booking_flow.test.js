@@ -23,6 +23,8 @@ function fetch(url, opts) {
 }
 
 const CWD = path.join(__dirname, '..');
+const PORT = process.env.TEST_PORT || '4101';
+const BASE_URL = `http://localhost:${PORT}`;
 jest.setTimeout(30000);
 
 describe('booking flow', () => {
@@ -31,30 +33,34 @@ describe('booking flow', () => {
     const env = Object.assign({}, process.env);
     env.STRIPE_WEBHOOK_SECRET = '';
     env.ALLOW_TEST_WEBHOOK = 'true';
+    env.PORT = String(PORT);
     server = spawn('node', ['server.js'], { cwd: CWD, env, stdio: ['ignore','pipe','pipe'] });
     await new Promise(resolve => setTimeout(resolve, 1200));
   });
   afterAll(() => { if (server) server.kill(); });
 
   test('create booking, attach to PaymentIntent, webhook confirms booking', async () => {
-    const bookingResp = await fetch('http://localhost:3000/api/bookings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_name: 'Test', user_email: 'test@example.com', trip_id: 'delphi', seats: 2, price_cents: 5000, currency: 'eur' }) });
+    const tripId = 'premium-acropolis-tour';
+    const seats = 2;
+    const priceCents = 28000;
+    const bookingResp = await fetch(`${BASE_URL}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_name: 'Test', user_email: 'test@example.com', trip_id: tripId, mode: 'van', seats, price_cents: priceCents, currency: 'eur' }) });
     expect(bookingResp.status).toBe(200);
     const bookingJson = await bookingResp.json();
     expect(bookingJson.bookingId).toBeDefined();
 
     // create payment intent for this booking
-  const piResp = await fetch('http://localhost:3000/api/partners/create-payment-intent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'book-test-'+Date.now() }, body: JSON.stringify({ amount: 5000, currency: 'eur', booking_id: bookingJson.bookingId }) });
+  const piResp = await fetch(`${BASE_URL}/api/partners/create-payment-intent`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'book-test-'+Date.now() }, body: JSON.stringify({ amount: priceCents, price_cents: priceCents, currency: 'eur', booking_id: bookingJson.bookingId, tripId, vehicleType: 'van', seats, customerEmail: 'test@example.com' }) });
     expect(piResp.status).toBe(200);
     const piJson = await piResp.json();
     expect(piJson.paymentIntentId).toBeDefined();
 
     // simulate webhook for succeeded
-    const evt = { id: 'evt_bf_' + Date.now(), type: 'payment_intent.succeeded', data: { object: { id: piJson.paymentIntentId, amount: 5000, currency: 'eur', metadata: { booking_id: bookingJson.bookingId } } } };
-    const wh = await fetch('http://localhost:3000/webhook/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(evt) });
+    const evt = { id: 'evt_bf_' + Date.now(), type: 'payment_intent.succeeded', data: { object: { id: piJson.paymentIntentId, amount: priceCents, currency: 'eur', metadata: { booking_id: bookingJson.bookingId } } } };
+    const wh = await fetch(`${BASE_URL}/webhook/test`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(evt) });
     expect(wh.status).toBe(200);
 
     // fetch booking and assert confirmed
-    const getb = await fetch('http://localhost:3000/api/bookings/' + bookingJson.bookingId);
+    const getb = await fetch(`${BASE_URL}/api/bookings/` + bookingJson.bookingId);
     expect(getb.status).toBe(200);
     const b = await getb.json();
     expect(b.status).toBe('confirmed');

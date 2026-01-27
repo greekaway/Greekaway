@@ -9,3 +9,169 @@
 2025-11-30T14:36:29.389Z debug.allow_test_env=true
 2025-11-30T14:36:29.389Z event.test-received id=evt_succ_1764513389387 type=payment_intent.succeeded
 2025-11-30T14:36:29.390Z payment.recorded id=pi_fail_1764513389387
+2026-01-27T10:54:58.027Z debug.allow_test_env=true
+2026-01-27T10:54:58.028Z event.test-received id=evt_sca_1769511298006_created type=payment_intent.created
+2026-01-27T10:54:58.035Z debug.allow_test_env=true
+2026-01-27T10:54:58.035Z event.test-received id=evt_sca_1769511298006_succeeded type=payment_intent.succeeded
+2026-01-27T10:54:58.037Z payment.recorded id=pi_sca_1769511298006
+2026-01-27T10:54:58.047Z debug.allow_test_env=true
+2026-01-27T10:54:58.047Z event.test-received id=evt_fail_1769511298047 type=payment_intent.payment_failed
+2026-01-27T10:54:58.048Z payment.failed id=pi_fail_1769511298047
+2026-01-27T10:54:58.050Z debug.allow_test_env=true
+2026-01-27T10:54:58.050Z event.test-received id=evt_succ_1769511298047 type=payment_intent.succeeded
+2026-01-27T10:54:58.050Z payment.recorded id=pi_fail_1769511298047
+2026-01-27T12:43:04.249Z webhook.invalid_signature Unable to extract timestamp and signatures from header
+2026-01-27T12:43:04.252Z debug.allow_test_env=true
+2026-01-27T12:43:04.252Z event.test-received id=evt_dup_1769517784251 type=payment_intent.succeeded
+2026-01-27T12:43:04.252Z payment.recorded id=pi_dup_1769517784251
+2026-01-27T12:43:04.253Z debug.allow_test_env=true
+2026-01-27T12:43:04.253Z event.test-received id=evt_dup_1769517784251 type=payment_intent.succeeded
+2026-01-27T12:43:04.254Z event.ignored id=evt_dup_1769517784251 reason=duplicate_event
+2026-01-27T12:43:05.474Z debug.allow_test_env=true
+2026-01-27T12:43:05.475Z event.test-received id=evt_sca_1769517785471_created type=payment_intent.created
+2026-01-27T12:43:05.477Z debug.allow_test_env=true
+2026-01-27T12:43:05.477Z event.test-received id=evt_sca_1769517785471_succeeded type=payment_intent.succeeded
+2026-01-27T12:43:05.478Z payment.recorded id=pi_sca_1769517785471
+2026-01-27T12:43:05.481Z debug.allow_test_env=true
+2026-01-27T12:43:05.481Z event.test-received id=evt_fail_1769517785480 type=payment_intent.payment_failed
+2026-01-27T12:43:05.481Z payment.failed id=pi_fail_1769517785480
+2026-01-27T12:43:05.482Z debug.allow_test_env=true
+2026-01-27T12:43:05.482Z event.test-received id=evt_succ_1769517785480 type=payment_intent.succeeded
+2026-01-27T12:43:05.482Z payment.recorded id=pi_fail_1769517785480
+2026-01-27T13:02:06.155Z webhook.invalid_signature Unable to extract timestamp and signatures from header
+2026-01-27T13:02:06.156Z debug.allow_test_env=true
+2026-01-27T13:02:06.156Z event.test-received id=evt_dup_1769518926156 type=payment_intent.succeeded
+2026-01-27T13:02:06.157Z payment.recorded id=pi_dup_1769518926156
+2026-01-27T13:02:06.158Z debug.allow_test_env=true
+2026-01-27T13:02:06.158Z event.test-received id=evt_dup_1769518926156 type=payment_intent.succeeded
+2026-01-27T13:02:06.158Z event.ignored id=evt_dup_1769518926156 reason=duplicate_event
+2026-01-27T13:02:08.711Z debug.allow_test_env=true
+2026-01-27T13:02:08.711Z event.test-received id=evt_sca_1769518928708_created type=payment_intent.created
+2026-01-27T13:02:08.714Z debug.allow_test_env=true
+2026-01-27T13:02:08.714Z event.test-received id=evt_sca_1769518928708_succeeded type=payment_intent.succeeded
+2026-01-27T13:02:08.715Z payment.recorded id=pi_sca_1769518928708
+2026-01-27T13:02:08.717Z debug.allow_test_env=true
+2026-01-27T13:02:08.717Z event.test-received id=evt_fail_1769518928717 type=payment_intent.payment_failed
+2026-01-27T13:02:08.717Z payment.failed id=pi_fail_1769518928717
+2026-01-27T13:02:08.718Z debug.allow_test_env=true
+2026-01-27T13:02:08.718Z event.test-received id=evt_succ_1769518928717 type=payment_intent.succeeded
+2026-01-27T13:02:08.719Z payment.recorded id=pi_fail_1769518928717
+2026-01-27T13:07:29.540Z webhook.invalid_signature Unable to extract timestamp and signatures from header
+2026-01-27T13:07:29.541Z debug.allow_test_env=true
+2026-01-27T13:07:29.541Z event.test-received id=evt_dup_1769519249541 type=payment_intent.succeeded
+2026-01-27T13:07:29.542Z payment.recorded id=pi_dup_1769519249541
+2026-01-27T13:07:29.543Z debug.allow_test_env=true
+2026-01-27T13:07:29.543Z event.test-received id=evt_dup_1769519249541 type=payment_intent.succeeded
+2026-01-27T13:07:29.543Z event.ignored id=evt_dup_1769519249541 reason=duplicate_event
+2026-01-27T13:09:54.959Z webhook.invalid_signature Unable to extract timestamp and signatures from header
+2026-01-27T13:09:54.960Z debug.allow_test_env=true
+2026-01-27T13:09:54.960Z event.test-received id=evt_dup_1769519394960 type=payment_intent.succeeded
+2026-01-27T13:09:54.961Z payment.recorded id=pi_dup_1769519394960
+2026-01-27T13:09:54.962Z debug.allow_test_env=true
+2026-01-27T13:09:54.962Z event.test-received id=evt_dup_1769519394960 type=payment_intent.succeeded
+2026-01-27T13:09:54.962Z event.ignored id=evt_dup_1769519394960 reason=duplicate_event
+2026-01-27T13:10:57.928Z webhook.invalid_signature Unable to extract timestamp and signatures from header
+2026-01-27T13:10:57.930Z debug.allow_test_env=true
+2026-01-27T13:10:57.930Z event.test-received id=evt_dup_1769519457929 type=payment_intent.succeeded
+2026-01-27T13:10:57.930Z payment.recorded id=pi_dup_1769519457929
+2026-01-27T13:10:57.931Z debug.allow_test_env=true
+2026-01-27T13:10:57.931Z event.test-received id=evt_dup_1769519457929 type=payment_intent.succeeded
+2026-01-27T13:10:57.931Z event.ignored id=evt_dup_1769519457929 reason=duplicate_event
+2026-01-27T13:11:22.723Z webhook.invalid_signature Unable to extract timestamp and signatures from header
+2026-01-27T13:11:22.725Z debug.allow_test_env=true
+2026-01-27T13:11:22.725Z event.test-received id=evt_dup_1769519482724 type=payment_intent.succeeded
+2026-01-27T13:11:22.726Z payment.recorded id=pi_dup_1769519482724
+2026-01-27T13:11:22.727Z debug.allow_test_env=true
+2026-01-27T13:11:22.727Z event.test-received id=evt_dup_1769519482724 type=payment_intent.succeeded
+2026-01-27T13:11:22.727Z event.ignored id=evt_dup_1769519482724 reason=duplicate_event
+2026-01-27T13:11:23.945Z debug.allow_test_env=true
+2026-01-27T13:11:23.945Z event.test-received id=evt_sca_1769519483942_created type=payment_intent.created
+2026-01-27T13:11:23.948Z debug.allow_test_env=true
+2026-01-27T13:11:23.948Z event.test-received id=evt_sca_1769519483942_succeeded type=payment_intent.succeeded
+2026-01-27T13:11:23.949Z payment.recorded id=pi_sca_1769519483942
+2026-01-27T13:11:23.951Z debug.allow_test_env=true
+2026-01-27T13:11:23.951Z event.test-received id=evt_fail_1769519483951 type=payment_intent.payment_failed
+2026-01-27T13:11:23.952Z payment.failed id=pi_fail_1769519483951
+2026-01-27T13:11:23.952Z debug.allow_test_env=true
+2026-01-27T13:11:23.953Z event.test-received id=evt_succ_1769519483951 type=payment_intent.succeeded
+2026-01-27T13:11:23.953Z payment.recorded id=pi_fail_1769519483951
+2026-01-27T13:18:21.631Z debug.allow_test_env=true
+2026-01-27T13:18:21.631Z event.test-received id=evt_bf_1769519901630 type=payment_intent.succeeded
+2026-01-27T13:18:21.631Z payment.recorded id=pi_3SuC9xAty3m3IbJ51O8J9vuJ
+2026-01-27T13:18:21.634Z booking.confirmed id=d8d91db0-0e59-4838-a8f3-e1aef339604c for_pi=pi_3SuC9xAty3m3IbJ51O8J9vuJ
+2026-01-27T13:18:23.681Z debug.allow_test_env=true
+2026-01-27T13:18:23.681Z event.test-received id=evt_jest_replay_1769519903681 type=payment_intent.succeeded
+2026-01-27T13:18:23.682Z payment.recorded id=pi_jest_replay_1769519903681
+2026-01-27T13:18:23.683Z debug.allow_test_env=true
+2026-01-27T13:18:23.684Z event.test-received id=evt_jest_replay_1769519903681 type=payment_intent.succeeded
+2026-01-27T13:18:23.684Z event.ignored id=evt_jest_replay_1769519903681 reason=duplicate_event
+2026-01-27T13:19:58.659Z debug.allow_test_env=true
+2026-01-27T13:19:58.659Z event.test-received id=evt_bf_1769519998659 type=payment_intent.succeeded
+2026-01-27T13:19:58.660Z payment.recorded id=pi_3SuCBWAty3m3IbJ50hjwDc0g
+2026-01-27T13:19:58.662Z booking.confirmed id=7a50e011-aaec-4867-9a54-09da1588ed5e for_pi=pi_3SuCBWAty3m3IbJ50hjwDc0g
+2026-01-27T13:20:00.725Z debug.allow_test_env=true
+2026-01-27T13:20:00.726Z event.test-received id=evt_jest_replay_1769520000725 type=payment_intent.succeeded
+2026-01-27T13:20:00.727Z payment.recorded id=pi_jest_replay_1769520000725
+2026-01-27T13:20:00.728Z debug.allow_test_env=true
+2026-01-27T13:20:00.728Z event.test-received id=evt_jest_replay_1769520000725 type=payment_intent.succeeded
+2026-01-27T13:20:00.728Z event.ignored id=evt_jest_replay_1769520000725 reason=duplicate_event
+2026-01-27T13:23:52.895Z debug.allow_test_env=true
+2026-01-27T13:23:52.895Z event.test-received id=evt_jest_replay_1769520232894 type=payment_intent.succeeded
+2026-01-27T13:23:52.896Z payment.recorded id=pi_jest_replay_1769520232894
+2026-01-27T13:23:52.897Z debug.allow_test_env=true
+2026-01-27T13:23:52.897Z event.test-received id=evt_jest_replay_1769520232894 type=payment_intent.succeeded
+2026-01-27T13:23:52.898Z event.ignored id=evt_jest_replay_1769520232894 reason=duplicate_event
+2026-01-27T13:23:54.714Z debug.allow_test_env=true
+2026-01-27T13:23:54.714Z event.test-received id=evt_bf_1769520234713 type=payment_intent.succeeded
+2026-01-27T13:23:54.714Z payment.recorded id=pi_3SuCFKAty3m3IbJ50BwxU4ZV
+2026-01-27T13:23:54.717Z booking.confirmed id=ad942bb7-51c2-4030-bcbe-3cf7f980f6e9 for_pi=pi_3SuCFKAty3m3IbJ50BwxU4ZV
+2026-01-27T13:23:58.311Z webhook.invalid_signature Unable to extract timestamp and signatures from header
+2026-01-27T13:23:58.312Z debug.allow_test_env=true
+2026-01-27T13:23:58.312Z event.test-received id=evt_dup_1769520238312 type=payment_intent.succeeded
+2026-01-27T13:23:58.313Z payment.recorded id=pi_dup_1769520238312
+2026-01-27T13:23:58.314Z debug.allow_test_env=true
+2026-01-27T13:23:58.314Z event.test-received id=evt_dup_1769520238312 type=payment_intent.succeeded
+2026-01-27T13:23:58.314Z event.ignored id=evt_dup_1769520238312 reason=duplicate_event
+2026-01-27T13:24:02.140Z debug.allow_test_env=true
+2026-01-27T13:24:02.141Z event.test-received id=evt_sca_1769520242137_created type=payment_intent.created
+2026-01-27T13:24:02.143Z debug.allow_test_env=true
+2026-01-27T13:24:02.143Z event.test-received id=evt_sca_1769520242137_succeeded type=payment_intent.succeeded
+2026-01-27T13:24:02.144Z payment.recorded id=pi_sca_1769520242137
+2026-01-27T13:24:02.146Z debug.allow_test_env=true
+2026-01-27T13:24:02.146Z event.test-received id=evt_fail_1769520242146 type=payment_intent.payment_failed
+2026-01-27T13:24:02.146Z payment.failed id=pi_fail_1769520242146
+2026-01-27T13:24:02.147Z debug.allow_test_env=true
+2026-01-27T13:24:02.147Z event.test-received id=evt_succ_1769520242146 type=payment_intent.succeeded
+2026-01-27T13:24:02.148Z payment.recorded id=pi_fail_1769520242146
+2026-01-27T13:29:22.403Z debug.allow_test_env=true
+2026-01-27T13:29:22.404Z event.test-received id=evt_jest_replay_1769520562402 type=payment_intent.succeeded
+2026-01-27T13:29:22.406Z payment.recorded id=pi_jest_replay_1769520562402
+2026-01-27T13:29:22.407Z debug.allow_test_env=true
+2026-01-27T13:29:22.407Z event.test-received id=evt_jest_replay_1769520562402 type=payment_intent.succeeded
+2026-01-27T13:29:22.407Z event.ignored id=evt_jest_replay_1769520562402 reason=duplicate_event
+2026-01-27T13:29:29.188Z debug.allow_test_env=true
+2026-01-27T13:29:29.188Z event.test-received id=evt_bf_1769520569187 type=payment_intent.succeeded
+2026-01-27T13:29:29.189Z payment.recorded id=pi_3SuCKjAty3m3IbJ51uB6ecs2
+2026-01-27T13:29:29.189Z booking.confirm_failed id=7924f119-e4a6-4186-9a7c-9268b40f5ca5 for_pi=pi_3SuCKjAty3m3IbJ51uB6ecs2 reason=no_capacity
+2026-01-27T13:29:30.433Z webhook.invalid_signature Unable to extract timestamp and signatures from header
+2026-01-27T13:29:30.434Z debug.allow_test_env=true
+2026-01-27T13:29:30.434Z event.test-received id=evt_dup_1769520570434 type=payment_intent.succeeded
+2026-01-27T13:29:30.435Z payment.recorded id=pi_dup_1769520570434
+2026-01-27T13:29:30.436Z debug.allow_test_env=true
+2026-01-27T13:29:30.436Z event.test-received id=evt_dup_1769520570434 type=payment_intent.succeeded
+2026-01-27T13:29:30.436Z event.ignored id=evt_dup_1769520570434 reason=duplicate_event
+2026-01-27T13:29:31.658Z debug.allow_test_env=true
+2026-01-27T13:29:31.658Z event.test-received id=evt_sca_1769520571655_created type=payment_intent.created
+2026-01-27T13:29:31.661Z debug.allow_test_env=true
+2026-01-27T13:29:31.661Z event.test-received id=evt_sca_1769520571655_succeeded type=payment_intent.succeeded
+2026-01-27T13:29:31.662Z payment.recorded id=pi_sca_1769520571655
+2026-01-27T13:29:31.664Z debug.allow_test_env=true
+2026-01-27T13:29:31.664Z event.test-received id=evt_fail_1769520571664 type=payment_intent.payment_failed
+2026-01-27T13:29:31.665Z payment.failed id=pi_fail_1769520571664
+2026-01-27T13:29:31.666Z debug.allow_test_env=true
+2026-01-27T13:29:31.666Z event.test-received id=evt_succ_1769520571664 type=payment_intent.succeeded
+2026-01-27T13:29:31.666Z payment.recorded id=pi_fail_1769520571664
+2026-01-27T13:30:09.929Z debug.allow_test_env=true
+2026-01-27T13:30:09.929Z event.test-received id=evt_bf_1769520609928 type=payment_intent.succeeded
+2026-01-27T13:30:09.930Z payment.recorded id=pi_3SuCLNAty3m3IbJ50Cuchc97
+2026-01-27T13:30:09.930Z booking.confirm_failed id=868d44d8-e761-4ce2-bfc9-eece723ae096 for_pi=pi_3SuCLNAty3m3IbJ50Cuchc97 reason=no_capacity

@@ -22,6 +22,8 @@ function fetch(url, opts) {
 }
 
 const CWD = path.join(__dirname, '..');
+const PORT = process.env.TEST_PORT || '4104';
+const BASE_URL = `http://localhost:${PORT}`;
 jest.setTimeout(30000);
 
 describe('pickup route endpoints', () => {
@@ -30,6 +32,7 @@ describe('pickup route endpoints', () => {
     const env = Object.assign({}, process.env);
     env.STRIPE_WEBHOOK_SECRET = '';
     env.ALLOW_TEST_WEBHOOK = 'true';
+    env.PORT = String(PORT);
     server = spawn('node', ['server.js'], { cwd: CWD, env, stdio: ['ignore','pipe','pipe'] });
     await new Promise(resolve => setTimeout(resolve, 800));
   });
@@ -47,7 +50,7 @@ describe('pickup route endpoints', () => {
         { booking_id: 'fake-3', address: 'Μαρούσι, Κεντρική Πλατεία', lat: 38.030, lng: 23.803, to_phone: '+30 69 0000 0003', to_email: 'demo3@example.com' }
       ]
     };
-    const createResp = await fetch('http://localhost:3000/admin/route/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const createResp = await fetch(`${BASE_URL}/admin/route/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     expect(createResp.status).toBe(200);
     const created = await createResp.json();
     expect(created && created.route_id).toBeDefined();
@@ -55,14 +58,14 @@ describe('pickup route endpoints', () => {
     expect(created.stops.length).toBe(3);
 
     // Trigger notify (test mode)
-    const trigResp = await fetch('http://localhost:3000/admin/route/trigger-notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ route_id: created.route_id, notify_when: '24h', test: true }) });
+    const trigResp = await fetch(`${BASE_URL}/admin/route/trigger-notify`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ route_id: created.route_id, notify_when: '24h', test: true }) });
     expect(trigResp.status).toBe(200);
     const trig = await trigResp.json();
     expect(trig && trig.ok).toBe(true);
     expect(trig.enqueued).toBe(3);
 
     // Driver JSON view
-    const drvResp = await fetch('http://localhost:3000/driver/route/' + encodeURIComponent(created.route_id) + '?json=1', { headers: { 'Accept': 'application/json' } });
+    const drvResp = await fetch(`${BASE_URL}/driver/route/` + encodeURIComponent(created.route_id) + '?json=1', { headers: { 'Accept': 'application/json' } });
     expect(drvResp.status).toBe(200);
     const drv = await drvResp.json();
     expect(drv && drv.ok).toBe(true);
@@ -76,7 +79,7 @@ describe('pickup route endpoints', () => {
 
     // Mark first booking as picked via new endpoint
     const first = drv.stops[0];
-    const markResp = await fetch(`http://localhost:3000/driver/route/${encodeURIComponent(created.route_id)}/mark-picked`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer test-token-not-required' }, body: JSON.stringify({ booking_id: first.booking_id, status:'picked' }) });
+    const markResp = await fetch(`${BASE_URL}/driver/route/${encodeURIComponent(created.route_id)}/mark-picked`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer test-token-not-required' }, body: JSON.stringify({ booking_id: first.booking_id, status:'picked' }) });
     // Since driverAuth expects a signed JWT, we skip authorization here (would be 401); for test mode we only assert endpoint exists (status 401 or 200 depending on auth config)
     expect([200,401]).toContain(markResp.status);
   });

@@ -124,7 +124,8 @@ if (compression) {
 const HOST = '0.0.0.0';
 // In test runs (Jest), force port 3000 so tests connect regardless of .env PORT
 const IS_JEST = !!process.env.JEST_WORKER_ID;
-const PORT = ((process.env.NODE_ENV === 'test') || IS_JEST) ? 3000 : (process.env.PORT ? parseInt(process.env.PORT, 10) : 3000);
+const TEST_PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const PORT = ((process.env.NODE_ENV === 'test') || IS_JEST) ? TEST_PORT : (process.env.PORT ? parseInt(process.env.PORT, 10) : 3000);
 // Sessions for admin auth (cookie-based, no Basic popups)
 let session = null;
 try { session = require('express-session'); } catch(_) { session = null; }
@@ -218,6 +219,65 @@ function buildAssistantSystemPrompt(){
 
 function norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'').trim(); }
 const TRIPINDEX_PATH = path.join(__dirname, 'public', 'data', 'tripindex.json');
+const TRIPS_DATA_DIR = path.join(__dirname, 'data', 'trips');
+const TRIPS_PUBLIC_DIR = path.join(__dirname, 'public', 'data', 'trips');
+
+function readTripConfig(tripId){
+  try {
+    const id = String(tripId || '').trim();
+    if (!id) return null;
+    const candidates = [
+      path.join(TRIPS_DATA_DIR, `${id}.json`),
+      path.join(TRIPS_PUBLIC_DIR, `${id}.json`)
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        const raw = fs.readFileSync(p, 'utf8');
+        return JSON.parse(raw);
+      }
+    }
+  } catch(_) {}
+  return null;
+}
+
+function normVehicleType(v){
+  const x = String(v || '').toLowerCase();
+  if (x === 'private' || x === 'mercedes/private') return 'mercedes';
+  if (x === 'multi' || x === 'shared' || x === 'minivan') return 'van';
+  if (x === 'van' || x === 'bus' || x === 'mercedes') return x;
+  return '';
+}
+
+function getTripPricing(trip, mode){
+  if (!trip || !mode) return null;
+  const modeSet = trip.mode_set && trip.mode_set[mode] ? trip.mode_set[mode] : null;
+  if (modeSet && Number.isFinite(parseInt(modeSet.price_cents, 10))) {
+    return { price_cents: parseInt(modeSet.price_cents, 10), charge_type: (modeSet.charge_type || 'per_person') };
+  }
+  const modeBlock = trip.modes && trip.modes[mode] ? trip.modes[mode] : null;
+  if (!modeBlock) return null;
+  const chargeType = (modeBlock.charge_type || 'per_person').toLowerCase();
+  if (chargeType === 'per_vehicle') {
+    const priceTotal = Number(modeBlock.price_total);
+    if (Number.isFinite(priceTotal) && priceTotal > 0) {
+      return { price_cents: Math.round(priceTotal * 100), charge_type: chargeType };
+    }
+  } else {
+    const pricePer = Number(modeBlock.price_per_person);
+    if (Number.isFinite(pricePer) && pricePer > 0) {
+      return { price_cents: Math.round(pricePer * 100), charge_type: chargeType };
+    }
+  }
+  return null;
+}
+
+function computeTripPriceCents(trip, mode, seatsCount){
+  const pricing = getTripPricing(trip, mode);
+  if (!pricing || !Number.isFinite(pricing.price_cents) || pricing.price_cents <= 0) return 0;
+  const seats = Math.max(1, parseInt(seatsCount, 10) || 1);
+  if (String(pricing.charge_type || '').toLowerCase() === 'per_vehicle') return pricing.price_cents;
+  return pricing.price_cents * seats;
+}
 // -----------------------------------------------------------------------------
 
 // SQLite bookings database initialization (restored from backup for tests)
@@ -354,7 +414,6 @@ const TRIP_PAGE_FILE = path.join(__dirname, 'public', 'trip.html');
 const STEP1_PAGE_FILE = path.join(__dirname, 'public', 'booking', 'step1.html');
 const STEP2_PAGE_FILE = path.join(__dirname, 'public', 'step2.html');
 const STEP3_PAGE_FILE = path.join(__dirname, 'public', 'step3.html');
-const TRIPS_DATA_DIR = path.join(__dirname, 'data', 'trips');
 const ADMIN_HOME_FILE = path.join(__dirname, 'public', 'admin-home.html');
 const LOCAL_UPLOADS_DIR = path.join(__dirname, 'uploads');
 const UPLOADS_DIR = process.env.RENDER ? getUploadsRoot() : (ensureDir(LOCAL_UPLOADS_DIR) || LOCAL_UPLOADS_DIR);
@@ -681,13 +740,39 @@ app.post('/mock-checkout', express.urlencoded({ extended: true }), (req, res) =>
 app.post('/create-payment-intent', async (req, res) => {
   if (!stripe) return res.status(500).json({ error: 'Stripe not configured on server.' });
   try {
-    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, customerEmail } = req.body || {};
+    const { amount, price_cents, currency, tripId: clientTripId, trip_id: clientTripIdAlt, duration, vehicleType, customerEmail, seats } = req.body || {};
     const { booking_id } = req.body || {};
     const clientMeta = req.body && req.body.metadata ? req.body.metadata : null;
 
-    // Trust UI-provided amount (price_cents or amount); remove server-side recomputation/overrides.
-    const finalAmountCents = parseInt(price_cents || amount || 0, 10) || 0;
-    if (!finalAmountCents || finalAmountCents <= 0) return res.status(400).json({ error: 'Invalid amount' });
+    const clientSubmittedCents = parseInt(price_cents || amount || 0, 10) || 0;
+    let serverAmountCents = 0;
+    // Prefer booking price if booking_id is provided
+    if (booking_id && bookingsDb) {
+      try {
+        const row = bookingsDb.prepare('SELECT price_cents, trip_id, vehicle_type, seats FROM bookings WHERE id = ?').get(booking_id);
+        if (row && Number.isFinite(parseInt(row.price_cents, 10)) && parseInt(row.price_cents, 10) > 0) {
+          serverAmountCents = parseInt(row.price_cents, 10);
+        }
+        if (row && !clientTripId && !clientTripIdAlt) {
+          req.body.trip_id = row.trip_id || req.body.trip_id;
+        }
+        if (row && !vehicleType) {
+          req.body.vehicleType = row.vehicle_type || req.body.vehicleType;
+        }
+        if (row && !seats) {
+          req.body.seats = row.seats || req.body.seats;
+        }
+      } catch(_) {}
+    }
+    if (!serverAmountCents) {
+      const tripIdForPrice = clientTripId || clientTripIdAlt || null;
+      const trip = tripIdForPrice ? readTripConfig(tripIdForPrice) : null;
+      const mode = normVehicleType(vehicleType || req.body.vehicleType || req.body.vehicle_type || '');
+      serverAmountCents = computeTripPriceCents(trip, mode, seats || 1);
+    }
+    if (!serverAmountCents || serverAmountCents <= 0) return res.status(400).json({ error: 'Invalid amount' });
+    if (clientSubmittedCents && clientSubmittedCents !== serverAmountCents) return res.status(400).json({ error: 'Invalid amount' });
+    const finalAmountCents = serverAmountCents;
 
     // Keep trip id for metadata traceability
     let tripId = clientTripId || clientTripIdAlt || null;
