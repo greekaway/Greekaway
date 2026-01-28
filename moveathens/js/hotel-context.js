@@ -1,4 +1,9 @@
 (async () => {
+  // Apply domain-aware home links
+  if (window.MoveAthensConfig?.applyHomeLinks) {
+    window.MoveAthensConfig.applyHomeLinks();
+  }
+
   const cfg = await window.MoveAthensConfig.load();
   const emailInput = document.querySelector('[data-ma-hotel-input="email"]');
   const zoneSelect = document.querySelector('[data-ma-hotel-input="zone"]');

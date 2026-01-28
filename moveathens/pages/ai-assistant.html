@@ -172,7 +172,7 @@
 </head>
 <body class="ma-ai-page">
   <header class="ma-ai-header">
-    <a href="/moveathens/">
+    <a href="/" data-ma-home-link>
       <img src="/moveathens/videos/hero-logo.png" alt="MoveAthens" class="ma-ai-logo">
     </a>
     <h1 class="ma-ai-title">AI Βοηθός</h1>
@@ -211,5 +211,11 @@
 
   <script src="/moveathens/js/moveathens-config.js"></script>
   <script src="/moveathens/js/footer.js"></script>
+  <script>
+    // Apply domain-aware home links
+    if (window.MoveAthensConfig?.applyHomeLinks) {
+      window.MoveAthensConfig.applyHomeLinks();
+    }
+  </script>
 </body>
 </html>

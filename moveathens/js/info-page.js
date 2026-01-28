@@ -5,6 +5,11 @@
 (async () => {
   'use strict';
 
+  // Apply domain-aware home links
+  if (window.MoveAthensConfig?.applyHomeLinks) {
+    window.MoveAthensConfig.applyHomeLinks();
+  }
+
   const titleEl = document.getElementById('info-title');
   const contentEl = document.getElementById('info-content');
 

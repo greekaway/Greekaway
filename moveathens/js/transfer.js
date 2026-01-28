@@ -460,6 +460,12 @@
 
     // Load hotel context
     hotelContext = loadHotelContext();
+    
+    // Apply domain-aware home links
+    if (window.MoveAthensConfig?.applyHomeLinks) {
+      window.MoveAthensConfig.applyHomeLinks();
+    }
+    
     if (!hotelContext?.origin_zone_id) {
       // No zone - show warning
       showStep('noZone');

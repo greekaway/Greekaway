@@ -41,6 +41,44 @@ function hasAdminSession(req){
 
 // (Phase 1 refactor note) Removed transient createApp() indirection; restore direct Express init for stability
 const app = express();
+
+// ========================================
+// CANONICAL DOMAIN REDIRECTS (FIRST MIDDLEWARE)
+// ========================================
+// Redirect onrender.com and www.moveathens.com to canonical https://moveathens.com
+app.use((req, res, next) => {
+  const host = (req.headers.host || '').toLowerCase();
+  
+  // Skip in development/test
+  if (host.includes('localhost') || host.includes('127.0.0.1') || host.endsWith('.local')) {
+    return next();
+  }
+  
+  // Redirect *.onrender.com to moveathens.com (for MoveAthens traffic)
+  if (host.includes('onrender.com')) {
+    // Check if this looks like MoveAthens traffic (based on path or referer)
+    const url = req.url || '/';
+    const referer = req.headers.referer || '';
+    const isMoveAthensTraffic = url.startsWith('/moveathens') || 
+                                 url.startsWith('/api/moveathens') ||
+                                 referer.includes('moveathens');
+    if (isMoveAthensTraffic) {
+      const cleanUrl = url.startsWith('/moveathens') ? url.replace('/moveathens', '') || '/' : url;
+      return res.redirect(301, `https://moveathens.com${cleanUrl}`);
+    }
+    // For Greekaway traffic on onrender.com, redirect to greekaway.com
+    // (uncomment if greekaway.com is also configured)
+    // return res.redirect(301, `https://greekaway.com${url}`);
+  }
+  
+  // Redirect www.moveathens.com to moveathens.com (canonical non-www)
+  if (host === 'www.moveathens.com') {
+    return res.redirect(301, `https://moveathens.com${req.url}`);
+  }
+  
+  next();
+});
+
 // Parse URL-encoded bodies for simple form logins
 app.use(express.urlencoded({ extended: true }));
 // Custom lightweight JSON body parser (replaces express.json())

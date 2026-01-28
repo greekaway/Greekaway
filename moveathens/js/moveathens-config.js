@@ -164,6 +164,14 @@
     return `${prefix}${normalizedPath}`;
   };
 
+  // Apply correct home link URLs based on domain
+  const applyHomeLinks = () => {
+    const homeUrl = buildRoute('/');
+    document.querySelectorAll('[data-ma-home-link]').forEach((el) => {
+      el.setAttribute('href', homeUrl);
+    });
+  };
+
   window.MoveAthensConfig = {
     load,
     applyHero,
@@ -177,6 +185,7 @@
     isDevHost,
     isMoveAthensDomain,
     getRoutePrefix,
-    buildRoute
+    buildRoute,
+    applyHomeLinks
   };
 })();
