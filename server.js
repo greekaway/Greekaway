@@ -43,9 +43,11 @@ function hasAdminSession(req){
 const app = express();
 
 // ========================================
-// CANONICAL DOMAIN REDIRECTS (FIRST MIDDLEWARE)
+// CANONICAL DOMAIN REDIRECTS - DISABLED FOR DEBUGGING
 // ========================================
-// Redirect onrender.com and www.moveathens.com to canonical https://moveathens.com
+// TEMPORARILY DISABLED: Causing redirect loops with Render proxy
+// Will re-enable with proper x-forwarded-proto checks after testing
+/*
 app.use((req, res, next) => {
   const host = (req.headers.host || '').toLowerCase();
   
@@ -56,7 +58,6 @@ app.use((req, res, next) => {
   
   // Redirect *.onrender.com to moveathens.com (for MoveAthens traffic)
   if (host.includes('onrender.com')) {
-    // Check if this looks like MoveAthens traffic (based on path or referer)
     const url = req.url || '/';
     const referer = req.headers.referer || '';
     const isMoveAthensTraffic = url.startsWith('/moveathens') || 
@@ -66,9 +67,6 @@ app.use((req, res, next) => {
       const cleanUrl = url.startsWith('/moveathens') ? url.replace('/moveathens', '') || '/' : url;
       return res.redirect(301, `https://moveathens.com${cleanUrl}`);
     }
-    // For Greekaway traffic on onrender.com, redirect to greekaway.com
-    // (uncomment if greekaway.com is also configured)
-    // return res.redirect(301, `https://greekaway.com${url}`);
   }
   
   // Redirect www.moveathens.com to moveathens.com (canonical non-www)
@@ -78,6 +76,7 @@ app.use((req, res, next) => {
   
   next();
 });
+*/
 
 // ========================================
 // HEALTH CHECK ENDPOINT (for load balancers, uptime monitors)
