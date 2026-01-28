@@ -79,6 +79,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// ========================================
+// HEALTH CHECK ENDPOINT (for load balancers, uptime monitors)
+// ========================================
+app.get('/healthz', (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.status(200).send('ok');
+});
+
 // Parse URL-encoded bodies for simple form logins
 app.use(express.urlencoded({ extended: true }));
 // Custom lightweight JSON body parser (replaces express.json())

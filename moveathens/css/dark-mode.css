@@ -174,6 +174,42 @@
     color: #46d3ff !important;
   }
 
+  /* Tariff selection */
+  .ma-transfer-page .ma-tariff-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f33 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-transfer-page .ma-tariff-card:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ma-transfer-page .ma-tariff-card[data-tariff="day"]:hover,
+  .ma-transfer-page .ma-tariff-card[data-tariff="day"]:focus {
+    border-color: #f39c12 !important;
+    background: linear-gradient(145deg, #2d2510 0%, #1a1508 100%) !important;
+  }
+
+  .ma-transfer-page .ma-tariff-card[data-tariff="night"]:hover,
+  .ma-transfer-page .ma-tariff-card[data-tariff="night"]:focus {
+    border-color: #3498db !important;
+    background: linear-gradient(145deg, #0a1f30 0%, #061520 100%) !important;
+  }
+
+  .ma-transfer-page .ma-tariff-name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-transfer-page .ma-tariff-hours {
+    color: #a0a8b0 !important;
+  }
+
+  .ma-transfer-page .ma-step-tariff-indicator {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #c0c8d0 !important;
+  }
+
   /* Vehicles */
   .ma-transfer-page .ma-vehicle-card {
     background: linear-gradient(145deg, #132742 0%, #132742 100%) !important;

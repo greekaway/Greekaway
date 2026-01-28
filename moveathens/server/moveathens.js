@@ -298,8 +298,11 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   };
 
   // ========================================
-  // TRANSFER PRICE NORMALIZATION (ZONE → DESTINATION → VEHICLE)
+  // TRANSFER PRICE NORMALIZATION (ZONE → DESTINATION → VEHICLE → TARIFF)
+  // Tariff types: 'day' (05:00-00:00), 'night' (00:00-05:00)
   // ========================================
+  const VALID_TARIFFS = ['day', 'night'];
+  
   const normalizeTransferPrice = (entry) => {
     if (!entry || typeof entry !== 'object') return null;
     const originZoneId = normalizeString(entry.origin_zone_id);
@@ -309,11 +312,15 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     const price = Number(entry.price);
     if (!Number.isFinite(price) || price < 0) return null;
     const id = normalizeString(entry.id) || makeId('tp');
+    // Tariff: default to 'day' for backward compatibility
+    let tariff = normalizeString(entry.tariff) || 'day';
+    if (!VALID_TARIFFS.includes(tariff)) tariff = 'day';
     return {
       id,
       origin_zone_id: originZoneId,
       destination_id: destinationId,
       vehicle_type_id: vehicleTypeId,
+      tariff,
       price
     };
   };
@@ -325,8 +332,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     list.forEach((entry) => {
       const normalized = normalizeTransferPrice(entry);
       if (!normalized) return;
-      // Unique: (origin_zone, destination, vehicle_type)
-      const key = `${normalized.origin_zone_id}__${normalized.destination_id}__${normalized.vehicle_type_id}`;
+      // Unique: (origin_zone, destination, vehicle_type, tariff)
+      const key = `${normalized.origin_zone_id}__${normalized.destination_id}__${normalized.vehicle_type_id}__${normalized.tariff}`;
       if (seen.has(key)) return;
       seen.add(key);
       out.push(normalized);
@@ -431,20 +438,33 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   // PRICE CALCULATION LOGIC (SOURCE OF TRUTH)
   // ========================================
   /**
-   * Get price for a specific route
+   * Get price for a specific route and tariff
    * @param {string} originZoneId - Hotel's zone
    * @param {string} destinationId - Destination ID
    * @param {string} vehicleTypeId - Vehicle type
+   * @param {string} tariff - 'day' or 'night'
    * @param {Array} transferPrices - All transfer prices
    * @returns {number|null} - Price or null if not defined
    */
-  const getPrice = (originZoneId, destinationId, vehicleTypeId, transferPrices) => {
+  const getPrice = (originZoneId, destinationId, vehicleTypeId, tariff, transferPrices) => {
     const price = transferPrices.find(p =>
       p.origin_zone_id === originZoneId &&
       p.destination_id === destinationId &&
-      p.vehicle_type_id === vehicleTypeId
+      p.vehicle_type_id === vehicleTypeId &&
+      p.tariff === tariff
     );
     return price ? price.price : null;
+  };
+
+  /**
+   * Get prices for both tariffs
+   * @returns {{ day: number|null, night: number|null }}
+   */
+  const getPricesBothTariffs = (originZoneId, destinationId, vehicleTypeId, transferPrices) => {
+    return {
+      day: getPrice(originZoneId, destinationId, vehicleTypeId, 'day', transferPrices),
+      night: getPrice(originZoneId, destinationId, vehicleTypeId, 'night', transferPrices)
+    };
   };
 
   /**
@@ -473,14 +493,17 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   };
 
   /**
-   * Get available vehicles with prices for a destination
-   * Called from frontend with origin_zone_id (hotel zone) and destination_id
-   * Price lookup: origin_zone_id + destination_id + vehicle_type_id
+   * Get available vehicles with prices for a destination and tariff
+   * Called from frontend with origin_zone_id (hotel zone), destination_id, and tariff
+   * Price lookup: origin_zone_id + destination_id + vehicle_type_id + tariff
+   * @param {string} tariff - 'day' or 'night'
    */
-  const getAvailableVehiclesForDestination = (originZoneId, destinationId, config) => {
+  const getAvailableVehiclesForDestination = (originZoneId, destinationId, tariff, config) => {
     const destination = config.destinations.find(d => d.id === destinationId);
     if (!destination || !destination.is_active) return [];
 
+    // Validate tariff, default to 'day'
+    const validTariff = VALID_TARIFFS.includes(tariff) ? tariff : 'day';
     const results = [];
 
     config.vehicleTypes.forEach(vehicle => {
@@ -495,8 +518,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       );
       if (!isAvailable) return;
 
-      // Get price: origin_zone + destination + vehicle
-      const price = getPrice(originZoneId, destinationId, vehicle.id, config.transferPrices);
+      // Get price: origin_zone + destination + vehicle + tariff
+      const price = getPrice(originZoneId, destinationId, vehicle.id, validTariff, config.transferPrices);
       if (price === null) return; // No price = not shown
 
       results.push({
@@ -508,7 +531,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         luggage_large: vehicle.luggage_large,
         luggage_medium: vehicle.luggage_medium,
         luggage_cabin: vehicle.luggage_cabin,
-        price
+        price,
+        tariff: validTariff
       });
     });
 
@@ -724,18 +748,19 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     }
   });
 
-  // Get vehicles with prices for a destination (requires origin_zone_id)
+  // Get vehicles with prices for a destination (requires origin_zone_id and tariff)
   app.get('/api/moveathens/vehicles', (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
       const originZoneId = normalizeString(req.query.origin_zone_id);
       const destinationId = normalizeString(req.query.destination_id);
+      const tariff = normalizeString(req.query.tariff) || 'day'; // default to day tariff
       if (!originZoneId || !destinationId) {
         return res.status(400).json({ error: 'origin_zone_id and destination_id required' });
       }
       const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      const vehicles = getAvailableVehiclesForDestination(originZoneId, destinationId, data);
-      return res.json({ vehicles });
+      const vehicles = getAvailableVehiclesForDestination(originZoneId, destinationId, tariff, data);
+      return res.json({ vehicles, tariff });
     } catch (err) {
       return res.status(500).json({ error: 'Vehicles unavailable' });
     }

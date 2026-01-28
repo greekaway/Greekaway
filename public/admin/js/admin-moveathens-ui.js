@@ -935,11 +935,12 @@
   };
 
   // ========================================
-  // PRICING TAB (Zone → Destination → Vehicle)
+  // PRICING TAB (Zone → Destination → Tariff → Vehicle)
   // ========================================
   const initPricingTab = () => {
     const originSelect = $('#maPriceOriginZone');
     const destSelect = $('#maPriceDestination');
+    const tariffSelect = $('#maPriceTariff');
     const loadBtn = $('#maPriceLoadBtn');
     const form = $('#ma-pricing-form');
     const grid = $('#ma-pricing-grid');
@@ -951,6 +952,12 @@
       suburb: 'Προάστια',
       port: 'Λιμάνι',
       airport: 'Αεροδρόμιο'
+    };
+
+    // Tariff labels for UI
+    const tariffLabels = {
+      day: '☀️ Ημερήσια (05:00 - 00:00)',
+      night: '🌙 Νυχτερινή (00:00 - 05:00)'
     };
 
     const populateDropdowns = () => {
@@ -996,6 +1003,7 @@
     const loadPrices = () => {
       const originZoneId = originSelect.value;
       const destinationId = destSelect.value;
+      const tariff = tariffSelect?.value || 'day';
       if (!originZoneId || !destinationId) {
         showToast('Επιλέξτε ζώνη ξενοδοχείου και προορισμό');
         return;
@@ -1003,12 +1011,16 @@
       const vehicles = (CONFIG.vehicleTypes || []).filter(v => v.is_active !== false);
       const prices = CONFIG.transferPrices || [];
 
-      grid.innerHTML = vehicles.map(v => {
-        // Find price for this origin_zone + destination + vehicle
+      // Show current tariff in UI
+      const tariffLabel = tariffLabels[tariff] || tariff;
+      grid.innerHTML = `<div class="ma-tariff-indicator">Ταρίφα: ${tariffLabel}</div>` + 
+        vehicles.map(v => {
+        // Find price for this origin_zone + destination + vehicle + tariff
         const existing = prices.find(p =>
           p.origin_zone_id === originZoneId &&
           p.destination_id === destinationId &&
-          p.vehicle_type_id === v.id
+          p.vehicle_type_id === v.id &&
+          (p.tariff || 'day') === tariff
         );
         const price = existing ? existing.price : '';
         return `
@@ -1033,15 +1045,16 @@
 
       const originZoneId = originSelect.value;
       const destinationId = destSelect.value;
+      const tariff = tariffSelect?.value || 'day';
       if (!originZoneId || !destinationId) return;
 
       // Collect all prices
       const inputs = grid.querySelectorAll('.price-input');
       let newPrices = [...(CONFIG.transferPrices || [])];
 
-      // Remove existing prices for this origin_zone + destination combo
+      // Remove existing prices for this origin_zone + destination + tariff combo
       newPrices = newPrices.filter(p =>
-        !(p.origin_zone_id === originZoneId && p.destination_id === destinationId)
+        !(p.origin_zone_id === originZoneId && p.destination_id === destinationId && (p.tariff || 'day') === tariff)
       );
 
       // Add new prices
@@ -1050,10 +1063,11 @@
         const price = parseFloat(input.value);
         if (Number.isFinite(price) && price >= 0) {
           newPrices.push({
-            id: `tp_${Date.now()}_${vehicleId}`,
+            id: `tp_${Date.now()}_${vehicleId}_${tariff}`,
             origin_zone_id: originZoneId,
             destination_id: destinationId,
             vehicle_type_id: vehicleId,
+            tariff,
             price
           });
         }

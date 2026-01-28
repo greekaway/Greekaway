@@ -329,7 +329,7 @@
           <div class="ma-section-header">
             <div>
               <h3 class="ma-subtitle">Τιμολόγηση</h3>
-              <p class="ma-helper">Τιμή = Ζώνη Ξενοδοχείου → Προορισμός → Τύπος Οχήματος</p>
+              <p class="ma-helper">Τιμή = Ζώνη Ξενοδοχείου → Προορισμός → Ταρίφα → Τύπος Οχήματος</p>
             </div>
           </div>
 
@@ -339,6 +339,12 @@
             </label>
             <label>Προορισμός (προς)
               <select id="maPriceDestination" class="input"></select>
+            </label>
+            <label>Ταρίφα
+              <select id="maPriceTariff" class="input">
+                <option value="day">☀️ Ημερήσια (05:00 - 00:00)</option>
+                <option value="night">🌙 Νυχτερινή (00:00 - 05:00)</option>
+              </select>
             </label>
             <button id="maPriceLoadBtn" class="btn secondary" type="button">Φόρτωση Τιμών</button>
           </div>

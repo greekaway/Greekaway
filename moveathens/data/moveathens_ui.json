@@ -118,6 +118,7 @@
       "origin_zone_id": "tz_1769602772374",
       "destination_id": "dest_1769606127352",
       "vehicle_type_id": "vt_1769602918068",
+      "tariff": "day",
       "price": 50
     },
     {
@@ -125,6 +126,7 @@
       "origin_zone_id": "tz_1769602772374",
       "destination_id": "dest_1769606127352",
       "vehicle_type_id": "vt_1769606282004",
+      "tariff": "day",
       "price": 100
     },
     {
@@ -132,6 +134,7 @@
       "origin_zone_id": "tz_1769603309708",
       "destination_id": "dest_1769606127352",
       "vehicle_type_id": "vt_1769602918068",
+      "tariff": "day",
       "price": 80
     },
     {
@@ -139,7 +142,24 @@
       "origin_zone_id": "tz_1769603309708",
       "destination_id": "dest_1769606127352",
       "vehicle_type_id": "vt_1769606282004",
+      "tariff": "day",
       "price": 120
+    },
+    {
+      "id": "tp_1769632432966_vt_1769602918068_night",
+      "origin_zone_id": "tz_1769603309708",
+      "destination_id": "dest_1769606127352",
+      "vehicle_type_id": "vt_1769602918068",
+      "tariff": "night",
+      "price": 300
+    },
+    {
+      "id": "tp_1769632432966_vt_1769606282004_night",
+      "origin_zone_id": "tz_1769603309708",
+      "destination_id": "dest_1769606127352",
+      "vehicle_type_id": "vt_1769606282004",
+      "tariff": "night",
+      "price": 500
     }
   ],
   "vehicleCategoryAvailability": [],

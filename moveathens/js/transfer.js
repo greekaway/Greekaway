@@ -1,6 +1,6 @@
 /**
  * MoveAthens Transfer Flow
- * Step 1: Categories → Step 2: Destinations → Step 3: Vehicles → Step 4: Confirm
+ * Step 1: Categories → Step 2: Destinations → Step 3: Tariff → Step 4: Vehicles → Step 5: Confirm
  */
 (() => {
   'use strict';
@@ -12,6 +12,7 @@
   let hotelContext = null;  // { origin_zone_id, ... }
   let selectedCategory = null;
   let selectedDestination = null;
+  let selectedTariff = null; // 'day' or 'night'
   let selectedVehicle = null;
   
   // Passenger & Luggage selection state
@@ -20,6 +21,12 @@
   let selectedLuggageMedium = 0;
   let selectedLuggageCabin = 0;
   let selectedPaymentMethod = null; // 'cash' or 'pos'
+
+  // Tariff labels for UI
+  const TARIFF_LABELS = {
+    day: '☀️ Ημερήσια (05:00 - 00:00)',
+    night: '🌙 Νυχτερινή (00:00 - 05:00)'
+  };
 
   // ========================================
   // DOM
@@ -30,6 +37,7 @@
   const steps = {
     categories: $('#step-categories'),
     destinations: $('#step-destinations'),
+    tariff: $('#step-tariff'),
     vehicles: $('#step-vehicles'),
     confirm: $('#step-confirm'),
     noZone: $('#step-no-zone')
@@ -40,9 +48,12 @@
   const vehiclesGrid = $('#vehicles-grid');
   const selectedCategoryName = $('#selected-category-name');
   const selectedDestinationName = $('#selected-destination-name');
+  const selectedDestinationForTariff = $('#selected-destination-for-tariff');
+  const selectedTariffIndicator = $('#selected-tariff-indicator');
 
   // Confirm step
   const confirmDestination = $('#confirm-destination');
+  const confirmTariff = $('#confirm-tariff');
   const confirmVehicle = $('#confirm-vehicle');
   const confirmPrice = $('#confirm-price');
   const ctaWhatsapp = $('#cta-whatsapp');
@@ -152,25 +163,61 @@
       </button>
     `).join('');
 
-    // Event listeners
+    // Event listeners - now goes to tariff selection instead of vehicles
     destinationsList.querySelectorAll('.ma-destination-item').forEach(item => {
       item.addEventListener('click', () => {
         selectedDestination = {
           id: item.dataset.id,
           name: item.dataset.name
         };
+        showTariffSelection();
+      });
+    });
+  };
+
+  // ========================================
+  // TARIFF SELECTION STEP
+  // ========================================
+  const showTariffSelection = () => {
+    if (!selectedDestination) return;
+    
+    // Update subtitle with destination name
+    if (selectedDestinationForTariff) {
+      selectedDestinationForTariff.textContent = `Προορισμός: ${selectedDestination.name}`;
+    }
+    
+    showStep('tariff');
+    
+    // Setup tariff card listeners
+    const tariffCards = document.querySelectorAll('.ma-tariff-card');
+    tariffCards.forEach(card => {
+      // Remove old listeners by cloning
+      const newCard = card.cloneNode(true);
+      card.parentNode.replaceChild(newCard, card);
+    });
+    
+    // Add fresh listeners
+    document.querySelectorAll('.ma-tariff-card').forEach(card => {
+      card.addEventListener('click', () => {
+        selectedTariff = card.dataset.tariff;
         loadVehicles();
       });
     });
   };
 
   const loadVehicles = async () => {
-    if (!selectedDestination || !hotelContext?.origin_zone_id) return;
+    if (!selectedDestination || !hotelContext?.origin_zone_id || !selectedTariff) return;
     selectedDestinationName.textContent = selectedDestination.name;
+    
+    // Show tariff indicator
+    if (selectedTariffIndicator) {
+      selectedTariffIndicator.textContent = TARIFF_LABELS[selectedTariff] || selectedTariff;
+    }
+    
     vehiclesGrid.innerHTML = '<div class="ma-loading">Φόρτωση...</div>';
     showStep('vehicles');
 
-    const url = `/api/moveathens/vehicles?origin_zone_id=${encodeURIComponent(hotelContext.origin_zone_id)}&destination_id=${encodeURIComponent(selectedDestination.id)}`;
+    const url = `/api/moveathens/vehicles?origin_zone_id=${encodeURIComponent(hotelContext.origin_zone_id)}&destination_id=${encodeURIComponent(selectedDestination.id)}&tariff=${encodeURIComponent(selectedTariff)}`;
     const data = await api(url);
 
     if (!data || !data.vehicles || !data.vehicles.length) {
@@ -214,9 +261,12 @@
   };
 
   const showConfirmation = () => {
-    if (!selectedDestination || !selectedVehicle) return;
+    if (!selectedDestination || !selectedVehicle || !selectedTariff) return;
 
     confirmDestination.textContent = selectedDestination.name;
+    if (confirmTariff) {
+      confirmTariff.textContent = TARIFF_LABELS[selectedTariff] || selectedTariff;
+    }
     confirmVehicle.textContent = selectedVehicle.name;
     confirmPrice.textContent = `€${selectedVehicle.price.toFixed(0)}`;
 
@@ -361,10 +411,14 @@
       travelDetails += `💳 Πληρωμή: ${paymentLabel}\n`;
     }
 
+    // Get tariff label
+    const tariffLabel = TARIFF_LABELS[selectedTariff] || selectedTariff;
+
     // Build message content
     const messageText = 
       `Γεια σας! Θέλω να κλείσω transfer:\n\n` +
       `🎯 Προορισμός: ${selectedDestination.name}\n` +
+      `🕐 Ταρίφα: ${tariffLabel}\n` +
       `🚗 Όχημα: ${selectedVehicle.name}\n` +
       (travelDetails ? `\n${travelDetails}` : '') +
       `💰 Τιμή: €${selectedVehicle.price.toFixed(0)}\n\n` +
@@ -481,9 +535,17 @@
       showStep('categories');
     });
 
-    $('#back-to-destinations')?.addEventListener('click', () => {
+    // From tariff back to destinations
+    $('#back-to-destinations-from-tariff')?.addEventListener('click', () => {
       selectedDestination = null;
+      selectedTariff = null;
       showStep('destinations');
+    });
+
+    // From vehicles back to tariff
+    $('#back-to-tariff')?.addEventListener('click', () => {
+      selectedTariff = null;
+      showStep('tariff');
     });
 
     $('#back-to-vehicles')?.addEventListener('click', () => {

@@ -35,15 +35,35 @@
       <div id="destinations-list" class="ma-destinations-list" aria-live="polite"></div>
     </section>
 
-    <!-- Step 3: Vehicles -->
+    <!-- Step 3: Tariff Selection -->
+    <section id="step-tariff" class="ma-step">
+      <button class="ma-back-btn" id="back-to-destinations-from-tariff" type="button">← Πίσω</button>
+      <h2 class="ma-step-title">Επιλέξτε Ώρα Διαδρομής</h2>
+      <p class="ma-step-subtitle" id="selected-destination-for-tariff"></p>
+      <div class="ma-tariff-grid">
+        <button class="ma-tariff-card" data-tariff="day" type="button">
+          <span class="ma-tariff-icon">☀️</span>
+          <span class="ma-tariff-name">Ημερήσια Ταρίφα</span>
+          <span class="ma-tariff-hours">05:00 - 00:00</span>
+        </button>
+        <button class="ma-tariff-card" data-tariff="night" type="button">
+          <span class="ma-tariff-icon">🌙</span>
+          <span class="ma-tariff-name">Νυχτερινή Ταρίφα</span>
+          <span class="ma-tariff-hours">00:00 - 05:00</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Step 4: Vehicles -->
     <section id="step-vehicles" class="ma-step">
-      <button class="ma-back-btn" id="back-to-destinations" type="button">← Πίσω</button>
+      <button class="ma-back-btn" id="back-to-tariff" type="button">← Πίσω</button>
       <h2 class="ma-step-title">Επιλέξτε Όχημα</h2>
       <p class="ma-step-subtitle" id="selected-destination-name"></p>
+      <p class="ma-step-tariff-indicator" id="selected-tariff-indicator"></p>
       <div id="vehicles-grid" class="ma-vehicles-grid" aria-live="polite"></div>
     </section>
 
-    <!-- Step 4: Confirmation / CTA -->
+    <!-- Step 5: Confirmation / CTA -->
     <section id="step-confirm" class="ma-step">
       <button class="ma-back-btn" id="back-to-vehicles" type="button">← Πίσω</button>
       <h2 class="ma-step-title">Επιβεβαίωση</h2>
@@ -51,6 +71,10 @@
         <div class="ma-confirm-row">
           <span class="ma-confirm-label">Προορισμός:</span>
           <span id="confirm-destination" class="ma-confirm-value"></span>
+        </div>
+        <div class="ma-confirm-row">
+          <span class="ma-confirm-label">Ταρίφα:</span>
+          <span id="confirm-tariff" class="ma-confirm-value"></span>
         </div>
         <div class="ma-confirm-row">
           <span class="ma-confirm-label">Όχημα:</span>
