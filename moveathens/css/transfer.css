@@ -3,29 +3,38 @@
 .ma-transfer-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-  padding-bottom: 80px;
+  padding-bottom: 160px;
 }
 
 .ma-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #001f3f 0%, #003366 100%);
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(0, 31, 63, 0.3);
+  justify-content: center;
+  position: relative;
+  padding: 20px 16px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.ma-logo {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .ma-logo-img {
-  height: 48px;
+  height: 90px;
   width: auto;
+  filter: brightness(0);
 }
 
 .ma-page-title {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   margin: 0;
-  letter-spacing: 0.5px;
+  text-align: center;
+  color: #1a1a2e;
 }
 
 .ma-main {
@@ -66,7 +75,7 @@
 .ma-back-btn {
   background: transparent;
   border: none;
-  color: #0066cc;
+  color: #1a1a2e;
   font-size: 14px;
   font-weight: 500;
   padding: 8px 0;
@@ -78,7 +87,7 @@
 }
 
 .ma-back-btn:hover {
-  color: #004499;
+  color: #333;
 }
 
 /* Loading */
@@ -353,6 +362,157 @@
   color: #0066cc;
 }
 
+/* Selection Card (Passengers & Luggage) */
+.ma-selection-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  border: none;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.ma-selection-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.ma-selection-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ma-selection-row:last-of-type {
+  border-bottom: none;
+}
+
+.ma-selection-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ma-selection-icon {
+  font-size: 22px;
+}
+
+.ma-selection-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.ma-selection-max {
+  font-size: 12px;
+  color: #888;
+  font-weight: 400;
+}
+
+/* Counter Controls */
+.ma-counter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f5f7fa;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.ma-counter-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ma-counter-minus {
+  background: linear-gradient(145deg, #fff 0%, #f0f0f0 100%);
+  color: #666;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.ma-counter-minus:hover:not(:disabled) {
+  background: linear-gradient(145deg, #f5f5f5 0%, #e8e8e8 100%);
+}
+
+.ma-counter-plus {
+  background: linear-gradient(145deg, #0077ee 0%, #0066cc 100%);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 102, 204, 0.3);
+}
+
+.ma-counter-plus:hover:not(:disabled) {
+  background: linear-gradient(145deg, #0088ff 0%, #0077ee 100%);
+  transform: scale(1.05);
+}
+
+.ma-counter-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.ma-counter-btn.ma-counter-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.ma-counter-value {
+  min-width: 36px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.ma-selection-hint {
+  font-size: 12px;
+  color: #888;
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  text-align: center;
+}
+
+/* Contact Title */
+.ma-contact-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #555;
+  margin: 24px 0 16px;
+  text-align: center;
+}
+
+/* CTA Grid - 3 options */
+.ma-cta-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 400px) {
+  .ma-cta-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 /* CTA Buttons */
 .ma-cta-buttons {
   display: grid;
@@ -362,29 +522,51 @@
 
 .ma-cta-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 16px 20px;
-  border-radius: 14px;
-  font-size: 16px;
-  font-weight: 700;
+  gap: 6px;
+  padding: 18px 14px;
+  border-radius: 16px;
   text-decoration: none;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .ma-cta-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
 .ma-cta-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
+}
+
+.ma-cta-icon {
+  font-size: 28px;
+}
+
+.ma-cta-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ma-cta-desc {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
 }
 
 .ma-cta-whatsapp {
   background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: #fff;
+}
+
+.ma-cta-whatsapp-call {
+  background: linear-gradient(135deg, #075e54 0%, #054d44 100%);
   color: #fff;
 }
 
@@ -393,8 +575,9 @@
   color: #fff;
 }
 
-.ma-cta-icon {
-  font-size: 20px;
+.ma-cta-email {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #fff;
 }
 
 /* Warning Card */
@@ -467,4 +650,218 @@
 
 .ma-nav-label {
   font-weight: 500;
+}
+/* Payment Method Selection */
+.ma-payment-options {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ma-payment-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.ma-payment-btn:hover {
+  border-color: #0066cc;
+  background: linear-gradient(145deg, #f8f9fa 0%, #f0f4f8 100%);
+}
+
+.ma-payment-btn.active {
+  border-color: #0066cc;
+  background: linear-gradient(145deg, #e8f4ff 0%, #d0e8ff 100%);
+  color: #0066cc;
+  box-shadow: 
+    0 3px 8px rgba(0, 102, 204, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.ma-payment-btn span {
+  font-size: 18px;
+}
+
+/* ========================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
+/* Very small phones (iPhone SE, small Androids) */
+@media (max-width: 359px) {
+  .ma-transfer-header h1 {
+    font-size: 18px;
+  }
+  
+  .ma-categories-grid {
+    gap: 10px;
+  }
+  
+  .ma-category-card {
+    padding: 18px 10px;
+  }
+  
+  .ma-category-icon-img {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .ma-category-name {
+    font-size: 13px;
+  }
+  
+  .ma-destination-item {
+    padding: 14px 16px;
+  }
+  
+  .ma-destination-name {
+    font-size: 15px;
+  }
+  
+  .ma-vehicle-card {
+    padding: 14px;
+  }
+  
+  .ma-vehicle-image {
+    width: 70px;
+    height: 50px;
+  }
+  
+  .ma-vehicle-name {
+    font-size: 15px;
+  }
+  
+  .ma-vehicle-price {
+    font-size: 18px;
+  }
+  
+  .ma-selection-card {
+    padding: 14px;
+  }
+  
+  .ma-selection-card h4 {
+    font-size: 13px;
+  }
+  
+  .ma-counter-value {
+    min-width: 36px;
+    font-size: 16px;
+  }
+  
+  .ma-counter-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .ma-cta-btn {
+    padding: 14px 10px;
+  }
+  
+  .ma-cta-icon {
+    font-size: 22px;
+  }
+  
+  .ma-cta-label {
+    font-size: 12px;
+  }
+  
+  .ma-payment-btn {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+  
+  .ma-payment-btn span {
+    font-size: 16px;
+  }
+}
+
+/* Small phones (iPhone 12 mini, older iPhones) */
+@media (min-width: 360px) and (max-width: 389px) {
+  .ma-categories-grid {
+    gap: 12px;
+  }
+  
+  .ma-category-card {
+    padding: 20px 12px;
+  }
+  
+  .ma-counter-value {
+    min-width: 40px;
+  }
+}
+
+/* Standard phones (iPhone 12/13/14, most Androids) */
+@media (min-width: 390px) and (max-width: 429px) {
+  .ma-categories-grid {
+    gap: 14px;
+  }
+}
+
+/* Large phones (iPhone Pro Max, large Androids) */
+@media (min-width: 430px) {
+  .ma-transfer-header h1 {
+    font-size: 24px;
+  }
+  
+  .ma-category-card {
+    padding: 28px 18px;
+  }
+  
+  .ma-category-icon-img {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .ma-category-name {
+    font-size: 16px;
+  }
+  
+  .ma-destination-item {
+    padding: 20px 24px;
+  }
+  
+  .ma-vehicle-card {
+    padding: 20px;
+  }
+  
+  .ma-vehicle-image {
+    width: 100px;
+    height: 70px;
+  }
+  
+  .ma-vehicle-name {
+    font-size: 18px;
+  }
+  
+  .ma-cta-btn {
+    padding: 22px 18px;
+  }
+  
+  .ma-cta-icon {
+    font-size: 32px;
+  }
+}
+
+/* Safe area insets for notched phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .ma-transfer-page {
+    padding-bottom: calc(160px + env(safe-area-inset-bottom));
+  }
+  
+  .ma-cta-container {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

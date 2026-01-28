@@ -1076,6 +1076,94 @@
   };
 
   // ========================================
+  // INFO PAGE TAB
+  // ========================================
+  const initInfoPageTab = () => {
+    const form = $('#ma-infopage-form');
+    const titleInput = $('#maInfoPageTitle');
+    const contentInput = $('#maInfoPageContent');
+    const saveBtn = $('#maInfoPageSaveBtn');
+    const status = $('#maInfoPageStatus');
+    const preview = $('#maInfoPagePreview');
+
+    // Simple markdown-like parser
+    const parseContent = (text) => {
+      if (!text) return '';
+      // Escape HTML
+      let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      
+      // Bold: **text**
+      html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      // Italic: *text*
+      html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      // Lists: lines starting with -
+      html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+      // Paragraphs: double newlines
+      html = html.split(/\n\n+/).map(p => {
+        p = p.trim();
+        if (!p) return '';
+        if (p.startsWith('<ul>') || p.startsWith('<li>')) return p;
+        return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+      }).join('');
+      
+      return html;
+    };
+
+    const updatePreview = () => {
+      if (preview) {
+        const title = titleInput?.value || '';
+        const content = contentInput?.value || '';
+        let html = '';
+        if (title) html += `<h2 style="margin:0 0 12px;font-size:20px;">${title.replace(/</g,'&lt;')}</h2>`;
+        html += parseContent(content);
+        preview.innerHTML = html || '<span style="color:#999;">Η προεπισκόπηση θα εμφανιστεί εδώ...</span>';
+      }
+    };
+
+    const populate = () => {
+      if (titleInput) titleInput.value = CONFIG.infoPageTitle || '';
+      if (contentInput) contentInput.value = CONFIG.infoPageContent || '';
+      updatePreview();
+    };
+
+    // Live preview on input
+    if (titleInput) titleInput.addEventListener('input', updatePreview);
+    if (contentInput) contentInput.addEventListener('input', updatePreview);
+
+    // Save
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setStatus(status, 'Αποθήκευση...', '');
+
+        const payload = {
+          infoPageTitle: titleInput?.value || '',
+          infoPageContent: contentInput?.value || ''
+        };
+
+        const res = await api('/api/admin/moveathens/ui-config', 'PUT', payload);
+        if (!res) return;
+
+        if (res.ok) {
+          const data = await res.json();
+          Object.assign(CONFIG, data);
+          showToast('Αποθηκεύτηκε!');
+          setStatus(status, '✓ Αποθηκεύτηκε', 'ok');
+        } else {
+          const err = await res.json().catch(() => ({}));
+          setStatus(status, err.error || 'Σφάλμα', 'error');
+        }
+      });
+    }
+
+    return { populate };
+  };
+
+  // ========================================
   // INIT
   // ========================================
   const init = async () => {
@@ -1086,6 +1174,7 @@
     const vehiclesTab = initVehiclesTab();
     const zonesTab = initZonesTab();
     const pricingTab = initPricingTab();
+    const infoPageTab = initInfoPageTab();
 
     await loadConfig();
 
@@ -1095,6 +1184,7 @@
     vehiclesTab.render();
     zonesTab.render();
     pricingTab.render();
+    infoPageTab.populate();
   };
 
   if (document.readyState === 'loading') {

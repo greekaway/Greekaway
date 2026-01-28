@@ -13,6 +13,13 @@
   let selectedCategory = null;
   let selectedDestination = null;
   let selectedVehicle = null;
+  
+  // Passenger & Luggage selection state
+  let selectedPassengers = 0;
+  let selectedLuggageLarge = 0;
+  let selectedLuggageMedium = 0;
+  let selectedLuggageCabin = 0;
+  let selectedPaymentMethod = null; // 'cash' or 'pos'
 
   // ========================================
   // DOM
@@ -37,9 +44,9 @@
   // Confirm step
   const confirmDestination = $('#confirm-destination');
   const confirmVehicle = $('#confirm-vehicle');
-  const confirmCapacity = $('#confirm-capacity');
   const confirmPrice = $('#confirm-price');
   const ctaWhatsapp = $('#cta-whatsapp');
+  const ctaWhatsappCall = $('#cta-whatsapp-call');
   const ctaPhone = $('#cta-phone');
   const ctaWhatsappFallback = $('#cta-whatsapp-fallback');
   const ctaPhoneFallback = $('#cta-phone-fallback');
@@ -211,22 +218,228 @@
 
     confirmDestination.textContent = selectedDestination.name;
     confirmVehicle.textContent = selectedVehicle.name;
-    confirmCapacity.textContent = `${selectedVehicle.max_passengers} επιβάτες`;
     confirmPrice.textContent = `€${selectedVehicle.price.toFixed(0)}`;
 
-    // Build WhatsApp message
-    const msg = encodeURIComponent(
-      `Γεια σας! Θέλω να κλείσω transfer:\n` +
-      `📍 Προορισμός: ${selectedDestination.name}\n` +
-      `🚗 Όχημα: ${selectedVehicle.name}\n` +
-      `💰 Τιμή: €${selectedVehicle.price.toFixed(0)}\n` +
-      `Από: ${hotelContext.hotelName || 'Ξενοδοχείο'}`
-    );
-    const phone = CONFIG?.whatsappNumber?.replace(/[^0-9+]/g, '') || '';
-    ctaWhatsapp.href = `https://wa.me/${phone}?text=${msg}`;
-    ctaPhone.href = `tel:${CONFIG?.phoneNumber || ''}`;
+    // Reset passenger & luggage selections
+    selectedPassengers = 0;
+    selectedLuggageLarge = 0;
+    selectedLuggageMedium = 0;
+    selectedLuggageCabin = 0;
+    selectedPaymentMethod = null;
+
+    // Update max values display
+    $('#passengers-max').textContent = `(μέγ. ${selectedVehicle.max_passengers})`;
+    $('#luggage-large-max').textContent = `(μέγ. ${selectedVehicle.luggage_large || 0})`;
+    $('#luggage-medium-max').textContent = `(μέγ. ${selectedVehicle.luggage_medium || 0})`;
+    $('#luggage-cabin-max').textContent = `(μέγ. ${selectedVehicle.luggage_cabin || 0})`;
+
+    // Reset counter displays
+    $('#passengers-count').textContent = '0';
+    $('#luggage-large-count').textContent = '0';
+    $('#luggage-medium-count').textContent = '0';
+    $('#luggage-cabin-count').textContent = '0';
+
+    // Reset payment buttons
+    $$('.ma-payment-btn').forEach(btn => btn.classList.remove('active'));
+
+    // Setup payment button listeners
+    setupPaymentListeners();
+
+    // Reset button states
+    updateCounterButtons();
+
+    // Setup counter event listeners
+    setupCounterListeners();
+
+    const hotelName = hotelContext.origin_zone_name || hotelContext.hotelName || 'Ξενοδοχείο';
+    const hotelAddress = hotelContext.address || '';
+    
+    // Build location info (zone + address if available)
+    let locationInfo = `🏨 Περιοχή: ${hotelName}`;
+    if (hotelAddress) {
+      locationInfo += `\n📍 Διεύθυνση: ${hotelAddress}`;
+    }
+
+    // Update CTA links with message
+    updateCtaLinks(locationInfo);
 
     showStep('confirm');
+  };
+
+  // ========================================
+  // COUNTER LOGIC
+  // ========================================
+  const updateCounterButtons = () => {
+    // Passengers
+    $('#passengers-minus').disabled = selectedPassengers <= 0;
+    $('#passengers-plus').disabled = selectedPassengers >= selectedVehicle.max_passengers;
+
+    // Large luggage
+    const maxLarge = selectedVehicle.luggage_large || 0;
+    $('#luggage-large-minus').disabled = selectedLuggageLarge <= 0;
+    $('#luggage-large-plus').disabled = selectedLuggageLarge >= maxLarge || maxLarge === 0;
+    if (maxLarge === 0) {
+      $('#luggage-large-plus').classList.add('ma-counter-disabled');
+      $('#luggage-large-minus').classList.add('ma-counter-disabled');
+    } else {
+      $('#luggage-large-plus').classList.remove('ma-counter-disabled');
+      $('#luggage-large-minus').classList.remove('ma-counter-disabled');
+    }
+
+    // Medium luggage
+    const maxMedium = selectedVehicle.luggage_medium || 0;
+    $('#luggage-medium-minus').disabled = selectedLuggageMedium <= 0;
+    $('#luggage-medium-plus').disabled = selectedLuggageMedium >= maxMedium || maxMedium === 0;
+    if (maxMedium === 0) {
+      $('#luggage-medium-plus').classList.add('ma-counter-disabled');
+      $('#luggage-medium-minus').classList.add('ma-counter-disabled');
+    } else {
+      $('#luggage-medium-plus').classList.remove('ma-counter-disabled');
+      $('#luggage-medium-minus').classList.remove('ma-counter-disabled');
+    }
+
+    // Cabin luggage
+    const maxCabin = selectedVehicle.luggage_cabin || 0;
+    $('#luggage-cabin-minus').disabled = selectedLuggageCabin <= 0;
+    $('#luggage-cabin-plus').disabled = selectedLuggageCabin >= maxCabin || maxCabin === 0;
+    if (maxCabin === 0) {
+      $('#luggage-cabin-plus').classList.add('ma-counter-disabled');
+      $('#luggage-cabin-minus').classList.add('ma-counter-disabled');
+    } else {
+      $('#luggage-cabin-plus').classList.remove('ma-counter-disabled');
+      $('#luggage-cabin-minus').classList.remove('ma-counter-disabled');
+    }
+  };
+
+  // Setup payment method listeners
+  const setupPaymentListeners = () => {
+    const paymentBtns = document.querySelectorAll('.ma-payment-btn');
+    paymentBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Toggle selection - if clicking the active one, deselect it
+        if (btn.classList.contains('active')) {
+          btn.classList.remove('active');
+          selectedPaymentMethod = null;
+        } else {
+          // Remove active from all, then add to clicked
+          paymentBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedPaymentMethod = btn.dataset.payment;
+        }
+        updateCtaLinks();
+      });
+    });
+  };
+
+  const updateCtaLinks = (locationInfo) => {
+    const hotelName = hotelContext.origin_zone_name || hotelContext.hotelName || 'Ξενοδοχείο';
+    const hotelAddress = hotelContext.address || '';
+    
+    if (!locationInfo) {
+      locationInfo = `🏨 Περιοχή: ${hotelName}`;
+      if (hotelAddress) {
+        locationInfo += `\n📍 Διεύθυνση: ${hotelAddress}`;
+      }
+    }
+
+    // Build passenger/luggage info only if selected
+    let travelDetails = '';
+    if (selectedPassengers > 0) {
+      travelDetails += `👥 Επιβάτες: ${selectedPassengers}\n`;
+    }
+    if (selectedLuggageLarge > 0) {
+      travelDetails += `🧳 Μεγάλες αποσκευές: ${selectedLuggageLarge}\n`;
+    }
+    if (selectedLuggageMedium > 0) {
+      travelDetails += `💼 Μεσαίες αποσκευές: ${selectedLuggageMedium}\n`;
+    }
+    if (selectedLuggageCabin > 0) {
+      travelDetails += `🎒 Χειραποσκευές: ${selectedLuggageCabin}\n`;
+    }
+    if (selectedPaymentMethod) {
+      const paymentLabel = selectedPaymentMethod === 'cash' ? 'Μετρητά' : 'POS';
+      travelDetails += `💳 Πληρωμή: ${paymentLabel}\n`;
+    }
+
+    // Build message content
+    const messageText = 
+      `Γεια σας! Θέλω να κλείσω transfer:\n\n` +
+      `🎯 Προορισμός: ${selectedDestination.name}\n` +
+      `🚗 Όχημα: ${selectedVehicle.name}\n` +
+      (travelDetails ? `\n${travelDetails}` : '') +
+      `💰 Τιμή: €${selectedVehicle.price.toFixed(0)}\n\n` +
+      `${locationInfo}\n\n` +
+      `Παρακαλώ επικοινωνήστε μαζί μου για να ολοκληρώσουμε την κράτηση.`;
+
+    // WhatsApp link with pre-filled message
+    const whatsappMsg = encodeURIComponent(messageText);
+    const phone = CONFIG?.whatsappNumber?.replace(/[^0-9+]/g, '') || '';
+    ctaWhatsapp.href = `https://wa.me/${phone}?text=${whatsappMsg}`;
+    
+    // WhatsApp call link
+    const ctaWhatsappCallEl = $('#cta-whatsapp-call');
+    if (ctaWhatsappCallEl) {
+      ctaWhatsappCallEl.href = `https://wa.me/${phone}`;
+    }
+    
+    // Phone link
+    ctaPhone.href = `tel:${CONFIG?.phoneNumber || ''}`;
+    
+    // Email link with pre-filled subject and body
+    const ctaEmail = $('#cta-email');
+    if (ctaEmail && CONFIG?.companyEmail) {
+      const emailSubject = encodeURIComponent(`Κράτηση Transfer - ${selectedDestination.name}`);
+      const emailBody = encodeURIComponent(messageText);
+      ctaEmail.href = `mailto:${CONFIG.companyEmail}?subject=${emailSubject}&body=${emailBody}`;
+    }
+  };
+
+  const setupCounterListeners = () => {
+    // Remove old listeners by cloning elements
+    const counters = [
+      { minus: '#passengers-minus', plus: '#passengers-plus', count: '#passengers-count', 
+        getValue: () => selectedPassengers, setValue: (v) => selectedPassengers = v, max: () => selectedVehicle.max_passengers },
+      { minus: '#luggage-large-minus', plus: '#luggage-large-plus', count: '#luggage-large-count',
+        getValue: () => selectedLuggageLarge, setValue: (v) => selectedLuggageLarge = v, max: () => selectedVehicle.luggage_large || 0 },
+      { minus: '#luggage-medium-minus', plus: '#luggage-medium-plus', count: '#luggage-medium-count',
+        getValue: () => selectedLuggageMedium, setValue: (v) => selectedLuggageMedium = v, max: () => selectedVehicle.luggage_medium || 0 },
+      { minus: '#luggage-cabin-minus', plus: '#luggage-cabin-plus', count: '#luggage-cabin-count',
+        getValue: () => selectedLuggageCabin, setValue: (v) => selectedLuggageCabin = v, max: () => selectedVehicle.luggage_cabin || 0 }
+    ];
+
+    counters.forEach(c => {
+      const minusBtn = $(c.minus);
+      const plusBtn = $(c.plus);
+      const countEl = $(c.count);
+
+      // Clone to remove old listeners
+      const newMinus = minusBtn.cloneNode(true);
+      const newPlus = plusBtn.cloneNode(true);
+      minusBtn.parentNode.replaceChild(newMinus, minusBtn);
+      plusBtn.parentNode.replaceChild(newPlus, plusBtn);
+
+      // Add new listeners
+      newMinus.addEventListener('click', () => {
+        const val = c.getValue();
+        if (val > 0) {
+          c.setValue(val - 1);
+          countEl.textContent = c.getValue();
+          updateCounterButtons();
+          updateCtaLinks();
+        }
+      });
+
+      newPlus.addEventListener('click', () => {
+        const val = c.getValue();
+        const maxVal = c.max();
+        if (val < maxVal) {
+          c.setValue(val + 1);
+          countEl.textContent = c.getValue();
+          updateCounterButtons();
+          updateCtaLinks();
+        }
+      });
+    });
   };
 
   // ========================================

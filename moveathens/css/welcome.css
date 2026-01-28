@@ -144,3 +144,49 @@
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 }
+
+/* ========================================
+   RESPONSIVE WELCOME PAGE
+   ======================================== */
+
+/* Very small phones (iPhone SE) */
+@media (max-width: 359px) {
+  .ma-hero__headline {
+    font-size: 22px;
+  }
+  
+  .ma-hero__subtext {
+    font-size: 13px;
+  }
+  
+  .ma-hero__overlay {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* Standard phones */
+@media (min-width: 360px) and (max-width: 389px) {
+  .ma-hero__headline {
+    font-size: 24px;
+  }
+  
+  .ma-hero__subtext {
+    font-size: 14px;
+  }
+}
+
+/* Large phones (Pro Max) */
+@media (min-width: 430px) {
+  .ma-hero__headline {
+    font-size: 32px;
+  }
+  
+  .ma-hero__subtext {
+    font-size: 18px;
+  }
+  
+  .ma-hero__overlay {
+    gap: 8px;
+  }
+}

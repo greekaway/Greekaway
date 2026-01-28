@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>MoveAthens - AI Βοηθός</title>
+  <link rel="stylesheet" href="/moveathens/css/moveathens-base.css">
+  <link rel="stylesheet" href="/moveathens/css/footer.css">
+  <link rel="stylesheet" href="/moveathens/css/dark-mode.css">
+  <style>
+    .ma-ai-page {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      padding-bottom: 90px;
+    }
+    
+    .ma-ai-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 20px 16px;
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .ma-ai-header a {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    
+    .ma-ai-logo {
+      height: 90px;
+      width: auto;
+      filter: brightness(0);
+    }
+    
+    .ma-ai-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+      color: #1a1a2e;
+    }
+    
+    .ma-ai-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px 20px;
+      text-align: center;
+    }
+    
+    .ma-ai-logo-text {
+      font-size: 56px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+      letter-spacing: -2px;
+    }
+    
+    .ma-ai-heading {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin: 0 0 10px;
+    }
+    
+    .ma-ai-subtitle {
+      font-size: 15px;
+      color: #555;
+      margin: 0 0 20px;
+      line-height: 1.5;
+    }
+    
+    .ma-ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      margin-bottom: 24px;
+    }
+    
+    .ma-ai-features {
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      max-width: 340px;
+    }
+    
+    .ma-ai-feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+      padding: 14px 16px;
+      border-radius: 12px;
+      box-shadow: 
+        0 2px 6px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+    
+    .ma-ai-feature-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    
+    .ma-ai-feature-text {
+      font-size: 13px;
+      color: #333;
+      text-align: left;
+    }
+    
+    /* Responsive AI page */
+    @media (max-width: 359px) {
+      .ma-ai-logo-text {
+        font-size: 44px;
+      }
+      .ma-ai-heading {
+        font-size: 18px;
+      }
+      .ma-ai-subtitle {
+        font-size: 13px;
+      }
+      .ma-ai-features {
+        max-width: 300px;
+      }
+      .ma-ai-feature {
+        padding: 12px 14px;
+      }
+      .ma-ai-feature-text {
+        font-size: 12px;
+      }
+      .ma-ai-badge {
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+    }
+    
+    @media (min-width: 430px) {
+      .ma-ai-logo-text {
+        font-size: 68px;
+      }
+      .ma-ai-heading {
+        font-size: 26px;
+      }
+      .ma-ai-subtitle {
+        font-size: 17px;
+      }
+      .ma-ai-features {
+        max-width: 380px;
+      }
+      .ma-ai-feature {
+        padding: 16px 20px;
+      }
+      .ma-ai-feature-text {
+        font-size: 15px;
+      }
+    }
+  </style>
+  <meta name="theme-color" content="#001f3f">
+</head>
+<body class="ma-ai-page">
+  <header class="ma-ai-header">
+    <a href="/moveathens/">
+      <img src="/moveathens/videos/hero-logo.png" alt="MoveAthens" class="ma-ai-logo">
+    </a>
+    <h1 class="ma-ai-title">AI Βοηθός</h1>
+  </header>
+
+  <main class="ma-ai-content">
+    <div class="ma-ai-logo-text">AI</div>
+    <h2 class="ma-ai-heading">Βοηθός Τεχνητής Νοημοσύνης</h2>
+    <p class="ma-ai-subtitle">
+      Ο έξυπνος βοηθός σας για άμεσες<br>
+      απαντήσεις και κρατήσεις 24/7
+    </p>
+    
+    <div class="ma-ai-badge">
+      <span>⏳</span>
+      <span>Σύντομα Διαθέσιμο</span>
+    </div>
+    
+    <div class="ma-ai-features">
+      <div class="ma-ai-feature">
+        <span class="ma-ai-feature-icon">💬</span>
+        <span class="ma-ai-feature-text">Άμεση απάντηση σε ερωτήσεις</span>
+      </div>
+      <div class="ma-ai-feature">
+        <span class="ma-ai-feature-icon">📅</span>
+        <span class="ma-ai-feature-text">Αυτόματη κράτηση χωρίς αναμονή</span>
+      </div>
+      <div class="ma-ai-feature">
+        <span class="ma-ai-feature-icon">🌍</span>
+        <span class="ma-ai-feature-text">Διαθέσιμος σε πολλές γλώσσες</span>
+      </div>
+    </div>
+  </main>
+
+  <div data-ma-footer-slot></div>
+
+  <script src="/moveathens/js/moveathens-config.js"></script>
+  <script src="/moveathens/js/footer.js"></script>
+</body>
+</html>

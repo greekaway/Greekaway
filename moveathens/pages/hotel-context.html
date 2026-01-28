@@ -3,12 +3,23 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MoveAthens - Ξενοδοχείο</title>
     <link rel="stylesheet" href="/moveathens/css/moveathens-base.css" />
     <link rel="stylesheet" href="/moveathens/css/footer.css" />
     <link rel="stylesheet" href="/moveathens/css/welcome.css" />
+    <link rel="stylesheet" href="/moveathens/css/page-header.css" />
+    <link rel="stylesheet" href="/moveathens/css/dark-mode.css" />
+    <meta name="theme-color" content="#001f3f">
   </head>
-  <body>
-    <main class="ma-main">
+  <body class="ma-page">
+    <header class="ma-page-header">
+      <a href="/moveathens/">
+        <img src="/moveathens/videos/hero-logo.png" alt="MoveAthens" class="ma-page-logo">
+      </a>
+      <h1 class="ma-page-title">Ξενοδοχείο</h1>
+    </header>
+    
+    <main class="ma-main ma-main--with-header">
       <section class="ma-card ma-section">
         <h1 class="ma-title" data-ma-page-title="context"></h1>
         <div class="ma-field">
@@ -19,7 +30,15 @@
           <label class="ma-muted" data-ma-hotel-label="zone"></label>
           <select class="ma-select" data-ma-hotel-input="zone"></select>
         </div>
-        <button class="ma-button" data-ma-hotel-send data-ma-hotel-button="sendEmail"></button>
+        <div class="ma-field">
+          <label class="ma-muted">Διεύθυνση Ξενοδοχείου</label>
+          <input class="ma-input" type="text" data-ma-hotel-input="address" placeholder="π.χ. Λεωφόρος Αθηνών 50" />
+        </div>
+        <button class="ma-button ma-button--save" data-ma-hotel-save>
+          <span class="ma-button__text">💾 Αποθήκευση</span>
+          <span class="ma-button__success" style="display:none;">✓ Αποθηκεύτηκε!</span>
+        </button>
+        <button class="ma-button ma-button--secondary" data-ma-hotel-send data-ma-hotel-button="sendEmail"></button>
       </section>
     </main>
 

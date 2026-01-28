@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/moveathens/css/moveathens-base.css">
   <link rel="stylesheet" href="/moveathens/css/footer.css">
   <link rel="stylesheet" href="/moveathens/css/transfer.css">
+  <link rel="stylesheet" href="/moveathens/css/dark-mode.css">
   <meta name="theme-color" content="#001f3f">
 </head>
 <body class="ma-transfer-page">
@@ -55,23 +56,112 @@
           <span class="ma-confirm-label">Όχημα:</span>
           <span id="confirm-vehicle" class="ma-confirm-value"></span>
         </div>
-        <div class="ma-confirm-row">
-          <span class="ma-confirm-label">Χωρητικότητα:</span>
-          <span id="confirm-capacity" class="ma-confirm-value"></span>
-        </div>
         <div class="ma-confirm-row ma-confirm-price">
           <span class="ma-confirm-label">Τιμή:</span>
           <span id="confirm-price" class="ma-confirm-value"></span>
         </div>
       </div>
-      <div class="ma-cta-buttons">
+
+      <!-- Passenger & Luggage Selection -->
+      <div class="ma-selection-card">
+        <h3 class="ma-selection-title">Στοιχεία Ταξιδιού</h3>
+        
+        <!-- Passengers -->
+        <div class="ma-selection-row">
+          <div class="ma-selection-info">
+            <span class="ma-selection-icon">👤</span>
+            <span class="ma-selection-label">Επιβάτες</span>
+            <span class="ma-selection-max" id="passengers-max"></span>
+          </div>
+          <div class="ma-counter">
+            <button type="button" class="ma-counter-btn ma-counter-minus" id="passengers-minus" disabled>−</button>
+            <span class="ma-counter-value" id="passengers-count">0</span>
+            <button type="button" class="ma-counter-btn ma-counter-plus" id="passengers-plus">+</button>
+          </div>
+        </div>
+
+        <!-- Large Luggage -->
+        <div class="ma-selection-row">
+          <div class="ma-selection-info">
+            <span class="ma-selection-icon">🧳</span>
+            <span class="ma-selection-label">Μεγάλες Αποσκευές</span>
+            <span class="ma-selection-max" id="luggage-large-max"></span>
+          </div>
+          <div class="ma-counter">
+            <button type="button" class="ma-counter-btn ma-counter-minus" id="luggage-large-minus" disabled>−</button>
+            <span class="ma-counter-value" id="luggage-large-count">0</span>
+            <button type="button" class="ma-counter-btn ma-counter-plus" id="luggage-large-plus">+</button>
+          </div>
+        </div>
+
+        <!-- Medium Luggage -->
+        <div class="ma-selection-row">
+          <div class="ma-selection-info">
+            <span class="ma-selection-icon">💼</span>
+            <span class="ma-selection-label">Μεσαίες Αποσκευές</span>
+            <span class="ma-selection-max" id="luggage-medium-max"></span>
+          </div>
+          <div class="ma-counter">
+            <button type="button" class="ma-counter-btn ma-counter-minus" id="luggage-medium-minus" disabled>−</button>
+            <span class="ma-counter-value" id="luggage-medium-count">0</span>
+            <button type="button" class="ma-counter-btn ma-counter-plus" id="luggage-medium-plus">+</button>
+          </div>
+        </div>
+
+        <!-- Cabin Luggage -->
+        <div class="ma-selection-row">
+          <div class="ma-selection-info">
+            <span class="ma-selection-icon">🎒</span>
+            <span class="ma-selection-label">Χειραποσκευές</span>
+            <span class="ma-selection-max" id="luggage-cabin-max"></span>
+          </div>
+          <div class="ma-counter">
+            <button type="button" class="ma-counter-btn ma-counter-minus" id="luggage-cabin-minus" disabled>−</button>
+            <span class="ma-counter-value" id="luggage-cabin-count">0</span>
+            <button type="button" class="ma-counter-btn ma-counter-plus" id="luggage-cabin-plus">+</button>
+          </div>
+        </div>
+
+        <p class="ma-selection-hint">💡 Προαιρετικό - αν δεν γνωρίζετε, μπορείτε να το αφήσετε κενό</p>
+      </div>
+
+      <!-- Payment Method Selection -->
+      <div class="ma-selection-card">
+        <h3 class="ma-selection-title">Τρόπος Πληρωμής</h3>
+        <div class="ma-payment-options">
+          <button type="button" class="ma-payment-btn" data-payment="cash">
+            <span class="ma-payment-icon">💵</span>
+            <span class="ma-payment-label">Μετρητά</span>
+          </button>
+          <button type="button" class="ma-payment-btn" data-payment="pos">
+            <span class="ma-payment-icon">💳</span>
+            <span class="ma-payment-label">POS</span>
+          </button>
+        </div>
+        <p class="ma-selection-hint">💡 Προαιρετικό - αν δεν γνωρίζετε, μπορείτε να το αφήσετε κενό</p>
+      </div>
+      
+      <h3 class="ma-contact-title">Επιλέξτε τρόπο επικοινωνίας:</h3>
+      <div class="ma-cta-grid">
         <a id="cta-whatsapp" href="#" class="ma-cta-btn ma-cta-whatsapp" target="_blank">
           <span class="ma-cta-icon">💬</span>
-          WhatsApp
+          <span class="ma-cta-label">WhatsApp</span>
+          <span class="ma-cta-desc">Στείλτε μήνυμα</span>
+        </a>
+        <a id="cta-whatsapp-call" href="#" class="ma-cta-btn ma-cta-whatsapp-call" target="_blank">
+          <span class="ma-cta-icon">📱</span>
+          <span class="ma-cta-label">WhatsApp</span>
+          <span class="ma-cta-desc">Καλέστε τώρα</span>
         </a>
         <a id="cta-phone" href="#" class="ma-cta-btn ma-cta-phone">
           <span class="ma-cta-icon">📞</span>
-          Τηλέφωνο
+          <span class="ma-cta-label">Τηλέφωνο</span>
+          <span class="ma-cta-desc">Καλέστε τώρα</span>
+        </a>
+        <a id="cta-email" href="#" class="ma-cta-btn ma-cta-email">
+          <span class="ma-cta-icon">✉️</span>
+          <span class="ma-cta-label">Email</span>
+          <span class="ma-cta-desc">Στείλτε email</span>
         </a>
       </div>
     </section>

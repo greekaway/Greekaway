@@ -1,0 +1,378 @@
+/* MoveAthens Dark Mode - System Preference Based */
+/* Does NOT affect .ma-hero-page (home page) */
+
+@media (prefers-color-scheme: dark) {
+  /* ========================================
+     PAGE BACKGROUNDS
+     ======================================== */
+  
+  /* Light gray background pages -> dark blue */
+  .ma-page,
+  .ma-transfer-page,
+  .ma-ai-page,
+  .ma-info-page {
+    background: linear-gradient(135deg, #0d1a2d 0%, #0a1525 100%) !important;
+  }
+
+  /* Header - dark blue gradient */
+  .ma-page .ma-page-header,
+  .ma-transfer-page .ma-header,
+  .ma-ai-page .ma-page-header,
+  .ma-info-page .ma-page-header {
+    background: linear-gradient(145deg, #0f2035 0%, #0a1828 100%) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* ========================================
+     LOGO - WHITE IN DARK MODE
+     ======================================== */
+  .ma-page .ma-page-logo,
+  .ma-transfer-page .ma-logo-img,
+  .ma-ai-page .ma-page-logo,
+  .ma-info-page .ma-page-logo {
+    filter: brightness(0) invert(1) !important;
+  }
+
+  /* ========================================
+     PAGE TITLES
+     ======================================== */
+  .ma-page .ma-page-title,
+  .ma-transfer-page .ma-page-title,
+  .ma-ai-page .ma-page-title,
+  .ma-info-page .ma-page-title {
+    color: #f0f4f8 !important;
+  }
+
+  /* ========================================
+     CARDS - Light blue instead of white
+     ======================================== */
+  .ma-page .ma-card,
+  .ma-transfer-page .ma-confirm-card,
+  .ma-transfer-page .ma-selection-card,
+  .ma-ai-page .ma-card,
+  .ma-info-page .ma-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* ========================================
+     TEXT COLORS - White on dark
+     ======================================== */
+  .ma-page .ma-title,
+  .ma-page .ma-muted,
+  .ma-page label,
+  .ma-transfer-page .ma-step-title,
+  .ma-transfer-page .ma-step-subtitle,
+  .ma-transfer-page .ma-confirm-label,
+  .ma-transfer-page .ma-confirm-value,
+  .ma-transfer-page .ma-selection-title,
+  .ma-transfer-page .ma-selection-label,
+  .ma-transfer-page .ma-counter-value,
+  .ma-ai-page .ma-title,
+  .ma-info-page .ma-title {
+    color: #e8edf3 !important;
+  }
+
+  /* Info page content */
+  .ma-info-page .ma-info-content,
+  .ma-info-page .ma-info-content p,
+  .ma-info-page .ma-info-content li {
+    color: #d0d8e0 !important;
+  }
+
+  .ma-info-page .ma-info-content strong {
+    color: #46d3ff !important;
+  }
+
+  /* Muted/secondary text */
+  .ma-page .ma-selection-max,
+  .ma-page .ma-selection-hint,
+  .ma-transfer-page .ma-selection-max,
+  .ma-transfer-page .ma-selection-hint {
+    color: #8896a6 !important;
+  }
+
+  /* ========================================
+     FORM INPUTS
+     ======================================== */
+  .ma-page .ma-input,
+  .ma-page .ma-select,
+  .ma-transfer-page .ma-input,
+  .ma-transfer-page .ma-select {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #f0f4f8 !important;
+  }
+
+  .ma-page .ma-input::placeholder,
+  .ma-transfer-page .ma-input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .ma-page .ma-input:focus,
+  .ma-page .ma-select:focus {
+    border-color: #46d3ff !important;
+    box-shadow: 0 0 0 3px rgba(70, 211, 255, 0.2) !important;
+  }
+
+  /* ========================================
+     TRANSFER PAGE SPECIFICS
+     ======================================== */
+  
+  /* Back button */
+  .ma-transfer-page .ma-back-btn {
+    color: #8896a6 !important;
+  }
+
+  .ma-transfer-page .ma-back-btn:hover {
+    color: #c0c8d0 !important;
+  }
+
+  /* Categories grid */
+  .ma-transfer-page .ma-category-card {
+    background: linear-gradient(145deg, #132742 0%, #132742 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-transfer-page .ma-category-card:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ma-transfer-page .ma-category-name {
+    color: #e8edf3 !important;
+  }
+
+  /* Category icons - make white */
+  .ma-transfer-page .ma-category-icon img,
+  .ma-transfer-page .ma-category-icon-img {
+    filter: brightness(0) invert(1) !important;
+  }
+
+  /* Destinations */
+  .ma-transfer-page .ma-destination-item {
+    background: linear-gradient(145deg, #132742 0%, #132742 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-transfer-page .ma-destination-item:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ma-transfer-page .ma-destination-name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-transfer-page .ma-destination-desc {
+    color: #8896a6 !important;
+  }
+
+  .ma-transfer-page .ma-destination-arrow {
+    color: #46d3ff !important;
+  }
+
+  /* Vehicles */
+  .ma-transfer-page .ma-vehicle-card {
+    background: linear-gradient(145deg, #132742 0%, #132742 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-transfer-page .ma-vehicle-card:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ma-transfer-page .ma-vehicle-name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-transfer-page .ma-spec {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #c0c8d0 !important;
+  }
+
+  /* Counter buttons */
+  .ma-transfer-page .ma-counter {
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ma-transfer-page .ma-counter-minus {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #c0c8d0 !important;
+  }
+
+  /* Selection row icons */
+  .ma-transfer-page .ma-selection-icon {
+    filter: none;
+  }
+
+  /* ========================================
+     FOOTER - Clone from home page style
+     ======================================== */
+  .ma-page .ma-footer,
+  .ma-transfer-page .ma-footer,
+  .ma-ai-page .ma-footer,
+  .ma-info-page .ma-footer {
+    background: rgba(10, 16, 28, 0.45) !important;
+    backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32), 0 0 18px rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-page .ma-footer__item,
+  .ma-transfer-page .ma-footer__item,
+  .ma-ai-page .ma-footer__item,
+  .ma-info-page .ma-footer__item {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  .ma-page .ma-footer__item.active,
+  .ma-transfer-page .ma-footer__item.active,
+  .ma-ai-page .ma-footer__item.active,
+  .ma-info-page .ma-footer__item.active {
+    color: rgba(82, 183, 255, 0.98) !important;
+    background: rgba(82, 183, 255, 0.12) !important;
+    box-shadow: 0 0 24px rgba(82, 183, 255, 0.45), 0 10px 24px rgba(0, 0, 0, 0.35) !important;
+  }
+
+  /* Footer icons in dark mode */
+  .ma-page .ma-footer__icon svg,
+  .ma-transfer-page .ma-footer__icon svg,
+  .ma-ai-page .ma-footer__icon svg,
+  .ma-info-page .ma-footer__icon svg {
+    filter: brightness(0) invert(1);
+    opacity: 0.85;
+  }
+
+  .ma-page .ma-footer__item.active .ma-footer__icon svg,
+  .ma-transfer-page .ma-footer__item.active .ma-footer__icon svg,
+  .ma-ai-page .ma-footer__item.active .ma-footer__icon svg,
+  .ma-info-page .ma-footer__item.active .ma-footer__icon svg {
+    filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(175deg);
+    opacity: 1;
+  }
+
+  /* ========================================
+     LOADING & EMPTY STATES
+     ======================================== */
+  .ma-transfer-page .ma-loading,
+  .ma-transfer-page .ma-empty {
+    color: #8896a6 !important;
+  }
+
+  /* ========================================
+     AI ASSISTANT PAGE
+     ======================================== */
+  .ma-ai-page {
+    background: linear-gradient(135deg, #0d1a2d 0%, #0a1525 100%) !important;
+  }
+
+  .ma-ai-page .ma-ai-header {
+    background: linear-gradient(145deg, #0f2035 0%, #0a1828 100%) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .ma-ai-page .ma-ai-logo {
+    filter: brightness(0) invert(1) !important;
+  }
+
+  .ma-ai-page .ma-ai-title {
+    color: #f0f4f8 !important;
+  }
+
+  .ma-ai-page .ma-ai-welcome {
+    color: #c0c8d0 !important;
+  }
+
+  .ma-ai-page .ma-ai-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .ma-ai-page .ma-ai-card-title {
+    color: #e8edf3 !important;
+  }
+
+  .ma-ai-page .ma-ai-card-desc {
+    color: #a0a8b0 !important;
+  }
+
+  /* AI Heading title (Βοηθός Τεχνητής Νοημοσύνης) */
+  .ma-ai-page .ma-ai-heading {
+    color: #f0f4f8 !important;
+  }
+
+  .ma-ai-page .ma-ai-subtitle {
+    color: #a0a8b0 !important;
+  }
+
+  /* AI Features buttons (Άμεση απάντηση, Αυτόματη κράτηση, Πολλές γλώσσες) */
+  .ma-ai-page .ma-ai-feature {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-ai-page .ma-ai-feature-text {
+    color: #e8edf3 !important;
+  }
+
+  /* ========================================
+     CONTACT PAGE
+     ======================================== */
+  .ma-page .ma-button--contact {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #e8edf3 !important;
+  }
+
+  .ma-page .ma-button--contact:hover {
+    background: linear-gradient(145deg, #1a2d4d 0%, #132540 100%) !important;
+  }
+
+  /* ========================================
+     PRICES PAGE
+     ======================================== */
+  .ma-page .ma-vehicle-card {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ma-page .ma-vehicle-card__name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-page .ma-vehicle-card__desc {
+    color: #8896a6 !important;
+  }
+
+  .ma-page .ma-vehicle-types__title {
+    color: #e8edf3 !important;
+  }
+
+  /* ========================================
+     PAYMENT METHOD BUTTONS
+     ======================================== */
+  .ma-transfer-page .ma-payment-btn {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    color: #e8edf3 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-transfer-page .ma-payment-btn:hover {
+    border-color: rgba(70, 211, 255, 0.5) !important;
+    background: linear-gradient(145deg, #1a2d4d 0%, #132540 100%) !important;
+  }
+
+  .ma-transfer-page .ma-payment-btn.active {
+    border-color: #46d3ff !important;
+    background: linear-gradient(145deg, #0f3a5a 0%, #0a2840 100%) !important;
+    color: #46d3ff !important;
+    box-shadow: 0 4px 20px rgba(70, 211, 255, 0.3) !important;
+  }

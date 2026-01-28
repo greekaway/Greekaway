@@ -23,6 +23,7 @@
           <button class="bar-tab" data-tab="vehicles">Οχήματα</button>
           <button class="bar-tab" data-tab="zones">Ζώνες</button>
           <button class="bar-tab" data-tab="pricing">Τιμολόγηση</button>
+          <button class="bar-tab" data-tab="infopage">Πληροφορίες</button>
 
         </div>
       </div>
@@ -76,7 +77,7 @@
                 </div>
               </div>
               <div class="ma-footer-row">
-                <div class="ma-footer-title">CTA</div>
+                <div class="ma-footer-title">AI Βοηθός</div>
                 <label>Label <input id="footerCta" class="input" type="text" maxlength="40"></label>
                 <div class="ma-upload">
                   <label>Icon (SVG) <input id="footerIconCtaFile" class="input" type="file" accept="image/svg+xml"></label>
@@ -349,6 +350,46 @@
               <span id="maPriceStatus" class="ma-status" aria-live="polite"></span>
             </div>
           </form>
+        </section>
+      </div>
+
+      <!-- ===== INFO PAGE TAB ===== -->
+      <div class="tab-content" data-tab="infopage">
+        <section class="panel">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">Περιεχόμενο Σελίδας Πληροφοριών</h3>
+              <p class="ma-helper">Το κείμενο που θα εμφανίζεται στη σελίδα "Πληροφορίες" του MoveAthens.</p>
+            </div>
+          </div>
+
+          <form id="ma-infopage-form" class="ma-infopage-form">
+            <div class="ma-field">
+              <label>Τίτλος Σελίδας
+                <input id="maInfoPageTitle" class="input" type="text" maxlength="100" placeholder="π.χ. Σχετικά με εμάς">
+              </label>
+            </div>
+            <div class="ma-field">
+              <label>Περιεχόμενο (υποστηρίζει Markdown)
+                <textarea id="maInfoPageContent" class="input ma-textarea-large" rows="15" placeholder="Γράψτε εδώ το κείμενο...
+
+Υποστηρίζει βασική μορφοποίηση:
+- **έντονα**
+- *πλάγια*
+- Λίστες με παύλα (-)
+- Κενές γραμμές για παραγράφους"></textarea>
+              </label>
+            </div>
+            <div class="ma-actions">
+              <button id="maInfoPageSaveBtn" class="btn" type="submit">💾 Αποθήκευση</button>
+              <span id="maInfoPageStatus" class="ma-status" aria-live="polite"></span>
+            </div>
+          </form>
+
+          <div class="ma-preview-section">
+            <h4 class="ma-preview-title">Προεπισκόπηση</h4>
+            <div id="maInfoPagePreview" class="ma-preview-box"></div>
+          </div>
         </section>
       </div>
     </main>

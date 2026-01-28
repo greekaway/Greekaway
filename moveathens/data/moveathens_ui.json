@@ -6,7 +6,7 @@
   "footerLabels": {
     "home": "Αρχική",
     "prices": "transfer",
-    "cta": "Καλέστε",
+    "cta": "AI",
     "info": "Πληροφορίες",
     "context": "ξενοδοχείο"
   },
@@ -18,8 +18,8 @@
     "context": "/moveathens/icons/footer-context.svg"
   },
   "phoneNumber": "+30 6985700007",
-  "whatsappNumber": "+30 6985700007",
-  "companyEmail": "contact@moveathens.com",
+  "whatsappNumber": "+30 6945358476",
+  "companyEmail": "repeatpalmos@hotmail.com",
   "ctaLabels": {
     "whatsapp": "WhatsApp",
     "phone": "Τηλέφωνο",
@@ -61,25 +61,25 @@
       "description": "",
       "imageUrl": "/moveathens/images/vehicle-3357c828-621f-492d-9adc-66cdc30361bb.jpg",
       "max_passengers": 4,
-      "luggage_large": 0,
-      "luggage_medium": 0,
-      "luggage_cabin": 0,
+      "luggage_large": 2,
+      "luggage_medium": 2,
+      "luggage_cabin": 4,
       "display_order": 1,
       "is_active": true,
-      "created_at": "2026-01-28T13:04:50.452Z"
+      "created_at": "2026-01-28T15:03:13.979Z"
     },
     {
       "id": "vt_1769606282004",
       "name": "van",
       "description": "",
       "imageUrl": "/moveathens/images/vehicle-52104e49-dbe4-4ede-8810-3be5412836bb.jpg",
-      "max_passengers": 6,
-      "luggage_large": 0,
-      "luggage_medium": 2,
-      "luggage_cabin": 0,
+      "max_passengers": 7,
+      "luggage_large": 4,
+      "luggage_medium": 4,
+      "luggage_cabin": 7,
       "display_order": 2,
       "is_active": true,
-      "created_at": "2026-01-28T13:18:02.004Z"
+      "created_at": "2026-01-28T15:06:06.449Z"
     }
   ],
   "destinationCategories": [
@@ -143,5 +143,7 @@
     }
   ],
   "vehicleCategoryAvailability": [],
-  "vehicleDestinationOverrides": []
+  "vehicleDestinationOverrides": [],
+  "infoPageTitle": "Μεταφορές",
+  "infoPageContent": "\n\n\nΟι μεταφορές του MoveAthens λειτουργούν με απόλυτη διαφάνεια και σαφήνεια.\n\nΕπιλέγετε:\n\t•\tκατηγορία προορισμού,\n\t•\tσυγκεκριμένο προορισμό,\n\t•\tκαι το όχημα που σας εξυπηρετεί.\n\nΤο σύστημα εμφανίζει μόνο τις διαθέσιμες επιλογές και την τελική τιμή, υπολογισμένη αυτόματα βάσει της ζώνης αναχώρησης.\n\nΗ επικοινωνία γίνεται στο τέλος της επιλογής σας, με έτοιμο μήνυμα WhatsApp που περιλαμβάνει όλα τα στοιχεία της μεταφοράς.\nΧωρίς αναμονή, χωρίς τηλεφωνικές διευκρινίσεις, χωρίς ασάφειες."
 }

@@ -496,6 +496,60 @@ app.get('/api/trips/:slug', async (req, res) => {
   }
 });
 
+// ========================================
+// HOST-BASED ROUTING: MoveAthens vs Greekaway
+// ========================================
+// Serve MoveAthens UI when accessed via moveathens.com domain
+const MOVEATHENS_HOSTS = ['moveathens.com', 'www.moveathens.com'];
+const MOVEATHENS_ENTRY = path.join(__dirname, 'moveathens', 'pages', 'welcome.html');
+const GREEKAWAY_ENTRY = path.join(__dirname, 'public', 'index.html');
+
+// Root route handler - domain-based frontend serving
+app.get('/', (req, res, next) => {
+  const host = (req.headers.host || '').toLowerCase().split(':')[0]; // strip port
+  if (MOVEATHENS_HOSTS.includes(host)) {
+    return res.sendFile(MOVEATHENS_ENTRY);
+  }
+  // For greekaway.com and other hosts, continue to static serving
+  next();
+});
+
+// MoveAthens page routes when accessed via moveathens.com domain
+const MOVEATHENS_PAGES_DIR = path.join(__dirname, 'moveathens', 'pages');
+const MOVEATHENS_PAGE_MAP = {
+  '/prices': 'prices.html',
+  '/transfer': 'transfer.html',
+  '/info': 'info.html',
+  '/contact': 'contact.html',
+  '/hotel': 'hotel-context.html',
+  '/assistant': 'ai-assistant.html'
+};
+
+Object.keys(MOVEATHENS_PAGE_MAP).forEach((routePath) => {
+  app.get(routePath, (req, res, next) => {
+    const host = (req.headers.host || '').toLowerCase().split(':')[0];
+    if (MOVEATHENS_HOSTS.includes(host)) {
+      return res.sendFile(path.join(MOVEATHENS_PAGES_DIR, MOVEATHENS_PAGE_MAP[routePath]));
+    }
+    next();
+  });
+});
+
+// MoveAthens static assets when accessed via moveathens.com
+app.use((req, res, next) => {
+  const host = (req.headers.host || '').toLowerCase().split(':')[0];
+  if (MOVEATHENS_HOSTS.includes(host)) {
+    // Rewrite paths for MoveAthens assets
+    const url = req.url;
+    // Serve moveathens assets directly (css, js, videos, etc.)
+    if (url.startsWith('/moveathens/')) {
+      // Already routed to /moveathens, let existing router handle
+      return next();
+    }
+  }
+  next();
+});
+
 // Serve Apple Pay domain association and other well-known files (explicitly allow dotfiles)
 app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known'), {
   dotfiles: 'allow',

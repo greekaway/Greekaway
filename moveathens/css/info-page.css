@@ -1,0 +1,48 @@
+/* MoveAthens Info Page Styles */
+
+.ma-info-page {
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.ma-info-content {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #1a2232;
+}
+
+.ma-info-content p {
+  margin: 0 0 14px;
+  color: #1a2232;
+}
+
+.ma-info-content p:last-child {
+  margin-bottom: 0;
+}
+
+.ma-info-content strong {
+  font-weight: 600;
+  color: #0066cc;
+}
+
+.ma-info-content em {
+  font-style: italic;
+}
+
+.ma-info-content ul,
+.ma-info-content ol {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  color: #1a2232;
+}
+
+.ma-info-content li {
+  margin-bottom: 6px;
+  color: #1a2232;
+}
+
+.ma-info-content .ma-loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}

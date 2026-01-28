@@ -28,7 +28,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     '/transfer': 'transfer.html',
     '/info': 'info.html',
     '/contact': 'contact.html',
-    '/hotel': 'hotel-context.html'
+    '/hotel': 'hotel-context.html',
+    '/assistant': 'ai-assistant.html'
   };
 
   Object.keys(pageMap).forEach((routePath) => {
@@ -1072,6 +1073,28 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       if (!validated.ok) return res.status(400).json({ error: validated.error });
       writeAtomic(validated.data);
       return res.json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: 'Failed to save config' });
+    }
+  });
+
+  // PUT endpoint for partial updates (info page content, etc.)
+  app.put('/api/admin/moveathens/ui-config', (req, res) => {
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const current = readUiConfig();
+      const body = req.body || {};
+      
+      // Allowed partial update fields
+      if (typeof body.infoPageTitle === 'string') {
+        current.infoPageTitle = normalizeString(body.infoPageTitle).slice(0, 200);
+      }
+      if (typeof body.infoPageContent === 'string') {
+        current.infoPageContent = body.infoPageContent.slice(0, 10000); // Allow up to 10k chars
+      }
+      
+      writeAtomic(current);
+      return res.json(current);
     } catch (err) {
       return res.status(500).json({ error: 'Failed to save config' });
     }

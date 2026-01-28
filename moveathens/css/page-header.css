@@ -1,0 +1,127 @@
+/* MoveAthens Page Header - Shared Styles */
+
+.ma-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+  padding-bottom: 90px;
+}
+
+.ma-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 20px 16px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.ma-page-header a {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ma-page-logo {
+  height: 90px;
+  width: auto;
+  filter: brightness(0);
+}
+
+.ma-page-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+  color: #1a1a2e;
+}
+
+.ma-main--with-header {
+  padding: 20px 16px;
+}
+
+/* Override card styles for pages with header */
+.ma-page .ma-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  border: none;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.ma-page .ma-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 20px;
+}
+
+.ma-page .ma-field {
+  margin-bottom: 16px;
+}
+
+.ma-page .ma-input,
+.ma-page .ma-select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 15px;
+  background: #fff;
+  color: #1a1a2e;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ma-page .ma-input:focus,
+.ma-page .ma-select:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+}
+
+.ma-page .ma-button {
+  width: 100%;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #0066cc 0%, #004499 100%);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.ma-page .ma-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 102, 204, 0.4);
+}
+
+.ma-page .ma-button:active {
+  transform: scale(0.98);
+}
+
+.ma-page .ma-muted {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+/* Placeholder for info page */
+.ma-page .ma-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+  font-style: italic;
+}
+
+.ma-page .ma-placeholder::before {
+  content: "Περιεχόμενο σύντομα...";
+}
