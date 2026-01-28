@@ -499,24 +499,22 @@ app.get('/api/trips/:slug', async (req, res) => {
 // ========================================
 // HOST-BASED ROUTING: MoveAthens vs Greekaway
 // ========================================
-// Serve MoveAthens UI when accessed via moveathens.com domain
+// GLOBAL DOMAIN GATE: Complete isolation between brands
 const MOVEATHENS_HOSTS = ['moveathens.com', 'www.moveathens.com'];
-const MOVEATHENS_ENTRY = path.join(__dirname, 'moveathens', 'pages', 'welcome.html');
+const MOVEATHENS_BASE_DIR = path.join(__dirname, 'moveathens');
+const MOVEATHENS_PAGES_DIR = path.join(MOVEATHENS_BASE_DIR, 'pages');
+const MOVEATHENS_ENTRY = path.join(MOVEATHENS_PAGES_DIR, 'welcome.html');
 const GREEKAWAY_ENTRY = path.join(__dirname, 'public', 'index.html');
 
-// Root route handler - domain-based frontend serving
-app.get('/', (req, res, next) => {
-  const host = (req.headers.host || '').toLowerCase().split(':')[0]; // strip port
-  if (MOVEATHENS_HOSTS.includes(host)) {
-    return res.sendFile(MOVEATHENS_ENTRY);
-  }
-  // For greekaway.com and other hosts, continue to static serving
-  next();
-});
+// Helper: check if request is from MoveAthens domain
+const isMoveAthensHost = (req) => {
+  const host = (req.headers.host || '').toLowerCase().split(':')[0];
+  return MOVEATHENS_HOSTS.includes(host);
+};
 
-// MoveAthens page routes when accessed via moveathens.com domain
-const MOVEATHENS_PAGES_DIR = path.join(__dirname, 'moveathens', 'pages');
+// MoveAthens page map
 const MOVEATHENS_PAGE_MAP = {
+  '/': 'welcome.html',
   '/prices': 'prices.html',
   '/transfer': 'transfer.html',
   '/info': 'info.html',
@@ -525,29 +523,56 @@ const MOVEATHENS_PAGE_MAP = {
   '/assistant': 'ai-assistant.html'
 };
 
-Object.keys(MOVEATHENS_PAGE_MAP).forEach((routePath) => {
-  app.get(routePath, (req, res, next) => {
-    const host = (req.headers.host || '').toLowerCase().split(':')[0];
-    if (MOVEATHENS_HOSTS.includes(host)) {
-      return res.sendFile(path.join(MOVEATHENS_PAGES_DIR, MOVEATHENS_PAGE_MAP[routePath]));
-    }
-    next();
-  });
-});
-
-// MoveAthens static assets when accessed via moveathens.com
+// ─────────────────────────────────────────────────────────
+// 1) GLOBAL DOMAIN GATE MIDDLEWARE
+// All MoveAthens requests are handled here and NEVER fall through to Greekaway
+// ─────────────────────────────────────────────────────────
 app.use((req, res, next) => {
-  const host = (req.headers.host || '').toLowerCase().split(':')[0];
-  if (MOVEATHENS_HOSTS.includes(host)) {
-    // Rewrite paths for MoveAthens assets
-    const url = req.url;
-    // Serve moveathens assets directly (css, js, videos, etc.)
-    if (url.startsWith('/moveathens/')) {
-      // Already routed to /moveathens, let existing router handle
-      return next();
-    }
+  if (!isMoveAthensHost(req)) {
+    // Not MoveAthens domain - continue to Greekaway routes
+    return next();
   }
-  next();
+
+  // === MOVEATHENS DOMAIN HANDLING ===
+  const url = req.url.split('?')[0]; // strip query string
+
+  // A) MoveAthens API routes - let them pass through to registered handlers
+  if (url.startsWith('/api/moveathens/') || url.startsWith('/api/admin/moveathens/')) {
+    return next();
+  }
+
+  // B) Uploads folder (shared between brands)
+  if (url.startsWith('/uploads/')) {
+    return next();
+  }
+
+  // C) MoveAthens static assets (css, js, images, videos)
+  if (url.startsWith('/moveathens/')) {
+    // Serve from moveathens folder directly
+    const assetPath = url.replace('/moveathens/', '');
+    const fullPath = path.join(MOVEATHENS_BASE_DIR, assetPath);
+    
+    // Security: prevent directory traversal
+    if (!fullPath.startsWith(MOVEATHENS_BASE_DIR)) {
+      return res.status(403).send('Forbidden');
+    }
+    
+    return res.sendFile(fullPath, (err) => {
+      if (err) {
+        // Asset not found - return 404
+        return res.status(404).send('Not found');
+      }
+    });
+  }
+
+  // C) MoveAthens pages
+  if (MOVEATHENS_PAGE_MAP[url]) {
+    return res.sendFile(path.join(MOVEATHENS_PAGES_DIR, MOVEATHENS_PAGE_MAP[url]));
+  }
+
+  // D) FALLBACK: Any unknown route on MoveAthens domain → welcome.html (SPA-style)
+  // This ensures moveathens.com/anything returns MoveAthens, NOT Greekaway
+  return res.sendFile(MOVEATHENS_ENTRY);
 });
 
 // Serve Apple Pay domain association and other well-known files (explicitly allow dotfiles)
