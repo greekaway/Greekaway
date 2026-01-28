@@ -9,6 +9,21 @@
   const cfg = await window.MoveAthensConfig.load();
   window.MoveAthensConfig.applyFooterLabels(document, cfg);
 
+  // Get route prefix for domain-aware navigation
+  const routePrefix = window.MoveAthensConfig.getRoutePrefix();
+  const isMoveAthensDomain = window.MoveAthensConfig.isMoveAthensDomain();
+
+  // Update all data-route attributes to be domain-aware
+  document.querySelectorAll('[data-route]').forEach((el) => {
+    const route = el.getAttribute('data-route');
+    if (route && route.startsWith('/moveathens')) {
+      // Convert /moveathens/xxx to correct path for current domain
+      const cleanPath = route.replace('/moveathens', '') || '/';
+      const newRoute = isMoveAthensDomain ? cleanPath : route;
+      el.setAttribute('data-route', newRoute);
+    }
+  });
+
   const applyFooterIcons = async () => {
     const icons = (cfg && cfg.footerIcons) ? cfg.footerIcons : {};
     const slots = Array.from(document.querySelectorAll('[data-ma-footer-icon]'));
@@ -45,12 +60,24 @@
   const getActiveRoute = () => {
     const path = normalizePath(window.location.pathname || '');
     const candidates = Array.from(document.querySelectorAll('[data-route]'));
+    
+    // First try exact match
     const exact = candidates.find((el) => normalizePath(el.getAttribute('data-route')) === path);
     if (exact) return exact;
+    
+    // Then try prefix match (exclude home routes)
+    const homeRoutes = ['/', '/moveathens'];
+    const prefixMatch = candidates.find((el) => {
+      const route = normalizePath(el.getAttribute('data-route'));
+      return route && path.startsWith(route) && !homeRoutes.includes(route);
+    });
+    if (prefixMatch) return prefixMatch;
+    
+    // Default to home
     return candidates.find((el) => {
       const route = normalizePath(el.getAttribute('data-route'));
-      return route && path.startsWith(route) && route !== '/moveathens';
-    }) || candidates.find((el) => normalizePath(el.getAttribute('data-route')) === '/moveathens');
+      return homeRoutes.includes(route);
+    });
   };
 
   const applyActive = () => {

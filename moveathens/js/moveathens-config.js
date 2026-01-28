@@ -145,6 +145,25 @@
     return state.promise;
   };
 
+  // Check if running on MoveAthens production domain
+  const isMoveAthensDomain = () => {
+    const host = window.location.hostname || '';
+    return host === 'moveathens.com' || host === 'www.moveathens.com';
+  };
+
+  // Get the correct route prefix based on domain
+  const getRoutePrefix = () => {
+    return isMoveAthensDomain() ? '' : '/moveathens';
+  };
+
+  // Build a route URL that works on both dev and production
+  const buildRoute = (path) => {
+    const prefix = getRoutePrefix();
+    // Ensure path starts with /
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    return `${prefix}${normalizedPath}`;
+  };
+
   window.MoveAthensConfig = {
     load,
     applyHero,
@@ -155,6 +174,9 @@
     applyModalLabels,
     resolveHeroVideoUrl,
     normalizePhone,
-    isDevHost
+    isDevHost,
+    isMoveAthensDomain,
+    getRoutePrefix,
+    buildRoute
   };
 })();
