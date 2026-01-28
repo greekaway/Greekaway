@@ -1,0 +1,133 @@
+:root {
+  --ma-bg: #0b0f1a;
+  --ma-surface: #141a2a;
+  --ma-card: #1c2438;
+  --ma-text: #f7f7fb;
+  --ma-muted: #b2b8c7;
+  --ma-accent: #46d3ff;
+  --ma-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  --ma-radius: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--ma-bg);
+  color: var(--ma-text);
+  min-height: 100vh;
+  padding-bottom: 86px;
+}
+
+.ma-main {
+  padding: 20px 18px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ma-card {
+  background: var(--ma-card);
+  border-radius: var(--ma-radius);
+  padding: 18px;
+  box-shadow: var(--ma-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ma-hero {
+  display: grid;
+  gap: 16px;
+}
+
+.ma-hero video {
+  width: 100%;
+  border-radius: var(--ma-radius);
+  background: #000;
+  display: block;
+}
+
+.ma-hero__headline {
+  font-size: 24px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.ma-hero__subtext {
+  margin: 0;
+  color: var(--ma-muted);
+  line-height: 1.5;
+}
+
+.ma-title {
+  font-size: 22px;
+  margin: 0;
+}
+
+.ma-muted {
+  color: var(--ma-muted);
+}
+
+.ma-section {
+  display: grid;
+  gap: 14px;
+}
+
+.ma-field {
+  display: grid;
+  gap: 8px;
+}
+
+.ma-input,
+.ma-select,
+.ma-button {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--ma-surface);
+  color: var(--ma-text);
+  padding: 12px 14px;
+  font-size: 15px;
+}
+
+.ma-button {
+  background: var(--ma-accent);
+  color: #05070f;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ma-button--contact {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.ma-button--contact .ma-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ma-button--contact .ma-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ma-link {
+  color: var(--ma-text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ma-list {
+  display: grid;
+  gap: 12px;
+}

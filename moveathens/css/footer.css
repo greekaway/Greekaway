@@ -1,0 +1,131 @@
+.ma-footer {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  height: 74px;
+  background: rgba(10, 16, 28, 0.35);
+  backdrop-filter: blur(14px);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  padding: 10px 12px 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32), 0 0 18px rgba(255, 255, 255, 0.08);
+  z-index: 50;
+}
+
+.ma-footer__item {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  text-align: center;
+  border-radius: 14px;
+  transition: background 160ms ease, box-shadow 160ms ease, color 160ms ease;
+}
+
+.ma-footer__icon {
+  font-size: 20px;
+  line-height: 1;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ma-footer__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ma-footer__icon:empty {
+  display: none;
+}
+
+.ma-footer__item span {
+  line-height: 1.1;
+}
+
+.ma-footer__item--cta {
+  border-radius: 16px;
+  font-weight: 600;
+  margin: 0 4px;
+}
+
+.ma-footer__item.active {
+  color: rgba(82, 183, 255, 0.98);
+  background: rgba(82, 183, 255, 0.12);
+  box-shadow: 0 0 24px rgba(82, 183, 255, 0.45), 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.ma-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: flex-end;
+  background: rgba(6, 10, 18, 0.6);
+  z-index: 60;
+}
+
+.ma-modal[data-open="true"] {
+  display: flex;
+}
+
+.ma-modal__sheet {
+  width: 100%;
+  background: var(--ma-surface);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  padding: 18px;
+  margin-bottom: 90px;
+  display: grid;
+  gap: 14px;
+}
+
+.ma-modal__close {
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  justify-self: end;
+  position: relative;
+}
+
+.ma-modal__close::before,
+.ma-modal__close::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 2px;
+  background: var(--ma-text);
+}
+
+.ma-modal__close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.ma-modal__close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.ma-modal__option {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--ma-card);
+  text-decoration: none;
+  color: var(--ma-text);
+}
+
+.ma-modal__option span:last-child {
+  color: var(--ma-muted);
+  font-size: 13px;
+}

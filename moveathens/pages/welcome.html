@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/moveathens/css/moveathens-base.css" />
+    <link rel="stylesheet" href="/moveathens/css/footer.css" />
+    <link rel="stylesheet" href="/moveathens/css/welcome.css" />
+  </head>
+  <body class="ma-hero-page">
+    <main class="ma-hero-stage">
+      <section class="ma-hero">
+        <div class="ma-hero__media">
+          <video data-ma-hero-video autoplay muted loop playsinline></video>
+          <div class="ma-hero__placeholder ma-placeholder" data-ma-hero-placeholder></div>
+        </div>
+        <div class="ma-hero__scrim"></div>
+        <div class="ma-hero__overlay">
+          <h1 class="ma-hero__headline" data-ma-hero-headline></h1>
+          <p class="ma-hero__subtext" data-ma-hero-subtext></p>
+          <img class="ma-hero__logo" data-ma-hero-logo alt="MoveAthens" />
+        </div>
+      </section>
+    </main>
+
+    <div data-ma-modal-slot></div>
+    <div data-ma-footer-slot></div>
+
+    <script src="/moveathens/js/moveathens-config.js"></script>
+    <script src="/moveathens/js/contact-modal.js"></script>
+    <script src="/moveathens/js/footer.js"></script>
+    <script src="/moveathens/js/welcome.js"></script>
+  </body>
+</html>

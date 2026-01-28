@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>MoveAthens Transfer</title>
+  <link rel="stylesheet" href="/moveathens/css/moveathens-base.css">
+  <link rel="stylesheet" href="/moveathens/css/footer.css">
+  <link rel="stylesheet" href="/moveathens/css/transfer.css">
+  <meta name="theme-color" content="#001f3f">
+</head>
+<body class="ma-transfer-page">
+  <header class="ma-header">
+    <a href="/moveathens/" class="ma-logo">
+      <img src="/moveathens/videos/hero-logo.png" alt="MoveAthens" class="ma-logo-img">
+    </a>
+    <h1 class="ma-page-title">Transfer</h1>
+  </header>
+
+  <main class="ma-main">
+    <!-- Step 1: Categories -->
+    <section id="step-categories" class="ma-step active">
+      <h2 class="ma-step-title">Επιλέξτε Κατηγορία</h2>
+      <div id="categories-grid" class="ma-categories-grid" aria-live="polite">
+        <div class="ma-loading">Φόρτωση...</div>
+      </div>
+    </section>
+
+    <!-- Step 2: Destinations -->
+    <section id="step-destinations" class="ma-step">
+      <button class="ma-back-btn" id="back-to-categories" type="button">← Πίσω</button>
+      <h2 class="ma-step-title">Επιλέξτε Προορισμό</h2>
+      <p class="ma-step-subtitle" id="selected-category-name"></p>
+      <div id="destinations-list" class="ma-destinations-list" aria-live="polite"></div>
+    </section>
+
+    <!-- Step 3: Vehicles -->
+    <section id="step-vehicles" class="ma-step">
+      <button class="ma-back-btn" id="back-to-destinations" type="button">← Πίσω</button>
+      <h2 class="ma-step-title">Επιλέξτε Όχημα</h2>
+      <p class="ma-step-subtitle" id="selected-destination-name"></p>
+      <div id="vehicles-grid" class="ma-vehicles-grid" aria-live="polite"></div>
+    </section>
+
+    <!-- Step 4: Confirmation / CTA -->
+    <section id="step-confirm" class="ma-step">
+      <button class="ma-back-btn" id="back-to-vehicles" type="button">← Πίσω</button>
+      <h2 class="ma-step-title">Επιβεβαίωση</h2>
+      <div class="ma-confirm-card">
+        <div class="ma-confirm-row">
+          <span class="ma-confirm-label">Προορισμός:</span>
+          <span id="confirm-destination" class="ma-confirm-value"></span>
+        </div>
+        <div class="ma-confirm-row">
+          <span class="ma-confirm-label">Όχημα:</span>
+          <span id="confirm-vehicle" class="ma-confirm-value"></span>
+        </div>
+        <div class="ma-confirm-row">
+          <span class="ma-confirm-label">Χωρητικότητα:</span>
+          <span id="confirm-capacity" class="ma-confirm-value"></span>
+        </div>
+        <div class="ma-confirm-row ma-confirm-price">
+          <span class="ma-confirm-label">Τιμή:</span>
+          <span id="confirm-price" class="ma-confirm-value"></span>
+        </div>
+      </div>
+      <div class="ma-cta-buttons">
+        <a id="cta-whatsapp" href="#" class="ma-cta-btn ma-cta-whatsapp" target="_blank">
+          <span class="ma-cta-icon">💬</span>
+          WhatsApp
+        </a>
+        <a id="cta-phone" href="#" class="ma-cta-btn ma-cta-phone">
+          <span class="ma-cta-icon">📞</span>
+          Τηλέφωνο
+        </a>
+      </div>
+    </section>
+
+    <!-- No Zone Warning -->
+    <section id="step-no-zone" class="ma-step">
+      <div class="ma-warning-card">
+        <h2>⚠️ Δεν βρέθηκε ζώνη</h2>
+        <p>Το ξενοδοχείο σας δεν έχει ορισμένη ζώνη transfer.</p>
+        <p>Παρακαλώ επικοινωνήστε μαζί μας:</p>
+        <div class="ma-cta-buttons">
+          <a id="cta-whatsapp-fallback" href="#" class="ma-cta-btn ma-cta-whatsapp" target="_blank">
+            💬 WhatsApp
+          </a>
+          <a id="cta-phone-fallback" href="#" class="ma-cta-btn ma-cta-phone">
+            📞 Τηλέφωνο
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-ma-footer-slot></div>
+
+  <script src="/moveathens/js/moveathens-config.js"></script>
+  <script src="/moveathens/js/footer.js"></script>
+  <script src="/moveathens/js/transfer.js"></script>
+</body>
+</html>

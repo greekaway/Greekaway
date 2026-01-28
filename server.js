@@ -415,6 +415,7 @@ const STEP1_PAGE_FILE = path.join(__dirname, 'public', 'booking', 'step1.html');
 const STEP2_PAGE_FILE = path.join(__dirname, 'public', 'step2.html');
 const STEP3_PAGE_FILE = path.join(__dirname, 'public', 'step3.html');
 const ADMIN_HOME_FILE = path.join(__dirname, 'public', 'admin-home.html');
+const ADMIN_MOVEATHENS_UI_FILE = path.join(__dirname, 'public', 'admin', 'pages', 'admin-moveathens-ui.html');
 const LOCAL_UPLOADS_DIR = path.join(__dirname, 'uploads');
 const UPLOADS_DIR = process.env.RENDER ? getUploadsRoot() : (ensureDir(LOCAL_UPLOADS_DIR) || LOCAL_UPLOADS_DIR);
 
@@ -1166,6 +1167,10 @@ try {
   console.warn('pickup-route: failed to mount', e && e.message ? e.message : e);
 }
 
+// MoveAthens (isolated subsystem)
+require('./moveathens/server/moveathens')(app, { isDev: IS_DEV, checkAdminAuth });
+console.log('MoveAthens admin routes loaded');
+
 // Start pickup notifications (T-24h freeze + notify)
 try {
   const pickup = require('./services/pickupNotifications');
@@ -1201,6 +1206,15 @@ app.get('/admin-login', (req, res) => {
   try {
     return res.sendFile(ADMIN_HOME_FILE);
   } catch (e) { return res.status(500).send('Server error'); }
+});
+
+app.get('/admin/moveathens-ui', (req, res) => {
+  if (!checkAdminAuth(req)) {
+    const nextUrl = encodeURIComponent(req.originalUrl || '/admin/moveathens-ui');
+    return res.redirect(`/admin-home.html?next=${nextUrl}`);
+  }
+  try { return res.sendFile(ADMIN_MOVEATHENS_UI_FILE); }
+  catch (_) { return res.status(404).send('Not found'); }
 });
 
 app.post('/admin-login', (req, res) => {

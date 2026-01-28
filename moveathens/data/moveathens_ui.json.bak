@@ -1,0 +1,147 @@
+{
+  "heroVideoUrl": "/moveathens/videos/hero.mp4",
+  "heroLogoUrl": "/moveathens/videos/hero-logo.png",
+  "heroHeadline": "MoveAthens Transfer",
+  "heroSubtext": "Ιδιωτικές μεταφορές στην Αθήνα — άμεση εξυπηρέτηση με τηλέφωνο ή WhatsApp.",
+  "footerLabels": {
+    "home": "Αρχική",
+    "prices": "transfer",
+    "cta": "Καλέστε",
+    "info": "Πληροφορίες",
+    "context": "ξενοδοχείο"
+  },
+  "footerIcons": {
+    "home": "/moveathens/icons/footer-home.svg",
+    "prices": "/moveathens/icons/footer-prices.svg",
+    "cta": "/moveathens/icons/footer-cta.svg",
+    "info": "/moveathens/icons/footer-info.svg",
+    "context": "/moveathens/icons/footer-context.svg"
+  },
+  "phoneNumber": "+30 6985700007",
+  "whatsappNumber": "+30 6985700007",
+  "companyEmail": "contact@moveathens.com",
+  "ctaLabels": {
+    "whatsapp": "WhatsApp",
+    "phone": "Τηλέφωνο",
+    "close": "Κλείσιμο"
+  },
+  "contactLabels": {
+    "email": "Email",
+    "phone": "Τηλέφωνο",
+    "whatsapp": "WhatsApp"
+  },
+  "hotelContextLabels": {
+    "email": "Hotel email",
+    "zone": "Ζώνη",
+    "sendEmail": "Send email"
+  },
+  "hotelEmailSubjectPrefix": "MoveAthens Transfer –",
+  "transferZones": [
+    {
+      "id": "tz_1769602772374",
+      "name": "αθηνα",
+      "description": "",
+      "type": "suburb",
+      "is_active": true,
+      "created_at": "2026-01-28T13:05:17.001Z"
+    },
+    {
+      "id": "tz_1769603309708",
+      "name": "γλυφαδα",
+      "description": "",
+      "type": "port",
+      "is_active": true,
+      "created_at": "2026-01-28T12:37:42.900Z"
+    }
+  ],
+  "vehicleTypes": [
+    {
+      "id": "vt_1769602918068",
+      "name": "sedan",
+      "description": "",
+      "imageUrl": "/moveathens/images/vehicle-3357c828-621f-492d-9adc-66cdc30361bb.jpg",
+      "max_passengers": 4,
+      "luggage_large": 0,
+      "luggage_medium": 0,
+      "luggage_cabin": 0,
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2026-01-28T13:04:50.452Z"
+    },
+    {
+      "id": "vt_1769606282004",
+      "name": "van",
+      "description": "",
+      "imageUrl": "/moveathens/images/vehicle-52104e49-dbe4-4ede-8810-3be5412836bb.jpg",
+      "max_passengers": 6,
+      "luggage_large": 0,
+      "luggage_medium": 2,
+      "luggage_cabin": 0,
+      "display_order": 2,
+      "is_active": true,
+      "created_at": "2026-01-28T13:18:02.004Z"
+    }
+  ],
+  "destinationCategories": [
+    {
+      "id": "dc_1769602646120",
+      "name": "μουσεια",
+      "icon": "/moveathens/icons/categories/category-05443d8a-fe0b-447f-803f-cedc3b6be452.svg",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2026-01-28T13:03:56.331Z"
+    },
+    {
+      "id": "dc_1769603253464",
+      "name": "εστιαορια",
+      "icon": "/moveathens/icons/categories/category-ede82a90-e440-4504-abb8-07d1f2ef01b7.svg",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2026-01-28T13:04:10.117Z"
+    }
+  ],
+  "destinations": [
+    {
+      "id": "dest_1769606127352",
+      "name": "μουσειο ακροπολη",
+      "description": "",
+      "category_id": "dc_1769602646120",
+      "zone_id": "tz_1769602772374",
+      "display_order": 1,
+      "is_active": true,
+      "created_at": "2026-01-28T13:15:27.353Z"
+    }
+  ],
+  "transferPrices": [
+    {
+      "id": "tp_1769607871223_vt_1769602918068",
+      "origin_zone_id": "tz_1769603309708",
+      "destination_id": "dest_1769606127352",
+      "vehicle_type_id": "vt_1769602918068",
+      "price": 80
+    },
+    {
+      "id": "tp_1769607871223_vt_1769606282004",
+      "origin_zone_id": "tz_1769603309708",
+      "destination_id": "dest_1769606127352",
+      "vehicle_type_id": "vt_1769606282004",
+      "price": 120
+    },
+    {
+      "id": "tp_1769607899228_vt_1769602918068",
+      "origin_zone_id": "tz_1769602772374",
+      "destination_id": "dest_1769606127352",
+      "vehicle_type_id": "vt_1769602918068",
+      "price": 50
+    },
+    {
+      "id": "tp_1769607899228_vt_1769606282004",
+      "origin_zone_id": "tz_1769602772374",
+      "destination_id": "dest_1769606127352",
+      "vehicle_type_id": "vt_1769606282004",
+      "price": 100
+    }
+  ],
+  "vehicleCategoryAvailability": [],
+  "vehicleDestinationOverrides": []
+}

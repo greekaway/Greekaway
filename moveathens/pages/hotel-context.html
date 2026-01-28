@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/moveathens/css/moveathens-base.css" />
+    <link rel="stylesheet" href="/moveathens/css/footer.css" />
+    <link rel="stylesheet" href="/moveathens/css/welcome.css" />
+  </head>
+  <body>
+    <main class="ma-main">
+      <section class="ma-card ma-section">
+        <h1 class="ma-title" data-ma-page-title="context"></h1>
+        <div class="ma-field">
+          <label class="ma-muted" data-ma-hotel-label="email"></label>
+          <input class="ma-input" type="email" data-ma-hotel-input="email" />
+        </div>
+        <div class="ma-field">
+          <label class="ma-muted" data-ma-hotel-label="zone"></label>
+          <select class="ma-select" data-ma-hotel-input="zone"></select>
+        </div>
+        <button class="ma-button" data-ma-hotel-send data-ma-hotel-button="sendEmail"></button>
+      </section>
+    </main>
+
+    <div data-ma-modal-slot></div>
+    <div data-ma-footer-slot></div>
+
+    <script src="/moveathens/js/moveathens-config.js"></script>
+    <script src="/moveathens/js/contact-modal.js"></script>
+    <script src="/moveathens/js/footer.js"></script>
+    <script src="/moveathens/js/welcome.js"></script>
+    <script src="/moveathens/js/hotel-context.js"></script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "version": "0.1",
+  "assistant": {
+    "name": "MoveAthens Assistant",
+    "languages": [
+      "el",
+      "en"
+    ],
+    "channels": [
+      "web"
+    ],
+    "tools": []
+  },
+  "capabilities": {
+    "booking": false,
+    "handoff": "human"
+  },
+  "lastUpdated": "2026-01-27"
+}

@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title>Greekaway Admin – MoveAthens Transfers</title>
+    <link rel="stylesheet" href="/css/admin-common.css">
+    <link rel="stylesheet" href="/css/admin-theme-toggle.css">
+    <link rel="stylesheet" href="/admin/css/admin-moveathens-ui.css">
+    <link rel="manifest" href="/manifest-admin.json">
+    <meta name="theme-color" content="#001f3f">
+    <link rel="stylesheet" href="/pwa.css">
+    <link rel="stylesheet" href="/css/pwa-fixes.css">
+  </head>
+  <body>
+    <header class="sticky-bar" aria-label="MoveAthens Transfers">
+      <div class="bar-inner">
+        <div class="title">MoveAthens Transfers</div>
+        <div class="bar-tabs">
+          <button class="bar-tab active" data-tab="general">General</button>
+          <button class="bar-tab" data-tab="categories">Κατηγορίες</button>
+          <button class="bar-tab" data-tab="destinations">Προορισμοί</button>
+          <button class="bar-tab" data-tab="vehicles">Οχήματα</button>
+          <button class="bar-tab" data-tab="zones">Ζώνες</button>
+          <button class="bar-tab" data-tab="pricing">Τιμολόγηση</button>
+
+        </div>
+      </div>
+    </header>
+
+    <main class="content-wrap">
+      <!-- ===== GENERAL TAB ===== -->
+      <div class="tab-content active" data-tab="general">
+        <section class="panel">
+          <form id="ma-form" class="ma-form" novalidate>
+            <div class="ma-grid">
+              <div class="ma-upload">
+                <label>Hero Video (mp4)
+                  <input id="heroVideoFile" class="input" type="file" accept="video/mp4">
+                </label>
+                <button id="heroVideoUploadBtn" class="btn secondary" type="button">Upload Video</button>
+              </div>
+              <div class="ma-upload">
+                <label>Hero Logo Upload (png/svg/webp)
+                  <input id="heroLogoFile" class="input" type="file" accept="image/png,image/svg+xml,image/webp">
+                </label>
+                <button id="heroLogoUploadBtn" class="btn secondary" type="button">Upload Logo</button>
+                <input id="heroLogoUrl" type="hidden">
+              </div>
+              <label>Hero Headline
+                <input id="heroHeadline" class="input" type="text" maxlength="120">
+              </label>
+              <label>Hero Subtext
+                <textarea id="heroSubtext" class="input" rows="3" maxlength="220"></textarea>
+              </label>
+            </div>
+
+            <h3 class="ma-subtitle">Footer</h3>
+            <div class="ma-footer-rows">
+              <div class="ma-footer-row">
+                <div class="ma-footer-title">Home</div>
+                <label>Label <input id="footerHome" class="input" type="text" maxlength="40"></label>
+                <div class="ma-upload">
+                  <label>Icon (SVG) <input id="footerIconHomeFile" class="input" type="file" accept="image/svg+xml"></label>
+                  <button id="footerIconHomeUpload" class="btn secondary" type="button">Upload Icon</button>
+                  <input id="footerIconHomeUrl" type="hidden">
+                </div>
+              </div>
+              <div class="ma-footer-row">
+                <div class="ma-footer-title">Transfer</div>
+                <label>Label <input id="footerPrices" class="input" type="text" maxlength="40"></label>
+                <div class="ma-upload">
+                  <label>Icon (SVG) <input id="footerIconPricesFile" class="input" type="file" accept="image/svg+xml"></label>
+                  <button id="footerIconPricesUpload" class="btn secondary" type="button">Upload Icon</button>
+                  <input id="footerIconPricesUrl" type="hidden">
+                </div>
+              </div>
+              <div class="ma-footer-row">
+                <div class="ma-footer-title">CTA</div>
+                <label>Label <input id="footerCta" class="input" type="text" maxlength="40"></label>
+                <div class="ma-upload">
+                  <label>Icon (SVG) <input id="footerIconCtaFile" class="input" type="file" accept="image/svg+xml"></label>
+                  <button id="footerIconCtaUpload" class="btn secondary" type="button">Upload Icon</button>
+                  <input id="footerIconCtaUrl" type="hidden">
+                </div>
+              </div>
+              <div class="ma-footer-row">
+                <div class="ma-footer-title">Info</div>
+                <label>Label <input id="footerInfo" class="input" type="text" maxlength="40"></label>
+                <div class="ma-upload">
+                  <label>Icon (SVG) <input id="footerIconInfoFile" class="input" type="file" accept="image/svg+xml"></label>
+                  <button id="footerIconInfoUpload" class="btn secondary" type="button">Upload Icon</button>
+                  <input id="footerIconInfoUrl" type="hidden">
+                </div>
+              </div>
+              <div class="ma-footer-row">
+                <div class="ma-footer-title">Context</div>
+                <label>Label <input id="footerContext" class="input" type="text" maxlength="40"></label>
+                <div class="ma-upload">
+                  <label>Icon (SVG) <input id="footerIconContextFile" class="input" type="file" accept="image/svg+xml"></label>
+                  <button id="footerIconContextUpload" class="btn secondary" type="button">Upload Icon</button>
+                  <input id="footerIconContextUrl" type="hidden">
+                </div>
+              </div>
+            </div>
+
+            <h3 class="ma-subtitle">Contact</h3>
+            <div class="ma-grid">
+              <label>Phone Number <input id="phoneNumber" class="input" type="text" maxlength="30"></label>
+              <label>WhatsApp Number <input id="whatsappNumber" class="input" type="text" maxlength="30"></label>
+              <label>Company Email <input id="companyEmail" class="input" type="email" maxlength="120"></label>
+            </div>
+
+            <div class="ma-actions">
+              <button id="saveBtn" class="btn" type="submit">Save</button>
+              <div id="ma-status" class="ma-status" aria-live="polite"></div>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <!-- ===== CATEGORIES TAB ===== -->
+      <div class="tab-content" data-tab="categories">
+        <section class="panel">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">Κατηγορίες Προορισμών</h3>
+              <p class="ma-helper">Αεροδρόμια, Λιμάνια, Παραλίες, Μουσεία κ.λπ.</p>
+            </div>
+            <div class="ma-actions">
+              <button id="maCategoryAddBtn" class="btn secondary" type="button">➕ Νέα Κατηγορία</button>
+            </div>
+          </div>
+
+          <form id="ma-category-form" class="ma-zone-form" hidden>
+            <div class="ma-zone-grid">
+              <label>Όνομα Κατηγορίας
+                <input id="maCategoryName" class="input" type="text" maxlength="60" required>
+              </label>
+              <label>Icon (emoji ή URL)
+                <input id="maCategoryIcon" class="input" type="text" maxlength="200" placeholder="✈️ ή /path/to/icon.svg">
+              </label>
+              <div class="ma-upload-row">
+                <label>Upload Icon (SVG)
+                  <input id="maCategoryIconFile" class="input" type="file" accept="image/svg+xml,image/png,image/jpeg">
+                </label>
+                <button id="maCategoryIconUpload" class="btn secondary" type="button">Upload</button>
+                <img id="maCategoryIconPreview" class="ma-icon-preview" alt="" data-visible="false">
+              </div>
+              <label>Σειρά Εμφάνισης (UI)
+                <input id="maCategoryOrder" class="input" type="number" min="0" value="0" title="Καθορίζει μόνο τη σειρά εμφάνισης στο UI. Δεν επηρεάζει τιμές.">
+                <small class="ma-hint">Καθορίζει μόνο τη σειρά εμφάνισης στο UI</small>
+              </label>
+              <label class="ma-zone-toggle">
+                <input id="maCategoryActive" type="checkbox" checked>
+                Ενεργή Κατηγορία
+              </label>
+            </div>
+            <div class="ma-actions">
+              <button id="maCategorySaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="maCategoryCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+              <span id="maCategoryStatus" class="ma-status" aria-live="polite"></span>
+            </div>
+          </form>
+
+          <div id="ma-categories-list" class="ma-zones-list" aria-live="polite"></div>
+        </section>
+      </div>
+
+      <!-- ===== DESTINATIONS TAB ===== -->
+      <div class="tab-content" data-tab="destinations">
+        <section class="panel">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">Προορισμοί</h3>
+              <p class="ma-helper">Κάθε προορισμός ανήκει σε μία κατηγορία και μία ζώνη (για pricing).</p>
+            </div>
+            <div class="ma-actions">
+              <button id="maDestinationAddBtn" class="btn secondary" type="button">➕ Νέος Προορισμός</button>
+            </div>
+          </div>
+
+          <form id="ma-destination-form" class="ma-zone-form" hidden>
+            <div class="ma-zone-grid">
+              <label>Όνομα Προορισμού
+                <input id="maDestinationName" class="input" type="text" maxlength="80" required>
+              </label>
+              <label>Περιγραφή (προαιρετικό)
+                <textarea id="maDestinationDescription" class="input" rows="2" maxlength="160"></textarea>
+              </label>
+              <label>Κατηγορία
+                <select id="maDestinationCategory" class="input" required>
+                  <option value="">-- Επιλογή --</option>
+                </select>
+              </label>
+              <label>Σειρά Εμφάνισης
+                <input id="maDestinationOrder" class="input" type="number" min="0" value="0">
+              </label>
+              <label class="ma-zone-toggle">
+                <input id="maDestinationActive" type="checkbox" checked>
+                Ενεργός Προορισμός
+              </label>
+            </div>
+            <div class="ma-actions">
+              <button id="maDestinationSaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="maDestinationCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+              <span id="maDestinationStatus" class="ma-status" aria-live="polite"></span>
+            </div>
+          </form>
+
+          <div id="ma-destinations-list" class="ma-zones-list" aria-live="polite"></div>
+        </section>
+      </div>
+
+      <!-- ===== VEHICLES TAB ===== -->
+      <div class="tab-content" data-tab="vehicles">
+        <section class="panel">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">Τύποι Οχημάτων</h3>
+              <p class="ma-helper">Ορισμός οχημάτων με χωρητικότητα επιβατών και αποσκευών.</p>
+            </div>
+            <div class="ma-actions">
+              <button id="maVehicleAddBtn" class="btn secondary" type="button">➕ Νέος Τύπος</button>
+            </div>
+          </div>
+
+          <form id="ma-vehicle-form" class="ma-zone-form" hidden>
+            <div class="ma-zone-grid">
+              <label>Όνομα
+                <input id="maVehicleName" class="input" type="text" maxlength="60" required>
+              </label>
+              <label>Περιγραφή (προαιρετικό)
+                <textarea id="maVehicleDescription" class="input" rows="2" maxlength="160"></textarea>
+              </label>
+              <label>Φωτογραφία
+                <input id="maVehicleImageFile" class="input" type="file" accept="image/*">
+              </label>
+              <div class="ma-upload">
+                <button id="maVehicleImageUploadBtn" class="btn secondary" type="button">Upload Φωτογραφίας</button>
+                <button id="maVehicleImageClearBtn" class="btn secondary" type="button">Καθαρισμός</button>
+                <input id="maVehicleImageUrl" type="hidden">
+                <img id="maVehicleImagePreview" class="ma-vehicle-preview" alt="">
+              </div>
+
+              <h4 class="ma-capacity-title">Χωρητικότητα</h4>
+              <label>Μέγιστοι Επιβάτες
+                <input id="maVehicleMaxPax" class="input" type="number" min="1" max="50" value="4">
+              </label>
+              <label>Μεγάλες Αποσκευές (large)
+                <input id="maVehicleLuggageLarge" class="input" type="number" min="0" max="20" value="0">
+              </label>
+              <label>Μεσαίες Αποσκευές (medium)
+                <input id="maVehicleLuggageMedium" class="input" type="number" min="0" max="20" value="0">
+              </label>
+              <label>Χειραποσκευές (cabin)
+                <input id="maVehicleLuggageCabin" class="input" type="number" min="0" max="20" value="0">
+              </label>
+              <label>Σειρά Εμφάνισης (UI)
+                <input id="maVehicleOrder" class="input" type="number" min="0" value="0" title="Καθορίζει μόνο τη σειρά εμφάνισης στο UI (dropdowns/cards). Δεν επηρεάζει τιμές.">
+                <small class="ma-hint">Καθορίζει μόνο τη σειρά εμφάνισης στο UI</small>
+              </label>
+              <label class="ma-zone-toggle">
+                <input id="maVehicleActive" type="checkbox" checked>
+                Ενεργός Τύπος
+              </label>
+            </div>
+            <div class="ma-actions">
+              <button id="maVehicleSaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="maVehicleCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+              <span id="maVehicleStatus" class="ma-status" aria-live="polite"></span>
+            </div>
+          </form>
+
+          <div id="ma-vehicles-list" class="ma-zones-list" aria-live="polite"></div>
+        </section>
+      </div>
+
+      <!-- ===== ZONES TAB ===== -->
+      <div class="tab-content" data-tab="zones">
+        <section class="panel">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">Ζώνες Transfer</h3>
+              <p class="ma-helper">Οι ζώνες είναι η ΜΟΝΑΔΙΚΗ πηγή αλήθειας για pricing.</p>
+            </div>
+            <div class="ma-actions">
+              <button id="maZoneAddBtn" class="btn secondary" type="button">➕ Νέα Ζώνη</button>
+            </div>
+          </div>
+
+          <form id="ma-zone-form" class="ma-zone-form" hidden>
+            <div class="ma-zone-grid">
+              <label>Όνομα Ζώνης
+                <input id="maZoneName" class="input" type="text" maxlength="80" required>
+              </label>
+              <label>Τύπος Ζώνης
+                <select id="maZoneType" class="input" required>
+                  <option value="">-- Επιλογή --</option>
+                  <option value="city_area">Κέντρο Πόλης</option>
+                  <option value="suburb">Προάστια</option>
+                  <option value="port">Λιμάνι</option>
+                  <option value="airport">Αεροδρόμιο</option>
+                </select>
+              </label>
+              <label>Περιγραφή (προαιρετικό)
+                <textarea id="maZoneDescription" class="input" rows="2" maxlength="160"></textarea>
+              </label>
+              <label class="ma-zone-toggle">
+                <input id="maZoneActive" type="checkbox" checked>
+                Ενεργή Ζώνη
+              </label>
+            </div>
+            <div class="ma-actions">
+              <button id="maZoneSaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="maZoneCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+              <span id="maZoneStatus" class="ma-status" aria-live="polite"></span>
+            </div>
+          </form>
+
+          <div id="ma-zones-list" class="ma-zones-list" aria-live="polite"></div>
+        </section>
+      </div>
+
+      <!-- ===== PRICING TAB ===== -->
+      <div class="tab-content" data-tab="pricing">
+        <section class="panel">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">Τιμολόγηση</h3>
+              <p class="ma-helper">Τιμή = Ζώνη Ξενοδοχείου → Προορισμός → Τύπος Οχήματος</p>
+            </div>
+          </div>
+
+          <div class="ma-price-controls">
+            <label>Ζώνη Ξενοδοχείου (από)
+              <select id="maPriceOriginZone" class="input"></select>
+            </label>
+            <label>Προορισμός (προς)
+              <select id="maPriceDestination" class="input"></select>
+            </label>
+            <button id="maPriceLoadBtn" class="btn secondary" type="button">Φόρτωση Τιμών</button>
+          </div>
+
+          <form id="ma-pricing-form" class="ma-pricing-form" hidden>
+            <div id="ma-pricing-grid" class="ma-pricing-grid"></div>
+            <div class="ma-actions">
+              <button id="maPriceSaveBtn" class="btn" type="submit">Αποθήκευση Τιμών</button>
+              <span id="maPriceStatus" class="ma-status" aria-live="polite"></span>
+            </div>
+          </form>
+        </section>
+      </div>
+    </main>
+
+    <nav class="bottom-nav">
+      <a href="/admin-home.html">Home</a>
+      <a href="/admin-bookings.html">Bookings</a>
+      <a href="/admin-payments.html">Payments</a>
+      <a href="/admin-manual.html">Manual</a>
+      <a href="/admin-providers.html">Providers</a>
+      <a href="/admin-availability.html">Availability</a>
+      <a href="/admin/trip-availability.html">Trip Availability</a>
+      <a href="/admin-trips.html">Trips</a>
+      <a href="/admin/moveathens-ui" class="active">MoveAthens</a>
+    </nav>
+    <footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
+
+    <div id="ma-toast" class="ma-toast" role="status" aria-live="polite"></div>
+    <div id="maConfirmModal" class="ma-modal" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="ma-modal__backdrop" data-action="close"></div>
+      <div class="ma-modal__content" role="document">
+        <h4 id="maConfirmTitle" class="ma-modal__title">Επιβεβαίωση</h4>
+        <p id="maConfirmMessage" class="ma-modal__message"></p>
+        <div class="ma-modal__actions">
+          <button id="maConfirmCancel" class="btn secondary" type="button">Ακύρωση</button>
+          <button id="maConfirmOk" class="btn" type="button">Διαγραφή</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/admin/js/admin-moveathens-ui.js"></script>
+    <script src="/js/admin-theme-toggle.js"></script>
+    <script src="/pwa-install.js" defer></script>
+    <script src="/js/main.js"></script>
+  </body>
+</html>
