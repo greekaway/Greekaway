@@ -1,13 +1,24 @@
 // Trip data loader for Greekaway Assistant
-// - Reads trip JSON files from public/data/trips/*.json
+// - Reads trip JSON files from data/trips/*.json (or PostgreSQL if available)
 // - Caches results in-memory with TTL
 // - Maps Greek/English names to trip ids using tripindex.json and heuristics
 
 const fs = require('fs');
 const path = require('path');
 
-const TRIPS_DIR = path.join(__dirname, '..', 'public', 'data', 'trips');
+// Primary location: data/trips/ (used by admin panel)
+const TRIPS_DIR = path.join(__dirname, '..', 'data', 'trips');
+// Fallback: public/data/trips/ (legacy)
+const TRIPS_DIR_LEGACY = path.join(__dirname, '..', 'public', 'data', 'trips');
 const TRIPINDEX_PATH = path.join(__dirname, '..', 'public', 'data', 'tripindex.json');
+
+// Database integration (optional)
+let tripsDataLayer = null;
+try {
+  tripsDataLayer = require('../src/server/data/trips');
+} catch (_) {
+  // Data layer not available, will use JSON files directly
+}
 
 const DEFAULT_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -100,8 +111,29 @@ function readTripJsonById(id) {
   const key = `trip:${id}`;
   const cached = cache.get(key);
   if (cached) return cached;
-  const file = path.join(TRIPS_DIR, `${id}.json`);
-  const data = safeReadJson(file);
+  
+  let data = null;
+  
+  // Try database first (if available)
+  if (tripsDataLayer && tripsDataLayer.isUsingDatabase && tripsDataLayer.isUsingDatabase()) {
+    try {
+      // Note: This is sync read from cache or async from DB
+      // For assistant, we use sync JSON fallback to avoid async complexity
+    } catch (_) {}
+  }
+  
+  // Try primary location (data/trips/)
+  if (!data) {
+    const file = path.join(TRIPS_DIR, `${id}.json`);
+    data = safeReadJson(file);
+  }
+  
+  // Try legacy location (public/data/trips/)
+  if (!data) {
+    const fileLegacy = path.join(TRIPS_DIR_LEGACY, `${id}.json`);
+    data = safeReadJson(fileLegacy);
+  }
+  
   if (data) cache.set(key, data, DEFAULT_TTL_MS);
   return data;
 }

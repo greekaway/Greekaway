@@ -1314,6 +1314,14 @@ try {
 require('./moveathens/server/moveathens')(app, { isDev: IS_DEV, checkAdminAuth });
 console.log('MoveAthens admin routes loaded');
 
+// MoveAthens AI Assistant
+try {
+  const { registerMoveAthensAssistantRoutes } = require('./moveathens/server/assistant');
+  registerMoveAthensAssistantRoutes(app, { OPENAI_API_KEY });
+} catch (e) {
+  console.warn('MoveAthens Assistant: failed to load', e?.message || e);
+}
+
 // Start pickup notifications (T-24h freeze + notify)
 try {
   const pickup = require('./services/pickupNotifications');

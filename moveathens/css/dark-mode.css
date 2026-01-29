@@ -123,11 +123,20 @@
   
   /* Back button */
   .ma-transfer-page .ma-back-btn {
-    color: #8896a6 !important;
+    background: rgba(255, 255, 255, 0.1) !important;
   }
 
   .ma-transfer-page .ma-back-btn:hover {
-    color: #c0c8d0 !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+  }
+  
+  .ma-transfer-page .ma-back-btn:active {
+    background: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  .ma-transfer-page .ma-back-chevron {
+    border-left-color: #e0e0e0 !important;
+    border-bottom-color: #e0e0e0 !important;
   }
 
   /* Categories grid */

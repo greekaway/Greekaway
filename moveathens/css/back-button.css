@@ -1,0 +1,56 @@
+/* MoveAthens Back Button - iPhone Notes Style */
+/* Use: <button class="ma-back-btn"><span class="ma-back-chevron"></span></button> */
+
+.ma-back-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s, transform 0.1s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ma-back-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.ma-back-btn:active {
+  background: rgba(0, 0, 0, 0.15);
+  transform: scale(0.95);
+}
+
+/* Connected chevron < */
+.ma-back-chevron {
+  width: 10px;
+  height: 10px;
+  border-left: 2.5px solid #1a1a2e;
+  border-bottom: 2.5px solid #1a1a2e;
+  transform: rotate(45deg);
+  margin-left: 3px;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .ma-back-btn {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .ma-back-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  
+  .ma-back-btn:active {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .ma-back-chevron {
+    border-left-color: #e0e0e0;
+    border-bottom-color: #e0e0e0;
+  }
+}
