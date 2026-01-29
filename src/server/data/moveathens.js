@@ -196,14 +196,47 @@ async function getZones(activeOnly = false) {
   if (dbAvailable) {
     try {
       const rows = await db.ma.getZones(activeOnly);
-      return rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        description: row.description || '',
-        type: row.zone_type,
-        is_active: row.is_active,
-        created_at: row.created_at
-      }));
+      // If DB has data, use it
+      if (rows && rows.length > 0) {
+        return rows.map(row => ({
+          id: row.id,
+          name: row.name,
+          description: row.description || '',
+          type: row.zone_type,
+          is_active: row.is_active,
+          created_at: row.created_at
+        }));
+      }
+      // DB is empty - check if JSON has data to migrate
+      const config = readConfigFromFile();
+      const jsonZones = config.transferZones || [];
+      if (jsonZones.length > 0) {
+        console.log('[moveathens] DB empty, auto-migrating', jsonZones.length, 'zones from JSON');
+        for (const zone of jsonZones) {
+          try {
+            await db.ma.upsertZone({
+              id: zone.id,
+              name: zone.name,
+              description: zone.description || '',
+              zone_type: zone.type || 'suburb',
+              is_active: zone.is_active !== false
+            });
+          } catch (e) {
+            console.error('[moveathens] Failed to migrate zone:', zone.id, e.message);
+          }
+        }
+        // Return the migrated data
+        const migrated = await db.ma.getZones(activeOnly);
+        return migrated.map(row => ({
+          id: row.id,
+          name: row.name,
+          description: row.description || '',
+          type: row.zone_type,
+          is_active: row.is_active,
+          created_at: row.created_at
+        }));
+      }
+      return []; // DB and JSON both empty
     } catch (err) {
       console.error('[moveathens] DB zones read failed:', err.message);
     }
@@ -302,19 +335,61 @@ async function getVehicleTypes(activeOnly = false) {
   if (dbAvailable) {
     try {
       const rows = await db.ma.getVehicleTypes(activeOnly);
-      return rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        description: row.description || '',
-        imageUrl: row.image_url || '',
-        max_passengers: row.max_passengers,
-        luggage_large: row.luggage_large,
-        luggage_medium: row.luggage_medium,
-        luggage_cabin: row.luggage_cabin,
-        display_order: row.display_order,
-        is_active: row.is_active,
-        created_at: row.created_at
-      }));
+      // If DB has data, use it
+      if (rows && rows.length > 0) {
+        return rows.map(row => ({
+          id: row.id,
+          name: row.name,
+          description: row.description || '',
+          imageUrl: row.image_url || '',
+          max_passengers: row.max_passengers,
+          luggage_large: row.luggage_large,
+          luggage_medium: row.luggage_medium,
+          luggage_cabin: row.luggage_cabin,
+          display_order: row.display_order,
+          is_active: row.is_active,
+          created_at: row.created_at
+        }));
+      }
+      // DB is empty - check if JSON has data to migrate
+      const config = readConfigFromFile();
+      const jsonVehicles = config.vehicleTypes || [];
+      if (jsonVehicles.length > 0) {
+        console.log('[moveathens] DB empty, auto-migrating', jsonVehicles.length, 'vehicles from JSON');
+        for (const v of jsonVehicles) {
+          try {
+            await db.ma.upsertVehicleType({
+              id: v.id,
+              name: v.name,
+              description: v.description || '',
+              image_url: v.imageUrl || '',
+              max_passengers: v.max_passengers || 4,
+              luggage_large: v.luggage_large || 2,
+              luggage_medium: v.luggage_medium || 2,
+              luggage_cabin: v.luggage_cabin || 4,
+              display_order: v.display_order || 0,
+              is_active: v.is_active !== false
+            });
+          } catch (e) {
+            console.error('[moveathens] Failed to migrate vehicle:', v.id, e.message);
+          }
+        }
+        const migrated = await db.ma.getVehicleTypes(activeOnly);
+        return migrated.map(row => ({
+          id: row.id,
+          name: row.name,
+          description: row.description || '',
+          imageUrl: row.image_url || '',
+          max_passengers: row.max_passengers,
+          luggage_large: row.luggage_large,
+          luggage_medium: row.luggage_medium,
+          luggage_cabin: row.luggage_cabin,
+          display_order: row.display_order,
+          is_active: row.is_active,
+          created_at: row.created_at
+        }));
+      }
+      return [];
     } catch (err) {
       console.error('[moveathens] DB vehicles read failed:', err.message);
     }
@@ -428,14 +503,45 @@ async function getDestinationCategories(activeOnly = false) {
   if (dbAvailable) {
     try {
       const rows = await db.ma.getDestinationCategories(activeOnly);
-      return rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        icon: row.icon || '',
-        display_order: row.display_order,
-        is_active: row.is_active,
-        created_at: row.created_at
-      }));
+      if (rows && rows.length > 0) {
+        return rows.map(row => ({
+          id: row.id,
+          name: row.name,
+          icon: row.icon || '',
+          display_order: row.display_order,
+          is_active: row.is_active,
+          created_at: row.created_at
+        }));
+      }
+      // DB empty - auto-migrate from JSON
+      const config = readConfigFromFile();
+      const jsonCats = config.destinationCategories || [];
+      if (jsonCats.length > 0) {
+        console.log('[moveathens] DB empty, auto-migrating', jsonCats.length, 'dest categories from JSON');
+        for (const c of jsonCats) {
+          try {
+            await db.ma.upsertDestinationCategory({
+              id: c.id,
+              name: c.name,
+              icon: c.icon || '',
+              display_order: c.display_order || 0,
+              is_active: c.is_active !== false
+            });
+          } catch (e) {
+            console.error('[moveathens] Failed to migrate dest category:', c.id, e.message);
+          }
+        }
+        const migrated = await db.ma.getDestinationCategories(activeOnly);
+        return migrated.map(row => ({
+          id: row.id,
+          name: row.name,
+          icon: row.icon || '',
+          display_order: row.display_order,
+          is_active: row.is_active,
+          created_at: row.created_at
+        }));
+      }
+      return [];
     } catch (err) {
       console.error('[moveathens] DB dest categories read failed:', err.message);
     }
@@ -534,16 +640,51 @@ async function getDestinations(filters = {}) {
   if (dbAvailable) {
     try {
       const rows = await db.ma.getDestinations(filters);
-      return rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        description: row.description || '',
-        category_id: row.category_id,
-        zone_id: row.zone_id,
-        display_order: row.display_order,
-        is_active: row.is_active,
-        created_at: row.created_at
-      }));
+      if (rows && rows.length > 0) {
+        return rows.map(row => ({
+          id: row.id,
+          name: row.name,
+          description: row.description || '',
+          category_id: row.category_id,
+          zone_id: row.zone_id,
+          display_order: row.display_order,
+          is_active: row.is_active,
+          created_at: row.created_at
+        }));
+      }
+      // DB empty - auto-migrate from JSON
+      const config = readConfigFromFile();
+      const jsonDests = config.destinations || [];
+      if (jsonDests.length > 0) {
+        console.log('[moveathens] DB empty, auto-migrating', jsonDests.length, 'destinations from JSON');
+        for (const d of jsonDests) {
+          try {
+            await db.ma.upsertDestination({
+              id: d.id,
+              name: d.name,
+              description: d.description || '',
+              category_id: d.category_id || null,
+              zone_id: d.zone_id || null,
+              display_order: d.display_order || 0,
+              is_active: d.is_active !== false
+            });
+          } catch (e) {
+            console.error('[moveathens] Failed to migrate destination:', d.id, e.message);
+          }
+        }
+        const migrated = await db.ma.getDestinations(filters);
+        return migrated.map(row => ({
+          id: row.id,
+          name: row.name,
+          description: row.description || '',
+          category_id: row.category_id,
+          zone_id: row.zone_id,
+          display_order: row.display_order,
+          is_active: row.is_active,
+          created_at: row.created_at
+        }));
+      }
+      return [];
     } catch (err) {
       console.error('[moveathens] DB destinations read failed:', err.message);
     }
@@ -658,14 +799,46 @@ async function getPrices(filters = {}) {
   if (dbAvailable) {
     try {
       const rows = await db.ma.getPrices(filters);
-      return rows.map(row => ({
-        id: row.id,
-        origin_zone_id: row.origin_zone_id,
-        destination_id: row.destination_id,
-        vehicle_type_id: row.vehicle_type_id,
-        tariff: row.tariff,
-        price: parseFloat(row.price)
-      }));
+      if (rows && rows.length > 0) {
+        return rows.map(row => ({
+          id: row.id,
+          origin_zone_id: row.origin_zone_id,
+          destination_id: row.destination_id,
+          vehicle_type_id: row.vehicle_type_id,
+          tariff: row.tariff,
+          price: parseFloat(row.price)
+        }));
+      }
+      // DB empty - auto-migrate from JSON
+      const config = readConfigFromFile();
+      const jsonPrices = config.transferPrices || [];
+      if (jsonPrices.length > 0) {
+        console.log('[moveathens] DB empty, auto-migrating', jsonPrices.length, 'prices from JSON');
+        for (const p of jsonPrices) {
+          try {
+            await db.ma.upsertPrice({
+              id: p.id,
+              origin_zone_id: p.origin_zone_id,
+              destination_id: p.destination_id,
+              vehicle_type_id: p.vehicle_type_id,
+              tariff: p.tariff || 'day',
+              price: p.price
+            });
+          } catch (e) {
+            console.error('[moveathens] Failed to migrate price:', p.id, e.message);
+          }
+        }
+        const migrated = await db.ma.getPrices(filters);
+        return migrated.map(row => ({
+          id: row.id,
+          origin_zone_id: row.origin_zone_id,
+          destination_id: row.destination_id,
+          vehicle_type_id: row.vehicle_type_id,
+          tariff: row.tariff,
+          price: parseFloat(row.price)
+        }));
+      }
+      return [];
     } catch (err) {
       console.error('[moveathens] DB prices read failed:', err.message);
     }
