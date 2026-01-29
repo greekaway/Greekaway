@@ -689,12 +689,15 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     }
   });
 
-  app.get('/api/moveathens/ui-config', (req, res) => {
+  app.get('/api/moveathens/ui-config', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+      // Read full config from database (with JSON fallback)
+      const dbConfig = await dataLayer.getFullConfig();
+      const data = ensureTransferConfig(migrateHotelZones(dbConfig));
       return res.json(data);
     } catch (err) {
+      console.error('[moveathens] Config read error:', err);
       return res.status(500).json({ error: 'MoveAthens config unavailable' });
     }
   });
@@ -772,10 +775,12 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   // ========================================
   // ADMIN API ENDPOINTS
   // ========================================
-  app.get('/api/admin/moveathens/ui-config', (req, res) => {
+  app.get('/api/admin/moveathens/ui-config', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+      // Read full config from database (with JSON fallback)
+      const dbConfig = await dataLayer.getFullConfig();
+      const data = ensureTransferConfig(migrateHotelZones(dbConfig));
       return res.json(data);
     } catch (err) {
       return res.status(500).json({ error: 'MoveAthens config unavailable' });
@@ -1170,21 +1175,27 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     });
   }
 
-  app.post('/api/admin/moveathens/ui-config', (req, res) => {
+  app.post('/api/admin/moveathens/ui-config', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const current = readUiConfig();
       const validated = validateAndMerge(req.body || {}, current);
       if (!validated.ok) return res.status(400).json({ error: validated.error });
+      
+      // Save to database (with JSON fallback)
+      await dataLayer.updateConfig(validated.data);
+      // Also write to JSON for immediate file sync
       writeAtomic(validated.data);
+      
       return res.json({ ok: true });
     } catch (err) {
+      console.error('[moveathens] Config save error:', err);
       return res.status(500).json({ error: 'Failed to save config' });
     }
   });
 
   // PUT endpoint for partial updates (info page content, etc.)
-  app.put('/api/admin/moveathens/ui-config', (req, res) => {
+  app.put('/api/admin/moveathens/ui-config', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const current = readUiConfig();
@@ -1198,9 +1209,14 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         current.infoPageContent = body.infoPageContent.slice(0, 10000); // Allow up to 10k chars
       }
       
+      // Save to database (with JSON fallback)
+      await dataLayer.updateConfig(current);
+      // Also write to JSON for immediate file sync
       writeAtomic(current);
+      
       return res.json(current);
     } catch (err) {
+      console.error('[moveathens] Config partial save error:', err);
       return res.status(500).json({ error: 'Failed to save config' });
     }
   });

@@ -190,13 +190,16 @@ async function updateConfig(data) {
 // TRANSFER ZONES
 // =========================================================
 
+// Track if initial migration has been done this session
+let zonesMigrated = false;
+
 async function getZones(activeOnly = false) {
   await initDb();
   
   if (dbAvailable) {
     try {
       const rows = await db.ma.getZones(activeOnly);
-      // If DB has data, use it
+      // If DB has data, use it (no migration needed)
       if (rows && rows.length > 0) {
         return rows.map(row => ({
           id: row.id,
@@ -207,34 +210,37 @@ async function getZones(activeOnly = false) {
           created_at: row.created_at
         }));
       }
-      // DB is empty - check if JSON has data to migrate
-      const config = readConfigFromFile();
-      const jsonZones = config.transferZones || [];
-      if (jsonZones.length > 0) {
-        console.log('[moveathens] DB empty, auto-migrating', jsonZones.length, 'zones from JSON');
-        for (const zone of jsonZones) {
-          try {
-            await db.ma.upsertZone({
-              id: zone.id,
-              name: zone.name,
-              description: zone.description || '',
-              zone_type: zone.type || 'suburb',
-              is_active: zone.is_active !== false
-            });
-          } catch (e) {
-            console.error('[moveathens] Failed to migrate zone:', zone.id, e.message);
+      // DB is empty AND we haven't migrated yet - migrate from JSON
+      if (!zonesMigrated) {
+        const config = readConfigFromFile();
+        const jsonZones = config.transferZones || [];
+        if (jsonZones.length > 0) {
+          console.log('[moveathens] DB empty, auto-migrating', jsonZones.length, 'zones from JSON');
+          zonesMigrated = true; // Mark as migrated to prevent repeated migrations
+          for (const zone of jsonZones) {
+            try {
+              await db.ma.upsertZone({
+                id: zone.id,
+                name: zone.name,
+                description: zone.description || '',
+                zone_type: zone.type || 'suburb',
+                is_active: zone.is_active !== false
+              });
+            } catch (e) {
+              console.error('[moveathens] Failed to migrate zone:', zone.id, e.message);
+            }
           }
+          // Return the migrated data
+          const migrated = await db.ma.getZones(activeOnly);
+          return migrated.map(row => ({
+            id: row.id,
+            name: row.name,
+            description: row.description || '',
+            type: row.zone_type,
+            is_active: row.is_active,
+            created_at: row.created_at
+          }));
         }
-        // Return the migrated data
-        const migrated = await db.ma.getZones(activeOnly);
-        return migrated.map(row => ({
-          id: row.id,
-          name: row.name,
-          description: row.description || '',
-          type: row.zone_type,
-          is_active: row.is_active,
-          created_at: row.created_at
-        }));
       }
       return []; // DB and JSON both empty
     } catch (err) {
