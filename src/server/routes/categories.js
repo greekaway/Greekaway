@@ -3,6 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// Data layer for PostgreSQL persistence
+const dataLayer = require('../data/categories');
+
 const {
   getIconsDir,
   absolutizeUploadsUrl,
@@ -70,17 +73,18 @@ function upsertCategory(list, input){
 function buildCategoriesRouter({ checkAdminAuth }){
   ensureCategoriesFile();
   const router = express.Router();
-  router.get('/', (req,res) => {
+  router.get('/', async (req,res) => {
     try {
       const isAdmin = (checkAdminAuth && checkAdminAuth(req)) ? true : false;
-      let list = safeReadCategories();
-      // Always sort by order then title for deterministic output
-      list.sort((a,b)=>(a.order-b.order)||String(a.title||'').localeCompare(String(b.title||'')));
       const qp = String(req.query.published || '').toLowerCase();
       const wantPublishedOnly = (qp === 'true' || qp === '1' || qp === 'yes');
-      if (wantPublishedOnly || !isAdmin) {
-        list = list.filter(c => !!c.published);
-      }
+      
+      // Use data layer (DB first, JSON fallback)
+      let list = await dataLayer.getCategories(wantPublishedOnly || !isAdmin);
+      
+      // Always sort by order then title for deterministic output
+      list.sort((a,b)=>(a.order-b.order)||String(a.title||'').localeCompare(String(b.title||'')));
+      
       const enriched = list.map(c => {
         const slug = c.slug || '';
         // Priority: stored iconPath -> legacy /categories/<slug>/icon.svg if exists -> default fallback
@@ -96,20 +100,23 @@ function buildCategoriesRouter({ checkAdminAuth }){
       return res.json(enriched);
     } catch(e){ console.error('categories: unexpected GET', e); return res.status(500).json({ error:'read_failed' }); }
   });
-  router.post('/', jsonParser, (req,res) => {
+  router.post('/', jsonParser, async (req,res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });
     try {
       const body = (req.body && typeof req.body==='object') ? req.body : null;
       if (!body) return res.status(400).json({ error:'invalid_body' });
-      const list = safeReadCategories();
-      let updated; try { updated = upsertCategory(list, body); } catch(err){ return res.status(400).json({ error: err.message||'upsert_failed' }); }
+      
+      // Prepare iconPath
       if (typeof body.iconPath === 'string' && body.iconPath.trim()) {
-        updated.iconPath = toRelativeUploadsPath(body.iconPath.trim());
-      } else {
-        updated.iconPath = toRelativeUploadsPath(updated.iconPath);
+        body.iconPath = toRelativeUploadsPath(body.iconPath.trim());
       }
-      list.sort((a,b)=>(a.order-b.order)||a.title.localeCompare(b.title));
-      if (!writeCategories(list)) return res.status(500).json({ error:'write_failed' });
+      
+      // Use data layer (DB first, JSON fallback)
+      const updated = await dataLayer.upsertCategory(body);
+      
+      // Get updated list count
+      const list = await dataLayer.getCategories();
+      
       console.log('categories: POST saved', { slug: updated.slug, iconPath: updated.iconPath });
       return res.json({ ok:true, category:updated, total:list.length });
     } catch(e){
@@ -117,16 +124,16 @@ function buildCategoriesRouter({ checkAdminAuth }){
       return res.status(500).json({ error:'write_failed', detail: e && e.message ? e.message : String(e) });
     }
   });
-  router.delete('/:slug', (req, res) => {
+  router.delete('/:slug', async (req, res) => {
     try {
       if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error:'Forbidden' });
       const slug = String(req.params.slug || '').trim().toLowerCase();
       if (!slug) return res.status(400).json({ error: 'invalid_slug' });
-      const list = safeReadCategories();
-      const before = list.length;
-      const filtered = list.filter(c => String(c.slug||'').toLowerCase() !== slug);
-      if (filtered.length === before) return res.status(404).json({ error: 'not_found' });
-      if (!writeCategories(filtered)) return res.status(500).json({ error: 'write_failed' });
+      
+      // Use data layer
+      const deleted = await dataLayer.deleteCategory(slug);
+      if (!deleted) return res.status(404).json({ error: 'not_found' });
+      
       return res.json({ success: true });
     } catch(e){ console.error('categories: unexpected DELETE', e); return res.status(500).json({ error:'delete_failed' }); }
   });
@@ -140,10 +147,10 @@ function registerCategoriesRoutes(app, { checkAdminAuth }){
     app.use('/api/admin/categories', adminRouter);
     console.log('categories: router mounted at /api/categories (+ /api/admin/categories)');
     // Public read-only endpoint for published categories (no auth)
-    app.get('/api/public/categories', (req, res) => {
+    app.get('/api/public/categories', async (req, res) => {
       try {
-        let list = safeReadCategories();
-        list = list.filter(c => !!c.published);
+        // Use data layer (DB first, JSON fallback)
+        let list = await dataLayer.getCategories(true); // published only
         list.sort((a,b)=>(a.order-b.order)||String(a.title||'').localeCompare(String(b.title||'')));
         const out = list.map(c => {
           const slug = c.slug || '';

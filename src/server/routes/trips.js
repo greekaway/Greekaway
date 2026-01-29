@@ -3,6 +3,9 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
+// Data layer for PostgreSQL persistence
+const dataLayer = require("../data/trips");
+
 const {
   getTripsDir: getUploadsTripsDir,
   absolutizeUploadsUrl,
@@ -777,11 +780,20 @@ function normalizeTripFilePayload(rawObj, filePath, slugLabel) {
   return normalized;
 }
 
-function readTrip(slug) {
+// Wrapper functions that use data layer with JSON fallback
+async function readTrip(slug) {
   ensureTripsDir();
   try {
     const safeSlug = sanitizeSlug(slug || "");
     if (!safeSlug || safeSlug === "_template") return null;
+    
+    // Try data layer first (DB with JSON fallback)
+    const trip = await dataLayer.getTripBySlug(safeSlug);
+    if (trip) {
+      return normalizeTripFilePayload(trip, `db:${safeSlug}`, safeSlug);
+    }
+    
+    // Extra fallback to local JSON file
     const file = path.join(TRIPS_DIR, safeSlug + ".json");
     if (!fs.existsSync(file)) return null;
     const raw = fs.readFileSync(file, "utf8");
@@ -793,15 +805,22 @@ function readTrip(slug) {
   }
 }
 
-function writeTrip(data) {
+async function writeTrip(data) {
   ensureTripsDir();
   try {
     const safeSlug = sanitizeSlug(data && data.slug);
     if (!safeSlug || safeSlug === "_template") return false;
-    const file = path.join(TRIPS_DIR, safeSlug + ".json");
+    
     const prepared = ensureTripShape({ ...data, slug: safeSlug }) || {};
     const stored = prepareTripForStorage(prepared) || {};
+    
+    // Use data layer (writes to DB if available, JSON as fallback)
+    await dataLayer.upsertTrip(stored);
+    
+    // Also write to local JSON for backup
+    const file = path.join(TRIPS_DIR, safeSlug + ".json");
     fs.writeFileSync(file, JSON.stringify(stored, null, 2), "utf8");
+    
     return true;
   } catch (e) {
     console.error("trips: writeTrip failed", data.slug, e.message);
@@ -809,13 +828,19 @@ function writeTrip(data) {
   }
 }
 
-function deleteTrip(slug) {
+async function deleteTrip(slug) {
   ensureTripsDir();
   try {
     const safeSlug = sanitizeSlug(slug || "");
     if (!safeSlug || safeSlug === "_template") return false;
+    
+    // Use data layer
+    await dataLayer.deleteTrip(safeSlug);
+    
+    // Also delete local JSON
     const file = path.join(TRIPS_DIR, safeSlug + ".json");
     if (fs.existsSync(file)) fs.unlinkSync(file);
+    
     return true;
   } catch (e) {
     console.error("trips: deleteTrip failed", slug, e.message);
@@ -823,9 +848,19 @@ function deleteTrip(slug) {
   }
 }
 
-function listTrips() {
+async function listTrips() {
   ensureTripsDir();
   try {
+    // Try data layer first
+    const trips = await dataLayer.getTrips();
+    if (trips && trips.length > 0) {
+      return trips
+        .map((trip) => normalizeTripFilePayload(trip, `db:${trip.slug}`, trip.slug))
+        .filter(Boolean)
+        .sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+    }
+    
+    // Fallback to JSON files
     const fns = fs
       .readdirSync(TRIPS_DIR)
       .filter((f) => f.endsWith(".json") && f !== TEMPLATE_FILENAME);
@@ -1003,26 +1038,26 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
 
   const adminRouter = express.Router();
   const jsonParser = express.json({ limit: "400kb" });
-  adminRouter.get("/", (req, res) => {
+  adminRouter.get("/", async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req))
       return res.status(403).json({ error: "Forbidden" });
-    return res.json(formatTripListForResponse(listTrips(), req));
+    return res.json(formatTripListForResponse(await listTrips(), req));
   });
   adminRouter.get("/template", (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req))
       return res.status(403).json({ error: "Forbidden" });
     return res.json(loadTripTemplate());
   });
-  adminRouter.get("/:slug", (req, res) => {
+  adminRouter.get("/:slug", async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req))
       return res.status(403).json({ error: "Forbidden" });
     const slug = sanitizeSlug(req.params.slug || "");
     if (!slug) return res.status(400).json({ error: "invalid_slug" });
-    const trip = readTrip(slug);
+    const trip = await readTrip(slug);
     if (!trip) return res.status(404).json({ error: "not_found" });
     return res.json(formatTripForResponse(trip, req));
   });
-  const handleSaveTrip = (req, res) => {
+  const handleSaveTrip = async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req))
       return res.status(403).json({ error: "Forbidden" });
     const input = req.body && typeof req.body === "object" ? req.body : {};
@@ -1032,7 +1067,7 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
         .status(400)
         .json({ error: "validation_failed", errors: validation.errors });
     const payload = validation.data;
-    const existing = readTrip(payload.slug);
+    const existing = await readTrip(payload.slug);
     const base = existing ? { ...existing } : applyTemplateDefaults({});
     const toWrite = { ...base, ...payload, slug: payload.slug };
     toWrite.modes = cloneJson(payload.modes);
@@ -1056,22 +1091,22 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
     }
     toWrite.updatedAt = nowIso;
     if (!toWrite.id) toWrite.id = crypto.randomUUID();
-    if (!writeTrip(toWrite))
+    if (!(await writeTrip(toWrite)))
       return res.status(500).json({ error: "write_failed" });
     const shaped = ensureTripShape(toWrite);
     return res.json({ ok: true, trip: formatTripForResponse(shaped, req) });
   };
 
-  const handleDeleteTrip = (req, res) => {
+  const handleDeleteTrip = async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req))
       return res.status(403).json({ error: "Forbidden" });
     const slug = sanitizeSlug(
       (req.params && req.params.slug) || (req.body && req.body.slug) || "",
     );
     if (!slug) return res.status(400).json({ error: "invalid_slug" });
-    const existing = readTrip(slug);
+    const existing = await readTrip(slug);
     if (!existing) return res.status(404).json({ error: "not_found" });
-    if (!deleteTrip(slug))
+    if (!(await deleteTrip(slug)))
       return res.status(500).json({ error: "delete_failed" });
     return res.json({ success: true });
   };
@@ -1084,13 +1119,13 @@ function registerTripsRoutes(app, { checkAdminAuth }) {
   app.use("/api/admin/trips", adminRouter);
   app.use("/api/admin/trips", adminRouter);
 
-  app.get("/api/public/trips", (req, res) => {
-    return res.json(formatTripListForResponse(listTrips(), req));
+  app.get("/api/public/trips", async (req, res) => {
+    return res.json(formatTripListForResponse(await listTrips(), req));
   });
-  app.get("/api/public/trips/:slug", (req, res) => {
+  app.get("/api/public/trips/:slug", async (req, res) => {
     const slug = sanitizeSlug(req.params.slug || "");
     if (!slug) return res.status(400).json({ error: "invalid_slug" });
-    const trip = readTrip(slug);
+    const trip = await readTrip(slug);
     if (!trip) return res.status(404).json({ error: "not_found" });
     return res.json(formatTripForResponse(trip, req));
   });
