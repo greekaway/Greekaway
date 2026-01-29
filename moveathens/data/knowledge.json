@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-01-29",
+  "purpose": "Οδηγίες για τον AI βοηθό του MoveAthens - ΔΕΝ περιέχει hardcoded δεδομένα",
+
+  "data_sources": {
+    "info_page": {
+      "description": "Όλες οι πληροφορίες για τον πελάτη (στάσεις, κατοικίδια, ακυρώσεις, κτλ)",
+      "api_endpoint": "/api/moveathens/ui-config",
+      "fields": ["infoPageTitle", "infoPageContent"],
+      "note": "Εδώ ο διαχειριστής γράφει όλες τις πολιτικές. Διάβασε τα ΠΑΝΤΑ από εδώ."
+    },
+    "vehicles": {
+      "description": "Τύποι οχημάτων με χωρητικότητα, βαλίτσες, booking rules",
+      "api_endpoint": "/api/moveathens/ui-config",
+      "field": "vehicleTypes",
+      "auto_updated": true
+    },
+    "zones": {
+      "description": "Ζώνες αναχώρησης (καθορίζουν την τιμή)",
+      "api_endpoint": "/api/moveathens/ui-config",
+      "field": "transferZones",
+      "auto_updated": true
+    },
+    "destinations": {
+      "description": "Προορισμοί ανά κατηγορία",
+      "api_endpoint": "/api/moveathens/ui-config",
+      "field": "destinations",
+      "auto_updated": true
+    },
+    "categories": {
+      "description": "Κατηγορίες προορισμών",
+      "api_endpoint": "/api/moveathens/ui-config",
+      "field": "destinationCategories",
+      "auto_updated": true
+    },
+    "prices": {
+      "description": "Τιμές ανά ζώνη/προορισμό/όχημα (day/night tariff)",
+      "api_endpoint": "/api/moveathens/ui-config",
+      "field": "transferPrices",
+      "auto_updated": true
+    },
+    "contact": {
+      "description": "Τηλέφωνο, WhatsApp, Email",
+      "api_endpoint": "/api/moveathens/ui-config",
+      "fields": ["phoneNumber", "whatsappNumber", "companyEmail"],
+      "auto_updated": true
+    }
+  },
+
+  "ai_instructions": {
+    "where_to_find_policies": "Διάβασε το infoPageContent για στάσεις, ακυρώσεις, κατοικίδια, κτλ",
+    "where_to_find_data": "Όλα τα δεδομένα (οχήματα, ζώνες, τιμές) έρχονται αυτόματα από το API",
+    "tone": "Φιλικός, επαγγελματικός, σύντομος",
+    "language": "Απάντα στη γλώσσα που ρωτάει ο πελάτης",
+    "unknown_answer": "Αν κάτι δεν υπάρχει στο infoPageContent, πρότεινε επικοινωνία μέσω WhatsApp"
+  }
+}
