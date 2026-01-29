@@ -8,3 +8,4 @@ Change: PaymentIntent amount fix (vehicle_type recompute) ready for production. 
 If deployment did not start automatically, ensure Render is set to auto-deploy on push to main.
 # Redeploy trigger 2026-01-29_15:08:13
 # Redeploy trigger 2026-01-29_15:08:19
+# Test 2026-01-29_15:22:26
