@@ -1,6 +1,6 @@
 {
-  "version": "1.0.3",
-  "build": "2026-01-29 16:30",
-  "buildNumber": 659,
-  "commit": "dataLayer-persistence-fix"
+  "version": "1.0.4",
+  "build": "2026-01-29 16:45",
+  "buildNumber": 660,
+  "commit": "persistence-test-2"
 }
