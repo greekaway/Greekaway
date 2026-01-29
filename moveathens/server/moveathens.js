@@ -521,6 +521,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         luggage_large: vehicle.luggage_large,
         luggage_medium: vehicle.luggage_medium,
         luggage_cabin: vehicle.luggage_cabin,
+        allow_instant: vehicle.allow_instant !== false,
+        min_advance_minutes: vehicle.min_advance_minutes || 0,
         price,
         tariff: validTariff
       });

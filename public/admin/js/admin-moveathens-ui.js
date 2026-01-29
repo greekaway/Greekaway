@@ -611,6 +611,8 @@
     const fLuggageCabin = $('#maVehicleLuggageCabin');
     const fOrder = $('#maVehicleOrder');
     const fActive = $('#maVehicleActive');
+    const fAllowInstant = $('#maVehicleAllowInstant');
+    const fMinAdvance = $('#maVehicleMinAdvance');
 
     const updatePreview = () => {
       const url = fImageUrl?.value;
@@ -641,6 +643,7 @@
             <span>🧳M ${v.luggage_medium}</span>
             <span>🎒 ${v.luggage_cabin}</span>
             <span>Order: ${v.display_order}</span>
+            <span>${v.allow_instant !== false ? '⚡ Άμεση' : '📅 ' + (v.min_advance_minutes || 0) + '′ πριν'}</span>
           </div>
           ${v.description ? `<p class="ma-zone-desc">${v.description}</p>` : ''}
           <div class="ma-zone-actions">
@@ -680,6 +683,8 @@
       fLuggageCabin.value = '0';
       fOrder.value = '0';
       fActive.checked = true;
+      if (fAllowInstant) fAllowInstant.checked = true;
+      if (fMinAdvance) fMinAdvance.value = '0';
       updatePreview();
       setStatus(status, '', '');
     };
@@ -697,6 +702,8 @@
       fLuggageCabin.value = v.luggage_cabin || 0;
       fOrder.value = v.display_order || 0;
       fActive.checked = v.is_active !== false;
+      if (fAllowInstant) fAllowInstant.checked = v.allow_instant !== false;
+      if (fMinAdvance) fMinAdvance.value = v.min_advance_minutes || 0;
       updatePreview();
       form.hidden = false;
     };
@@ -769,6 +776,8 @@
         luggage_cabin: parseInt(fLuggageCabin.value, 10) || 0,
         display_order: parseInt(fOrder.value, 10) || 0,
         is_active: fActive.checked,
+        allow_instant: fAllowInstant?.checked ?? true,
+        min_advance_minutes: parseInt(fMinAdvance?.value, 10) || 0,
         created_at: new Date().toISOString()
       };
 

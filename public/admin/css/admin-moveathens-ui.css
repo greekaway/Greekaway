@@ -134,6 +134,19 @@
   font-weight: 600;
 }
 
+.ma-toggles-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  padding: 12px 0;
+  grid-column: 1 / -1;
+}
+
+.ma-toggles-row .ma-zone-toggle {
+  margin: 0;
+}
+
 .ma-zones-list {
   display: grid;
   gap: 12px;

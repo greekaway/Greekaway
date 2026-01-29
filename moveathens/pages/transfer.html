@@ -63,6 +63,50 @@
       <div id="vehicles-grid" class="ma-vehicles-grid" aria-live="polite"></div>
     </section>
 
+    <!-- Step 4b: Booking Type (instant vs scheduled) -->
+    <section id="step-booking-type" class="ma-step">
+      <button class="ma-back-btn" id="back-to-vehicles-from-booking" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
+      <h2 class="ma-step-title">Πότε θέλετε το όχημα;</h2>
+      <p class="ma-step-subtitle" id="booking-vehicle-name"></p>
+      
+      <!-- Instant booking (only shown for taxis) -->
+      <div id="booking-instant-option" class="ma-booking-option" hidden>
+        <button id="btn-book-instant" class="ma-booking-btn ma-booking-instant" type="button">
+          <span class="ma-booking-icon">⚡</span>
+          <span class="ma-booking-title">Θέλω τώρα</span>
+          <span class="ma-booking-desc">Άμεση κλήση οχήματος</span>
+        </button>
+      </div>
+      
+      <!-- Scheduled booking (always shown) -->
+      <div id="booking-scheduled-option" class="ma-booking-option">
+        <button id="btn-book-scheduled" class="ma-booking-btn ma-booking-scheduled" type="button">
+          <span class="ma-booking-icon">📅</span>
+          <span class="ma-booking-title">Προγραμματισμένη κράτηση</span>
+          <span class="ma-booking-desc" id="booking-min-notice">Επιλέξτε ημερομηνία & ώρα</span>
+        </button>
+      </div>
+      
+      <!-- Date/Time picker (shown after clicking scheduled) -->
+      <div id="booking-datetime-picker" class="ma-datetime-picker" hidden>
+        <h3 class="ma-datetime-title">Επιλέξτε ημερομηνία & ώρα παραλαβής</h3>
+        <div class="ma-datetime-inputs">
+          <label class="ma-datetime-label">
+            <span>Ημερομηνία</span>
+            <input type="date" id="booking-date" class="ma-datetime-input" required>
+          </label>
+          <label class="ma-datetime-label">
+            <span>Ώρα</span>
+            <input type="time" id="booking-time" class="ma-datetime-input" required>
+          </label>
+        </div>
+        <p id="booking-datetime-error" class="ma-datetime-error" hidden></p>
+        <button id="btn-confirm-datetime" class="ma-btn-confirm-datetime" type="button">
+          Συνέχεια
+        </button>
+      </div>
+    </section>
+
     <!-- Step 5: Confirmation / CTA -->
     <section id="step-confirm" class="ma-step">
       <button class="ma-back-btn" id="back-to-vehicles" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
@@ -79,6 +123,10 @@
         <div class="ma-confirm-row">
           <span class="ma-confirm-label">Όχημα:</span>
           <span id="confirm-vehicle" class="ma-confirm-value"></span>
+        </div>
+        <div class="ma-confirm-row" id="confirm-booking-type-row">
+          <span class="ma-confirm-label">Χρόνος:</span>
+          <span id="confirm-booking-type" class="ma-confirm-value"></span>
         </div>
         <div class="ma-confirm-row ma-confirm-price">
           <span class="ma-confirm-label">Τιμή:</span>

@@ -994,3 +994,181 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* ============================================
+   BOOKING TYPE STEP STYLES
+   ============================================ */
+
+.ma-booking-option {
+  margin-bottom: 16px;
+}
+
+.ma-booking-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 24px 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 16px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.ma-booking-btn:active {
+  transform: scale(0.98);
+}
+
+.ma-booking-instant {
+  border-color: #4CAF50;
+  background: linear-gradient(135deg, #f1f8e9 0%, #ffffff 100%);
+}
+
+.ma-booking-instant:hover {
+  border-color: #388E3C;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.25);
+}
+
+.ma-booking-scheduled {
+  border-color: #2196F3;
+  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+}
+
+.ma-booking-scheduled:hover {
+  border-color: #1976D2;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.25);
+}
+
+.ma-booking-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.ma-booking-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 4px;
+}
+
+.ma-booking-desc {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Datetime Picker */
+.ma-datetime-picker {
+  background: white;
+  border-radius: 16px;
+  padding: 24px 20px;
+  margin-top: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e0e0e0;
+}
+
+.ma-datetime-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.ma-datetime-inputs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ma-datetime-label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ma-datetime-label span {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+}
+
+.ma-datetime-input {
+  width: 100%;
+  padding: 14px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 16px;
+  background: #f8f9fa;
+  color: #1a1a2e;
+  transition: border-color 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ma-datetime-input:focus {
+  outline: none;
+  border-color: #2196F3;
+  background: white;
+}
+
+.ma-datetime-error {
+  color: #d32f2f;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #ffebee;
+  border-radius: 8px;
+}
+
+.ma-btn-confirm-datetime {
+  width: 100%;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ma-btn-confirm-datetime:hover {
+  background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.35);
+}
+
+.ma-btn-confirm-datetime:active {
+  transform: scale(0.98);
+}
+
+/* Vehicle card scheduled-only badge */
+.ma-vehicle-scheduled-only {
+  font-size: 11px;
+  color: #1976D2;
+  background: #e3f2fd;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+  display: inline-block;
+}
+
+/* Responsive for booking type */
+@media (max-width: 400px) {
+  .ma-datetime-inputs {
+    flex-direction: column;
+  }
+  
+  .ma-booking-icon {
+    font-size: 40px;
+  }
+  
+  .ma-booking-title {
+    font-size: 16px;
+  }
+}

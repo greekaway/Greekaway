@@ -1,6 +1,6 @@
 /**
  * MoveAthens Transfer Flow
- * Step 1: Categories → Step 2: Destinations → Step 3: Tariff → Step 4: Vehicles → Step 5: Confirm
+ * Step 1: Categories → Step 2: Destinations → Step 3: Tariff → Step 4: Vehicles → Step 4b: Booking Type → Step 5: Confirm
  */
 (() => {
   'use strict';
@@ -14,6 +14,8 @@
   let selectedDestination = null;
   let selectedTariff = null; // 'day' or 'night'
   let selectedVehicle = null;
+  let selectedBookingType = null; // 'instant' or 'scheduled'
+  let selectedDateTime = null; // { date: 'YYYY-MM-DD', time: 'HH:MM' }
   
   // Passenger & Luggage selection state
   let selectedPassengers = 0;
@@ -39,6 +41,7 @@
     destinations: $('#step-destinations'),
     tariff: $('#step-tariff'),
     vehicles: $('#step-vehicles'),
+    bookingType: $('#step-booking-type'),
     confirm: $('#step-confirm'),
     noZone: $('#step-no-zone')
   };
@@ -228,7 +231,8 @@
     vehiclesGrid.innerHTML = data.vehicles.map(v => `
       <button class="ma-vehicle-card" data-id="${v.id}" data-name="${v.name}" data-price="${v.price}" 
               data-pax="${v.max_passengers}" data-large="${v.luggage_large}" 
-              data-medium="${v.luggage_medium}" data-cabin="${v.luggage_cabin}">
+              data-medium="${v.luggage_medium}" data-cabin="${v.luggage_cabin}"
+              data-allow-instant="${v.allow_instant !== false}" data-min-advance="${v.min_advance_minutes || 0}">
         ${v.imageUrl ? `<img src="${v.imageUrl}" alt="${v.name}" class="ma-vehicle-img">` : '<div class="ma-vehicle-placeholder">🚗</div>'}
         <div class="ma-vehicle-info">
           <h3 class="ma-vehicle-name">${v.name}</h3>
@@ -238,6 +242,7 @@
             ${v.luggage_medium ? `<span class="ma-spec">🧳M ${v.luggage_medium}</span>` : ''}
             ${v.luggage_cabin ? `<span class="ma-spec">🎒 ${v.luggage_cabin}</span>` : ''}
           </div>
+          ${v.allow_instant === false ? '<div class="ma-vehicle-scheduled-only">📅 Μόνο με κράτηση</div>' : ''}
         </div>
         <div class="ma-vehicle-price">€${v.price.toFixed(0)}</div>
       </button>
@@ -253,10 +258,147 @@
           max_passengers: parseInt(card.dataset.pax, 10),
           luggage_large: parseInt(card.dataset.large, 10),
           luggage_medium: parseInt(card.dataset.medium, 10),
-          luggage_cabin: parseInt(card.dataset.cabin, 10)
+          luggage_cabin: parseInt(card.dataset.cabin, 10),
+          allow_instant: card.dataset.allowInstant === 'true',
+          min_advance_minutes: parseInt(card.dataset.minAdvance, 10) || 0
         };
-        showConfirmation();
+        showBookingTypeStep();
       });
+    });
+  };
+
+  // ========================================
+  // BOOKING TYPE STEP
+  // ========================================
+  const showBookingTypeStep = () => {
+    if (!selectedVehicle) return;
+
+    // Reset booking state
+    selectedBookingType = null;
+    selectedDateTime = null;
+
+    // Update vehicle name display
+    const vehicleNameEl = $('#booking-vehicle-name');
+    if (vehicleNameEl) vehicleNameEl.textContent = `${selectedVehicle.name} - €${selectedVehicle.price.toFixed(0)}`;
+
+    // Show/hide instant option based on vehicle settings
+    const instantOption = $('#booking-instant-option');
+    const scheduledOption = $('#booking-scheduled-option');
+    const datetimePicker = $('#booking-datetime-picker');
+    const minNotice = $('#booking-min-notice');
+
+    // Hide datetime picker initially
+    if (datetimePicker) datetimePicker.hidden = true;
+
+    // Show instant option only if vehicle allows it
+    if (instantOption) {
+      instantOption.hidden = !selectedVehicle.allow_instant;
+    }
+
+    // Update scheduled notice text
+    if (minNotice) {
+      if (selectedVehicle.min_advance_minutes > 0) {
+        const hours = Math.floor(selectedVehicle.min_advance_minutes / 60);
+        const mins = selectedVehicle.min_advance_minutes % 60;
+        let timeText = '';
+        if (hours > 0) timeText += `${hours} ώρ${hours === 1 ? 'α' : 'ες'}`;
+        if (mins > 0) timeText += `${hours > 0 ? ' και ' : ''}${mins} λεπτά`;
+        minNotice.textContent = `Ελάχιστος χρόνος: ${timeText} πριν`;
+      } else {
+        minNotice.textContent = 'Επιλέξτε ημερομηνία & ώρα';
+      }
+    }
+
+    showStep('bookingType');
+  };
+
+  const setupBookingTypeListeners = () => {
+    const btnInstant = $('#btn-book-instant');
+    const btnScheduled = $('#btn-book-scheduled');
+    const datetimePicker = $('#booking-datetime-picker');
+    const dateInput = $('#booking-date');
+    const timeInput = $('#booking-time');
+    const btnConfirmDatetime = $('#btn-confirm-datetime');
+    const errorEl = $('#booking-datetime-error');
+    const backBtn = $('#back-to-vehicles-from-booking');
+
+    // Back button
+    backBtn?.addEventListener('click', () => showStep('vehicles'));
+
+    // Instant booking
+    btnInstant?.addEventListener('click', () => {
+      selectedBookingType = 'instant';
+      selectedDateTime = null;
+      showConfirmation();
+    });
+
+    // Scheduled booking - show datetime picker
+    btnScheduled?.addEventListener('click', () => {
+      if (datetimePicker) {
+        datetimePicker.hidden = false;
+        
+        // Set minimum date/time
+        const now = new Date();
+        const minAdvance = selectedVehicle?.min_advance_minutes || 0;
+        const minDate = new Date(now.getTime() + minAdvance * 60000);
+        
+        // Set date input min to today
+        if (dateInput) {
+          dateInput.min = now.toISOString().split('T')[0];
+          // Max date: 30 days from now
+          const maxDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+          dateInput.max = maxDate.toISOString().split('T')[0];
+          dateInput.value = minDate.toISOString().split('T')[0];
+        }
+        
+        // Set default time (rounded to next 30 min)
+        if (timeInput) {
+          const roundedMins = Math.ceil(minDate.getMinutes() / 30) * 30;
+          minDate.setMinutes(roundedMins);
+          const hours = String(minDate.getHours()).padStart(2, '0');
+          const minutes = String(minDate.getMinutes()).padStart(2, '0');
+          timeInput.value = `${hours}:${minutes}`;
+        }
+      }
+      if (errorEl) errorEl.hidden = true;
+    });
+
+    // Confirm datetime
+    btnConfirmDatetime?.addEventListener('click', () => {
+      const date = dateInput?.value;
+      const time = timeInput?.value;
+
+      if (!date || !time) {
+        if (errorEl) {
+          errorEl.textContent = 'Παρακαλώ επιλέξτε ημερομηνία και ώρα';
+          errorEl.hidden = false;
+        }
+        return;
+      }
+
+      // Validate minimum advance time
+      const selectedDT = new Date(`${date}T${time}`);
+      const now = new Date();
+      const minAdvance = selectedVehicle?.min_advance_minutes || 0;
+      const minAllowedTime = new Date(now.getTime() + minAdvance * 60000);
+
+      if (selectedDT < minAllowedTime) {
+        if (errorEl) {
+          const hours = Math.floor(minAdvance / 60);
+          const mins = minAdvance % 60;
+          let timeText = '';
+          if (hours > 0) timeText += `${hours} ώρ${hours === 1 ? 'α' : 'ες'}`;
+          if (mins > 0) timeText += `${hours > 0 ? ' και ' : ''}${mins} λεπτά`;
+          errorEl.textContent = `Η ώρα πρέπει να είναι τουλάχιστον ${timeText} από τώρα`;
+          errorEl.hidden = false;
+        }
+        return;
+      }
+
+      // Valid - proceed
+      selectedBookingType = 'scheduled';
+      selectedDateTime = { date, time };
+      showConfirmation();
     });
   };
 
@@ -269,6 +411,28 @@
     }
     confirmVehicle.textContent = selectedVehicle.name;
     confirmPrice.textContent = `€${selectedVehicle.price.toFixed(0)}`;
+
+    // Update booking type display
+    const confirmBookingType = $('#confirm-booking-type');
+    const confirmBookingTypeRow = $('#confirm-booking-type-row');
+    if (confirmBookingType && confirmBookingTypeRow) {
+      if (selectedBookingType === 'instant') {
+        confirmBookingType.textContent = '⚡ Άμεσα';
+      } else if (selectedBookingType === 'scheduled' && selectedDateTime) {
+        // Format date nicely in Greek
+        const dt = new Date(`${selectedDateTime.date}T${selectedDateTime.time}`);
+        const dayNames = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
+        const monthNames = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
+        const dayName = dayNames[dt.getDay()];
+        const day = dt.getDate();
+        const month = monthNames[dt.getMonth()];
+        const time = selectedDateTime.time;
+        confirmBookingType.textContent = `📅 ${dayName} ${day} ${month}, ${time}`;
+      } else {
+        confirmBookingTypeRow.style.display = 'none';
+      }
+      confirmBookingTypeRow.style.display = 'flex';
+    }
 
     // Reset passenger & luggage selections
     selectedPassengers = 0;
@@ -414,12 +578,24 @@
     // Get tariff label
     const tariffLabel = TARIFF_LABELS[selectedTariff] || selectedTariff;
 
+    // Build booking time text
+    let bookingTimeText = '';
+    if (selectedBookingType === 'instant') {
+      bookingTimeText = '⚡ ΑΜΕΣΑ';
+    } else if (selectedBookingType === 'scheduled' && selectedDateTime) {
+      const dt = new Date(`${selectedDateTime.date}T${selectedDateTime.time}`);
+      const dayNames = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
+      const monthNames = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
+      bookingTimeText = `📅 ${dayNames[dt.getDay()]} ${dt.getDate()} ${monthNames[dt.getMonth()]}, ώρα ${selectedDateTime.time}`;
+    }
+
     // Build message content
     const messageText = 
       `Γεια σας! Θέλω να κλείσω transfer:\n\n` +
       `🎯 Προορισμός: ${selectedDestination.name}\n` +
       `🕐 Ταρίφα: ${tariffLabel}\n` +
       `🚗 Όχημα: ${selectedVehicle.name}\n` +
+      (bookingTimeText ? `⏰ Χρόνος: ${bookingTimeText}\n` : '') +
       (travelDetails ? `\n${travelDetails}` : '') +
       `💰 Τιμή: €${selectedVehicle.price.toFixed(0)}\n\n` +
       `${locationInfo}\n\n` +
@@ -549,9 +725,17 @@
     });
 
     $('#back-to-vehicles')?.addEventListener('click', () => {
-      selectedVehicle = null;
-      showStep('vehicles');
+      // Coming from confirm -> go back to booking type
+      selectedBookingType = null;
+      selectedDateTime = null;
+      // Reset datetime picker state
+      const datetimePicker = $('#booking-datetime-picker');
+      if (datetimePicker) datetimePicker.hidden = true;
+      showStep('bookingType');
     });
+
+    // Setup booking type listeners
+    setupBookingTypeListeners();
   };
 
   if (document.readyState === 'loading') {

@@ -409,6 +409,8 @@ async function getVehicleTypes(activeOnly = false) {
           luggage_cabin: row.luggage_cabin,
           display_order: row.display_order,
           is_active: row.is_active,
+          allow_instant: row.allow_instant ?? true,
+          min_advance_minutes: row.min_advance_minutes || 0,
           created_at: row.created_at
         }));
       }
@@ -429,7 +431,9 @@ async function getVehicleTypes(activeOnly = false) {
               luggage_medium: v.luggage_medium || 2,
               luggage_cabin: v.luggage_cabin || 4,
               display_order: v.display_order || 0,
-              is_active: v.is_active !== false
+              is_active: v.is_active !== false,
+              allow_instant: v.allow_instant ?? true,
+              min_advance_minutes: v.min_advance_minutes || 0
             });
           } catch (e) {
             console.error('[moveathens] Failed to migrate vehicle:', v.id, e.message);
@@ -447,6 +451,8 @@ async function getVehicleTypes(activeOnly = false) {
           luggage_cabin: row.luggage_cabin,
           display_order: row.display_order,
           is_active: row.is_active,
+          allow_instant: row.allow_instant ?? true,
+          min_advance_minutes: row.min_advance_minutes || 0,
           created_at: row.created_at
         }));
       }
@@ -479,7 +485,9 @@ async function upsertVehicleType(data) {
         luggage_medium: data.luggage_medium || 2,
         luggage_cabin: data.luggage_cabin || 4,
         display_order: data.display_order || 0,
-        is_active: data.is_active !== false
+        is_active: data.is_active !== false,
+        allow_instant: data.allow_instant ?? true,
+        min_advance_minutes: data.min_advance_minutes || 0
       });
       console.log('[moveathens] Vehicle saved to DB:', row.id);
       return {
@@ -493,6 +501,8 @@ async function upsertVehicleType(data) {
         luggage_cabin: row.luggage_cabin,
         display_order: row.display_order,
         is_active: row.is_active,
+        allow_instant: row.allow_instant ?? true,
+        min_advance_minutes: row.min_advance_minutes || 0,
         created_at: row.created_at
       };
     } catch (err) {
@@ -515,6 +525,8 @@ async function upsertVehicleType(data) {
     luggage_cabin: data.luggage_cabin || 4,
     display_order: data.display_order || 0,
     is_active: data.is_active !== false,
+    allow_instant: data.allow_instant ?? true,
+    min_advance_minutes: data.min_advance_minutes || 0,
     created_at: idx >= 0 ? vehicles[idx].created_at : new Date().toISOString()
   };
   

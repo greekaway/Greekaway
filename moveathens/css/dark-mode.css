@@ -421,3 +421,87 @@
     color: #46d3ff !important;
     box-shadow: 0 4px 20px rgba(70, 211, 255, 0.3) !important;
   }
+
+  /* ========================================
+     BOOKING TYPE BUTTONS (Instant / Scheduled)
+     ======================================== */
+  .ma-transfer-page .ma-booking-btn {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-transfer-page .ma-booking-btn.ma-booking-instant {
+    border-color: rgba(76, 175, 80, 0.4) !important;
+    background: linear-gradient(145deg, #0f2a1a 0%, #0a1f12 100%) !important;
+  }
+
+  .ma-transfer-page .ma-booking-btn.ma-booking-instant:hover {
+    border-color: #4CAF50 !important;
+    background: linear-gradient(145deg, #143520 0%, #0f2816 100%) !important;
+    box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3) !important;
+  }
+
+  .ma-transfer-page .ma-booking-btn.ma-booking-scheduled {
+    border-color: rgba(33, 150, 243, 0.4) !important;
+    background: linear-gradient(145deg, #0a1f30 0%, #061520 100%) !important;
+  }
+
+  .ma-transfer-page .ma-booking-btn.ma-booking-scheduled:hover {
+    border-color: #2196F3 !important;
+    background: linear-gradient(145deg, #0f2840 0%, #0a1f30 100%) !important;
+    box-shadow: 0 4px 20px rgba(33, 150, 243, 0.3) !important;
+  }
+
+  .ma-transfer-page .ma-booking-title {
+    color: #e8edf3 !important;
+  }
+
+  .ma-transfer-page .ma-booking-desc {
+    color: #8896a6 !important;
+  }
+
+  /* Datetime picker */
+  .ma-transfer-page .ma-datetime-picker {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-transfer-page .ma-datetime-title {
+    color: #e8edf3 !important;
+  }
+
+  .ma-transfer-page .ma-datetime-label span {
+    color: #a0aab5 !important;
+  }
+
+  .ma-transfer-page .ma-datetime-input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    color: #e8edf3 !important;
+  }
+
+  .ma-transfer-page .ma-datetime-input:focus {
+    border-color: #46d3ff !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .ma-transfer-page .ma-datetime-error {
+    background: rgba(211, 47, 47, 0.2) !important;
+    color: #ff8a80 !important;
+  }
+
+  .ma-transfer-page .ma-btn-confirm-datetime {
+    background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%) !important;
+  }
+
+  .ma-transfer-page .ma-btn-confirm-datetime:hover {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
+  }
+
+  /* Vehicle scheduled-only badge */
+  .ma-transfer-page .ma-vehicle-scheduled-only {
+    background: rgba(33, 150, 243, 0.2) !important;
+    color: #64b5f6 !important;
+  }

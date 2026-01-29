@@ -389,14 +389,16 @@ const ma = {
   async upsertVehicleType(data) {
     const {
       id, name, description, image_url, max_passengers,
-      luggage_large, luggage_medium, luggage_cabin, display_order, is_active
+      luggage_large, luggage_medium, luggage_cabin, display_order, is_active,
+      allow_instant, min_advance_minutes
     } = data;
     const vehicleId = id || `vt_${Date.now()}`;
     const sql = `
       INSERT INTO ma_vehicle_types (
         id, name, description, image_url, max_passengers,
-        luggage_large, luggage_medium, luggage_cabin, display_order, is_active
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        luggage_large, luggage_medium, luggage_cabin, display_order, is_active,
+        allow_instant, min_advance_minutes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,
@@ -407,13 +409,16 @@ const ma = {
         luggage_cabin = EXCLUDED.luggage_cabin,
         display_order = EXCLUDED.display_order,
         is_active = EXCLUDED.is_active,
+        allow_instant = EXCLUDED.allow_instant,
+        min_advance_minutes = EXCLUDED.min_advance_minutes,
         updated_at = NOW()
       RETURNING *
     `;
     const rows = await query(sql, [
       vehicleId, name, description || '', image_url || null,
       max_passengers || 4, luggage_large || 2, luggage_medium || 2,
-      luggage_cabin || 4, display_order || 0, is_active ?? true
+      luggage_cabin || 4, display_order || 0, is_active ?? true,
+      allow_instant ?? true, min_advance_minutes || 0
     ]);
     return rows[0];
   },

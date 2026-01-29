@@ -257,13 +257,26 @@
               <label>Χειραποσκευές (cabin)
                 <input id="maVehicleLuggageCabin" class="input" type="number" min="0" max="20" value="0">
               </label>
+
+              <h4 class="ma-capacity-title">Κανόνες Κράτησης</h4>
+              <div class="ma-toggles-row">
+                <label class="ma-zone-toggle">
+                  <input id="maVehicleAllowInstant" type="checkbox" checked>
+                  Επιτρέπει άμεση κλήση (π.χ. Ταξί)
+                </label>
+                <label class="ma-zone-toggle">
+                  <input id="maVehicleActive" type="checkbox" checked>
+                  Ενεργός Τύπος
+                </label>
+              </div>
+              <label>Ελάχιστος χρόνος κράτησης (λεπτά)
+                <input id="maVehicleMinAdvance" class="input" type="number" min="0" max="1440" value="0">
+                <small class="ma-hint">0 = άμεσα, 120 = 2 ώρες πριν (για μαύρα αυτοκίνητα)</small>
+              </label>
+
               <label>Σειρά Εμφάνισης (UI)
                 <input id="maVehicleOrder" class="input" type="number" min="0" value="0" title="Καθορίζει μόνο τη σειρά εμφάνισης στο UI (dropdowns/cards). Δεν επηρεάζει τιμές.">
                 <small class="ma-hint">Καθορίζει μόνο τη σειρά εμφάνισης στο UI</small>
-              </label>
-              <label class="ma-zone-toggle">
-                <input id="maVehicleActive" type="checkbox" checked>
-                Ενεργός Τύπος
               </label>
             </div>
             <div class="ma-actions">
