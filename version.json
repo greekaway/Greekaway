@@ -1,6 +1,6 @@
 {
-  "version": "1.0.1",
-  "build": "2026-01-29 14:30",
-  "buildNumber": 657,
-  "commit": "test-db-persistence"
+  "version": "1.0.2",
+  "build": "2026-01-29 14:35",
+  "buildNumber": 658,
+  "commit": "test-db-persistence-v2"
 }
