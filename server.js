@@ -158,6 +158,25 @@ try {
 } catch (e) {
   console.warn('trips: module preload failed', e && e.message ? e.message : e);
 }
+
+// PostgreSQL Database initialization (if DATABASE_URL is set)
+let db = null;
+(async function initDatabase() {
+  try {
+    db = require('./db');
+    const connected = await db.init();
+    if (connected) {
+      console.log('server: PostgreSQL database connected');
+      // Run schema migrations on startup
+      await db.runMigrations();
+    } else {
+      console.log('server: Running without PostgreSQL (using JSON file storage)');
+    }
+  } catch (err) {
+    console.warn('server: Database initialization skipped:', err.message);
+  }
+})();
+
 // Environment detection: treat non-production and non-Render as local dev
 const IS_RENDER = !!process.env.RENDER;
 const IS_DEV = (process.env.NODE_ENV !== 'production') && !IS_RENDER;

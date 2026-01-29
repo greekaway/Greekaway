@@ -1,0 +1,618 @@
+'use strict';
+/**
+ * PostgreSQL Database Module
+ * Centralized database connection and query helpers for Greekaway + MoveAthens
+ * 
+ * Usage:
+ *   const db = require('./db');
+ *   await db.init(); // Call once at startup
+ *   const rows = await db.query('SELECT * FROM gk_categories WHERE published = $1', [true]);
+ *   const category = await db.queryOne('SELECT * FROM gk_categories WHERE slug = $1', ['test']);
+ */
+
+const { Pool } = require('pg');
+const fs = require('fs');
+const path = require('path');
+
+let pool = null;
+let isConnected = false;
+
+/**
+ * Get DATABASE_URL from environment
+ */
+function getDatabaseUrl() {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    console.warn('[db] DATABASE_URL not set - database features disabled');
+    return null;
+  }
+  return url;
+}
+
+/**
+ * Initialize database connection pool
+ */
+async function init() {
+  const dbUrl = getDatabaseUrl();
+  if (!dbUrl) {
+    isConnected = false;
+    return false;
+  }
+
+  try {
+    pool = new Pool({
+      connectionString: dbUrl,
+      ssl: dbUrl.includes('render.com') || dbUrl.includes('neon.tech') || dbUrl.includes('supabase')
+        ? { rejectUnauthorized: false }
+        : false,
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000
+    });
+
+    // Test connection
+    const client = await pool.connect();
+    await client.query('SELECT 1');
+    client.release();
+    
+    isConnected = true;
+    console.log('[db] PostgreSQL connected successfully');
+    return true;
+  } catch (err) {
+    console.error('[db] PostgreSQL connection failed:', err.message);
+    isConnected = false;
+    pool = null;
+    return false;
+  }
+}
+
+/**
+ * Check if database is available
+ */
+function isAvailable() {
+  return isConnected && pool !== null;
+}
+
+/**
+ * Execute a query and return all rows
+ */
+async function query(sql, params = []) {
+  if (!isAvailable()) {
+    throw new Error('Database not available');
+  }
+  const result = await pool.query(sql, params);
+  return result.rows;
+}
+
+/**
+ * Execute a query and return first row or null
+ */
+async function queryOne(sql, params = []) {
+  const rows = await query(sql, params);
+  return rows.length > 0 ? rows[0] : null;
+}
+
+/**
+ * Execute a query that modifies data (INSERT, UPDATE, DELETE)
+ * Returns { rowCount, rows }
+ */
+async function execute(sql, params = []) {
+  if (!isAvailable()) {
+    throw new Error('Database not available');
+  }
+  const result = await pool.query(sql, params);
+  return {
+    rowCount: result.rowCount,
+    rows: result.rows
+  };
+}
+
+/**
+ * Execute multiple queries in a transaction
+ */
+async function transaction(callback) {
+  if (!isAvailable()) {
+    throw new Error('Database not available');
+  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await callback({
+      query: (sql, params) => client.query(sql, params).then(r => r.rows),
+      queryOne: async (sql, params) => {
+        const res = await client.query(sql, params);
+        return res.rows.length > 0 ? res.rows[0] : null;
+      },
+      execute: (sql, params) => client.query(sql, params).then(r => ({ rowCount: r.rowCount, rows: r.rows }))
+    });
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Run schema migrations
+ */
+async function runMigrations() {
+  if (!isAvailable()) {
+    console.warn('[db] Cannot run migrations - database not available');
+    return false;
+  }
+
+  try {
+    const schemaPath = path.join(__dirname, 'schema.sql');
+    if (!fs.existsSync(schemaPath)) {
+      console.warn('[db] schema.sql not found');
+      return false;
+    }
+    
+    const schema = fs.readFileSync(schemaPath, 'utf8');
+    await pool.query(schema);
+    console.log('[db] Schema migrations applied');
+    return true;
+  } catch (err) {
+    console.error('[db] Migration failed:', err.message);
+    return false;
+  }
+}
+
+/**
+ * Close database connection pool
+ */
+async function close() {
+  if (pool) {
+    await pool.end();
+    pool = null;
+    isConnected = false;
+    console.log('[db] PostgreSQL connection closed');
+  }
+}
+
+// =========================================================
+// GREEKAWAY SPECIFIC HELPERS
+// =========================================================
+
+const gk = {
+  // Categories
+  async getCategories(publishedOnly = false) {
+    let sql = 'SELECT * FROM gk_categories';
+    if (publishedOnly) sql += ' WHERE published = true';
+    sql += ' ORDER BY display_order, title';
+    return query(sql);
+  },
+
+  async getCategoryBySlug(slug) {
+    return queryOne('SELECT * FROM gk_categories WHERE slug = $1', [slug]);
+  },
+
+  async getCategoryById(id) {
+    return queryOne('SELECT * FROM gk_categories WHERE id = $1', [id]);
+  },
+
+  async upsertCategory(data) {
+    const { id, title, slug, icon_path, display_order, published } = data;
+    const sql = `
+      INSERT INTO gk_categories (id, title, slug, icon_path, display_order, published)
+      VALUES (COALESCE($1, uuid_generate_v4()), $2, $3, $4, $5, $6)
+      ON CONFLICT (slug) DO UPDATE SET
+        title = EXCLUDED.title,
+        icon_path = EXCLUDED.icon_path,
+        display_order = EXCLUDED.display_order,
+        published = EXCLUDED.published,
+        updated_at = NOW()
+      RETURNING *
+    `;
+    const rows = await query(sql, [id || null, title, slug, icon_path || null, display_order || 0, published ?? false]);
+    return rows[0];
+  },
+
+  async deleteCategory(slug) {
+    const result = await execute('DELETE FROM gk_categories WHERE slug = $1', [slug]);
+    return result.rowCount > 0;
+  },
+
+  // Trips
+  async getTrips(activeOnly = false) {
+    let sql = 'SELECT * FROM gk_trips';
+    if (activeOnly) sql += ' WHERE active = true';
+    sql += ' ORDER BY title';
+    return query(sql);
+  },
+
+  async getTripBySlug(slug) {
+    return queryOne('SELECT * FROM gk_trips WHERE slug = $1', [slug]);
+  },
+
+  async getTripById(id) {
+    return queryOne('SELECT * FROM gk_trips WHERE id = $1', [id]);
+  },
+
+  async upsertTrip(data) {
+    const {
+      id, slug, title, subtitle, teaser, category, active, default_mode,
+      icon_path, cover_image, featured_image, hero_video_url, hero_thumbnail,
+      currency, tags, gallery, videos, modes
+    } = data;
+    
+    const sql = `
+      INSERT INTO gk_trips (
+        id, slug, title, subtitle, teaser, category, active, default_mode,
+        icon_path, cover_image, featured_image, hero_video_url, hero_thumbnail,
+        currency, tags, gallery, videos, modes
+      ) VALUES (
+        COALESCE($1, uuid_generate_v4()), $2, $3, $4, $5, $6, $7, $8,
+        $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+      )
+      ON CONFLICT (slug) DO UPDATE SET
+        title = EXCLUDED.title,
+        subtitle = EXCLUDED.subtitle,
+        teaser = EXCLUDED.teaser,
+        category = EXCLUDED.category,
+        active = EXCLUDED.active,
+        default_mode = EXCLUDED.default_mode,
+        icon_path = EXCLUDED.icon_path,
+        cover_image = EXCLUDED.cover_image,
+        featured_image = EXCLUDED.featured_image,
+        hero_video_url = EXCLUDED.hero_video_url,
+        hero_thumbnail = EXCLUDED.hero_thumbnail,
+        currency = EXCLUDED.currency,
+        tags = EXCLUDED.tags,
+        gallery = EXCLUDED.gallery,
+        videos = EXCLUDED.videos,
+        modes = EXCLUDED.modes,
+        updated_at = NOW()
+      RETURNING *
+    `;
+    
+    const rows = await query(sql, [
+      id || null, slug, title, subtitle || null, teaser || null, category || null,
+      active ?? true, default_mode || 'van', icon_path || null, cover_image || null,
+      featured_image || null, hero_video_url || null, hero_thumbnail || null,
+      currency || 'EUR',
+      JSON.stringify(tags || []),
+      JSON.stringify(gallery || []),
+      JSON.stringify(videos || []),
+      JSON.stringify(modes || {})
+    ]);
+    return rows[0];
+  },
+
+  async deleteTrip(slug) {
+    const result = await execute('DELETE FROM gk_trips WHERE slug = $1', [slug]);
+    return result.rowCount > 0;
+  }
+};
+
+// =========================================================
+// MOVEATHENS SPECIFIC HELPERS
+// =========================================================
+
+const ma = {
+  // Config (singleton)
+  async getConfig() {
+    let row = await queryOne('SELECT * FROM ma_config WHERE id = 1');
+    if (!row) {
+      // Insert default config
+      await execute(`
+        INSERT INTO ma_config (id) VALUES (1)
+        ON CONFLICT (id) DO NOTHING
+      `);
+      row = await queryOne('SELECT * FROM ma_config WHERE id = 1');
+    }
+    return row;
+  },
+
+  async updateConfig(data) {
+    const fields = [
+      'hero_video_url', 'hero_logo_url', 'hero_headline', 'hero_subtext',
+      'footer_labels', 'footer_icons', 'phone_number', 'whatsapp_number',
+      'company_email', 'cta_labels', 'contact_labels', 'hotel_context_labels',
+      'hotel_email_subject_prefix', 'info_page_title', 'info_page_content'
+    ];
+    
+    const updates = [];
+    const values = [];
+    let paramCount = 0;
+    
+    for (const field of fields) {
+      const camelField = field.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+      if (data[camelField] !== undefined || data[field] !== undefined) {
+        paramCount++;
+        updates.push(`${field} = $${paramCount}`);
+        let val = data[camelField] !== undefined ? data[camelField] : data[field];
+        if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
+        values.push(val);
+      }
+    }
+    
+    if (updates.length === 0) return this.getConfig();
+    
+    await execute(`
+      UPDATE ma_config SET ${updates.join(', ')}, updated_at = NOW() WHERE id = 1
+    `, values);
+    
+    return this.getConfig();
+  },
+
+  // Transfer Zones
+  async getZones(activeOnly = false) {
+    let sql = 'SELECT * FROM ma_transfer_zones';
+    if (activeOnly) sql += ' WHERE is_active = true';
+    sql += ' ORDER BY name';
+    return query(sql);
+  },
+
+  async getZoneById(id) {
+    return queryOne('SELECT * FROM ma_transfer_zones WHERE id = $1', [id]);
+  },
+
+  async upsertZone(data) {
+    const { id, name, description, zone_type, is_active } = data;
+    const zoneId = id || `tz_${Date.now()}`;
+    const sql = `
+      INSERT INTO ma_transfer_zones (id, name, description, zone_type, is_active)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        description = EXCLUDED.description,
+        zone_type = EXCLUDED.zone_type,
+        is_active = EXCLUDED.is_active,
+        updated_at = NOW()
+      RETURNING *
+    `;
+    const rows = await query(sql, [zoneId, name, description || '', zone_type || 'suburb', is_active ?? true]);
+    return rows[0];
+  },
+
+  async deleteZone(id) {
+    const result = await execute('DELETE FROM ma_transfer_zones WHERE id = $1', [id]);
+    return result.rowCount > 0;
+  },
+
+  // Vehicle Types
+  async getVehicleTypes(activeOnly = false) {
+    let sql = 'SELECT * FROM ma_vehicle_types';
+    if (activeOnly) sql += ' WHERE is_active = true';
+    sql += ' ORDER BY display_order, name';
+    return query(sql);
+  },
+
+  async getVehicleTypeById(id) {
+    return queryOne('SELECT * FROM ma_vehicle_types WHERE id = $1', [id]);
+  },
+
+  async upsertVehicleType(data) {
+    const {
+      id, name, description, image_url, max_passengers,
+      luggage_large, luggage_medium, luggage_cabin, display_order, is_active
+    } = data;
+    const vehicleId = id || `vt_${Date.now()}`;
+    const sql = `
+      INSERT INTO ma_vehicle_types (
+        id, name, description, image_url, max_passengers,
+        luggage_large, luggage_medium, luggage_cabin, display_order, is_active
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        description = EXCLUDED.description,
+        image_url = EXCLUDED.image_url,
+        max_passengers = EXCLUDED.max_passengers,
+        luggage_large = EXCLUDED.luggage_large,
+        luggage_medium = EXCLUDED.luggage_medium,
+        luggage_cabin = EXCLUDED.luggage_cabin,
+        display_order = EXCLUDED.display_order,
+        is_active = EXCLUDED.is_active,
+        updated_at = NOW()
+      RETURNING *
+    `;
+    const rows = await query(sql, [
+      vehicleId, name, description || '', image_url || null,
+      max_passengers || 4, luggage_large || 2, luggage_medium || 2,
+      luggage_cabin || 4, display_order || 0, is_active ?? true
+    ]);
+    return rows[0];
+  },
+
+  async deleteVehicleType(id) {
+    const result = await execute('DELETE FROM ma_vehicle_types WHERE id = $1', [id]);
+    return result.rowCount > 0;
+  },
+
+  // Destination Categories
+  async getDestinationCategories(activeOnly = false) {
+    let sql = 'SELECT * FROM ma_destination_categories';
+    if (activeOnly) sql += ' WHERE is_active = true';
+    sql += ' ORDER BY display_order, name';
+    return query(sql);
+  },
+
+  async getDestinationCategoryById(id) {
+    return queryOne('SELECT * FROM ma_destination_categories WHERE id = $1', [id]);
+  },
+
+  async upsertDestinationCategory(data) {
+    const { id, name, icon, display_order, is_active } = data;
+    const catId = id || `dc_${Date.now()}`;
+    const sql = `
+      INSERT INTO ma_destination_categories (id, name, icon, display_order, is_active)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        icon = EXCLUDED.icon,
+        display_order = EXCLUDED.display_order,
+        is_active = EXCLUDED.is_active,
+        updated_at = NOW()
+      RETURNING *
+    `;
+    const rows = await query(sql, [catId, name, icon || '', display_order || 0, is_active ?? true]);
+    return rows[0];
+  },
+
+  async deleteDestinationCategory(id) {
+    const result = await execute('DELETE FROM ma_destination_categories WHERE id = $1', [id]);
+    return result.rowCount > 0;
+  },
+
+  // Destinations
+  async getDestinations(filters = {}) {
+    let sql = 'SELECT * FROM ma_destinations WHERE 1=1';
+    const params = [];
+    let paramCount = 0;
+
+    if (filters.category_id) {
+      paramCount++;
+      sql += ` AND category_id = $${paramCount}`;
+      params.push(filters.category_id);
+    }
+    if (filters.zone_id) {
+      paramCount++;
+      sql += ` AND zone_id = $${paramCount}`;
+      params.push(filters.zone_id);
+    }
+    if (filters.activeOnly) {
+      sql += ' AND is_active = true';
+    }
+
+    sql += ' ORDER BY display_order, name';
+    return query(sql, params);
+  },
+
+  async getDestinationById(id) {
+    return queryOne('SELECT * FROM ma_destinations WHERE id = $1', [id]);
+  },
+
+  async upsertDestination(data) {
+    const { id, name, description, category_id, zone_id, display_order, is_active } = data;
+    const destId = id || `dest_${Date.now()}`;
+    const sql = `
+      INSERT INTO ma_destinations (id, name, description, category_id, zone_id, display_order, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        description = EXCLUDED.description,
+        category_id = EXCLUDED.category_id,
+        zone_id = EXCLUDED.zone_id,
+        display_order = EXCLUDED.display_order,
+        is_active = EXCLUDED.is_active,
+        updated_at = NOW()
+      RETURNING *
+    `;
+    const rows = await query(sql, [
+      destId, name, description || '', category_id || null,
+      zone_id || null, display_order || 0, is_active ?? true
+    ]);
+    return rows[0];
+  },
+
+  async deleteDestination(id) {
+    const result = await execute('DELETE FROM ma_destinations WHERE id = $1', [id]);
+    return result.rowCount > 0;
+  },
+
+  // Transfer Prices
+  async getPrices(filters = {}) {
+    let sql = 'SELECT * FROM ma_transfer_prices WHERE 1=1';
+    const params = [];
+    let paramCount = 0;
+
+    if (filters.origin_zone_id) {
+      paramCount++;
+      sql += ` AND origin_zone_id = $${paramCount}`;
+      params.push(filters.origin_zone_id);
+    }
+    if (filters.destination_id) {
+      paramCount++;
+      sql += ` AND destination_id = $${paramCount}`;
+      params.push(filters.destination_id);
+    }
+    if (filters.vehicle_type_id) {
+      paramCount++;
+      sql += ` AND vehicle_type_id = $${paramCount}`;
+      params.push(filters.vehicle_type_id);
+    }
+    if (filters.tariff) {
+      paramCount++;
+      sql += ` AND tariff = $${paramCount}`;
+      params.push(filters.tariff);
+    }
+
+    return query(sql, params);
+  },
+
+  async upsertPrice(data) {
+    const { id, origin_zone_id, destination_id, vehicle_type_id, tariff, price } = data;
+    const priceId = id || `tp_${Date.now()}_${vehicle_type_id}_${tariff}`;
+    const sql = `
+      INSERT INTO ma_transfer_prices (id, origin_zone_id, destination_id, vehicle_type_id, tariff, price)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (origin_zone_id, destination_id, vehicle_type_id, tariff) DO UPDATE SET
+        price = EXCLUDED.price,
+        updated_at = NOW()
+      RETURNING *
+    `;
+    const rows = await query(sql, [priceId, origin_zone_id, destination_id, vehicle_type_id, tariff || 'day', price]);
+    return rows[0];
+  },
+
+  async deletePrice(id) {
+    const result = await execute('DELETE FROM ma_transfer_prices WHERE id = $1', [id]);
+    return result.rowCount > 0;
+  },
+
+  // Vehicle Category Availability
+  async getVehicleCategoryAvailability() {
+    return query('SELECT * FROM ma_vehicle_category_availability');
+  },
+
+  async setVehicleCategoryAvailability(category_id, vehicle_type_id, is_available) {
+    const sql = `
+      INSERT INTO ma_vehicle_category_availability (category_id, vehicle_type_id, is_available)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (category_id, vehicle_type_id) DO UPDATE SET is_available = EXCLUDED.is_available
+      RETURNING *
+    `;
+    const rows = await query(sql, [category_id, vehicle_type_id, is_available]);
+    return rows[0];
+  },
+
+  // Vehicle Destination Overrides
+  async getVehicleDestinationOverrides() {
+    return query('SELECT * FROM ma_vehicle_destination_overrides');
+  },
+
+  async setVehicleDestinationOverride(destination_id, vehicle_type_id, is_available, price_override = null) {
+    const sql = `
+      INSERT INTO ma_vehicle_destination_overrides (destination_id, vehicle_type_id, is_available, price_override)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (destination_id, vehicle_type_id) DO UPDATE SET
+        is_available = EXCLUDED.is_available,
+        price_override = EXCLUDED.price_override
+      RETURNING *
+    `;
+    const rows = await query(sql, [destination_id, vehicle_type_id, is_available, price_override]);
+    return rows[0];
+  },
+
+  // Full pricing view
+  async getFullPricing() {
+    return query('SELECT * FROM ma_transfer_pricing_full');
+  }
+};
+
+module.exports = {
+  init,
+  isAvailable,
+  query,
+  queryOne,
+  execute,
+  transaction,
+  runMigrations,
+  close,
+  gk,
+  ma
+};

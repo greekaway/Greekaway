@@ -1,14 +1,26 @@
+databases:
+  - name: greekaway-db
+    databaseName: greekaway
+    user: greekaway
+    plan: free
+    # ipAllowList: [] # Uncomment to restrict access
+
 services:
   - type: web
     name: greekaway
     env: node
     plan: free
-    buildCommand: npm ci
+    buildCommand: npm ci && node tools/migrate_to_postgres.js || true
     startCommand: npm start
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
+      # PostgreSQL Database URL (from Render managed database)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: greekaway-db
+          property: connectionString
       # Optional Stripe keys and admin creds; set values in Render Dashboard
       - key: STRIPE_SECRET_KEY
         sync: false
