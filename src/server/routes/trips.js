@@ -765,6 +765,13 @@ function hasLegacyDurationFields(obj) {
 function normalizeTripFilePayload(rawObj, filePath, slugLabel) {
   const normalized = ensureTripShape(rawObj);
   if (!hasLegacyDurationFields(rawObj)) return normalized;
+  // Skip writing if data came from DB (filePath starts with 'db:')
+  if (filePath && filePath.startsWith('db:')) {
+    if (slugLabel) {
+      console.log("trips: legacy fields normalized in memory for", slugLabel);
+    }
+    return normalized;
+  }
   try {
     fs.writeFileSync(filePath, JSON.stringify(normalized, null, 2), "utf8");
     if (slugLabel) {
@@ -817,10 +824,6 @@ async function writeTrip(data) {
     // Use data layer (writes to DB if available, JSON as fallback)
     await dataLayer.upsertTrip(stored);
     
-    // Also write to local JSON for backup
-    const file = path.join(TRIPS_DIR, safeSlug + ".json");
-    fs.writeFileSync(file, JSON.stringify(stored, null, 2), "utf8");
-    
     return true;
   } catch (e) {
     console.error("trips: writeTrip failed", data.slug, e.message);
@@ -836,10 +839,6 @@ async function deleteTrip(slug) {
     
     // Use data layer
     await dataLayer.deleteTrip(safeSlug);
-    
-    // Also delete local JSON
-    const file = path.join(TRIPS_DIR, safeSlug + ".json");
-    if (fs.existsSync(file)) fs.unlinkSync(file);
     
     return true;
   } catch (e) {
