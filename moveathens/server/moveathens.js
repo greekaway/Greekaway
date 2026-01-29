@@ -5,6 +5,9 @@ const crypto = require('crypto');
 let multer = null;
 try { multer = require('multer'); } catch (_) { multer = null; }
 
+// Data layer for PostgreSQL persistence
+const dataLayer = require('../../src/server/data/moveathens');
+
 module.exports = function registerMoveAthens(app, opts = {}) {
   const isDev = !!opts.isDev;
   const checkAdminAuth = typeof opts.checkAdminAuth === 'function' ? opts.checkAdminAuth : null;
@@ -780,25 +783,42 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   });
 
   // --- ZONES ---
-  app.get('/api/admin/moveathens/transfer-zones', (req, res) => {
+  app.get('/api/admin/moveathens/transfer-zones', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      return res.json({ zones: data.transferZones });
+      // Try database first via data layer
+      const zones = await dataLayer.getZones();
+      return res.json({ zones });
     } catch (err) {
-      return res.status(500).json({ error: 'MoveAthens zones unavailable' });
+      // Fallback to JSON
+      try {
+        const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+        return res.json({ zones: data.transferZones });
+      } catch (err2) {
+        return res.status(500).json({ error: 'MoveAthens zones unavailable' });
+      }
     }
   });
 
-  app.put('/api/admin/moveathens/transfer-zones', (req, res) => {
+  app.put('/api/admin/moveathens/transfer-zones', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const incoming = req.body || {};
       const zones = normalizeZonesList(incoming.zones || []);
+      
+      // Save each zone via data layer (handles DB vs JSON automatically)
+      const savedZones = [];
+      for (const zone of zones) {
+        const saved = await dataLayer.upsertZone(zone);
+        savedZones.push(saved);
+      }
+      
+      // Also sync to local JSON for backup/fallback
       const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
       const updated = { ...current, transferZones: zones };
       writeAtomic(updated);
-      return res.json({ zones });
+      
+      return res.json({ zones: savedZones });
     } catch (err) {
       console.error('moveathens: save zones failed', err && err.stack ? err.stack : err);
       return res.status(500).json({ error: 'Failed to save zones' });
@@ -806,42 +826,62 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   });
 
   // --- DESTINATION CATEGORIES ---
-  app.get('/api/admin/moveathens/destination-categories', (req, res) => {
+  app.get('/api/admin/moveathens/destination-categories', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      return res.json({ categories: data.destinationCategories });
+      const categories = await dataLayer.getDestinationCategories();
+      return res.json({ categories });
     } catch (err) {
-      return res.status(500).json({ error: 'Categories unavailable' });
+      try {
+        const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+        return res.json({ categories: data.destinationCategories });
+      } catch (err2) {
+        return res.status(500).json({ error: 'Categories unavailable' });
+      }
     }
   });
 
-  app.put('/api/admin/moveathens/destination-categories', (req, res) => {
+  app.put('/api/admin/moveathens/destination-categories', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const incoming = req.body || {};
       const categories = normalizeDestinationCategories(incoming.categories || []);
+      
+      // Save each category via data layer
+      const savedCategories = [];
+      for (const cat of categories) {
+        const saved = await dataLayer.upsertDestinationCategory(cat);
+        savedCategories.push(saved);
+      }
+      
+      // Sync to local JSON
       const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
       const updated = { ...current, destinationCategories: categories };
       writeAtomic(updated);
-      return res.json({ categories });
+      
+      return res.json({ categories: savedCategories });
     } catch (err) {
       return res.status(500).json({ error: 'Failed to save categories' });
     }
   });
 
   // --- VEHICLE TYPES ---
-  app.get('/api/admin/moveathens/vehicle-types', (req, res) => {
+  app.get('/api/admin/moveathens/vehicle-types', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      return res.json({ vehicleTypes: data.vehicleTypes });
+      const vehicleTypes = await dataLayer.getVehicleTypes();
+      return res.json({ vehicleTypes });
     } catch (err) {
-      return res.status(500).json({ error: 'Vehicle types unavailable' });
+      try {
+        const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+        return res.json({ vehicleTypes: data.vehicleTypes });
+      } catch (err2) {
+        return res.status(500).json({ error: 'Vehicle types unavailable' });
+      }
     }
   });
 
-  app.put('/api/admin/moveathens/vehicle-types', (req, res) => {
+  app.put('/api/admin/moveathens/vehicle-types', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const incoming = req.body || {};
@@ -858,10 +898,20 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         seenNames.set(norm, id);
       });
       const vehicleTypes = normalizeVehicleTypes(incomingList);
+      
+      // Save each vehicle type via data layer
+      const savedVehicles = [];
+      for (const vt of vehicleTypes) {
+        const saved = await dataLayer.upsertVehicleType(vt);
+        savedVehicles.push(saved);
+      }
+      
+      // Sync to local JSON
       const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
       const updated = { ...current, vehicleTypes };
       writeAtomic(updated);
-      return res.json({ vehicleTypes });
+      
+      return res.json({ vehicleTypes: savedVehicles });
     } catch (err) {
       if (err && err.code === 409) {
         return res.status(409).json({ error: 'DUPLICATE_NAME', message: 'Type name already exists' });
@@ -871,50 +921,80 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   });
 
   // --- DESTINATIONS ---
-  app.get('/api/admin/moveathens/destinations', (req, res) => {
+  app.get('/api/admin/moveathens/destinations', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      return res.json({ destinations: data.destinations });
+      const destinations = await dataLayer.getDestinations();
+      return res.json({ destinations });
     } catch (err) {
-      return res.status(500).json({ error: 'Destinations unavailable' });
+      try {
+        const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+        return res.json({ destinations: data.destinations });
+      } catch (err2) {
+        return res.status(500).json({ error: 'Destinations unavailable' });
+      }
     }
   });
 
-  app.put('/api/admin/moveathens/destinations', (req, res) => {
+  app.put('/api/admin/moveathens/destinations', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const incoming = req.body || {};
       const destinations = normalizeDestinations(incoming.destinations || []);
+      
+      // Save each destination via data layer
+      const savedDestinations = [];
+      for (const dest of destinations) {
+        const saved = await dataLayer.upsertDestination(dest);
+        savedDestinations.push(saved);
+      }
+      
+      // Sync to local JSON
       const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
       const updated = { ...current, destinations };
       writeAtomic(updated);
-      return res.json({ destinations });
+      
+      return res.json({ destinations: savedDestinations });
     } catch (err) {
       return res.status(500).json({ error: 'Failed to save destinations' });
     }
   });
 
   // --- TRANSFER PRICES (ZONE MATRIX) ---
-  app.get('/api/admin/moveathens/transfer-prices', (req, res) => {
+  app.get('/api/admin/moveathens/transfer-prices', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      return res.json({ transferPrices: data.transferPrices });
+      const transferPrices = await dataLayer.getPrices();
+      return res.json({ transferPrices });
     } catch (err) {
-      return res.status(500).json({ error: 'Transfer prices unavailable' });
+      try {
+        const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+        return res.json({ transferPrices: data.transferPrices });
+      } catch (err2) {
+        return res.status(500).json({ error: 'Transfer prices unavailable' });
+      }
     }
   });
 
-  app.put('/api/admin/moveathens/transfer-prices', (req, res) => {
+  app.put('/api/admin/moveathens/transfer-prices', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const incoming = req.body || {};
       const transferPrices = normalizeTransferPrices(incoming.transferPrices || []);
+      
+      // Save each price via data layer
+      const savedPrices = [];
+      for (const price of transferPrices) {
+        const saved = await dataLayer.upsertPrice(price);
+        savedPrices.push(saved);
+      }
+      
+      // Sync to local JSON
       const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
       const updated = { ...current, transferPrices };
       writeAtomic(updated);
-      return res.json({ transferPrices });
+      
+      return res.json({ transferPrices: savedPrices });
     } catch (err) {
       return res.status(500).json({ error: 'Failed to save transfer prices' });
     }
