@@ -1472,14 +1472,19 @@ app.get('/admin/bookings', (req, res) => {
 // Health/readiness endpoint for uptime checks
 app.get('/health', (req, res) => {
   try {
+    const dbModule = require('./db');
     const info = {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      env: process.env.NODE_ENV || 'development'
+      env: process.env.NODE_ENV || 'development',
+      database: {
+        available: dbModule.isAvailable(),
+        hasUrl: !!process.env.DATABASE_URL
+      }
     };
     res.json(info);
   } catch (e) {
-    res.status(500).json({ status: 'error' });
+    res.status(500).json({ status: 'error', message: e.message });
   }
 });
 
