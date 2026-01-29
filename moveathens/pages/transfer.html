@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>MoveAthens Transfer</title>
+  <!-- Preload critical assets -->
+  <link rel="preload" href="/moveathens/css/transfer.css" as="style">
+  <link rel="preload" href="/moveathens/videos/hero-logo.png" as="image">
   <link rel="stylesheet" href="/moveathens/css/moveathens-base.css">
   <link rel="stylesheet" href="/moveathens/css/footer.css">
   <link rel="stylesheet" href="/moveathens/css/transfer.css">
@@ -13,7 +16,7 @@
 <body class="ma-transfer-page">
   <header class="ma-header">
     <a href="/" class="ma-logo" data-ma-home-link>
-      <img src="/moveathens/videos/hero-logo.png" alt="MoveAthens" class="ma-logo-img">
+      <img src="/moveathens/videos/hero-logo.png" alt="MoveAthens" class="ma-logo-img" fetchpriority="high">
     </a>
     <h1 class="ma-page-title">Transfer</h1>
   </header>

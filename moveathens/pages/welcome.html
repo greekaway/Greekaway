@@ -3,6 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/moveathens/videos/hero-logo.png" as="image" />
+    <link rel="preload" href="/moveathens/css/moveathens-base.css" as="style" />
+    <link rel="preload" href="/moveathens/css/welcome.css" as="style" />
     <link rel="stylesheet" href="/moveathens/css/moveathens-base.css" />
     <link rel="stylesheet" href="/moveathens/css/footer.css" />
     <link rel="stylesheet" href="/moveathens/css/welcome.css" />
@@ -16,7 +20,7 @@
         </div>
         <div class="ma-hero__scrim"></div>
         <div class="ma-hero__overlay">
-          <img class="ma-hero__logo" data-ma-hero-logo alt="MoveAthens" />
+          <img class="ma-hero__logo" data-ma-hero-logo alt="MoveAthens" fetchpriority="high" />
           <div class="ma-hero__text-group">
             <h1 class="ma-hero__headline" data-ma-hero-headline></h1>
             <p class="ma-hero__subtext" data-ma-hero-subtext></p>
