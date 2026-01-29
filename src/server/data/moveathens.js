@@ -110,6 +110,9 @@ function makeId(prefix = 'id') {
 // CONFIG (UI Settings)
 // =========================================================
 
+// Track if config migration has been done this session
+let configMigrated = false;
+
 /**
  * Get UI config
  */
@@ -119,6 +122,58 @@ async function getConfig() {
   if (dbAvailable) {
     try {
       const row = await db.ma.getConfig();
+      
+      // Check if DB config is empty (never been set) - migrate from JSON
+      const dbHasData = row.hero_headline || row.hero_video_url || row.phone_number;
+      
+      if (!dbHasData && !configMigrated) {
+        // DB config is empty, migrate from JSON file
+        const jsonConfig = readConfigFromFile();
+        if (jsonConfig.heroHeadline || jsonConfig.heroVideoUrl || jsonConfig.phoneNumber) {
+          console.log('[moveathens] DB config empty, auto-migrating from JSON');
+          configMigrated = true;
+          
+          await db.ma.updateConfig({
+            heroVideoUrl: jsonConfig.heroVideoUrl,
+            heroLogoUrl: jsonConfig.heroLogoUrl,
+            heroHeadline: jsonConfig.heroHeadline,
+            heroSubtext: jsonConfig.heroSubtext,
+            footerLabels: jsonConfig.footerLabels,
+            footerIcons: jsonConfig.footerIcons,
+            phoneNumber: jsonConfig.phoneNumber,
+            whatsappNumber: jsonConfig.whatsappNumber,
+            companyEmail: jsonConfig.companyEmail,
+            ctaLabels: jsonConfig.ctaLabels,
+            contactLabels: jsonConfig.contactLabels,
+            hotelContextLabels: jsonConfig.hotelContextLabels,
+            hotelEmailSubjectPrefix: jsonConfig.hotelEmailSubjectPrefix,
+            infoPageTitle: jsonConfig.infoPageTitle,
+            infoPageContent: jsonConfig.infoPageContent
+          });
+          
+          // Return migrated config
+          const migrated = await db.ma.getConfig();
+          return {
+            heroVideoUrl: migrated.hero_video_url || '',
+            heroLogoUrl: migrated.hero_logo_url || '',
+            heroHeadline: migrated.hero_headline || '',
+            heroSubtext: migrated.hero_subtext || '',
+            footerLabels: migrated.footer_labels || {},
+            footerIcons: migrated.footer_icons || {},
+            phoneNumber: migrated.phone_number || '',
+            whatsappNumber: migrated.whatsapp_number || '',
+            companyEmail: migrated.company_email || '',
+            ctaLabels: migrated.cta_labels || {},
+            contactLabels: migrated.contact_labels || {},
+            hotelContextLabels: migrated.hotel_context_labels || {},
+            hotelEmailSubjectPrefix: migrated.hotel_email_subject_prefix || '',
+            infoPageTitle: migrated.info_page_title || '',
+            infoPageContent: migrated.info_page_content || ''
+          };
+        }
+      }
+      
+      // DB has data, return it
       return {
         heroVideoUrl: row.hero_video_url || '',
         heroLogoUrl: row.hero_logo_url || '',
