@@ -1,7 +1,7 @@
 {
   "heroVideoUrl": "/moveathens/videos/hero.mp4",
   "heroLogoUrl": "/moveathens/videos/hero-logo.png",
-  "heroHeadline": "MoveAthens Transfer",
+  "heroHeadline": "MoveAthens",
   "heroSubtext": "Ιδιωτικές μεταφορές στην Αθήνα — άμεση εξυπηρέτηση με τηλέφωνο ή WhatsApp.",
   "footerLabels": {
     "home": "Αρχική",
@@ -39,7 +39,7 @@
   "transferZones": [
     {
       "id": "tz_1769602772374",
-      "name": "αθηνα",
+      "name": "Αθηνα",
       "description": "",
       "type": "suburb",
       "is_active": true,
@@ -87,13 +87,13 @@
       "id": "dc_1769602646120",
       "name": "μουσεια",
       "icon": "/moveathens/icons/categories/category-05443d8a-fe0b-447f-803f-cedc3b6be452.svg",
-      "display_order": 1,
+      "display_order": 2,
       "is_active": true,
       "created_at": "2026-01-28T13:03:56.331Z"
     },
     {
       "id": "dc_1769603253464",
-      "name": "εστιαορια",
+      "name": "εστιατορια",
       "icon": "/moveathens/icons/categories/category-ede82a90-e440-4504-abb8-07d1f2ef01b7.svg",
       "display_order": 1,
       "is_active": true,
@@ -146,7 +146,7 @@
       "price": 120
     },
     {
-      "id": "tp_1769632422753_vt_1769602918068_night",
+      "id": "tp_1769632432966_vt_1769602918068_night",
       "origin_zone_id": "tz_1769603309708",
       "destination_id": "dest_1769606127352",
       "vehicle_type_id": "vt_1769602918068",
@@ -154,7 +154,7 @@
       "price": 300
     },
     {
-      "id": "tp_1769632422753_vt_1769606282004_night",
+      "id": "tp_1769632432966_vt_1769606282004_night",
       "origin_zone_id": "tz_1769603309708",
       "destination_id": "dest_1769606127352",
       "vehicle_type_id": "vt_1769606282004",
