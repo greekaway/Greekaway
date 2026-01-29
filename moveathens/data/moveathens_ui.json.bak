@@ -1,8 +1,8 @@
 {
   "heroVideoUrl": "/moveathens/videos/hero.mp4",
   "heroLogoUrl": "/moveathens/videos/hero-logo.png",
-  "heroHeadline": "MoveAthens",
-  "heroSubtext": "Ιδιωτικές μεταφορές στην Αθήνα — άμεση εξυπηρέτηση με τηλέφωνο ή WhatsApp.",
+  "heroHeadline": "γ",
+  "heroSubtext": "",
   "footerLabels": {
     "home": "Αρχική",
     "prices": "transfer",
@@ -47,7 +47,7 @@
     },
     {
       "id": "tz_1769603309708",
-      "name": "γλυφαδα",
+      "name": "Γλυφαδα",
       "description": "",
       "type": "port",
       "is_active": true,
