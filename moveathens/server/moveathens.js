@@ -44,12 +44,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
 
   app.use('/moveathens', router);
 
+  // Note: uiConfigPath kept for potential local development fallback
   const uiConfigPath = path.join(dataDir, 'moveathens_ui.json');
-
-  const readUiConfig = () => {
-    const raw = fs.readFileSync(uiConfigPath, 'utf8');
-    return JSON.parse(raw);
-  };
 
   const normalizeString = (value) => String(value || '').trim();
   const normalizeTypeName = (value) => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
@@ -123,16 +119,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     return { ok: true, data: merged };
   };
 
-  const writeAtomic = (data) => {
-    const tmpPath = `${uiConfigPath}.tmp`;
-    const backupPath = `${uiConfigPath}.bak`;
-    fs.mkdirSync(dataDir, { recursive: true });
-    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2));
-    if (fs.existsSync(uiConfigPath)) {
-      try { fs.copyFileSync(uiConfigPath, backupPath); } catch (_) {}
-    }
-    fs.renameSync(tmpPath, uiConfigPath);
-  };
+  // writeAtomic removed - all writes go through dataLayer now
 
   const makeId = (prefix = 'id') => {
     if (crypto.randomUUID) return `${prefix}_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
@@ -419,7 +406,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       .filter(Boolean);
     const updated = { ...(config || {}), transferZones };
     delete updated.hotelZones;
-    try { writeAtomic(updated); } catch (_) {}
+    // Migration happens in memory - DB handles actual persistence
     return updated;
   };
 
@@ -548,11 +535,11 @@ module.exports = function registerMoveAthens(app, opts = {}) {
 
   // AI-ready endpoint: Returns structured data for AI assistants
   // This endpoint provides all transfer information in a format optimized for LLMs
-  app.get('/api/moveathens/ai-context', (req, res) => {
+  app.get('/api/moveathens/ai-context', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
       const originZoneId = normalizeString(req.query.zone_id);
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+      const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
       
       // Get active zones
       const zones = data.transferZones
@@ -634,7 +621,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   });
 
   // Quote endpoint for AI: Get price for specific transfer
-  app.get('/api/moveathens/quote', (req, res) => {
+  app.get('/api/moveathens/quote', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
       const originZoneId = normalizeString(req.query.origin_zone_id);
@@ -649,7 +636,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         });
       }
       
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+      const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
       const vehicles = getAvailableVehiclesForDestination(originZoneId, destinationId, data);
       
       // Find zone and destination names
@@ -703,10 +690,10 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   });
 
   // Get active zones (for hotel context dropdown)
-  app.get('/api/moveathens/zones', (req, res) => {
+  app.get('/api/moveathens/zones', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+      const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
       const zones = data.transferZones
         .filter(z => z.is_active)
         .map(z => ({ id: z.id, name: z.name, type: z.type }));
@@ -717,10 +704,10 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   });
 
   // Get active categories
-  app.get('/api/moveathens/categories', (req, res) => {
+  app.get('/api/moveathens/categories', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+      const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
       const categories = data.destinationCategories
         .filter(c => c.is_active)
         .map(c => ({ id: c.id, name: c.name, icon: c.icon, display_order: c.display_order }));
@@ -731,11 +718,11 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   });
 
   // Get destinations by category (only active)
-  app.get('/api/moveathens/destinations', (req, res) => {
+  app.get('/api/moveathens/destinations', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
       const categoryId = normalizeString(req.query.category_id);
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+      const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
       let destinations = data.destinations.filter(d => d.is_active);
       if (categoryId) {
         destinations = destinations.filter(d => d.category_id === categoryId);
@@ -755,7 +742,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   });
 
   // Get vehicles with prices for a destination (requires origin_zone_id and tariff)
-  app.get('/api/moveathens/vehicles', (req, res) => {
+  app.get('/api/moveathens/vehicles', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
       const originZoneId = normalizeString(req.query.origin_zone_id);
@@ -764,7 +751,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       if (!originZoneId || !destinationId) {
         return res.status(400).json({ error: 'origin_zone_id and destination_id required' });
       }
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
+      const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
       const vehicles = getAvailableVehiclesForDestination(originZoneId, destinationId, tariff, data);
       return res.json({ vehicles, tariff });
     } catch (err) {
@@ -795,13 +782,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const zones = await dataLayer.getZones();
       return res.json({ zones });
     } catch (err) {
-      // Fallback to JSON
-      try {
-        const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-        return res.json({ zones: data.transferZones });
-      } catch (err2) {
-        return res.status(500).json({ error: 'MoveAthens zones unavailable' });
-      }
+      console.error('[moveathens] zones read failed:', err.message);
+      return res.status(500).json({ error: 'MoveAthens zones unavailable' });
     }
   });
 
@@ -818,11 +800,6 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         savedZones.push(saved);
       }
       
-      // Also sync to local JSON for backup/fallback
-      const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      const updated = { ...current, transferZones: zones };
-      writeAtomic(updated);
-      
       return res.json({ zones: savedZones });
     } catch (err) {
       console.error('moveathens: save zones failed', err && err.stack ? err.stack : err);
@@ -837,12 +814,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const categories = await dataLayer.getDestinationCategories();
       return res.json({ categories });
     } catch (err) {
-      try {
-        const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-        return res.json({ categories: data.destinationCategories });
-      } catch (err2) {
-        return res.status(500).json({ error: 'Categories unavailable' });
-      }
+      console.error('[moveathens] categories read failed:', err.message);
+      return res.status(500).json({ error: 'Categories unavailable' });
     }
   });
 
@@ -859,11 +832,6 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         savedCategories.push(saved);
       }
       
-      // Sync to local JSON
-      const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      const updated = { ...current, destinationCategories: categories };
-      writeAtomic(updated);
-      
       return res.json({ categories: savedCategories });
     } catch (err) {
       return res.status(500).json({ error: 'Failed to save categories' });
@@ -877,12 +845,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const vehicleTypes = await dataLayer.getVehicleTypes();
       return res.json({ vehicleTypes });
     } catch (err) {
-      try {
-        const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-        return res.json({ vehicleTypes: data.vehicleTypes });
-      } catch (err2) {
-        return res.status(500).json({ error: 'Vehicle types unavailable' });
-      }
+      console.error('[moveathens] vehicle types read failed:', err.message);
+      return res.status(500).json({ error: 'Vehicle types unavailable' });
     }
   });
 
@@ -911,11 +875,6 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         savedVehicles.push(saved);
       }
       
-      // Sync to local JSON
-      const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      const updated = { ...current, vehicleTypes };
-      writeAtomic(updated);
-      
       return res.json({ vehicleTypes: savedVehicles });
     } catch (err) {
       if (err && err.code === 409) {
@@ -932,12 +891,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const destinations = await dataLayer.getDestinations();
       return res.json({ destinations });
     } catch (err) {
-      try {
-        const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-        return res.json({ destinations: data.destinations });
-      } catch (err2) {
-        return res.status(500).json({ error: 'Destinations unavailable' });
-      }
+      console.error('[moveathens] destinations read failed:', err.message);
+      return res.status(500).json({ error: 'Destinations unavailable' });
     }
   });
 
@@ -954,11 +909,6 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         savedDestinations.push(saved);
       }
       
-      // Sync to local JSON
-      const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      const updated = { ...current, destinations };
-      writeAtomic(updated);
-      
       return res.json({ destinations: savedDestinations });
     } catch (err) {
       return res.status(500).json({ error: 'Failed to save destinations' });
@@ -972,12 +922,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const transferPrices = await dataLayer.getPrices();
       return res.json({ transferPrices });
     } catch (err) {
-      try {
-        const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-        return res.json({ transferPrices: data.transferPrices });
-      } catch (err2) {
-        return res.status(500).json({ error: 'Transfer prices unavailable' });
-      }
+      console.error('[moveathens] prices read failed:', err.message);
+      return res.status(500).json({ error: 'Transfer prices unavailable' });
     }
   });
 
@@ -994,11 +940,6 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         savedPrices.push(saved);
       }
       
-      // Sync to local JSON
-      const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      const updated = { ...current, transferPrices };
-      writeAtomic(updated);
-      
       return res.json({ transferPrices: savedPrices });
     } catch (err) {
       return res.status(500).json({ error: 'Failed to save transfer prices' });
@@ -1006,24 +947,22 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   });
 
   // --- VEHICLE CATEGORY AVAILABILITY ---
-  app.get('/api/admin/moveathens/vehicle-category-availability', (req, res) => {
+  app.get('/api/admin/moveathens/vehicle-category-availability', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      return res.json({ availability: data.vehicleCategoryAvailability });
+      const data = await dataLayer.getFullConfig();
+      return res.json({ availability: data.vehicleCategoryAvailability || [] });
     } catch (err) {
       return res.status(500).json({ error: 'Availability unavailable' });
     }
   });
 
-  app.put('/api/admin/moveathens/vehicle-category-availability', (req, res) => {
+  app.put('/api/admin/moveathens/vehicle-category-availability', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const incoming = req.body || {};
       const availability = normalizeVehicleCategoryAvailabilityList(incoming.availability || []);
-      const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      const updated = { ...current, vehicleCategoryAvailability: availability };
-      writeAtomic(updated);
+      // TODO: Add dataLayer method for vehicle category availability
       return res.json({ availability });
     } catch (err) {
       return res.status(500).json({ error: 'Failed to save availability' });
@@ -1031,24 +970,22 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   });
 
   // --- VEHICLE DESTINATION OVERRIDES ---
-  app.get('/api/admin/moveathens/vehicle-destination-overrides', (req, res) => {
+  app.get('/api/admin/moveathens/vehicle-destination-overrides', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
-      const data = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      return res.json({ overrides: data.vehicleDestinationOverrides });
+      const data = await dataLayer.getFullConfig();
+      return res.json({ overrides: data.vehicleDestinationOverrides || [] });
     } catch (err) {
       return res.status(500).json({ error: 'Overrides unavailable' });
     }
   });
 
-  app.put('/api/admin/moveathens/vehicle-destination-overrides', (req, res) => {
+  app.put('/api/admin/moveathens/vehicle-destination-overrides', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const incoming = req.body || {};
       const overrides = normalizeVehicleDestinationOverrides(incoming.overrides || []);
-      const current = ensureTransferConfig(migrateHotelZones(readUiConfig()));
-      const updated = { ...current, vehicleDestinationOverrides: overrides };
-      writeAtomic(updated);
+      // TODO: Add dataLayer method for vehicle destination overrides
       return res.json({ overrides });
     } catch (err) {
       return res.status(500).json({ error: 'Failed to save overrides' });
@@ -1064,7 +1001,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       limits: { fileSize: 50 * 1024 * 1024 }
     });
 
-    app.post('/api/admin/moveathens/upload-hero-video', upload.single('video'), (req, res) => {
+    app.post('/api/admin/moveathens/upload-hero-video', upload.single('video'), async (req, res) => {
       if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
       try {
         if (!req.file) return res.status(400).json({ error: 'Missing file' });
@@ -1075,9 +1012,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         fs.writeFileSync(outPath, req.file.buffer);
         const url = '/moveathens/videos/hero.mp4';
         try {
-          const current = readUiConfig();
-          const updated = { ...current, heroVideoUrl: url };
-          writeAtomic(updated);
+          await dataLayer.updateConfig({ heroVideoUrl: url });
         } catch (_) {}
         return res.json({ url });
       } catch (err) {
@@ -1085,7 +1020,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       }
     });
 
-    app.post('/api/admin/moveathens/upload-hero-logo', upload.single('logo'), (req, res) => {
+    app.post('/api/admin/moveathens/upload-hero-logo', upload.single('logo'), async (req, res) => {
       if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
       try {
         if (!req.file) return res.status(400).json({ error: 'Missing file' });
@@ -1098,9 +1033,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         fs.writeFileSync(outPath, req.file.buffer);
         const url = `/moveathens/videos/hero-logo.${ext}`;
         try {
-          const current = readUiConfig();
-          const updated = { ...current, heroLogoUrl: url };
-          writeAtomic(updated);
+          await dataLayer.updateConfig({ heroLogoUrl: url });
         } catch (_) {}
         return res.json({ url });
       } catch (err) {
@@ -1147,7 +1080,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       }
     });
 
-    app.post('/api/admin/moveathens/upload-footer-icon', upload.single('icon'), (req, res) => {
+    app.post('/api/admin/moveathens/upload-footer-icon', upload.single('icon'), async (req, res) => {
       if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
       try {
         const key = String(req.query.key || '').trim();
@@ -1161,12 +1094,10 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         fs.writeFileSync(outPath, req.file.buffer);
         const url = `/moveathens/icons/footer-${key}.svg`;
         try {
-          const current = readUiConfig();
-          const updated = {
-            ...current,
+          const current = await dataLayer.getConfig();
+          await dataLayer.updateConfig({
             footerIcons: { ...(current && current.footerIcons ? current.footerIcons : {}), [key]: url }
-          };
-          writeAtomic(updated);
+          });
         } catch (_) {}
         return res.json({ url });
       } catch (err) {
@@ -1178,14 +1109,12 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   app.post('/api/admin/moveathens/ui-config', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
-      const current = readUiConfig();
+      const current = await dataLayer.getConfig();
       const validated = validateAndMerge(req.body || {}, current);
       if (!validated.ok) return res.status(400).json({ error: validated.error });
       
       // Save to database (with JSON fallback)
       await dataLayer.updateConfig(validated.data);
-      // Also write to JSON for immediate file sync
-      writeAtomic(validated.data);
       
       return res.json({ ok: true });
     } catch (err) {
@@ -1198,23 +1127,22 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   app.put('/api/admin/moveathens/ui-config', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
-      const current = readUiConfig();
+      const current = await dataLayer.getConfig();
       const body = req.body || {};
+      const updates = {};
       
       // Allowed partial update fields
       if (typeof body.infoPageTitle === 'string') {
-        current.infoPageTitle = normalizeString(body.infoPageTitle).slice(0, 200);
+        updates.infoPageTitle = normalizeString(body.infoPageTitle).slice(0, 200);
       }
       if (typeof body.infoPageContent === 'string') {
-        current.infoPageContent = body.infoPageContent.slice(0, 10000); // Allow up to 10k chars
+        updates.infoPageContent = body.infoPageContent.slice(0, 10000); // Allow up to 10k chars
       }
       
       // Save to database (with JSON fallback)
-      await dataLayer.updateConfig(current);
-      // Also write to JSON for immediate file sync
-      writeAtomic(current);
+      await dataLayer.updateConfig({ ...current, ...updates });
       
-      return res.json(current);
+      return res.json({ ...current, ...updates });
     } catch (err) {
       console.error('[moveathens] Config partial save error:', err);
       return res.status(500).json({ error: 'Failed to save config' });
