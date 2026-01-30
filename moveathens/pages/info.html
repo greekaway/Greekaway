@@ -22,9 +22,51 @@
     </header>
     
     <main class="ma-main ma-main--with-header">
-      <section class="ma-card ma-section">
-        <h1 id="info-title" class="ma-title"></h1>
-        <div id="info-content" class="ma-info-content">
+      <!-- Tab Navigation -->
+      <nav class="ma-info-tabs" role="tablist">
+        <button class="ma-info-tab active" data-tab="transfers" role="tab" aria-selected="true">
+          <span class="ma-info-tab__icon">📍</span>
+          <span class="ma-info-tab__label">Μεταφορές</span>
+        </button>
+        <button class="ma-info-tab" data-tab="cancellation" role="tab" aria-selected="false">
+          <span class="ma-info-tab__icon">🚫</span>
+          <span class="ma-info-tab__label">Ακυρώσεις</span>
+        </button>
+        <button class="ma-info-tab" data-tab="compliance" role="tab" aria-selected="false">
+          <span class="ma-info-tab__icon">📋</span>
+          <span class="ma-info-tab__label">Κανόνες</span>
+        </button>
+        <button class="ma-info-tab" data-tab="faq" role="tab" aria-selected="false">
+          <span class="ma-info-tab__icon">❓</span>
+          <span class="ma-info-tab__label">FAQ</span>
+        </button>
+      </nav>
+
+      <!-- Tab Content Panels -->
+      <section class="ma-card ma-section ma-info-panel active" data-panel="transfers" role="tabpanel">
+        <h2 id="info-title-transfers" class="ma-title"></h2>
+        <div id="info-content-transfers" class="ma-info-content">
+          <div class="ma-loading">Φόρτωση...</div>
+        </div>
+      </section>
+
+      <section class="ma-card ma-section ma-info-panel" data-panel="cancellation" role="tabpanel" hidden>
+        <h2 id="info-title-cancellation" class="ma-title"></h2>
+        <div id="info-content-cancellation" class="ma-info-content">
+          <div class="ma-loading">Φόρτωση...</div>
+        </div>
+      </section>
+
+      <section class="ma-card ma-section ma-info-panel" data-panel="compliance" role="tabpanel" hidden>
+        <h2 id="info-title-compliance" class="ma-title"></h2>
+        <div id="info-content-compliance" class="ma-info-content">
+          <div class="ma-loading">Φόρτωση...</div>
+        </div>
+      </section>
+
+      <section class="ma-card ma-section ma-info-panel" data-panel="faq" role="tabpanel" hidden>
+        <h2 id="info-title-faq" class="ma-title"></h2>
+        <div id="info-content-faq" class="ma-info-content">
           <div class="ma-loading">Φόρτωση...</div>
         </div>
       </section>

@@ -51,6 +51,32 @@ html[data-theme='light'] body{
 html[data-theme='light'] header,
 html[data-theme='light'] footer,
 html[data-theme='light'] .sticky-bar{ background:var(--ga-navy-deep); }
+
+/* Light theme inputs - IMPORTANT for visibility */
+html[data-theme='light'] .input,
+html[data-theme='light'] .select,
+html[data-theme='light'] input.input,
+html[data-theme='light'] textarea.input,
+html[data-theme='light'] select.input,
+html[data-theme='light'] .filters input,
+html[data-theme='light'] .filters select {
+  background: #ffffff;
+  color: #1a2232;
+  border-color: rgba(6, 24, 53, 0.2);
+}
+html[data-theme='light'] .input::placeholder,
+html[data-theme='light'] textarea.input::placeholder,
+html[data-theme='light'] input.input::placeholder {
+  color: #7b8794;
+}
+html[data-theme='light'] .input:focus,
+html[data-theme='light'] textarea.input:focus,
+html[data-theme='light'] select.input:focus {
+  outline: 2px solid rgba(78, 107, 255, 0.5);
+  outline-offset: 0;
+  border-color: #4E6BFF;
+}
+
 html[data-theme='light'] .bottom-nav{
   background:#ffffff !important;
   border-top:1px solid rgba(6,24,53,.12) !important;

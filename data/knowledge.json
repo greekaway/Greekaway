@@ -1,7 +1,17 @@
 {
-  "version": "1.0.0",
-  "last_updated": "2025-11-12",
+  "version": "1.1.0",
+  "last_updated": "2026-01-30",
   "purpose": "Ανθρώπινη περιγραφή των λειτουργικών κανόνων του Greekaway για χρήση από τον βοηθό AI.",
+
+  "data_sources": {
+    "moveathens_info": "Οι πληροφορίες για τις μεταφορές MoveAthens (πολιτική ακυρώσεων, πολιτική συμμόρφωσης, FAQ) διαχειρίζονται από το admin panel και αποθηκεύονται στη βάση στον πίνακα ma_config. Για να τις ανακτήσεις, χρησιμοποίησε το API endpoint: GET /api/moveathens/config",
+    "info_sections": [
+      "infoPageTitle + infoPageContent: Γενικές πληροφορίες μεταφορών",
+      "infoCancellationTitle + infoCancellationContent: Πολιτική ακυρώσεων",
+      "infoComplianceTitle + infoComplianceContent: Πολιτική συμμόρφωσης/κανόνες επιβατών",
+      "infoFaqTitle + infoFaqContent: Συχνές ερωτήσεις και απαντήσεις"
+    ]
+  },
 
   "trip_rules": {
     "start_condition": "Κάθε εκδρομή ξεκινά μόνο όταν όλοι οι επιβάτες έχουν παραληφθεί και βρίσκονται στο σημείο εκκίνησης.",

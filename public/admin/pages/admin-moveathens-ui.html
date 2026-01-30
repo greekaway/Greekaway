@@ -378,36 +378,80 @@
           <div class="ma-section-header">
             <div>
               <h3 class="ma-subtitle">Περιεχόμενο Σελίδας Πληροφοριών</h3>
-              <p class="ma-helper">Το κείμενο που θα εμφανίζεται στη σελίδα "Πληροφορίες" του MoveAthens.</p>
+              <p class="ma-helper">Οι ενότητες που εμφανίζονται στη σελίδα "Πληροφορίες" του MoveAthens. Ο πελάτης και ο AI assistant μπορούν να τις διαβάσουν.</p>
             </div>
           </div>
 
           <form id="ma-infopage-form" class="ma-infopage-form">
-            <div class="ma-field">
-              <label>Τίτλος Σελίδας
-                <input id="maInfoPageTitle" class="input" type="text" maxlength="100" placeholder="π.χ. Σχετικά με εμάς">
-              </label>
+            <!-- Section 1: Γενικές Πληροφορίες Μεταφορών -->
+            <div class="ma-info-section">
+              <h4 class="ma-info-section-title">📍 Γενικές Πληροφορίες Μεταφορών</h4>
+              <div class="ma-field">
+                <label>Τίτλος
+                  <input id="maInfoPageTitle" class="input" type="text" maxlength="100" placeholder="π.χ. Μεταφορές">
+                </label>
+              </div>
+              <div class="ma-field">
+                <label>Περιεχόμενο (υποστηρίζει Markdown)
+                  <textarea id="maInfoPageContent" class="input ma-textarea-medium" rows="8" placeholder="Γράψτε εδώ τις γενικές πληροφορίες μεταφορών..."></textarea>
+                </label>
+              </div>
             </div>
-            <div class="ma-field">
-              <label>Περιεχόμενο (υποστηρίζει Markdown)
-                <textarea id="maInfoPageContent" class="input ma-textarea-large" rows="15" placeholder="Γράψτε εδώ το κείμενο...
 
-Υποστηρίζει βασική μορφοποίηση:
-- **έντονα**
-- *πλάγια*
-- Λίστες με παύλα (-)
-- Κενές γραμμές για παραγράφους"></textarea>
-              </label>
+            <!-- Section 2: Πολιτική Ακυρώσεων -->
+            <div class="ma-info-section">
+              <h4 class="ma-info-section-title">🚫 Πολιτική Ακυρώσεων</h4>
+              <div class="ma-field">
+                <label>Τίτλος
+                  <input id="maInfoCancellationTitle" class="input" type="text" maxlength="100" placeholder="π.χ. Πολιτική Ακυρώσεων">
+                </label>
+              </div>
+              <div class="ma-field">
+                <label>Περιεχόμενο
+                  <textarea id="maInfoCancellationContent" class="input ma-textarea-medium" rows="8" placeholder="Γράψτε εδώ την πολιτική ακυρώσεων..."></textarea>
+                </label>
+              </div>
             </div>
+
+            <!-- Section 3: Πολιτική Συμμόρφωσης -->
+            <div class="ma-info-section">
+              <h4 class="ma-info-section-title">📋 Πολιτική Συμμόρφωσης Επιβατών</h4>
+              <div class="ma-field">
+                <label>Τίτλος
+                  <input id="maInfoComplianceTitle" class="input" type="text" maxlength="100" placeholder="π.χ. Κανόνες Επιβατών">
+                </label>
+              </div>
+              <div class="ma-field">
+                <label>Περιεχόμενο
+                  <textarea id="maInfoComplianceContent" class="input ma-textarea-medium" rows="8" placeholder="π.χ. Ο πελάτης δεν έχει δικαίωμα αλλαγής διαδρομής, αλλά μπορεί να κάνει σύντομη στάση 5 λεπτών..."></textarea>
+                </label>
+              </div>
+            </div>
+
+            <!-- Section 4: Συχνές Ερωτήσεις -->
+            <div class="ma-info-section">
+              <h4 class="ma-info-section-title">❓ Συχνές Ερωτήσεις (FAQ)</h4>
+              <div class="ma-field">
+                <label>Τίτλος
+                  <input id="maInfoFaqTitle" class="input" type="text" maxlength="100" placeholder="π.χ. Συχνές Ερωτήσεις">
+                </label>
+              </div>
+              <div class="ma-field">
+                <label>Περιεχόμενο
+                  <textarea id="maInfoFaqContent" class="input ma-textarea-medium" rows="8" placeholder="Γράψτε εδώ τις συχνές ερωτήσεις & απαντήσεις..."></textarea>
+                </label>
+              </div>
+            </div>
+
             <div class="ma-actions">
-              <button id="maInfoPageSaveBtn" class="btn" type="submit">💾 Αποθήκευση</button>
+              <button id="maInfoPageSaveBtn" class="btn" type="submit">💾 Αποθήκευση Όλων</button>
               <span id="maInfoPageStatus" class="ma-status" aria-live="polite"></span>
             </div>
           </form>
 
           <div class="ma-preview-section">
-            <h4 class="ma-preview-title">Προεπισκόπηση</h4>
-            <div id="maInfoPagePreview" class="ma-preview-box"></div>
+            <h4 class="ma-preview-title">Προεπισκόπηση (scroll down για όλες τις ενότητες)</h4>
+            <div id="maInfoPagePreview" class="ma-preview-box ma-preview-scroll"></div>
           </div>
         </section>
       </div>

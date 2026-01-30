@@ -1,14 +1,39 @@
 {
-  "version": "1.0.0",
-  "last_updated": "2026-01-29",
+  "version": "1.1.0",
+  "last_updated": "2026-01-30",
   "purpose": "Οδηγίες για τον AI βοηθό του MoveAthens - ΔΕΝ περιέχει hardcoded δεδομένα",
 
   "data_sources": {
-    "info_page": {
-      "description": "Όλες οι πληροφορίες για τον πελάτη (στάσεις, κατοικίδια, ακυρώσεις, κτλ)",
+    "info_sections": {
+      "description": "Δομημένες ενότητες πληροφοριών για τον πελάτη - ΚΥΡΙΑ ΠΗΓΗ ΑΠΑΝΤΗΣΕΩΝ",
       "api_endpoint": "/api/moveathens/ui-config",
-      "fields": ["infoPageTitle", "infoPageContent"],
-      "note": "Εδώ ο διαχειριστής γράφει όλες τις πολιτικές. Διάβασε τα ΠΑΝΤΑ από εδώ."
+      "sections": [
+        {
+          "id": "transfers",
+          "title_field": "infoPageTitle",
+          "content_field": "infoPageContent",
+          "purpose": "Γενικές πληροφορίες για τις μεταφορές (πώς λειτουργεί η υπηρεσία)"
+        },
+        {
+          "id": "cancellation",
+          "title_field": "infoCancellationTitle",
+          "content_field": "infoCancellationContent",
+          "purpose": "Πολιτική ακυρώσεων - χρόνοι, επιστροφές, κόστη"
+        },
+        {
+          "id": "compliance",
+          "title_field": "infoComplianceTitle",
+          "content_field": "infoComplianceContent",
+          "purpose": "Κανόνες επιβατών - τι επιτρέπεται, στάσεις, αλλαγές διαδρομής"
+        },
+        {
+          "id": "faq",
+          "title_field": "infoFaqTitle",
+          "content_field": "infoFaqContent",
+          "purpose": "Συχνές ερωτήσεις - κατοικίδια, παιδικά καθίσματα, καθυστερήσεις"
+        }
+      ],
+      "note": "ΠΡΟΤΕΡΑΙΟΤΗΤΑ: Πάντα διάβαζε ΟΛΕΣ τις ενότητες πριν απαντήσεις. Ο διαχειριστής ενημερώνει αυτά τα κείμενα."
     },
     "vehicles": {
       "description": "Τύποι οχημάτων με χωρητικότητα, βαλίτσες, booking rules",
@@ -49,10 +74,16 @@
   },
 
   "ai_instructions": {
-    "where_to_find_policies": "Διάβασε το infoPageContent για στάσεις, ακυρώσεις, κατοικίδια, κτλ",
-    "where_to_find_data": "Όλα τα δεδομένα (οχήματα, ζώνες, τιμές) έρχονται αυτόματα από το API",
+    "how_to_answer": [
+      "1. Φόρτωσε το API /api/moveathens/ui-config",
+      "2. Διάβασε ΟΛΕΣ τις info sections (infoPageContent, infoCancellationContent, infoComplianceContent, infoFaqContent)",
+      "3. Βρες την απάντηση στα κείμενα που έγραψε ο διαχειριστής",
+      "4. Αν η ερώτηση αφορά ΑΚΥΡΩΣΗ → ψάξε στο infoCancellationContent",
+      "5. Αν αφορά ΚΑΝΟΝΕΣ/ΣΤΑΣΕΙΣ/ΑΛΛΑΓΕΣ → ψάξε στο infoComplianceContent",
+      "6. Αν είναι FAQ (κατοικίδια, παιδιά, κλπ) → ψάξε στο infoFaqContent"
+    ],
     "tone": "Φιλικός, επαγγελματικός, σύντομος",
     "language": "Απάντα στη γλώσσα που ρωτάει ο πελάτης",
-    "unknown_answer": "Αν κάτι δεν υπάρχει στο infoPageContent, πρότεινε επικοινωνία μέσω WhatsApp"
+    "unknown_answer": "Αν η απάντηση δεν υπάρχει σε κανένα info section, πρότεινε επικοινωνία μέσω WhatsApp"
   }
 }

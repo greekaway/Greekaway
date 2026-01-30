@@ -3,7 +3,15 @@
 const path = require('path');
 const fs = require('fs');
 
-// Load knowledge files
+// Import data layer for dynamic DB access
+let maData = null;
+try {
+  maData = require('../../src/server/data/moveathens');
+} catch (e) {
+  console.warn('[MA-Assistant] Could not load moveathens data layer:', e.message);
+}
+
+// Load knowledge files (static rules/concept - can be overridden by DB config)
 function loadKnowledge() {
   const base = path.join(__dirname, '..', 'data', 'knowledge');
   const knowledge = { concept: null, faqs: [], rules: [] };
@@ -34,11 +42,46 @@ function loadKnowledge() {
   return knowledge;
 }
 
-// Load transfer data
-function loadTransferData() {
+// Load transfer data dynamically from database
+async function loadTransferData() {
+  // Try to load from database via data layer
+  if (maData) {
+    try {
+      const [config, zones, vehicles, destinations, prices, categories] = await Promise.all([
+        maData.getConfig().catch(() => null),
+        maData.getZones().catch(() => []),
+        maData.getVehicleTypes().catch(() => []),
+        maData.getDestinations().catch(() => []),
+        maData.getPrices().catch(() => []),
+        maData.getDestinationCategories ? maData.getDestinationCategories().catch(() => []) : Promise.resolve([])
+      ]);
+      
+      console.log('[MA-Assistant] Loaded data from DB:', {
+        zones: zones?.length || 0,
+        vehicles: vehicles?.length || 0,
+        destinations: destinations?.length || 0,
+        prices: prices?.length || 0,
+        categories: categories?.length || 0
+      });
+      
+      return {
+        config,
+        transferZones: zones,
+        vehicleTypes: vehicles,
+        destinations,
+        transferPrices: prices,
+        categories
+      };
+    } catch (e) {
+      console.warn('[MA-Assistant] Failed to load from DB:', e.message);
+    }
+  }
+  
+  // Fallback to JSON file (local development only)
   const dataPath = path.join(__dirname, '..', 'data', 'moveathens_ui.json');
   try {
     if (fs.existsSync(dataPath)) {
+      console.log('[MA-Assistant] Fallback to JSON file');
       return JSON.parse(fs.readFileSync(dataPath, 'utf8'));
     }
   } catch (e) { console.warn('[MA-Assistant] Failed to load transfer data:', e.message); }
@@ -91,6 +134,32 @@ function buildSystemPrompt(knowledge, transferData, lang = 'el') {
     prompt += '\n';
   }
   
+  // Add destinations
+  if (transferData?.destinations?.length) {
+    prompt += isGreek ? '## Προορισμοί που καλύπτουμε\n' : '## Destinations we cover\n';
+    transferData.destinations.filter(d => d.is_active).forEach(d => {
+      if (d.description) {
+        prompt += `- **${d.name}**: ${d.description}\n`;
+      } else {
+        prompt += `- ${d.name}\n`;
+      }
+    });
+    prompt += '\n';
+  }
+
+  // Add categories (attractions, restaurants, etc.) from admin panel
+  if (transferData?.categories?.length) {
+    prompt += isGreek ? '## Κατηγορίες & Αξιοθέατα\n' : '## Categories & Attractions\n';
+    transferData.categories.filter(c => c.is_active !== false).forEach(c => {
+      if (c.description) {
+        prompt += `- **${c.name}**: ${c.description}\n`;
+      } else {
+        prompt += `- ${c.name}\n`;
+      }
+    });
+    prompt += '\n';
+  }
+
   // Add sample prices
   if (transferData?.transferPrices?.length) {
     prompt += isGreek ? '## Ενδεικτικές Τιμές\n' : '## Sample Prices\n';
@@ -171,6 +240,27 @@ function mockResponse(message, knowledge, transferData, lang = 'el') {
       ? 'Για κράτηση κάλεσε +30 6985700007 ή στείλε WhatsApp στο +30 6945358476. Θα χρειαστούμε: ημερομηνία, ώρα, σημείο παραλαβής, προορισμό και αριθμό επιβατών.'
       : 'To book, call +30 6985700007 or send WhatsApp to +30 6945358476. We will need: date, time, pickup point, destination and number of passengers.';
   }
+
+  // Check for destination questions
+  if (/προορισμ|destination|που πάτε|που πηγαίνετε|τι καλύπτ|where.*go|what.*cover|places/.test(m)) {
+    if (transferData?.destinations?.length) {
+      const activeDestinations = transferData.destinations.filter(d => d.is_active);
+      if (activeDestinations.length > 0) {
+        const destList = activeDestinations.map(d => {
+          if (d.description) {
+            return `**${d.name}** - ${d.description}`;
+          }
+          return d.name;
+        }).join('\n- ');
+        return isGreek
+          ? `Καλύπτουμε μεταφορές προς τους παρακάτω προορισμούς:\n- ${destList}\n\nΑν θες πληροφορίες για κάποιον συγκεκριμένο προορισμό ή τιμή, πες μου!`
+          : `We cover transfers to the following destinations:\n- ${destList}\n\nIf you want info about a specific destination or price, let me know!`;
+      }
+    }
+    return isGreek
+      ? 'Καλύπτουμε μεταφορές σε όλη την Αττική - αεροδρόμιο, λιμάνια, αξιοθέατα και ξενοδοχεία. Πες μου τον προορισμό σου για περισσότερες πληροφορίες!'
+      : 'We cover transfers across Attica - airport, ports, attractions and hotels. Tell me your destination for more info!';
+  }
   
   // Check for FAQ matches
   for (const faq of (knowledge.faqs || [])) {
@@ -210,7 +300,7 @@ function registerMoveAthensAssistantRoutes(app, deps = {}) {
       }
       
       const knowledge = loadKnowledge();
-      const transferData = loadTransferData();
+      const transferData = await loadTransferData();
       
       // If no OpenAI key, use mock responses
       if (!OPENAI_API_KEY) {

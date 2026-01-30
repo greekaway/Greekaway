@@ -91,6 +91,13 @@ function getDefaultConfig() {
     hotelEmailSubjectPrefix: '',
     infoPageTitle: '',
     infoPageContent: '',
+    // Structured info sections
+    infoCancellationTitle: '',
+    infoCancellationContent: '',
+    infoComplianceTitle: '',
+    infoComplianceContent: '',
+    infoFaqTitle: '',
+    infoFaqContent: '',
     transferZones: [],
     vehicleTypes: [],
     destinationCategories: [],
@@ -148,7 +155,13 @@ async function getConfig() {
             hotelContextLabels: jsonConfig.hotelContextLabels,
             hotelEmailSubjectPrefix: jsonConfig.hotelEmailSubjectPrefix,
             infoPageTitle: jsonConfig.infoPageTitle,
-            infoPageContent: jsonConfig.infoPageContent
+            infoPageContent: jsonConfig.infoPageContent,
+            infoCancellationTitle: jsonConfig.infoCancellationTitle,
+            infoCancellationContent: jsonConfig.infoCancellationContent,
+            infoComplianceTitle: jsonConfig.infoComplianceTitle,
+            infoComplianceContent: jsonConfig.infoComplianceContent,
+            infoFaqTitle: jsonConfig.infoFaqTitle,
+            infoFaqContent: jsonConfig.infoFaqContent
           });
           
           // Return migrated config
@@ -168,7 +181,13 @@ async function getConfig() {
             hotelContextLabels: migrated.hotel_context_labels || {},
             hotelEmailSubjectPrefix: migrated.hotel_email_subject_prefix || '',
             infoPageTitle: migrated.info_page_title || '',
-            infoPageContent: migrated.info_page_content || ''
+            infoPageContent: migrated.info_page_content || '',
+            infoCancellationTitle: migrated.info_cancellation_title || '',
+            infoCancellationContent: migrated.info_cancellation_content || '',
+            infoComplianceTitle: migrated.info_compliance_title || '',
+            infoComplianceContent: migrated.info_compliance_content || '',
+            infoFaqTitle: migrated.info_faq_title || '',
+            infoFaqContent: migrated.info_faq_content || ''
           };
         }
       }
@@ -189,7 +208,13 @@ async function getConfig() {
         hotelContextLabels: row.hotel_context_labels || {},
         hotelEmailSubjectPrefix: row.hotel_email_subject_prefix || '',
         infoPageTitle: row.info_page_title || '',
-        infoPageContent: row.info_page_content || ''
+        infoPageContent: row.info_page_content || '',
+        infoCancellationTitle: row.info_cancellation_title || '',
+        infoCancellationContent: row.info_cancellation_content || '',
+        infoComplianceTitle: row.info_compliance_title || '',
+        infoComplianceContent: row.info_compliance_content || '',
+        infoFaqTitle: row.info_faq_title || '',
+        infoFaqContent: row.info_faq_content || ''
       };
     } catch (err) {
       console.error('[moveathens] DB config read failed:', err.message);
@@ -212,7 +237,13 @@ async function getConfig() {
     hotelContextLabels: full.hotelContextLabels || {},
     hotelEmailSubjectPrefix: full.hotelEmailSubjectPrefix || '',
     infoPageTitle: full.infoPageTitle || '',
-    infoPageContent: full.infoPageContent || ''
+    infoPageContent: full.infoPageContent || '',
+    infoCancellationTitle: full.infoCancellationTitle || '',
+    infoCancellationContent: full.infoCancellationContent || '',
+    infoComplianceTitle: full.infoComplianceTitle || '',
+    infoComplianceContent: full.infoComplianceContent || '',
+    infoFaqTitle: full.infoFaqTitle || '',
+    infoFaqContent: full.infoFaqContent || ''
   };
 }
 

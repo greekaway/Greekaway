@@ -1132,8 +1132,19 @@
   // ========================================
   const initInfoPageTab = () => {
     const form = $('#ma-infopage-form');
+    // General info
     const titleInput = $('#maInfoPageTitle');
     const contentInput = $('#maInfoPageContent');
+    // Cancellation policy
+    const cancellationTitleInput = $('#maInfoCancellationTitle');
+    const cancellationContentInput = $('#maInfoCancellationContent');
+    // Compliance policy
+    const complianceTitleInput = $('#maInfoComplianceTitle');
+    const complianceContentInput = $('#maInfoComplianceContent');
+    // FAQ
+    const faqTitleInput = $('#maInfoFaqTitle');
+    const faqContentInput = $('#maInfoFaqContent');
+    
     const saveBtn = $('#maInfoPageSaveBtn');
     const status = $('#maInfoPageStatus');
     const preview = $('#maInfoPagePreview');
@@ -1165,26 +1176,81 @@
       return html;
     };
 
+    // Render a single section for preview
+    const renderSection = (title, content, icon) => {
+      if (!title && !content) return '';
+      let html = '<div class="ma-preview-section-divider"></div>';
+      if (title) {
+        html += `<h3>${icon ? icon + ' ' : ''}${title.replace(/</g,'&lt;')}</h3>`;
+      }
+      html += parseContent(content);
+      return html;
+    };
+
     const updatePreview = () => {
       if (preview) {
-        const title = titleInput?.value || '';
-        const content = contentInput?.value || '';
         let html = '';
-        if (title) html += `<h2 style="margin:0 0 12px;font-size:20px;">${title.replace(/</g,'&lt;')}</h2>`;
-        html += parseContent(content);
+        
+        // Section 1: General info (first section - no divider)
+        const title1 = titleInput?.value || '';
+        const content1 = contentInput?.value || '';
+        if (title1 || content1) {
+          if (title1) html += `<h3>📍 ${title1.replace(/</g,'&lt;')}</h3>`;
+          html += parseContent(content1);
+        }
+        
+        // Section 2: Cancellation
+        html += renderSection(
+          cancellationTitleInput?.value,
+          cancellationContentInput?.value,
+          '🚫'
+        );
+        
+        // Section 3: Compliance
+        html += renderSection(
+          complianceTitleInput?.value,
+          complianceContentInput?.value,
+          '📋'
+        );
+        
+        // Section 4: FAQ
+        html += renderSection(
+          faqTitleInput?.value,
+          faqContentInput?.value,
+          '❓'
+        );
+        
         preview.innerHTML = html || '<span style="color:#999;">Η προεπισκόπηση θα εμφανιστεί εδώ...</span>';
       }
     };
 
     const populate = () => {
+      // General info
       if (titleInput) titleInput.value = CONFIG.infoPageTitle || '';
       if (contentInput) contentInput.value = CONFIG.infoPageContent || '';
+      // Cancellation
+      if (cancellationTitleInput) cancellationTitleInput.value = CONFIG.infoCancellationTitle || '';
+      if (cancellationContentInput) cancellationContentInput.value = CONFIG.infoCancellationContent || '';
+      // Compliance
+      if (complianceTitleInput) complianceTitleInput.value = CONFIG.infoComplianceTitle || '';
+      if (complianceContentInput) complianceContentInput.value = CONFIG.infoComplianceContent || '';
+      // FAQ
+      if (faqTitleInput) faqTitleInput.value = CONFIG.infoFaqTitle || '';
+      if (faqContentInput) faqContentInput.value = CONFIG.infoFaqContent || '';
+      
       updatePreview();
     };
 
-    // Live preview on input
-    if (titleInput) titleInput.addEventListener('input', updatePreview);
-    if (contentInput) contentInput.addEventListener('input', updatePreview);
+    // Live preview on input - all fields
+    const allInputs = [
+      titleInput, contentInput,
+      cancellationTitleInput, cancellationContentInput,
+      complianceTitleInput, complianceContentInput,
+      faqTitleInput, faqContentInput
+    ];
+    allInputs.forEach(input => {
+      if (input) input.addEventListener('input', updatePreview);
+    });
 
     // Save
     if (form) {
@@ -1194,7 +1260,13 @@
 
         const payload = {
           infoPageTitle: titleInput?.value || '',
-          infoPageContent: contentInput?.value || ''
+          infoPageContent: contentInput?.value || '',
+          infoCancellationTitle: cancellationTitleInput?.value || '',
+          infoCancellationContent: cancellationContentInput?.value || '',
+          infoComplianceTitle: complianceTitleInput?.value || '',
+          infoComplianceContent: complianceContentInput?.value || '',
+          infoFaqTitle: faqTitleInput?.value || '',
+          infoFaqContent: faqContentInput?.value || ''
         };
 
         const res = await api('/api/admin/moveathens/ui-config', 'PUT', payload);

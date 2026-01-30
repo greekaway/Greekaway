@@ -338,7 +338,11 @@ const ma = {
       'hero_video_url', 'hero_logo_url', 'hero_headline', 'hero_subtext',
       'footer_labels', 'footer_icons', 'phone_number', 'whatsapp_number',
       'company_email', 'cta_labels', 'contact_labels', 'hotel_context_labels',
-      'hotel_email_subject_prefix', 'info_page_title', 'info_page_content'
+      'hotel_email_subject_prefix', 'info_page_title', 'info_page_content',
+      // New structured info sections (2026-01-30)
+      'info_cancellation_title', 'info_cancellation_content',
+      'info_compliance_title', 'info_compliance_content',
+      'info_faq_title', 'info_faq_content'
     ];
     
     const updates = [];
