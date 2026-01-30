@@ -222,7 +222,11 @@
     };
 
     fields.heroVideoUploadBtn?.addEventListener('click', () => {
-      uploadFile('/api/admin/moveathens/upload-hero-video', fields.heroVideoFile, 'video', () => {});
+      uploadFile('/api/admin/moveathens/upload-hero-video', fields.heroVideoFile, 'video', (url) => {
+        // Update CONFIG with new video URL
+        CONFIG.heroVideoUrl = url;
+        showToast('Video uploaded! URL: ' + url);
+      });
     });
 
     fields.heroLogoUploadBtn?.addEventListener('click', () => {
@@ -1092,6 +1096,31 @@
       } else {
         const err = await res.json().catch(() => ({}));
         setStatus(status, err.error || 'Σφάλμα', 'error');
+      }
+    });
+
+    // Auto-load prices when dropdowns change
+    originSelect?.addEventListener('change', () => {
+      if (originSelect.value && destSelect.value) {
+        loadPrices();
+      } else {
+        form.hidden = true;
+        grid.innerHTML = '';
+      }
+    });
+
+    destSelect?.addEventListener('change', () => {
+      if (originSelect.value && destSelect.value) {
+        loadPrices();
+      } else {
+        form.hidden = true;
+        grid.innerHTML = '';
+      }
+    });
+
+    tariffSelect?.addEventListener('change', () => {
+      if (originSelect.value && destSelect.value) {
+        loadPrices();
       }
     });
 

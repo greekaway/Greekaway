@@ -229,6 +229,8 @@ async function updateConfig(data) {
       return getConfig();
     } catch (err) {
       console.error('[moveathens] DB config write failed:', err.message);
+      // Throw error instead of falling back to JSON (ephemeral on Render)
+      throw new Error(`Database config write failed: ${err.message}`);
     }
   }
   
