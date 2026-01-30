@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch(_) {}
 });
 
+// NOTE: Categories/Trips links are now handled by admin-greekaway-tabs.js in the header
+// The code below is disabled to prevent duplicate links in the footer
+/*
 // Ensure admin bottom-nav has Categories/Trips; append if missing, label by href (EN), keep stable order
 document.addEventListener('DOMContentLoaded', () => {
   try {
@@ -41,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   } catch(_) { /* silent */ }
 });
+*/
 
 // Lightweight logger: set debug = true to enable console output during development.
 const G = {
