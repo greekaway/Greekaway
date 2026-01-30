@@ -201,7 +201,8 @@
 
 .ma-destination-item {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   padding: 18px 20px;
   background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
   border: none;

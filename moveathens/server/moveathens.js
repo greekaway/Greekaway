@@ -217,6 +217,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     const luggageCabin = toInt(entry.luggage_cabin, 0);
     const displayOrder = toInt(entry.display_order, 0);
     const isActive = typeof entry.is_active === 'boolean' ? entry.is_active : true;
+    const allowInstant = typeof entry.allow_instant === 'boolean' ? entry.allow_instant : true;
+    const minAdvanceMinutes = toInt(entry.min_advance_minutes, 0);
     const createdAt = normalizeString(entry.created_at) || new Date().toISOString();
     return {
       id,
@@ -229,6 +231,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       luggage_cabin: luggageCabin,
       display_order: displayOrder,
       is_active: isActive,
+      allow_instant: allowInstant,
+      min_advance_minutes: minAdvanceMinutes,
       created_at: createdAt
     };
   };
@@ -1008,11 +1012,12 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       try {
         if (!req.file) return res.status(400).json({ error: 'Missing file' });
         if (req.file.mimetype !== 'video/mp4') return res.status(400).json({ error: 'Invalid file type' });
-        const videosDir = path.join(baseDir, 'videos');
+        // Use persistent uploads folder
+        const videosDir = path.join(__dirname, '..', '..', 'uploads', 'moveathens', 'videos');
         fs.mkdirSync(videosDir, { recursive: true });
         const outPath = path.join(videosDir, 'hero.mp4');
         fs.writeFileSync(outPath, req.file.buffer);
-        const url = '/moveathens/videos/hero.mp4';
+        const url = '/uploads/moveathens/videos/hero.mp4';
         try {
           await dataLayer.updateConfig({ heroVideoUrl: url });
         } catch (_) {}
@@ -1029,11 +1034,12 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         const allowed = new Set(['image/png', 'image/webp', 'image/svg+xml']);
         if (!allowed.has(req.file.mimetype)) return res.status(400).json({ error: 'Invalid file type' });
         const ext = req.file.mimetype === 'image/svg+xml' ? 'svg' : (req.file.mimetype === 'image/webp' ? 'webp' : 'png');
-        const videosDir = path.join(baseDir, 'videos');
+        // Use persistent uploads folder
+        const videosDir = path.join(__dirname, '..', '..', 'uploads', 'moveathens', 'videos');
         fs.mkdirSync(videosDir, { recursive: true });
         const outPath = path.join(videosDir, `hero-logo.${ext}`);
         fs.writeFileSync(outPath, req.file.buffer);
-        const url = `/moveathens/videos/hero-logo.${ext}`;
+        const url = `/uploads/moveathens/videos/hero-logo.${ext}`;
         try {
           await dataLayer.updateConfig({ heroLogoUrl: url });
         } catch (_) {}
@@ -1050,12 +1056,13 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         const allowed = new Set(['image/png', 'image/jpeg', 'image/webp']);
         if (!allowed.has(req.file.mimetype)) return res.status(400).json({ error: 'Invalid file type' });
         const ext = req.file.mimetype === 'image/webp' ? 'webp' : (req.file.mimetype === 'image/jpeg' ? 'jpg' : 'png');
-        const imagesDir = path.join(baseDir, 'images');
-        fs.mkdirSync(imagesDir, { recursive: true });
+        // Use persistent uploads folder instead of ephemeral moveathens/images
+        const uploadsDir = path.join(__dirname, '..', '..', 'uploads', 'moveathens', 'vehicles');
+        fs.mkdirSync(uploadsDir, { recursive: true });
         const name = crypto.randomUUID ? crypto.randomUUID() : `veh_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
-        const outPath = path.join(imagesDir, `vehicle-${name}.${ext}`);
+        const outPath = path.join(uploadsDir, `vehicle-${name}.${ext}`);
         fs.writeFileSync(outPath, req.file.buffer);
-        const url = `/moveathens/images/vehicle-${name}.${ext}`;
+        const url = `/uploads/moveathens/vehicles/vehicle-${name}.${ext}`;
         return res.json({ url });
       } catch (err) {
         return res.status(500).json({ error: 'Upload failed' });
@@ -1070,12 +1077,13 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         const allowed = new Set(['image/svg+xml', 'image/png', 'image/jpeg']);
         if (!allowed.has(req.file.mimetype)) return res.status(400).json({ error: 'Invalid file type. Use SVG, PNG or JPEG' });
         const ext = req.file.mimetype === 'image/svg+xml' ? 'svg' : (req.file.mimetype === 'image/jpeg' ? 'jpg' : 'png');
-        const iconsDir = path.join(baseDir, 'icons', 'categories');
+        // Use persistent uploads folder
+        const iconsDir = path.join(__dirname, '..', '..', 'uploads', 'moveathens', 'icons', 'categories');
         fs.mkdirSync(iconsDir, { recursive: true });
         const name = crypto.randomUUID ? crypto.randomUUID() : `cat_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
         const outPath = path.join(iconsDir, `category-${name}.${ext}`);
         fs.writeFileSync(outPath, req.file.buffer);
-        const url = `/moveathens/icons/categories/category-${name}.${ext}`;
+        const url = `/uploads/moveathens/icons/categories/category-${name}.${ext}`;
         return res.json({ url });
       } catch (err) {
         return res.status(500).json({ error: 'Upload failed' });
@@ -1090,11 +1098,12 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         if (!allowedKeys.has(key)) return res.status(400).json({ error: 'Invalid key' });
         if (!req.file) return res.status(400).json({ error: 'Missing file' });
         if (req.file.mimetype !== 'image/svg+xml') return res.status(400).json({ error: 'Invalid file type' });
-        const iconsDir = path.join(baseDir, 'icons');
+        // Use persistent uploads folder
+        const iconsDir = path.join(__dirname, '..', '..', 'uploads', 'moveathens', 'icons');
         fs.mkdirSync(iconsDir, { recursive: true });
         const outPath = path.join(iconsDir, `footer-${key}.svg`);
         fs.writeFileSync(outPath, req.file.buffer);
-        const url = `/moveathens/icons/footer-${key}.svg`;
+        const url = `/uploads/moveathens/icons/footer-${key}.svg`;
         try {
           const current = await dataLayer.getConfig();
           await dataLayer.updateConfig({
