@@ -15,9 +15,8 @@ BEGIN
   EXCEPTION WHEN duplicate_column THEN NULL; END;
 END $$;
 
--- Set existing vehicles to scheduled-only (black cars) with 2h minimum
-UPDATE ma_vehicle_types 
-SET allow_instant = false, min_advance_minutes = 120 
-WHERE allow_instant IS NULL OR allow_instant = true;
+-- NOTE: Do NOT update existing values here!
+-- Vehicle booking rules are managed via admin panel.
+-- Default values (allow_instant=true, min_advance_minutes=0) apply only to NEW vehicles.
 
 COMMIT;
