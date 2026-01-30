@@ -72,6 +72,12 @@
       <h2 class="ma-step-title">Πότε θέλετε το όχημα;</h2>
       <p class="ma-step-subtitle" id="booking-vehicle-name"></p>
       
+      <!-- Warning for non-taxi vehicles -->
+      <div id="booking-non-taxi-warning" class="ma-booking-warning" hidden>
+        <span class="ma-warning-icon">⚠️</span>
+        <span class="ma-warning-text">Αυτό το όχημα δέχεται μόνο προγραμματισμένες κρατήσεις (ελάχιστον 2 ώρες πριν).</span>
+      </div>
+      
       <!-- Instant booking (only shown for taxis) -->
       <div id="booking-instant-option" class="ma-booking-option" hidden>
         <button id="btn-book-instant" class="ma-booking-btn ma-booking-instant" type="button">
@@ -140,6 +146,17 @@
       <!-- Passenger & Luggage Selection -->
       <div class="ma-selection-card">
         <h3 class="ma-selection-title">Στοιχεία Ταξιδιού</h3>
+        
+        <!-- Passenger Name (required for non-taxi vehicles) -->
+        <div class="ma-input-row">
+          <label for="passenger-name" class="ma-input-label">
+            <span class="ma-input-icon">✍️</span>
+            <span>Ονοματεπώνυμο Επιβάτη</span>
+            <span id="passenger-name-required" class="ma-input-required" hidden>*</span>
+          </label>
+          <input type="text" id="passenger-name" class="ma-text-input" placeholder="π.χ. Γιάννης Παπαδόπουλος" autocomplete="name">
+          <p id="passenger-name-error" class="ma-input-error" hidden>Το ονοματεπώνυμο είναι υποχρεωτικό για αυτό το όχημα</p>
+        </div>
         
         <!-- Passengers -->
         <div class="ma-selection-row">

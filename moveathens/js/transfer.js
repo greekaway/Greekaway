@@ -23,6 +23,7 @@
   let selectedLuggageMedium = 0;
   let selectedLuggageCabin = 0;
   let selectedPaymentMethod = null; // 'cash' or 'pos'
+  let passengerName = ''; // Name of passenger (required for non-taxi vehicles)
 
   // Tariff labels for UI
   const TARIFF_LABELS = {
@@ -286,6 +287,7 @@
     const scheduledOption = $('#booking-scheduled-option');
     const datetimePicker = $('#booking-datetime-picker');
     const minNotice = $('#booking-min-notice');
+    const nonTaxiWarning = $('#booking-non-taxi-warning');
 
     // Hide datetime picker initially
     if (datetimePicker) datetimePicker.hidden = true;
@@ -293,6 +295,11 @@
     // Show instant option only if vehicle allows it
     if (instantOption) {
       instantOption.hidden = !selectedVehicle.allow_instant;
+    }
+
+    // Always hide warning initially - will show only when user tries to click instant
+    if (nonTaxiWarning) {
+      nonTaxiWarning.hidden = true;
     }
 
     // Update scheduled notice text
@@ -323,10 +330,26 @@
     const backBtn = $('#back-to-vehicles-from-booking');
 
     // Back button
-    backBtn?.addEventListener('click', () => showStep('vehicles'));
+    backBtn?.addEventListener('click', () => {
+      // Hide warning when going back
+      const nonTaxiWarning = $('#booking-non-taxi-warning');
+      if (nonTaxiWarning) nonTaxiWarning.hidden = true;
+      showStep('vehicles');
+    });
 
     // Instant booking
     btnInstant?.addEventListener('click', () => {
+      // Check if vehicle allows instant booking
+      if (!selectedVehicle?.allow_instant) {
+        // Show warning instead of proceeding
+        const nonTaxiWarning = $('#booking-non-taxi-warning');
+        if (nonTaxiWarning) {
+          nonTaxiWarning.hidden = false;
+          // Scroll to warning
+          nonTaxiWarning.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
       selectedBookingType = 'instant';
       selectedDateTime = null;
       showConfirmation();
@@ -440,6 +463,25 @@
     selectedLuggageMedium = 0;
     selectedLuggageCabin = 0;
     selectedPaymentMethod = null;
+    passengerName = '';
+
+    // Setup passenger name field
+    const passengerNameInput = $('#passenger-name');
+    const passengerNameRequired = $('#passenger-name-required');
+    const passengerNameError = $('#passenger-name-error');
+    
+    // Show required indicator for non-taxi vehicles
+    const isNonTaxi = !selectedVehicle.allow_instant;
+    if (passengerNameRequired) {
+      passengerNameRequired.hidden = !isNonTaxi;
+    }
+    if (passengerNameInput) {
+      passengerNameInput.value = '';
+      passengerNameInput.classList.remove('ma-input-error-state');
+    }
+    if (passengerNameError) {
+      passengerNameError.hidden = true;
+    }
 
     // Update max values display
     $('#passengers-max').textContent = `(μέγ. ${selectedVehicle.max_passengers})`;
@@ -458,6 +500,9 @@
 
     // Setup payment button listeners
     setupPaymentListeners();
+    
+    // Setup passenger name input listener
+    setupPassengerNameListener();
 
     // Reset button states
     updateCounterButtons();
@@ -525,6 +570,58 @@
     }
   };
 
+  // Setup passenger name input listener
+  const setupPassengerNameListener = () => {
+    const input = $('#passenger-name');
+    const errorEl = $('#passenger-name-error');
+    
+    if (!input) return;
+    
+    // Clone to remove old listeners
+    const newInput = input.cloneNode(true);
+    input.parentNode.replaceChild(newInput, input);
+    
+    // Add input listener
+    newInput.addEventListener('input', (e) => {
+      passengerName = e.target.value.trim();
+      
+      // Clear error state on input
+      newInput.classList.remove('ma-input-error-state');
+      if (errorEl) errorEl.hidden = true;
+      
+      // Update CTA links with new name
+      updateCtaLinks();
+    });
+    
+    // Add blur listener for validation feedback
+    newInput.addEventListener('blur', () => {
+      const isNonTaxi = selectedVehicle && !selectedVehicle.allow_instant;
+      if (isNonTaxi && !passengerName) {
+        newInput.classList.add('ma-input-error-state');
+        if (errorEl) errorEl.hidden = false;
+      }
+    });
+  };
+
+  // Validate passenger name before allowing CTA actions (for non-taxi only)
+  const validatePassengerName = () => {
+    const isNonTaxi = selectedVehicle && !selectedVehicle.allow_instant;
+    if (!isNonTaxi) return true; // Taxi vehicles don't require name
+    
+    const input = $('#passenger-name');
+    const errorEl = $('#passenger-name-error');
+    
+    if (!passengerName) {
+      if (input) {
+        input.classList.add('ma-input-error-state');
+        input.focus();
+      }
+      if (errorEl) errorEl.hidden = false;
+      return false;
+    }
+    return true;
+  };
+
   // Setup payment method listeners
   const setupPaymentListeners = () => {
     const paymentBtns = document.querySelectorAll('.ma-payment-btn');
@@ -558,6 +655,9 @@
 
     // Build passenger/luggage info only if selected
     let travelDetails = '';
+    if (passengerName) {
+      travelDetails += `👤 Όνομα επιβάτη: ${passengerName}\n`;
+    }
     if (selectedPassengers > 0) {
       travelDetails += `👥 Επιβάτες: ${selectedPassengers}\n`;
     }
@@ -593,8 +693,7 @@
     const messageText = 
       `Γεια σας! Θέλω να κλείσω transfer:\n\n` +
       `🎯 Προορισμός: ${selectedDestination.name}\n` +
-      `🕐 Ταρίφα: ${tariffLabel}\n` +
-      `🚗 Όχημα: ${selectedVehicle.name}\n` +
+      ` Όχημα: ${selectedVehicle.name}\n` +
       (bookingTimeText ? `⏰ Χρόνος: ${bookingTimeText}\n` : '') +
       (travelDetails ? `\n${travelDetails}` : '') +
       `💰 Τιμή: €${selectedVehicle.price.toFixed(0)}\n\n` +
@@ -622,6 +721,28 @@
       const emailBody = encodeURIComponent(messageText);
       ctaEmail.href = `mailto:${CONFIG.companyEmail}?subject=${emailSubject}&body=${emailBody}`;
     }
+    
+    // Setup CTA validation for non-taxi vehicles
+    setupCtaValidation();
+  };
+  
+  // Setup CTA click validation (block if passenger name is required but missing)
+  const setupCtaValidation = () => {
+    const ctaIds = ['#cta-whatsapp', '#cta-phone', '#cta-whatsapp-call', '#cta-email'];
+    
+    ctaIds.forEach(id => {
+      const link = $(id);
+      if (!link) return;
+      
+      // Remove existing validation listeners by setting onclick
+      link.onclick = (e) => {
+        if (!validatePassengerName()) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      };
+    });
   };
 
   const setupCounterListeners = () => {

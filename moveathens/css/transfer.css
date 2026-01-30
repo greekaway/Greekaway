@@ -477,6 +477,100 @@
   border-bottom: 1px solid #e8e8e8;
 }
 
+/* Passenger Name Input Row */
+.ma-input-row {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ma-input-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.ma-input-icon {
+  font-size: 20px;
+}
+
+.ma-input-required {
+  color: #e74c3c;
+  font-weight: 700;
+  font-size: 16px;
+  margin-left: 2px;
+}
+
+.ma-text-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: #fff;
+  color: #1a1a2e;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.ma-text-input:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+}
+
+.ma-text-input::placeholder {
+  color: #999;
+}
+
+.ma-text-input.ma-input-error-state {
+  border-color: #e74c3c;
+  background: #fef6f6;
+}
+
+.ma-text-input.ma-input-error-state:focus {
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+}
+
+.ma-input-error {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #ffeaea 0%, #fff0f0 100%);
+  border: 1px solid #f5c6c6;
+  border-radius: 8px;
+  color: #c0392b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Booking Warning for Non-Taxi Vehicles */
+.ma-booking-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #fff8e6 0%, #fff4d9 100%);
+  border: 1px solid #f5d97d;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.ma-warning-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.ma-warning-text {
+  font-size: 14px;
+  color: #856404;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
 .ma-selection-row {
   display: flex;
   justify-content: space-between;

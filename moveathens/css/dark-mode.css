@@ -100,21 +100,52 @@
   .ma-page .ma-input,
   .ma-page .ma-select,
   .ma-transfer-page .ma-input,
-  .ma-transfer-page .ma-select {
+  .ma-transfer-page .ma-select,
+  .ma-transfer-page .ma-text-input {
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
     color: #f0f4f8 !important;
   }
 
   .ma-page .ma-input::placeholder,
-  .ma-transfer-page .ma-input::placeholder {
+  .ma-transfer-page .ma-input::placeholder,
+  .ma-transfer-page .ma-text-input::placeholder {
     color: rgba(255, 255, 255, 0.4) !important;
   }
 
   .ma-page .ma-input:focus,
-  .ma-page .ma-select:focus {
+  .ma-page .ma-select:focus,
+  .ma-transfer-page .ma-text-input:focus {
     border-color: #46d3ff !important;
     box-shadow: 0 0 0 3px rgba(70, 211, 255, 0.2) !important;
+  }
+
+  /* Passenger name input label */
+  .ma-transfer-page .ma-input-label {
+    color: #e8edf3 !important;
+  }
+
+  /* Error state for text input */
+  .ma-transfer-page .ma-text-input.ma-input-error-state {
+    border-color: #e74c3c !important;
+    background: rgba(231, 76, 60, 0.15) !important;
+  }
+
+  /* Input error message */
+  .ma-transfer-page .ma-input-error {
+    background: rgba(231, 76, 60, 0.15) !important;
+    border-color: rgba(231, 76, 60, 0.3) !important;
+    color: #ff8a80 !important;
+  }
+
+  /* Booking warning */
+  .ma-transfer-page .ma-booking-warning {
+    background: rgba(255, 193, 7, 0.15) !important;
+    border-color: rgba(255, 193, 7, 0.3) !important;
+  }
+
+  .ma-transfer-page .ma-warning-text {
+    color: #ffc107 !important;
   }
 
   /* ========================================
