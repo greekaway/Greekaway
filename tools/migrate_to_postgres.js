@@ -86,6 +86,32 @@ async function main() {
     }
   }
   
+  // CHECK: If database already has data, skip migration (unless --force)
+  // This prevents overwriting data added via admin panel
+  if (!FORCE && !DRY_RUN) {
+    try {
+      const existingVehicles = await db.ma.getVehicleTypes();
+      const existingTrips = await db.gk.listTrips();
+      const existingCategories = await db.gk.getCategories();
+      
+      const totalExisting = (existingVehicles?.length || 0) + (existingTrips?.length || 0) + (existingCategories?.length || 0);
+      
+      if (totalExisting > 0) {
+        console.log('═══════════════════════════════════════════════════════════════');
+        console.log('  ℹ️  DATABASE ALREADY HAS DATA - SKIPPING MIGRATION');
+        console.log('═══════════════════════════════════════════════════════════════');
+        console.log(`   Found: ${existingVehicles?.length || 0} vehicles, ${existingTrips?.length || 0} trips, ${existingCategories?.length || 0} categories`);
+        console.log('   The database is the source of truth. Data added via admin panel is preserved.');
+        console.log('   Use --force flag to overwrite existing data from JSON files.\n');
+        await db.close();
+        console.log('✨ No migration needed - database is up to date!');
+        process.exit(0);
+      }
+    } catch (checkErr) {
+      console.log('   ⚠️  Could not check existing data, proceeding with migration...\n');
+    }
+  }
+  
   // Migrate Greekaway Categories
   await migrateCategories();
   
