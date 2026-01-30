@@ -92,9 +92,23 @@ async function loadTransferData() {
 function buildSystemPrompt(knowledge, transferData, lang = 'el') {
   const isGreek = lang === 'el';
   
+  // Get vehicle names for intro
+  const vehicleNames = (transferData?.vehicleTypes || [])
+    .filter(v => v.is_active !== false)
+    .map(v => v.name)
+    .join(', ');
+  
   let prompt = isGreek 
-    ? `Είσαι ο ψηφιακός βοηθός του MoveAthens, υπηρεσίας ιδιωτικών μεταφορών premium στην Αθήνα.`
-    : `You are the digital assistant of MoveAthens, a premium private transfer service in Athens, Greece.`;
+    ? `Είσαι ο ψηφιακός βοηθός του MoveAthens, υπηρεσίας μεταφορών στην Αθήνα.
+
+ΣΗΜΑΝΤΙΚΟ: Διαβάζεις δεδομένα ΜΟΝΟ από τη βάση δεδομένων. Αν σε ρωτήσουν για κάποιο όχημα, ΨΑΞΕ στη λίστα "Διαθέσιμα Οχήματα" παρακάτω. Αν υπάρχει, απάντησε ότι ΝΑΙ το έχουμε. Μην αρνείσαι χωρίς να ελέγξεις.
+
+Τα οχήματά μας: ${vehicleNames || 'διάφορα οχήματα'}.`
+    : `You are the digital assistant of MoveAthens, a transfer service in Athens, Greece.
+
+IMPORTANT: You read data ONLY from the database. If asked about a vehicle, SEARCH the "Available Vehicles" list below. If it exists, answer YES we have it. Don't refuse without checking.
+
+Our vehicles: ${vehicleNames || 'various vehicles'}.`;
   
   prompt += '\n\n';
   
@@ -218,6 +232,31 @@ function mockResponse(message, knowledge, transferData, lang = 'el') {
     return isGreek
       ? 'Η τιμή εξαρτάται από τον προορισμό και το όχημα. Για ακριβή προσφορά, κάλεσε +30 6985700007 ή WhatsApp +30 6945358476.'
       : 'The price depends on destination and vehicle. For an exact quote, call +30 6985700007 or WhatsApp +30 6945358476.';
+  }
+  
+  // Check if user asks about a SPECIFIC vehicle by name (taxi, sedan, van, etc.)
+  if (transferData?.vehicleTypes?.length) {
+    // Normalize function to handle accents and variations
+    const normalize = (str) => str.toLowerCase()
+      .replace(/ά/g, 'α').replace(/έ/g, 'ε').replace(/ή/g, 'η')
+      .replace(/ί/g, 'ι').replace(/ό/g, 'ο').replace(/ύ/g, 'υ').replace(/ώ/g, 'ω');
+    
+    const normalizedMessage = normalize(m);
+    
+    // Check if any vehicle name appears in the message
+    const foundVehicle = transferData.vehicleTypes.find(v => {
+      if (v.is_active === false) return false;
+      const normalizedName = normalize(v.name);
+      // Also check for "taxi" when vehicle is "ταξί"
+      const isTaxi = normalizedName === 'ταξι' && (normalizedMessage.includes('taxi') || normalizedMessage.includes('ταξι'));
+      return normalizedMessage.includes(normalizedName) || isTaxi;
+    });
+    
+    if (foundVehicle) {
+      return isGreek
+        ? `Ναι, έχουμε ${foundVehicle.name}! Χωρητικότητα: έως ${foundVehicle.max_passengers} επιβάτες, ${foundVehicle.luggage_large} μεγάλες + ${foundVehicle.luggage_medium} μεσαίες βαλίτσες. Θέλεις να μάθεις την τιμή για κάποιο συγκεκριμένο δρομολόγιο;`
+        : `Yes, we have ${foundVehicle.name}! Capacity: up to ${foundVehicle.max_passengers} passengers, ${foundVehicle.luggage_large} large + ${foundVehicle.luggage_medium} medium luggage. Would you like to know the price for a specific route?`;
+    }
   }
   
   // Check for vehicle questions
