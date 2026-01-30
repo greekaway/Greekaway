@@ -103,6 +103,8 @@ CREATE TABLE IF NOT EXISTS ma_vehicle_types (
     luggage_cabin INTEGER DEFAULT 4,
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
+    allow_instant BOOLEAN DEFAULT true,
+    min_advance_minutes INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

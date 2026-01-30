@@ -507,6 +507,9 @@ async function upsertVehicleType(data) {
       };
     } catch (err) {
       console.error('[moveathens] DB vehicle write failed:', err.message);
+      // CRITICAL: If DB is available but write fails, throw error instead of falling back to JSON
+      // JSON files are ephemeral on Render and will be lost after restart
+      throw new Error(`Database write failed: ${err.message}`);
     }
   }
   

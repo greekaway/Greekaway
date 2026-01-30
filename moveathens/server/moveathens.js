@@ -799,6 +799,18 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const incoming = req.body || {};
       const zones = normalizeZonesList(incoming.zones || []);
       
+      // Get current zones to find which ones to delete
+      const currentZones = await dataLayer.getZones();
+      const newIds = new Set(zones.map(z => z.id));
+      
+      // Delete zones that are no longer in the list
+      for (const existing of currentZones) {
+        if (!newIds.has(existing.id)) {
+          console.log('[moveathens] Deleting zone:', existing.id, existing.name);
+          await dataLayer.deleteZone(existing.id);
+        }
+      }
+      
       // Save each zone via data layer (handles DB vs JSON automatically)
       const savedZones = [];
       for (const zone of zones) {
@@ -831,6 +843,18 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const incoming = req.body || {};
       const categories = normalizeDestinationCategories(incoming.categories || []);
       
+      // Get current categories to find which ones to delete
+      const currentCategories = await dataLayer.getDestinationCategories();
+      const newIds = new Set(categories.map(c => c.id));
+      
+      // Delete categories that are no longer in the list
+      for (const existing of currentCategories) {
+        if (!newIds.has(existing.id)) {
+          console.log('[moveathens] Deleting category:', existing.id, existing.name);
+          await dataLayer.deleteDestinationCategory(existing.id);
+        }
+      }
+      
       // Save each category via data layer
       const savedCategories = [];
       for (const cat of categories) {
@@ -861,6 +885,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     try {
       const incoming = req.body || {};
       const incomingList = Array.isArray(incoming.vehicleTypes) ? incoming.vehicleTypes : [];
+      console.log('[moveathens] PUT vehicle-types: received', incomingList.length, 'vehicles');
+      
       const seenNames = new Map();
       incomingList.forEach((entry) => {
         if (!entry || typeof entry !== 'object') return;
@@ -873,20 +899,36 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         seenNames.set(norm, id);
       });
       const vehicleTypes = normalizeVehicleTypes(incomingList);
+      console.log('[moveathens] PUT vehicle-types: normalized to', vehicleTypes.length, 'vehicles');
+      
+      // Get current vehicles to find which ones to delete
+      const currentVehicles = await dataLayer.getVehicleTypes();
+      const newIds = new Set(vehicleTypes.map(v => v.id));
+      
+      // Delete vehicles that are no longer in the list
+      for (const existing of currentVehicles) {
+        if (!newIds.has(existing.id)) {
+          console.log('[moveathens] Deleting vehicle:', existing.id, existing.name);
+          await dataLayer.deleteVehicleType(existing.id);
+        }
+      }
       
       // Save each vehicle type via data layer
       const savedVehicles = [];
       for (const vt of vehicleTypes) {
+        console.log('[moveathens] PUT vehicle-types: saving', vt.id, vt.name);
         const saved = await dataLayer.upsertVehicleType(vt);
         savedVehicles.push(saved);
       }
       
+      console.log('[moveathens] PUT vehicle-types: saved', savedVehicles.length, 'vehicles successfully');
       return res.json({ vehicleTypes: savedVehicles });
     } catch (err) {
+      console.error('[moveathens] PUT vehicle-types FAILED:', err.message, err.stack);
       if (err && err.code === 409) {
         return res.status(409).json({ error: 'DUPLICATE_NAME', message: 'Type name already exists' });
       }
-      return res.status(500).json({ error: 'Failed to save vehicle types' });
+      return res.status(500).json({ error: 'Failed to save vehicle types', details: err.message });
     }
   });
 
@@ -908,6 +950,18 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const incoming = req.body || {};
       const destinations = normalizeDestinations(incoming.destinations || []);
       
+      // Get current destinations to find which ones to delete
+      const currentDestinations = await dataLayer.getDestinations();
+      const newIds = new Set(destinations.map(d => d.id));
+      
+      // Delete destinations that are no longer in the list
+      for (const existing of currentDestinations) {
+        if (!newIds.has(existing.id)) {
+          console.log('[moveathens] Deleting destination:', existing.id, existing.name);
+          await dataLayer.deleteDestination(existing.id);
+        }
+      }
+      
       // Save each destination via data layer
       const savedDestinations = [];
       for (const dest of destinations) {
@@ -917,6 +971,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       
       return res.json({ destinations: savedDestinations });
     } catch (err) {
+      console.error('[moveathens] PUT destinations failed:', err.message);
       return res.status(500).json({ error: 'Failed to save destinations' });
     }
   });

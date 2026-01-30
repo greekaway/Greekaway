@@ -145,6 +145,7 @@ async function runMigrations() {
   }
 
   try {
+    // Run base schema
     const schemaPath = path.join(__dirname, 'schema.sql');
     if (!fs.existsSync(schemaPath)) {
       console.warn('[db] schema.sql not found');
@@ -153,7 +154,32 @@ async function runMigrations() {
     
     const schema = fs.readFileSync(schemaPath, 'utf8');
     await pool.query(schema);
-    console.log('[db] Schema migrations applied');
+    console.log('[db] Base schema applied');
+    
+    // Run migration files (sorted alphabetically = chronologically by date prefix)
+    const migrationsDir = path.join(__dirname, 'migrations');
+    if (fs.existsSync(migrationsDir)) {
+      const migrationFiles = fs.readdirSync(migrationsDir)
+        .filter(f => f.endsWith('.sql'))
+        .sort();
+      
+      for (const file of migrationFiles) {
+        try {
+          const migrationPath = path.join(migrationsDir, file);
+          const migration = fs.readFileSync(migrationPath, 'utf8');
+          await pool.query(migration);
+          console.log(`[db] Migration applied: ${file}`);
+        } catch (migrationErr) {
+          // Ignore "already exists" errors for idempotent migrations
+          if (!migrationErr.message.includes('already exists') && 
+              !migrationErr.message.includes('duplicate_column')) {
+            console.warn(`[db] Migration warning (${file}):`, migrationErr.message);
+          }
+        }
+      }
+    }
+    
+    console.log('[db] All migrations completed');
     return true;
   } catch (err) {
     console.error('[db] Migration failed:', err.message);

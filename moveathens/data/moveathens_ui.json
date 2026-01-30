@@ -66,6 +66,8 @@
       "luggage_cabin": 4,
       "display_order": 1,
       "is_active": true,
+      "allow_instant": true,
+      "min_advance_minutes": 0,
       "created_at": "2026-01-28T15:03:13.979Z"
     },
     {
@@ -79,7 +81,24 @@
       "luggage_cabin": 7,
       "display_order": 2,
       "is_active": true,
+      "allow_instant": true,
+      "min_advance_minutes": 0,
       "created_at": "2026-01-28T15:06:06.449Z"
+    },
+    {
+      "id": "vt_1769783004711",
+      "name": "ταξί",
+      "description": "",
+      "imageUrl": "",
+      "max_passengers": 4,
+      "luggage_large": 2,
+      "luggage_medium": 2,
+      "luggage_cabin": 4,
+      "display_order": 0,
+      "is_active": true,
+      "allow_instant": true,
+      "min_advance_minutes": 0,
+      "created_at": "2026-01-30T14:23:24.718Z"
     }
   ],
   "destinationCategories": [
@@ -160,6 +179,14 @@
       "vehicle_type_id": "vt_1769606282004",
       "tariff": "night",
       "price": 500
+    },
+    {
+      "id": "tp_1769783067473_vt_1769783004711_day",
+      "origin_zone_id": "tz_1769602772374",
+      "destination_id": "dest_1769606127352",
+      "vehicle_type_id": "vt_1769783004711",
+      "tariff": "day",
+      "price": 0.03
     }
   ],
   "vehicleCategoryAvailability": [],
