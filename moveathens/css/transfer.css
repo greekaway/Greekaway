@@ -789,6 +789,80 @@
   margin: 0 0 8px;
 }
 
+.ma-warning-card .ma-warning-main {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.ma-warning-card .ma-warning-instructions {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.ma-warning-card .ma-warning-instructions h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #5d4404;
+  margin: 0 0 12px;
+}
+
+.ma-warning-card .ma-warning-instructions ol {
+  margin: 0 0 16px 0;
+  padding-left: 20px;
+  color: #6b5204;
+}
+
+.ma-warning-card .ma-warning-instructions li {
+  font-size: 14px;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.ma-warning-card .ma-warning-instructions li strong {
+  color: #4a3803;
+}
+
+.ma-btn-go-hotel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  transition: all 0.2s ease;
+}
+
+.ma-btn-go-hotel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+.ma-btn-go-hotel:active {
+  transform: translateY(0);
+}
+
+.ma-warning-card .ma-warning-help {
+  padding-top: 16px;
+  border-top: 1px solid rgba(133, 100, 4, 0.15);
+}
+
+.ma-warning-card .ma-warning-help p {
+  font-size: 13px;
+  color: #7a6104;
+  margin-bottom: 12px;
+}
+
 .ma-warning-card .ma-cta-buttons {
   margin-top: 16px;
 }
@@ -1116,23 +1190,26 @@
   transform: scale(0.98);
 }
 
+/* Both buttons start neutral - no pre-selection */
 .ma-booking-instant {
-  border-color: #4CAF50;
-  background: linear-gradient(135deg, #f1f8e9 0%, #ffffff 100%);
+  border-color: #e0e0e0;
+  background: white;
 }
 
 .ma-booking-instant:hover {
-  border-color: #388E3C;
+  border-color: #4CAF50;
+  background: linear-gradient(135deg, #f1f8e9 0%, #ffffff 100%);
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.25);
 }
 
 .ma-booking-scheduled {
-  border-color: #2196F3;
-  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+  border-color: #e0e0e0;
+  background: white;
 }
 
 .ma-booking-scheduled:hover {
-  border-color: #1976D2;
+  border-color: #2196F3;
+  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
   box-shadow: 0 4px 12px rgba(33, 150, 243, 0.25);
 }
 

@@ -462,9 +462,10 @@
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
   }
 
+  /* Both buttons neutral by default in dark mode */
   .ma-transfer-page .ma-booking-btn.ma-booking-instant {
-    border-color: rgba(76, 175, 80, 0.4) !important;
-    background: linear-gradient(145deg, #0f2a1a 0%, #0a1f12 100%) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
   }
 
   .ma-transfer-page .ma-booking-btn.ma-booking-instant:hover {
@@ -474,8 +475,8 @@
   }
 
   .ma-transfer-page .ma-booking-btn.ma-booking-scheduled {
-    border-color: rgba(33, 150, 243, 0.4) !important;
-    background: linear-gradient(145deg, #0a1f30 0%, #061520 100%) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
   }
 
   .ma-transfer-page .ma-booking-btn.ma-booking-scheduled:hover {
@@ -536,3 +537,44 @@
     background: rgba(33, 150, 243, 0.2) !important;
     color: #64b5f6 !important;
   }
+
+  /* Warning Card (No Zone) */
+  .ma-transfer-page .ma-warning-card {
+    background: linear-gradient(145deg, #2a2510 0%, #1f1c0d 100%) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-transfer-page .ma-warning-card h2 {
+    color: #ffc107 !important;
+  }
+
+  .ma-transfer-page .ma-warning-card p,
+  .ma-transfer-page .ma-warning-card .ma-warning-main {
+    color: #d4b106 !important;
+  }
+
+  .ma-transfer-page .ma-warning-instructions {
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .ma-transfer-page .ma-warning-instructions h3 {
+    color: #ffc107 !important;
+  }
+
+  .ma-transfer-page .ma-warning-instructions ol,
+  .ma-transfer-page .ma-warning-instructions li {
+    color: #c9a906 !important;
+  }
+
+  .ma-transfer-page .ma-warning-instructions li strong {
+    color: #ffd54f !important;
+  }
+
+  .ma-transfer-page .ma-warning-help {
+    border-top-color: rgba(255, 193, 7, 0.2) !important;
+  }
+
+  .ma-transfer-page .ma-warning-help p {
+    color: #b8a005 !important;
+  }
+}

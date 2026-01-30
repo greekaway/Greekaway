@@ -804,9 +804,14 @@
       return;
     }
 
-    // Fallback CTAs
+    // Fallback CTAs (for no-zone warning)
     const phone = CONFIG?.whatsappNumber?.replace(/[^0-9+]/g, '') || '';
-    if (ctaWhatsappFallback) ctaWhatsappFallback.href = `https://wa.me/${phone}`;
+    const fallbackMessage = encodeURIComponent(
+      'Γεια σας! Χρειάζομαι βοήθεια με τη ρύθμιση του ξενοδοχείου μου στο MoveAthens.\n\n' +
+      'Δεν μπορώ να ολοκληρώσω την κράτηση transfer γιατί δεν έχει οριστεί ζώνη.\n\n' +
+      'Παρακαλώ επικοινωνήστε μαζί μου.'
+    );
+    if (ctaWhatsappFallback) ctaWhatsappFallback.href = `https://wa.me/${phone}?text=${fallbackMessage}`;
     if (ctaPhoneFallback) ctaPhoneFallback.href = `tel:${CONFIG?.phoneNumber || ''}`;
 
     // Load hotel context
