@@ -3,6 +3,7 @@
 <title>Greekaway Admin – Categories</title>
 <link rel="stylesheet" href="/css/admin-common.css">
 <link rel="stylesheet" href="/admin/css/categories.css">
+<link rel="stylesheet" href="/css/admin-theme-toggle.css">
 <link rel="manifest" href="/manifest-admin.json">
 <meta name="theme-color" content="#001f3f">
 <link rel="stylesheet" href="/pwa.css">
@@ -10,6 +11,7 @@
 </head><body>
 <header class="sticky-bar" aria-label="Κατηγορίες — Φόρμα" data-collapsed="false">
   <div class="bar-inner">
+    <div class="title">Greekaway</div>
     <button id="toggleFilters" class="filters-toggle" aria-label="Εμφάνιση/Απόκρυψη φόρμας" aria-expanded="true">▲</button>
     <form id="categoryForm" class="filters" onsubmit="return false;">
       <label>Title
@@ -66,20 +68,9 @@
     </div>
   </div>
 </main>
-<nav class="bottom-nav">
-  <a href="/admin-home.html">Home</a>
-  <a href="/admin-bookings.html">Bookings</a>
-  <a href="/admin-payments.html">Payments</a>
-  <a href="/admin-manual.html">Manual</a>
-  <a href="/admin-providers.html">Providers</a>
-  <a href="/admin-availability.html">Availability</a>
-  <a href="/admin/trip-availability.html">Trip Availability</a>
-  <a href="/admin/categories.html" class="active">Categories</a>
-  <a href="/admin/moveathens-ui">MoveAthens</a>
-</nav>
-<footer class="version">Greekaway Admin • v<span id="ga-version">—</span></footer>
 <script src="/admin/js/upload-client.js"></script>
 <script src="/admin/js/categories.js"></script>
+<script src="/js/admin-theme-toggle.js"></script>
 <script src="/pwa-install.js" defer></script>
 <script>
 fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){document.getElementById('ga-version').textContent=v.version||'—'} });
@@ -96,4 +87,6 @@ fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){document.getE
   }
 })();
 </script>
+<script src="/admin/js/admin-greekaway-tabs.js"></script>
+<script src="/admin/js/admin-footer.js"></script>
 </body></html>

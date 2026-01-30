@@ -160,6 +160,64 @@ footer.version{
 .status-dot.orange{background:#f39c12}
 .status-dot.red{background:#e74c3c}
 
+/* Greekaway Header Row (consistent across all pages) */
+.greekaway-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  max-width: 1400px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+.greekaway-header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ga-text, #fff);
+  white-space: nowrap;
+}
+
+/* Greekaway Navigation Tabs (in header - same line as title) */
+.greekaway-nav-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-left: auto;
+}
+.greekaway-nav-tabs .bar-tab {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.greekaway-nav-tabs .bar-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.greekaway-nav-tabs .bar-tab.active {
+  background: rgba(255, 255, 255, 0.95);
+  color: #001f3f;
+  border-color: transparent;
+}
+html[data-theme='light'] .greekaway-header-title {
+  color: #001f3f;
+}
+html[data-theme='light'] .greekaway-nav-tabs .bar-tab {
+  color: #001f3f;
+  border-color: rgba(6,24,53,0.2);
+}
+html[data-theme='light'] .greekaway-nav-tabs .bar-tab.active {
+  background: #001f3f;
+  color: #fff;
+}
+
 /* Disabled actions for demo rows */
 [aria-disabled="true"], .btn[disabled]{opacity:.55;cursor:not-allowed;pointer-events:auto}
 [aria-disabled="true"]:hover{filter:none}
