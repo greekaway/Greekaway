@@ -560,6 +560,11 @@
   margin-bottom: 16px;
 }
 
+/* Ensure hidden attribute works */
+.ma-booking-warning[hidden] {
+  display: none !important;
+}
+
 .ma-warning-icon {
   font-size: 20px;
   flex-shrink: 0;
