@@ -292,9 +292,9 @@
     // Hide datetime picker initially
     if (datetimePicker) datetimePicker.hidden = true;
 
-    // Show instant option only if vehicle allows it
+    // Always show instant option (so user can click it and see the warning if not allowed)
     if (instantOption) {
-      instantOption.hidden = !selectedVehicle.allow_instant;
+      instantOption.hidden = false;
     }
 
     // Always hide warning initially - will show only when user tries to click instant
