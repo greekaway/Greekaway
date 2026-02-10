@@ -808,7 +808,7 @@
     const phone = CONFIG?.whatsappNumber?.replace(/[^0-9+]/g, '') || '';
     const fallbackMessage = encodeURIComponent(
       'Γεια σας! Χρειάζομαι βοήθεια με τη ρύθμιση του ξενοδοχείου μου στο MoveAthens.\n\n' +
-      'Δεν μπορώ να ολοκληρώσω την κράτηση transfer γιατί δεν έχει οριστεί ζώνη.\n\n' +
+      'Δεν μπορώ να ολοκληρώσω την κράτηση transfer γιατί δεν έχει επιλεγεί ξενοδοχείο.\n\n' +
       'Παρακαλώ επικοινωνήστε μαζί μου.'
     );
     if (ctaWhatsappFallback) ctaWhatsappFallback.href = `https://wa.me/${phone}?text=${fallbackMessage}`;

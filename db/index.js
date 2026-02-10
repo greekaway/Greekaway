@@ -382,20 +382,32 @@ const ma = {
   },
 
   async upsertZone(data) {
-    const { id, name, description, zone_type, is_active } = data;
+    const { id, name, description, zone_type, is_active,
+            municipality, address, phone, email, accommodation_type } = data;
     const zoneId = id || `tz_${Date.now()}`;
     const sql = `
-      INSERT INTO ma_transfer_zones (id, name, description, zone_type, is_active)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO ma_transfer_zones
+        (id, name, description, zone_type, is_active,
+         municipality, address, phone, email, accommodation_type)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,
         zone_type = EXCLUDED.zone_type,
         is_active = EXCLUDED.is_active,
+        municipality = EXCLUDED.municipality,
+        address = EXCLUDED.address,
+        phone = EXCLUDED.phone,
+        email = EXCLUDED.email,
+        accommodation_type = EXCLUDED.accommodation_type,
         updated_at = NOW()
       RETURNING *
     `;
-    const rows = await query(sql, [zoneId, name, description || '', zone_type || 'suburb', is_active ?? true]);
+    const rows = await query(sql, [
+      zoneId, name, description || '', zone_type || 'suburb', is_active ?? true,
+      municipality || '', address || '', phone || '', email || '',
+      accommodation_type || 'hotel'
+    ]);
     return rows[0];
   },
 
@@ -580,17 +592,26 @@ const ma = {
   },
 
   async upsertPrice(data) {
-    const { id, origin_zone_id, destination_id, vehicle_type_id, tariff, price } = data;
+    const { id, origin_zone_id, destination_id, vehicle_type_id, tariff, price,
+            commission_driver, commission_hotel, commission_service } = data;
     const priceId = id || `tp_${Date.now()}_${vehicle_type_id}_${tariff}`;
     const sql = `
-      INSERT INTO ma_transfer_prices (id, origin_zone_id, destination_id, vehicle_type_id, tariff, price)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO ma_transfer_prices
+        (id, origin_zone_id, destination_id, vehicle_type_id, tariff, price,
+         commission_driver, commission_hotel, commission_service)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       ON CONFLICT (origin_zone_id, destination_id, vehicle_type_id, tariff) DO UPDATE SET
         price = EXCLUDED.price,
+        commission_driver = EXCLUDED.commission_driver,
+        commission_hotel = EXCLUDED.commission_hotel,
+        commission_service = EXCLUDED.commission_service,
         updated_at = NOW()
       RETURNING *
     `;
-    const rows = await query(sql, [priceId, origin_zone_id, destination_id, vehicle_type_id, tariff || 'day', price]);
+    const rows = await query(sql, [
+      priceId, origin_zone_id, destination_id, vehicle_type_id, tariff || 'day', price,
+      commission_driver || 0, commission_hotel || 0, commission_service || 0
+    ]);
     return rows[0];
   },
 

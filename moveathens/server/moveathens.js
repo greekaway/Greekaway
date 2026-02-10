@@ -127,17 +127,25 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   };
 
   // ========================================
-  // ZONE NORMALIZATION
+  // HOTEL (formerly ZONE) NORMALIZATION
   // ========================================
   const allowedZoneTypes = new Set(['city_area', 'suburb', 'port', 'airport']);
+  const allowedAccommodationTypes = new Set(['hotel', 'rental_rooms']);
 
   const normalizeZone = (zone) => {
     if (!zone || typeof zone !== 'object') return null;
     const name = normalizeString(zone.name);
     if (!name) return null;
-    const type = normalizeString(zone.type);
-    if (!allowedZoneTypes.has(type)) return null;
+    const type = normalizeString(zone.type) || 'suburb';
+    // Accept any zone_type for backward compat, default to suburb
+    const zoneType = allowedZoneTypes.has(type) ? type : 'suburb';
     const description = normalizeString(zone.description || '');
+    const municipality = normalizeString(zone.municipality || '');
+    const address = normalizeString(zone.address || '');
+    const phone = normalizeString(zone.phone || '');
+    const email = normalizeString(zone.email || '');
+    let accommodationType = normalizeString(zone.accommodation_type || 'hotel');
+    if (!allowedAccommodationTypes.has(accommodationType)) accommodationType = 'hotel';
     const isActive = typeof zone.is_active === 'boolean' ? zone.is_active : true;
     const id = normalizeString(zone.id) || makeId('tz');
     const createdAt = normalizeString(zone.created_at) || new Date().toISOString();
@@ -145,7 +153,12 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       id,
       name,
       description,
-      type,
+      type: zoneType,
+      municipality,
+      address,
+      phone,
+      email,
+      accommodation_type: accommodationType,
       is_active: isActive,
       created_at: createdAt
     };
@@ -309,13 +322,20 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     // Tariff: default to 'day' for backward compatibility
     let tariff = normalizeString(entry.tariff) || 'day';
     if (!VALID_TARIFFS.includes(tariff)) tariff = 'day';
+    // Commission fields
+    const commissionDriver = Math.max(0, Number(entry.commission_driver) || 0);
+    const commissionHotel = Math.max(0, Number(entry.commission_hotel) || 0);
+    const commissionService = Math.max(0, Number(entry.commission_service) || 0);
     return {
       id,
       origin_zone_id: originZoneId,
       destination_id: destinationId,
       vehicle_type_id: vehicleTypeId,
       tariff,
-      price
+      price,
+      commission_driver: commissionDriver,
+      commission_hotel: commissionHotel,
+      commission_service: commissionService
     };
   };
 
@@ -696,17 +716,17 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     }
   });
 
-  // Get active zones (for hotel context dropdown)
+  // Get active hotels (for hotel context dropdown)
   app.get('/api/moveathens/zones', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
       const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
       const zones = data.transferZones
         .filter(z => z.is_active)
-        .map(z => ({ id: z.id, name: z.name, type: z.type }));
+        .map(z => ({ id: z.id, name: z.name, type: z.type, accommodation_type: z.accommodation_type || 'hotel' }));
       return res.json({ zones });
     } catch (err) {
-      return res.status(500).json({ error: 'Zones unavailable' });
+      return res.status(500).json({ error: 'Hotels unavailable' });
     }
   });
 
@@ -800,8 +820,13 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const incoming = req.body || {};
       const zones = normalizeZonesList(incoming.zones || []);
       
-      // Get current zones to find which ones to delete
+      // WIPE PROTECTION: refuse empty payload when data exists
       const currentZones = await dataLayer.getZones();
+      if (zones.length === 0 && currentZones.length > 0) {
+        console.warn('[moveathens] WIPE BLOCKED: PUT zones with 0 items, but', currentZones.length, 'exist');
+        return res.status(409).json({ error: 'WIPE_BLOCKED', message: 'Cannot replace all zones with empty list. Delete individually instead.' });
+      }
+      
       const newIds = new Set(zones.map(z => z.id));
       
       // Delete zones that are no longer in the list
@@ -844,8 +869,13 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const incoming = req.body || {};
       const categories = normalizeDestinationCategories(incoming.categories || []);
       
-      // Get current categories to find which ones to delete
+      // WIPE PROTECTION
       const currentCategories = await dataLayer.getDestinationCategories();
+      if (categories.length === 0 && currentCategories.length > 0) {
+        console.warn('[moveathens] WIPE BLOCKED: PUT categories with 0 items, but', currentCategories.length, 'exist');
+        return res.status(409).json({ error: 'WIPE_BLOCKED', message: 'Cannot replace all categories with empty list.' });
+      }
+      
       const newIds = new Set(categories.map(c => c.id));
       
       // Delete categories that are no longer in the list
@@ -902,8 +932,13 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const vehicleTypes = normalizeVehicleTypes(incomingList);
       console.log('[moveathens] PUT vehicle-types: normalized to', vehicleTypes.length, 'vehicles');
       
-      // Get current vehicles to find which ones to delete
+      // WIPE PROTECTION
       const currentVehicles = await dataLayer.getVehicleTypes();
+      if (vehicleTypes.length === 0 && currentVehicles.length > 0) {
+        console.warn('[moveathens] WIPE BLOCKED: PUT vehicles with 0 items, but', currentVehicles.length, 'exist');
+        return res.status(409).json({ error: 'WIPE_BLOCKED', message: 'Cannot replace all vehicles with empty list.' });
+      }
+      
       const newIds = new Set(vehicleTypes.map(v => v.id));
       
       // Delete vehicles that are no longer in the list
@@ -951,8 +986,13 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const incoming = req.body || {};
       const destinations = normalizeDestinations(incoming.destinations || []);
       
-      // Get current destinations to find which ones to delete
+      // WIPE PROTECTION
       const currentDestinations = await dataLayer.getDestinations();
+      if (destinations.length === 0 && currentDestinations.length > 0) {
+        console.warn('[moveathens] WIPE BLOCKED: PUT destinations with 0 items, but', currentDestinations.length, 'exist');
+        return res.status(409).json({ error: 'WIPE_BLOCKED', message: 'Cannot replace all destinations with empty list.' });
+      }
+      
       const newIds = new Set(destinations.map(d => d.id));
       
       // Delete destinations that are no longer in the list

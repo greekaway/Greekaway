@@ -281,6 +281,38 @@ async function updateConfig(data) {
 // Track if initial migration has been done this session
 let zonesMigrated = false;
 
+// Helper: map a price row to the unified shape
+function mapPriceRow(row) {
+  return {
+    id: row.id,
+    origin_zone_id: row.origin_zone_id,
+    destination_id: row.destination_id,
+    vehicle_type_id: row.vehicle_type_id,
+    tariff: row.tariff,
+    price: parseFloat(row.price),
+    commission_driver: parseFloat(row.commission_driver || 0),
+    commission_hotel: parseFloat(row.commission_hotel || 0),
+    commission_service: parseFloat(row.commission_service || 0)
+  };
+}
+
+// Helper: map a DB row or JSON zone to the unified shape
+function mapZoneRow(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description || '',
+    type: row.zone_type || row.type || 'suburb',
+    municipality: row.municipality || '',
+    address: row.address || '',
+    phone: row.phone || '',
+    email: row.email || '',
+    accommodation_type: row.accommodation_type || 'hotel',
+    is_active: row.is_active,
+    created_at: row.created_at
+  };
+}
+
 async function getZones(activeOnly = false) {
   await initDb();
   
@@ -289,14 +321,7 @@ async function getZones(activeOnly = false) {
       const rows = await db.ma.getZones(activeOnly);
       // If DB has data, use it (no migration needed)
       if (rows && rows.length > 0) {
-        return rows.map(row => ({
-          id: row.id,
-          name: row.name,
-          description: row.description || '',
-          type: row.zone_type,
-          is_active: row.is_active,
-          created_at: row.created_at
-        }));
+        return rows.map(mapZoneRow);
       }
       // DB is empty AND we haven't migrated yet - migrate from JSON
       if (!zonesMigrated) {
@@ -304,7 +329,7 @@ async function getZones(activeOnly = false) {
         const jsonZones = config.transferZones || [];
         if (jsonZones.length > 0) {
           console.log('[moveathens] DB empty, auto-migrating', jsonZones.length, 'zones from JSON');
-          zonesMigrated = true; // Mark as migrated to prevent repeated migrations
+          zonesMigrated = true;
           for (const zone of jsonZones) {
             try {
               await db.ma.upsertZone({
@@ -312,25 +337,22 @@ async function getZones(activeOnly = false) {
                 name: zone.name,
                 description: zone.description || '',
                 zone_type: zone.type || 'suburb',
+                municipality: zone.municipality || '',
+                address: zone.address || '',
+                phone: zone.phone || '',
+                email: zone.email || '',
+                accommodation_type: zone.accommodation_type || 'hotel',
                 is_active: zone.is_active !== false
               });
             } catch (e) {
               console.error('[moveathens] Failed to migrate zone:', zone.id, e.message);
             }
           }
-          // Return the migrated data
           const migrated = await db.ma.getZones(activeOnly);
-          return migrated.map(row => ({
-            id: row.id,
-            name: row.name,
-            description: row.description || '',
-            type: row.zone_type,
-            is_active: row.is_active,
-            created_at: row.created_at
-          }));
+          return migrated.map(mapZoneRow);
         }
       }
-      return []; // DB and JSON both empty
+      return [];
     } catch (err) {
       console.error('[moveathens] DB zones read failed:', err.message);
     }
@@ -354,19 +376,17 @@ async function upsertZone(data) {
         name: data.name,
         description: data.description || '',
         zone_type: data.type || 'suburb',
+        municipality: data.municipality || '',
+        address: data.address || '',
+        phone: data.phone || '',
+        email: data.email || '',
+        accommodation_type: data.accommodation_type || 'hotel',
         is_active: data.is_active !== false
       });
-      console.log('[moveathens] Zone saved to DB:', row.id);
-      return {
-        id: row.id,
-        name: row.name,
-        description: row.description || '',
-        type: row.zone_type,
-        is_active: row.is_active,
-        created_at: row.created_at
-      };
+      console.log('[moveathens] Hotel saved to DB:', row.id);
+      return mapZoneRow(row);
     } catch (err) {
-      console.error('[moveathens] DB zone write failed:', err.message);
+      console.error('[moveathens] DB hotel write failed:', err.message);
     }
   }
   
@@ -379,6 +399,11 @@ async function upsertZone(data) {
     name: data.name,
     description: data.description || '',
     type: data.type || 'suburb',
+    municipality: data.municipality || '',
+    address: data.address || '',
+    phone: data.phone || '',
+    email: data.email || '',
+    accommodation_type: data.accommodation_type || 'hotel',
     is_active: data.is_active !== false,
     created_at: idx >= 0 ? zones[idx].created_at : new Date().toISOString()
   };
@@ -391,7 +416,7 @@ async function upsertZone(data) {
   
   config.transferZones = zones;
   if (!writeConfigToFile(config)) throw new Error('write_failed');
-  console.log('[moveathens] Zone saved to JSON:', id);
+  console.log('[moveathens] Hotel saved to JSON:', id);
   return zone;
 }
 
@@ -909,14 +934,7 @@ async function getPrices(filters = {}) {
     try {
       const rows = await db.ma.getPrices(filters);
       if (rows && rows.length > 0) {
-        return rows.map(row => ({
-          id: row.id,
-          origin_zone_id: row.origin_zone_id,
-          destination_id: row.destination_id,
-          vehicle_type_id: row.vehicle_type_id,
-          tariff: row.tariff,
-          price: parseFloat(row.price)
-        }));
+        return rows.map(mapPriceRow);
       }
       // DB empty - auto-migrate from JSON
       const config = readConfigFromFile();
@@ -931,21 +949,17 @@ async function getPrices(filters = {}) {
               destination_id: p.destination_id,
               vehicle_type_id: p.vehicle_type_id,
               tariff: p.tariff || 'day',
-              price: p.price
+              price: p.price,
+              commission_driver: p.commission_driver || 0,
+              commission_hotel: p.commission_hotel || 0,
+              commission_service: p.commission_service || 0
             });
           } catch (e) {
             console.error('[moveathens] Failed to migrate price:', p.id, e.message);
           }
         }
         const migrated = await db.ma.getPrices(filters);
-        return migrated.map(row => ({
-          id: row.id,
-          origin_zone_id: row.origin_zone_id,
-          destination_id: row.destination_id,
-          vehicle_type_id: row.vehicle_type_id,
-          tariff: row.tariff,
-          price: parseFloat(row.price)
-        }));
+        return migrated.map(mapPriceRow);
       }
       return [];
     } catch (err) {
@@ -985,17 +999,13 @@ async function upsertPrice(data) {
         destination_id: data.destination_id,
         vehicle_type_id: data.vehicle_type_id,
         tariff: data.tariff || 'day',
-        price: data.price
+        price: data.price,
+        commission_driver: data.commission_driver || 0,
+        commission_hotel: data.commission_hotel || 0,
+        commission_service: data.commission_service || 0
       });
       console.log('[moveathens] Price saved to DB:', row.id);
-      return {
-        id: row.id,
-        origin_zone_id: row.origin_zone_id,
-        destination_id: row.destination_id,
-        vehicle_type_id: row.vehicle_type_id,
-        tariff: row.tariff,
-        price: parseFloat(row.price)
-      };
+      return mapPriceRow(row);
     } catch (err) {
       console.error('[moveathens] DB price write failed:', err.message);
     }
@@ -1018,7 +1028,10 @@ async function upsertPrice(data) {
     destination_id: data.destination_id,
     vehicle_type_id: data.vehicle_type_id,
     tariff: data.tariff || 'day',
-    price: data.price
+    price: data.price,
+    commission_driver: data.commission_driver || 0,
+    commission_hotel: data.commission_hotel || 0,
+    commission_service: data.commission_service || 0
   };
   
   if (idx >= 0) {

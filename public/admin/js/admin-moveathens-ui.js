@@ -66,6 +66,7 @@
   // STATE
   // ========================================
   let CONFIG = {};
+  let configLoaded = false;
   let editingCategoryId = null;
   let editingDestinationId = null;
   let editingVehicleId = null;
@@ -87,10 +88,24 @@
 
   const loadConfig = async () => {
     const res = await api('/api/admin/moveathens/ui-config');
-    if (!res) return;
-    if (!res.ok) { showToast('Σφάλμα φόρτωσης'); return; }
+    if (!res) { console.error('[admin-ma] loadConfig: no response (auth redirect?)'); return; }
+    if (!res.ok) { console.error('[admin-ma] loadConfig: status', res.status); showToast('Σφάλμα φόρτωσης'); return; }
     CONFIG = await res.json();
+    configLoaded = true;
+    console.log('[admin-ma] Config loaded OK — zones:', (CONFIG.transferZones||[]).length,
+      'vehicles:', (CONFIG.vehicleTypes||[]).length,
+      'prices:', (CONFIG.transferPrices||[]).length);
     return CONFIG;
+  };
+
+  /** Guard: prevent saves if config never loaded (would wipe data) */
+  const ensureConfigLoaded = () => {
+    if (!configLoaded) {
+      showToast('⚠️ Config δεν φορτώθηκε — δεν επιτρέπεται αποθήκευση. Ξαναφόρτωσε τη σελίδα.');
+      console.error('[admin-ma] Save blocked: configLoaded =', configLoaded);
+      return false;
+    }
+    return true;
   };
 
   // ========================================
@@ -376,6 +391,7 @@
     fIcon?.addEventListener('input', updateIconPreview);
 
     const saveCategories = async (categories) => {
+      if (!ensureConfigLoaded()) return false;
       const res = await api('/api/admin/moveathens/destination-categories', 'PUT', { categories });
       if (!res) return false;
       if (res.ok) {
@@ -530,6 +546,7 @@
     };
 
     const saveDestinations = async (destinations) => {
+      if (!ensureConfigLoaded()) return false;
       const res = await api('/api/admin/moveathens/destinations', 'PUT', { destinations });
       if (!res) return false;
       if (res.ok) {
@@ -713,6 +730,7 @@
     };
 
     const saveVehicles = async (vehicleTypes) => {
+      if (!ensureConfigLoaded()) return false;
       const res = await api('/api/admin/moveathens/vehicle-types', 'PUT', { vehicleTypes });
       if (!res) return false;
       if (res.ok) {
@@ -803,7 +821,7 @@
   };
 
   // ========================================
-  // ZONES TAB
+  // HOTELS TAB (was ZONES)
   // ========================================
   const initZonesTab = () => {
     const form = $('#ma-zone-form');
@@ -812,22 +830,22 @@
     const cancelBtn = $('#maZoneCancelBtn');
     const status = $('#maZoneStatus');
     const fName = $('#maZoneName');
-    const fType = $('#maZoneType');
-    const fDesc = $('#maZoneDescription');
+    const fMunicipality = $('#maZoneMunicipality');
+    const fAddress = $('#maZoneAddress');
+    const fPhone = $('#maZonePhone');
+    const fEmail = $('#maZoneEmail');
+    const fAccommodationType = $('#maZoneAccommodationType');
     const fActive = $('#maZoneActive');
 
-    // Zone type labels for display
-    const zoneTypeLabels = {
-      city_area: 'Κέντρο Πόλης',
-      suburb: 'Προάστια',
-      port: 'Λιμάνι',
-      airport: 'Αεροδρόμιο'
+    const accommodationLabels = {
+      hotel: 'Ξενοδοχείο',
+      rental_rooms: 'Ενοικιαζόμενα Δωμάτια'
     };
 
     const render = () => {
       const zones = CONFIG.transferZones || [];
       if (!zones.length) {
-        list.innerHTML = '<p class="ma-empty">Δεν υπάρχουν ζώνες.</p>';
+        list.innerHTML = '<p class="ma-empty">Δεν υπάρχουν ξενοδοχεία.</p>';
         return;
       }
       list.innerHTML = zones.map(z => `
@@ -835,11 +853,16 @@
           <div class="ma-zone-card__header">
             <div class="ma-zone-card__title">
               <h4>${z.name}</h4>
-              <span class="ma-zone-type">${zoneTypeLabels[z.type] || z.type}</span>
-              <span class="ma-zone-status" data-active="${z.is_active}">${z.is_active ? 'Ενεργή' : 'Ανενεργή'}</span>
+              <span class="ma-zone-type">${accommodationLabels[z.accommodation_type] || 'Ξενοδοχείο'}</span>
+              <span class="ma-zone-status" data-active="${z.is_active}">${z.is_active ? 'Ενεργό' : 'Ανενεργό'}</span>
             </div>
           </div>
-          ${z.description ? `<p class="ma-zone-desc">${z.description}</p>` : ''}
+          <div class="ma-hotel-details">
+            ${z.municipality ? `<span>📍 ${z.municipality}</span>` : ''}
+            ${z.address ? `<span>🏠 ${z.address}</span>` : ''}
+            ${z.phone ? `<span>📞 ${z.phone}</span>` : ''}
+            ${z.email ? `<span>✉️ ${z.email}</span>` : ''}
+          </div>
           <div class="ma-zone-actions">
             <button class="btn secondary btn-edit" type="button">Επεξεργασία</button>
             <button class="btn secondary btn-delete" type="button">Διαγραφή</button>
@@ -857,7 +880,7 @@
         btn.addEventListener('click', async () => {
           const id = btn.closest('.ma-zone-card').dataset.id;
           const z = zones.find(x => x.id === id);
-          if (await openConfirm(`Διαγραφή "${z?.name}"?`, { title: 'Διαγραφή Ζώνης', okLabel: 'Διαγραφή' })) {
+          if (await openConfirm(`Διαγραφή "${z?.name}"?`, { title: 'Διαγραφή Ξενοδοχείου', okLabel: 'Διαγραφή' })) {
             deleteZone(id);
           }
         });
@@ -868,8 +891,11 @@
       form.hidden = true;
       editingZoneId = null;
       fName.value = '';
-      fType.value = '';
-      fDesc.value = '';
+      if (fMunicipality) fMunicipality.value = '';
+      if (fAddress) fAddress.value = '';
+      if (fPhone) fPhone.value = '';
+      if (fEmail) fEmail.value = '';
+      if (fAccommodationType) fAccommodationType.value = 'hotel';
       fActive.checked = true;
       setStatus(status, '', '');
     };
@@ -879,13 +905,17 @@
       if (!z) return;
       editingZoneId = id;
       fName.value = z.name || '';
-      fType.value = z.type || '';
-      fDesc.value = z.description || '';
+      if (fMunicipality) fMunicipality.value = z.municipality || '';
+      if (fAddress) fAddress.value = z.address || '';
+      if (fPhone) fPhone.value = z.phone || '';
+      if (fEmail) fEmail.value = z.email || '';
+      if (fAccommodationType) fAccommodationType.value = z.accommodation_type || 'hotel';
       fActive.checked = z.is_active !== false;
       form.hidden = false;
     };
 
     const saveZones = async (zones) => {
+      if (!ensureConfigLoaded()) return false;
       const res = await api('/api/admin/moveathens/transfer-zones', 'PUT', { zones });
       if (!res) return false;
       if (res.ok) {
@@ -918,14 +948,18 @@
       setStatus(status, '', '');
       const name = fName.value.trim();
       if (!name) { setStatus(status, 'Το όνομα είναι υποχρεωτικό', 'error'); return; }
-      if (!fType.value) { setStatus(status, 'Επιλέξτε τύπο', 'error'); return; }
 
       let zones = [...(CONFIG.transferZones || [])];
       const entry = {
         id: editingZoneId || `tz_${Date.now()}`,
         name,
-        type: fType.value,
-        description: fDesc.value.trim(),
+        type: 'suburb',
+        description: '',
+        municipality: (fMunicipality?.value || '').trim(),
+        address: (fAddress?.value || '').trim(),
+        phone: (fPhone?.value || '').trim(),
+        email: (fEmail?.value || '').trim(),
+        accommodation_type: fAccommodationType?.value || 'hotel',
         is_active: fActive.checked,
         created_at: new Date().toISOString()
       };
@@ -948,10 +982,12 @@
   };
 
   // ========================================
-  // PRICING TAB (Zone → Destination → Tariff → Vehicle)
+  // PRICING TAB (Hotel → Destination → Tariff → Vehicle + Commissions)
   // ========================================
   const initPricingTab = () => {
-    const originSelect = $('#maPriceOriginZone');
+    const originHidden = $('#maPriceOriginZone');
+    const hotelSearch = $('#maPriceHotelSearch');
+    const hotelDropdown = $('#maPriceHotelDropdown');
     const destSelect = $('#maPriceDestination');
     const tariffSelect = $('#maPriceTariff');
     const loadBtn = $('#maPriceLoadBtn');
@@ -959,33 +995,75 @@
     const grid = $('#ma-pricing-grid');
     const status = $('#maPriceStatus');
 
-    // Zone type labels for UI
-    const zoneTypeLabels = {
-      city_area: 'Κέντρο Πόλης',
-      suburb: 'Προάστια',
-      port: 'Λιμάνι',
-      airport: 'Αεροδρόμιο'
-    };
-
     // Tariff labels for UI
     const tariffLabels = {
       day: '☀️ Ημερήσια (05:00 - 00:00)',
       night: '🌙 Νυχτερινή (00:00 - 05:00)'
     };
 
-    const populateDropdowns = () => {
-      // Origin: ALL active zones
-      const zones = (CONFIG.transferZones || []).filter(z => z.is_active !== false);
-      const typeLabel = (type) => zoneTypeLabels[type] || type;
-      originSelect.innerHTML = '<option value="">-- Επιλογή Ζώνης Ξενοδοχείου --</option>' +
-        zones.map(z => `<option value="${z.id}">${z.name} (${typeLabel(z.type)})</option>`).join('');
+    // ---- Hotel autocomplete ----
+    let allHotels = [];
+    let selectedHotelName = '';
 
-      // Destination: ALL active destinations (grouped by category)
+    const populateHotelList = () => {
+      allHotels = (CONFIG.transferZones || []).filter(z => z.is_active !== false);
+    };
+
+    const showDropdown = (matches) => {
+      if (!matches.length) { hotelDropdown.hidden = true; return; }
+      hotelDropdown.innerHTML = matches.map(h =>
+        `<div class="ma-ac-item" data-id="${h.id}">${h.name}${h.municipality ? ' <span class="ma-muted">(' + h.municipality + ')</span>' : ''}</div>`
+      ).join('');
+      hotelDropdown.hidden = false;
+
+      hotelDropdown.querySelectorAll('.ma-ac-item').forEach(item => {
+        item.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          const id = item.dataset.id;
+          const hotel = allHotels.find(h => h.id === id);
+          if (hotel) {
+            originHidden.value = hotel.id;
+            hotelSearch.value = hotel.name;
+            selectedHotelName = hotel.name;
+          }
+          hotelDropdown.hidden = true;
+          // Auto-load if destination also selected
+          if (originHidden.value && destSelect.value) loadPrices();
+        });
+      });
+    };
+
+    hotelSearch?.addEventListener('input', () => {
+      const q = hotelSearch.value.trim().toLowerCase();
+      if (q.length < 2) { hotelDropdown.hidden = true; return; }
+      const matches = allHotels.filter(h =>
+        h.name.toLowerCase().includes(q) ||
+        (h.municipality || '').toLowerCase().includes(q)
+      );
+      showDropdown(matches);
+    });
+
+    hotelSearch?.addEventListener('focus', () => {
+      const q = hotelSearch.value.trim().toLowerCase();
+      if (q.length >= 2) {
+        const matches = allHotels.filter(h =>
+          h.name.toLowerCase().includes(q) ||
+          (h.municipality || '').toLowerCase().includes(q)
+        );
+        showDropdown(matches);
+      }
+    });
+
+    hotelSearch?.addEventListener('blur', () => {
+      setTimeout(() => { hotelDropdown.hidden = true; }, 200);
+    });
+
+    // ---- Destination dropdown ----
+    const populateDestinations = () => {
       const destinations = (CONFIG.destinations || []).filter(d => d.is_active !== false);
       const categories = CONFIG.destinationCategories || [];
       const getCatName = (catId) => categories.find(c => c.id === catId)?.name || 'Χωρίς κατηγορία';
       
-      // Group by category
       const grouped = {};
       destinations.forEach(d => {
         const catName = getCatName(d.category_id);
@@ -1002,33 +1080,71 @@
         destOpts += '</optgroup>';
       });
       destSelect.innerHTML = destOpts;
-
-      if (typeof console !== 'undefined' && console.log) {
-        console.log('[Pricing] Zones:', zones.length, '| Destinations:', destinations.length);
-      }
     };
 
     const render = () => {
-      populateDropdowns();
+      populateHotelList();
+      populateDestinations();
       form.hidden = true;
+      // Restore search text if hotel already selected
+      if (originHidden.value && selectedHotelName) {
+        hotelSearch.value = selectedHotelName;
+      }
+    };
+
+    // ---- Commission validation ----
+    const validateCommissions = () => {
+      const rows = grid.querySelectorAll('.ma-price-row');
+      let allOk = true;
+      rows.forEach(row => {
+        const priceInput = row.querySelector('.price-input');
+        const driverInput = row.querySelector('.comm-driver');
+        const hotelInput = row.querySelector('.comm-hotel');
+        const serviceInput = row.querySelector('.comm-service');
+        if (!priceInput) return;
+
+        const total = parseFloat(priceInput.value) || 0;
+        const driver = parseFloat(driverInput?.value) || 0;
+        const hotel = parseFloat(hotelInput?.value) || 0;
+        const service = parseFloat(serviceInput?.value) || 0;
+        const sumComm = driver + hotel + service;
+
+        const errorEl = row.querySelector('.ma-comm-error');
+        if (sumComm > total && total > 0) {
+          if (errorEl) {
+            errorEl.textContent = `⚠️ Σύνολο προμηθειών (${sumComm.toFixed(2)}€) > τιμή (${total.toFixed(2)}€)`;
+            errorEl.hidden = false;
+          }
+          allOk = false;
+        } else {
+          if (errorEl) errorEl.hidden = true;
+        }
+      });
+      return allOk;
     };
 
     const loadPrices = () => {
-      const originZoneId = originSelect.value;
+      const originZoneId = originHidden.value;
       const destinationId = destSelect.value;
       const tariff = tariffSelect?.value || 'day';
       if (!originZoneId || !destinationId) {
-        showToast('Επιλέξτε ζώνη ξενοδοχείου και προορισμό');
+        showToast('Επιλέξτε ξενοδοχείο και προορισμό');
         return;
       }
       const vehicles = (CONFIG.vehicleTypes || []).filter(v => v.is_active !== false);
       const prices = CONFIG.transferPrices || [];
 
-      // Show current tariff in UI
       const tariffLabel = tariffLabels[tariff] || tariff;
-      grid.innerHTML = `<div class="ma-tariff-indicator">Ταρίφα: ${tariffLabel}</div>` + 
-        vehicles.map(v => {
-        // Find price for this origin_zone + destination + vehicle + tariff
+      grid.innerHTML = `
+        <div class="ma-tariff-indicator">Ταρίφα: ${tariffLabel}</div>
+        <div class="ma-price-header">
+          <span>Όχημα</span>
+          <span>Συνολικό Κόστος (€)</span>
+          <span>Προμήθεια Οδηγού (€)</span>
+          <span>Προμήθεια Ξενοδοχείου (€)</span>
+          <span>Προμήθεια Υπηρεσίας (€)</span>
+        </div>
+      ` + vehicles.map(v => {
         const existing = prices.find(p =>
           p.origin_zone_id === originZoneId &&
           p.destination_id === destinationId &&
@@ -1036,16 +1152,28 @@
           (p.tariff || 'day') === tariff
         );
         const price = existing ? existing.price : '';
+        const commDriver = existing ? (existing.commission_driver || '') : '';
+        const commHotel = existing ? (existing.commission_hotel || '') : '';
+        const commService = existing ? (existing.commission_service || '') : '';
         return `
-          <div class="ma-price-row">
-            <div>
+          <div class="ma-price-row" data-vehicle="${v.id}">
+            <div class="ma-price-vehicle">
               <strong>${v.name}</strong>
               <span class="ma-muted">(👤${v.max_passengers})</span>
             </div>
-            <input type="number" class="input price-input" data-vehicle="${v.id}" min="0" step="0.01" value="${price}" placeholder="€">
+            <input type="number" class="input price-input" data-vehicle="${v.id}" min="0" step="0.01" value="${price}" placeholder="€" title="Συνολικό κόστος">
+            <input type="number" class="input comm-driver" min="0" step="0.01" value="${commDriver}" placeholder="€" title="Προμήθεια οδηγού">
+            <input type="number" class="input comm-hotel" min="0" step="0.01" value="${commHotel}" placeholder="€" title="Προμήθεια ξενοδοχείου">
+            <input type="number" class="input comm-service" min="0" step="0.01" value="${commService}" placeholder="€" title="Προμήθεια υπηρεσίας">
+            <div class="ma-comm-error" hidden></div>
           </div>
         `;
       }).join('');
+
+      // Live validation on input
+      grid.querySelectorAll('input[type="number"]').forEach(inp => {
+        inp.addEventListener('input', validateCommissions);
+      });
 
       form.hidden = false;
     };
@@ -1054,36 +1182,51 @@
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!ensureConfigLoaded()) return;
       setStatus(status, '', '');
 
-      const originZoneId = originSelect.value;
+      if (!validateCommissions()) {
+        setStatus(status, 'Οι προμήθειες δεν μπορούν να υπερβαίνουν το συνολικό κόστος', 'error');
+        return;
+      }
+
+      const originZoneId = originHidden.value;
       const destinationId = destSelect.value;
       const tariff = tariffSelect?.value || 'day';
       if (!originZoneId || !destinationId) return;
 
       // Collect all prices
-      const inputs = grid.querySelectorAll('.price-input');
+      const rows = grid.querySelectorAll('.ma-price-row');
       let newPrices = [...(CONFIG.transferPrices || [])];
 
-      // Remove existing prices for this origin_zone + destination + tariff combo
+      // Remove existing prices for this combo
       newPrices = newPrices.filter(p =>
         !(p.origin_zone_id === originZoneId && p.destination_id === destinationId && (p.tariff || 'day') === tariff)
       );
 
       // Add new prices
-      inputs.forEach(input => {
-        const vehicleId = input.dataset.vehicle;
-        const price = parseFloat(input.value);
-        if (Number.isFinite(price) && price >= 0) {
-          newPrices.push({
-            id: `tp_${Date.now()}_${vehicleId}_${tariff}`,
-            origin_zone_id: originZoneId,
-            destination_id: destinationId,
-            vehicle_type_id: vehicleId,
-            tariff,
-            price
-          });
-        }
+      rows.forEach(row => {
+        const vehicleId = row.dataset.vehicle;
+        if (!vehicleId) return;
+        const priceInput = row.querySelector('.price-input');
+        const price = parseFloat(priceInput?.value);
+        if (!Number.isFinite(price) || price < 0) return;
+
+        const commDriver = parseFloat(row.querySelector('.comm-driver')?.value) || 0;
+        const commHotel = parseFloat(row.querySelector('.comm-hotel')?.value) || 0;
+        const commService = parseFloat(row.querySelector('.comm-service')?.value) || 0;
+
+        newPrices.push({
+          id: `tp_${Date.now()}_${vehicleId}_${tariff}`,
+          origin_zone_id: originZoneId,
+          destination_id: destinationId,
+          vehicle_type_id: vehicleId,
+          tariff,
+          price,
+          commission_driver: commDriver,
+          commission_hotel: commHotel,
+          commission_service: commService
+        });
       });
 
       const res = await api('/api/admin/moveathens/transfer-prices', 'PUT', { transferPrices: newPrices });
@@ -1099,29 +1242,14 @@
       }
     });
 
-    // Auto-load prices when dropdowns change
-    originSelect?.addEventListener('change', () => {
-      if (originSelect.value && destSelect.value) {
-        loadPrices();
-      } else {
-        form.hidden = true;
-        grid.innerHTML = '';
-      }
-    });
-
+    // Auto-load on destination/tariff change
     destSelect?.addEventListener('change', () => {
-      if (originSelect.value && destSelect.value) {
-        loadPrices();
-      } else {
-        form.hidden = true;
-        grid.innerHTML = '';
-      }
+      if (originHidden.value && destSelect.value) loadPrices();
+      else { form.hidden = true; grid.innerHTML = ''; }
     });
 
     tariffSelect?.addEventListener('change', () => {
-      if (originSelect.value && destSelect.value) {
-        loadPrices();
-      }
+      if (originHidden.value && destSelect.value) loadPrices();
     });
 
     return { render };
@@ -1291,24 +1419,36 @@
   // INIT
   // ========================================
   const init = async () => {
-    initTabs();
-    const generalTab = initGeneralTab();
-    const categoriesTab = initCategoriesTab();
-    const destinationsTab = initDestinationsTab();
-    const vehiclesTab = initVehiclesTab();
-    const zonesTab = initZonesTab();
-    const pricingTab = initPricingTab();
-    const infoPageTab = initInfoPageTab();
+    try {
+      console.log('[admin-ma] Initializing tabs…');
+      initTabs();
+      const generalTab = initGeneralTab();
+      const categoriesTab = initCategoriesTab();
+      const destinationsTab = initDestinationsTab();
+      const vehiclesTab = initVehiclesTab();
+      const zonesTab = initZonesTab();
+      const pricingTab = initPricingTab();
+      const infoPageTab = initInfoPageTab();
 
-    await loadConfig();
+      console.log('[admin-ma] Loading config from server…');
+      await loadConfig();
 
-    generalTab.populate();
-    categoriesTab.render();
-    destinationsTab.render();
-    vehiclesTab.render();
-    zonesTab.render();
-    pricingTab.render();
-    infoPageTab.populate();
+      if (!configLoaded) {
+        console.error('[admin-ma] Config failed to load — tabs will be empty.');
+        return;
+      }
+
+      generalTab.populate();
+      categoriesTab.render();
+      destinationsTab.render();
+      vehiclesTab.render();
+      zonesTab.render();
+      pricingTab.render();
+      infoPageTab.populate();
+      console.log('[admin-ma] Init complete ✔');
+    } catch (err) {
+      console.error('[admin-ma] INIT CRASHED:', err);
+    }
   };
 
   if (document.readyState === 'loading') {

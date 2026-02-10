@@ -78,12 +78,17 @@ CREATE TABLE IF NOT EXISTS ma_config (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Transfer Zones (from moveathens_ui.json transferZones)
+-- Hotels (was Transfer Zones — repurposed to store hotel records)
 CREATE TABLE IF NOT EXISTS ma_transfer_zones (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    zone_type VARCHAR(50) NOT NULL CHECK (zone_type IN ('city_area', 'suburb', 'port', 'airport')),
+    zone_type VARCHAR(50) NOT NULL DEFAULT 'suburb' CHECK (zone_type IN ('city_area', 'suburb', 'port', 'airport')),
+    municipality VARCHAR(255) DEFAULT '',
+    address VARCHAR(500) DEFAULT '',
+    phone VARCHAR(50) DEFAULT '',
+    email VARCHAR(255) DEFAULT '',
+    accommodation_type VARCHAR(30) DEFAULT 'hotel' CHECK (accommodation_type IN ('hotel', 'rental_rooms')),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -149,6 +154,9 @@ CREATE TABLE IF NOT EXISTS ma_transfer_prices (
     vehicle_type_id VARCHAR(50) REFERENCES ma_vehicle_types(id) ON DELETE CASCADE,
     tariff VARCHAR(20) NOT NULL CHECK (tariff IN ('day', 'night')),
     price DECIMAL(10, 2) NOT NULL,
+    commission_driver DECIMAL(10, 2) DEFAULT 0,
+    commission_hotel DECIMAL(10, 2) DEFAULT 0,
+    commission_service DECIMAL(10, 2) DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(origin_zone_id, destination_id, vehicle_type_id, tariff)

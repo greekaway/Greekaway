@@ -253,13 +253,38 @@
 
 .ma-price-row {
   display: grid;
-  grid-template-columns: 1fr 140px;
-  gap: 10px;
+  grid-template-columns: minmax(100px, 1.2fr) repeat(4, minmax(70px, 1fr));
+  gap: 8px;
   align-items: center;
   border: 1px solid rgba(9, 30, 66, 0.12);
   border-radius: 12px;
   padding: 10px 12px;
   background: var(--ga-card);
+}
+
+.ma-price-row .ma-comm-error {
+  grid-column: 1 / -1;
+  color: #d32f2f;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ma-price-header {
+  display: grid;
+  grid-template-columns: minmax(100px, 1.2fr) repeat(4, minmax(70px, 1fr));
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ga-muted, #7b8794);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ma-price-vehicle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .ma-price-row .ma-muted {
@@ -704,5 +729,59 @@ html[data-theme='light'] .ma-infopage-form label {
 .ma-field {
   display: grid;
   gap: 8px;
+}
+
+/* Hotel autocomplete */
+.ma-autocomplete-wrap {
+  position: relative;
+}
+
+.ma-autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #ffffff;
+  color: #1a1a2e;
+  border: 1px solid rgba(9, 30, 66, 0.25);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.18);
+}
+
+.ma-ac-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #1a1a2e;
+}
+
+.ma-ac-item:hover {
+  background: #e8ecf1;
+  color: #0d1b2a;
+}
+
+/* Hotel detail row */
+.ma-hotel-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 13px;
+  color: var(--ga-muted, #7b8794);
+  padding: 4px 0;
+}
+
+@media (max-width: 720px) {
+  .ma-price-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ma-price-vehicle {
+    grid-column: 1 / -1;
+  }
+  .ma-price-header {
+    display: none;
+  }
 }
 
