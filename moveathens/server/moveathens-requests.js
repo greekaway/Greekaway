@@ -157,11 +157,13 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         await driversData.upsertDriver({ ...driver, name: driverName });
       }
 
-      // Update request to accepted
+      // Update request to accepted (include driver_name for display)
+      const finalDriverName = driverName || driver.name || driver.phone || '';
       const updated = await requestsData.updateRequest(request.id, {
         status: 'accepted',
         accepted_at: new Date().toISOString(),
-        driver_id: driver.id
+        driver_id: driver.id,
+        driver_name: finalDriverName
       });
 
       // Update driver totals (revenue = price, owed = service commission)

@@ -109,3 +109,21 @@
   .dr-modal { padding: 16px; }
   .dr-btn { padding: 6px 10px; font-size: 12px; }
 }
+
+/* --- completed badge --- */
+.dr-badge.completed { background: #e0e7ff; color: #3730a3; }
+
+/* --- balance colors in table cells --- */
+.dr-table td.positive { color: #10b981 !important; }
+.dr-table td.negative { color: #ef4444 !important; }
+
+/* --- sort controls in management tab --- */
+#drvmgmt-sort-field,
+#drvmgmt-sort-dir {
+  padding: 8px 12px;
+  border: 1px solid var(--ga-border, rgba(212,175,55,.25));
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--ga-card, #162432);
+  color: var(--ga-text, #E8EDF3);
+}

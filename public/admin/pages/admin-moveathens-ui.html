@@ -25,7 +25,8 @@
           <button class="bar-tab" data-tab="zones">Ξενοδοχεία</button>
           <button class="bar-tab" data-tab="pricing">Τιμολόγηση</button>
           <button class="bar-tab" data-tab="infopage">Πληροφορίες</button>
-          <button class="bar-tab" data-tab="drivers">Οδηγοί</button>
+          <button class="bar-tab" data-tab="drivers">Αιτήματα Διαδρομών</button>
+          <button class="bar-tab" data-tab="driversmgmt">Οδηγοί</button>
 
         </div>
       </div>
@@ -478,13 +479,9 @@
             </div>
             <div class="dr-filter-bar" style="margin:0">
               <select id="req-filter-status">
-                <option value="">Όλα τα status</option>
-                <option value="pending">Pending</option>
-                <option value="sent">Sent</option>
-                <option value="accepted">Accepted</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="expired">Expired</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="">Όλα</option>
+                <option value="pending">Αναμονή</option>
+                <option value="sent">Εστάλη</option>
               </select>
               <button class="btn secondary" id="req-refresh-btn" type="button">🔄 Ανανέωση</button>
             </div>
@@ -514,8 +511,58 @@
         <section class="panel" style="margin-top:20px">
           <div class="ma-section-header">
             <div>
-              <h3 class="ma-subtitle">👤 Οδηγοί</h3>
-              <p class="ma-helper">Δημιουργούνται αυτόματα όταν ο οδηγός αποδεχτεί μια διαδρομή.</p>
+              <h3 class="ma-subtitle">✅ Αποδεκτές Διαδρομές Οδηγών</h3>
+              <p class="ma-helper">Εμφανίζονται αυτόματα μετά αποδοχή. Αυτο-διαγραφή: 2ω μετά (άμεσα) ή 2ω μετά την ώρα κράτησης (προγρ.).</p>
+            </div>
+          </div>
+
+          <div class="dr-table-wrap">
+            <table class="dr-table">
+              <thead>
+                <tr>
+                  <th>Κωδικός</th>
+                  <th>Οδηγός</th>
+                  <th>Τηλέφωνο</th>
+                  <th>Διαδρομή</th>
+                  <th>Όχημα</th>
+                  <th>Τιμή</th>
+                  <th>Τύπος</th>
+                  <th>Αποδοχή</th>
+                  <th>Λεπτομέρειες</th>
+                </tr>
+              </thead>
+              <tbody id="acc-tbody"></tbody>
+            </table>
+          </div>
+          <div class="dr-empty" id="acc-empty" style="display:none">Δεν υπάρχουν αποδεκτές διαδρομές.</div>
+        </section>
+
+      </div> <!-- end Αιτήματα Διαδρομών tab -->
+
+      <!-- ===== DRIVER MANAGEMENT TAB (Οδηγοί) ===== -->
+      <div class="tab-content" data-tab="driversmgmt">
+        <section class="panel">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">👤 Οδηγοί — Οικονομική Επισκόπηση</h3>
+              <p class="ma-helper">Μόνιμος πίνακας. Στοιχεία οδηγών, έσοδα, πληρωμές &amp; υπόλοιπα.</p>
+            </div>
+            <div class="dr-filter-bar" style="margin:0">
+              <label style="font-size:13px;display:flex;align-items:center;gap:6px">Ταξινόμηση:
+                <select id="drvmgmt-sort-field">
+                  <option value="name">Όνομα</option>
+                  <option value="total_trips">Διαδρομές</option>
+                  <option value="total_revenue">Έσοδα</option>
+                  <option value="total_owed">Οφειλόμενα</option>
+                  <option value="total_paid">Πληρωμένα</option>
+                  <option value="balance">Υπόλοιπο</option>
+                </select>
+              </label>
+              <select id="drvmgmt-sort-dir">
+                <option value="desc">▼ Μεγαλύτερα πρώτα</option>
+                <option value="asc">▲ Μικρότερα πρώτα</option>
+              </select>
+              <button class="btn secondary" id="drvmgmt-refresh-btn" type="button">🔄 Ανανέωση</button>
             </div>
           </div>
 
@@ -533,53 +580,53 @@
                   <th>Ενέργειες</th>
                 </tr>
               </thead>
-              <tbody id="drv-tbody"></tbody>
+              <tbody id="drvmgmt-tbody"></tbody>
             </table>
           </div>
-          <div class="dr-empty" id="drv-empty" style="display:none">Δεν υπάρχουν οδηγοί ακόμα.</div>
+          <div class="dr-empty" id="drvmgmt-empty" style="display:none">Δεν υπάρχουν οδηγοί.</div>
         </section>
+      </div>
 
-        <!-- Driver Detail Modal -->
-        <div class="dr-overlay hidden" id="driver-modal">
-          <div class="dr-modal">
-            <div class="dr-modal-title">
-              <span id="dm-title">Οδηγός</span>
-              <button class="dr-modal-close" id="dm-close">&times;</button>
+      <!-- Shared: Driver Detail Modal -->
+      <div class="dr-overlay hidden" id="driver-modal">
+        <div class="dr-modal">
+          <div class="dr-modal-title">
+            <span id="dm-title">Οδηγός</span>
+            <button class="dr-modal-close" id="dm-close">&times;</button>
+          </div>
+          <div class="dr-driver-card" id="dm-stats"></div>
+          <div style="margin-top:16px">
+            <h4 class="ma-subtitle">💳 Καταγραφή Πληρωμής</h4>
+            <div class="dr-pay-form" id="dm-pay-form">
+              <label>Ποσό (€) <input type="number" id="dm-pay-amount" min="1" step="1" placeholder="0"></label>
+              <label>Σημείωση <input type="text" id="dm-pay-note" maxlength="200" placeholder="π.χ. Μετρητά 10/2"></label>
+              <button class="btn" id="dm-pay-btn" type="button">💰 Καταχώρηση</button>
             </div>
-            <div class="dr-driver-card" id="dm-stats"></div>
-            <div style="margin-top:16px">
-              <h4 class="ma-subtitle">💳 Καταγραφή Πληρωμής</h4>
-              <div class="dr-pay-form" id="dm-pay-form">
-                <label>Ποσό (€) <input type="number" id="dm-pay-amount" min="1" step="1" placeholder="0"></label>
-                <label>Σημείωση <input type="text" id="dm-pay-note" maxlength="200" placeholder="π.χ. Μετρητά 10/2"></label>
-                <button class="btn" id="dm-pay-btn" type="button">💰 Καταχώρηση</button>
-              </div>
+          </div>
+          <div style="margin-top:16px">
+            <h4 class="ma-subtitle">📜 Ιστορικό Πληρωμών</h4>
+            <div class="dr-table-wrap">
+              <table class="dr-table"><thead><tr><th>Ημ/νία</th><th>Ποσό</th><th>Σημείωση</th></tr></thead><tbody id="dm-payments-tbody"></tbody></table>
             </div>
-            <div style="margin-top:16px">
-              <h4 class="ma-subtitle">📜 Ιστορικό Πληρωμών</h4>
-              <div class="dr-table-wrap">
-                <table class="dr-table"><thead><tr><th>Ημ/νία</th><th>Ποσό</th><th>Σημείωση</th></tr></thead><tbody id="dm-payments-tbody"></tbody></table>
-              </div>
-            </div>
-            <div style="margin-top:16px">
-              <h4 class="ma-subtitle">🗺️ Ιστορικό Διαδρομών</h4>
-              <div class="dr-table-wrap">
-                <table class="dr-table"><thead><tr><th>Ημ/νία</th><th>Ξενοδοχείο</th><th>Προορισμός</th><th>Τιμή</th><th>Status</th></tr></thead><tbody id="dm-trips-tbody"></tbody></table>
-              </div>
+          </div>
+          <div style="margin-top:16px">
+            <h4 class="ma-subtitle">🗺️ Ιστορικό Διαδρομών</h4>
+            <div class="dr-table-wrap">
+              <table class="dr-table"><thead><tr><th>Ημ/νία</th><th>Ξενοδοχείο</th><th>Προορισμός</th><th>Τιμή</th><th>Status</th></tr></thead><tbody id="dm-trips-tbody"></tbody></table>
             </div>
           </div>
         </div>
-        <div class="dr-toast" id="dr-toast"></div>
+      </div>
+      <div class="dr-toast" id="dr-toast"></div>
 
-        <!-- Styled confirm dialog for drivers tab -->
-        <div class="dr-confirm-overlay hidden" id="dr-confirm">
-          <div class="dr-confirm-box">
-            <h4 id="dr-confirm-title">Επιβεβαίωση</h4>
-            <p id="dr-confirm-msg"></p>
-            <div class="dr-confirm-actions">
-              <button class="dr-btn dr-btn-ghost" id="dr-confirm-cancel">Ακύρωση</button>
-              <button class="dr-btn dr-btn-danger" id="dr-confirm-ok">Διαγραφή</button>
-            </div>
+      <!-- Styled confirm dialog (shared) -->
+      <div class="dr-confirm-overlay hidden" id="dr-confirm">
+        <div class="dr-confirm-box">
+          <h4 id="dr-confirm-title">Επιβεβαίωση</h4>
+          <p id="dr-confirm-msg"></p>
+          <div class="dr-confirm-actions">
+            <button class="dr-btn dr-btn-ghost" id="dr-confirm-cancel">Ακύρωση</button>
+            <button class="dr-btn dr-btn-danger" id="dr-confirm-ok">Διαγραφή</button>
           </div>
         </div>
       </div>

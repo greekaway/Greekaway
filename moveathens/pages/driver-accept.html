@@ -138,8 +138,12 @@
         }
 
         if (data.status === 'accepted' || data.status === 'confirmed') {
-          loading.classList.remove('show');
-          acceptedContent.style.display = 'block';
+          renderTrip(data);
+          acceptBtn.textContent = '✅ Αποδεκτό';
+          acceptBtn.disabled = true;
+          acceptBtn.style.background = '#d1fae5';
+          acceptBtn.style.color = '#065f46';
+          driverNameInput.style.display = 'none';
           return;
         }
 
@@ -196,8 +200,13 @@
         const data = await res.json();
 
         if (res.ok && (data.ok || data.already)) {
-          tripContent.style.display = 'none';
-          acceptedContent.style.display = 'block';
+          acceptBtn.textContent = '✅ Αποδεκτό';
+          acceptBtn.disabled = true;
+          acceptBtn.style.background = '#d1fae5';
+          acceptBtn.style.color = '#065f46';
+          driverNameInput.style.display = 'none';
+          statusMsg.className = 'status ok';
+          statusMsg.textContent = 'Καλή διαδρομή! Ο πελάτης θα ειδοποιηθεί.';
         } else {
           statusMsg.className = 'status error';
           statusMsg.textContent = data.error || 'Σφάλμα. Δοκίμασε ξανά.';
