@@ -186,6 +186,79 @@ CREATE TABLE IF NOT EXISTS ma_vehicle_destination_overrides (
 );
 
 -- =========================================================
+-- MOVEATHENS DRIVERS & TRANSFER REQUESTS
+-- =========================================================
+
+-- Drivers table (profile per phone number)
+CREATE TABLE IF NOT EXISTS ma_drivers (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(200) NOT NULL DEFAULT '',
+    phone VARCHAR(50) NOT NULL UNIQUE,
+    notes TEXT DEFAULT '',
+    total_trips INTEGER DEFAULT 0,
+    total_revenue DECIMAL(12, 2) DEFAULT 0,
+    total_owed DECIMAL(12, 2) DEFAULT 0,
+    total_paid DECIMAL(12, 2) DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ma_drivers_phone ON ma_drivers(phone);
+
+-- Transfer requests table
+CREATE TABLE IF NOT EXISTS ma_transfer_requests (
+    id VARCHAR(50) PRIMARY KEY,
+    origin_zone_id VARCHAR(50),
+    origin_zone_name VARCHAR(200) DEFAULT '',
+    hotel_name VARCHAR(200) DEFAULT '',
+    hotel_address VARCHAR(300) DEFAULT '',
+    destination_id VARCHAR(50),
+    destination_name VARCHAR(200) DEFAULT '',
+    vehicle_type_id VARCHAR(50),
+    vehicle_name VARCHAR(200) DEFAULT '',
+    tariff VARCHAR(20) DEFAULT 'day',
+    booking_type VARCHAR(20) DEFAULT 'instant',
+    scheduled_date VARCHAR(20) DEFAULT '',
+    scheduled_time VARCHAR(10) DEFAULT '',
+    passenger_name VARCHAR(200) DEFAULT '',
+    passengers INTEGER DEFAULT 0,
+    luggage_large INTEGER DEFAULT 0,
+    luggage_medium INTEGER DEFAULT 0,
+    luggage_cabin INTEGER DEFAULT 0,
+    payment_method VARCHAR(20) DEFAULT 'cash',
+    price DECIMAL(10, 2) DEFAULT 0,
+    commission_driver DECIMAL(10, 2) DEFAULT 0,
+    commission_hotel DECIMAL(10, 2) DEFAULT 0,
+    commission_service DECIMAL(10, 2) DEFAULT 0,
+    driver_id VARCHAR(50) REFERENCES ma_drivers(id) ON DELETE SET NULL,
+    driver_phone VARCHAR(50) DEFAULT '',
+    accept_token VARCHAR(100) UNIQUE,
+    status VARCHAR(30) DEFAULT 'pending',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    sent_at TIMESTAMPTZ,
+    accepted_at TIMESTAMPTZ,
+    confirmed_at TIMESTAMPTZ,
+    expired_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ma_requests_status ON ma_transfer_requests(status);
+CREATE INDEX IF NOT EXISTS idx_ma_requests_driver ON ma_transfer_requests(driver_id);
+CREATE INDEX IF NOT EXISTS idx_ma_requests_token ON ma_transfer_requests(accept_token);
+
+-- Driver payments table
+CREATE TABLE IF NOT EXISTS ma_driver_payments (
+    id VARCHAR(50) PRIMARY KEY,
+    driver_id VARCHAR(50) NOT NULL REFERENCES ma_drivers(id) ON DELETE CASCADE,
+    amount DECIMAL(10, 2) NOT NULL,
+    note TEXT DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ma_payments_driver ON ma_driver_payments(driver_id);
+
+-- =========================================================
 -- HELPER FUNCTIONS
 -- =========================================================
 

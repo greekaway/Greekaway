@@ -657,6 +657,157 @@ const ma = {
   // Full pricing view
   async getFullPricing() {
     return query('SELECT * FROM ma_transfer_pricing_full');
+  },
+
+  // ---- TRANSFER REQUESTS ----
+  async getRequests(filters = {}) {
+    let sql = 'SELECT * FROM ma_transfer_requests';
+    const params = [];
+    const clauses = [];
+    if (filters.status) { params.push(filters.status); clauses.push(`status = $${params.length}`); }
+    if (filters.driver_id) { params.push(filters.driver_id); clauses.push(`driver_id = $${params.length}`); }
+    if (clauses.length) sql += ' WHERE ' + clauses.join(' AND ');
+    sql += ' ORDER BY created_at DESC';
+    if (filters.limit) { params.push(filters.limit); sql += ` LIMIT $${params.length}`; }
+    return query(sql, params);
+  },
+
+  async getRequestById(id) {
+    return queryOne('SELECT * FROM ma_transfer_requests WHERE id = $1', [id]);
+  },
+
+  async getRequestByToken(token) {
+    return queryOne('SELECT * FROM ma_transfer_requests WHERE accept_token = $1', [token]);
+  },
+
+  async createRequest(data) {
+    const sql = `
+      INSERT INTO ma_transfer_requests (
+        id, origin_zone_id, origin_zone_name, hotel_name, hotel_address,
+        destination_id, destination_name, vehicle_type_id, vehicle_name,
+        tariff, booking_type, scheduled_date, scheduled_time,
+        passenger_name, passengers, luggage_large, luggage_medium, luggage_cabin,
+        payment_method, price, commission_driver, commission_hotel, commission_service,
+        status, accept_token
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25
+      ) RETURNING *
+    `;
+    const rows = await query(sql, [
+      data.id, data.origin_zone_id, data.origin_zone_name || '', data.hotel_name || '', data.hotel_address || '',
+      data.destination_id || '', data.destination_name || '', data.vehicle_type_id || '', data.vehicle_name || '',
+      data.tariff || 'day', data.booking_type || 'instant', data.scheduled_date || '', data.scheduled_time || '',
+      data.passenger_name || '', data.passengers || 0, data.luggage_large || 0, data.luggage_medium || 0, data.luggage_cabin || 0,
+      data.payment_method || 'cash', data.price || 0, data.commission_driver || 0, data.commission_hotel || 0, data.commission_service || 0,
+      data.status || 'pending', data.accept_token || null
+    ]);
+    return rows[0];
+  },
+
+  async updateRequest(id, data) {
+    const fields = [];
+    const params = [];
+    let idx = 1;
+    for (const [key, val] of Object.entries(data)) {
+      fields.push(`${key} = $${idx}`);
+      params.push(val);
+      idx++;
+    }
+    params.push(id);
+    const sql = `UPDATE ma_transfer_requests SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`;
+    const rows = await query(sql, params);
+    return rows[0];
+  },
+
+  async deleteRequest(id) {
+    const r = await execute('DELETE FROM ma_transfer_requests WHERE id = $1', [id]);
+    return r.rowCount > 0;
+  },
+
+  async expireOldRequests(cutoffMs = 3600000) {
+    const cutoff = new Date(Date.now() - cutoffMs).toISOString();
+    const sql = `
+      UPDATE ma_transfer_requests
+      SET status = 'expired', expired_at = NOW()
+      WHERE status = 'pending' AND created_at < $1
+      RETURNING id
+    `;
+    return query(sql, [cutoff]);
+  },
+
+  // ---- DRIVERS ----
+  async getDrivers(activeOnly = false) {
+    let sql = 'SELECT * FROM ma_drivers';
+    if (activeOnly) sql += ' WHERE is_active = true';
+    sql += ' ORDER BY name ASC';
+    return query(sql);
+  },
+
+  async getDriverById(id) {
+    return queryOne('SELECT * FROM ma_drivers WHERE id = $1', [id]);
+  },
+
+  async getDriverByPhone(phone) {
+    return queryOne('SELECT * FROM ma_drivers WHERE phone = $1', [phone]);
+  },
+
+  async upsertDriver(data) {
+    const sql = `
+      INSERT INTO ma_drivers (id, name, phone, notes, is_active)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        phone = EXCLUDED.phone,
+        notes = EXCLUDED.notes,
+        is_active = EXCLUDED.is_active
+      RETURNING *
+    `;
+    const rows = await query(sql, [
+      data.id, data.name || '', data.phone, data.notes || '', data.is_active !== false
+    ]);
+    return rows[0];
+  },
+
+  async updateDriverTotals(driverId, tripRevenue, serviceCommission) {
+    const sql = `
+      UPDATE ma_drivers SET
+        total_trips = total_trips + 1,
+        total_revenue = total_revenue + $2,
+        total_owed = total_owed + $3
+      WHERE id = $1
+      RETURNING *
+    `;
+    const rows = await query(sql, [driverId, tripRevenue, serviceCommission]);
+    return rows[0];
+  },
+
+  async deleteDriver(id) {
+    const r = await execute('DELETE FROM ma_drivers WHERE id = $1', [id]);
+    return r.rowCount > 0;
+  },
+
+  // ---- DRIVER PAYMENTS ----
+  async getDriverPayments(driverId) {
+    return query('SELECT * FROM ma_driver_payments WHERE driver_id = $1 ORDER BY created_at DESC', [driverId]);
+  },
+
+  async addDriverPayment(data) {
+    const sql = `
+      INSERT INTO ma_driver_payments (id, driver_id, amount, note)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `;
+    const rows = await query(sql, [data.id, data.driver_id, data.amount, data.note || '']);
+    return rows[0];
+  },
+
+  async recordDriverPayment(driverId, paymentId, amount, note) {
+    // Insert payment + update driver total_paid atomically
+    const paymentSql = `INSERT INTO ma_driver_payments (id, driver_id, amount, note) VALUES ($1, $2, $3, $4) RETURNING *`;
+    const payment = await query(paymentSql, [paymentId, driverId, amount, note || '']);
+    const driverSql = `UPDATE ma_drivers SET total_paid = total_paid + $2 WHERE id = $1 RETURNING *`;
+    const driver = await query(driverSql, [driverId, amount]);
+    return { payment: payment[0], driver: driver[0] };
   }
 };
 

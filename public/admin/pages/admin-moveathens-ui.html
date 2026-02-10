@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/admin-common.css">
     <link rel="stylesheet" href="/css/admin-theme-toggle.css">
     <link rel="stylesheet" href="/admin/css/admin-moveathens-ui.css">
+    <link rel="stylesheet" href="/admin/css/admin-ma-drivers.css">
     <link rel="manifest" href="/manifest-admin.json">
     <meta name="theme-color" content="#001f3f">
     <link rel="stylesheet" href="/pwa.css">
@@ -24,6 +25,7 @@
           <button class="bar-tab" data-tab="zones">Ξενοδοχεία</button>
           <button class="bar-tab" data-tab="pricing">Τιμολόγηση</button>
           <button class="bar-tab" data-tab="infopage">Πληροφορίες</button>
+          <button class="bar-tab" data-tab="drivers">🚖 Οδηγοί</button>
 
         </div>
       </div>
@@ -465,6 +467,110 @@
           </div>
         </section>
       </div>
+
+      <!-- ===== DRIVERS TAB ===== -->
+      <div class="tab-content" data-tab="drivers">
+        <section class="panel">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">📋 Αιτήματα Transfer</h3>
+              <p class="ma-helper">Αιτήματα που δημιουργούνται αυτόματα όταν ο ξενοδόχος πατήσει WhatsApp.</p>
+            </div>
+            <div class="dr-filter-bar" style="margin:0">
+              <select id="req-filter-status">
+                <option value="">Όλα τα status</option>
+                <option value="pending">Pending</option>
+                <option value="sent">Sent</option>
+                <option value="accepted">Accepted</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="expired">Expired</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <button class="btn secondary" id="req-refresh-btn" type="button">🔄 Ανανέωση</button>
+            </div>
+          </div>
+
+          <div class="dr-table-wrap">
+            <table class="dr-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Ξενοδοχείο</th>
+                  <th>Προορισμός</th>
+                  <th>Όχημα</th>
+                  <th>Τιμή</th>
+                  <th>Πελάτης</th>
+                  <th>Status</th>
+                  <th>Τηλ. Οδηγού</th>
+                  <th>Ενέργειες</th>
+                </tr>
+              </thead>
+              <tbody id="req-tbody"></tbody>
+            </table>
+          </div>
+          <div class="dr-empty" id="req-empty" style="display:none">Δεν υπάρχουν αιτήματα.</div>
+        </section>
+
+        <section class="panel" style="margin-top:20px">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">👤 Οδηγοί</h3>
+              <p class="ma-helper">Δημιουργούνται αυτόματα όταν ο οδηγός αποδεχτεί μια διαδρομή.</p>
+            </div>
+          </div>
+
+          <div class="dr-table-wrap">
+            <table class="dr-table">
+              <thead>
+                <tr>
+                  <th>Όνομα</th>
+                  <th>Τηλέφωνο</th>
+                  <th>Διαδρομές</th>
+                  <th>Έσοδα</th>
+                  <th>Οφειλόμενα</th>
+                  <th>Πληρωμένα</th>
+                  <th>Υπόλοιπο</th>
+                  <th>Ενέργειες</th>
+                </tr>
+              </thead>
+              <tbody id="drv-tbody"></tbody>
+            </table>
+          </div>
+          <div class="dr-empty" id="drv-empty" style="display:none">Δεν υπάρχουν οδηγοί ακόμα.</div>
+        </section>
+
+        <!-- Driver Detail Modal -->
+        <div class="dr-overlay hidden" id="driver-modal">
+          <div class="dr-modal">
+            <div class="dr-modal-title">
+              <span id="dm-title">Οδηγός</span>
+              <button class="dr-modal-close" id="dm-close">&times;</button>
+            </div>
+            <div class="dr-driver-card" id="dm-stats"></div>
+            <div style="margin-top:16px">
+              <h4 class="ma-subtitle">💳 Καταγραφή Πληρωμής</h4>
+              <div class="dr-pay-form" id="dm-pay-form">
+                <label>Ποσό (€) <input type="number" id="dm-pay-amount" min="1" step="1" placeholder="0"></label>
+                <label>Σημείωση <input type="text" id="dm-pay-note" maxlength="200" placeholder="π.χ. Μετρητά 10/2"></label>
+                <button class="btn" id="dm-pay-btn" type="button">💰 Καταχώρηση</button>
+              </div>
+            </div>
+            <div style="margin-top:16px">
+              <h4 class="ma-subtitle">📜 Ιστορικό Πληρωμών</h4>
+              <div class="dr-table-wrap">
+                <table class="dr-table"><thead><tr><th>Ημ/νία</th><th>Ποσό</th><th>Σημείωση</th></tr></thead><tbody id="dm-payments-tbody"></tbody></table>
+              </div>
+            </div>
+            <div style="margin-top:16px">
+              <h4 class="ma-subtitle">🗺️ Ιστορικό Διαδρομών</h4>
+              <div class="dr-table-wrap">
+                <table class="dr-table"><thead><tr><th>Ημ/νία</th><th>Ξενοδοχείο</th><th>Προορισμός</th><th>Τιμή</th><th>Status</th></tr></thead><tbody id="dm-trips-tbody"></tbody></table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dr-toast" id="dr-toast"></div>
+      </div>
     </main>
 
     <div id="ma-toast" class="ma-toast" role="status" aria-live="polite"></div>
@@ -481,6 +587,7 @@
     </div>
 
     <script src="/admin/js/admin-moveathens-ui.js"></script>
+    <script src="/admin/js/admin-ma-drivers.js"></script>
     <script src="/js/admin-theme-toggle.js"></script>
     <script src="/pwa-install.js" defer></script>
     <script src="/js/main.js"></script>

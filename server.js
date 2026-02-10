@@ -480,6 +480,8 @@ const STEP2_PAGE_FILE = path.join(__dirname, 'public', 'step2.html');
 const STEP3_PAGE_FILE = path.join(__dirname, 'public', 'step3.html');
 const ADMIN_HOME_FILE = path.join(__dirname, 'public', 'admin-home.html');
 const ADMIN_MOVEATHENS_UI_FILE = path.join(__dirname, 'public', 'admin', 'pages', 'admin-moveathens-ui.html');
+const ADMIN_MA_DRIVERS_FILE = path.join(__dirname, 'public', 'admin', 'pages', 'admin-ma-drivers.html');
+const DRIVER_ACCEPT_FILE = path.join(__dirname, 'moveathens', 'pages', 'driver-accept.html');
 const LOCAL_UPLOADS_DIR = path.join(__dirname, 'uploads');
 const UPLOADS_DIR = process.env.RENDER ? getUploadsRoot() : (ensureDir(LOCAL_UPLOADS_DIR) || LOCAL_UPLOADS_DIR);
 
@@ -1314,6 +1316,24 @@ try {
 require('./moveathens/server/moveathens')(app, { isDev: IS_DEV, checkAdminAuth });
 console.log('MoveAthens admin routes loaded');
 
+// MoveAthens Transfer Requests & Drivers
+require('./moveathens/server/moveathens-requests')(app, { checkAdminAuth });
+require('./moveathens/server/moveathens-drivers')(app, { checkAdminAuth });
+console.log('MoveAthens requests/drivers routes loaded');
+
+// Auto-expire orphan transfer requests (pending > 1 hour)
+try {
+  const requestsData = require('./src/server/data/moveathens-requests');
+  setInterval(() => {
+    requestsData.expireOldRequests(3600000)
+      .then(n => { if (n) console.log(`[MoveAthens] expired ${n} orphan request(s)`); })
+      .catch(e => console.warn('[MoveAthens] expire error:', e.message));
+  }, 5 * 60 * 1000); // every 5 minutes
+  console.log('MoveAthens request auto-expiry enabled (1h, check every 5m)');
+} catch (e) {
+  console.warn('MoveAthens auto-expiry: failed to init', e?.message || e);
+}
+
 // MoveAthens AI Assistant
 try {
   const { registerMoveAthensAssistantRoutes } = require('./moveathens/server/assistant');
@@ -1365,6 +1385,22 @@ app.get('/admin/moveathens-ui', (req, res) => {
     return res.redirect(`/admin-home.html?next=${nextUrl}`);
   }
   try { return res.sendFile(ADMIN_MOVEATHENS_UI_FILE); }
+  catch (_) { return res.status(404).send('Not found'); }
+});
+
+// Admin Drivers Panel
+app.get('/admin/ma-drivers', (req, res) => {
+  if (!checkAdminAuth(req)) {
+    const nextUrl = encodeURIComponent(req.originalUrl || '/admin/ma-drivers');
+    return res.redirect(`/admin-home.html?next=${nextUrl}`);
+  }
+  try { return res.sendFile(ADMIN_MA_DRIVERS_FILE); }
+  catch (_) { return res.status(404).send('Not found'); }
+});
+
+// Driver accept page (public — no auth)
+app.get('/moveathens/driver-accept', (req, res) => {
+  try { return res.sendFile(DRIVER_ACCEPT_FILE); }
   catch (_) { return res.status(404).send('Not found'); }
 });
 

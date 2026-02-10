@@ -1,0 +1,95 @@
+/* ===== Admin MoveAthens Drivers Panel ===== */
+
+/* --- layout --- */
+.dr-content-wrap {
+  max-width: 1400px;
+  width: 100%;
+  padding: 0 16px 110px;
+  margin: 0 auto;
+}
+
+/* --- tabs --- */
+.dr-tabs { display: flex; gap: 0; overflow-x: auto; border-bottom: 2px solid var(--ga-border, #e5e7eb); margin-bottom: 20px; }
+.dr-tab { background: none; border: none; padding: 10px 18px; font-size: 14px; font-weight: 600; color: var(--ga-muted, #7b8794); cursor: pointer; border-bottom: 3px solid transparent; transition: all .2s; white-space: nowrap; }
+.dr-tab:hover { color: var(--ga-text, #1a1a2e); }
+.dr-tab.active { color: #0d6efd; border-bottom-color: #0d6efd; }
+
+.dr-panel { display: none; }
+.dr-panel.active { display: block; }
+
+/* --- section / panel --- */
+.dr-section { background: var(--ga-card, #fff); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.dr-section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+/* --- filter bar --- */
+.dr-filter-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+.dr-filter-bar select,
+.dr-filter-bar input { padding: 8px 12px; border: 1px solid var(--ga-border, #d1d5db); border-radius: 8px; font-size: 14px; background: #fff; color: #1a1a2e; }
+
+/* --- data table --- */
+.dr-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.dr-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dr-table th { background: #f3f4f6; color: #6b7280; text-align: left; padding: 8px 10px; white-space: nowrap; font-weight: 600; position: sticky; top: 0; }
+.dr-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+.dr-table tr:hover td { background: #f8fafc; }
+
+/* status badges */
+.dr-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.dr-badge.pending   { background: #fef3c7; color: #92400e; }
+.dr-badge.sent      { background: #dbeafe; color: #1e40af; }
+.dr-badge.accepted  { background: #d1fae5; color: #065f46; }
+.dr-badge.confirmed { background: #c7d2fe; color: #3730a3; }
+.dr-badge.expired   { background: #fecaca; color: #991b1b; }
+.dr-badge.cancelled { background: #e5e7eb; color: #374151; }
+
+/* --- inline inputs --- */
+.dr-inline-input { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 140px; }
+.dr-inline-input:focus { border-color: #0d6efd; outline: none; }
+
+/* --- buttons --- */
+.dr-btn { border: none; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.dr-btn:disabled { opacity: .4; cursor: not-allowed; }
+.dr-btn-primary { background: #0d6efd; color: #fff; }
+.dr-btn-primary:hover:not(:disabled) { background: #0b5ed7; }
+.dr-btn-success { background: #10b981; color: #fff; }
+.dr-btn-success:hover:not(:disabled) { background: #059669; }
+.dr-btn-danger  { background: #ef4444; color: #fff; }
+.dr-btn-danger:hover:not(:disabled) { background: #dc2626; }
+.dr-btn-ghost   { background: transparent; color: #6b7280; }
+.dr-btn-ghost:hover { color: #1a1a2e; background: #f3f4f6; }
+
+/* --- driver detail card --- */
+.dr-driver-card { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.dr-stat { background: #f8fafc; border-radius: 10px; padding: 14px; text-align: center; }
+.dr-stat .num { font-size: 24px; font-weight: 700; color: #001f3f; }
+.dr-stat .lbl { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.dr-stat .positive { color: #10b981; }
+.dr-stat .negative { color: #ef4444; }
+
+/* --- payment form --- */
+.dr-pay-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-top: 12px; }
+.dr-pay-form label { font-size: 13px; color: #6b7280; display: flex; flex-direction: column; gap: 4px; }
+.dr-pay-form input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+
+/* --- empty state --- */
+.dr-empty { text-align: center; padding: 32px 16px; color: #9ca3af; font-size: 14px; }
+
+/* --- detail modal overlay --- */
+.dr-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.dr-overlay.hidden { display: none; }
+.dr-modal { background: #fff; border-radius: 16px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,.18); }
+.dr-modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.dr-modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #6b7280; }
+
+/* --- toast --- */
+.dr-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a1a2e; color: #fff; padding: 10px 24px; border-radius: 10px; font-size: 14px; z-index: 2000; opacity: 0; transition: opacity .3s; pointer-events: none; }
+.dr-toast.show { opacity: 1; }
+
+/* --- responsive --- */
+@media (max-width: 640px) {
+  .dr-table { font-size: 12px; }
+  .dr-inline-input { width: 110px; }
+  .dr-driver-card { grid-template-columns: 1fr 1fr; }
+  .dr-modal { padding: 16px; }
+  .dr-btn { padding: 6px 10px; font-size: 12px; }
+}

@@ -726,6 +726,41 @@
     setupCtaValidation();
   };
   
+  // Auto-create transfer request on server before WhatsApp opens
+  const createTransferRequest = async () => {
+    if (!selectedDestination || !selectedVehicle || !hotelContext) return;
+    try {
+      const body = {
+        origin_zone_id:    hotelContext.origin_zone_id || '',
+        origin_zone_name:  hotelContext.origin_zone_name || '',
+        hotel_name:        hotelContext.hotelName || '',
+        hotel_address:     hotelContext.address || '',
+        destination_id:    selectedDestination.id || '',
+        destination_name:  selectedDestination.name || '',
+        vehicle_id:        selectedVehicle.id || '',
+        vehicle_name:      selectedVehicle.name || '',
+        tariff:            selectedTariff || 'day',
+        booking_type:      selectedBookingType || 'instant',
+        scheduled_date:    selectedDateTime?.date || '',
+        scheduled_time:    selectedDateTime?.time || '',
+        passengers:        selectedPassengers || 1,
+        luggage:           [selectedLuggageLarge, selectedLuggageMedium, selectedLuggageCabin].join('/'),
+        passenger_name:    passengerName || '',
+        price:             selectedVehicle.price || 0,
+        payment_method:    selectedPaymentMethod || 'cash'
+      };
+      await fetch('/api/moveathens/transfer-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      console.log('[MoveAthens] transfer request created');
+    } catch (err) {
+      console.warn('[MoveAthens] failed to create request:', err);
+      // Don't block the WhatsApp link — fire & forget
+    }
+  };
+
   // Setup CTA click validation (block if passenger name is required but missing)
   const setupCtaValidation = () => {
     const ctaIds = ['#cta-whatsapp', '#cta-phone', '#cta-whatsapp-call', '#cta-email'];
@@ -740,6 +775,10 @@
           e.preventDefault();
           e.stopPropagation();
           return false;
+        }
+        // Auto-create transfer request for WhatsApp clicks
+        if (id === '#cta-whatsapp') {
+          createTransferRequest();
         }
       };
     });
