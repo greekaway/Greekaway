@@ -62,8 +62,9 @@
       const driversPanel = _$('.tab-content[data-tab="drivers"]');
       if (driversPanel && driversPanel.classList.contains('active')) {
         loadRequests();
+        loadDrivers();
       }
-    }, 12000); // refresh requests every 12 s
+    }, 12000); // refresh both tables every 12 s
   }
 
   // Watch the parent tab system — when "drivers" tab activates, init

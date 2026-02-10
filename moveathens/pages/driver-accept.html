@@ -6,18 +6,18 @@
   <title>MoveAthens — Αποδοχή Διαδρομής</title>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f4f8;color:#1a1a2e;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
-    .card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.1);max-width:440px;width:100%;padding:28px 24px;text-align:center}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f4f8;color:#1a1a2e;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;transition:background .3s,color .3s}
+    .card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.1);max-width:440px;width:100%;padding:28px 24px;text-align:center;transition:background .3s,box-shadow .3s}
     .logo{font-size:24px;font-weight:700;color:#001f3f;margin-bottom:20px}
     .logo span{color:#0d6efd}
-    .trip-info{text-align:left;background:#f8f9fb;border-radius:12px;padding:16px;margin:16px 0;display:grid;gap:10px}
+    .trip-info{text-align:left;background:#f8f9fb;border-radius:12px;padding:16px;margin:16px 0;display:grid;gap:10px;transition:background .3s}
     .trip-row{display:flex;gap:8px;align-items:center;font-size:15px}
     .trip-row .icon{font-size:18px;min-width:24px;text-align:center}
     .trip-row .label{color:#6b7280;min-width:80px}
-    .trip-row .value{font-weight:600;color:#1a1a2e}
+    .trip-row .value{font-weight:600;color:#1a1a2e;transition:color .3s}
     .price-highlight{background:linear-gradient(135deg,#001f3f,#0d6efd);color:#fff;border-radius:12px;padding:16px;margin:12px 0;display:flex;justify-content:space-between;align-items:center;font-size:18px}
     .price-highlight .amount{font-size:28px;font-weight:700}
-    .name-input{width:100%;padding:12px 16px;border:2px solid #d1d5db;border-radius:10px;font-size:16px;margin:12px 0;outline:none;transition:border-color .2s}
+    .name-input{width:100%;padding:12px 16px;border:2px solid #d1d5db;border-radius:10px;font-size:16px;margin:12px 0;outline:none;transition:border-color .2s,background .3s,color .3s;background:#fff;color:#1a1a2e}
     .name-input:focus{border-color:#0d6efd}
     .btn{display:block;width:100%;padding:14px;border:none;border-radius:12px;font-size:17px;font-weight:600;cursor:pointer;transition:all .2s}
     .btn-accept{background:linear-gradient(135deg,#10b981,#059669);color:#fff;margin-top:12px}
@@ -32,6 +32,26 @@
     .spinner{width:32px;height:32px;border:3px solid #e5e7eb;border-top-color:#0d6efd;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
     @keyframes spin{to{transform:rotate(360deg)}}
     .expired-msg{padding:24px;text-align:center;color:#991b1b}
+
+    /* ── dark mode (follows device preference) ── */
+    @media (prefers-color-scheme: dark) {
+      body{background:#0f1923;color:#e0e6ed}
+      .card{background:#162432;box-shadow:0 4px 24px rgba(0,0,0,.35)}
+      .logo{color:#e0e6ed}
+      .trip-info{background:#1b2d3e}
+      .trip-row .label{color:#8b9db0}
+      .trip-row .value{color:#e0e6ed}
+      .name-input{background:#1b2d3e;color:#e0e6ed;border-color:#2d4a5e}
+      .name-input:focus{border-color:#0d6efd}
+      .spinner{border-color:#2d4a5e;border-top-color:#0d6efd}
+      .expired-msg{color:#fca5a5}
+      .expired-msg p[style]{color:#8b9db0 !important}
+      .status.ok{background:#064e3b;color:#6ee7b7}
+      .status.error{background:#7f1d1d;color:#fca5a5}
+      .status.info{background:#1e3a5f;color:#93c5fd}
+      #accepted-content h3{color:#6ee7b7 !important}
+      #accepted-content p[style]{color:#8b9db0 !important}
+    }
   </style>
 </head>
 <body>
