@@ -781,6 +781,7 @@ async function getDestinations(filters = {}) {
           description: row.description || '',
           category_id: row.category_id,
           zone_id: row.zone_id,
+          route_type: row.route_type || null,
           display_order: row.display_order,
           is_active: row.is_active,
           created_at: row.created_at
@@ -799,6 +800,7 @@ async function getDestinations(filters = {}) {
               description: d.description || '',
               category_id: d.category_id || null,
               zone_id: d.zone_id || null,
+              route_type: d.route_type || null,
               display_order: d.display_order || 0,
               is_active: d.is_active !== false
             });
@@ -813,6 +815,7 @@ async function getDestinations(filters = {}) {
           description: row.description || '',
           category_id: row.category_id,
           zone_id: row.zone_id,
+          route_type: row.route_type || null,
           display_order: row.display_order,
           is_active: row.is_active,
           created_at: row.created_at
