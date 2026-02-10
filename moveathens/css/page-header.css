@@ -2,6 +2,9 @@
 
 .ma-page {
   min-height: 100vh;
+  height: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
   padding-bottom: 90px;
 }
