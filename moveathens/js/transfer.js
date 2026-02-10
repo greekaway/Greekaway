@@ -756,7 +756,9 @@
         scheduled_date:    selectedDateTime?.date || '',
         scheduled_time:    selectedDateTime?.time || '',
         passengers:        selectedPassengers || 1,
-        luggage:           [selectedLuggageLarge, selectedLuggageMedium, selectedLuggageCabin].join('/'),
+        luggage_large:     selectedLuggageLarge || 0,
+        luggage_medium:    selectedLuggageMedium || 0,
+        luggage_cabin:     selectedLuggageCabin || 0,
         passenger_name:    passengerName || '',
         price:             selectedVehicle.price || 0,
         payment_method:    selectedPaymentMethod || 'cash'
