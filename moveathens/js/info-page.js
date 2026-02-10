@@ -76,11 +76,10 @@
   };
 
   try {
-    // Load config from API
-    const res = await fetch('/api/moveathens/ui-config');
-    if (!res.ok) throw new Error('Failed to load config');
-    
-    const cfg = await res.json();
+    // Load config via shared loader (avoids duplicate fetch)
+    const cfg = await (window.MoveAthensConfig?.load
+      ? window.MoveAthensConfig.load()
+      : fetch('/api/moveathens/ui-config').then(r => r.ok ? r.json() : Promise.reject(new Error('Failed to load config'))));
     
     // Populate all sections
     populateSection(

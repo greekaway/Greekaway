@@ -18,16 +18,17 @@
     el.textContent = value || '';
   };
 
-  const resolveHeroVideoUrl = () => {
-    const base = '/moveathens/videos/hero.mp4';
-    return isDevHost() ? `${base}?cb=${Date.now()}` : base;
+  const resolveHeroVideoUrl = (cfgUrl) => {
+    const base = cfgUrl || '/moveathens/videos/hero.mp4';
+    // Always add cache-buster so browsers pick up newly uploaded videos
+    return `${base}?cb=${Date.now()}`;
   };
 
   const applyHero = async (root, cfg) => {
     const video = root.querySelector('[data-ma-hero-video]');
     const placeholder = root.querySelector('[data-ma-hero-placeholder]');
     const logo = root.querySelector('[data-ma-hero-logo]');
-    const url = resolveHeroVideoUrl();
+    const url = resolveHeroVideoUrl(cfg.heroVideoUrl);
     try {
       const res = await fetch(url, { method: 'HEAD' });
       if (res.ok && video) {

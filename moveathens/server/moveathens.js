@@ -683,7 +683,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   });
 
   app.get('/api/moveathens/ui-config', async (req, res) => {
-    if (isDev) res.set('Cache-Control', 'no-store');
+    // Always prevent caching so admin changes (hero video etc.) appear instantly
+    res.set('Cache-Control', 'no-store');
     try {
       // Read full config from database (with JSON fallback)
       const dbConfig = await dataLayer.getFullConfig();
