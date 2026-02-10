@@ -275,6 +275,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     const description = normalizeString(entry.description || '');
     const categoryId = normalizeString(entry.category_id || '');
     const zoneId = normalizeString(entry.zone_id || '');
+    const routeType = normalizeString(entry.route_type || '');
     const displayOrder = toInt(entry.display_order, 0);
     const isActive = typeof entry.is_active === 'boolean' ? entry.is_active : true;
     const createdAt = normalizeString(entry.created_at) || new Date().toISOString();
@@ -284,6 +285,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       description,
       category_id: categoryId,
       zone_id: zoneId,
+      route_type: routeType || null,
       display_order: displayOrder,
       is_active: isActive,
       created_at: createdAt

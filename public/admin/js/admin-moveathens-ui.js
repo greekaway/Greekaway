@@ -496,7 +496,7 @@
           <div class="ma-zone-meta">
             <span>Κατηγορία: ${getCategoryName(d.category_id)}</span>
             <span>Σειρά: ${d.display_order}</span>
-            ${d.route_type ? `<span>Τύπος: ${{airport:'✈️ Αεροδρόμιο',port:'⚓ Λιμάνι',city:'🏙️ Πόλη',travel:'🚗 Ταξίδια'}[d.route_type] || d.route_type}</span>` : ''}
+            <span>Τύπος: ${{airport:'✈️ Αεροδρόμιο',port:'⚓ Λιμάνι',city:'🏙️ Πόλη',travel:'🚗 Ταξίδια'}[d.route_type] || '— Δεν έχει οριστεί'}</span>
           </div>
           ${d.description ? `<p class="ma-zone-desc">${d.description}</p>` : ''}
           <div class="ma-zone-actions">
