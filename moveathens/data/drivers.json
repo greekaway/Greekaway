@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "drv_1770746362273_76151298",
+    "name": "Test Driver",
+    "phone": "+306912345678",
+    "notes": "",
+    "is_active": true,
+    "total_trips": 1,
+    "total_revenue": 50,
+    "total_owed": 0,
+    "total_paid": 0,
+    "created_at": "2026-02-10T17:59:22.273Z",
+    "updated_at": "2026-02-10T17:59:22.274Z"
+  }
+]

@@ -233,6 +233,7 @@ CREATE TABLE IF NOT EXISTS ma_transfer_requests (
     commission_hotel DECIMAL(10, 2) DEFAULT 0,
     commission_service DECIMAL(10, 2) DEFAULT 0,
     driver_id VARCHAR(50) REFERENCES ma_drivers(id) ON DELETE SET NULL,
+    driver_name VARCHAR(200) DEFAULT '',
     driver_phone VARCHAR(50) DEFAULT '',
     accept_token VARCHAR(100) UNIQUE,
     status VARCHAR(30) DEFAULT 'pending',
