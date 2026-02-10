@@ -45,6 +45,7 @@
 
   /* ─── lazy init: load data when drivers tab first becomes visible ─── */
   let initialised = false;
+  let _pollTimer = null;
 
   function initIfNeeded() {
     if (initialised) return;
@@ -52,6 +53,17 @@
     bindEvents();
     loadRequests();
     loadDrivers();
+    startPolling();
+  }
+
+  function startPolling() {
+    if (_pollTimer) return;
+    _pollTimer = setInterval(() => {
+      const driversPanel = _$('.tab-content[data-tab="drivers"]');
+      if (driversPanel && driversPanel.classList.contains('active')) {
+        loadRequests();
+      }
+    }, 12000); // refresh requests every 12 s
   }
 
   // Watch the parent tab system — when "drivers" tab activates, init

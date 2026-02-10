@@ -274,22 +274,16 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       if (request.scheduled_date) scheduleText = `📅 ${request.scheduled_date} ${request.scheduled_time || ''}`;
 
       const msg = [
-        `🚗 Νέα Διαδρομή MoveAthens`,
+        `Νέα Διαδρομή MoveAthens`,
+        `${request.hotel_name || '—'} → ${request.destination_name || '—'}`,
+        `Όχημα: ${request.vehicle_name || '—'} | ${scheduleText}`,
+        `Τιμή: ${parseFloat(request.price || 0).toFixed(0)}€ — Αμοιβή: ${parseFloat(request.commission_driver || 0).toFixed(0)}€`,
+        `Επιβάτης: ${request.passenger_name || '—'}`,
         ``,
-        `🏨 Ξενοδοχείο: ${request.hotel_name || '—'}`,
-        `🎯 Προορισμός: ${request.destination_name || '—'}`,
-        `🚘 Όχημα: ${request.vehicle_name || '—'}`,
-        `⏰ ${scheduleText}`,
-        `💰 Τιμή: €${parseFloat(request.price || 0).toFixed(0)}`,
-        `🤝 Δική σου αμοιβή: €${parseFloat(request.commission_driver || 0).toFixed(0)}`,
-        ``,
-        `👤 Επιβάτης: ${request.passenger_name || '—'}`,
-        ``,
-        `Πάτα εδώ για αποδοχή:`,
-        acceptUrl
+        `Αποδοχή: ${acceptUrl}`
       ].join('\n');
 
-      const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
+      const waUrl = `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(msg)}`;
 
       return res.json({
         ok: true,

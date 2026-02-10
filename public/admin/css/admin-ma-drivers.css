@@ -17,14 +17,14 @@
 .dr-panel { display: none; }
 .dr-panel.active { display: block; }
 
-/* --- section / panel --- */
-.dr-section { background: var(--ga-card, #fff); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
-.dr-section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+/* --- section / panel (forced-light — overrides dark admin theme) --- */
+.dr-section { background: #ffffff !important; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); color: #1a1a2e; }
+.dr-section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; color: #1a1a2e; }
 
 /* --- filter bar --- */
 .dr-filter-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
 .dr-filter-bar select,
-.dr-filter-bar input { padding: 8px 12px; border: 1px solid var(--ga-border, #d1d5db); border-radius: 8px; font-size: 14px; background: #fff; color: #1a1a2e; }
+.dr-filter-bar input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff !important; color: #1a1a2e !important; }
 
 /* --- data table --- */
 .dr-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
