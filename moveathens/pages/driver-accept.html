@@ -89,6 +89,7 @@
     <div id="trip-content" style="display:none">
       <h2 style="font-size:18px;margin-bottom:4px">Νέα Διαδρομή</h2>
       <p style="color:#6b7280;font-size:14px;margin-bottom:8px">Δες τα στοιχεία και πάτα αποδοχή</p>
+      <p style="color:#6b7280;font-size:14px;margin-bottom:8px">Μόλις αποβιβάσεις πάτα ολοκλήρωση</p>
 
       <div class="trip-info" id="trip-details"></div>
 
@@ -195,7 +196,18 @@
     function renderTrip(data) {
       const tariffLabel = data.tariff === 'night' ? '🌙 Νυχτερινή' : '☀️ Ημερήσια';
       let schedule = data.booking_type === 'instant' ? '⚡ Άμεσα' : '';
-      if (data.scheduled_date) schedule = '📅 ' + data.scheduled_date + (data.scheduled_time ? ' ' + data.scheduled_time : '');
+      if (data.scheduled_date) {
+        const [y, m, d] = data.scheduled_date.split('-');
+        let tStr = data.scheduled_time || '';
+        if (tStr) {
+          const [hh, mm] = tStr.split(':');
+          const h = parseInt(hh, 10);
+          const suffix = h < 12 ? 'πμ' : 'μμ';
+          const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+          tStr = String(h12).padStart(2,'0') + ':' + mm + ' ' + suffix;
+        }
+        schedule = '📅 ' + d + '-' + m + '-' + y + (tStr ? ' ' + tStr : '');
+      }
 
       // ── Section: Route ──
       const sections = [];

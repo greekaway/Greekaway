@@ -314,19 +314,30 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       const acceptUrl = `${BASE_URL}${acceptPath}?token=${request.accept_token}`;
 
       // Build WhatsApp message
-      const tariffLabel = request.tariff === 'night' ? 'Νυχτερινή' : 'Ημερήσια';
-      let scheduleText = request.booking_type === 'instant' ? '⚡ ΑΜΕΣΑ' : '';
-      if (request.scheduled_date) scheduleText = `📅 ${request.scheduled_date} ${request.scheduled_time || ''}`;
+      let scheduleText = '';
+      if (request.scheduled_date) {
+        // Format date as DD-MM-YYYY
+        const [y, m, d] = request.scheduled_date.split('-');
+        let timeStr = request.scheduled_time || '';
+        if (timeStr) {
+          const [hh, mm] = timeStr.split(':');
+          const h = parseInt(hh, 10);
+          const suffix = h < 12 ? 'πμ' : 'μμ';
+          const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+          timeStr = `${String(h12).padStart(2,'0')}:${mm} ${suffix}`;
+        }
+        scheduleText = `\n⏰Χρόνος📅 ${d}-${m}-${y} ${timeStr}`;
+      }
 
       const msg = [
         `Νέα Διαδρομή MoveAthens`,
         `${request.hotel_name || '—'} → ${request.destination_name || '—'}`,
-        `Όχημα: ${request.vehicle_name || '—'} | ${scheduleText}`,
-        `Τιμή: ${parseFloat(request.price || 0).toFixed(0)}€ — Αμοιβή: ${parseFloat(request.commission_driver || 0).toFixed(0)}€`,
-        `Επιβάτης: ${request.passenger_name || '—'}`,
+        scheduleText,
+        ``,
+        `Παρακαλώ πολύ πατήστε το link έτσι ώστε να αποδεχτείτε την διαδρομή`,
         ``,
         `Αποδοχή: ${acceptUrl}`
-      ].join('\n');
+      ].filter(l => l !== undefined).join('\n');
 
       const waUrl = `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(msg)}`;
 
