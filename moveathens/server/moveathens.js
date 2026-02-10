@@ -718,14 +718,23 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     }
   });
 
-  // Get active hotels (for hotel context dropdown)
+  // Get active hotels (for hotel context dropdown + autocomplete)
   app.get('/api/moveathens/zones', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
       const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
       const zones = data.transferZones
         .filter(z => z.is_active)
-        .map(z => ({ id: z.id, name: z.name, type: z.type, accommodation_type: z.accommodation_type || 'hotel' }));
+        .map(z => ({
+          id: z.id,
+          name: z.name,
+          type: z.type,
+          municipality: z.municipality || '',
+          address: z.address || '',
+          phone: z.phone || '',
+          email: z.email || '',
+          accommodation_type: z.accommodation_type || 'hotel'
+        }));
       return res.json({ zones });
     } catch (err) {
       return res.status(500).json({ error: 'Hotels unavailable' });

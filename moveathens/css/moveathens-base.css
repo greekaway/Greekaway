@@ -234,3 +234,56 @@ body {
     border-radius: 16px;
   }
 }
+
+/* ── Autocomplete (hotel name) ── */
+.ma-field--autocomplete {
+  position: relative;
+}
+.ma-autocomplete-wrap {
+  position: relative;
+}
+.ma-autocomplete-list {
+  display: none;
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  position: absolute;
+  z-index: 100;
+  left: 0; right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--ma-surface, #1a1f2e);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+}
+.ma-ac-item {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ma-ac-item:hover,
+.ma-ac-item.ma-ac-active {
+  background: rgba(70,211,255,0.15);
+}
+.ma-ac-name {
+  font-size: 15px;
+  color: var(--ma-text, #fff);
+}
+.ma-ac-name b {
+  color: var(--ma-accent, #46d3ff);
+  font-weight: 700;
+}
+.ma-ac-meta {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 2px;
+}
+.ma-ac-empty {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+}

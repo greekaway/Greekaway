@@ -23,18 +23,39 @@
     <main class="ma-main ma-main--with-header">
       <section class="ma-card ma-section">
         <h1 class="ma-title" data-ma-page-title="context"></h1>
+
+        <!-- Hotel name autocomplete -->
+        <div class="ma-field ma-field--autocomplete">
+          <label class="ma-muted">Όνομα Ξενοδοχείου</label>
+          <div class="ma-autocomplete-wrap">
+            <input class="ma-input" type="text" data-ma-hotel-input="name"
+                   placeholder="Πληκτρολογήστε για αναζήτηση…" autocomplete="off" />
+            <ul class="ma-autocomplete-list" data-ma-hotel-suggestions></ul>
+          </div>
+        </div>
+
+        <!-- Auto-filled fields (editable) -->
         <div class="ma-field">
-          <label class="ma-muted" data-ma-hotel-label="email"></label>
-          <input class="ma-input" type="email" data-ma-hotel-input="email" />
+          <label class="ma-muted">Δήμος</label>
+          <input class="ma-input" type="text" data-ma-hotel-input="municipality" placeholder="π.χ. Αθήνα" />
         </div>
         <div class="ma-field">
-          <label class="ma-muted">Ξενοδοχείο</label>
-          <select class="ma-select" data-ma-hotel-input="zone"></select>
-        </div>
-        <div class="ma-field">
-          <label class="ma-muted">Διεύθυνση Ξενοδοχείου</label>
+          <label class="ma-muted">Διεύθυνση</label>
           <input class="ma-input" type="text" data-ma-hotel-input="address" placeholder="π.χ. Λεωφόρος Αθηνών 50" />
         </div>
+        <div class="ma-field">
+          <label class="ma-muted">Τηλέφωνο</label>
+          <input class="ma-input" type="tel" data-ma-hotel-input="phone" placeholder="π.χ. 210 1234567" />
+        </div>
+        <div class="ma-field">
+          <label class="ma-muted">Email Ξενοδοχείου</label>
+          <input class="ma-input" type="email" data-ma-hotel-input="email" placeholder="info@hotel.gr" />
+        </div>
+        <div class="ma-field">
+          <label class="ma-muted">Τύπος Καταλύματος</label>
+          <input class="ma-input" type="text" data-ma-hotel-input="accommodation_type" placeholder="π.χ. hotel" readonly />
+        </div>
+
         <button class="ma-button ma-button--save" data-ma-hotel-save>
           <span class="ma-button__text">💾 Αποθήκευση</span>
           <span class="ma-button__success" style="display:none;">✓ Αποθηκεύτηκε!</span>

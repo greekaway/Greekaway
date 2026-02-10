@@ -512,9 +512,13 @@
 
     const hotelName = hotelContext.origin_zone_name || hotelContext.hotelName || 'Ξενοδοχείο';
     const hotelAddress = hotelContext.address || '';
+    const hotelMunicipality = hotelContext.municipality || '';
     
-    // Build location info (zone + address if available)
-    let locationInfo = `🏨 Περιοχή: ${hotelName}`;
+    // Build location info (zone + municipality + address)
+    let locationInfo = `🏨 Ξενοδοχείο: ${hotelName}`;
+    if (hotelMunicipality) {
+      locationInfo += `\n📌 Δήμος: ${hotelMunicipality}`;
+    }
     if (hotelAddress) {
       locationInfo += `\n📍 Διεύθυνση: ${hotelAddress}`;
     }
@@ -645,9 +649,13 @@
   const updateCtaLinks = (locationInfo) => {
     const hotelName = hotelContext.origin_zone_name || hotelContext.hotelName || 'Ξενοδοχείο';
     const hotelAddress = hotelContext.address || '';
+    const hotelMunicipality = hotelContext.municipality || '';
     
     if (!locationInfo) {
-      locationInfo = `🏨 Περιοχή: ${hotelName}`;
+      locationInfo = `🏨 Ξενοδοχείο: ${hotelName}`;
+      if (hotelMunicipality) {
+        locationInfo += `\n📌 Δήμος: ${hotelMunicipality}`;
+      }
       if (hotelAddress) {
         locationInfo += `\n📍 Διεύθυνση: ${hotelAddress}`;
       }
@@ -733,8 +741,9 @@
       const body = {
         origin_zone_id:    hotelContext.origin_zone_id || '',
         origin_zone_name:  hotelContext.origin_zone_name || '',
-        hotel_name:        hotelContext.hotelName || '',
+        hotel_name:        hotelContext.hotelName || hotelContext.origin_zone_name || '',
         hotel_address:     hotelContext.address || '',
+        hotel_municipality: hotelContext.municipality || '',
         destination_id:    selectedDestination.id || '',
         destination_name:  selectedDestination.name || '',
         vehicle_id:        selectedVehicle.id || '',
