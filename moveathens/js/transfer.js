@@ -61,7 +61,6 @@
   const confirmVehicle = $('#confirm-vehicle');
   const confirmPrice = $('#confirm-price');
   const ctaWhatsapp = $('#cta-whatsapp');
-  const ctaWhatsappCall = $('#cta-whatsapp-call');
   const ctaPhone = $('#cta-phone');
   const ctaWhatsappFallback = $('#cta-whatsapp-fallback');
   const ctaPhoneFallback = $('#cta-phone-fallback');
@@ -716,22 +715,8 @@
     const phone = CONFIG?.whatsappNumber?.replace(/[^0-9+]/g, '') || '';
     ctaWhatsapp.href = `https://wa.me/${phone}?text=${whatsappMsg}`;
     
-    // WhatsApp call link
-    const ctaWhatsappCallEl = $('#cta-whatsapp-call');
-    if (ctaWhatsappCallEl) {
-      ctaWhatsappCallEl.href = `https://wa.me/${phone}`;
-    }
-    
     // Phone link
     ctaPhone.href = `tel:${CONFIG?.phoneNumber || ''}`;
-    
-    // Email link with pre-filled subject and body
-    const ctaEmail = $('#cta-email');
-    if (ctaEmail && CONFIG?.companyEmail) {
-      const emailSubject = encodeURIComponent(`Κράτηση Transfer - ${selectedDestination.name}`);
-      const emailBody = encodeURIComponent(messageText);
-      ctaEmail.href = `mailto:${CONFIG.companyEmail}?subject=${emailSubject}&body=${emailBody}`;
-    }
     
     // Setup CTA validation for non-taxi vehicles
     setupCtaValidation();
@@ -777,7 +762,7 @@
 
   // Setup CTA click validation (block if passenger name is required but missing)
   const setupCtaValidation = () => {
-    const ctaIds = ['#cta-whatsapp', '#cta-phone', '#cta-whatsapp-call', '#cta-email'];
+    const ctaIds = ['#cta-whatsapp', '#cta-phone'];
     
     ctaIds.forEach(id => {
       const link = $(id);
