@@ -693,7 +693,11 @@
       const dt = new Date(`${selectedDateTime.date}T${selectedDateTime.time}`);
       const dayNames = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
       const monthNames = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
-      bookingTimeText = `📅 ${dayNames[dt.getDay()]} ${dt.getDate()} ${monthNames[dt.getMonth()]}, ώρα ${selectedDateTime.time}`;
+      const hh = parseInt(selectedDateTime.time.split(':')[0], 10);
+      const mm = selectedDateTime.time.split(':')[1];
+      const ampm = hh < 12 ? 'πμ' : 'μμ';
+      const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+      bookingTimeText = `📅 ${dayNames[dt.getDay()]} ${dt.getDate()} ${monthNames[dt.getMonth()]}, ώρα ${h12}:${mm} ${ampm}`;
     }
 
     // Build message content — ordered: destination, time, vehicle, hotel, passenger details, price

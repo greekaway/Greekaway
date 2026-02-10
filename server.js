@@ -613,6 +613,11 @@ app.use((req, res, next) => {
     return next();
   }
 
+  // B.5) Favicon for MoveAthens domain
+  if (url === '/favicon.ico') {
+    return res.sendFile(path.join(MOVEATHENS_BASE_DIR, 'icons', 'favicon-32x32.png'));
+  }
+
   // C) MoveAthens static assets (css, js, images, videos)
   if (url.startsWith('/moveathens/')) {
     // Serve from moveathens folder directly

@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>MoveAthens — Αποδοχή Διαδρομής</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/moveathens/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/moveathens/icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/moveathens/icons/apple-touch-icon.png">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f4f8;color:#1a1a2e;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;transition:background .3s,color .3s}
@@ -197,16 +200,20 @@
       const tariffLabel = data.tariff === 'night' ? '🌙 Νυχτερινή' : '☀️ Ημερήσια';
       let schedule = data.booking_type === 'instant' ? '⚡ Άμεσα' : '';
       if (data.scheduled_date) {
-        const [y, m, d] = data.scheduled_date.split('-');
-        let tStr = data.scheduled_time || '';
-        if (tStr) {
-          const [hh, mm] = tStr.split(':');
+        const dayNames = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
+        const monthNames = ['Ιανουαρίου','Φεβρουαρίου','Μαρτίου','Απριλίου','Μαΐου','Ιουνίου','Ιουλίου','Αυγούστου','Σεπτεμβρίου','Οκτωβρίου','Νοεμβρίου','Δεκεμβρίου'];
+        const dt = new Date(data.scheduled_date + 'T' + (data.scheduled_time || '00:00'));
+        const dayName = dayNames[dt.getDay()];
+        const monthName = monthNames[dt.getMonth()];
+        let tStr = '';
+        if (data.scheduled_time) {
+          const [hh, mm] = data.scheduled_time.split(':');
           const h = parseInt(hh, 10);
           const suffix = h < 12 ? 'πμ' : 'μμ';
           const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-          tStr = String(h12).padStart(2,'0') + ':' + mm + ' ' + suffix;
+          tStr = ' ώρα ' + h12 + ':' + mm + ' ' + suffix;
         }
-        schedule = '📅 ' + d + '-' + m + '-' + y + (tStr ? ' ' + tStr : '');
+        schedule = '📅 ' + dayName + ' ' + dt.getDate() + ', ' + monthName + tStr;
       }
 
       // ── Section: Route ──

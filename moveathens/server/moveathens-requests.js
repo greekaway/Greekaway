@@ -316,17 +316,20 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       // Build WhatsApp message
       let scheduleText = '';
       if (request.scheduled_date) {
-        // Format date as DD-MM-YYYY
-        const [y, m, d] = request.scheduled_date.split('-');
-        let timeStr = request.scheduled_time || '';
-        if (timeStr) {
-          const [hh, mm] = timeStr.split(':');
+        const dayNames = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
+        const monthNames = ['Ιανουαρίου','Φεβρουαρίου','Μαρτίου','Απριλίου','Μαΐου','Ιουνίου','Ιουλίου','Αυγούστου','Σεπτεμβρίου','Οκτωβρίου','Νοεμβρίου','Δεκεμβρίου'];
+        const dt = new Date(`${request.scheduled_date}T${request.scheduled_time || '00:00'}`);
+        const dayName = dayNames[dt.getDay()];
+        const monthName = monthNames[dt.getMonth()];
+        let timeStr = '';
+        if (request.scheduled_time) {
+          const [hh, mm] = request.scheduled_time.split(':');
           const h = parseInt(hh, 10);
           const suffix = h < 12 ? 'πμ' : 'μμ';
           const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-          timeStr = `${String(h12).padStart(2,'0')}:${mm} ${suffix}`;
+          timeStr = ` ώρα ${h12}:${mm} ${suffix}`;
         }
-        scheduleText = `\n⏰Χρόνος📅 ${d}-${m}-${y} ${timeStr}`;
+        scheduleText = `\n📅 ${dayName} ${dt.getDate()}, ${monthName}${timeStr}`;
       }
 
       const msg = [
