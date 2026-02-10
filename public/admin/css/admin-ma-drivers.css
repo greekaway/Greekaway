@@ -1,5 +1,35 @@
 /* ===== Admin MoveAthens Drivers Panel ===== */
 
+/*
+ * The admin panel uses a dark theme (.panel → --ga-card: #162432).
+ * We force a professional light-green palette for the entire drivers tab
+ * so every element is immediately readable — no hover required.
+ */
+
+/* ──── force light palette on the whole drivers tab ──── */
+.tab-content[data-tab="drivers"] {
+  color: #1a1a2e !important;
+}
+.tab-content[data-tab="drivers"] .panel {
+  background: #f0fdf4 !important;  /* soft mint-green */
+  border-color: #bbf7d0 !important;
+  color: #1a1a2e !important;
+}
+.tab-content[data-tab="drivers"] .ma-subtitle {
+  color: #166534 !important;  /* deep green */
+}
+.tab-content[data-tab="drivers"] .ma-helper {
+  color: #4b5563 !important;
+}
+.tab-content[data-tab="drivers"] .btn.secondary {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border: 1px solid #86efac !important;
+}
+.tab-content[data-tab="drivers"] .btn.secondary:hover {
+  background: #bbf7d0 !important;
+}
+
 /* --- layout --- */
 .dr-content-wrap {
   max-width: 1400px;
@@ -18,22 +48,22 @@
 .dr-panel.active { display: block; }
 
 /* --- section / panel (forced-light — overrides dark admin theme) --- */
-.dr-section { background: #ffffff !important; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); color: #1a1a2e; }
-.dr-section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; color: #1a1a2e; }
+.dr-section { background: #f0fdf4 !important; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); color: #1a1a2e; }
+.dr-section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; color: #166534; }
 
 /* --- filter bar --- */
 .dr-filter-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
 .dr-filter-bar select,
-.dr-filter-bar input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff !important; color: #1a1a2e !important; }
+.dr-filter-bar input { padding: 8px 12px; border: 1px solid #86efac !important; border-radius: 8px; font-size: 14px; background: #fff !important; color: #1a1a2e !important; }
 
 /* --- data table --- */
 .dr-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.dr-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.dr-table th { background: #f3f4f6; color: #6b7280; text-align: left; padding: 8px 10px; white-space: nowrap; font-weight: 600; position: sticky; top: 0; }
-.dr-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; color: #1a1a2e; }
-.dr-table tr:hover td { background: #f0f4ff; color: #1a1a2e; }
-.dr-table .dr-inline-input { background: #fff; color: #1a1a2e; }
-.dr-table tr:hover .dr-inline-input { background: #fff; color: #1a1a2e; }
+.dr-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #ffffff; }
+.dr-table th { background: #dcfce7 !important; color: #166534 !important; text-align: left; padding: 10px 12px; white-space: nowrap; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .3px; position: sticky; top: 0; border-bottom: 2px solid #86efac; }
+.dr-table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; color: #1a1a2e !important; background: #ffffff !important; }
+.dr-table tr:hover td { background: #f0fdf4 !important; color: #1a1a2e !important; }
+.dr-table .dr-inline-input { background: #fff !important; color: #1a1a2e !important; }
+.dr-table tr:hover .dr-inline-input { background: #fff !important; color: #1a1a2e !important; }
 
 /* status badges */
 .dr-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }

@@ -15,7 +15,11 @@ const driversData = require('../../src/server/data/moveathens-drivers');
 
 module.exports = function registerRequestRoutes(app, opts = {}) {
   const checkAdminAuth = typeof opts.checkAdminAuth === 'function' ? opts.checkAdminAuth : null;
-  const BASE_URL = process.env.BASE_URL || `http://127.0.0.1:${process.env.PORT || 3101}`;
+
+  // In production use the real domain; locally use .env BASE_URL or fallback
+  const BASE_URL = process.env.NODE_ENV === 'production'
+    ? 'https://www.moveathens.com'
+    : (process.env.BASE_URL || `http://127.0.0.1:${process.env.PORT || 3101}`);
 
   // Helper: get commissions from pricing data
   const getCommissions = async (originZoneId, destinationId, vehicleTypeId, tariff) => {
