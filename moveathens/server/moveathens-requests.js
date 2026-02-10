@@ -270,7 +270,11 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       });
 
       // Build the accept link
-      const acceptUrl = `${BASE_URL}/moveathens/driver-accept?token=${request.accept_token}`;
+      // On production (moveathens.com) the page map serves /driver-accept directly
+      // On localhost we need /moveathens/driver-accept
+      const isProduction = process.env.NODE_ENV === 'production';
+      const acceptPath = isProduction ? '/driver-accept' : '/moveathens/driver-accept';
+      const acceptUrl = `${BASE_URL}${acceptPath}?token=${request.accept_token}`;
 
       // Build WhatsApp message
       const tariffLabel = request.tariff === 'night' ? 'Νυχτερινή' : 'Ημερήσια';
