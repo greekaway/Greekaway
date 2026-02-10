@@ -1,0 +1,98 @@
+/**
+ * Admin MoveAthens — Hotel Revenue Styles
+ * Companion to admin-ma-hotel-revenue.js
+ */
+
+/* ─── Route type expand inside hotel revenue table ─── */
+.hrt-types-badge {
+  display: inline-block;
+  min-width: 28px;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--surface-alt, #1a2a3a);
+  color: var(--text-primary, #e0e6ed);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s, box-shadow .15s;
+  user-select: none;
+}
+
+.hrt-types-badge:hover,
+.hrt-types-badge.active {
+  background: var(--accent, #0095ff);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(0, 149, 255, 0.3);
+}
+
+.hrt-expand {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface-alt, #0d1b2a);
+  border: 1px solid var(--border, #1e3a5f);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.hrt-expand.hidden {
+  display: none;
+}
+
+.hrt-type-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hrt-type-row strong {
+  color: var(--accent, #0095ff);
+}
+
+/* ─── Hotel revenue table tweaks ─── */
+#hotel-rev-table th:nth-child(5),
+#hotel-rev-table td:nth-child(5) {
+  width: 100px;
+  text-align: center;
+}
+
+.hrt-types-cell {
+  position: relative;
+}
+
+/* ─── Date filter bar enhancement ─── */
+#hotel-revenue-section .dr-filter-bar,
+.tab-content[data-tab="driversmgmt"] .dr-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#hotel-revenue-section .dr-filter-bar input[type="date"],
+.tab-content[data-tab="driversmgmt"] input[type="date"] {
+  background: var(--surface, #0d1b2a);
+  color: var(--text-primary, #e0e6ed);
+  border: 1px solid var(--border, #1e3a5f);
+  border-radius: 6px;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .hrt-types-badge {
+    font-size: 12px;
+    padding: 2px 6px;
+  }
+  
+  .hrt-expand {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  #hotel-rev-table th,
+  #hotel-rev-table td {
+    font-size: 12px;
+    padding: 6px 4px;
+  }
+}

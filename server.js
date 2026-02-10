@@ -1320,7 +1320,8 @@ console.log('MoveAthens admin routes loaded');
 // MoveAthens Transfer Requests & Drivers
 require('./moveathens/server/moveathens-requests')(app, { checkAdminAuth });
 require('./moveathens/server/moveathens-drivers')(app, { checkAdminAuth });
-console.log('MoveAthens requests/drivers routes loaded');
+require('./moveathens/server/moveathens-hotel-revenue')(app, { checkAdminAuth });
+console.log('MoveAthens requests/drivers/hotel-revenue routes loaded');
 
 // Auto-expire orphan transfer requests (pending > 1 hour)
 try {

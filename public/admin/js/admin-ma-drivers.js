@@ -459,4 +459,10 @@
       loadAllDrivers();
     } catch (e) { toast('Σφάλμα: ' + e.message); }
   }
+
+  /* ─── Cross-module event: open driver modal from other modules ─── */
+  document.addEventListener('ma-open-driver-modal', function (e) {
+    var id = e.detail && e.detail.id;
+    if (id) openDriverModal(id);
+  });
 })();

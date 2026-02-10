@@ -534,16 +534,17 @@ const ma = {
   },
 
   async upsertDestination(data) {
-    const { id, name, description, category_id, zone_id, display_order, is_active } = data;
+    const { id, name, description, category_id, zone_id, route_type, display_order, is_active } = data;
     const destId = id || `dest_${Date.now()}`;
     const sql = `
-      INSERT INTO ma_destinations (id, name, description, category_id, zone_id, display_order, is_active)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO ma_destinations (id, name, description, category_id, zone_id, route_type, display_order, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,
         category_id = EXCLUDED.category_id,
         zone_id = EXCLUDED.zone_id,
+        route_type = EXCLUDED.route_type,
         display_order = EXCLUDED.display_order,
         is_active = EXCLUDED.is_active,
         updated_at = NOW()
@@ -551,7 +552,7 @@ const ma = {
     `;
     const rows = await query(sql, [
       destId, name, description || '', category_id || null,
-      zone_id || null, display_order || 0, is_active ?? true
+      zone_id || null, route_type || null, display_order || 0, is_active ?? true
     ]);
     return rows[0];
   },

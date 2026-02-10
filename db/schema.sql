@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS ma_destinations (
     description TEXT,
     category_id VARCHAR(50) REFERENCES ma_destination_categories(id) ON DELETE SET NULL,
     zone_id VARCHAR(50) REFERENCES ma_transfer_zones(id) ON DELETE SET NULL,
+    route_type VARCHAR(20) DEFAULT NULL,
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW(),

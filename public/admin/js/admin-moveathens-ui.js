@@ -467,6 +467,7 @@
     const fCategory = $('#maDestinationCategory');
     const fOrder = $('#maDestinationOrder');
     const fActive = $('#maDestinationActive');
+    const fRouteType = $('#maDestinationRouteType');
 
     const populateDropdowns = () => {
       // Categories (only active ones)
@@ -495,6 +496,7 @@
           <div class="ma-zone-meta">
             <span>Κατηγορία: ${getCategoryName(d.category_id)}</span>
             <span>Σειρά: ${d.display_order}</span>
+            ${d.route_type ? `<span>Τύπος: ${{airport:'✈️ Αεροδρόμιο',port:'⚓ Λιμάνι',city:'🏙️ Πόλη',travel:'🚗 Ταξίδια'}[d.route_type] || d.route_type}</span>` : ''}
           </div>
           ${d.description ? `<p class="ma-zone-desc">${d.description}</p>` : ''}
           <div class="ma-zone-actions">
@@ -529,6 +531,7 @@
       fCategory.value = '';
       fOrder.value = '0';
       fActive.checked = true;
+      if (fRouteType) fRouteType.value = '';
       setStatus(status, '', '');
     };
 
@@ -542,6 +545,7 @@
       fCategory.value = dest.category_id || '';
       fOrder.value = dest.display_order || 0;
       fActive.checked = dest.is_active !== false;
+      if (fRouteType) fRouteType.value = dest.route_type || '';
       form.hidden = false;
     };
 
@@ -588,6 +592,7 @@
         name,
         description: fDesc.value.trim(),
         category_id: fCategory.value,
+        route_type: fRouteType ? fRouteType.value || null : null,
         display_order: parseInt(fOrder.value, 10) || 0,
         is_active: fActive.checked,
         created_at: new Date().toISOString()

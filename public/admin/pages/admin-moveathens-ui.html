@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/admin-theme-toggle.css">
     <link rel="stylesheet" href="/admin/css/admin-moveathens-ui.css">
     <link rel="stylesheet" href="/admin/css/admin-ma-drivers.css">
+    <link rel="stylesheet" href="/admin/css/admin-ma-hotel-revenue.css">
     <link rel="manifest" href="/manifest-admin.json">
     <meta name="theme-color" content="#001f3f">
     <link rel="stylesheet" href="/pwa.css">
@@ -27,6 +28,7 @@
           <button class="bar-tab" data-tab="infopage">Πληροφορίες</button>
           <button class="bar-tab" data-tab="drivers">Αιτήματα Διαδρομών</button>
           <button class="bar-tab" data-tab="driversmgmt">Οδηγοί</button>
+          <button class="bar-tab" data-tab="hotelrevenue">Έσοδα Ξενοδοχείων</button>
 
         </div>
       </div>
@@ -199,6 +201,15 @@
               </label>
               <label>Σειρά Εμφάνισης
                 <input id="maDestinationOrder" class="input" type="number" min="0" value="0">
+              </label>
+              <label>Τύπος Διαδρομής (εσωτερικό)
+                <select id="maDestinationRouteType" class="input">
+                  <option value="">-- Χωρίς --</option>
+                  <option value="airport">✈️ Αεροδρόμιο</option>
+                  <option value="port">⚓ Λιμάνι</option>
+                  <option value="city">🏙️ Πόλη</option>
+                  <option value="travel">🚗 Ταξίδια</option>
+                </select>
               </label>
               <label class="ma-zone-toggle">
                 <input id="maDestinationActive" type="checkbox" checked>
@@ -566,6 +577,19 @@
             </div>
           </div>
 
+          <!-- Date range filter -->
+          <div class="dr-filter-bar" style="margin-top:8px;flex-wrap:wrap">
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px">Από:
+              <input type="date" id="drvmgmt-date-from" class="input" style="width:150px;padding:4px 8px;font-size:13px">
+            </label>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px">Έως:
+              <input type="date" id="drvmgmt-date-to" class="input" style="width:150px;padding:4px 8px;font-size:13px">
+            </label>
+            <button class="btn secondary" id="drvmgmt-date-apply" type="button" style="font-size:12px;padding:4px 12px">📅 Φίλτρο</button>
+            <button class="btn secondary" id="drvmgmt-date-clear" type="button" style="font-size:12px;padding:4px 12px">✕ Καθαρισμός</button>
+            <span id="drvmgmt-date-info" style="font-size:12px;color:var(--text-muted,#888)"></span>
+          </div>
+
           <div class="dr-table-wrap">
             <table class="dr-table">
               <thead>
@@ -584,6 +608,62 @@
             </table>
           </div>
           <div class="dr-empty" id="drvmgmt-empty" style="display:none">Δεν υπάρχουν οδηγοί.</div>
+        </section>
+      </div>
+
+      <!-- ===== HOTEL REVENUE TAB (Έσοδα Ξενοδοχείων) ===== -->
+      <div class="tab-content" data-tab="hotelrevenue">
+        <section class="panel" id="hotel-revenue-section">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">🏨 Ξενοδοχεία — Οικονομική Επισκόπηση</h3>
+              <p class="ma-helper">Διαδρομές, τζίρος, προμήθειες &amp; τύποι διαδρομών ανά ξενοδοχείο.</p>
+            </div>
+            <div class="dr-filter-bar" style="margin:0">
+              <label style="font-size:13px;display:flex;align-items:center;gap:6px">Ταξινόμηση:
+                <select id="hotel-rev-sort-field">
+                  <option value="hotel_name">Όνομα</option>
+                  <option value="total_routes">Διαδρομές</option>
+                  <option value="total_revenue">Έσοδα</option>
+                  <option value="total_commission">Προμήθειες</option>
+                </select>
+              </label>
+              <select id="hotel-rev-sort-dir">
+                <option value="desc">▼ Μεγαλύτερα πρώτα</option>
+                <option value="asc">▲ Μικρότερα πρώτα</option>
+              </select>
+              <button class="btn secondary" id="hotel-rev-refresh" type="button">🔄 Ανανέωση</button>
+            </div>
+          </div>
+
+          <!-- Date range filter -->
+          <div class="dr-filter-bar" style="margin-top:8px;flex-wrap:wrap">
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px">Από:
+              <input type="date" id="hotel-rev-date-from" class="input" style="width:150px;padding:4px 8px;font-size:13px">
+            </label>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px">Έως:
+              <input type="date" id="hotel-rev-date-to" class="input" style="width:150px;padding:4px 8px;font-size:13px">
+            </label>
+            <button class="btn secondary" id="hotel-rev-date-apply" type="button" style="font-size:12px;padding:4px 12px">📅 Φίλτρο</button>
+            <button class="btn secondary" id="hotel-rev-date-clear" type="button" style="font-size:12px;padding:4px 12px">✕ Καθαρισμός</button>
+            <span id="hotel-rev-date-info" style="font-size:12px;color:var(--text-muted,#888)"></span>
+          </div>
+
+          <div class="dr-table-wrap" style="margin-top:12px">
+            <table class="dr-table" id="hotel-rev-table">
+              <thead>
+                <tr>
+                  <th>Ξενοδοχείο</th>
+                  <th>Διαδρομές</th>
+                  <th>Έσοδα (€)</th>
+                  <th>Προμήθειες (€)</th>
+                  <th>Τύποι Διαδρ.</th>
+                </tr>
+              </thead>
+              <tbody id="hotel-rev-tbody"></tbody>
+            </table>
+          </div>
+          <div class="dr-empty" id="hotel-rev-empty" style="display:none">Δεν υπάρχουν δεδομένα ξενοδοχείων.</div>
         </section>
       </div>
 
@@ -647,6 +727,7 @@
 
     <script src="/admin/js/admin-moveathens-ui.js"></script>
     <script src="/admin/js/admin-ma-drivers.js"></script>
+    <script src="/admin/js/admin-ma-hotel-revenue.js"></script>
     <script src="/js/admin-theme-toggle.js"></script>
     <script src="/pwa-install.js" defer></script>
     <script src="/js/main.js"></script>

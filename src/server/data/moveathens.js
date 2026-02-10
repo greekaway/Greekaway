@@ -853,6 +853,7 @@ async function upsertDestination(data) {
         description: data.description || '',
         category_id: data.category_id || null,
         zone_id: data.zone_id || null,
+        route_type: data.route_type || null,
         display_order: data.display_order || 0,
         is_active: data.is_active !== false
       });
@@ -863,6 +864,7 @@ async function upsertDestination(data) {
         description: row.description || '',
         category_id: row.category_id,
         zone_id: row.zone_id,
+        route_type: row.route_type || null,
         display_order: row.display_order,
         is_active: row.is_active,
         created_at: row.created_at
@@ -882,6 +884,7 @@ async function upsertDestination(data) {
     description: data.description || '',
     category_id: data.category_id || null,
     zone_id: data.zone_id || null,
+    route_type: data.route_type || null,
     display_order: data.display_order || 0,
     is_active: data.is_active !== false,
     created_at: idx >= 0 ? dests[idx].created_at : new Date().toISOString()
