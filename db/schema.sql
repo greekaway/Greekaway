@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS ma_config (
     hotel_email_subject_prefix VARCHAR(255),
     info_page_title VARCHAR(255),
     info_page_content TEXT,
+    show_price_in_message BOOLEAN DEFAULT true,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

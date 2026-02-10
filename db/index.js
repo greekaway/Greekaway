@@ -342,7 +342,9 @@ const ma = {
       // New structured info sections (2026-01-30)
       'info_cancellation_title', 'info_cancellation_content',
       'info_compliance_title', 'info_compliance_content',
-      'info_faq_title', 'info_faq_content'
+      'info_faq_title', 'info_faq_content',
+      // Price toggle (2026-02-10)
+      'show_price_in_message'
     ];
     
     const updates = [];

@@ -697,13 +697,13 @@
       bookingTimeText = `📅 ${dayNames[dt.getDay()]} ${dt.getDate()} ${monthNames[dt.getMonth()]}, ώρα ${selectedDateTime.time}`;
     }
 
-    // Build message content — ordered: destination, hotel, time, details, price
+    // Build message content — ordered: destination, time, vehicle, hotel, passenger details, price
     const parts = [];
     parts.push(`🎯 Προορισμός: ${selectedDestination.name}`);
+    if (bookingTimeText) parts.push(`⏰ Χρόνος: ${bookingTimeText}`);
     parts.push(`🚗 Όχημα: ${selectedVehicle.name}`);
     parts.push('');
     parts.push(locationInfo);
-    if (bookingTimeText) parts.push(`\n⏰ Χρόνος: ${bookingTimeText}`);
     if (travelDetails) parts.push(`\n${travelDetails.trim()}`);
     // Price — only if admin has enabled it
     const showPrice = CONFIG?.showPriceInMessage !== false;

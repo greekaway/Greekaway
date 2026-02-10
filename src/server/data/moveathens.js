@@ -187,7 +187,8 @@ async function getConfig() {
             infoComplianceTitle: migrated.info_compliance_title || '',
             infoComplianceContent: migrated.info_compliance_content || '',
             infoFaqTitle: migrated.info_faq_title || '',
-            infoFaqContent: migrated.info_faq_content || ''
+            infoFaqContent: migrated.info_faq_content || '',
+            showPriceInMessage: migrated.show_price_in_message !== false
           };
         }
       }
@@ -214,7 +215,8 @@ async function getConfig() {
         infoComplianceTitle: row.info_compliance_title || '',
         infoComplianceContent: row.info_compliance_content || '',
         infoFaqTitle: row.info_faq_title || '',
-        infoFaqContent: row.info_faq_content || ''
+        infoFaqContent: row.info_faq_content || '',
+        showPriceInMessage: row.show_price_in_message !== false
       };
     } catch (err) {
       console.error('[moveathens] DB config read failed:', err.message);
@@ -243,7 +245,8 @@ async function getConfig() {
     infoComplianceTitle: full.infoComplianceTitle || '',
     infoComplianceContent: full.infoComplianceContent || '',
     infoFaqTitle: full.infoFaqTitle || '',
-    infoFaqContent: full.infoFaqContent || ''
+    infoFaqContent: full.infoFaqContent || '',
+    showPriceInMessage: full.showPriceInMessage !== false
   };
 }
 
