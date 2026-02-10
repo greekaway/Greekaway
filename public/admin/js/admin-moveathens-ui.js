@@ -179,6 +179,12 @@
       if (fields.phoneNumber) fields.phoneNumber.value = CONFIG.phoneNumber || '';
       if (fields.whatsappNumber) fields.whatsappNumber.value = CONFIG.whatsappNumber || '';
       if (fields.companyEmail) fields.companyEmail.value = CONFIG.companyEmail || '';
+
+      // Price visibility toggle
+      const priceToggle = document.getElementById('showPriceToggle');
+      if (priceToggle) {
+        priceToggle.checked = CONFIG.showPriceInMessage !== false; // default ON
+      }
     };
 
     if (form) {
@@ -205,7 +211,8 @@
           },
           phoneNumber: fields.phoneNumber?.value || '',
           whatsappNumber: fields.whatsappNumber?.value || '',
-          companyEmail: fields.companyEmail?.value || ''
+          companyEmail: fields.companyEmail?.value || '',
+          showPriceInMessage: document.getElementById('showPriceToggle')?.checked !== false
         };
         const res = await api('/api/admin/moveathens/ui-config', 'POST', payload);
         if (!res) return;
@@ -1451,6 +1458,20 @@
       pricingTab.render();
       infoPageTab.populate();
       console.log('[admin-ma] Init complete ✔');
+
+      // Price toggle — auto-save on change
+      const priceToggle = document.getElementById('showPriceToggle');
+      if (priceToggle) {
+        priceToggle.addEventListener('change', async () => {
+          const val = priceToggle.checked;
+          const res = await api('/api/admin/moveathens/ui-config', 'PUT', { showPriceInMessage: val });
+          if (res && res.ok) {
+            showToast(val ? '✅ Τιμή ενεργή στο μήνυμα' : '❌ Τιμή κρυφή από το μήνυμα');
+          } else {
+            showToast('⚠️ Σφάλμα αποθήκευσης');
+          }
+        });
+      }
     } catch (err) {
       console.error('[admin-ma] INIT CRASHED:', err);
     }

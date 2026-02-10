@@ -116,6 +116,11 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       };
     }
 
+    // Price visibility toggle (boolean, default true)
+    if (typeof incoming.showPriceInMessage === 'boolean') {
+      merged.showPriceInMessage = incoming.showPriceInMessage;
+    }
+
     return { ok: true, data: merged };
   };
 
@@ -1255,6 +1260,9 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       }
       if (typeof body.infoPageContent === 'string') {
         updates.infoPageContent = body.infoPageContent.slice(0, 10000); // Allow up to 10k chars
+      }
+      if (typeof body.showPriceInMessage === 'boolean') {
+        updates.showPriceInMessage = body.showPriceInMessage;
       }
       
       // Save to database (with JSON fallback)

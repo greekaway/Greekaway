@@ -697,16 +697,19 @@
       bookingTimeText = `📅 ${dayNames[dt.getDay()]} ${dt.getDate()} ${monthNames[dt.getMonth()]}, ώρα ${selectedDateTime.time}`;
     }
 
-    // Build message content
-    const messageText = 
-      `Γεια σας! Θέλω να κλείσω transfer:\n\n` +
-      `🎯 Προορισμός: ${selectedDestination.name}\n` +
-      ` Όχημα: ${selectedVehicle.name}\n` +
-      (bookingTimeText ? `⏰ Χρόνος: ${bookingTimeText}\n` : '') +
-      (travelDetails ? `\n${travelDetails}` : '') +
-      `💰 Τιμή: €${selectedVehicle.price.toFixed(0)}\n\n` +
-      `${locationInfo}\n\n` +
-      `Παρακαλώ επικοινωνήστε μαζί μου για να ολοκληρώσουμε την κράτηση.`;
+    // Build message content — ordered: destination, hotel, time, details, price
+    const parts = [];
+    parts.push(`🎯 Προορισμός: ${selectedDestination.name}`);
+    parts.push(`🚗 Όχημα: ${selectedVehicle.name}`);
+    parts.push('');
+    parts.push(locationInfo);
+    if (bookingTimeText) parts.push(`\n⏰ Χρόνος: ${bookingTimeText}`);
+    if (travelDetails) parts.push(`\n${travelDetails.trim()}`);
+    // Price — only if admin has enabled it
+    const showPrice = CONFIG?.showPriceInMessage !== false;
+    if (showPrice) parts.push(`\n💰 Τιμή: €${selectedVehicle.price.toFixed(0)}`);
+
+    const messageText = parts.join('\n');
 
     // WhatsApp link with pre-filled message
     const whatsappMsg = encodeURIComponent(messageText);
@@ -855,9 +858,8 @@
     // Fallback CTAs (for no-zone warning)
     const phone = CONFIG?.whatsappNumber?.replace(/[^0-9+]/g, '') || '';
     const fallbackMessage = encodeURIComponent(
-      'Γεια σας! Χρειάζομαι βοήθεια με τη ρύθμιση του ξενοδοχείου μου στο MoveAthens.\n\n' +
-      'Δεν μπορώ να ολοκληρώσω την κράτηση transfer γιατί δεν έχει επιλεγεί ξενοδοχείο.\n\n' +
-      'Παρακαλώ επικοινωνήστε μαζί μου.'
+      'Χρειάζομαι βοήθεια — δεν έχω καταχωρήσει ακόμα το ξενοδοχείο μου στο MoveAthens.\n\n' +
+      'Πώς μπορώ να περάσω το όνομα του ξενοδοχείου μου;'
     );
     if (ctaWhatsappFallback) ctaWhatsappFallback.href = `https://wa.me/${phone}?text=${fallbackMessage}`;
     if (ctaPhoneFallback) ctaPhoneFallback.href = `tel:${CONFIG?.phoneNumber || ''}`;
