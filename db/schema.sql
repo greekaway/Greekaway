@@ -215,6 +215,7 @@ CREATE TABLE IF NOT EXISTS ma_transfer_requests (
     origin_zone_name VARCHAR(200) DEFAULT '',
     hotel_name VARCHAR(200) DEFAULT '',
     hotel_address VARCHAR(300) DEFAULT '',
+    hotel_municipality VARCHAR(255) DEFAULT '',
     destination_id VARCHAR(50),
     destination_name VARCHAR(200) DEFAULT '',
     vehicle_type_id VARCHAR(50),

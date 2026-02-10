@@ -77,6 +77,7 @@ async function createRequest(data) {
     origin_zone_name: data.origin_zone_name || '',
     hotel_name: data.hotel_name || '',
     hotel_address: data.hotel_address || '',
+    hotel_municipality: data.hotel_municipality || '',
     destination_id: data.destination_id || '',
     destination_name: data.destination_name || '',
     vehicle_type_id: data.vehicle_type_id || '',

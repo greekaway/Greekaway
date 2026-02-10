@@ -226,8 +226,34 @@
     if (!list.length) { tbody.innerHTML = ''; if (empty) empty.style.display = 'block'; return; }
     if (empty) empty.style.display = 'none';
 
+    // Skip full re-render if user is actively editing a phone input
+    var activeEl = document.activeElement;
+    if (activeEl && activeEl.classList.contains('req-phone') && tbody.contains(activeEl)) {
+      // Only update non-input cells (status badges, etc.) without touching rows being edited
+      var editingRowId = activeEl.closest('tr') ? activeEl.closest('tr').dataset.id : null;
+      var serverMap = {};
+      list.forEach(function (r) { serverMap[r.id] = r; });
+      // Update status badges and other cells for rows NOT being edited
+      _$$('tr[data-id]', tbody).forEach(function (tr) {
+        if (tr.dataset.id === editingRowId) return; // skip the row user is typing in
+        var r = serverMap[tr.dataset.id];
+        if (!r) return;
+        var statusTd = tr.children[6];
+        if (statusTd) statusTd.innerHTML = statusBadge(r.status);
+      });
+      return;
+    }
+
+    // Preserve any phone values the user typed but hasn't sent yet
+    var savedPhones = {};
+    _$$('.req-phone', tbody).forEach(function (input) {
+      var tr = input.closest('tr');
+      if (tr && input.value.trim()) savedPhones[tr.dataset.id] = input.value;
+    });
+
     tbody.innerHTML = list.map(function (r) {
       var canSend = r.status === 'pending' || r.status === 'sent';
+      var phoneVal = savedPhones[r.id] || r.driver_phone || '';
       return '<tr data-id="' + r.id + '">' +
         '<td title="' + r.id + '">' + String(r.id).slice(-6) + '</td>' +
         '<td>' + (r.hotel_name || '—') + '</td>' +
@@ -237,7 +263,7 @@
         '<td>' + (r.passenger_name || '—') + '</td>' +
         '<td>' + statusBadge(r.status) + '</td>' +
         '<td>' + (canSend
-          ? '<input class="dr-inline-input req-phone" value="' + (r.driver_phone || '') + '" placeholder="+30…">'
+          ? '<input class="dr-inline-input req-phone" value="' + phoneVal + '" placeholder="+30…">'
           : (r.driver_phone || '—')) + '</td>' +
         '<td style="white-space:nowrap">' +
           (canSend ? '<button class="dr-btn dr-btn-success req-send-btn">Αποστολή</button>' : '') +
@@ -376,8 +402,9 @@
       btn.addEventListener('click', async function () {
         var tr = btn.closest('tr');
         var id = tr.dataset.id;
-        var driver = Object.values(_driversMap).find(function(d) { return d.id === id; });
-        var bal = driver ? (parseFloat(driver.total_owed || 0) - parseFloat(driver.total_paid || 0)) : 0;
+        // Read balance directly from the rendered table cell (column 7, index 6)
+        var balCell = tr.children[6];
+        var bal = balCell ? parseFloat(balCell.textContent.replace(/[^0-9.\-]/g, '')) || 0 : 0;
         if (bal > 0) {
           toast('⚠️ Ο οδηγός χρωστάει €' + bal.toFixed(0) + ' — δεν μπορεί να διαγραφεί.');
           return;

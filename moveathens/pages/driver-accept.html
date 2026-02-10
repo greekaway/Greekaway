@@ -15,8 +15,19 @@
     .trip-row .icon{font-size:18px;min-width:24px;text-align:center}
     .trip-row .label{color:#6b7280;min-width:80px}
     .trip-row .value{font-weight:600;color:#1a1a2e;transition:color .3s}
-    .price-highlight{background:linear-gradient(135deg,#001f3f,#0d6efd);color:#fff;border-radius:12px;padding:16px;margin:12px 0;display:flex;justify-content:space-between;align-items:center;font-size:18px}
-    .price-highlight .amount{font-size:28px;font-weight:700}
+    .section-divider{height:1px;background:#e5e7eb;margin:6px 0;transition:background .3s}
+    .section-title{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;font-weight:600;margin:4px 0 2px;padding-left:32px}
+    .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+    .price-card{background:#f0f4f8;border-radius:10px;padding:12px;text-align:center;transition:background .3s}
+    .price-card .pc-label{font-size:12px;color:#6b7280;margin-bottom:4px}
+    .price-card .pc-value{font-size:20px;font-weight:700;color:#1a1a2e;transition:color .3s}
+    .price-card.driver{background:linear-gradient(135deg,#001f3f,#0d6efd);color:#fff}
+    .price-card.driver .pc-label{color:rgba(255,255,255,.75)}
+    .price-card.driver .pc-value{color:#fff;font-size:26px}
+    .price-card.hotel{background:#fef3c7}
+    .price-card.hotel .pc-value{color:#92400e}
+    .price-card.service{background:#ede9fe}
+    .price-card.service .pc-value{color:#5b21b6}
     .name-input{width:100%;padding:12px 16px;border:2px solid #d1d5db;border-radius:10px;font-size:16px;margin:12px 0;outline:none;transition:border-color .2s,background .3s,color .3s;background:#fff;color:#1a1a2e}
     .name-input:focus{border-color:#0d6efd}
     .btn{display:block;width:100%;padding:14px;border:none;border-radius:12px;font-size:17px;font-weight:600;cursor:pointer;transition:all .2s}
@@ -45,6 +56,14 @@
       .trip-info{background:#1b2d3e}
       .trip-row .label{color:#8b9db0}
       .trip-row .value{color:#e0e6ed}
+      .section-divider{background:#2d4a5e}
+      .section-title{color:#5b7a94}
+      .price-card{background:#1b2d3e}
+      .price-card .pc-value{color:#e0e6ed}
+      .price-card.hotel{background:#422006}
+      .price-card.hotel .pc-value{color:#fbbf24}
+      .price-card.service{background:#2e1065}
+      .price-card.service .pc-value{color:#a78bfa}
       .name-input{background:#1b2d3e;color:#e0e6ed;border-color:#2d4a5e}
       .name-input:focus{border-color:#0d6efd}
       .spinner{border-color:#2d4a5e;border-top-color:#0d6efd}
@@ -73,10 +92,7 @@
 
       <div class="trip-info" id="trip-details"></div>
 
-      <div class="price-highlight">
-        <span>Η αμοιβή σου</span>
-        <span class="amount" id="driver-pay">€0</span>
-      </div>
+      <div class="price-grid" id="price-grid"></div>
 
       <input type="text" class="name-input" id="driver-name"
         placeholder="Το όνομά σου (προαιρετικά)" maxlength="100">
@@ -117,7 +133,6 @@
     const expiredContent = document.getElementById('expired-content');
     const acceptedContent = document.getElementById('accepted-content');
     const tripDetails = document.getElementById('trip-details');
-    const driverPay = document.getElementById('driver-pay');
     const acceptBtn = document.getElementById('accept-btn');
     const completeBtn = document.getElementById('complete-btn');
     const driverNameInput = document.getElementById('driver-name');
@@ -182,26 +197,72 @@
       let schedule = data.booking_type === 'instant' ? '⚡ Άμεσα' : '';
       if (data.scheduled_date) schedule = '📅 ' + data.scheduled_date + (data.scheduled_time ? ' ' + data.scheduled_time : '');
 
-      const rows = [
-        { icon: '🏨', label: 'Ξενοδοχείο', value: data.hotel_name || '—' },
-        { icon: '🎯', label: 'Προορισμός', value: data.destination_name || '—' },
-        { icon: '🚘', label: 'Όχημα', value: data.vehicle_name || '—' },
-        { icon: '⏰', label: 'Χρόνος', value: schedule || tariffLabel },
-        { icon: '👤', label: 'Επιβάτης', value: data.passenger_name || '—' },
-        { icon: '👥', label: 'Άτομα', value: data.passengers || '—' },
-        { icon: '💰', label: 'Τιμή', value: '€' + parseFloat(data.price || 0).toFixed(0) },
-        { icon: '💳', label: 'Πληρωμή', value: data.payment_method === 'pos' ? 'POS' : 'Μετρητά' }
-      ];
+      // ── Section: Route ──
+      const sections = [];
+      sections.push({ type: 'title', text: 'Διαδρομή' });
+      sections.push({ icon: '🎯', label: 'Προορισμός', value: data.destination_name || '—' });
+      sections.push({ icon: '🚘', label: 'Όχημα', value: data.vehicle_name || '—' });
+      sections.push({ icon: '⏰', label: 'Χρόνος', value: schedule || tariffLabel });
+      sections.push({ icon: '💳', label: 'Πληρωμή', value: data.payment_method === 'pos' ? 'POS' : 'Μετρητά' });
 
-      tripDetails.innerHTML = rows.map(r =>
-        '<div class="trip-row">' +
+      // ── Section: Hotel ──
+      sections.push({ type: 'divider' });
+      sections.push({ type: 'title', text: 'Ξενοδοχείο' });
+      sections.push({ icon: '🏨', label: 'Όνομα', value: data.hotel_name || '—' });
+      if (data.hotel_municipality) {
+        sections.push({ icon: '📌', label: 'Δήμος', value: data.hotel_municipality });
+      }
+      if (data.hotel_address) {
+        sections.push({ icon: '📍', label: 'Διεύθυνση', value: data.hotel_address });
+      }
+
+      // ── Section: Passengers ──
+      sections.push({ type: 'divider' });
+      sections.push({ type: 'title', text: 'Επιβάτες & Αποσκευές' });
+      if (data.passenger_name) {
+        sections.push({ icon: '👤', label: 'Όνομα', value: data.passenger_name });
+      }
+      sections.push({ icon: '👥', label: 'Άτομα', value: data.passengers || '—' });
+      const luggageParts = [];
+      if (data.luggage_large > 0) luggageParts.push(data.luggage_large + ' μεγάλ.');
+      if (data.luggage_medium > 0) luggageParts.push(data.luggage_medium + ' μεσαί.');
+      if (data.luggage_cabin > 0) luggageParts.push(data.luggage_cabin + ' χειρ.');
+      sections.push({ icon: '🧳', label: 'Αποσκευές', value: luggageParts.length ? luggageParts.join(', ') : '—' });
+
+      // Render rows
+      tripDetails.innerHTML = sections.map(function(r) {
+        if (r.type === 'divider') return '<div class="section-divider"></div>';
+        if (r.type === 'title') return '<div class="section-title">' + r.text + '</div>';
+        return '<div class="trip-row">' +
           '<span class="icon">' + r.icon + '</span>' +
           '<span class="label">' + r.label + '</span>' +
           '<span class="value">' + r.value + '</span>' +
-        '</div>'
-      ).join('');
+        '</div>';
+      }).join('');
 
-      driverPay.textContent = '€' + parseFloat(data.commission_driver || 0).toFixed(0);
+      // ── Price cards (4 fields) ──
+      var price = parseFloat(data.price || 0);
+      var driverCut = parseFloat(data.commission_driver || 0);
+      var hotelCut = parseFloat(data.commission_hotel || 0);
+      var serviceCut = parseFloat(data.commission_service || 0);
+
+      document.getElementById('price-grid').innerHTML =
+        '<div class="price-card driver" style="grid-column:1/-1">' +
+          '<div class="pc-label">💶 Η αμοιβή σου</div>' +
+          '<div class="pc-value">€' + driverCut.toFixed(0) + '</div>' +
+        '</div>' +
+        '<div class="price-card">' +
+          '<div class="pc-label">💰 Συνολ. Χρέωση</div>' +
+          '<div class="pc-value">€' + price.toFixed(0) + '</div>' +
+        '</div>' +
+        '<div class="price-card hotel">' +
+          '<div class="pc-label">🏨 Ξενοδόχος</div>' +
+          '<div class="pc-value">€' + hotelCut.toFixed(0) + '</div>' +
+        '</div>' +
+        '<div class="price-card service">' +
+          '<div class="pc-label">🔧 Υπηρεσία</div>' +
+          '<div class="pc-value">€' + serviceCut.toFixed(0) + '</div>' +
+        '</div>';
 
       loading.classList.remove('show');
       tripContent.style.display = 'block';

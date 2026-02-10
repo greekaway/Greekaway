@@ -686,18 +686,18 @@ const ma = {
   async createRequest(data) {
     const sql = `
       INSERT INTO ma_transfer_requests (
-        id, origin_zone_id, origin_zone_name, hotel_name, hotel_address,
+        id, origin_zone_id, origin_zone_name, hotel_name, hotel_address, hotel_municipality,
         destination_id, destination_name, vehicle_type_id, vehicle_name,
         tariff, booking_type, scheduled_date, scheduled_time,
         passenger_name, passengers, luggage_large, luggage_medium, luggage_cabin,
         payment_method, price, commission_driver, commission_hotel, commission_service,
         status, accept_token
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26
       ) RETURNING *
     `;
     const rows = await query(sql, [
-      data.id, data.origin_zone_id, data.origin_zone_name || '', data.hotel_name || '', data.hotel_address || '',
+      data.id, data.origin_zone_id, data.origin_zone_name || '', data.hotel_name || '', data.hotel_address || '', data.hotel_municipality || '',
       data.destination_id || '', data.destination_name || '', data.vehicle_type_id || '', data.vehicle_name || '',
       data.tariff || 'day', data.booking_type || 'instant', data.scheduled_date || '', data.scheduled_time || '',
       data.passenger_name || '', data.passengers || 0, data.luggage_large || 0, data.luggage_medium || 0, data.luggage_cabin || 0,
