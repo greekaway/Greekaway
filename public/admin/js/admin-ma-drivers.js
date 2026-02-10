@@ -376,11 +376,26 @@
       btn.addEventListener('click', async function () {
         var tr = btn.closest('tr');
         var id = tr.dataset.id;
+        var driver = Object.values(_driversMap).find(function(d) { return d.id === id; });
+        var bal = driver ? (parseFloat(driver.total_owed || 0) - parseFloat(driver.total_paid || 0)) : 0;
+        if (bal > 0) {
+          toast('⚠️ Ο οδηγός χρωστάει €' + bal.toFixed(0) + ' — δεν μπορεί να διαγραφεί.');
+          return;
+        }
         var ok = await showConfirm('Διαγραφή Οδηγού', 'Θέλεις σίγουρα να διαγράψεις αυτόν τον οδηγό;');
         if (!ok) return;
         btn.disabled = true;
         try {
-          await api('/api/admin/moveathens/drivers/' + id, { method: 'DELETE' });
+          var resp = await fetch('/api/admin/moveathens/drivers/' + id, { method: 'DELETE', credentials: 'same-origin' });
+          var data = await resp.json();
+          if (!resp.ok) {
+            if (data.error === 'BALANCE_OWED') {
+              toast('⚠️ ' + data.message);
+              btn.disabled = false;
+              return;
+            }
+            throw new Error(data.error || 'Delete failed');
+          }
           toast('Διαγράφηκε');
           loadAllDrivers();
         } catch (e) { toast('Σφάλμα: ' + e.message); btn.disabled = false; }

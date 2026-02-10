@@ -23,6 +23,10 @@
     .btn-accept{background:linear-gradient(135deg,#10b981,#059669);color:#fff;margin-top:12px}
     .btn-accept:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(16,185,129,.3)}
     .btn-accept:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .btn-complete{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;margin-top:10px;display:none}
+    .btn-complete:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,.3)}
+    .btn-complete:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .btn-completed{background:#dbeafe!important;color:#1e40af!important;cursor:default!important}
     .status{margin-top:16px;padding:12px;border-radius:10px;font-size:14px;display:none}
     .status.ok{display:block;background:#d1fae5;color:#065f46}
     .status.error{display:block;background:#fee2e2;color:#991b1b}
@@ -79,6 +83,8 @@
 
       <button class="btn btn-accept" id="accept-btn">✅ Αποδοχή Διαδρομής</button>
 
+      <button class="btn btn-complete" id="complete-btn">🏁 Ολοκλήρωση Διαδρομής</button>
+
       <div class="status" id="status-msg"></div>
     </div>
 
@@ -113,6 +119,7 @@
     const tripDetails = document.getElementById('trip-details');
     const driverPay = document.getElementById('driver-pay');
     const acceptBtn = document.getElementById('accept-btn');
+    const completeBtn = document.getElementById('complete-btn');
     const driverNameInput = document.getElementById('driver-name');
     const statusMsg = document.getElementById('status-msg');
 
@@ -137,6 +144,20 @@
           return;
         }
 
+        if (data.status === 'completed') {
+          renderTrip(data);
+          acceptBtn.textContent = '✅ Αποδεκτό';
+          acceptBtn.disabled = true;
+          acceptBtn.style.background = '#d1fae5';
+          acceptBtn.style.color = '#065f46';
+          driverNameInput.style.display = 'none';
+          completeBtn.style.display = 'block';
+          completeBtn.textContent = '🏁 Ολοκληρωμένη';
+          completeBtn.disabled = true;
+          completeBtn.classList.add('btn-completed');
+          return;
+        }
+
         if (data.status === 'accepted' || data.status === 'confirmed') {
           renderTrip(data);
           acceptBtn.textContent = '✅ Αποδεκτό';
@@ -144,6 +165,7 @@
           acceptBtn.style.background = '#d1fae5';
           acceptBtn.style.color = '#065f46';
           driverNameInput.style.display = 'none';
+          completeBtn.style.display = 'block';
           return;
         }
 
@@ -205,6 +227,7 @@
           acceptBtn.style.background = '#d1fae5';
           acceptBtn.style.color = '#065f46';
           driverNameInput.style.display = 'none';
+          completeBtn.style.display = 'block';
           statusMsg.className = 'status ok';
           statusMsg.textContent = 'Καλή διαδρομή! Ο πελάτης θα ειδοποιηθεί.';
         } else {
@@ -218,6 +241,37 @@
         statusMsg.textContent = 'Σφάλμα σύνδεσης.';
         acceptBtn.disabled = false;
         acceptBtn.textContent = '✅ Αποδοχή Διαδρομής';
+      }
+    });
+
+    completeBtn.addEventListener('click', async function() {
+      completeBtn.disabled = true;
+      completeBtn.textContent = 'Αποστολή…';
+
+      try {
+        const res = await fetch('/api/moveathens/driver-complete/' + token, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          completeBtn.textContent = '🏁 Ολοκληρωμένη';
+          completeBtn.disabled = true;
+          completeBtn.classList.add('btn-completed');
+          statusMsg.className = 'status ok';
+          statusMsg.textContent = 'Η διαδρομή ολοκληρώθηκε. Ευχαριστούμε!';
+        } else {
+          statusMsg.className = 'status error';
+          statusMsg.textContent = data.error || 'Σφάλμα. Δοκίμασε ξανά.';
+          completeBtn.disabled = false;
+          completeBtn.textContent = '🏁 Ολοκλήρωση Διαδρομής';
+        }
+      } catch (err) {
+        statusMsg.className = 'status error';
+        statusMsg.textContent = 'Σφάλμα σύνδεσης.';
+        completeBtn.disabled = false;
+        completeBtn.textContent = '🏁 Ολοκλήρωση Διαδρομής';
       }
     });
 

@@ -182,6 +182,34 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
   });
 
   // ========================================
+  // PUBLIC: Driver marks trip as completed
+  // ========================================
+  app.post('/api/moveathens/driver-complete/:token', async (req, res) => {
+    try {
+      const request = await requestsData.getRequestByToken(req.params.token);
+      if (!request) return res.status(404).json({ error: 'Request not found' });
+
+      if (request.status === 'completed') {
+        return res.json({ ok: true, already: true, message: 'Already completed' });
+      }
+      if (request.status !== 'accepted' && request.status !== 'confirmed') {
+        return res.status(400).json({ error: 'Trip must be accepted before completing' });
+      }
+
+      await requestsData.updateRequest(request.id, {
+        status: 'completed',
+        updated_at: new Date().toISOString()
+      });
+
+      console.log('[ma-requests] Request', request.id, 'COMPLETED by driver');
+      return res.json({ ok: true, message: 'Trip completed' });
+    } catch (err) {
+      console.error('[ma-requests] POST driver-complete failed:', err.message);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ========================================
   // ADMIN: List all requests
   // ========================================
   app.get('/api/admin/moveathens/requests', async (req, res) => {

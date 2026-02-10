@@ -72,6 +72,18 @@ module.exports = function registerDriverRoutes(app, opts = {}) {
   app.delete('/api/admin/moveathens/drivers/:id', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
+      // Check if driver has outstanding balance
+      const driver = await driversData.getDriverById(req.params.id);
+      if (driver) {
+        const balance = (parseFloat(driver.total_owed) || 0) - (parseFloat(driver.total_paid) || 0);
+        if (balance > 0) {
+          return res.status(409).json({
+            error: 'BALANCE_OWED',
+            message: 'Ο οδηγός χρωστάει €' + balance.toFixed(2) + ' — δεν μπορεί να διαγραφεί.',
+            balance: balance
+          });
+        }
+      }
       await driversData.deleteDriver(req.params.id);
       return res.json({ ok: true });
     } catch (err) {
