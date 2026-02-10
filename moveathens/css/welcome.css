@@ -157,7 +157,8 @@
   }
   
   .ma-hero__logo {
-    width: 291px;
+    width: min(291px, 90vw);
+    max-width: 100%;
     background: transparent;
     position: absolute;
     top: calc(50% - 288px);
@@ -203,7 +204,8 @@
   
   .ma-hero__subtext {
     font-size: 14px;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: break-word;
   }
 }
 
@@ -223,7 +225,8 @@
   
   .ma-hero__subtext {
     font-size: 16px;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: break-word;
   }
 }
 
@@ -243,6 +246,7 @@
   
   .ma-hero__subtext {
     font-size: 16px;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: break-word;
   }
 }

@@ -191,20 +191,55 @@ Our vehicles: ${vehicleNames || 'various vehicles'}.`;
     prompt += '\n';
   }
   
-  // Add rules
+  // Add rules (replace hardcoded phone numbers with dynamic config)
   if (knowledge.rules?.length) {
+    const phone = transferData?.config?.phoneNumber || '';
+    const whatsapp = transferData?.config?.whatsappNumber || '';
     prompt += isGreek ? '## Κανόνες Συμπεριφοράς\n' : '## Behavior Rules\n';
     knowledge.rules.forEach(r => {
-      prompt += `- ${r.text}\n`;
+      let text = r.text;
+      // Skip contact rule — we inject dynamic contact below
+      if (r.id === 'contact') return;
+      prompt += `- ${text}\n`;
     });
     prompt += '\n';
   }
   
-  // Add contact info
-  if (knowledge.concept?.constraints?.length) {
-    prompt += isGreek ? '## Σημαντικό\n' : '## Important\n';
-    knowledge.concept.constraints.forEach(c => {
-      prompt += `- ${c}\n`;
+  // Add DYNAMIC contact info from admin config (NOT hardcoded)
+  const cfgPhone = transferData?.config?.phoneNumber || '';
+  const cfgWhatsapp = transferData?.config?.whatsappNumber || '';
+  if (cfgPhone || cfgWhatsapp) {
+    prompt += isGreek ? '## Στοιχεία Επικοινωνίας (από admin panel)\n' : '## Contact Info (from admin panel)\n';
+    if (cfgPhone) {
+      prompt += isGreek ? `- Τηλέφωνο: ${cfgPhone}\n` : `- Phone: ${cfgPhone}\n`;
+    }
+    if (cfgWhatsapp) {
+      prompt += `- WhatsApp: ${cfgWhatsapp}\n`;
+    }
+    prompt += isGreek
+      ? '- Δεν κάνουμε κρατήσεις μέσω chat - μόνο πληροφορίες και τιμές\n'
+      : '- We do not take bookings via chat - info and prices only\n';
+    prompt += isGreek
+      ? '- Τιμές ημέρας (06:00-00:00) και νύχτας (00:00-06:00) διαφέρουν\n'
+      : '- Day (06:00-00:00) and night (00:00-06:00) prices differ\n';
+    prompt += '\n';
+  }
+
+  // Add admin info sections (cancellation, compliance, FAQ) from admin panel
+  const cfg = transferData?.config || {};
+  const infoSections = [
+    { title: cfg.infoCancellationTitle, content: cfg.infoCancellationContent, label: isGreek ? 'Πολιτική Ακύρωσης' : 'Cancellation Policy' },
+    { title: cfg.infoComplianceTitle, content: cfg.infoComplianceContent, label: isGreek ? 'Συμμόρφωση' : 'Compliance' },
+    { title: cfg.infoFaqTitle, content: cfg.infoFaqContent, label: isGreek ? 'Συχνές Ερωτήσεις' : 'FAQ' },
+    { title: cfg.infoPageTitle, content: cfg.infoPageContent, label: isGreek ? 'Γενικές Πληροφορίες' : 'General Info' },
+  ];
+  const hasInfoSections = infoSections.some(s => s.content);
+  if (hasInfoSections) {
+    prompt += isGreek ? '## Πληροφορίες από Admin Panel\n' : '## Info from Admin Panel\n';
+    infoSections.forEach(s => {
+      if (s.content) {
+        prompt += `### ${s.title || s.label}\n${s.content}\n\n`;
+      }
     });
   }
   
@@ -216,6 +251,13 @@ function mockResponse(message, knowledge, transferData, lang = 'el') {
   const m = (message || '').toLowerCase();
   const isGreek = lang === 'el';
   
+  // Dynamic contact info from config
+  const phone = transferData?.config?.phoneNumber || '';
+  const whatsapp = transferData?.config?.whatsappNumber || '';
+  const contactSuffix = (isGreek)
+    ? (phone ? ` Τηλέφωνο: ${phone}.` : '') + (whatsapp ? ` WhatsApp: ${whatsapp}.` : '')
+    : (phone ? ` Phone: ${phone}.` : '') + (whatsapp ? ` WhatsApp: ${whatsapp}.` : '');
+
   // Check for price questions
   if (/τιμ[ηή]|κοστ|πόσο|price|cost|how much/.test(m)) {
     if (transferData?.transferPrices?.length) {
@@ -225,13 +267,13 @@ function mockResponse(message, knowledge, transferData, lang = 'el') {
       const vehicle = transferData.vehicleTypes?.find(v => v.id === sample.vehicle_type_id);
       if (zone && dest && vehicle) {
         return isGreek
-          ? `Ενδεικτικά, η τιμή από ${zone.name} στο ${dest.name} με ${vehicle.name} είναι ${sample.price}€. Για ακριβή τιμή, επικοινώνησε στο +30 6985700007 ή WhatsApp +30 6945358476.`
-          : `For example, the price from ${zone.name} to ${dest.name} by ${vehicle.name} is €${sample.price}. For an exact quote, contact +30 6985700007 or WhatsApp +30 6945358476.`;
+          ? `Ενδεικτικά, η τιμή από ${zone.name} στο ${dest.name} με ${vehicle.name} είναι ${sample.price}€. Για ακριβή τιμή, επικοινώνησε μαζί μας.${contactSuffix}`
+          : `For example, the price from ${zone.name} to ${dest.name} by ${vehicle.name} is €${sample.price}. For an exact quote, contact us.${contactSuffix}`;
       }
     }
     return isGreek
-      ? 'Η τιμή εξαρτάται από τον προορισμό και το όχημα. Για ακριβή προσφορά, κάλεσε +30 6985700007 ή WhatsApp +30 6945358476.'
-      : 'The price depends on destination and vehicle. For an exact quote, call +30 6985700007 or WhatsApp +30 6945358476.';
+      ? `Η τιμή εξαρτάται από τον προορισμό και το όχημα.${contactSuffix}`
+      : `The price depends on destination and vehicle.${contactSuffix}`;
   }
   
   // Check if user asks about a SPECIFIC vehicle by name (taxi, sedan, van, etc.)
@@ -276,8 +318,8 @@ function mockResponse(message, knowledge, transferData, lang = 'el') {
   // Check for booking questions
   if (/κράτηση|book|reserve|κλείσ/.test(m)) {
     return isGreek
-      ? 'Για κράτηση κάλεσε +30 6985700007 ή στείλε WhatsApp στο +30 6945358476. Θα χρειαστούμε: ημερομηνία, ώρα, σημείο παραλαβής, προορισμό και αριθμό επιβατών.'
-      : 'To book, call +30 6985700007 or send WhatsApp to +30 6945358476. We will need: date, time, pickup point, destination and number of passengers.';
+      ? `Για κράτηση επικοινώνησε μαζί μας.${contactSuffix} Θα χρειαστούμε: ημερομηνία, ώρα, σημείο παραλαβής, προορισμό και αριθμό επιβατών.`
+      : `To book, contact us.${contactSuffix} We will need: date, time, pickup point, destination and number of passengers.`;
   }
 
   // Check for destination questions
@@ -401,7 +443,7 @@ function registerMoveAthensAssistantRoutes(app, deps = {}) {
     }
     
     const knowledge = loadKnowledge();
-    const transferData = loadTransferData();
+    const transferData = await loadTransferData();
     
     if (!OPENAI_API_KEY) {
       // For mock, just return JSON (no streaming)

@@ -4,6 +4,7 @@
   min-height: 100vh;
   height: auto;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
   padding-bottom: 90px;
@@ -127,4 +128,79 @@
 
 .ma-page .ma-placeholder::before {
   content: "Περιεχόμενο σύντομα...";
+}
+
+/* ========================================
+   RESPONSIVE PAGE-HEADER
+   ======================================== */
+
+/* Very small phones (≤359px) */
+@media (max-width: 359px) {
+  .ma-page-header {
+    padding: 14px 12px;
+  }
+
+  .ma-page-logo {
+    height: 68px;
+  }
+
+  .ma-page .ma-card {
+    padding: 16px;
+  }
+
+  .ma-page .ma-title {
+    font-size: 17px;
+  }
+
+  .ma-page .ma-button {
+    padding: 14px 18px;
+    font-size: 15px;
+  }
+}
+
+/* Standard phones (360px–429px) */
+@media (min-width: 360px) and (max-width: 429px) {
+  .ma-page-logo {
+    height: 78px;
+  }
+
+  .ma-page .ma-card {
+    padding: 20px;
+  }
+}
+
+/* Large phones (≥430px) */
+@media (min-width: 430px) {
+  .ma-page-logo {
+    height: 96px;
+  }
+
+  .ma-page .ma-card {
+    padding: 26px;
+  }
+
+  .ma-page .ma-title {
+    font-size: 22px;
+  }
+}
+
+/* Tablets (≥768px) */
+@media (min-width: 768px) {
+  .ma-main--with-header {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 28px 24px;
+  }
+
+  .ma-page .ma-title {
+    font-size: 24px;
+  }
+}
+
+/* Desktop (≥1024px) */
+@media (min-width: 1024px) {
+  .ma-main--with-header {
+    max-width: 800px;
+    padding: 36px 32px;
+  }
 }

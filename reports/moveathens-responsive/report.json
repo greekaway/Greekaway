@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-02-10T20:49:02.376Z",
+  "viewports": [
+    "iPhone-SE (375×667)",
+    "iPhone-14 (390×844)",
+    "iPhone-15-Pro-Max (430×932)",
+    "Samsung-Galaxy-S21 (360×800)",
+    "Galaxy-Z-Fold (280×653)",
+    "iPad-Mini (768×1024)",
+    "iPad-Air (820×1180)",
+    "iPad-Pro-12.9 (1024×1366)",
+    "Desktop-HD (1440×900)",
+    "Desktop-4K (1920×1080)"
+  ],
+  "pages": [
+    "welcome",
+    "transfer",
+    "info",
+    "contact",
+    "prices",
+    "ai-assistant"
+  ],
+  "issues": [],
+  "totalScreenshots": 60
+}

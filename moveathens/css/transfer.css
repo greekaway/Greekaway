@@ -713,6 +713,12 @@
   gap: 14px;
 }
 
+@media (max-width: 359px) {
+  .ma-cta-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
 .ma-cta-btn {
   display: flex;
   flex-direction: column;
@@ -911,6 +917,7 @@
 /* Payment Method Selection */
 .ma-payment-options {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 8px;
 }
@@ -1337,5 +1344,64 @@
   
   .ma-booking-title {
     font-size: 16px;
+  }
+}
+
+/* ========================================
+   TABLET & DESKTOP ENHANCEMENTS
+   ======================================== */
+
+/* Tablets (768px+) */
+@media (min-width: 768px) {
+  .ma-transfer-main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 28px 24px 40px;
+  }
+
+  .ma-categories-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .ma-vehicle-card {
+    grid-template-columns: 120px 1fr auto;
+  }
+
+  .ma-vehicle-img,
+  .ma-vehicle-placeholder {
+    width: 120px;
+    height: 84px;
+  }
+
+  .ma-tariff-grid {
+    gap: 20px;
+  }
+
+  .ma-tariff-card {
+    padding: 32px 20px;
+  }
+}
+
+/* Desktop (1024px+) */
+@media (min-width: 1024px) {
+  .ma-transfer-main {
+    max-width: 800px;
+    padding: 36px 32px 48px;
+  }
+
+  .ma-categories-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .ma-tariff-grid {
+    gap: 24px;
+  }
+
+  .ma-tariff-card {
+    padding: 36px 24px;
+  }
+
+  .ma-tariff-icon {
+    font-size: 56px;
   }
 }
