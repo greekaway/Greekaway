@@ -253,8 +253,10 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       const request = await requestsData.getRequestById(req.params.id);
       if (!request) return res.status(404).json({ error: 'Request not found' });
 
-      // Clean phone
+      // Clean phone — keep + for storage
       const cleanPhone = driver_phone.replace(/[^0-9+]/g, '');
+      // wa.me needs digits only (no +)
+      const waPhone = cleanPhone.replace(/^\+/, '');
 
       // Update request with driver phone and mark as sent
       const updated = await requestsData.updateRequest(request.id, {
@@ -287,7 +289,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         acceptUrl
       ].join('\n');
 
-      const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+      const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
 
       return res.json({
         ok: true,

@@ -25,7 +25,7 @@
           <button class="bar-tab" data-tab="zones">Ξενοδοχεία</button>
           <button class="bar-tab" data-tab="pricing">Τιμολόγηση</button>
           <button class="bar-tab" data-tab="infopage">Πληροφορίες</button>
-          <button class="bar-tab" data-tab="drivers">🚖 Οδηγοί</button>
+          <button class="bar-tab" data-tab="drivers">Οδηγοί</button>
 
         </div>
       </div>
@@ -570,6 +570,18 @@
           </div>
         </div>
         <div class="dr-toast" id="dr-toast"></div>
+
+        <!-- Styled confirm dialog for drivers tab -->
+        <div class="dr-confirm-overlay hidden" id="dr-confirm">
+          <div class="dr-confirm-box">
+            <h4 id="dr-confirm-title">Επιβεβαίωση</h4>
+            <p id="dr-confirm-msg"></p>
+            <div class="dr-confirm-actions">
+              <button class="dr-btn dr-btn-ghost" id="dr-confirm-cancel">Ακύρωση</button>
+              <button class="dr-btn dr-btn-danger" id="dr-confirm-ok">Διαγραφή</button>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
 

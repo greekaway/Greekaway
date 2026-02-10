@@ -86,6 +86,31 @@
     // payment button
     const payBtn = _$('#dm-pay-btn');
     if (payBtn) payBtn.addEventListener('click', recordPayment);
+
+    // confirm modal wiring
+    const cancelBtn = _$('#dr-confirm-cancel');
+    if (cancelBtn) cancelBtn.addEventListener('click', closeConfirm);
+    const overlay = _$('#dr-confirm');
+    if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) closeConfirm(); });
+  }
+
+  /* ─── styled confirm dialog (replaces window.confirm) ─── */
+  let _confirmResolve = null;
+  function showConfirm(title, msg) {
+    return new Promise(resolve => {
+      _confirmResolve = resolve;
+      const ov = _$('#dr-confirm');
+      _$('#dr-confirm-title').textContent = title;
+      _$('#dr-confirm-msg').textContent = msg;
+      ov.classList.remove('hidden');
+      const okBtn = _$('#dr-confirm-ok');
+      const handler = () => { okBtn.removeEventListener('click', handler); _confirmResolve = null; _$('#dr-confirm').classList.add('hidden'); resolve(true); };
+      okBtn.addEventListener('click', handler);
+    });
+  }
+  function closeConfirm() {
+    _$('#dr-confirm').classList.add('hidden');
+    if (_confirmResolve) { _confirmResolve(false); _confirmResolve = null; }
   }
 
   async function loadRequests() {
@@ -128,8 +153,8 @@
             : (r.driver_phone || '—')}
         </td>
         <td style="white-space:nowrap">
-          ${canSend ? `<button class="dr-btn dr-btn-primary req-send-btn" title="Αποστολή σε οδηγό">📲</button>` : ''}
-          <button class="dr-btn dr-btn-danger req-del-btn" title="Διαγραφή">🗑️</button>
+          ${canSend ? `<button class="dr-btn dr-btn-success req-send-btn">Αποστολή</button>` : ''}
+          <button class="dr-btn dr-btn-danger req-del-btn">Διαγραφή</button>
         </td>
       </tr>`;
     }).join('');
@@ -148,7 +173,16 @@
             body: JSON.stringify({ driver_phone: phone.trim() })
           });
           toast('Εστάλη! Ανοίγει WhatsApp…');
-          if (data.whatsapp_url) window.open(data.whatsapp_url, '_blank');
+          if (data.whatsapp_url) {
+            // Use location.href to avoid popup blocker
+            const a = document.createElement('a');
+            a.href = data.whatsapp_url;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          }
           loadRequests();
         } catch (e) {
           toast('Σφάλμα: ' + e.message);
@@ -157,12 +191,13 @@
       });
     });
 
-    // delete buttons
+    // delete buttons — use styled confirm modal
     _$$('.req-del-btn', tbody).forEach(btn => {
       btn.addEventListener('click', async () => {
         const tr = btn.closest('tr');
         const id = tr.dataset.id;
-        if (!confirm('Διαγραφή αιτήματος #' + String(id).slice(-6) + ';')) return;
+        const ok = await showConfirm('Διαγραφή Αιτήματος', 'Θέλεις σίγουρα να διαγράψεις το αίτημα #' + String(id).slice(-6) + ';');
+        if (!ok) return;
         btn.disabled = true;
         try {
           await api(`/api/admin/moveathens/requests/${id}`, { method: 'DELETE' });
@@ -213,8 +248,8 @@
         <td>€${parseFloat(d.total_paid || 0).toFixed(0)}</td>
         <td class="${cls}">€${balance.toFixed(0)}</td>
         <td>
-          <button class="dr-btn dr-btn-primary drv-detail-btn" title="Λεπτομέρειες">📄</button>
-          <button class="dr-btn dr-btn-danger drv-del-btn" title="Διαγραφή">🗑️</button>
+          <button class="dr-btn dr-btn-primary drv-detail-btn">Λεπτομέρειες</button>
+          <button class="dr-btn dr-btn-danger drv-del-btn">Διαγραφή</button>
         </td>
       </tr>`;
     }).join('');
@@ -227,7 +262,8 @@
       btn.addEventListener('click', async () => {
         const tr = btn.closest('tr');
         const id = tr.dataset.id;
-        if (!confirm('Διαγραφή οδηγού;')) return;
+        const ok = await showConfirm('Διαγραφή Οδηγού', 'Θέλεις σίγουρα να διαγράψεις αυτόν τον οδηγό;');
+        if (!ok) return;
         btn.disabled = true;
         try {
           await api(`/api/admin/moveathens/drivers/${id}`, { method: 'DELETE' });
