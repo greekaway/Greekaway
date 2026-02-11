@@ -627,6 +627,18 @@ app.use((req, res, next) => {
     if (!fullPath.startsWith(MOVEATHENS_BASE_DIR)) {
       return res.status(403).send('Forbidden');
     }
+
+    // Cache-Control: long cache for immutable assets, no-cache for HTML
+    if (!IS_DEV) {
+      if (/\.(css|js|png|jpg|jpeg|webp|svg|mp4|woff2?|ttf|eot)$/i.test(url)) {
+        res.setHeader('Cache-Control', 'public, max-age=604800, immutable'); // 7 days
+      } else if (/\.json$/i.test(url)) {
+        res.setHeader('Cache-Control', 'public, max-age=300'); // 5 min
+      }
+      // HTML pages: no explicit cache header (browser default = no-cache)
+    } else {
+      res.setHeader('Cache-Control', 'no-store');
+    }
     
     return res.sendFile(fullPath, (err) => {
       if (err) {

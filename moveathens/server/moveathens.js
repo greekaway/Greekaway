@@ -1050,6 +1050,13 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     try {
       const incoming = req.body || {};
       const transferPrices = normalizeTransferPrices(incoming.transferPrices || []);
+
+      // WIPE PROTECTION
+      const currentPrices = await dataLayer.getPrices();
+      if (transferPrices.length === 0 && currentPrices.length > 0) {
+        console.warn('[moveathens] WIPE BLOCKED: PUT transfer-prices with 0 items, but', currentPrices.length, 'exist');
+        return res.status(409).json({ error: 'WIPE_BLOCKED', message: 'Cannot replace all prices with empty list. Delete individually instead.' });
+      }
       
       // Save each price via data layer
       const savedPrices = [];

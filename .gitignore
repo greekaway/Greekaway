@@ -9,6 +9,7 @@ server.backup*.js
 /uploads/**
 /uploads/
 reports/
+logs/
 tools/inventory.js
 
 # Ignore runtime uploads generated via admin panel

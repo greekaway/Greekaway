@@ -14,10 +14,21 @@
 'use strict';
 
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const requestsData = require('../../src/server/data/moveathens-requests');
 const driversData = require('../../src/server/data/moveathens-drivers');
+const maLogger = require('../../services/maLogger');
 
 const DRIVER_ACCEPT_FILE = path.join(__dirname, '..', 'pages', 'driver-accept.html');
+
+// Rate limiter for public driver endpoints (per IP)
+const driverRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30,                   // 30 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' }
+});
 
 module.exports = function registerRequestRoutes(app, opts = {}) {
   const checkAdminAuth = typeof opts.checkAdminAuth === 'function' ? opts.checkAdminAuth : null;
@@ -103,7 +114,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
   // ========================================
   // PUBLIC: Driver views trip details via token
   // ========================================
-  app.get('/api/moveathens/driver-accept/:token', async (req, res) => {
+  app.get('/api/moveathens/driver-accept/:token', driverRateLimit, async (req, res) => {
     try {
       const request = await requestsData.getRequestByToken(req.params.token);
       if (!request) return res.status(404).json({ error: 'Request not found or expired' });
@@ -136,7 +147,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         status: request.status
       });
     } catch (err) {
-      console.error('[ma-requests] GET driver-accept failed:', err.message);
+      maLogger.log('error', 'driver-view', { token: req.params.token, reason: err.message, stack: err.stack });
       return res.status(500).json({ error: 'Server error' });
     }
   });
@@ -144,7 +155,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
   // ========================================
   // PUBLIC: Driver accepts the trip
   // ========================================
-  app.post('/api/moveathens/driver-accept/:token', async (req, res) => {
+  app.post('/api/moveathens/driver-accept/:token', driverRateLimit, async (req, res) => {
     try {
       const request = await requestsData.getRequestByToken(req.params.token);
       if (!request) return res.status(404).json({ error: 'Request not found' });
@@ -189,7 +200,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       console.log('[ma-requests] Request', request.id, 'ACCEPTED by driver', driver.id, driver.phone);
       return res.json({ ok: true, message: 'Trip accepted successfully' });
     } catch (err) {
-      console.error('[ma-requests] POST driver-accept failed:', err.message);
+      maLogger.log('error', 'driver-accept', { token: req.params.token, reason: err.message, stack: err.stack });
       return res.status(500).json({ error: 'Server error' });
     }
   });
@@ -197,7 +208,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
   // ========================================
   // PUBLIC: Driver marks trip as completed
   // ========================================
-  app.post('/api/moveathens/driver-complete/:token', async (req, res) => {
+  app.post('/api/moveathens/driver-complete/:token', driverRateLimit, async (req, res) => {
     try {
       const request = await requestsData.getRequestByToken(req.params.token);
       if (!request) return res.status(404).json({ error: 'Request not found' });
@@ -217,7 +228,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       console.log('[ma-requests] Request', request.id, 'COMPLETED by driver');
       return res.json({ ok: true, message: 'Trip completed' });
     } catch (err) {
-      console.error('[ma-requests] POST driver-complete failed:', err.message);
+      maLogger.log('error', 'driver-complete', { token: req.params.token, reason: err.message, stack: err.stack });
       return res.status(500).json({ error: 'Server error' });
     }
   });
