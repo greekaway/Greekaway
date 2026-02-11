@@ -3,15 +3,21 @@
  * Public: POST /api/moveathens/transfer-request  (hotel creates request)
  *         GET  /api/moveathens/driver-accept/:token  (driver sees details)
  *         POST /api/moveathens/driver-accept/:token  (driver accepts)
+ *         POST /api/moveathens/driver-complete/:token (driver completes)
+ *         GET  /moveathens/driver-accept             (HTML page — no auth)
  * Admin:  GET  /api/admin/moveathens/requests
  *         PUT  /api/admin/moveathens/requests/:id
  *         DELETE /api/admin/moveathens/requests/:id
  *         POST /api/admin/moveathens/requests/:id/send-driver (set driver phone + generate link)
+ * Timer:  Auto-expire orphan requests (pending > 1h, every 5 min)
  */
 'use strict';
 
+const path = require('path');
 const requestsData = require('../../src/server/data/moveathens-requests');
 const driversData = require('../../src/server/data/moveathens-drivers');
+
+const DRIVER_ACCEPT_FILE = path.join(__dirname, '..', 'pages', 'driver-accept.html');
 
 module.exports = function registerRequestRoutes(app, opts = {}) {
   const checkAdminAuth = typeof opts.checkAdminAuth === 'function' ? opts.checkAdminAuth : null;
@@ -356,5 +362,22 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
     }
   });
 
-  console.log('[ma-requests] Routes mounted');
+  // ========================================
+  // PUBLIC: Driver accept page (HTML — no auth)
+  // ========================================
+  app.get('/moveathens/driver-accept', (req, res) => {
+    try { return res.sendFile(DRIVER_ACCEPT_FILE); }
+    catch (_) { return res.status(404).send('Not found'); }
+  });
+
+  // ========================================
+  // Auto-expire orphan requests (pending > 1 hour, check every 5 min)
+  // ========================================
+  setInterval(() => {
+    requestsData.expireOldRequests(3600000)
+      .then(n => { if (n) console.log(`[ma-requests] expired ${n} orphan request(s)`); })
+      .catch(e => console.warn('[ma-requests] expire error:', e.message));
+  }, 5 * 60 * 1000);
+
+  console.log('[ma-requests] Routes mounted (incl. driver-accept page + auto-expiry)');
 };
