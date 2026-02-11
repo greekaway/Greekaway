@@ -330,6 +330,12 @@
 
     } else if (uiState === 'arrived') {
       // ── NAVIGATE TO FINAL DESTINATION ──
+      // Record navigating_dest_at on server (fire-and-forget)
+      fetch('/api/moveathens/driver-navigating/' + token, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }).catch(function() {});
+
       openNavigation(
         tripData.destination_lat,
         tripData.destination_lng,
@@ -349,6 +355,12 @@
         statusMsg.className = 'status info';
         statusMsg.textContent = 'Δεν βρέθηκε τηλέφωνο ξενοδοχείου για WhatsApp.';
       }
+
+      // Record arrived_at on server (fire-and-forget)
+      fetch('/api/moveathens/driver-arrived/' + token, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }).catch(function() {});
 
       // Transition to "arrived" state
       uiState = 'arrived';

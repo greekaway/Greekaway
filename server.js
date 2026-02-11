@@ -1337,7 +1337,8 @@ console.log('MoveAthens admin routes loaded');
 require('./moveathens/server/moveathens-requests')(app, { checkAdminAuth });
 require('./moveathens/server/moveathens-drivers')(app, { checkAdminAuth });
 require('./moveathens/server/moveathens-hotel-revenue')(app, { checkAdminAuth });
-console.log('MoveAthens requests/drivers/hotel-revenue routes loaded');
+require('./moveathens/server/moveathens-driver-timeline')(app, { checkAdminAuth });
+console.log('MoveAthens requests/drivers/hotel-revenue/timeline routes loaded');
 
 // Auto-expire + driver-accept page now live inside moveathens-requests.js
 

@@ -257,6 +257,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
 
       await requestsData.updateRequest(request.id, {
         status: 'completed',
+        completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
 

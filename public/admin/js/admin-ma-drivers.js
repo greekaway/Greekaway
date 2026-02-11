@@ -307,6 +307,11 @@
       var typeLabel = r.booking_type === 'instant'
         ? '⚡ Άμεσα'
         : (r.scheduled_date ? '📅 ' + r.scheduled_date + ' ' + (r.scheduled_time || '') : '—');
+      // Driver phase badge
+      var phaseBadge;
+      if (r.navigating_dest_at) phaseBadge = '<span class="dr-badge" style="background:#dbeafe;color:#1e40af">🎯 Προορισμό</span>';
+      else if (r.arrived_at) phaseBadge = '<span class="dr-badge" style="background:#fef3c7;color:#92400e">📍 Έφτασε</span>';
+      else phaseBadge = '<span class="dr-badge accepted">🚗 Εν Ρούτε</span>';
       return '<tr data-id="' + r.id + '" data-driver-id="' + (r.driver_id || '') + '">' +
         '<td title="' + r.id + '">' + String(r.id).slice(-6) + '</td>' +
         '<td>' + driverName + '</td>' +
@@ -316,6 +321,7 @@
         '<td>€' + parseFloat(r.price || 0).toFixed(0) + '</td>' +
         '<td>' + typeLabel + '</td>' +
         '<td>' + fmtDate(r.accepted_at) + '</td>' +
+        '<td>' + phaseBadge + '</td>' +
         '<td>' + (r.driver_id ? '<button class="dr-btn dr-btn-primary acc-detail-btn">Λεπτομέρειες</button>' : '') + '</td>' +
       '</tr>';
     }).join('');

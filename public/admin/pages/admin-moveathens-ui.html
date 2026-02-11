@@ -27,6 +27,7 @@
           <button class="bar-tab" data-tab="pricing">Τιμολόγηση</button>
           <button class="bar-tab" data-tab="infopage">Πληροφορίες</button>
           <button class="bar-tab" data-tab="drivers">Αιτήματα Διαδρομών</button>
+          <button class="bar-tab" data-tab="timeline">📊 Χρονολόγιο</button>
           <button class="bar-tab" data-tab="driversmgmt">Οδηγοί</button>
           <button class="bar-tab" data-tab="hotelrevenue">Έσοδα Ξενοδοχείων</button>
 
@@ -549,6 +550,7 @@
                   <th>Τιμή</th>
                   <th>Τύπος</th>
                   <th>Αποδοχή</th>
+                  <th>Φάση</th>
                   <th>Λεπτομέρειες</th>
                 </tr>
               </thead>
@@ -559,6 +561,57 @@
         </section>
 
       </div> <!-- end Αιτήματα Διαδρομών tab -->
+
+      <!-- ===== TIMELINE TAB (Χρονολόγιο Οδηγών) ===== -->
+      <div class="tab-content" data-tab="timeline">
+        <section class="panel">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">📊 Χρονολόγιο Διαδρομών</h3>
+              <p class="ma-helper">Αναλυτικοί χρόνοι κάθε φάσης: Πλοήγηση → Ξενοδοχείο, Αναμονή Επιβάτη, Πλοήγηση → Προορισμό, Σύνολο.</p>
+            </div>
+            <div class="dr-filter-bar" style="margin:0">
+              <button class="btn secondary" id="tl-refresh-btn" type="button">🔄 Ανανέωση</button>
+            </div>
+          </div>
+
+          <!-- Summary cards -->
+          <div id="tl-summary" class="tl-summary" style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0"></div>
+
+          <div class="dr-table-wrap">
+            <table class="dr-table" id="tl-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Οδηγός</th>
+                  <th>Διαδρομή</th>
+                  <th>Τύπος</th>
+                  <th>Αποδοχή</th>
+                  <th>Κατάσταση</th>
+                  <th>🚗 Ξενοδ.</th>
+                  <th>⏳ Αναμονή</th>
+                  <th>🎯 Προορ.</th>
+                  <th>⏱️ Σύνολο</th>
+                  <th>Λεπτομ.</th>
+                </tr>
+              </thead>
+              <tbody id="tl-tbody"></tbody>
+            </table>
+          </div>
+          <div class="dr-empty" id="tl-empty" style="display:none">Δεν υπάρχουν δεδομένα χρονολογίου.</div>
+        </section>
+
+        <!-- Timeline detail modal -->
+        <div class="dr-overlay hidden" id="tl-modal">
+          <div class="dr-modal" style="max-width:500px">
+            <div class="dr-modal-title">
+              <span id="tl-modal-title">Χρονολόγιο Διαδρομής</span>
+              <button class="dr-modal-close" id="tl-modal-close">&times;</button>
+            </div>
+            <div id="tl-modal-body" style="padding:12px 0"></div>
+          </div>
+        </div>
+      </div>
 
       <!-- ===== DRIVER MANAGEMENT TAB (Οδηγοί) ===== -->
       <div class="tab-content" data-tab="driversmgmt">
@@ -738,6 +791,7 @@
     <script src="/admin/js/admin-moveathens-ui.js"></script>
     <script src="/admin/js/admin-ma-drivers.js"></script>
     <script src="/admin/js/admin-ma-hotel-revenue.js"></script>
+    <script src="/admin/js/admin-ma-timeline.js"></script>
     <script src="/js/admin-theme-toggle.js"></script>
     <script src="/pwa-install.js" defer></script>
     <script src="/js/main.js"></script>
