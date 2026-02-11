@@ -386,13 +386,15 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       }
 
       const msg = [
-        `Νέα Διαδρομή MoveAthens`,
-        `${request.hotel_name || '—'} → ${request.destination_name || '—'}`,
+        `🚗 *Νέα Διαδρομή MoveAthens*`,
+        ``,
+        `🏨 ${request.hotel_name || '—'}`,
+        `🎯 ${request.destination_name || '—'}`,
         scheduleText,
         ``,
-        `Παρακαλώ πολύ πατήστε το link έτσι ώστε να αποδεχτείτε την διαδρομή`,
+        `👆 Πατήστε παρακάτω για αποδοχή:`,
         ``,
-        `Αποδοχή: ${acceptUrl}`
+        `${acceptUrl}`
       ].filter(l => l !== undefined).join('\n');
 
       const waUrl = `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(msg)}`;
