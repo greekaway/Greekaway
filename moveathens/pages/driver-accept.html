@@ -37,6 +37,10 @@
     .btn-accept{background:linear-gradient(135deg,#10b981,#059669);color:#fff;margin-top:12px}
     .btn-accept:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(16,185,129,.3)}
     .btn-accept:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .btn-navigate{background:linear-gradient(135deg,#0d6efd,#0049e6);color:#fff;margin-top:12px}
+    .btn-navigate:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(13,110,253,.3)}
+    .btn-arrived{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;margin-top:10px}
+    .btn-arrived:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(245,158,11,.3)}
     .btn-complete{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;margin-top:10px;display:none}
     .btn-complete:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,.3)}
     .btn-complete:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
@@ -101,9 +105,11 @@
       <input type="text" class="name-input" id="driver-name"
         placeholder="Το όνομά σου (προαιρετικά)" maxlength="100">
 
-      <button class="btn btn-accept" id="accept-btn">✅ Αποδοχή Διαδρομής</button>
+      <!-- Button 1: Accept → Navigate to Hotel → Navigate to Destination -->
+      <button class="btn btn-accept" id="primary-btn">✅ Αποδοχή Διαδρομής</button>
 
-      <button class="btn btn-complete" id="complete-btn">🏁 Ολοκλήρωση Διαδρομής</button>
+      <!-- Button 2: (hidden initially) Arrived → Complete -->
+      <button class="btn btn-arrived" id="secondary-btn" style="display:none">📍 Έφτασα</button>
 
       <div class="status" id="status-msg"></div>
     </div>
@@ -125,238 +131,6 @@
     </div>
   </div>
 
-  <script>
-  (function() {
-    'use strict';
-
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-
-    const loading = document.getElementById('loading');
-    const tripContent = document.getElementById('trip-content');
-    const expiredContent = document.getElementById('expired-content');
-    const acceptedContent = document.getElementById('accepted-content');
-    const tripDetails = document.getElementById('trip-details');
-    const acceptBtn = document.getElementById('accept-btn');
-    const completeBtn = document.getElementById('complete-btn');
-    const driverNameInput = document.getElementById('driver-name');
-    const statusMsg = document.getElementById('status-msg');
-
-    if (!token) {
-      loading.classList.remove('show');
-      expiredContent.style.display = 'block';
-      return;
-    }
-
-    async function loadTrip() {
-      try {
-        const res = await fetch('/api/moveathens/driver-accept/' + token);
-        if (res.status === 404 || res.status === 410) {
-          loading.classList.remove('show');
-          expiredContent.style.display = 'block';
-          return;
-        }
-        const data = await res.json();
-        if (!res.ok) {
-          loading.classList.remove('show');
-          expiredContent.style.display = 'block';
-          return;
-        }
-
-        if (data.status === 'completed') {
-          renderTrip(data);
-          acceptBtn.textContent = '✅ Αποδεκτό';
-          acceptBtn.disabled = true;
-          acceptBtn.style.background = '#d1fae5';
-          acceptBtn.style.color = '#065f46';
-          driverNameInput.style.display = 'none';
-          completeBtn.style.display = 'block';
-          completeBtn.textContent = '🏁 Ολοκληρωμένη';
-          completeBtn.disabled = true;
-          completeBtn.classList.add('btn-completed');
-          return;
-        }
-
-        if (data.status === 'accepted' || data.status === 'confirmed') {
-          renderTrip(data);
-          acceptBtn.textContent = '✅ Αποδεκτό';
-          acceptBtn.disabled = true;
-          acceptBtn.style.background = '#d1fae5';
-          acceptBtn.style.color = '#065f46';
-          driverNameInput.style.display = 'none';
-          completeBtn.style.display = 'block';
-          return;
-        }
-
-        renderTrip(data);
-      } catch (err) {
-        loading.classList.remove('show');
-        statusMsg.className = 'status error';
-        statusMsg.textContent = 'Σφάλμα φόρτωσης. Δοκίμασε ξανά.';
-      }
-    }
-
-    function renderTrip(data) {
-      const tariffLabel = data.tariff === 'night' ? '🌙 Νυχτερινή' : '☀️ Ημερήσια';
-      let schedule = data.booking_type === 'instant' ? '⚡ Άμεσα' : '';
-      if (data.scheduled_date) {
-        const dayNames = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
-        const monthNames = ['Ιανουαρίου','Φεβρουαρίου','Μαρτίου','Απριλίου','Μαΐου','Ιουνίου','Ιουλίου','Αυγούστου','Σεπτεμβρίου','Οκτωβρίου','Νοεμβρίου','Δεκεμβρίου'];
-        const dt = new Date(data.scheduled_date + 'T' + (data.scheduled_time || '00:00'));
-        const dayName = dayNames[dt.getDay()];
-        const monthName = monthNames[dt.getMonth()];
-        let tStr = '';
-        if (data.scheduled_time) {
-          const [hh, mm] = data.scheduled_time.split(':');
-          const h = parseInt(hh, 10);
-          const suffix = h < 12 ? 'πμ' : 'μμ';
-          const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-          tStr = ' ώρα ' + h12 + ':' + mm + ' ' + suffix;
-        }
-        schedule = '📅 ' + dayName + ' ' + dt.getDate() + ', ' + monthName + tStr;
-      }
-
-      // ── Section: Route ──
-      const sections = [];
-      sections.push({ type: 'title', text: 'Διαδρομή' });
-      sections.push({ icon: '🎯', label: 'Προορισμός', value: data.destination_name || '—' });
-      sections.push({ icon: '🚘', label: 'Όχημα', value: data.vehicle_name || '—' });
-      sections.push({ icon: '⏰', label: 'Χρόνος', value: schedule || tariffLabel });
-      sections.push({ icon: '💳', label: 'Πληρωμή', value: data.payment_method === 'pos' ? 'POS' : 'Μετρητά' });
-
-      // ── Section: Hotel ──
-      sections.push({ type: 'divider' });
-      sections.push({ type: 'title', text: 'Ξενοδοχείο' });
-      sections.push({ icon: '🏨', label: 'Όνομα', value: data.hotel_name || '—' });
-      if (data.hotel_municipality) {
-        sections.push({ icon: '📌', label: 'Δήμος', value: data.hotel_municipality });
-      }
-      if (data.hotel_address) {
-        sections.push({ icon: '📍', label: 'Διεύθυνση', value: data.hotel_address });
-      }
-
-      // ── Section: Passengers ──
-      sections.push({ type: 'divider' });
-      sections.push({ type: 'title', text: 'Επιβάτες & Αποσκευές' });
-      if (data.passenger_name) {
-        sections.push({ icon: '👤', label: 'Όνομα', value: data.passenger_name });
-      }
-      sections.push({ icon: '👥', label: 'Άτομα', value: data.passengers || '—' });
-      const luggageParts = [];
-      if (data.luggage_large > 0) luggageParts.push(data.luggage_large + ' μεγάλ.');
-      if (data.luggage_medium > 0) luggageParts.push(data.luggage_medium + ' μεσαί.');
-      if (data.luggage_cabin > 0) luggageParts.push(data.luggage_cabin + ' χειρ.');
-      sections.push({ icon: '🧳', label: 'Αποσκευές', value: luggageParts.length ? luggageParts.join(', ') : '—' });
-
-      // Render rows
-      tripDetails.innerHTML = sections.map(function(r) {
-        if (r.type === 'divider') return '<div class="section-divider"></div>';
-        if (r.type === 'title') return '<div class="section-title">' + r.text + '</div>';
-        return '<div class="trip-row">' +
-          '<span class="icon">' + r.icon + '</span>' +
-          '<span class="label">' + r.label + '</span>' +
-          '<span class="value">' + r.value + '</span>' +
-        '</div>';
-      }).join('');
-
-      // ── Price cards (4 fields) ──
-      var price = parseFloat(data.price || 0);
-      var driverCut = parseFloat(data.commission_driver || 0);
-      var hotelCut = parseFloat(data.commission_hotel || 0);
-      var serviceCut = parseFloat(data.commission_service || 0);
-
-      document.getElementById('price-grid').innerHTML =
-        '<div class="price-card driver" style="grid-column:1/-1">' +
-          '<div class="pc-label">💶 Η αμοιβή σου</div>' +
-          '<div class="pc-value">€' + driverCut.toFixed(0) + '</div>' +
-        '</div>' +
-        '<div class="price-card">' +
-          '<div class="pc-label">💰 Συνολ. Χρέωση</div>' +
-          '<div class="pc-value">€' + price.toFixed(0) + '</div>' +
-        '</div>' +
-        '<div class="price-card hotel">' +
-          '<div class="pc-label">🏨 Ξενοδόχος</div>' +
-          '<div class="pc-value">€' + hotelCut.toFixed(0) + '</div>' +
-        '</div>' +
-        '<div class="price-card service">' +
-          '<div class="pc-label">🔧 Υπηρεσία</div>' +
-          '<div class="pc-value">€' + serviceCut.toFixed(0) + '</div>' +
-        '</div>';
-
-      loading.classList.remove('show');
-      tripContent.style.display = 'block';
-    }
-
-    acceptBtn.addEventListener('click', async function() {
-      acceptBtn.disabled = true;
-      acceptBtn.textContent = 'Αποστολή…';
-      statusMsg.className = 'status';
-      statusMsg.textContent = '';
-
-      try {
-        const res = await fetch('/api/moveathens/driver-accept/' + token, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ driver_name: driverNameInput.value.trim() })
-        });
-        const data = await res.json();
-
-        if (res.ok && (data.ok || data.already)) {
-          acceptBtn.textContent = '✅ Αποδεκτό';
-          acceptBtn.disabled = true;
-          acceptBtn.style.background = '#d1fae5';
-          acceptBtn.style.color = '#065f46';
-          driverNameInput.style.display = 'none';
-          completeBtn.style.display = 'block';
-          statusMsg.className = 'status ok';
-          statusMsg.textContent = 'Καλή διαδρομή! Ο πελάτης θα ειδοποιηθεί.';
-        } else {
-          statusMsg.className = 'status error';
-          statusMsg.textContent = data.error || 'Σφάλμα. Δοκίμασε ξανά.';
-          acceptBtn.disabled = false;
-          acceptBtn.textContent = '✅ Αποδοχή Διαδρομής';
-        }
-      } catch (err) {
-        statusMsg.className = 'status error';
-        statusMsg.textContent = 'Σφάλμα σύνδεσης.';
-        acceptBtn.disabled = false;
-        acceptBtn.textContent = '✅ Αποδοχή Διαδρομής';
-      }
-    });
-
-    completeBtn.addEventListener('click', async function() {
-      completeBtn.disabled = true;
-      completeBtn.textContent = 'Αποστολή…';
-
-      try {
-        const res = await fetch('/api/moveathens/driver-complete/' + token, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await res.json();
-
-        if (res.ok && data.ok) {
-          completeBtn.textContent = '🏁 Ολοκληρωμένη';
-          completeBtn.disabled = true;
-          completeBtn.classList.add('btn-completed');
-          statusMsg.className = 'status ok';
-          statusMsg.textContent = 'Η διαδρομή ολοκληρώθηκε. Ευχαριστούμε!';
-        } else {
-          statusMsg.className = 'status error';
-          statusMsg.textContent = data.error || 'Σφάλμα. Δοκίμασε ξανά.';
-          completeBtn.disabled = false;
-          completeBtn.textContent = '🏁 Ολοκλήρωση Διαδρομής';
-        }
-      } catch (err) {
-        statusMsg.className = 'status error';
-        statusMsg.textContent = 'Σφάλμα σύνδεσης.';
-        completeBtn.disabled = false;
-        completeBtn.textContent = '🏁 Ολοκλήρωση Διαδρομής';
-      }
-    });
-
-    loadTrip();
-  })();
-  </script>
+  <script src="/moveathens/js/driver-accept.js"></script>
 </body>
 </html>

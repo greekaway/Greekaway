@@ -281,6 +281,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     const categoryId = normalizeString(entry.category_id || '');
     const zoneId = normalizeString(entry.zone_id || '');
     const routeType = normalizeString(entry.route_type || '');
+    const lat = entry.lat != null ? parseFloat(entry.lat) : null;
+    const lng = entry.lng != null ? parseFloat(entry.lng) : null;
     const displayOrder = toInt(entry.display_order, 0);
     const isActive = typeof entry.is_active === 'boolean' ? entry.is_active : true;
     const createdAt = normalizeString(entry.created_at) || new Date().toISOString();
@@ -291,6 +293,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       category_id: categoryId,
       zone_id: zoneId,
       route_type: routeType || null,
+      lat: Number.isFinite(lat) ? lat : null,
+      lng: Number.isFinite(lng) ? lng : null,
       display_order: displayOrder,
       is_active: isActive,
       created_at: createdAt

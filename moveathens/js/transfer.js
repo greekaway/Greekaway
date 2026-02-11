@@ -24,6 +24,7 @@
   let selectedLuggageCabin = 0;
   let selectedPaymentMethod = null; // 'cash' or 'pos'
   let passengerName = ''; // Name of passenger (required for non-taxi vehicles)
+  let roomNumber = ''; // Room number (optional)
 
   // Tariff labels for UI
   const TARIFF_LABELS = {
@@ -463,6 +464,7 @@
     selectedLuggageCabin = 0;
     selectedPaymentMethod = null;
     passengerName = '';
+    roomNumber = '';
 
     // Setup passenger name field
     const passengerNameInput = $('#passenger-name');
@@ -481,6 +483,10 @@
     if (passengerNameError) {
       passengerNameError.hidden = true;
     }
+
+    // Reset room number field
+    const roomNumberInput = $('#room-number');
+    if (roomNumberInput) roomNumberInput.value = '';
 
     // Update max values display
     $('#passengers-max').textContent = `(μέγ. ${selectedVehicle.max_passengers})`;
@@ -502,6 +508,9 @@
     
     // Setup passenger name input listener
     setupPassengerNameListener();
+
+    // Setup room number input listener
+    setupRoomNumberListener();
 
     // Reset button states
     updateCounterButtons();
@@ -606,6 +615,21 @@
     });
   };
 
+  // Setup room number input listener
+  const setupRoomNumberListener = () => {
+    const input = $('#room-number');
+    if (!input) return;
+    
+    // Clone to remove old listeners
+    const newInput = input.cloneNode(true);
+    input.parentNode.replaceChild(newInput, input);
+    
+    newInput.addEventListener('input', (e) => {
+      roomNumber = e.target.value.trim();
+      updateCtaLinks();
+    });
+  };
+
   // Validate passenger name before allowing CTA actions (for non-taxi only)
   const validatePassengerName = () => {
     const isNonTaxi = selectedVehicle && !selectedVehicle.allow_instant;
@@ -664,6 +688,9 @@
     let travelDetails = '';
     if (passengerName) {
       travelDetails += `👤 Όνομα επιβάτη: ${passengerName}\n`;
+    }
+    if (roomNumber) {
+      travelDetails += `🚪 Δωμάτιο: ${roomNumber}\n`;
     }
     if (selectedPassengers > 0) {
       travelDetails += `👥 Επιβάτες: ${selectedPassengers}\n`;
@@ -749,6 +776,7 @@
         luggage_medium:    selectedLuggageMedium || 0,
         luggage_cabin:     selectedLuggageCabin || 0,
         passenger_name:    passengerName || '',
+        room_number:       roomNumber || '',
         price:             selectedVehicle.price || 0,
         payment_method:    selectedPaymentMethod || 'cash'
       };

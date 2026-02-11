@@ -475,6 +475,7 @@
     const fOrder = $('#maDestinationOrder');
     const fActive = $('#maDestinationActive');
     const fRouteType = $('#maDestinationRouteType');
+    const fLatLng = $('#maDestinationLatLng');
 
     const populateDropdowns = () => {
       // Categories (only active ones)
@@ -539,6 +540,7 @@
       fOrder.value = '0';
       fActive.checked = true;
       if (fRouteType) fRouteType.value = '';
+      if (fLatLng) fLatLng.value = '';
       setStatus(status, '', '');
     };
 
@@ -553,6 +555,13 @@
       fOrder.value = dest.display_order || 0;
       fActive.checked = dest.is_active !== false;
       if (fRouteType) fRouteType.value = dest.route_type || '';
+      if (fLatLng) {
+        if (dest.lat != null && dest.lng != null) {
+          fLatLng.value = `${dest.lat},${dest.lng}`;
+        } else {
+          fLatLng.value = '';
+        }
+      }
       form.hidden = false;
     };
 
@@ -594,12 +603,32 @@
       if (!fCategory.value) { setStatus(status, 'Επιλέξτε κατηγορία', 'error'); return; }
 
       let dests = [...(CONFIG.destinations || [])];
+
+      // Parse lat,lng from input
+      let lat = null, lng = null;
+      if (fLatLng && fLatLng.value.trim()) {
+        const parts = fLatLng.value.trim().split(',');
+        if (parts.length === 2) {
+          lat = parseFloat(parts[0].trim());
+          lng = parseFloat(parts[1].trim());
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+            setStatus(status, 'Μη έγκυρες συντεταγμένες (lat,lng)', 'error');
+            return;
+          }
+        } else {
+          setStatus(status, 'Οι συντεταγμένες πρέπει να είναι lat,lng', 'error');
+          return;
+        }
+      }
+
       const entry = {
         id: editingDestinationId || `dest_${Date.now()}`,
         name,
         description: fDesc.value.trim(),
         category_id: fCategory.value,
         route_type: fRouteType ? fRouteType.value || null : null,
+        lat,
+        lng,
         display_order: parseInt(fOrder.value, 10) || 0,
         is_active: fActive.checked,
         created_at: new Date().toISOString()

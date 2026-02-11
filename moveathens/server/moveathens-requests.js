@@ -92,6 +92,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         scheduled_date: body.scheduled_date || '',
         scheduled_time: body.scheduled_time || '',
         passenger_name: body.passenger_name || '',
+        room_number: body.room_number || '',
         passengers: body.passengers || 0,
         luggage_large: body.luggage_large || 0,
         luggage_medium: body.luggage_medium || 0,
@@ -122,19 +123,53 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         return res.status(410).json({ error: 'Request expired' });
       }
 
+      // Look up hotel phone from zone data for WhatsApp "arrived" message
+      let hotel_phone = '';
+      if (request.origin_zone_id) {
+        try {
+          const moveathensData = require('../../src/server/data/moveathens');
+          const zones = await moveathensData.getZones({ activeOnly: false });
+          const zone = zones.find(z => z.id === request.origin_zone_id);
+          if (zone && zone.phone) hotel_phone = zone.phone;
+        } catch (e) { /* ignore */ }
+      }
+
+      // Look up destination coordinates for navigation
+      let destination_lat = null, destination_lng = null;
+      if (request.destination_id) {
+        try {
+          const moveathensData = require('../../src/server/data/moveathens');
+          const dests = await moveathensData.getDestinations({ activeOnly: false });
+          const dest = dests.find(d => d.id === request.destination_id);
+          if (dest) {
+            destination_lat = dest.lat || null;
+            destination_lng = dest.lng || null;
+          }
+        } catch (e) { /* ignore */ }
+      }
+
+      // Look up hotel (zone) coordinates for navigation to pickup
+      let hotel_lat = null, hotel_lng = null;
+      // Hotels don't have lat/lng yet — we rely on address for now
+      // (could be added similarly to destinations in future)
+
       // Return trip info (no sensitive admin data)
       return res.json({
         id: request.id,
         hotel_name: request.hotel_name,
         hotel_address: request.hotel_address || '',
         hotel_municipality: request.hotel_municipality || '',
+        hotel_phone: hotel_phone,
         destination_name: request.destination_name,
+        destination_lat,
+        destination_lng,
         vehicle_name: request.vehicle_name,
         tariff: request.tariff,
         booking_type: request.booking_type,
         scheduled_date: request.scheduled_date,
         scheduled_time: request.scheduled_time,
         passenger_name: request.passenger_name,
+        room_number: request.room_number || '',
         passengers: request.passengers,
         luggage_large: request.luggage_large || 0,
         luggage_medium: request.luggage_medium || 0,

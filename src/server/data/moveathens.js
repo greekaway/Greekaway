@@ -785,6 +785,8 @@ async function getDestinations(filters = {}) {
           category_id: row.category_id,
           zone_id: row.zone_id,
           route_type: row.route_type || null,
+          lat: row.lat != null ? parseFloat(row.lat) : null,
+          lng: row.lng != null ? parseFloat(row.lng) : null,
           display_order: row.display_order,
           is_active: row.is_active,
           created_at: row.created_at
@@ -804,6 +806,8 @@ async function getDestinations(filters = {}) {
               category_id: d.category_id || null,
               zone_id: d.zone_id || null,
               route_type: d.route_type || null,
+              lat: d.lat != null ? parseFloat(d.lat) : null,
+              lng: d.lng != null ? parseFloat(d.lng) : null,
               display_order: d.display_order || 0,
               is_active: d.is_active !== false
             });
@@ -819,6 +823,8 @@ async function getDestinations(filters = {}) {
           category_id: row.category_id,
           zone_id: row.zone_id,
           route_type: row.route_type || null,
+          lat: row.lat != null ? parseFloat(row.lat) : null,
+          lng: row.lng != null ? parseFloat(row.lng) : null,
           display_order: row.display_order,
           is_active: row.is_active,
           created_at: row.created_at
@@ -860,6 +866,8 @@ async function upsertDestination(data) {
         category_id: data.category_id || null,
         zone_id: data.zone_id || null,
         route_type: data.route_type || null,
+        lat: data.lat != null ? parseFloat(data.lat) : null,
+        lng: data.lng != null ? parseFloat(data.lng) : null,
         display_order: data.display_order || 0,
         is_active: data.is_active !== false
       });
@@ -871,6 +879,8 @@ async function upsertDestination(data) {
         category_id: row.category_id,
         zone_id: row.zone_id,
         route_type: row.route_type || null,
+        lat: row.lat != null ? parseFloat(row.lat) : null,
+        lng: row.lng != null ? parseFloat(row.lng) : null,
         display_order: row.display_order,
         is_active: row.is_active,
         created_at: row.created_at
@@ -891,6 +901,8 @@ async function upsertDestination(data) {
     category_id: data.category_id || null,
     zone_id: data.zone_id || null,
     route_type: data.route_type || null,
+    lat: data.lat != null ? parseFloat(data.lat) : null,
+    lng: data.lng != null ? parseFloat(data.lng) : null,
     display_order: data.display_order || 0,
     is_active: data.is_active !== false,
     created_at: idx >= 0 ? dests[idx].created_at : new Date().toISOString()
