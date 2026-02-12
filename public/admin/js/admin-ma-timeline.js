@@ -202,6 +202,7 @@
         durCell(r.dur_to_dest, 60) +
         durCell(r.dur_total, 120) +
         '<td><button class="dr-btn dr-btn-primary tl-detail-btn" style="font-size:11px;padding:4px 10px">🔍</button></td>' +
+        '<td><button class="dr-btn tl-del-btn" style="background:#ef4444;color:#fff;font-size:11px;padding:4px 10px">Διαγραφή</button></td>' +
       '</tr>';
     }).join('');
 
@@ -210,6 +211,22 @@
         var id = btn.closest('tr').dataset.id;
         var r = _timelineData.find(function (t) { return t.id === id; });
         if (r) openTimelineModal(r);
+      });
+    });
+
+    _$$('.tl-del-btn', tbody).forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var tr = btn.closest('tr');
+        var id = tr.dataset.id;
+        if (!confirm('Θέλετε σίγουρα να διαγράψετε αυτή τη διαδρομή από το χρονολόγιο;')) return;
+        btn.disabled = true;
+        try {
+          var res = await fetch('/api/admin/moveathens/requests/' + id, { method: 'DELETE', credentials: 'include' });
+          var json = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(json.error || 'Server error');
+          toast('Η διαδρομή διαγράφηκε.');
+          loadTimeline();
+        } catch (e) { toast('Σφάλμα: ' + e.message); btn.disabled = false; }
       });
     });
   }

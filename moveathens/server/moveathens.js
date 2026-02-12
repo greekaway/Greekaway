@@ -906,6 +906,19 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     }
   });
 
+  // --- DELETE single zone ---
+  app.delete('/api/admin/moveathens/transfer-zones/:id', async (req, res) => {
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const deleted = await dataLayer.deleteZone(req.params.id);
+      if (!deleted) return res.status(404).json({ error: 'Zone not found' });
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error('[moveathens] DELETE zone failed:', err.message);
+      return res.status(500).json({ error: 'Delete failed' });
+    }
+  });
+
   // --- HOTEL PHONES ---
   app.get('/api/admin/moveathens/hotel-phones', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });

@@ -241,7 +241,7 @@
           (rt.unknown ? '<div class="hrt-type-row">❓ Χωρίς τύπο: <strong>' + rt.unknown + '</strong></div>' : '') +
           '</div>';
 
-        return '<tr>' +
+        return '<tr data-zone-id="' + (h.origin_zone_id || '') + '">' +
           '<td><strong>' + h.hotel_name + '</strong></td>' +
           '<td>' + h.total_routes + '</td>' +
           '<td>€' + h.total_revenue.toFixed(0) + '</td>' +
@@ -249,6 +249,9 @@
           '<td class="hrt-types-cell">' +
             '<span class="hrt-types-badge" data-target="' + expandId + '" title="Κλικ για ανάλυση">' + typeSummary + '</span>' +
             expandHtml +
+          '</td>' +
+          '<td style="white-space:nowrap">' +
+            (h.origin_zone_id ? '<button class="dr-btn hrt-del-btn" style="background:#ef4444;color:#fff;font-size:0.75rem;padding:0.25rem 0.5rem">Διαγραφή</button>' : '') +
           '</td>' +
         '</tr>';
       }).join('');
@@ -259,6 +262,26 @@
           const target = _$('#' + this.dataset.target);
           if (target) target.classList.toggle('hidden');
           this.classList.toggle('active');
+        });
+      });
+
+      // Bind hotel delete buttons
+      _$$('.hrt-del-btn', tbody).forEach(btn => {
+        btn.addEventListener('click', async function () {
+          const tr = btn.closest('tr');
+          const zoneId = tr.dataset.zoneId;
+          if (!zoneId) { toast('Δεν βρέθηκε zone ID.'); return; }
+          if (!confirm('Θέλετε σίγουρα να διαγράψετε αυτό το ξενοδοχείο;')) return;
+          btn.disabled = true;
+          try {
+            const res = await fetch('/api/admin/moveathens/transfer-zones/' + encodeURIComponent(zoneId), {
+              method: 'DELETE', credentials: 'include'
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(json.error || 'Server error');
+            toast('Το ξενοδοχείο διαγράφηκε.');
+            loadHotelRevenue();
+          } catch (e) { toast('Σφάλμα διαγραφής: ' + e.message); btn.disabled = false; }
         });
       });
 

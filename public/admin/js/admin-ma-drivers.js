@@ -266,7 +266,7 @@
           ? '<input class="dr-inline-input req-phone" value="' + phoneVal + '" placeholder="+30…">'
           : (r.driver_phone || '—')) + '</td>' +
         '<td style="white-space:nowrap">' +
-          (canSend ? '<button class="dr-btn dr-btn-success req-send-btn">Αποστολή</button>' : '') +
+          (canSend ? '<button class="dr-btn dr-btn-success req-send-btn">Αποστολή</button> <button class="dr-btn req-del-btn" style="background:#ef4444;color:#fff;margin-left:4px">Διαγραφή</button>' : '') +
         '</td>' +
       '</tr>';
     }).join('');
@@ -289,6 +289,20 @@
           }
           loadRoutesData();
         } catch (e) { toast('Σφάλμα: ' + e.message); btn.disabled = false; }
+      });
+    });
+
+    _$$('.req-del-btn', tbody).forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var tr = btn.closest('tr');
+        var id = tr.dataset.id;
+        if (!confirm('Θέλετε σίγουρα να διαγράψετε αυτό το αίτημα;')) return;
+        btn.disabled = true;
+        try {
+          await api('/api/admin/moveathens/requests/' + id, { method: 'DELETE' });
+          toast('Το αίτημα διαγράφηκε.');
+          loadRoutesData();
+        } catch (e) { toast('Σφάλμα διαγραφής: ' + e.message); btn.disabled = false; }
       });
     });
   }

@@ -88,6 +88,7 @@ module.exports = function registerHotelRevenueRoutes(app, opts = {}) {
         if (!hotelMap[name]) {
           hotelMap[name] = {
             hotel_name: name,
+            origin_zone_id: r.origin_zone_id || '',
             total_routes: 0,
             total_revenue: 0,
             total_commission: 0,

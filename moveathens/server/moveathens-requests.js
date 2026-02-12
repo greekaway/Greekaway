@@ -126,13 +126,34 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
 
       // Look up hotel phone from zone data for WhatsApp "arrived" message
       // Prefer orderer_phone (the specific employee who placed the order)
-      let hotel_phone = request.orderer_phone || '';
-      if (!hotel_phone && request.origin_zone_id) {
+      // but validate it exists in ma_hotel_phones for this zone
+      let hotel_phone = '';
+      if (request.origin_zone_id) {
         try {
           const moveathensData = require('../../src/server/data/moveathens');
-          const zones = await moveathensData.getZones({ activeOnly: false });
-          const zone = zones.find(z => z.id === request.origin_zone_id);
-          if (zone && zone.phone) hotel_phone = zone.phone;
+          const hotelPhones = await moveathensData.getHotelPhones(request.origin_zone_id);
+          if (request.orderer_phone) {
+            // Normalize orderer_phone for comparison
+            const normOrderer = request.orderer_phone.replace(/[\s\-().]/g, '').replace(/^\+30/, '').replace(/^0030/, '');
+            const matched = (hotelPhones || []).find(p => {
+              const normStored = p.phone.replace(/[\s\-().]/g, '').replace(/^\+30/, '').replace(/^0030/, '');
+              return normStored === normOrderer;
+            });
+            if (matched) {
+              // Use the properly formatted phone from DB
+              hotel_phone = matched.phone;
+            }
+          }
+          // Fallback: if orderer_phone not matched, use first phone from zone's phones
+          if (!hotel_phone && hotelPhones && hotelPhones.length > 0) {
+            hotel_phone = hotelPhones[0].phone;
+          }
+          // Last fallback: zone's main phone field
+          if (!hotel_phone) {
+            const zones = await moveathensData.getZones({ activeOnly: false });
+            const zone = zones.find(z => z.id === request.origin_zone_id);
+            if (zone && zone.phone) hotel_phone = zone.phone;
+          }
         } catch (e) { /* ignore */ }
       }
 
@@ -394,7 +415,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         `🎯 ${request.destination_name || '—'}`,
         scheduleText,
         ``,
-        `👆 Πατήστε παρακάτω για αποδοχή:`,
+        `� Πατήστε παρακάτω για αποδοχή:`,
         ``,
         `${acceptUrl}`
       ].filter(l => l !== undefined).join('\n');

@@ -67,7 +67,15 @@
   // ── Build WhatsApp "arrived" message to hotel ──
   function buildArrivedWhatsAppUrl() {
     if (!tripData || !tripData.hotel_phone) return null;
-    var phone = tripData.hotel_phone.replace(/[^0-9+]/g, '').replace(/^\+/, '');
+    var phone = tripData.hotel_phone.replace(/[^0-9+]/g, '');
+    if (!phone) return null;
+    // Ensure country code: if starts with +30 strip +, if starts with 69… prepend 30
+    if (phone.charAt(0) === '+') {
+      phone = phone.substring(1);
+    }
+    if (/^69/.test(phone) || /^21/.test(phone) || /^22/.test(phone)) {
+      phone = '30' + phone;
+    }
     if (!phone) return null;
 
     var greeting = getGreeting();
