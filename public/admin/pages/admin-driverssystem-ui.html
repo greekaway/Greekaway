@@ -258,6 +258,35 @@
 
       <!-- ===== DRIVERS TAB ===== -->
       <div class="tab-content" data-tab="drivers">
+        <!-- Create Driver Form -->
+        <section class="panel">
+          <div class="ds-section-header">
+            <div>
+              <h3 class="ds-admin-subtitle">Δημιουργία Οδηγού</h3>
+              <p class="ds-admin-helper">Προσθέστε νέο οδηγό στο σύστημα</p>
+            </div>
+          </div>
+          <form id="adminCreateDriverForm" class="ds-admin-create-driver-form">
+            <div class="ds-admin-form-row">
+              <div class="ds-admin-form-field">
+                <label for="newDriverName">Ονοματεπώνυμο *</label>
+                <input id="newDriverName" class="input" type="text" placeholder="π.χ. Γιάννης Παπαδόπουλος" required />
+              </div>
+              <div class="ds-admin-form-field">
+                <label for="newDriverPhone">Τηλέφωνο *</label>
+                <input id="newDriverPhone" class="input" type="tel" placeholder="π.χ. 6912345678" required />
+              </div>
+              <div class="ds-admin-form-field">
+                <label for="newDriverEmail">Email</label>
+                <input id="newDriverEmail" class="input" type="email" placeholder="π.χ. driver@email.com" />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary ds-admin-create-btn">➕ Δημιουργία Οδηγού</button>
+            <div class="ds-admin-form-msg" data-admin-create-driver-msg></div>
+          </form>
+        </section>
+
+        <!-- Drivers List -->
         <section class="panel">
           <div class="ds-section-header">
             <div>
@@ -323,6 +352,19 @@
     </main>
 
     <div id="ds-toast" class="ds-toast" role="status" aria-live="polite"></div>
+
+    <!-- Confirm Modal -->
+    <div id="dsConfirmModal" class="ds-modal" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="ds-modal__backdrop" data-action="close"></div>
+      <div class="ds-modal__content" role="document">
+        <h4 id="dsConfirmTitle" class="ds-modal__title">Επιβεβαίωση</h4>
+        <p id="dsConfirmMessage" class="ds-modal__message"></p>
+        <div class="ds-modal__actions">
+          <button id="dsConfirmCancel" class="btn secondary" type="button">Ακύρωση</button>
+          <button id="dsConfirmOk" class="btn btn-danger-solid" type="button">Διαγραφή</button>
+        </div>
+      </div>
+    </div>
 
     <script src="/admin/js/admin-driverssystem-ui.js"></script>
     <script src="/admin/js/admin-driverssystem-stats.js"></script>

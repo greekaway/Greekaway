@@ -8,6 +8,29 @@
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
+  // ── Auth Guard — check if driver is logged in ──
+  const STORAGE_KEY = 'ds_driver_phone';
+  const savedPhone = localStorage.getItem(STORAGE_KEY);
+
+  if (!savedPhone) {
+    const profileUrl = window.DriversSystemConfig
+      ? window.DriversSystemConfig.buildRoute('/profile')
+      : '/driverssystem/profile';
+
+    const guard = document.createElement('div');
+    guard.className = 'ds-auth-guard';
+    guard.innerHTML = `
+      <div class="ds-auth-guard__inner">
+        <div class="ds-auth-guard__icon">🔒</div>
+        <h2 class="ds-auth-guard__title">Απαιτείται Σύνδεση</h2>
+        <p class="ds-auth-guard__desc">Για να καταχωρήσετε διαδρομές, πρέπει πρώτα να συνδεθείτε με τον αριθμό τηλεφώνου σας.</p>
+        <a class="ds-auth-guard__btn" href="${profileUrl}">Σύνδεση στο Προφίλ</a>
+      </div>`;
+    document.body.appendChild(guard);
+    const cfg = await window.DriversSystemConfig.load();
+    return;
+  }
+
   // ── Config ──
   const cfg = await window.DriversSystemConfig.load();
   window.DriversSystemConfig.applyPageTitles(document, cfg);
@@ -144,9 +167,9 @@
     btn.querySelector('.ds-save-btn__text').textContent = 'Αποθήκευση…';
 
     try {
-      const driverData = JSON.parse(localStorage.getItem('ds_driver') || '{}');
+      const driverPhone = localStorage.getItem('ds_driver_phone') || '';
       const res = await api('/api/driverssystem/entries', 'POST', {
-        driverId: driverData.phone || '',
+        driverId: driverPhone,
         sourceId: selectedSource.id,
         sourceName: selectedSource.name,
         amount,
@@ -190,7 +213,8 @@
     if (!list) return;
 
     try {
-      const res = await api(`/api/driverssystem/entries?date=${currentDate}`);
+      const driverPhone = localStorage.getItem('ds_driver_phone') || '';
+      const res = await api(`/api/driverssystem/entries?date=${currentDate}&driverId=${encodeURIComponent(driverPhone)}`);
       if (!res.ok) return;
       const entries = await res.json();
 
@@ -241,7 +265,8 @@
   // ── Load summary ──
   const loadSummary = async () => {
     try {
-      const res = await api(`/api/driverssystem/entries/summary?date=${currentDate}`);
+      const driverPhone = localStorage.getItem('ds_driver_phone') || '';
+      const res = await api(`/api/driverssystem/entries/summary?date=${currentDate}&driverId=${encodeURIComponent(driverPhone)}`);
       if (!res.ok) return;
       const s = await res.json();
 

@@ -8,6 +8,31 @@
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
+  // ── Auth Guard — check if driver is logged in ──
+  const STORAGE_KEY = 'ds_driver_phone';
+  const savedPhone = localStorage.getItem(STORAGE_KEY);
+
+  if (!savedPhone) {
+    // Show auth guard overlay
+    const profileUrl = window.DriversSystemConfig
+      ? window.DriversSystemConfig.buildRoute('/profile')
+      : '/driverssystem/profile';
+
+    const guard = document.createElement('div');
+    guard.className = 'ds-auth-guard';
+    guard.innerHTML = `
+      <div class="ds-auth-guard__inner">
+        <div class="ds-auth-guard__icon">🔒</div>
+        <h2 class="ds-auth-guard__title">Απαιτείται Σύνδεση</h2>
+        <p class="ds-auth-guard__desc">Για να δείτε τα στατιστικά σας, πρέπει πρώτα να συνδεθείτε με τον αριθμό τηλεφώνου σας.</p>
+        <a class="ds-auth-guard__btn" href="${profileUrl}">Σύνδεση στο Προφίλ</a>
+      </div>`;
+    document.body.appendChild(guard);
+    // Don't load stats — just show the guard and footer
+    const cfg = await window.DriversSystemConfig.load();
+    return;
+  }
+
   // ── Config ──
   const cfg = await window.DriversSystemConfig.load();
 

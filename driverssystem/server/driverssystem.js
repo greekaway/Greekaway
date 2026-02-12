@@ -26,7 +26,8 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     '/': 'welcome.html',
     '/listings': 'entries.html',
     '/info': 'stats.html',
-    '/stats': 'stats.html'
+    '/stats': 'stats.html',
+    '/profile': 'profile.html'
   };
 
   Object.keys(pageMap).forEach((routePath) => {
@@ -223,6 +224,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       const filters = {};
       if (req.query.date) filters.date = req.query.date;
       if (req.query.sourceId) filters.sourceId = req.query.sourceId;
+      if (req.query.driverId) filters.driverId = req.query.driverId;
       const items = await dataLayer.getEntries(filters);
       return res.json(items);
     } catch (err) {
@@ -256,7 +258,8 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   app.get('/api/driverssystem/entries/summary', async (req, res) => {
     try {
       const date = req.query.date || new Date().toISOString().slice(0, 10);
-      const summary = await dataLayer.getEntriesSummary(date);
+      const driverId = req.query.driverId || null;
+      const summary = await dataLayer.getEntriesSummary(date, driverId);
       return res.json(summary);
     } catch (err) {
       return res.status(500).json({ error: 'Server error' });
@@ -325,6 +328,60 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       const drivers = await dataLayer.getDrivers(filters);
       return res.json(drivers);
     } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Admin: Create driver ──
+  app.post('/api/admin/driverssystem/drivers', requireAdmin, async (req, res) => {
+    try {
+      const { phone, fullName, email } = req.body || {};
+      if (!phone || !phone.trim()) {
+        return res.status(400).json({ error: 'Απαιτείται αριθμός τηλεφώνου' });
+      }
+      if (!fullName || !fullName.trim()) {
+        return res.status(400).json({ error: 'Απαιτείται ονοματεπώνυμο' });
+      }
+      const driver = await dataLayer.registerDriver({
+        phone: phone.trim(),
+        fullName: fullName.trim(),
+        email: (email || '').trim()
+      });
+      if (!driver) return res.status(500).json({ error: 'Creation failed' });
+      return res.status(201).json(driver);
+    } catch (err) {
+      console.error('[driverssystem] admin create driver error:', err.message);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Admin: Update driver ──
+  app.put('/api/admin/driverssystem/drivers/:id', requireAdmin, async (req, res) => {
+    try {
+      const { fullName, email, phone } = req.body || {};
+      const drivers = await dataLayer.getDrivers({});
+      const driver = drivers.find(d => d.id === req.params.id);
+      if (!driver) return res.status(404).json({ error: 'Δεν βρέθηκε' });
+      const updated = await dataLayer.updateDriver(driver.phone, {
+        fullName: fullName !== undefined ? fullName : driver.fullName,
+        email: email !== undefined ? email : driver.email
+      });
+      if (!updated) return res.status(500).json({ error: 'Update failed' });
+      return res.json(updated);
+    } catch (err) {
+      console.error('[driverssystem] admin update driver error:', err.message);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Admin: Delete driver ──
+  app.delete('/api/admin/driverssystem/drivers/:id', requireAdmin, async (req, res) => {
+    try {
+      const ok = await dataLayer.deleteDriver(req.params.id);
+      if (!ok) return res.status(404).json({ error: 'Δεν βρέθηκε' });
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error('[driverssystem] admin delete driver error:', err.message);
       return res.status(500).json({ error: 'Server error' });
     }
   });

@@ -257,8 +257,11 @@ async function deleteEntry(id) {
   return true;
 }
 
-async function getEntriesSummary(date) {
-  const entries = readEntries().filter(e => e.date === date);
+async function getEntriesSummary(date, driverId) {
+  let entries = readEntries().filter(e => e.date === date);
+  if (driverId) {
+    entries = entries.filter(e => e.driverId === driverId);
+  }
   const totalGross = entries.reduce((s, e) => s + (e.amount || 0), 0);
   const totalNet = entries.reduce((s, e) => s + (e.netAmount || 0), 0);
   const totalCommission = totalGross - totalNet;
@@ -356,6 +359,15 @@ async function updateDriver(phone, data) {
   if (data.email !== undefined) drivers[idx].email = data.email.trim();
   writeDrivers(drivers);
   return drivers[idx];
+}
+
+async function deleteDriver(id) {
+  const drivers = readDrivers();
+  const idx = drivers.findIndex(d => d.id === id);
+  if (idx === -1) return false;
+  drivers.splice(idx, 1);
+  writeDrivers(drivers);
+  return true;
 }
 
 // =========================================================
@@ -472,6 +484,7 @@ module.exports = {
   getDriverByPhone,
   registerDriver,
   updateDriver,
+  deleteDriver,
   // Stats
   getEntriesRange,
   getStatsRange

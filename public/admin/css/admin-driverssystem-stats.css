@@ -308,6 +308,79 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
 
+.ds-admin-driver-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ds-admin-driver-actions .btn-sm {
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid var(--ga-border);
+  background: var(--ga-card);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ds-admin-driver-actions .btn-sm:hover {
+  background: rgba(0, 200, 150, 0.1);
+}
+
+.ds-admin-driver-actions .btn-danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Create driver form */
+.ds-admin-create-driver-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ds-admin-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.ds-admin-form-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--ga-text);
+}
+
+.ds-admin-form-field .input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ds-admin-create-btn {
+  align-self: flex-start;
+}
+
+.ds-admin-form-msg {
+  font-size: 14px;
+  min-height: 20px;
+}
+
+.ds-admin-form-msg.success {
+  color: #00c896;
+}
+
+.ds-admin-form-msg.error {
+  color: #ef4444;
+}
+
+@media (max-width: 600px) {
+  .ds-admin-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .ds-admin-driver-avatar {
   width: 42px;
   height: 42px;
@@ -456,4 +529,72 @@
   .ds-admin-driver-stats {
     justify-content: center;
   }
+}
+
+/* ── Confirm Modal ── */
+.ds-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+}
+
+.ds-modal[data-open="true"] {
+  display: flex;
+}
+
+.ds-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 12, 20, 0.55);
+}
+
+.ds-modal__content {
+  position: relative;
+  z-index: 1;
+  background: var(--ga-card);
+  color: var(--ga-text);
+  border-radius: 14px;
+  padding: 18px;
+  width: min(92vw, 420px);
+  box-shadow: 0 20px 50px rgba(5, 15, 25, 0.28);
+  border: 1px solid var(--ga-border);
+  display: grid;
+  gap: 12px;
+}
+
+.ds-modal__title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.ds-modal__message {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ga-muted, #7b8794);
+}
+
+.ds-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ── Danger button (solid red) ── */
+.btn-danger-solid {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-danger-solid:hover {
+  background: #dc2626;
 }

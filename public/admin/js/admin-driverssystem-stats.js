@@ -9,11 +9,18 @@
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
   // ── API helper ──
-  const api = async (url, method = 'GET', body = null) => {
+  const api = async (url, methodOrOpts = 'GET', body = null) => {
+    let method = 'GET';
+    if (typeof methodOrOpts === 'object' && methodOrOpts !== null) {
+      method = methodOrOpts.method || 'GET';
+      body = methodOrOpts.body ? JSON.parse(methodOrOpts.body) : null;
+    } else {
+      method = methodOrOpts;
+    }
     const opts = { method, credentials: 'include' };
     if (body) {
       opts.headers = { 'Content-Type': 'application/json' };
-      opts.body = JSON.stringify(body);
+      opts.body = typeof body === 'string' ? body : JSON.stringify(body);
     }
     const res = await fetch(url, opts);
     if (res.status === 401 || res.status === 403) {
@@ -44,6 +51,36 @@
     if (groupBy === 'week') return `Εβδ. ${fmtDate(periodStr)}`;
     return fmtDate(periodStr);
   };
+
+  // ── Confirm Modal (styled, like MoveAthens) ──
+  const openConfirm = (message, opts = {}) => new Promise((resolve) => {
+    const root = $('#dsConfirmModal');
+    if (!root) { resolve(confirm(message)); return; }
+    const titleEl = $('#dsConfirmTitle');
+    const msgEl = $('#dsConfirmMessage');
+    const okBtn = $('#dsConfirmOk');
+    const cancelBtn = $('#dsConfirmCancel');
+    if (titleEl) titleEl.textContent = opts.title || 'Επιβεβαίωση';
+    if (msgEl) msgEl.textContent = message || '';
+    if (okBtn) okBtn.textContent = opts.okLabel || 'OK';
+    root.setAttribute('data-open', 'true');
+    root.setAttribute('aria-hidden', 'false');
+
+    const close = (result) => {
+      root.removeAttribute('data-open');
+      root.setAttribute('aria-hidden', 'true');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      root.removeEventListener('click', onBackdrop);
+      resolve(result);
+    };
+    const onOk = () => close(true);
+    const onCancel = () => close(false);
+    const onBackdrop = (e) => { if (e.target && e.target.matches && e.target.matches('[data-action="close"]')) close(false); };
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    root.addEventListener('click', onBackdrop);
+  });
 
   // ── Tab switching ──
   $$('.bar-tab').forEach(tab => {
@@ -209,13 +246,12 @@
         return;
       }
 
-      // For each driver, we'll show basic info. Stats could be loaded on demand.
       list.innerHTML = drivers.map(d => {
         const initials = (d.fullName || '?').split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2);
         const since = d.createdAt ? fmtDate(d.createdAt.slice(0, 10)) : '—';
         const lastLogin = d.lastLoginAt ? fmtDate(d.lastLoginAt.slice(0, 10)) : '—';
         return `
-          <div class="ds-admin-driver-card">
+          <div class="ds-admin-driver-card" data-driver-id="${d.id}">
             <div class="ds-admin-driver-avatar">${initials}</div>
             <div class="ds-admin-driver-info">
               <div class="ds-admin-driver-name">${d.fullName || '(Χωρίς όνομα)'}</div>
@@ -226,12 +262,99 @@
                 <span>🕐 ${lastLogin}</span>
               </div>
             </div>
+            <div class="ds-admin-driver-actions">
+              <button class="btn btn-sm btn-edit" data-edit-driver="${d.id}" data-name="${(d.fullName || '').replace(/"/g, '&quot;')}" data-phone="${d.phone}" data-email="${(d.email || '').replace(/"/g, '&quot;')}" title="Επεξεργασία">✏️</button>
+              <button class="btn btn-sm btn-danger-solid" data-delete-driver="${d.id}" data-name="${(d.fullName || '').replace(/"/g, '&quot;')}" title="Διαγραφή">Διαγραφή</button>
+            </div>
           </div>`;
       }).join('');
+
+      // Attach edit handlers
+      list.querySelectorAll('[data-edit-driver]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-edit-driver');
+          const name = btn.getAttribute('data-name');
+          const phone = btn.getAttribute('data-phone');
+          const email = btn.getAttribute('data-email');
+          const newName = prompt('Ονοματεπώνυμο:', name);
+          if (newName === null) return;
+          const newEmail = prompt('Email:', email);
+          if (newEmail === null) return;
+          api(`/api/admin/driverssystem/drivers/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fullName: newName, email: newEmail })
+          }).then(r => {
+            if (r && r.ok) {
+              loadDrivers(searchInput ? searchInput.value.trim() : '');
+              loadDriversList();
+            } else {
+              alert('Σφάλμα ενημέρωσης');
+            }
+          });
+        });
+      });
+
+      // Attach delete handlers
+      list.querySelectorAll('[data-delete-driver]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-delete-driver');
+          const name = btn.getAttribute('data-name');
+          const ok = await openConfirm(`Θέλετε σίγουρα να διαγράψετε τον οδηγό "${name}";`, { title: 'Διαγραφή Οδηγού', okLabel: 'Διαγραφή' });
+          if (!ok) return;
+          const r = await api(`/api/admin/driverssystem/drivers/${id}`, { method: 'DELETE' });
+          if (r && r.ok) {
+            loadDrivers(searchInput ? searchInput.value.trim() : '');
+            loadDriversList();
+          } else {
+            await openConfirm('Σφάλμα διαγραφής. Δοκιμάστε ξανά.', { title: 'Σφάλμα', okLabel: 'OK' });
+          }
+        });
+      });
     } catch (_) {
       list.innerHTML = '<div class="ds-admin-empty">Σφάλμα φόρτωσης</div>';
     }
   };
+
+  // Create driver form
+  const createForm = $('#adminCreateDriverForm');
+  if (createForm) {
+    createForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msgEl = $('[data-admin-create-driver-msg]');
+      const nameInput = $('#newDriverName');
+      const phoneInput = $('#newDriverPhone');
+      const emailInput = $('#newDriverEmail');
+      const fullName = (nameInput.value || '').trim();
+      const phone = (phoneInput.value || '').trim();
+      const email = (emailInput.value || '').trim();
+      if (!fullName || !phone) {
+        if (msgEl) { msgEl.textContent = 'Συμπληρώστε όνομα και τηλέφωνο'; msgEl.className = 'ds-admin-form-msg error'; }
+        return;
+      }
+      try {
+        const res = await api('/api/admin/driverssystem/drivers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fullName, phone, email })
+        });
+        if (res && res.ok) {
+          if (msgEl) { msgEl.textContent = 'Ο οδηγός δημιουργήθηκε!'; msgEl.className = 'ds-admin-form-msg success'; }
+          nameInput.value = '';
+          phoneInput.value = '';
+          emailInput.value = '';
+          loadDrivers('');
+          loadDriversList();
+          setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 3000);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          if (msgEl) { msgEl.textContent = err.error || 'Σφάλμα δημιουργίας'; msgEl.className = 'ds-admin-form-msg error'; }
+        }
+      } catch (_) {
+        if (msgEl) { msgEl.textContent = 'Σφάλμα σύνδεσης'; msgEl.className = 'ds-admin-form-msg error'; }
+      }
+    });
+  }
 
   // Driver search
   let searchTimeout;

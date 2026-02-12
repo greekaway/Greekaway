@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Προφίλ – DriversSystem</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/driverssystem/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/driverssystem/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/driverssystem/icons/apple-touch-icon.png">
+    <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
+    <link rel="preload" href="/driverssystem/css/profile.css" as="style" />
+    <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
+    <link rel="stylesheet" href="/driverssystem/css/footer.css" />
+    <link rel="stylesheet" href="/driverssystem/css/profile.css" />
+    <link rel="stylesheet" href="/driverssystem/css/dark-mode.css" />
+  </head>
+  <body class="ds-profile-page">
+
+    <!-- ─── Header ─── -->
+    <header class="ds-page-header">
+      <a class="ds-page-logo-link" data-ds-home-link href="/driverssystem">
+        <img class="ds-page-logo" data-ds-hero-logo alt="DriversSystem" style="display:none" />
+      </a>
+      <h1 class="ds-page-title">Προφίλ</h1>
+      <span class="ds-page-header__spacer"></span>
+    </header>
+
+    <!-- ─── Main Content ─── -->
+    <main class="ds-profile-main">
+
+      <!-- ── Login Section (visible when NOT logged in) ── -->
+      <section class="ds-profile-login ds-card" data-ds-profile-login>
+        <div class="ds-profile-login__icon">👤</div>
+        <h2 class="ds-profile-login__title">Σύνδεση Οδηγού</h2>
+        <p class="ds-profile-login__desc">Εισάγετε τον αριθμό τηλεφώνου σας για να δείτε το προφίλ σας</p>
+        <form class="ds-profile-login__form" data-ds-profile-login-form>
+          <div class="ds-profile-field">
+            <label class="ds-profile-field__label" for="ds-phone-input">Τηλέφωνο</label>
+            <input class="ds-input ds-profile-phone-input" type="tel" id="ds-phone-input"
+                   placeholder="π.χ. 6912345678" autocomplete="tel" data-ds-phone-input />
+          </div>
+          <button type="submit" class="ds-btn-primary ds-profile-login__btn">Αναζήτηση</button>
+          <div class="ds-profile-login__error" data-ds-profile-error style="display:none"></div>
+        </form>
+      </section>
+
+      <!-- ── Profile Card (visible when logged in) ── -->
+      <section class="ds-profile-card ds-card" data-ds-profile-card style="display:none">
+        <div class="ds-profile-card__header">
+          <div class="ds-profile-avatar" data-ds-profile-avatar></div>
+          <div class="ds-profile-card__info">
+            <h2 class="ds-profile-name" data-ds-profile-name></h2>
+            <p class="ds-profile-email" data-ds-profile-email></p>
+            <p class="ds-profile-phone-display" data-ds-profile-phone-display></p>
+          </div>
+        </div>
+        <div class="ds-profile-card__since">
+          <span class="ds-profile-since-label">Μέλος από:</span>
+          <span class="ds-profile-since-value" data-ds-profile-since></span>
+        </div>
+      </section>
+
+      <!-- ── Financial Summary (visible when logged in) ── -->
+      <section class="ds-profile-financials ds-card" data-ds-profile-financials style="display:none">
+        <h3 class="ds-profile-section-title">Οικονομικά Στοιχεία</h3>
+        <div class="ds-profile-stats-grid">
+          <div class="ds-profile-stat">
+            <span class="ds-profile-stat-value" data-ds-profile-gross>0,00 €</span>
+            <span class="ds-profile-stat-label">Μεικτά</span>
+          </div>
+          <div class="ds-profile-stat">
+            <span class="ds-profile-stat-value ds-profile-stat-value--net" data-ds-profile-net>0,00 €</span>
+            <span class="ds-profile-stat-label">Καθαρά</span>
+          </div>
+          <div class="ds-profile-stat">
+            <span class="ds-profile-stat-value" data-ds-profile-trips>0</span>
+            <span class="ds-profile-stat-label">Διαδρομές</span>
+          </div>
+          <div class="ds-profile-stat">
+            <span class="ds-profile-stat-value" data-ds-profile-commission>0,00 €</span>
+            <span class="ds-profile-stat-label">Προμήθειες</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Actions (visible when logged in) ── -->
+      <section class="ds-profile-actions" data-ds-profile-actions style="display:none">
+        <button class="ds-btn-primary ds-profile-stats-btn" data-ds-go-stats>
+          📊 Δες τα Στατιστικά σου
+        </button>
+        <button class="ds-btn-secondary ds-profile-logout-btn" data-ds-profile-logout>
+          Αποσύνδεση
+        </button>
+      </section>
+
+    </main>
+
+    <div data-ds-footer-slot></div>
+
+    <script src="/driverssystem/js/driverssystem-config.js"></script>
+    <script src="/driverssystem/js/footer.js"></script>
+    <script src="/driverssystem/js/profile.js"></script>
+  </body>
+</html>

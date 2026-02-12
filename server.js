@@ -685,7 +685,8 @@ const DRIVERSSYSTEM_PAGE_MAP = {
   '/': 'welcome.html',
   '/listings': 'entries.html',
   '/info': 'stats.html',
-  '/stats': 'stats.html'
+  '/stats': 'stats.html',
+  '/profile': 'profile.html'
 };
 
 // ─────────────────────────────────────────────────────────
@@ -697,14 +698,14 @@ app.use((req, res, next) => {
     return next();
   }
 
-  // Redirect www → canonical non-www
+  // Redirect non-www → canonical www (matches Render domain config)
   // Use x-forwarded-host when behind a reverse proxy (Render), fall back to Host header
   const fwdHost = (req.headers['x-forwarded-host'] || '').toLowerCase().split(':')[0];
   const rawHost = (req.headers.host || '').toLowerCase().split(':')[0];
   const effectiveHost = fwdHost || rawHost;
-  if (effectiveHost === 'www.driverssystem.com') {
-    const proto = req.protocol; // reflects x-forwarded-proto with trust proxy
-    return res.redirect(301, `${proto}://driverssystem.com${req.url}`);
+  if (effectiveHost === 'driverssystem.com') {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol;
+    return res.redirect(301, `${proto}://www.driverssystem.com${req.url}`);
   }
 
   const url = req.url.split('?')[0];
