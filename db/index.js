@@ -824,7 +824,18 @@ const ma = {
   },
 
   async getHotelByPhone(phone) {
-    const row = await queryOne('SELECT * FROM ma_hotel_phones WHERE phone = $1', [phone]);
+    // Normalize: strip +30, spaces, dashes for flexible matching
+    const norm = phone.replace(/[\s\-().]/g, '').replace(/^\+30/, '').replace(/^0030/, '');
+    // Try exact match first, then normalized match
+    let row = await queryOne('SELECT * FROM ma_hotel_phones WHERE phone = $1', [phone]);
+    if (!row) {
+      // Search by normalized form: strip same chars from stored phones
+      const all = await query('SELECT * FROM ma_hotel_phones');
+      row = all.find(p => {
+        const storedNorm = p.phone.replace(/[\s\-().]/g, '').replace(/^\+30/, '').replace(/^0030/, '');
+        return storedNorm === norm;
+      }) || null;
+    }
     if (!row) return null;
     const zone = await queryOne('SELECT * FROM ma_transfer_zones WHERE id = $1', [row.zone_id]);
     if (!zone) return null;

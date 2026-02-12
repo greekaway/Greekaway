@@ -149,17 +149,23 @@
 
 .ma-zones-list {
   display: grid;
-  gap: 12px;
+  gap: 16px;
 }
 
 .ma-zone-card {
-  border: 1px solid rgba(9, 30, 66, 0.12);
-  border-radius: 12px;
-  padding: 12px 14px;
+  border: 1px solid rgba(9, 30, 66, 0.18);
+  border-radius: 14px;
+  padding: 16px 18px;
   background: var(--ga-card);
   display: grid;
   gap: 10px;
   color: var(--ga-text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.15s ease;
+}
+
+.ma-zone-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
 }
 
 .ma-zone-card h4 {
@@ -775,15 +781,27 @@ html[data-theme='light'] .ma-infopage-form label {
 
 /* ── Hotel multi-phone management ── */
 .ma-hotel-phones {
-  padding: 10px 0;
+  padding: 10px 0 0;
   border-top: 1px solid rgba(255,255,255,0.08);
   margin-top: 6px;
+}
+.ma-hotel-phones__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 .ma-hotel-phones__label {
   font-size: 12px;
   font-weight: 600;
   color: var(--ga-muted, #7b8794);
-  margin-bottom: 6px;
+}
+.ma-phone-toggle-add {
+  padding: 2px 10px !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  min-width: 0 !important;
+  border-radius: 8px !important;
 }
 .ma-hotel-phones__list {
   display: flex;
@@ -802,6 +820,17 @@ html[data-theme='light'] .ma-infopage-form label {
   border-radius: 16px;
   font-size: 13px;
   font-weight: 500;
+}
+.ma-phone-badge em {
+  font-weight: 400;
+  font-style: normal;
+  opacity: 0.7;
+  font-size: 12px;
+}
+.ma-phone-badge--main {
+  background: rgba(78,107,255,0.12);
+  color: #6b8aff;
+  border-color: rgba(78,107,255,0.25);
 }
 .ma-phone-remove {
   background: none;

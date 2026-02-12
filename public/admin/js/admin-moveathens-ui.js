@@ -1004,9 +1004,15 @@
       }
       list.innerHTML = zones.map(z => {
         const phones = phonesCache[z.id] || [];
-        const phoneBadges = phones.length
-          ? phones.map(p => `<span class="ma-phone-badge" title="${p.label || 'Τηλέφωνο'}">${p.phone}${p.label ? ' (' + p.label + ')' : ''}<button class="ma-phone-remove" data-phone-id="${p.id}" data-zone-id="${z.id}" title="Αφαίρεση">✕</button></span>`).join('')
-          : '<span class="ma-muted-text">Χωρίς τηλέφωνα login</span>';
+        // Build unified phone list: main phone first (if exists and not already in phones list), then login phones
+        const mainPhone = (z.phone || '').trim();
+        const mainAlreadyInList = mainPhone && phones.some(p => p.phone.replace(/\s+/g,'') === mainPhone.replace(/\s+/g,''));
+        let allBadges = '';
+        if (mainPhone && !mainAlreadyInList) {
+          allBadges += `<span class="ma-phone-badge ma-phone-badge--main" title="Κύριο τηλέφωνο">📞 ${mainPhone}</span>`;
+        }
+        allBadges += phones.map(p => `<span class="ma-phone-badge" title="${p.label || 'Τηλέφωνο'}">${p.phone}${p.label ? ' <em>(' + p.label + ')</em>' : ''}<button class="ma-phone-remove" data-phone-id="${p.id}" data-zone-id="${z.id}" title="Αφαίρεση">✕</button></span>`).join('');
+        if (!allBadges) allBadges = '<span class="ma-muted-text">Δεν έχουν οριστεί τηλέφωνα</span>';
         return `
         <div class="ma-zone-card" data-id="${z.id}">
           <div class="ma-zone-card__header">
@@ -1019,16 +1025,18 @@
           <div class="ma-hotel-details">
             ${z.municipality ? `<span>📍 ${z.municipality}</span>` : ''}
             ${z.address ? `<span>🏠 ${z.address}</span>` : ''}
-            ${z.phone ? `<span>📞 ${z.phone} (κύριο)</span>` : ''}
             ${z.email ? `<span>✉️ ${z.email}</span>` : ''}
           </div>
           <div class="ma-hotel-phones">
-            <div class="ma-hotel-phones__label">📱 Τηλέφωνα Login:</div>
-            <div class="ma-hotel-phones__list">${phoneBadges}</div>
-            <div class="ma-hotel-phones__add">
-              <input class="input ma-phone-input" type="text" placeholder="+30 69..." maxlength="30" data-zone-id="${z.id}">
+            <div class="ma-hotel-phones__header">
+              <span class="ma-hotel-phones__label">📱 Τηλέφωνα</span>
+              <button class="btn secondary ma-phone-toggle-add" type="button" data-zone-id="${z.id}" title="Προσθήκη τηλεφώνου">＋</button>
+            </div>
+            <div class="ma-hotel-phones__list">${allBadges}</div>
+            <div class="ma-hotel-phones__add" data-zone-id="${z.id}" hidden>
+              <input class="input ma-phone-input" type="text" placeholder="6912345678" maxlength="30" data-zone-id="${z.id}">
               <input class="input ma-phone-label-input" type="text" placeholder="Ετικέτα (προαιρ.)" maxlength="50" data-zone-id="${z.id}">
-              <button class="btn secondary ma-phone-add-btn" type="button" data-zone-id="${z.id}">➕</button>
+              <button class="btn secondary ma-phone-add-btn" type="button" data-zone-id="${z.id}">Προσθήκη</button>
             </div>
           </div>
           <div class="ma-zone-actions">
@@ -1050,6 +1058,21 @@
           const z = zones.find(x => x.id === id);
           if (await openConfirm(`Διαγραφή "${z?.name}"?`, { title: 'Διαγραφή Ξενοδοχείου', okLabel: 'Διαγραφή' })) {
             deleteZone(id);
+          }
+        });
+      });
+
+      // Toggle "+" button to reveal inline add form
+      list.querySelectorAll('.ma-phone-toggle-add').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const zoneId = btn.dataset.zoneId;
+          const card = btn.closest('.ma-zone-card');
+          const addRow = card.querySelector(`.ma-hotel-phones__add[data-zone-id="${zoneId}"]`);
+          if (addRow) {
+            const show = addRow.hidden;
+            addRow.hidden = !show;
+            btn.textContent = show ? '✕' : '＋';
+            if (show) addRow.querySelector('.ma-phone-input')?.focus();
           }
         });
       });

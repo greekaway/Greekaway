@@ -754,7 +754,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   app.get('/api/moveathens/hotel-by-phone', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
-      const phone = normalizeString(req.query.phone);
+      const phone = normalizeString(req.query.phone).replace(/[\s\-()]/g, '');
       if (!phone || phone.length < 5) {
         return res.status(400).json({ error: 'Invalid phone' });
       }
