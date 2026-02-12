@@ -24,6 +24,7 @@
           <button class="bar-tab" data-tab="overview">Επισκόπηση</button>
           <button class="bar-tab" data-tab="drivers">Οδηγοί</button>
           <button class="bar-tab" data-tab="entries">Καταχωρήσεις</button>
+          <button class="bar-tab" data-tab="expenses">Έξοδα</button>
         </div>
       </div>
     </header>
@@ -345,6 +346,80 @@
           </div>
           <div class="ds-admin-empty" data-admin-entries-empty style="display:none">
             Δεν υπάρχουν καταχωρήσεις
+          </div>
+        </section>
+      </div>
+
+      <!-- ===== EXPENSES TAB ===== -->
+      <div class="tab-content" data-tab="expenses">
+        <section class="panel">
+          <div class="ds-section-header">
+            <div>
+              <h3 class="ds-admin-subtitle">Έξοδα Οδηγών</h3>
+              <p class="ds-admin-helper">Προβολή εξόδων ανά οδηγό και κατηγορία</p>
+            </div>
+            <div class="ds-admin-filters ds-admin-filters--inline">
+              <label>Οδηγός:
+                <select id="adminExpDriverSelect" class="input ds-admin-select">
+                  <option value="">Όλοι</option>
+                </select>
+              </label>
+              <label>Κατηγορία:
+                <select id="adminExpCatSelect" class="input ds-admin-select">
+                  <option value="">Όλες</option>
+                  <option value="car">🚗 Αυτ/του</option>
+                  <option value="fixed">🏢 Πάγια</option>
+                  <option value="personal">👤 Προσωπικά</option>
+                  <option value="family">👨‍👩‍👧 Οικογενειακά</option>
+                </select>
+              </label>
+              <label>Από:
+                <input id="adminExpFrom" class="input" type="date" />
+              </label>
+              <label>Έως:
+                <input id="adminExpTo" class="input" type="date" />
+              </label>
+              <button id="adminExpLoad" class="btn" type="button">Φόρτωση</button>
+            </div>
+          </div>
+
+          <!-- Expense Summary Cards -->
+          <div class="ds-admin-summary ds-admin-summary--expenses" data-admin-exp-summary>
+            <div class="ds-admin-summary-card">
+              <span class="ds-admin-summary-label">🚗 Αυτ/του</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--commission" data-admin-exp-car>0,00 €</span>
+            </div>
+            <div class="ds-admin-summary-card">
+              <span class="ds-admin-summary-label">🏢 Πάγια</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--commission" data-admin-exp-fixed>0,00 €</span>
+            </div>
+            <div class="ds-admin-summary-card">
+              <span class="ds-admin-summary-label">👤 Προσωπικά</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--commission" data-admin-exp-personal>0,00 €</span>
+            </div>
+            <div class="ds-admin-summary-card">
+              <span class="ds-admin-summary-label">👨‍👩‍👧 Οικογενειακά</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--commission" data-admin-exp-family>0,00 €</span>
+            </div>
+          </div>
+
+          <!-- Expenses Table -->
+          <div class="ds-admin-table-wrap">
+            <table class="ds-admin-table ds-admin-table--expenses">
+              <thead>
+                <tr>
+                  <th>Ημ/νία</th>
+                  <th>Οδηγός</th>
+                  <th>Κατηγορία</th>
+                  <th>Περιγραφή</th>
+                  <th>Ποσό</th>
+                </tr>
+              </thead>
+              <tbody data-admin-expenses-tbody></tbody>
+            </table>
+          </div>
+          <div class="ds-admin-empty" data-admin-expenses-empty style="display:none">
+            Δεν υπάρχουν έξοδα
           </div>
         </section>
       </div>

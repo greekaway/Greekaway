@@ -1,6 +1,7 @@
 /**
  * DriversSystem — Profile Page
  * Phone-based driver identification with localStorage persistence
+ * Shows only personal info: name, phone, email, registration date
  */
 (async () => {
   'use strict';
@@ -24,12 +25,10 @@
     homeLink.href = window.DriversSystemConfig.buildRoute('/');
   }
 
-  // ── Formatting ──
-  const fmtEur = (v) => {
-    const num = (v || 0).toFixed(2);
-    return num.replace('.', ',') + ' \u20AC';
-  };
+  // Apply dynamic page title from admin config
+  window.DriversSystemConfig.applyPageTitles(document, cfg);
 
+  // ── Formatting ──
   const fmtDate = (dateStr) => {
     if (!dateStr) return '—';
     const parts = dateStr.slice(0, 10).split('-');
@@ -43,16 +42,13 @@
   const phoneInput = $('[data-ds-phone-input]');
   const errorEl = $('[data-ds-profile-error]');
   const profileCard = $('[data-ds-profile-card]');
-  const financialsSection = $('[data-ds-profile-financials]');
   const actionsSection = $('[data-ds-profile-actions]');
-  const goStatsBtn = $('[data-ds-go-stats]');
   const logoutBtn = $('[data-ds-profile-logout]');
 
   // ── Show/Hide States ──
   const showLogin = () => {
     loginSection.style.display = '';
     profileCard.style.display = 'none';
-    financialsSection.style.display = 'none';
     actionsSection.style.display = 'none';
     if (errorEl) errorEl.style.display = 'none';
   };
@@ -60,7 +56,6 @@
   const showProfile = () => {
     loginSection.style.display = 'none';
     profileCard.style.display = '';
-    financialsSection.style.display = '';
     actionsSection.style.display = '';
   };
 
@@ -102,36 +97,12 @@
       if (phoneDisplayEl) phoneDisplayEl.textContent = `📱 ${driver.phone}`;
       if (sinceEl) sinceEl.textContent = fmtDate(driver.createdAt);
 
-      // Load financial stats
-      await loadFinancials(driver.phone);
-
       showProfile();
       return true;
     } catch (err) {
       console.error('[profile] load error:', err);
       showError('Σφάλμα σύνδεσης. Δοκιμάστε ξανά.');
       return false;
-    }
-  };
-
-  // ── Load Financial Summary ──
-  const loadFinancials = async (driverId) => {
-    try {
-      const res = await fetch(`/api/driverssystem/stats?driverId=${encodeURIComponent(driverId)}`);
-      if (!res.ok) return;
-      const stats = await res.json();
-
-      const grossEl = $('[data-ds-profile-gross]');
-      const netEl = $('[data-ds-profile-net]');
-      const tripsEl = $('[data-ds-profile-trips]');
-      const commissionEl = $('[data-ds-profile-commission]');
-
-      if (grossEl) grossEl.textContent = fmtEur(stats.totalGross);
-      if (netEl) netEl.textContent = fmtEur(stats.totalNet);
-      if (tripsEl) tripsEl.textContent = stats.count || 0;
-      if (commissionEl) commissionEl.textContent = fmtEur(stats.totalCommission);
-    } catch (err) {
-      console.error('[profile] financials error:', err);
     }
   };
 
@@ -159,13 +130,6 @@
         btn.disabled = false;
         btn.textContent = 'Αναζήτηση';
       }
-    });
-  }
-
-  // ── Go to Stats ──
-  if (goStatsBtn) {
-    goStatsBtn.addEventListener('click', () => {
-      window.location.href = window.DriversSystemConfig.buildRoute('/info');
     });
   }
 

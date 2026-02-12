@@ -91,14 +91,13 @@
 
 /* ── Financial summary cards on welcome page ── */
 .ds-financials {
-  position: absolute;
-  bottom: 110px;
-  left: 16px;
-  right: 16px;
+  position: relative;
+  left: 0; right: 0;
   z-index: 4;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 12px;
+  margin-bottom: 12px;
 }
 
 .ds-fin-card {
@@ -133,14 +132,179 @@
 }
 
 .ds-financials-empty {
-  position: absolute;
-  bottom: 140px;
-  left: 16px;
-  right: 16px;
-  z-index: 4;
   text-align: center;
   color: rgba(255, 255, 255, 0.4);
   font-size: 14px;
+  margin-bottom: 12px;
+}
+
+/* ── Welcome Dashboard (scrollable content area) ── */
+.ds-welcome-dashboard {
+  position: absolute;
+  bottom: 80px;
+  left: 0; right: 0;
+  top: 80px;
+  z-index: 4;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ds-welcome-login-prompt {
+  position: absolute;
+  bottom: 140px;
+  left: 16px; right: 16px;
+  z-index: 4;
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+  font-size: 15px;
+}
+
+.ds-welcome-login-btn {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 12px 32px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #00c896 0%, #00a87a 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+.ds-welcome-login-btn:active { transform: scale(0.97); }
+
+/* ── Monthly Overview ── */
+.ds-monthly-overview {
+  z-index: 4;
+}
+
+.ds-monthly-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  margin: 0 0 10px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.ds-monthly-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ds-monthly-card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.ds-monthly-card--balance {
+  grid-column: 1 / -1;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.ds-monthly-card__label {
+  display: block;
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.ds-monthly-card__value {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ds-monthly-card__value--expense {
+  color: #f87171;
+}
+
+.ds-monthly-card__value.positive {
+  color: #34d399 !important;
+}
+.ds-monthly-card__value.negative {
+  color: #f87171 !important;
+}
+
+/* ── Business Plan ── */
+.ds-business-plan {
+  z-index: 4;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.ds-bplan-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  margin: 0 0 12px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.ds-bplan-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ds-bplan-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ds-bplan-label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+}
+
+.ds-bplan-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ds-bplan-value.positive { color: #34d399; }
+.ds-bplan-value.negative { color: #f87171; }
+
+.ds-bplan-progress-wrap {
+  margin-top: 6px;
+}
+
+.ds-bplan-progress-bar {
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ds-bplan-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  width: 0%;
+}
+
+.ds-bplan-progress-text {
+  display: block;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+  text-align: right;
 }
 
 @media (max-width: 380px) {
@@ -216,6 +380,36 @@
   .ds-financials-empty {
     color: rgba(0, 0, 0, 0.4) !important;
   }
+
+  /* Monthly overview — light */
+  .ds-monthly-title,
+  .ds-bplan-title {
+    color: #1a2232 !important;
+    text-shadow: none !important;
+  }
+  .ds-monthly-card {
+    background: rgba(255,255,255,0.75) !important;
+    border: 1px solid rgba(0,0,0,0.08) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+  }
+  .ds-monthly-card__label { color: #6b7280 !important; }
+  .ds-monthly-card__value { color: #1a2232 !important; }
+  .ds-monthly-card__value--expense { color: #dc2626 !important; }
+  .ds-monthly-card__value.positive { color: #059669 !important; }
+  .ds-monthly-card__value.negative { color: #dc2626 !important; }
+
+  .ds-business-plan {
+    background: rgba(255,255,255,0.75) !important;
+    border: 1px solid rgba(0,0,0,0.08) !important;
+  }
+  .ds-bplan-label { color: #6b7280 !important; }
+  .ds-bplan-value { color: #1a2232 !important; }
+  .ds-bplan-value.positive { color: #059669 !important; }
+  .ds-bplan-value.negative { color: #dc2626 !important; }
+  .ds-bplan-progress-bar { background: rgba(0,0,0,0.08) !important; }
+  .ds-bplan-progress-text { color: rgba(0,0,0,0.5) !important; }
+
+  .ds-welcome-login-prompt { color: #4a5568 !important; }
 
   /* Footer — light glass on light page */
   .ds-hero-page .ds-footer {

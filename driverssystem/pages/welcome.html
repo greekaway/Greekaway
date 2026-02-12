@@ -26,11 +26,83 @@
           </div>
         </div>
 
-        <!-- Financial summary cards -->
-        <div class="ds-financials" data-ds-financials></div>
-        <div class="ds-financials-empty" data-ds-financials-empty style="display:none">
-          Δεν υπάρχουν οικονομικά στοιχεία
+        <!-- Monthly Dashboard (visible when logged in) -->
+        <div class="ds-welcome-dashboard" data-ds-welcome-dashboard style="display:none">
+
+          <!-- Financial summary cards from admin panel -->
+          <div class="ds-financials" data-ds-financials></div>
+          <div class="ds-financials-empty" data-ds-financials-empty style="display:none">
+            Δεν υπάρχουν οικονομικά στοιχεία
+          </div>
+
+          <!-- Monthly Stats Overview -->
+          <div class="ds-monthly-overview" data-ds-monthly-overview>
+            <h3 class="ds-monthly-title">📊 Τρέχων Μήνας</h3>
+            <div class="ds-monthly-grid">
+              <div class="ds-monthly-card">
+                <span class="ds-monthly-card__label">Καθαρά Έσοδα</span>
+                <span class="ds-monthly-card__value" data-ds-month-net>0,00 €</span>
+              </div>
+              <div class="ds-monthly-card">
+                <span class="ds-monthly-card__label">Έξοδα Αυτ/του</span>
+                <span class="ds-monthly-card__value ds-monthly-card__value--expense" data-ds-month-car>0,00 €</span>
+              </div>
+              <div class="ds-monthly-card">
+                <span class="ds-monthly-card__label">Πάγια Έξοδα</span>
+                <span class="ds-monthly-card__value ds-monthly-card__value--expense" data-ds-month-fixed>0,00 €</span>
+              </div>
+              <div class="ds-monthly-card">
+                <span class="ds-monthly-card__label">Προσωπικά</span>
+                <span class="ds-monthly-card__value ds-monthly-card__value--expense" data-ds-month-personal>0,00 €</span>
+              </div>
+              <div class="ds-monthly-card">
+                <span class="ds-monthly-card__label">Οικογενειακά</span>
+                <span class="ds-monthly-card__value ds-monthly-card__value--expense" data-ds-month-family>0,00 €</span>
+              </div>
+              <div class="ds-monthly-card ds-monthly-card--balance">
+                <span class="ds-monthly-card__label">Υπόλοιπο</span>
+                <span class="ds-monthly-card__value" data-ds-month-balance>0,00 €</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Business Plan Prediction -->
+          <div class="ds-business-plan" data-ds-business-plan>
+            <h3 class="ds-bplan-title">📈 Business Plan</h3>
+            <div class="ds-bplan-content">
+              <div class="ds-bplan-row">
+                <span class="ds-bplan-label">Ημερήσιος μ.ό. εσόδων</span>
+                <span class="ds-bplan-value" data-ds-bplan-daily-avg>—</span>
+              </div>
+              <div class="ds-bplan-row">
+                <span class="ds-bplan-label">Πρόβλεψη μήνα (καθαρά)</span>
+                <span class="ds-bplan-value" data-ds-bplan-projected-net>—</span>
+              </div>
+              <div class="ds-bplan-row">
+                <span class="ds-bplan-label">Πρόβλεψη μήνα (μετά εξόδων)</span>
+                <span class="ds-bplan-value" data-ds-bplan-projected-balance>—</span>
+              </div>
+              <div class="ds-bplan-row">
+                <span class="ds-bplan-label">Κάλυψη εξόδων σε</span>
+                <span class="ds-bplan-value" data-ds-bplan-breakeven>—</span>
+              </div>
+              <div class="ds-bplan-progress-wrap">
+                <div class="ds-bplan-progress-bar" data-ds-bplan-progress-bar>
+                  <div class="ds-bplan-progress-fill" data-ds-bplan-progress-fill></div>
+                </div>
+                <span class="ds-bplan-progress-text" data-ds-bplan-progress-text></span>
+              </div>
+            </div>
+          </div>
+
         </div>
+
+        <!-- Not logged in message -->
+        <div class="ds-welcome-login-prompt" data-ds-welcome-login-prompt style="display:none">
+          <p>Συνδεθείτε για να δείτε τα στατιστικά σας</p>
+          <a class="ds-welcome-login-btn" data-ds-welcome-login-link href="/driverssystem/profile">Σύνδεση</a>
+        </div>
+
       </section>
     </main>
 

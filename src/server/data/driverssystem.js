@@ -32,6 +32,7 @@ const DATA_DIR = resolveDataDir();
 const UI_CONFIG_PATH = path.join(DATA_DIR, 'driverssystem_ui.json');
 const ENTRIES_PATH = path.join(DATA_DIR, 'entries.json');
 const DRIVERS_PATH = path.join(DATA_DIR, 'drivers.json');
+const EXPENSES_PATH = path.join(DATA_DIR, 'expenses.json');
 
 // ── Seed persistent disk from repo defaults on first boot ──
 function seedIfNeeded() {
@@ -487,5 +488,121 @@ module.exports = {
   deleteDriver,
   // Stats
   getEntriesRange,
-  getStatsRange
+  getStatsRange,
+  // Expenses
+  getExpenses,
+  addExpense,
+  updateExpense,
+  deleteExpense,
+  getExpensesRange,
+  getExpensesSummary
 };
+
+// =========================================================
+// EXPENSES (Car / Fixed / Personal / Family)
+// =========================================================
+
+const EXPENSE_CATEGORIES = ['car', 'fixed', 'personal', 'family'];
+
+function readExpenses() {
+  try {
+    if (!fs.existsSync(EXPENSES_PATH)) return [];
+    const raw = fs.readFileSync(EXPENSES_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writeExpenses(data) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tmpPath = `${EXPENSES_PATH}.tmp`;
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2));
+    fs.renameSync(tmpPath, EXPENSES_PATH);
+    return true;
+  } catch (err) {
+    console.error('[driverssystem] expenses write failed:', err.message);
+    return false;
+  }
+}
+
+async function getExpenses(filters = {}) {
+  let expenses = readExpenses();
+  if (filters.driverId) expenses = expenses.filter(e => e.driverId === filters.driverId);
+  if (filters.category) expenses = expenses.filter(e => e.category === filters.category);
+  if (filters.from) expenses = expenses.filter(e => e.date >= filters.from);
+  if (filters.to) expenses = expenses.filter(e => e.date <= filters.to);
+  expenses.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
+  return expenses;
+}
+
+async function addExpense(expense) {
+  const expenses = readExpenses();
+  const cat = (expense.category || '').toLowerCase();
+  if (!EXPENSE_CATEGORIES.includes(cat)) {
+    throw new Error('Invalid category: ' + cat);
+  }
+  const newExpense = {
+    id: `exp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    driverId: expense.driverId || '',
+    category: cat,
+    description: (expense.description || '').trim(),
+    amount: parseFloat(expense.amount) || 0,
+    date: expense.date || new Date().toISOString().slice(0, 10),
+    createdAt: new Date().toISOString()
+  };
+  expenses.push(newExpense);
+  writeExpenses(expenses);
+  return newExpense;
+}
+
+async function updateExpense(id, data) {
+  const expenses = readExpenses();
+  const idx = expenses.findIndex(e => e.id === id);
+  if (idx === -1) return null;
+  if (data.description !== undefined) expenses[idx].description = (data.description || '').trim();
+  if (data.amount !== undefined) expenses[idx].amount = parseFloat(data.amount) || 0;
+  if (data.date !== undefined) expenses[idx].date = data.date;
+  if (data.category !== undefined) expenses[idx].category = data.category;
+  writeExpenses(expenses);
+  return expenses[idx];
+}
+
+async function deleteExpense(id) {
+  const expenses = readExpenses();
+  const idx = expenses.findIndex(e => e.id === id);
+  if (idx === -1) return false;
+  expenses.splice(idx, 1);
+  writeExpenses(expenses);
+  return true;
+}
+
+async function getExpensesRange(filters = {}) {
+  let expenses = readExpenses();
+  if (filters.driverId) expenses = expenses.filter(e => e.driverId === filters.driverId);
+  if (filters.from) expenses = expenses.filter(e => e.date >= filters.from);
+  if (filters.to) expenses = expenses.filter(e => e.date <= filters.to);
+  if (filters.category) expenses = expenses.filter(e => e.category === filters.category);
+
+  const byCategory = {};
+  EXPENSE_CATEGORIES.forEach(cat => { byCategory[cat] = { total: 0, count: 0 }; });
+  let totalExpenses = 0;
+  expenses.forEach(e => {
+    const cat = e.category || 'other';
+    if (!byCategory[cat]) byCategory[cat] = { total: 0, count: 0 };
+    byCategory[cat].total += e.amount || 0;
+    byCategory[cat].count++;
+    totalExpenses += e.amount || 0;
+  });
+
+  return { expenses, totalExpenses, byCategory, count: expenses.length };
+}
+
+async function getExpensesSummary(driverId, from, to) {
+  const filters = { driverId };
+  if (from) filters.from = from;
+  if (to) filters.to = to;
+  return getExpensesRange(filters);
+}

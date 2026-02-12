@@ -95,6 +95,7 @@
       // Lazy load tabs
       if (target === 'drivers') loadDrivers();
       if (target === 'entries') loadEntries();
+      if (target === 'expenses') loadExpenses();
     });
   });
 
@@ -425,10 +426,94 @@
   const entriesLoadBtn = $('#adminEntriesLoad');
   if (entriesLoadBtn) entriesLoadBtn.addEventListener('click', loadEntries);
 
+  // ── EXPENSES TAB ──
+
+  const catLabels = { car: '🚗 Αυτ/του', fixed: '🏢 Πάγια', personal: '👤 Προσωπικά', family: '👨‍👩‍👧 Οικογενειακά' };
+
+  const populateExpDriverDropdown = () => {
+    const el = $('#adminExpDriverSelect');
+    if (!el) return;
+    const current = el.value;
+    el.innerHTML = '<option value="">Όλοι</option>';
+    driversCache.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.phone;
+      opt.textContent = `${d.fullName || d.phone} (${d.phone})`;
+      el.appendChild(opt);
+    });
+    el.value = current;
+  };
+
+  const loadExpenses = async () => {
+    const driverId = ($('#adminExpDriverSelect') || {}).value || '';
+    const category = ($('#adminExpCatSelect') || {}).value || '';
+    const from = ($('#adminExpFrom') || {}).value || '';
+    const to = ($('#adminExpTo') || {}).value || '';
+
+    const params = new URLSearchParams();
+    if (driverId) params.set('driverId', driverId);
+    if (category) params.set('category', category);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+
+    const tbody = $('[data-admin-expenses-tbody]');
+    const emptyEl = $('[data-admin-expenses-empty]');
+    if (!tbody) return;
+
+    try {
+      const res = await api(`/api/admin/driverssystem/expenses?${params}`);
+      if (!res || !res.ok) return;
+      const expenses = await res.json();
+
+      // Compute category totals
+      const totals = { car: 0, fixed: 0, personal: 0, family: 0 };
+      expenses.forEach(e => { if (totals[e.category] !== undefined) totals[e.category] += (e.amount || 0); });
+
+      const carEl = $('[data-admin-exp-car]');
+      const fixedEl = $('[data-admin-exp-fixed]');
+      const personalEl = $('[data-admin-exp-personal]');
+      const familyEl = $('[data-admin-exp-family]');
+      if (carEl) carEl.textContent = fmtEur(totals.car);
+      if (fixedEl) fixedEl.textContent = fmtEur(totals.fixed);
+      if (personalEl) personalEl.textContent = fmtEur(totals.personal);
+      if (familyEl) familyEl.textContent = fmtEur(totals.family);
+
+      if (expenses.length === 0) {
+        tbody.innerHTML = '';
+        if (emptyEl) emptyEl.style.display = 'block';
+        return;
+      }
+
+      if (emptyEl) emptyEl.style.display = 'none';
+
+      const driverMap = {};
+      driversCache.forEach(d => { driverMap[d.phone] = d.fullName || d.phone; });
+
+      tbody.innerHTML = expenses.map(e => {
+        const driverName = e.driverId ? (driverMap[e.driverId] || e.driverId) : '—';
+        return `
+          <tr>
+            <td>${fmtDate(e.date)}</td>
+            <td>${driverName}</td>
+            <td>${catLabels[e.category] || e.category}</td>
+            <td>${e.description || '—'}</td>
+            <td class="col-commission">${fmtEur(e.amount)}</td>
+          </tr>`;
+      }).join('');
+    } catch (_) {
+      tbody.innerHTML = '';
+      if (emptyEl) emptyEl.style.display = 'block';
+    }
+  };
+
+  const expLoadBtn = $('#adminExpLoad');
+  if (expLoadBtn) expLoadBtn.addEventListener('click', loadExpenses);
+
   // ── INIT ──
   (async () => {
     await loadSources();
     await loadDriversList();
+    populateExpDriverDropdown();
     // Set default date range to current month
     const today = new Date();
     const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -436,6 +521,11 @@
     const toInput = $('#adminTo');
     if (fromInput) fromInput.value = firstOfMonth.toISOString().slice(0, 10);
     if (toInput) toInput.value = today.toISOString().slice(0, 10);
+    // Also set expense date defaults
+    const expFromInput = $('#adminExpFrom');
+    const expToInput = $('#adminExpTo');
+    if (expFromInput) expFromInput.value = firstOfMonth.toISOString().slice(0, 10);
+    if (expToInput) expToInput.value = today.toISOString().slice(0, 10);
     await loadOverview();
   })();
 

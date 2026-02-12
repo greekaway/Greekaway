@@ -1,6 +1,8 @@
 /**
  * DriversSystem — Stats Page
- * Displays aggregated statistics with time-range filters
+ * Displays aggregated statistics with time-range filters,
+ * clickable summary cards with source breakdowns,
+ * and expense category navigation.
  */
 (async () => {
   'use strict';
@@ -13,7 +15,6 @@
   const savedPhone = localStorage.getItem(STORAGE_KEY);
 
   if (!savedPhone) {
-    // Show auth guard overlay
     const profileUrl = window.DriversSystemConfig
       ? window.DriversSystemConfig.buildRoute('/profile')
       : '/driverssystem/profile';
@@ -28,13 +29,15 @@
         <a class="ds-auth-guard__btn" href="${profileUrl}">Σύνδεση στο Προφίλ</a>
       </div>`;
     document.body.appendChild(guard);
-    // Don't load stats — just show the guard and footer
     const cfg = await window.DriversSystemConfig.load();
     return;
   }
 
   // ── Config ──
   const cfg = await window.DriversSystemConfig.load();
+
+  // Apply dynamic page title from admin panel
+  window.DriversSystemConfig.applyPageTitles(document, cfg);
 
   // Apply logo
   const logo = $('[data-ds-hero-logo]');
@@ -57,10 +60,8 @@
 
   const fmtDate = (dateStr) => {
     if (!dateStr) return '';
-    // YYYY-MM-DD → DD/MM/YYYY
     const parts = dateStr.split('-');
     if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    // YYYY-MM → MM/YYYY
     if (parts.length === 2) return `${parts[1]}/${parts[0]}`;
     return dateStr;
   };
@@ -85,6 +86,7 @@
   let currentSourceFilter = 'all';
   let customFrom = '';
   let customTo = '';
+  let lastStats = null; // cache for detail panels
 
   // ── Get driver ID from localStorage (phone-based identity) ──
   const getDriverId = () => {
@@ -106,7 +108,7 @@
         return { from: toStr(today), to: toStr(today) };
       case 'week': {
         const start = new Date(today);
-        const day = start.getDay() || 7; // Mon=1
+        const day = start.getDay() || 7;
         start.setDate(start.getDate() - day + 1);
         return { from: toStr(start), to: toStr(today) };
       }
@@ -159,7 +161,7 @@
     }
   };
 
-  // ── Render ──
+  // ── Render Summary Cards ──
   const renderSummary = (stats) => {
     const grossEl = $('[data-ds-stats-gross]');
     const netEl = $('[data-ds-stats-net]');
@@ -170,6 +172,69 @@
     if (netEl) netEl.textContent = fmtEur(stats.totalNet);
     if (countEl) countEl.textContent = stats.count;
     if (commEl) commEl.textContent = fmtEur(stats.totalCommission);
+  };
+
+  // ── Render Expandable Detail Panels (bySource breakdown) ──
+  const renderDetailPanels = (stats) => {
+    const bySource = stats.bySource || {};
+    const keys = Object.keys(bySource);
+
+    const makeRows = (field) => {
+      if (keys.length === 0) return '<div class="ds-detail-empty">Δεν υπάρχουν δεδομένα</div>';
+      return keys.map(key => {
+        const s = bySource[key];
+        const src = sources.find(x => x.id === key);
+        const color = src ? src.color : '#9ca3af';
+        let value;
+        if (field === 'gross') value = fmtEur(s.gross);
+        else if (field === 'net') value = fmtEur(s.net);
+        else if (field === 'trips') value = s.count;
+        else if (field === 'commission') value = fmtEur(s.gross - s.net);
+        return `
+          <div class="ds-detail-row">
+            <span class="ds-detail-dot" style="background:${color}"></span>
+            <span class="ds-detail-name">${s.name}</span>
+            <span class="ds-detail-value">${value}</span>
+          </div>`;
+      }).join('');
+    };
+
+    ['gross', 'net', 'trips', 'commission'].forEach(type => {
+      const body = $(`[data-ds-detail-body="${type}"]`);
+      if (body) body.innerHTML = makeRows(type);
+    });
+  };
+
+  // ── Clickable Summary Cards (toggle detail panels) ──
+  const initClickableCards = () => {
+    $$('[data-stats-detail]').forEach(card => {
+      card.addEventListener('click', () => {
+        const type = card.dataset.statsDetail;
+        const panel = $(`[data-ds-detail-panel="${type}"]`);
+        if (!panel) return;
+
+        const isOpen = panel.style.display !== 'none';
+        // Close all panels first
+        $$('[data-ds-detail-panel]').forEach(p => p.style.display = 'none');
+        $$('[data-stats-detail]').forEach(c => c.classList.remove('ds-stats-card--open'));
+
+        if (!isOpen) {
+          panel.style.display = 'block';
+          card.classList.add('ds-stats-card--open');
+        }
+      });
+    });
+  };
+
+  // ── Expense Navigation Buttons ──
+  const initExpenseNav = () => {
+    $$('[data-expense-cat]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cat = btn.dataset.expenseCat;
+        const url = window.DriversSystemConfig.buildRoute(`/expenses/${cat}`);
+        window.location.href = url;
+      });
+    });
   };
 
   const renderSourcePills = () => {
@@ -259,7 +324,9 @@
   const loadStats = async () => {
     const stats = await fetchStats();
     if (!stats) return;
+    lastStats = stats;
     renderSummary(stats);
+    renderDetailPanels(stats);
     renderSourceBars(stats);
     renderTimeline(stats);
   };
@@ -282,7 +349,6 @@
       });
     });
 
-    // Custom date inputs
     const fromInput = $('[data-ds-stats-from]');
     const toInput = $('[data-ds-stats-to]');
     if (fromInput) {
@@ -316,6 +382,8 @@
   renderSourcePills();
   initQuickFilters();
   initGroupPills();
+  initClickableCards();
+  initExpenseNav();
   await loadStats();
 
 })();

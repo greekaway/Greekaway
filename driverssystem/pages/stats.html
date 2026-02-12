@@ -22,31 +22,61 @@
       <a class="ds-page-logo-link" data-ds-home-link href="/driverssystem">
         <img class="ds-page-logo" data-ds-hero-logo alt="DriversSystem" style="display:none" />
       </a>
-      <h1 class="ds-page-title">Στατιστικά</h1>
+      <h1 class="ds-page-title" data-ds-page-title="info"></h1>
       <span class="ds-page-header__spacer"></span>
     </header>
 
     <!-- ─── Main Content ─── -->
     <main class="ds-stats-main">
 
-      <!-- ── Summary Cards ── -->
+      <!-- ── Expense Category Buttons ── -->
+      <section class="ds-expense-nav">
+        <button class="ds-expense-nav-btn" data-expense-cat="car">🚗 Έξοδα Αυτ/του</button>
+        <button class="ds-expense-nav-btn" data-expense-cat="fixed">🏢 Πάγια</button>
+        <button class="ds-expense-nav-btn" data-expense-cat="personal">👤 Προσωπικά</button>
+        <button class="ds-expense-nav-btn" data-expense-cat="family">👨‍👩‍👧 Οικογενειακά</button>
+      </section>
+
+      <!-- ── Summary Cards (clickable for breakdown) ── -->
       <section class="ds-stats-summary">
-        <div class="ds-stats-card ds-stats-card--gross">
+        <div class="ds-stats-card ds-stats-card--gross ds-stats-card--clickable" data-stats-detail="gross">
           <span class="ds-stats-card__label">Μεικτά</span>
           <span class="ds-stats-card__value" data-ds-stats-gross>0,00 €</span>
+          <span class="ds-stats-card__expand">▼</span>
         </div>
-        <div class="ds-stats-card ds-stats-card--net">
+        <div class="ds-stats-card ds-stats-card--net ds-stats-card--clickable" data-stats-detail="net">
           <span class="ds-stats-card__label">Καθαρά</span>
           <span class="ds-stats-card__value" data-ds-stats-net>0,00 €</span>
+          <span class="ds-stats-card__expand">▼</span>
         </div>
-        <div class="ds-stats-card ds-stats-card--trips">
+        <div class="ds-stats-card ds-stats-card--trips ds-stats-card--clickable" data-stats-detail="trips">
           <span class="ds-stats-card__label">Διαδρομές</span>
           <span class="ds-stats-card__value" data-ds-stats-count>0</span>
+          <span class="ds-stats-card__expand">▼</span>
         </div>
-        <div class="ds-stats-card ds-stats-card--commission">
+        <div class="ds-stats-card ds-stats-card--commission ds-stats-card--clickable" data-stats-detail="commission">
           <span class="ds-stats-card__label">Προμήθειες</span>
           <span class="ds-stats-card__value" data-ds-stats-commission>0,00 €</span>
+          <span class="ds-stats-card__expand">▼</span>
         </div>
+      </section>
+
+      <!-- ── Expandable Detail Panels ── -->
+      <section class="ds-stats-detail-panel" data-ds-detail-panel="gross" style="display:none">
+        <h3 class="ds-stats-detail-title">Ανάλυση Μεικτών ανά Πηγή</h3>
+        <div class="ds-stats-detail-body" data-ds-detail-body="gross"></div>
+      </section>
+      <section class="ds-stats-detail-panel" data-ds-detail-panel="net" style="display:none">
+        <h3 class="ds-stats-detail-title">Ανάλυση Καθαρών ανά Πηγή</h3>
+        <div class="ds-stats-detail-body" data-ds-detail-body="net"></div>
+      </section>
+      <section class="ds-stats-detail-panel" data-ds-detail-panel="trips" style="display:none">
+        <h3 class="ds-stats-detail-title">Διαδρομές ανά Εφαρμογή</h3>
+        <div class="ds-stats-detail-body" data-ds-detail-body="trips"></div>
+      </section>
+      <section class="ds-stats-detail-panel" data-ds-detail-panel="commission" style="display:none">
+        <h3 class="ds-stats-detail-title">Προμήθειες ανά Εφαρμογή</h3>
+        <div class="ds-stats-detail-body" data-ds-detail-body="commission"></div>
       </section>
 
       <!-- ── Filters ── -->

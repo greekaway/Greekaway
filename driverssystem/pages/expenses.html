@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Έξοδα – DriversSystem</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/driverssystem/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/driverssystem/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/driverssystem/icons/apple-touch-icon.png">
+    <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
+    <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
+    <link rel="stylesheet" href="/driverssystem/css/footer.css" />
+    <link rel="stylesheet" href="/driverssystem/css/profile.css" />
+    <link rel="stylesheet" href="/driverssystem/css/expenses.css" />
+    <link rel="stylesheet" href="/driverssystem/css/dark-mode.css" />
+  </head>
+  <body class="ds-expenses-page">
+
+    <!-- ─── Header ─── -->
+    <header class="ds-page-header">
+      <a class="ds-page-logo-link" data-ds-home-link href="/driverssystem">
+        <img class="ds-page-logo" data-ds-hero-logo alt="DriversSystem" style="display:none" />
+      </a>
+      <h1 class="ds-page-title" data-ds-expenses-title>Έξοδα</h1>
+      <span class="ds-page-header__spacer"></span>
+    </header>
+
+    <!-- ─── Category Tabs ─── -->
+    <nav class="ds-expenses-tabs">
+      <button class="ds-expenses-tab active" data-expense-tab="car">🚗 Αυτοκίνητο</button>
+      <button class="ds-expenses-tab" data-expense-tab="fixed">🏢 Πάγια</button>
+      <button class="ds-expenses-tab" data-expense-tab="personal">👤 Προσωπικά</button>
+      <button class="ds-expenses-tab" data-expense-tab="family">👨‍👩‍👧 Οικογένεια</button>
+    </nav>
+
+    <!-- ─── Main Content ─── -->
+    <main class="ds-expenses-main">
+
+      <!-- ── Month Total ── -->
+      <div class="ds-expenses-month-total">
+        <span class="ds-expenses-month-label">Σύνολο μήνα:</span>
+        <span class="ds-expenses-month-value" data-ds-expenses-total>0,00 €</span>
+      </div>
+
+      <!-- ── Add Expense Form ── -->
+      <section class="ds-expenses-form-section ds-card">
+        <h3 class="ds-expenses-form-title">Νέα Καταχώρηση</h3>
+        <form data-ds-expense-form>
+          <div class="ds-expenses-form-grid">
+            <div class="ds-expenses-field">
+              <label>Περιγραφή</label>
+              <input class="ds-input" type="text" data-ds-expense-desc placeholder="π.χ. Βενζίνη" maxlength="100" />
+            </div>
+            <div class="ds-expenses-field">
+              <label>Ποσό (€)</label>
+              <input class="ds-input" type="number" data-ds-expense-amount step="0.01" min="0" placeholder="0.00" />
+            </div>
+            <div class="ds-expenses-field">
+              <label>Ημερομηνία</label>
+              <input class="ds-input" type="date" data-ds-expense-date />
+            </div>
+          </div>
+          <button type="submit" class="ds-btn-primary ds-expenses-submit">Αποθήκευση</button>
+        </form>
+      </section>
+
+      <!-- ── Expenses List ── -->
+      <section class="ds-expenses-list-section ds-card">
+        <h3 class="ds-expenses-list-title">Καταχωρήσεις</h3>
+        <div class="ds-expenses-list" data-ds-expenses-list>
+          <div class="ds-expenses-empty">Δεν υπάρχουν καταχωρήσεις</div>
+        </div>
+      </section>
+
+    </main>
+
+    <div data-ds-footer-slot></div>
+
+    <script src="/driverssystem/js/driverssystem-config.js"></script>
+    <script src="/driverssystem/js/footer.js"></script>
+    <script src="/driverssystem/js/expenses.js"></script>
+  </body>
+</html>

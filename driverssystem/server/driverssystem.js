@@ -419,5 +419,93 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     }
   });
 
+  // ══════════════════════════════════════════════════════════
+  // EXPENSES API (Driver — car / fixed / personal / family)
+  // ══════════════════════════════════════════════════════════
+
+  app.get('/api/driverssystem/expenses', async (req, res) => {
+    try {
+      const filters = {};
+      if (req.query.driverId) filters.driverId = req.query.driverId;
+      if (req.query.category) filters.category = req.query.category;
+      if (req.query.from) filters.from = req.query.from;
+      if (req.query.to) filters.to = req.query.to;
+      const items = await dataLayer.getExpenses(filters);
+      return res.json(items);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Summary MUST come before /:id routes
+  app.get('/api/driverssystem/expenses/summary', async (req, res) => {
+    try {
+      const driverId = req.query.driverId || '';
+      const from = req.query.from || '';
+      const to = req.query.to || '';
+      const summary = await dataLayer.getExpensesSummary(driverId, from, to);
+      return res.json(summary);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.post('/api/driverssystem/expenses', async (req, res) => {
+    try {
+      const expense = req.body;
+      if (!expense || !expense.category || !expense.amount) {
+        return res.status(400).json({ error: 'Απαιτείται κατηγορία και ποσό' });
+      }
+      const saved = await dataLayer.addExpense(expense);
+      return res.status(201).json(saved);
+    } catch (err) {
+      return res.status(500).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  app.put('/api/driverssystem/expenses/:id', async (req, res) => {
+    try {
+      const updated = await dataLayer.updateExpense(req.params.id, req.body);
+      if (!updated) return res.status(404).json({ error: 'Not found' });
+      return res.json(updated);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.delete('/api/driverssystem/expenses/:id', async (req, res) => {
+    try {
+      const ok = await dataLayer.deleteExpense(req.params.id);
+      if (!ok) return res.status(404).json({ error: 'Not found' });
+      return res.json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Admin: Expenses view (all drivers) ──
+
+  app.get('/api/admin/driverssystem/expenses', requireAdmin, async (req, res) => {
+    try {
+      const filters = {};
+      if (req.query.driverId) filters.driverId = req.query.driverId;
+      if (req.query.category) filters.category = req.query.category;
+      if (req.query.from) filters.from = req.query.from;
+      if (req.query.to) filters.to = req.query.to;
+      const result = await dataLayer.getExpensesRange(filters);
+      return res.json(result);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Expenses page routes ──
+  const expensePages = ['/expenses', '/expenses/car', '/expenses/fixed', '/expenses/personal', '/expenses/family'];
+  expensePages.forEach(route => {
+    router.get(route, (req, res) => {
+      return res.sendFile(path.join(pagesDir, 'expenses.html'));
+    });
+  });
+
   console.log('[driverssystem] routes registered');
 };
