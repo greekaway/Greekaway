@@ -296,13 +296,16 @@
       btn.addEventListener('click', async function () {
         var tr = btn.closest('tr');
         var id = tr.dataset.id;
-        if (!confirm('Θέλετε σίγουρα να διαγράψετε αυτό το αίτημα;')) return;
+        var ok = await showConfirm('Διαγραφή Αιτήματος', 'Θέλεις σίγουρα να διαγράψεις αυτό το αίτημα;');
+        if (!ok) return;
         btn.disabled = true;
         try {
-          await api('/api/admin/moveathens/requests/' + id, { method: 'DELETE' });
-          toast('Το αίτημα διαγράφηκε.');
+          var resp = await fetch('/api/admin/moveathens/requests/' + id, { method: 'DELETE', credentials: 'same-origin' });
+          var data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || 'Delete failed');
+          toast('Διαγράφηκε');
           loadRoutesData();
-        } catch (e) { toast('Σφάλμα διαγραφής: ' + e.message); btn.disabled = false; }
+        } catch (e) { toast('Σφάλμα: ' + e.message); btn.disabled = false; }
       });
     });
   }

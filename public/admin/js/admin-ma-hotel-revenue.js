@@ -24,10 +24,30 @@
   }
 
   async function api(path) {
-    const res = await fetch(path, { credentials: 'include' });
+    const res = await fetch(path, { credentials: 'same-origin' });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(json.error || 'Server error');
     return json;
+  }
+
+  /* ─── Styled confirm dialog (reuses #dr-confirm shared DOM) ─── */
+  var _confirmResolve = null;
+  function showConfirm(title, msg) {
+    return new Promise(function (resolve) {
+      _confirmResolve = resolve;
+      var ov = _$('#dr-confirm');
+      _$('#dr-confirm-title').textContent = title;
+      _$('#dr-confirm-msg').textContent = msg;
+      ov.classList.remove('hidden');
+      var okBtn = _$('#dr-confirm-ok');
+      var handler = function () {
+        okBtn.removeEventListener('click', handler);
+        _confirmResolve = null;
+        _$('#dr-confirm').classList.add('hidden');
+        resolve(true);
+      };
+      okBtn.addEventListener('click', handler);
+    });
   }
 
   const ROUTE_TYPE_LABELS = {
@@ -271,17 +291,18 @@
           const tr = btn.closest('tr');
           const zoneId = tr.dataset.zoneId;
           if (!zoneId) { toast('Δεν βρέθηκε zone ID.'); return; }
-          if (!confirm('Θέλετε σίγουρα να διαγράψετε αυτό το ξενοδοχείο;')) return;
+          var ok = await showConfirm('Διαγραφή Ξενοδοχείου', 'Θέλετε σίγουρα να διαγράψετε αυτό το ξενοδοχείο;');
+          if (!ok) return;
           btn.disabled = true;
           try {
-            const res = await fetch('/api/admin/moveathens/transfer-zones/' + encodeURIComponent(zoneId), {
-              method: 'DELETE', credentials: 'include'
+            var resp = await fetch('/api/admin/moveathens/transfer-zones/' + encodeURIComponent(zoneId), {
+              method: 'DELETE', credentials: 'same-origin'
             });
-            const json = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(json.error || 'Server error');
-            toast('Το ξενοδοχείο διαγράφηκε.');
+            var data = await resp.json().catch(() => ({}));
+            if (!resp.ok) throw new Error(data.error || 'Delete failed');
+            toast('Διαγράφηκε');
             loadHotelRevenue();
-          } catch (e) { toast('Σφάλμα διαγραφής: ' + e.message); btn.disabled = false; }
+          } catch (e) { toast('Σφάλμα: ' + e.message); btn.disabled = false; }
         });
       });
 

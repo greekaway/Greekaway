@@ -26,10 +26,30 @@
   }
 
   async function api(path) {
-    const res = await fetch(path, { credentials: 'include' });
+    const res = await fetch(path, { credentials: 'same-origin' });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(json.error || 'Server error');
     return json;
+  }
+
+  /* ─── Styled confirm dialog (reuses #dr-confirm shared DOM) ─── */
+  var _confirmResolve = null;
+  function showConfirm(title, msg) {
+    return new Promise(function (resolve) {
+      _confirmResolve = resolve;
+      var ov = _$('#dr-confirm');
+      _$('#dr-confirm-title').textContent = title;
+      _$('#dr-confirm-msg').textContent = msg;
+      ov.classList.remove('hidden');
+      var okBtn = _$('#dr-confirm-ok');
+      var handler = function () {
+        okBtn.removeEventListener('click', handler);
+        _confirmResolve = null;
+        _$('#dr-confirm').classList.add('hidden');
+        resolve(true);
+      };
+      okBtn.addEventListener('click', handler);
+    });
   }
 
   /* ─── Duration formatting ─── */
@@ -218,13 +238,14 @@
       btn.addEventListener('click', async function () {
         var tr = btn.closest('tr');
         var id = tr.dataset.id;
-        if (!confirm('Θέλετε σίγουρα να διαγράψετε αυτή τη διαδρομή από το χρονολόγιο;')) return;
+        var ok = await showConfirm('Διαγραφή Διαδρομής', 'Θέλετε σίγουρα να διαγράψετε αυτή τη διαδρομή από το χρονολόγιο;');
+        if (!ok) return;
         btn.disabled = true;
         try {
-          var res = await fetch('/api/admin/moveathens/requests/' + id, { method: 'DELETE', credentials: 'include' });
-          var json = await res.json().catch(function () { return {}; });
-          if (!res.ok) throw new Error(json.error || 'Server error');
-          toast('Η διαδρομή διαγράφηκε.');
+          var resp = await fetch('/api/admin/moveathens/requests/' + id, { method: 'DELETE', credentials: 'same-origin' });
+          var data = await resp.json().catch(function () { return {}; });
+          if (!resp.ok) throw new Error(data.error || 'Delete failed');
+          toast('Διαγράφηκε');
           loadTimeline();
         } catch (e) { toast('Σφάλμα: ' + e.message); btn.disabled = false; }
       });
