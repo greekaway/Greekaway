@@ -477,6 +477,8 @@
     const fRouteType = $('#maDestinationRouteType');
     const fLatLng = $('#maDestinationLatLng');
 
+    const fSearch = $('#maDestinationSearch');
+
     const populateDropdowns = () => {
       // Categories (only active ones)
       const activeCats = (CONFIG.destinationCategories || []).filter(c => c.is_active !== false);
@@ -485,6 +487,34 @@
     };
 
     const getCategoryName = (id) => (CONFIG.destinationCategories || []).find(c => c.id === id)?.name || '—';
+
+    // Live-filter: hide cards that don't match the search term
+    const applySearchFilter = () => {
+      const q = (fSearch?.value || '').trim().toLowerCase();
+      list.querySelectorAll('.ma-zone-card').forEach(card => {
+        if (!q) { card.style.display = ''; return; }
+        const name = (card.querySelector('h4')?.textContent || '').toLowerCase();
+        const meta = (card.querySelector('.ma-zone-meta')?.textContent || '').toLowerCase();
+        const desc = (card.querySelector('.ma-zone-desc')?.textContent || '').toLowerCase();
+        card.style.display = (name.includes(q) || meta.includes(q) || desc.includes(q)) ? '' : 'none';
+      });
+      // Show "no results" hint
+      const visible = list.querySelectorAll('.ma-zone-card:not([style*="display: none"])');
+      let hint = list.querySelector('.ma-search-empty');
+      if (q && visible.length === 0) {
+        if (!hint) {
+          hint = document.createElement('p');
+          hint.className = 'ma-empty ma-search-empty';
+          list.appendChild(hint);
+        }
+        hint.textContent = `Δεν βρέθηκε προορισμός για «${fSearch.value.trim()}»`;
+        hint.style.display = '';
+      } else if (hint) {
+        hint.style.display = 'none';
+      }
+    };
+
+    fSearch?.addEventListener('input', applySearchFilter);
 
     const render = () => {
       populateDropdowns();
@@ -529,6 +559,9 @@
           }
         });
       });
+
+      // Re-apply search filter after re-rendering cards
+      applySearchFilter();
     };
 
     const resetForm = () => {
@@ -877,6 +910,86 @@
     const fEmail = $('#maZoneEmail');
     const fAccommodationType = $('#maZoneAccommodationType');
     const fActive = $('#maZoneActive');
+    const fSearch = $('#maZoneSearch');
+
+    // Hotel phones cache: { zoneId: [{ id, phone, label }] }
+    const phonesCache = {};
+
+    const loadPhones = async (zoneId) => {
+      try {
+        const res = await api(`/api/admin/moveathens/hotel-phones?zone_id=${zoneId}`);
+        if (res && res.ok) {
+          const data = await res.json();
+          phonesCache[zoneId] = data.phones || [];
+        }
+      } catch (e) { console.warn('loadPhones error', e); }
+      return phonesCache[zoneId] || [];
+    };
+
+    const loadAllPhones = async () => {
+      try {
+        const res = await api('/api/admin/moveathens/hotel-phones');
+        if (res && res.ok) {
+          const data = await res.json();
+          (data.phones || []).forEach(p => {
+            if (!phonesCache[p.zone_id]) phonesCache[p.zone_id] = [];
+            const existing = phonesCache[p.zone_id].find(x => x.id === p.id);
+            if (!existing) phonesCache[p.zone_id].push(p);
+          });
+        }
+      } catch (e) { console.warn('loadAllPhones error', e); }
+    };
+
+    const addPhone = async (zoneId, phone, label) => {
+      try {
+        const res = await api('/api/admin/moveathens/hotel-phones', 'POST', { zone_id: zoneId, phone, label });
+        if (res && res.ok) {
+          const data = await res.json();
+          if (!phonesCache[zoneId]) phonesCache[zoneId] = [];
+          phonesCache[zoneId].push(data.phone);
+          return { ok: true };
+        }
+        const err = await res.json().catch(() => ({}));
+        return { ok: false, error: err.error || 'Failed', hotel_name: err.hotel_name };
+      } catch (e) { return { ok: false, error: e.message }; }
+    };
+
+    const removePhone = async (zoneId, phoneId) => {
+      try {
+        const res = await api(`/api/admin/moveathens/hotel-phones/${phoneId}`, 'DELETE');
+        if (res && res.ok) {
+          phonesCache[zoneId] = (phonesCache[zoneId] || []).filter(p => p.id !== phoneId);
+          return true;
+        }
+      } catch (e) { /* ignore */ }
+      return false;
+    };
+
+    // Live-filter: hide cards that don't match the search term
+    const applySearchFilter = () => {
+      const q = (fSearch?.value || '').trim().toLowerCase();
+      list.querySelectorAll('.ma-zone-card').forEach(card => {
+        if (!q) { card.style.display = ''; return; }
+        const name = (card.querySelector('h4')?.textContent || '').toLowerCase();
+        const details = (card.querySelector('.ma-hotel-details')?.textContent || '').toLowerCase();
+        card.style.display = (name.includes(q) || details.includes(q)) ? '' : 'none';
+      });
+      const visible = list.querySelectorAll('.ma-zone-card:not([style*="display: none"])');
+      let hint = list.querySelector('.ma-search-empty');
+      if (q && visible.length === 0) {
+        if (!hint) {
+          hint = document.createElement('p');
+          hint.className = 'ma-empty ma-search-empty';
+          list.appendChild(hint);
+        }
+        hint.textContent = `\u0394\u03b5\u03bd \u03b2\u03c1\u03ad\u03b8\u03b7\u03ba\u03b5 \u03be\u03b5\u03bd\u03bf\u03b4\u03bf\u03c7\u03b5\u03af\u03bf \u03b3\u03b9\u03b1 \u00ab${fSearch.value.trim()}\u00bb`;
+        hint.style.display = '';
+      } else if (hint) {
+        hint.style.display = 'none';
+      }
+    };
+
+    fSearch?.addEventListener('input', applySearchFilter);
 
     const accommodationLabels = {
       hotel: 'Ξενοδοχείο',
@@ -889,7 +1002,12 @@
         list.innerHTML = '<p class="ma-empty">Δεν υπάρχουν ξενοδοχεία.</p>';
         return;
       }
-      list.innerHTML = zones.map(z => `
+      list.innerHTML = zones.map(z => {
+        const phones = phonesCache[z.id] || [];
+        const phoneBadges = phones.length
+          ? phones.map(p => `<span class="ma-phone-badge" title="${p.label || 'Τηλέφωνο'}">${p.phone}${p.label ? ' (' + p.label + ')' : ''}<button class="ma-phone-remove" data-phone-id="${p.id}" data-zone-id="${z.id}" title="Αφαίρεση">✕</button></span>`).join('')
+          : '<span class="ma-muted-text">Χωρίς τηλέφωνα login</span>';
+        return `
         <div class="ma-zone-card" data-id="${z.id}">
           <div class="ma-zone-card__header">
             <div class="ma-zone-card__title">
@@ -901,15 +1019,24 @@
           <div class="ma-hotel-details">
             ${z.municipality ? `<span>📍 ${z.municipality}</span>` : ''}
             ${z.address ? `<span>🏠 ${z.address}</span>` : ''}
-            ${z.phone ? `<span>📞 ${z.phone}</span>` : ''}
+            ${z.phone ? `<span>📞 ${z.phone} (κύριο)</span>` : ''}
             ${z.email ? `<span>✉️ ${z.email}</span>` : ''}
+          </div>
+          <div class="ma-hotel-phones">
+            <div class="ma-hotel-phones__label">📱 Τηλέφωνα Login:</div>
+            <div class="ma-hotel-phones__list">${phoneBadges}</div>
+            <div class="ma-hotel-phones__add">
+              <input class="input ma-phone-input" type="text" placeholder="+30 69..." maxlength="30" data-zone-id="${z.id}">
+              <input class="input ma-phone-label-input" type="text" placeholder="Ετικέτα (προαιρ.)" maxlength="50" data-zone-id="${z.id}">
+              <button class="btn secondary ma-phone-add-btn" type="button" data-zone-id="${z.id}">➕</button>
+            </div>
           </div>
           <div class="ma-zone-actions">
             <button class="btn secondary btn-edit" type="button">Επεξεργασία</button>
             <button class="btn secondary btn-delete" type="button">Διαγραφή</button>
           </div>
         </div>
-      `).join('');
+      `}).join('');
 
       list.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -926,6 +1053,51 @@
           }
         });
       });
+
+      // Phone add buttons
+      list.querySelectorAll('.ma-phone-add-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const zoneId = btn.dataset.zoneId;
+          const card = btn.closest('.ma-zone-card');
+          const phoneInput = card.querySelector(`.ma-phone-input[data-zone-id="${zoneId}"]`);
+          const labelInput = card.querySelector(`.ma-phone-label-input[data-zone-id="${zoneId}"]`);
+          const phone = (phoneInput?.value || '').trim();
+          const label = (labelInput?.value || '').trim();
+          if (!phone || phone.length < 5) { showToast('Εισάγετε έγκυρο τηλέφωνο', 'error'); return; }
+          btn.disabled = true;
+          const result = await addPhone(zoneId, phone, label);
+          btn.disabled = false;
+          if (result.ok) {
+            showToast('Τηλέφωνο προστέθηκε');
+            if (phoneInput) phoneInput.value = '';
+            if (labelInput) labelInput.value = '';
+            render();
+          } else {
+            const msg = result.hotel_name
+              ? `Το τηλέφωνο υπάρχει ήδη στο "${result.hotel_name}"`
+              : (result.error || 'Σφάλμα');
+            showToast(msg, 'error');
+          }
+        });
+      });
+
+      // Phone remove buttons
+      list.querySelectorAll('.ma-phone-remove').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const phoneId = btn.dataset.phoneId;
+          const zoneId = btn.dataset.zoneId;
+          if (await openConfirm('Αφαίρεση αυτού του τηλεφώνου;', { title: 'Αφαίρεση Τηλεφώνου', okLabel: 'Αφαίρεση' })) {
+            const ok = await removePhone(zoneId, phoneId);
+            if (ok) { showToast('Αφαιρέθηκε'); render(); }
+            else { showToast('Σφάλμα', 'error'); }
+          }
+        });
+      });
+
+      // Re-apply search filter after re-rendering cards
+      applySearchFilter();
     };
 
     const resetForm = () => {
@@ -1019,7 +1191,13 @@
       }
     });
 
-    return { render };
+    // Render with async phone loading
+    const renderWithPhones = async () => {
+      await loadAllPhones();
+      render();
+    };
+
+    return { render: renderWithPhones };
   };
 
   // ========================================

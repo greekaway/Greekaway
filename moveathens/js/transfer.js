@@ -778,7 +778,8 @@
         passenger_name:    passengerName || '',
         room_number:       roomNumber || '',
         price:             selectedVehicle.price || 0,
-        payment_method:    selectedPaymentMethod || 'cash'
+        payment_method:    selectedPaymentMethod || 'cash',
+        orderer_phone:     hotelContext.orderer_phone || hotelContext.phone || ''
       };
       await fetch('/api/moveathens/transfer-request', {
         method: 'POST',

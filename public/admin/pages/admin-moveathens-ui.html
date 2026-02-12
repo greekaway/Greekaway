@@ -234,6 +234,13 @@
             </div>
           </form>
 
+          <!-- Search / Filter -->
+          <div class="ma-price-controls ma-dest-filter">
+            <label>Αναζήτηση Προορισμού
+              <input id="maDestinationSearch" class="input" type="text" placeholder="Πληκτρολογήστε 2+ γράμματα…" autocomplete="off">
+            </label>
+          </div>
+
           <div id="ma-destinations-list" class="ma-zones-list" aria-live="polite"></div>
         </section>
       </div>
@@ -321,7 +328,7 @@
           <div class="ma-section-header">
             <div>
               <h3 class="ma-subtitle">Ξενοδοχεία / Καταλύματα</h3>
-              <p class="ma-helper">Κάθε ξενοδοχείο αντιστοιχεί σε μοναδικές τιμές transfer.</p>
+              <p class="ma-helper">Κάθε ξενοδοχείο αντιστοιχεί σε μοναδικές τιμές transfer. Τα τηλέφωνα λειτουργούν ως κωδικοί πρόσβασης.</p>
             </div>
             <div class="ma-actions">
               <button id="maZoneAddBtn" class="btn secondary" type="button">➕ Νέο Ξενοδοχείο</button>
@@ -339,7 +346,7 @@
               <label>Διεύθυνση
                 <input id="maZoneAddress" class="input" type="text" maxlength="250" placeholder="π.χ. Λεωφ. Βασ. Αμαλίας 10">
               </label>
-              <label>Τηλέφωνο
+              <label>Τηλέφωνο (κύριο)
                 <input id="maZonePhone" class="input" type="text" maxlength="30" placeholder="+30 210 ...">
               </label>
               <label>Email
@@ -362,6 +369,13 @@
               <span id="maZoneStatus" class="ma-status" aria-live="polite"></span>
             </div>
           </form>
+
+          <!-- Search / Filter -->
+          <div class="ma-price-controls ma-dest-filter">
+            <label>Αναζήτηση Ξενοδοχείου
+              <input id="maZoneSearch" class="input" type="text" placeholder="Πληκτρολογήστε 2+ γράμματα…" autocomplete="off">
+            </label>
+          </div>
 
           <div id="ma-zones-list" class="ma-zones-list" aria-live="polite"></div>
         </section>

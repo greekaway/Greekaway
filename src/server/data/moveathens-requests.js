@@ -100,6 +100,7 @@ async function createRequest(data) {
     driver_id: null,
     driver_phone: '',
     accept_token: token,
+    orderer_phone: data.orderer_phone || '',
     status: 'pending',
     created_at: now,
     sent_at: null,

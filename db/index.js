@@ -693,9 +693,9 @@ const ma = {
         tariff, booking_type, scheduled_date, scheduled_time,
         passenger_name, room_number, passengers, luggage_large, luggage_medium, luggage_cabin,
         payment_method, price, commission_driver, commission_hotel, commission_service,
-        status, accept_token
+        status, accept_token, orderer_phone
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28
       ) RETURNING *
     `;
     const rows = await query(sql, [
@@ -704,7 +704,7 @@ const ma = {
       data.tariff || 'day', data.booking_type || 'instant', data.scheduled_date || '', data.scheduled_time || '',
       data.passenger_name || '', data.room_number || '', data.passengers || 0, data.luggage_large || 0, data.luggage_medium || 0, data.luggage_cabin || 0,
       data.payment_method || 'cash', data.price || 0, data.commission_driver || 0, data.commission_hotel || 0, data.commission_service || 0,
-      data.status || 'pending', data.accept_token || null
+      data.status || 'pending', data.accept_token || null, data.orderer_phone || ''
     ]);
     return rows[0];
   },
@@ -813,6 +813,39 @@ const ma = {
     const driverSql = `UPDATE ma_drivers SET total_paid = total_paid + $2 WHERE id = $1 RETURNING *`;
     const driver = await query(driverSql, [driverId, amount]);
     return { payment: payment[0], driver: driver[0] };
+  },
+
+  // ---- HOTEL PHONES ----
+  async getHotelPhones(zoneId) {
+    if (zoneId) {
+      return query('SELECT * FROM ma_hotel_phones WHERE zone_id = $1 ORDER BY created_at ASC', [zoneId]);
+    }
+    return query('SELECT * FROM ma_hotel_phones ORDER BY zone_id, created_at ASC');
+  },
+
+  async getHotelByPhone(phone) {
+    const row = await queryOne('SELECT * FROM ma_hotel_phones WHERE phone = $1', [phone]);
+    if (!row) return null;
+    const zone = await queryOne('SELECT * FROM ma_transfer_zones WHERE id = $1', [row.zone_id]);
+    if (!zone) return null;
+    const phones = await query('SELECT * FROM ma_hotel_phones WHERE zone_id = $1 ORDER BY created_at ASC', [row.zone_id]);
+    return { zone, phones };
+  },
+
+  async addHotelPhone(data) {
+    const sql = `
+      INSERT INTO ma_hotel_phones (id, zone_id, phone, label)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `;
+    const id = data.id || `hp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const rows = await query(sql, [id, data.zone_id, data.phone, data.label || '']);
+    return rows[0];
+  },
+
+  async deleteHotelPhone(id) {
+    const r = await execute('DELETE FROM ma_hotel_phones WHERE id = $1', [id]);
+    return r.rowCount > 0;
   }
 };
 

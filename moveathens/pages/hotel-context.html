@@ -24,46 +24,57 @@
     </header>
     
     <main class="ma-main ma-main--with-header">
-      <section class="ma-card ma-section">
-        <h1 class="ma-title" data-ma-page-title="context"></h1>
-
-        <!-- Hotel name autocomplete -->
-        <div class="ma-field ma-field--autocomplete">
-          <label class="ma-muted">Όνομα Ξενοδοχείου</label>
-          <div class="ma-autocomplete-wrap">
-            <input class="ma-input" type="text" data-ma-hotel-input="name"
-                   placeholder="Πληκτρολογήστε για αναζήτηση…" autocomplete="off" />
-            <ul class="ma-autocomplete-list" data-ma-hotel-suggestions></ul>
-          </div>
+      <!-- Step 1: Phone login -->
+      <section class="ma-card ma-section" id="hotel-login-section">
+        <h2 class="ma-title">Σύνδεση Ξενοδοχείου</h2>
+        <p class="ma-muted" style="margin-bottom:1rem;">Εισάγετε τον αριθμό τηλεφώνου σας για πρόσβαση.</p>
+        <div class="ma-field">
+          <label class="ma-muted">Τηλέφωνο</label>
+          <input class="ma-input" type="tel" id="hotel-phone-login"
+                 placeholder="+30 69..." autocomplete="tel" inputmode="tel" />
         </div>
+        <button class="ma-button ma-button--save" id="hotel-login-btn">
+          <span class="ma-button__text">🔑 Σύνδεση</span>
+        </button>
+        <p class="ma-error-msg" id="hotel-login-error" style="display:none; color:#e74c3c; margin-top:0.5rem;"></p>
+      </section>
 
-        <!-- Auto-filled fields (editable) -->
+      <!-- Step 2: Hotel info (read-only) — shown after successful login -->
+      <section class="ma-card ma-section" id="hotel-info-section" style="display:none;">
+        <h2 class="ma-title" id="hotel-display-name"></h2>
+
+        <div class="ma-field">
+          <label class="ma-muted">Τύπος Καταλύματος</label>
+          <input class="ma-input" type="text" data-ma-hotel-input="accommodation_type" readonly />
+        </div>
         <div class="ma-field">
           <label class="ma-muted">Δήμος</label>
-          <input class="ma-input" type="text" data-ma-hotel-input="municipality" placeholder="π.χ. Αθήνα" />
+          <input class="ma-input" type="text" data-ma-hotel-input="municipality" readonly />
         </div>
         <div class="ma-field">
           <label class="ma-muted">Διεύθυνση</label>
-          <input class="ma-input" type="text" data-ma-hotel-input="address" placeholder="π.χ. Λεωφόρος Αθηνών 50" />
-        </div>
-        <div class="ma-field">
-          <label class="ma-muted">Τηλέφωνο</label>
-          <input class="ma-input" type="tel" data-ma-hotel-input="phone" placeholder="π.χ. 210 1234567" />
+          <input class="ma-input" type="text" data-ma-hotel-input="address" readonly />
         </div>
         <div class="ma-field">
           <label class="ma-muted">Email Ξενοδοχείου</label>
-          <input class="ma-input" type="email" data-ma-hotel-input="email" placeholder="info@hotel.gr" />
-        </div>
-        <div class="ma-field">
-          <label class="ma-muted">Τύπος Καταλύματος</label>
-          <input class="ma-input" type="text" data-ma-hotel-input="accommodation_type" placeholder="π.χ. hotel" readonly />
+          <input class="ma-input" type="email" data-ma-hotel-input="email" readonly />
         </div>
 
-        <button class="ma-button ma-button--save" data-ma-hotel-save>
-          <span class="ma-button__text">💾 Αποθήκευση</span>
-          <span class="ma-button__success" style="display:none;">✓ Αποθηκεύτηκε!</span>
-        </button>
-        <button class="ma-button ma-button--secondary" data-ma-hotel-send data-ma-hotel-button="sendEmail"></button>
+        <div class="ma-field">
+          <label class="ma-muted">Τηλέφωνα Ξενοδοχείου</label>
+          <div id="hotel-phones-list" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.25rem;"></div>
+        </div>
+
+        <div class="ma-field" style="background:rgba(46,204,113,0.1); padding:0.75rem; border-radius:8px;">
+          <label class="ma-muted" style="color:#27ae60;">✅ Συνδεδεμένος με</label>
+          <input class="ma-input" type="text" id="hotel-connected-phone" readonly style="font-weight:600;" />
+        </div>
+
+        <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+          <button class="ma-button ma-button--secondary" id="hotel-logout-btn">
+            🚪 Αποσύνδεση
+          </button>
+        </div>
       </section>
     </main>
 

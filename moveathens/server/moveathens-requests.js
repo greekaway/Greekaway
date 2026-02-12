@@ -101,7 +101,8 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         price: commissions ? commissions.price : (parseFloat(body.price) || 0),
         commission_driver: commissions ? commissions.commission_driver : 0,
         commission_hotel: commissions ? commissions.commission_hotel : 0,
-        commission_service: commissions ? commissions.commission_service : 0
+        commission_service: commissions ? commissions.commission_service : 0,
+        orderer_phone: body.orderer_phone || ''
       });
 
       console.log('[ma-requests] Request created:', record.id, 'status:', record.status);
@@ -124,8 +125,9 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       }
 
       // Look up hotel phone from zone data for WhatsApp "arrived" message
-      let hotel_phone = '';
-      if (request.origin_zone_id) {
+      // Prefer orderer_phone (the specific employee who placed the order)
+      let hotel_phone = request.orderer_phone || '';
+      if (!hotel_phone && request.origin_zone_id) {
         try {
           const moveathensData = require('../../src/server/data/moveathens');
           const zones = await moveathensData.getZones({ activeOnly: false });

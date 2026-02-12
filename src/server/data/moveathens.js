@@ -1115,6 +1115,65 @@ async function getFullConfig() {
   };
 }
 
+// =========================================================
+// HOTEL PHONES (multi-phone per hotel)
+// =========================================================
+
+async function getHotelPhones(zoneId) {
+  await initDb();
+  if (dbAvailable) {
+    try {
+      return await db.ma.getHotelPhones(zoneId || null);
+    } catch (err) {
+      console.error('[moveathens] DB getHotelPhones failed:', err.message);
+    }
+  }
+  return [];
+}
+
+async function getHotelByPhone(phone) {
+  await initDb();
+  if (!phone) return null;
+  if (dbAvailable) {
+    try {
+      const result = await db.ma.getHotelByPhone(phone);
+      if (!result) return null;
+      return {
+        zone: mapZoneRow(result.zone),
+        phones: result.phones
+      };
+    } catch (err) {
+      console.error('[moveathens] DB getHotelByPhone failed:', err.message);
+    }
+  }
+  return null;
+}
+
+async function addHotelPhone(data) {
+  await initDb();
+  if (dbAvailable) {
+    try {
+      return await db.ma.addHotelPhone(data);
+    } catch (err) {
+      console.error('[moveathens] DB addHotelPhone failed:', err.message);
+      throw err;
+    }
+  }
+  throw new Error('Database required for hotel phones');
+}
+
+async function deleteHotelPhone(id) {
+  await initDb();
+  if (dbAvailable) {
+    try {
+      return await db.ma.deleteHotelPhone(id);
+    } catch (err) {
+      console.error('[moveathens] DB deleteHotelPhone failed:', err.message);
+    }
+  }
+  return false;
+}
+
 /**
  * Check if using database
  */
@@ -1133,6 +1192,11 @@ module.exports = {
   getZones,
   upsertZone,
   deleteZone,
+  // Hotel Phones
+  getHotelPhones,
+  getHotelByPhone,
+  addHotelPhone,
+  deleteHotelPhone,
   // Vehicles
   getVehicleTypes,
   upsertVehicleType,

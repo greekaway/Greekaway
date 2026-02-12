@@ -750,6 +750,41 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     }
   });
 
+  // Public: Lookup hotel by phone number (used for hotel staff login)
+  app.get('/api/moveathens/hotel-by-phone', async (req, res) => {
+    if (isDev) res.set('Cache-Control', 'no-store');
+    try {
+      const phone = normalizeString(req.query.phone);
+      if (!phone || phone.length < 5) {
+        return res.status(400).json({ error: 'Invalid phone' });
+      }
+      const result = await dataLayer.getHotelByPhone(phone);
+      if (!result) {
+        return res.status(404).json({ error: 'Phone not found' });
+      }
+      const zone = result.zone;
+      return res.json({
+        zone: {
+          id: zone.id,
+          name: zone.name,
+          type: zone.type,
+          municipality: zone.municipality || '',
+          address: zone.address || '',
+          email: zone.email || '',
+          accommodation_type: zone.accommodation_type || 'hotel'
+        },
+        phones: (result.phones || []).map(p => ({
+          id: p.id,
+          phone: p.phone,
+          label: p.label || ''
+        }))
+      });
+    } catch (err) {
+      console.error('[moveathens] hotel-by-phone error:', err.message);
+      return res.status(500).json({ error: 'Lookup failed' });
+    }
+  });
+
   // Get active categories
   app.get('/api/moveathens/categories', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
@@ -868,6 +903,54 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     } catch (err) {
       console.error('moveathens: save zones failed', err && err.stack ? err.stack : err);
       return res.status(500).json({ error: 'Failed to save zones' });
+    }
+  });
+
+  // --- HOTEL PHONES ---
+  app.get('/api/admin/moveathens/hotel-phones', async (req, res) => {
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const zoneId = normalizeString(req.query.zone_id) || null;
+      const phones = await dataLayer.getHotelPhones(zoneId);
+      return res.json({ phones });
+    } catch (err) {
+      console.error('[moveathens] hotel-phones read failed:', err.message);
+      return res.status(500).json({ error: 'Hotel phones unavailable' });
+    }
+  });
+
+  app.post('/api/admin/moveathens/hotel-phones', async (req, res) => {
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const { zone_id, phone, label } = req.body || {};
+      if (!zone_id || !phone) {
+        return res.status(400).json({ error: 'zone_id and phone are required' });
+      }
+      const cleanPhone = normalizeString(phone);
+      if (cleanPhone.length < 5) {
+        return res.status(400).json({ error: 'Phone number too short' });
+      }
+      // Check for duplicate phone
+      const existing = await dataLayer.getHotelByPhone(cleanPhone);
+      if (existing) {
+        return res.status(409).json({ error: 'Phone already registered', hotel_name: existing.zone.name });
+      }
+      const saved = await dataLayer.addHotelPhone({ zone_id, phone: cleanPhone, label: normalizeString(label) });
+      return res.json({ ok: true, phone: saved });
+    } catch (err) {
+      console.error('[moveathens] hotel-phone add failed:', err.message);
+      return res.status(500).json({ error: 'Failed to add phone' });
+    }
+  });
+
+  app.delete('/api/admin/moveathens/hotel-phones/:id', async (req, res) => {
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const deleted = await dataLayer.deleteHotelPhone(req.params.id);
+      return res.json({ ok: deleted });
+    } catch (err) {
+      console.error('[moveathens] hotel-phone delete failed:', err.message);
+      return res.status(500).json({ error: 'Failed to delete phone' });
     }
   });
 

@@ -773,6 +773,68 @@ html[data-theme='light'] .ma-infopage-form label {
   padding: 4px 0;
 }
 
+/* ── Hotel multi-phone management ── */
+.ma-hotel-phones {
+  padding: 10px 0;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  margin-top: 6px;
+}
+.ma-hotel-phones__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ga-muted, #7b8794);
+  margin-bottom: 6px;
+}
+.ma-hotel-phones__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.ma-phone-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(46,204,113,0.15);
+  color: #2ecc71;
+  border: 1px solid rgba(46,204,113,0.3);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.ma-phone-remove {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  opacity: 0.7;
+}
+.ma-phone-remove:hover { opacity: 1; }
+.ma-muted-text {
+  font-size: 12px;
+  color: var(--ga-muted, #7b8794);
+  opacity: 0.6;
+}
+.ma-hotel-phones__add {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.ma-phone-input {
+  flex: 1;
+  max-width: 180px;
+  font-size: 13px;
+}
+.ma-phone-label-input {
+  flex: 1;
+  max-width: 140px;
+  font-size: 13px;
+}
+
 @media (max-width: 720px) {
   .ma-price-row {
     grid-template-columns: 1fr 1fr;
@@ -832,5 +894,14 @@ html[data-theme='light'] .ma-infopage-form label {
   font-size: 15px;
   color: rgba(255,255,255,0.90);
   font-weight: 600;
+}
+
+/* ===== Destination Search Filter ===== */
+.ma-dest-filter {
+  grid-template-columns: 1fr;
+}
+.ma-search-empty {
+  color: #6b7280;
+  font-style: italic;
 }
 

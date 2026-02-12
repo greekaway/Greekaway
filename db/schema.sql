@@ -97,6 +97,18 @@ CREATE TABLE IF NOT EXISTS ma_transfer_zones (
 
 CREATE INDEX IF NOT EXISTS idx_ma_zones_active ON ma_transfer_zones(is_active);
 
+-- Hotel Phones (multiple phones per hotel for staff login)
+CREATE TABLE IF NOT EXISTS ma_hotel_phones (
+    id VARCHAR(50) PRIMARY KEY,
+    zone_id VARCHAR(50) NOT NULL REFERENCES ma_transfer_zones(id) ON DELETE CASCADE,
+    phone VARCHAR(50) NOT NULL,
+    label VARCHAR(100) DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ma_hotel_phones_phone ON ma_hotel_phones(phone);
+CREATE INDEX IF NOT EXISTS idx_ma_hotel_phones_zone ON ma_hotel_phones(zone_id);
+
 -- Vehicle Types (from moveathens_ui.json vehicleTypes)
 CREATE TABLE IF NOT EXISTS ma_vehicle_types (
     id VARCHAR(50) PRIMARY KEY,
@@ -240,6 +252,7 @@ CREATE TABLE IF NOT EXISTS ma_transfer_requests (
     driver_id VARCHAR(50) REFERENCES ma_drivers(id) ON DELETE SET NULL,
     driver_name VARCHAR(200) DEFAULT '',
     driver_phone VARCHAR(50) DEFAULT '',
+    orderer_phone VARCHAR(50) DEFAULT '',
     accept_token VARCHAR(100) UNIQUE,
     status VARCHAR(30) DEFAULT 'pending',
     created_at TIMESTAMPTZ DEFAULT NOW(),
