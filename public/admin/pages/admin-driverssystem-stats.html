@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title>Greekaway Admin – DriversSystem Στατιστικά</title>
+    <link rel="stylesheet" href="/css/admin-common.css">
+    <link rel="stylesheet" href="/css/admin-theme-toggle.css">
+    <link rel="stylesheet" href="/admin/css/admin-driverssystem-stats.css">
+    <link rel="manifest" href="/manifest-admin.json">
+    <meta name="theme-color" content="#001f3f">
+    <link rel="stylesheet" href="/pwa.css">
+    <link rel="stylesheet" href="/css/pwa-fixes.css">
+  </head>
+  <body>
+    <header class="sticky-bar" aria-label="DriversSystem">
+      <div class="bar-inner">
+        <div class="title">DriversSystem</div>
+        <div class="bar-tabs">
+          <a href="/admin/driverssystem-ui" class="bar-tab bar-tab--link">⚙️ Ρυθμίσεις</a>
+          <span class="bar-tab-divider"></span>
+          <button class="bar-tab active" data-tab="overview">Επισκόπηση</button>
+          <button class="bar-tab" data-tab="drivers">Οδηγοί</button>
+          <button class="bar-tab" data-tab="entries">Καταχωρήσεις</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content-wrap">
+
+      <!-- ===== OVERVIEW TAB ===== -->
+      <div class="tab-content active" data-tab="overview">
+        <section class="panel">
+
+          <!-- Filters -->
+          <div class="ds-admin-filters">
+            <div class="ds-admin-filter-row">
+              <label class="ds-admin-filter-label">Οδηγός:
+                <select id="adminDriverSelect" class="input ds-admin-select">
+                  <option value="">Όλοι οι οδηγοί</option>
+                </select>
+              </label>
+              <label class="ds-admin-filter-label">Από:
+                <input id="adminFrom" class="input" type="date" />
+              </label>
+              <label class="ds-admin-filter-label">Έως:
+                <input id="adminTo" class="input" type="date" />
+              </label>
+              <label class="ds-admin-filter-label">Ομαδοποίηση:
+                <select id="adminPeriod" class="input">
+                  <option value="day">Ημέρα</option>
+                  <option value="week">Εβδομάδα</option>
+                  <option value="month" selected>Μήνας</option>
+                </select>
+              </label>
+              <button id="adminStatsLoad" class="btn" type="button">Φόρτωση</button>
+            </div>
+          </div>
+
+          <!-- Summary Cards -->
+          <div class="ds-admin-summary">
+            <div class="ds-admin-summary-card">
+              <span class="ds-admin-summary-label">Συνολικά Μεικτά</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--gross" data-admin-gross>0,00 €</span>
+            </div>
+            <div class="ds-admin-summary-card">
+              <span class="ds-admin-summary-label">Συνολικά Καθαρά</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--net" data-admin-net>0,00 €</span>
+            </div>
+            <div class="ds-admin-summary-card">
+              <span class="ds-admin-summary-label">Προμήθειες</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--commission" data-admin-commission>0,00 €</span>
+            </div>
+            <div class="ds-admin-summary-card">
+              <span class="ds-admin-summary-label">Διαδρομές</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--trips" data-admin-count>0</span>
+            </div>
+          </div>
+
+          <!-- Source breakdown -->
+          <h3 class="ds-admin-subtitle">Ανά Πηγή</h3>
+          <div class="ds-admin-source-bars" data-admin-source-bars></div>
+
+          <!-- Timeline -->
+          <h3 class="ds-admin-subtitle">Χρονολόγιο</h3>
+          <div class="ds-admin-table-wrap">
+            <table class="ds-admin-table">
+              <thead>
+                <tr>
+                  <th>Περίοδος</th>
+                  <th>Διαδρομές</th>
+                  <th>Μεικτά</th>
+                  <th>Καθαρά</th>
+                  <th>Προμήθεια</th>
+                </tr>
+              </thead>
+              <tbody data-admin-timeline-tbody></tbody>
+            </table>
+          </div>
+          <div class="ds-admin-empty" data-admin-timeline-empty style="display:none">
+            Δεν υπάρχουν δεδομένα
+          </div>
+
+        </section>
+      </div>
+
+      <!-- ===== DRIVERS TAB ===== -->
+      <div class="tab-content" data-tab="drivers">
+        <section class="panel">
+          <div class="ds-section-header">
+            <div>
+              <h3 class="ds-admin-subtitle">Εγγεγραμμένοι Οδηγοί</h3>
+              <p class="ds-admin-helper">Οι οδηγοί που έχουν εγγραφεί στο σύστημα</p>
+            </div>
+            <div class="ds-admin-search-wrap">
+              <input id="adminDriverSearch" class="input ds-admin-search" type="text"
+                     placeholder="Αναζήτηση ονόματος, τηλεφώνου, email…" />
+            </div>
+          </div>
+          <div class="ds-admin-drivers-list" data-admin-drivers-list>
+            <div class="ds-admin-empty">Φόρτωση…</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ===== ENTRIES TAB ===== -->
+      <div class="tab-content" data-tab="entries">
+        <section class="panel">
+          <div class="ds-section-header">
+            <div>
+              <h3 class="ds-admin-subtitle">Πρόσφατες Καταχωρήσεις</h3>
+              <p class="ds-admin-helper">Αναλυτική λίστα καταχωρήσεων από όλους τους οδηγούς</p>
+            </div>
+            <div class="ds-admin-filters ds-admin-filters--inline">
+              <label>Οδηγός:
+                <select id="adminEntriesDriverSelect" class="input ds-admin-select">
+                  <option value="">Όλοι</option>
+                </select>
+              </label>
+              <label>Από:
+                <input id="adminEntriesFrom" class="input" type="date" />
+              </label>
+              <label>Έως:
+                <input id="adminEntriesTo" class="input" type="date" />
+              </label>
+              <button id="adminEntriesLoad" class="btn" type="button">Φόρτωση</button>
+            </div>
+          </div>
+          <div class="ds-admin-table-wrap">
+            <table class="ds-admin-table ds-admin-table--entries">
+              <thead>
+                <tr>
+                  <th>Ημ/νία</th>
+                  <th>Ώρα</th>
+                  <th>Οδηγός</th>
+                  <th>Πηγή</th>
+                  <th>Μεικτά</th>
+                  <th>Καθαρά</th>
+                  <th>Σημείωση</th>
+                </tr>
+              </thead>
+              <tbody data-admin-entries-tbody></tbody>
+            </table>
+          </div>
+          <div class="ds-admin-empty" data-admin-entries-empty style="display:none">
+            Δεν υπάρχουν καταχωρήσεις
+          </div>
+        </section>
+      </div>
+
+    </main>
+
+    <div id="ds-toast" class="ds-toast" role="status"></div>
+
+    <script src="/admin/js/admin-driverssystem-stats.js"></script>
+    <script src="/js/admin-theme-toggle.js"></script>
+    <script src="/pwa-install.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/admin/js/admin-footer.js"></script>
+  </body>
+</html>

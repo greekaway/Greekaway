@@ -24,7 +24,9 @@ module.exports = function registerDriversSystem(app, opts = {}) {
 
   const pageMap = {
     '/': 'welcome.html',
-    '/listings': 'entries.html'
+    '/listings': 'entries.html',
+    '/info': 'stats.html',
+    '/stats': 'stats.html'
   };
 
   Object.keys(pageMap).forEach((routePath) => {
@@ -256,6 +258,105 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       const date = req.query.date || new Date().toISOString().slice(0, 10);
       const summary = await dataLayer.getEntriesSummary(date);
       return res.json(summary);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Driver Registration / Identity ──
+
+  app.post('/api/driverssystem/drivers/register', async (req, res) => {
+    try {
+      const { phone, fullName, email } = req.body || {};
+      if (!phone || !phone.trim()) {
+        return res.status(400).json({ error: 'Απαιτείται αριθμός τηλεφώνου' });
+      }
+      if (!fullName || !fullName.trim()) {
+        return res.status(400).json({ error: 'Απαιτείται ονοματεπώνυμο' });
+      }
+      if (!email || !email.trim()) {
+        return res.status(400).json({ error: 'Απαιτείται email' });
+      }
+      const driver = await dataLayer.registerDriver({ phone: phone.trim(), fullName: fullName.trim(), email: email.trim() });
+      if (!driver) return res.status(500).json({ error: 'Registration failed' });
+      return res.json(driver);
+    } catch (err) {
+      console.error('[driverssystem] register error:', err.message);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.get('/api/driverssystem/drivers/me', async (req, res) => {
+    try {
+      const phone = req.query.phone;
+      if (!phone) return res.status(400).json({ error: 'Απαιτείται τηλέφωνο' });
+      const driver = await dataLayer.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Δεν βρέθηκε οδηγός' });
+      return res.json(driver);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Stats API (Driver - range queries) ──
+
+  app.get('/api/driverssystem/stats', async (req, res) => {
+    try {
+      const filters = {};
+      if (req.query.driverId) filters.driverId = req.query.driverId;
+      if (req.query.from) filters.from = req.query.from;
+      if (req.query.to) filters.to = req.query.to;
+      if (req.query.period) filters.period = req.query.period;
+      if (req.query.sourceId) filters.sourceId = req.query.sourceId;
+      const stats = await dataLayer.getStatsRange(filters);
+      return res.json(stats);
+    } catch (err) {
+      console.error('[driverssystem] stats error:', err.message);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Admin: Drivers list ──
+
+  app.get('/api/admin/driverssystem/drivers', requireAdmin, async (req, res) => {
+    try {
+      const filters = {};
+      if (req.query.search) filters.search = req.query.search;
+      const drivers = await dataLayer.getDrivers(filters);
+      return res.json(drivers);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Admin: Stats for any driver ──
+
+  app.get('/api/admin/driverssystem/stats', requireAdmin, async (req, res) => {
+    try {
+      const filters = {};
+      if (req.query.driverId) filters.driverId = req.query.driverId;
+      if (req.query.from) filters.from = req.query.from;
+      if (req.query.to) filters.to = req.query.to;
+      if (req.query.period) filters.period = req.query.period;
+      if (req.query.sourceId) filters.sourceId = req.query.sourceId;
+      const stats = await dataLayer.getStatsRange(filters);
+      return res.json(stats);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Admin: All entries for admin view ──
+
+  app.get('/api/admin/driverssystem/entries', requireAdmin, async (req, res) => {
+    try {
+      const filters = {};
+      if (req.query.driverId) filters.driverId = req.query.driverId;
+      if (req.query.from) filters.from = req.query.from;
+      if (req.query.to) filters.to = req.query.to;
+      if (req.query.sourceId) filters.sourceId = req.query.sourceId;
+      const entries = await dataLayer.getEntriesRange(filters);
+      return res.json(entries);
     } catch (err) {
       return res.status(500).json({ error: 'Server error' });
     }

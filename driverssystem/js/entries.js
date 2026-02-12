@@ -144,7 +144,9 @@
     btn.querySelector('.ds-save-btn__text').textContent = 'Αποθήκευση…';
 
     try {
+      const driverData = JSON.parse(localStorage.getItem('ds_driver') || '{}');
       const res = await api('/api/driverssystem/entries', 'POST', {
+        driverId: driverData.phone || '',
         sourceId: selectedSource.id,
         sourceName: selectedSource.name,
         amount,

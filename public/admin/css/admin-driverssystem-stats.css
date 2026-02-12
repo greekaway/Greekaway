@@ -1,0 +1,459 @@
+/* ─────────────────────────────────────
+   Admin – DriversSystem Stats
+   ───────────────────────────────────── */
+
+/* Link tabs & divider */
+.bar-tab--link {
+  text-decoration: none;
+  opacity: 0.65;
+  transition: opacity 0.18s, background 0.15s, color 0.15s;
+}
+
+.bar-tab--link:hover {
+  opacity: 1;
+}
+
+.bar-tab-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 4px;
+  align-self: center;
+}
+
+@media (prefers-color-scheme: light) {
+  .bar-tab-divider {
+    background: rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Tab navigation (reuse from admin-driverssystem-ui) */
+.bar-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.bar-tab {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.bar-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bar-tab.active {
+  background: rgba(255, 255, 255, 0.95);
+  color: #001f3f;
+  border-color: transparent;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.content-wrap {
+  max-width: 1400px;
+  width: 100%;
+  padding: 0 16px 110px;
+}
+
+.sticky-bar .bar-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Admin Filters ── */
+.ds-admin-filters {
+  margin-bottom: 20px;
+}
+
+.ds-admin-filter-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.ds-admin-filter-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--ga-muted);
+}
+
+.ds-admin-select {
+  min-width: 160px;
+}
+
+.ds-admin-filters--inline {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.ds-admin-filters--inline label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--ga-muted);
+}
+
+/* ── Summary Cards ── */
+.ds-admin-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.ds-admin-summary-card {
+  background: var(--ga-card);
+  border: 1px solid var(--ga-border);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.ds-admin-summary-label {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ga-muted);
+  margin-bottom: 6px;
+}
+
+.ds-admin-summary-value {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ga-text);
+}
+
+.ds-admin-summary-value--gross { color: #3b82f6; }
+.ds-admin-summary-value--net { color: #2ecc71; }
+.ds-admin-summary-value--commission { color: #e74c3c; }
+.ds-admin-summary-value--trips { color: #8b5cf6; }
+
+@media (max-width: 768px) {
+  .ds-admin-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .ds-admin-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Subtitles ── */
+.ds-admin-subtitle {
+  font-size: 16px;
+  margin: 4px 0 12px;
+  color: var(--ga-text);
+}
+
+.ds-admin-helper {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ga-muted);
+}
+
+/* ── Source Bars ── */
+.ds-admin-source-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.ds-admin-source-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ds-admin-source-bar__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ds-admin-source-bar__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ga-text);
+  min-width: 80px;
+}
+
+.ds-admin-source-bar__track {
+  flex: 1;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ds-admin-source-bar__fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+.ds-admin-source-bar__amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ga-text);
+  min-width: 80px;
+  text-align: right;
+}
+
+.ds-admin-source-bar__count {
+  font-size: 12px;
+  color: var(--ga-muted);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ── Tables ── */
+.ds-admin-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 16px;
+}
+
+.ds-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.ds-admin-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--ga-muted);
+  border-bottom: 2px solid var(--ga-border);
+  white-space: nowrap;
+}
+
+.ds-admin-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ga-border);
+  color: var(--ga-text);
+  white-space: nowrap;
+}
+
+.ds-admin-table tbody tr:hover {
+  background: rgba(212, 175, 55, 0.06);
+}
+
+.ds-admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Color hints for money columns */
+.ds-admin-table td.col-gross { color: #3b82f6; font-weight: 600; }
+.ds-admin-table td.col-net { color: #2ecc71; font-weight: 600; }
+.ds-admin-table td.col-commission { color: #e74c3c; font-weight: 600; }
+
+.ds-admin-empty {
+  text-align: center;
+  color: var(--ga-muted);
+  font-size: 14px;
+  padding: 24px 0;
+}
+
+/* ── Drivers List ── */
+.ds-admin-drivers-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.ds-admin-driver-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--ga-card);
+  border: 1px solid var(--ga-border);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.15s;
+}
+
+.ds-admin-driver-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.ds-admin-driver-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00c896, #059669);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ds-admin-driver-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ds-admin-driver-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ga-text);
+}
+
+.ds-admin-driver-meta {
+  font-size: 13px;
+  color: var(--ga-muted);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ds-admin-driver-stats {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.ds-admin-driver-stat {
+  text-align: center;
+}
+
+.ds-admin-driver-stat__value {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ds-admin-driver-stat__value--gross { color: #3b82f6; }
+.ds-admin-driver-stat__value--net { color: #2ecc71; }
+.ds-admin-driver-stat__value--count { color: #8b5cf6; }
+
+.ds-admin-driver-stat__label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--ga-muted);
+}
+
+/* ── Search ── */
+.ds-admin-search-wrap {
+  max-width: 320px;
+  width: 100%;
+}
+
+.ds-admin-search {
+  width: 100%;
+}
+
+.ds-section-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+/* ── Source dot for entries table ── */
+.ds-admin-source-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* ── Toast ── */
+.ds-toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: #222;
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms, transform 250ms;
+  z-index: 999;
+}
+
+.ds-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Light mode overrides ── */
+@media (prefers-color-scheme: light) {
+  .bar-tab {
+    border-color: rgba(0, 0, 0, 0.15);
+    color: rgba(0, 31, 63, 0.7);
+  }
+  .bar-tab:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+  .bar-tab.active {
+    background: #001f3f;
+    color: #fff;
+    border-color: transparent;
+  }
+
+  .ds-admin-source-bar__track {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  .ds-admin-table tbody tr:hover {
+    background: rgba(208, 128, 0, 0.06);
+  }
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .ds-admin-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ds-admin-driver-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .ds-admin-driver-stats {
+    justify-content: center;
+  }
+}

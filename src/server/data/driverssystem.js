@@ -31,6 +31,7 @@ function resolveDataDir() {
 const DATA_DIR = resolveDataDir();
 const UI_CONFIG_PATH = path.join(DATA_DIR, 'driverssystem_ui.json');
 const ENTRIES_PATH = path.join(DATA_DIR, 'entries.json');
+const DRIVERS_PATH = path.join(DATA_DIR, 'drivers.json');
 
 // ── Seed persistent disk from repo defaults on first boot ──
 function seedIfNeeded() {
@@ -219,6 +220,9 @@ async function getEntries(filters = {}) {
   if (filters.sourceId) {
     entries = entries.filter(e => e.sourceId === filters.sourceId);
   }
+  if (filters.driverId) {
+    entries = entries.filter(e => e.driverId === filters.driverId);
+  }
   // Sort newest first
   entries.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   return entries;
@@ -228,6 +232,7 @@ async function addEntry(entry) {
   const entries = readEntries();
   const newEntry = {
     id: `e_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    driverId: entry.driverId || '',
     sourceId: entry.sourceId || '',
     sourceName: entry.sourceName || '',
     amount: parseFloat(entry.amount) || 0,
@@ -256,7 +261,7 @@ async function getEntriesSummary(date) {
   const entries = readEntries().filter(e => e.date === date);
   const totalGross = entries.reduce((s, e) => s + (e.amount || 0), 0);
   const totalNet = entries.reduce((s, e) => s + (e.netAmount || 0), 0);
-  const totalCommission = entries.reduce((s, e) => s + ((e.amount || 0) - (e.netAmount || 0)), 0);
+  const totalCommission = totalGross - totalNet;
   const count = entries.length;
   const bySource = {};
   entries.forEach(e => {
@@ -267,6 +272,186 @@ async function getEntriesSummary(date) {
     bySource[key].count++;
   });
   return { date, count, totalGross, totalNet, totalCommission, bySource };
+}
+
+// =========================================================
+// DRIVERS
+// =========================================================
+
+function readDrivers() {
+  try {
+    if (!fs.existsSync(DRIVERS_PATH)) return [];
+    const raw = fs.readFileSync(DRIVERS_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writeDrivers(data) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tmpPath = `${DRIVERS_PATH}.tmp`;
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2));
+    fs.renameSync(tmpPath, DRIVERS_PATH);
+    return true;
+  } catch (err) {
+    console.error('[driverssystem] drivers write failed:', err.message);
+    return false;
+  }
+}
+
+async function getDrivers(filters = {}) {
+  let drivers = readDrivers();
+  if (filters.search) {
+    const q = filters.search.toLowerCase();
+    drivers = drivers.filter(d =>
+      (d.fullName || '').toLowerCase().includes(q) ||
+      (d.phone || '').includes(q) ||
+      (d.email || '').toLowerCase().includes(q)
+    );
+  }
+  drivers.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  return drivers;
+}
+
+async function getDriverByPhone(phone) {
+  const drivers = readDrivers();
+  return drivers.find(d => d.phone === phone) || null;
+}
+
+async function registerDriver(data) {
+  const drivers = readDrivers();
+  const phone = (data.phone || '').trim();
+  if (!phone) return null;
+  // Check if already exists
+  const existing = drivers.find(d => d.phone === phone);
+  if (existing) {
+    // Update name/email if provided
+    if (data.fullName) existing.fullName = data.fullName.trim();
+    if (data.email) existing.email = data.email.trim();
+    existing.lastLoginAt = new Date().toISOString();
+    writeDrivers(drivers);
+    return existing;
+  }
+  const newDriver = {
+    id: `drv_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    phone,
+    fullName: (data.fullName || '').trim(),
+    email: (data.email || '').trim(),
+    createdAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString()
+  };
+  drivers.push(newDriver);
+  writeDrivers(drivers);
+  return newDriver;
+}
+
+async function updateDriver(phone, data) {
+  const drivers = readDrivers();
+  const idx = drivers.findIndex(d => d.phone === phone);
+  if (idx === -1) return null;
+  if (data.fullName !== undefined) drivers[idx].fullName = data.fullName.trim();
+  if (data.email !== undefined) drivers[idx].email = data.email.trim();
+  writeDrivers(drivers);
+  return drivers[idx];
+}
+
+// =========================================================
+// ENTRIES RANGE & STATS
+// =========================================================
+
+async function getEntriesRange(filters = {}) {
+  let entries = readEntries();
+  if (filters.driverId) {
+    entries = entries.filter(e => e.driverId === filters.driverId);
+  }
+  if (filters.from) {
+    entries = entries.filter(e => e.date >= filters.from);
+  }
+  if (filters.to) {
+    entries = entries.filter(e => e.date <= filters.to);
+  }
+  if (filters.sourceId) {
+    entries = entries.filter(e => e.sourceId === filters.sourceId);
+  }
+  entries.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+  return entries;
+}
+
+/**
+ * Get aggregated statistics for a date range, grouped by period
+ * @param {Object} filters - { driverId, from, to, period: 'day'|'week'|'month' }
+ */
+async function getStatsRange(filters = {}) {
+  let entries = readEntries();
+  if (filters.driverId) {
+    entries = entries.filter(e => e.driverId === filters.driverId);
+  }
+  if (filters.from) {
+    entries = entries.filter(e => e.date >= filters.from);
+  }
+  if (filters.to) {
+    entries = entries.filter(e => e.date <= filters.to);
+  }
+  if (filters.sourceId) {
+    entries = entries.filter(e => e.sourceId === filters.sourceId);
+  }
+
+  // Totals
+  const totalGross = entries.reduce((s, e) => s + (e.amount || 0), 0);
+  const totalNet = entries.reduce((s, e) => s + (e.netAmount || 0), 0);
+  const totalCommission = totalGross - totalNet;
+  const count = entries.length;
+
+  // By source
+  const bySource = {};
+  entries.forEach(e => {
+    const key = e.sourceId || 'unknown';
+    if (!bySource[key]) bySource[key] = { name: e.sourceName || key, gross: 0, net: 0, count: 0 };
+    bySource[key].gross += e.amount || 0;
+    bySource[key].net += e.netAmount || 0;
+    bySource[key].count++;
+  });
+
+  // Group by period
+  const period = filters.period || 'day';
+  const groups = {};
+  entries.forEach(e => {
+    let key;
+    if (period === 'month') {
+      key = e.date.slice(0, 7); // YYYY-MM
+    } else if (period === 'week') {
+      // ISO week start (Monday)
+      const d = new Date(e.date + 'T00:00:00');
+      const day = d.getDay() || 7;
+      d.setDate(d.getDate() - day + 1);
+      key = d.toISOString().slice(0, 10);
+    } else {
+      key = e.date; // day
+    }
+    if (!groups[key]) groups[key] = { period: key, gross: 0, net: 0, commission: 0, count: 0 };
+    groups[key].gross += e.amount || 0;
+    groups[key].net += e.netAmount || 0;
+    groups[key].commission += (e.amount || 0) - (e.netAmount || 0);
+    groups[key].count++;
+  });
+
+  // Sort periods descending
+  const timeline = Object.values(groups).sort((a, b) => b.period.localeCompare(a.period));
+
+  return {
+    from: filters.from || null,
+    to: filters.to || null,
+    period,
+    count,
+    totalGross,
+    totalNet,
+    totalCommission,
+    bySource,
+    timeline
+  };
 }
 
 module.exports = {
@@ -281,5 +466,13 @@ module.exports = {
   getEntries,
   addEntry,
   deleteEntry,
-  getEntriesSummary
+  getEntriesSummary,
+  // Drivers
+  getDrivers,
+  getDriverByPhone,
+  registerDriver,
+  updateDriver,
+  // Stats
+  getEntriesRange,
+  getStatsRange
 };

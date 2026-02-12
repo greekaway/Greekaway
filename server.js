@@ -42,6 +42,10 @@ function hasAdminSession(req){
 // (Phase 1 refactor note) Removed transient createApp() indirection; restore direct Express init for stability
 const app = express();
 
+// Render (and similar PaaS) terminate TLS at the proxy layer.
+// Trust the first proxy so req.protocol reads x-forwarded-proto correctly.
+app.set('trust proxy', 1);
+
 // ========================================
 // CANONICAL DOMAIN REDIRECTS - DISABLED FOR DEBUGGING
 // ========================================
@@ -482,6 +486,7 @@ const ADMIN_HOME_FILE = path.join(__dirname, 'public', 'admin-home.html');
 const ADMIN_MOVEATHENS_UI_FILE = path.join(__dirname, 'public', 'admin', 'pages', 'admin-moveathens-ui.html');
 const ADMIN_MA_DRIVERS_FILE = path.join(__dirname, 'public', 'admin', 'pages', 'admin-ma-drivers.html');
 const ADMIN_DRIVERSSYSTEM_UI_FILE = path.join(__dirname, 'public', 'admin', 'pages', 'admin-driverssystem-ui.html');
+const ADMIN_DRIVERSSYSTEM_STATS_FILE = path.join(__dirname, 'public', 'admin', 'pages', 'admin-driverssystem-stats.html');
 const LOCAL_UPLOADS_DIR = path.join(__dirname, 'uploads');
 const UPLOADS_DIR = process.env.RENDER ? getUploadsRoot() : (ensureDir(LOCAL_UPLOADS_DIR) || LOCAL_UPLOADS_DIR);
 
@@ -580,14 +585,18 @@ const GREEKAWAY_ENTRY = path.join(__dirname, 'public', 'index.html');
 
 // Helper: check if request is from MoveAthens domain
 const isMoveAthensHost = (req) => {
+  const fwd = (req.headers['x-forwarded-host'] || '').toLowerCase().split(':')[0];
   const host = (req.headers.host || '').toLowerCase().split(':')[0];
-  return MOVEATHENS_HOSTS.includes(host);
+  const effective = fwd || host;
+  return MOVEATHENS_HOSTS.includes(effective);
 };
 
 // Helper: check if request is from DriversSystem domain
 const isDriversSystemHost = (req) => {
+  const fwd = (req.headers['x-forwarded-host'] || '').toLowerCase().split(':')[0];
   const host = (req.headers.host || '').toLowerCase().split(':')[0];
-  return DRIVERSSYSTEM_HOSTS.includes(host);
+  const effective = fwd || host;
+  return DRIVERSSYSTEM_HOSTS.includes(effective);
 };
 
 // MoveAthens page map
@@ -674,7 +683,9 @@ app.use((req, res, next) => {
 // DriversSystem page map
 const DRIVERSSYSTEM_PAGE_MAP = {
   '/': 'welcome.html',
-  '/listings': 'entries.html'
+  '/listings': 'entries.html',
+  '/info': 'stats.html',
+  '/stats': 'stats.html'
 };
 
 // ─────────────────────────────────────────────────────────
@@ -687,9 +698,13 @@ app.use((req, res, next) => {
   }
 
   // Redirect www → canonical non-www
+  // Use x-forwarded-host when behind a reverse proxy (Render), fall back to Host header
+  const fwdHost = (req.headers['x-forwarded-host'] || '').toLowerCase().split(':')[0];
   const rawHost = (req.headers.host || '').toLowerCase().split(':')[0];
-  if (rawHost === 'www.driverssystem.com') {
-    return res.redirect(301, `https://driverssystem.com${req.url}`);
+  const effectiveHost = fwdHost || rawHost;
+  if (effectiveHost === 'www.driverssystem.com') {
+    const proto = req.protocol; // reflects x-forwarded-proto with trust proxy
+    return res.redirect(301, `${proto}://driverssystem.com${req.url}`);
   }
 
   const url = req.url.split('?')[0];
@@ -1504,6 +1519,10 @@ app.get('/admin/driverssystem-ui', (req, res) => {
   }
   try { return res.sendFile(ADMIN_DRIVERSSYSTEM_UI_FILE); }
   catch (_) { return res.status(404).send('Not found'); }
+});
+
+app.get('/admin/driverssystem-stats', (req, res) => {
+  return res.redirect('/admin/driverssystem-ui');
 });
 
 // Admin Drivers Panel

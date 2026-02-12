@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Στατιστικά – DriversSystem</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/driverssystem/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/driverssystem/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/driverssystem/icons/apple-touch-icon.png">
+    <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
+    <link rel="preload" href="/driverssystem/css/stats.css" as="style" />
+    <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
+    <link rel="stylesheet" href="/driverssystem/css/footer.css" />
+    <link rel="stylesheet" href="/driverssystem/css/stats.css" />
+    <link rel="stylesheet" href="/driverssystem/css/dark-mode.css" />
+  </head>
+  <body class="ds-info-page">
+
+    <!-- ─── Header ─── -->
+    <header class="ds-page-header">
+      <a class="ds-page-logo-link" data-ds-home-link href="/driverssystem">
+        <img class="ds-page-logo" data-ds-hero-logo alt="DriversSystem" style="display:none" />
+      </a>
+      <h1 class="ds-page-title">Στατιστικά</h1>
+      <span class="ds-page-header__spacer"></span>
+    </header>
+
+    <!-- ─── Main Content ─── -->
+    <main class="ds-stats-main">
+
+      <!-- ── Summary Cards ── -->
+      <section class="ds-stats-summary">
+        <div class="ds-stats-card ds-stats-card--gross">
+          <span class="ds-stats-card__label">Μεικτά</span>
+          <span class="ds-stats-card__value" data-ds-stats-gross>0,00 €</span>
+        </div>
+        <div class="ds-stats-card ds-stats-card--net">
+          <span class="ds-stats-card__label">Καθαρά</span>
+          <span class="ds-stats-card__value" data-ds-stats-net>0,00 €</span>
+        </div>
+        <div class="ds-stats-card ds-stats-card--trips">
+          <span class="ds-stats-card__label">Διαδρομές</span>
+          <span class="ds-stats-card__value" data-ds-stats-count>0</span>
+        </div>
+        <div class="ds-stats-card ds-stats-card--commission">
+          <span class="ds-stats-card__label">Προμήθειες</span>
+          <span class="ds-stats-card__value" data-ds-stats-commission>0,00 €</span>
+        </div>
+      </section>
+
+      <!-- ── Filters ── -->
+      <section class="ds-stats-filters ds-card">
+        <h2 class="ds-stats-filters__title">Φίλτρα</h2>
+
+        <!-- Quick period buttons -->
+        <div class="ds-stats-quick-filters">
+          <button class="ds-stats-quick-btn active" data-period-quick="today">Σήμερα</button>
+          <button class="ds-stats-quick-btn" data-period-quick="week">Εβδομάδα</button>
+          <button class="ds-stats-quick-btn" data-period-quick="month">Μήνας</button>
+          <button class="ds-stats-quick-btn" data-period-quick="3months">3 Μήνες</button>
+          <button class="ds-stats-quick-btn" data-period-quick="custom">Προσαρμοσμένο</button>
+        </div>
+
+        <!-- Custom date range (hidden by default) -->
+        <div class="ds-stats-custom-range" data-ds-custom-range style="display:none">
+          <div class="ds-stats-date-field">
+            <label class="ds-stats-date-label" for="ds-stats-from">Από</label>
+            <input class="ds-stats-date-input" type="date" id="ds-stats-from" data-ds-stats-from />
+          </div>
+          <div class="ds-stats-date-field">
+            <label class="ds-stats-date-label" for="ds-stats-to">Έως</label>
+            <input class="ds-stats-date-input" type="date" id="ds-stats-to" data-ds-stats-to />
+          </div>
+        </div>
+
+        <!-- Group by -->
+        <div class="ds-stats-group-row">
+          <span class="ds-stats-group-label">Ομαδοποίηση:</span>
+          <div class="ds-stats-group-pills">
+            <button class="ds-stats-group-pill active" data-group="day">Ημέρα</button>
+            <button class="ds-stats-group-pill" data-group="week">Εβδομάδα</button>
+            <button class="ds-stats-group-pill" data-group="month">Μήνας</button>
+          </div>
+        </div>
+
+        <!-- Source filter -->
+        <div class="ds-stats-source-row">
+          <span class="ds-stats-source-label">Πηγή:</span>
+          <div class="ds-stats-source-pills" data-ds-stats-source-pills>
+            <button class="ds-stats-source-pill active" data-source-filter="all">Όλες</button>
+            <!-- Dynamic source pills populated from API -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ── By Source Breakdown ── -->
+      <section class="ds-stats-sources-breakdown ds-card" data-ds-stats-sources-breakdown>
+        <h2 class="ds-stats-section-title">Ανά Πηγή</h2>
+        <div class="ds-stats-source-bars" data-ds-stats-source-bars>
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- ── Timeline Table ── -->
+      <section class="ds-stats-timeline ds-card" data-ds-stats-timeline>
+        <h2 class="ds-stats-section-title">Χρονολόγιο</h2>
+        <div class="ds-stats-table-wrap">
+          <table class="ds-stats-table">
+            <thead>
+              <tr>
+                <th>Περίοδος</th>
+                <th>Διαδρομές</th>
+                <th>Μεικτά</th>
+                <th>Καθαρά</th>
+                <th>Προμήθεια</th>
+              </tr>
+            </thead>
+            <tbody data-ds-stats-tbody>
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+        <div class="ds-stats-empty" data-ds-stats-empty style="display:none">
+          Δεν υπάρχουν δεδομένα για αυτό το διάστημα
+        </div>
+      </section>
+
+    </main>
+
+    <div data-ds-footer-slot></div>
+
+    <script src="/driverssystem/js/driverssystem-config.js"></script>
+    <script src="/driverssystem/js/footer.js"></script>
+    <script src="/driverssystem/js/stats.js"></script>
+  </body>
+</html>

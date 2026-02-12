@@ -1,3 +1,28 @@
+/* Page-level navigation — link tabs & divider */
+.bar-tab--link {
+  text-decoration: none;
+  opacity: 0.65;
+  transition: opacity 0.18s, background 0.15s, color 0.15s;
+}
+
+.bar-tab--link:hover {
+  opacity: 1;
+}
+
+.bar-tab-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 4px;
+  align-self: center;
+}
+
+@media (prefers-color-scheme: light) {
+  .bar-tab-divider {
+    background: rgba(0, 0, 0, 0.15);
+  }
+}
+
 /* Tab navigation */
 .bar-tabs {
   display: flex;
