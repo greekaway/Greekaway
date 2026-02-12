@@ -39,6 +39,9 @@ services:
       name: uploads
       mountPath: /opt/render/project/src/uploads
       sizeGB: 5
+    customDomains:
+      - name: driverssystem.com
+      - name: www.driverssystem.com
     routes:
       - type: rewrite
         source: /trips/trip.html

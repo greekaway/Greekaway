@@ -563,19 +563,31 @@ app.get('/api/trips/:slug', async (req, res) => {
 });
 
 // ========================================
-// HOST-BASED ROUTING: MoveAthens vs Greekaway
+// HOST-BASED ROUTING: MoveAthens vs Greekaway vs DriversSystem
 // ========================================
 // GLOBAL DOMAIN GATE: Complete isolation between brands
 const MOVEATHENS_HOSTS = ['moveathens.com', 'www.moveathens.com'];
 const MOVEATHENS_BASE_DIR = path.join(__dirname, 'moveathens');
 const MOVEATHENS_PAGES_DIR = path.join(MOVEATHENS_BASE_DIR, 'pages');
 const MOVEATHENS_ENTRY = path.join(MOVEATHENS_PAGES_DIR, 'welcome.html');
+
+const DRIVERSSYSTEM_HOSTS = ['driverssystem.com', 'www.driverssystem.com'];
+const DRIVERSSYSTEM_BASE_DIR = path.join(__dirname, 'driverssystem');
+const DRIVERSSYSTEM_PAGES_DIR = path.join(DRIVERSSYSTEM_BASE_DIR, 'pages');
+const DRIVERSSYSTEM_ENTRY = path.join(DRIVERSSYSTEM_PAGES_DIR, 'welcome.html');
+
 const GREEKAWAY_ENTRY = path.join(__dirname, 'public', 'index.html');
 
 // Helper: check if request is from MoveAthens domain
 const isMoveAthensHost = (req) => {
   const host = (req.headers.host || '').toLowerCase().split(':')[0];
   return MOVEATHENS_HOSTS.includes(host);
+};
+
+// Helper: check if request is from DriversSystem domain
+const isDriversSystemHost = (req) => {
+  const host = (req.headers.host || '').toLowerCase().split(':')[0];
+  return DRIVERSSYSTEM_HOSTS.includes(host);
 };
 
 // MoveAthens page map
@@ -657,6 +669,90 @@ app.use((req, res, next) => {
   // D) FALLBACK: Any unknown route on MoveAthens domain → welcome.html (SPA-style)
   // This ensures moveathens.com/anything returns MoveAthens, NOT Greekaway
   return res.sendFile(MOVEATHENS_ENTRY);
+});
+
+// DriversSystem page map
+const DRIVERSSYSTEM_PAGE_MAP = {
+  '/': 'welcome.html',
+  '/listings': 'entries.html'
+};
+
+// ─────────────────────────────────────────────────────────
+// 2) GLOBAL DOMAIN GATE: DriversSystem
+// All driverssystem.com requests are handled here and NEVER fall through to Greekaway
+// ─────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  if (!isDriversSystemHost(req)) {
+    return next();
+  }
+
+  // Redirect www → canonical non-www
+  const rawHost = (req.headers.host || '').toLowerCase().split(':')[0];
+  if (rawHost === 'www.driverssystem.com') {
+    return res.redirect(301, `https://driverssystem.com${req.url}`);
+  }
+
+  const url = req.url.split('?')[0];
+
+  // A) DriversSystem API routes — let them pass through to registered handlers
+  if (url.startsWith('/api/driverssystem/') || url.startsWith('/api/admin/driverssystem/')) {
+    return next();
+  }
+
+  // B) Uploads folder (shared between brands — persistent disk)
+  if (url.startsWith('/uploads/')) {
+    return next();
+  }
+
+  // B.2) Admin panel & admin assets — let them pass through
+  if (url.startsWith('/admin/') || url === '/admin-login' || url.startsWith('/css/admin') ||
+      url.startsWith('/js/admin') || url.startsWith('/pwa') || url === '/manifest-admin.json' ||
+      url.startsWith('/css/pwa')) {
+    return next();
+  }
+
+  // B.5) Favicon for DriversSystem domain
+  if (url === '/favicon.ico') {
+    const faviconPath = path.join(DRIVERSSYSTEM_BASE_DIR, 'icons', 'favicon-32x32.png');
+    if (fs.existsSync(faviconPath)) {
+      return res.sendFile(faviconPath);
+    }
+    // Fallback: serve no favicon
+    return res.status(204).end();
+  }
+
+  // C) DriversSystem static assets (css, js, images, icons, partials)
+  if (url.startsWith('/driverssystem/')) {
+    const assetPath = url.replace('/driverssystem/', '');
+    const fullPath = path.join(DRIVERSSYSTEM_BASE_DIR, assetPath);
+
+    // Security: prevent directory traversal
+    if (!fullPath.startsWith(DRIVERSSYSTEM_BASE_DIR)) {
+      return res.status(403).send('Forbidden');
+    }
+
+    if (!IS_DEV) {
+      if (/\.(css|js|png|jpg|jpeg|webp|svg|mp4|woff2?|ttf|eot)$/i.test(url)) {
+        res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+      } else if (/\.json$/i.test(url)) {
+        res.setHeader('Cache-Control', 'public, max-age=300');
+      }
+    } else {
+      res.setHeader('Cache-Control', 'no-store');
+    }
+
+    return res.sendFile(fullPath, (err) => {
+      if (err) return res.status(404).send('Not found');
+    });
+  }
+
+  // D) DriversSystem pages
+  if (DRIVERSSYSTEM_PAGE_MAP[url]) {
+    return res.sendFile(path.join(DRIVERSSYSTEM_PAGES_DIR, DRIVERSSYSTEM_PAGE_MAP[url]));
+  }
+
+  // E) FALLBACK: Any unknown route on DriversSystem domain → welcome.html
+  return res.sendFile(DRIVERSSYSTEM_ENTRY);
 });
 
 // Serve Apple Pay domain association and other well-known files (explicitly allow dotfiles)
