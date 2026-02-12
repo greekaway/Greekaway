@@ -107,7 +107,11 @@
         break;
 
       case 'accepted':
-        primaryBtn.textContent = '🧭 Πλοήγηση προς Ξενοδοχείο';
+        if (tripData && tripData.is_arrival) {
+          primaryBtn.textContent = '🧭 Πλοήγηση προς Σημείο Παραλαβής';
+        } else {
+          primaryBtn.textContent = '🧭 Πλοήγηση προς Ξενοδοχείο';
+        }
         primaryBtn.className = 'btn btn-navigate';
         primaryBtn.disabled = false;
         primaryBtn.style.cssText = '';
@@ -119,8 +123,12 @@
         break;
 
       case 'arrived':
-        // After "arrived" is pressed, primary becomes "navigate to destination"
-        primaryBtn.textContent = '🧭 Πλοήγηση προς Τελικό Προορισμό';
+        // After "arrived" is pressed, primary becomes navigate to final point
+        if (tripData && tripData.is_arrival) {
+          primaryBtn.textContent = '🧭 Πλοήγηση προς Ξενοδοχείο';
+        } else {
+          primaryBtn.textContent = '🧭 Πλοήγηση προς Τελικό Προορισμό';
+        }
         primaryBtn.className = 'btn btn-navigate';
         primaryBtn.disabled = false;
         primaryBtn.style.cssText = '';
@@ -220,7 +228,12 @@
     // ── Section: Route ──
     var sections = [];
     sections.push({ type: 'title', text: 'Διαδρομή' });
-    sections.push({ icon: '🎯', label: 'Προορισμός', value: data.destination_name || '—' });
+    if (data.is_arrival) {
+      sections.push({ icon: '✈️', label: 'Παραλαβή', value: data.destination_name || '—' });
+      sections.push({ icon: '🏨', label: 'Προορισμός', value: data.hotel_name || '—' });
+    } else {
+      sections.push({ icon: '🎯', label: 'Προορισμός', value: data.destination_name || '—' });
+    }
     sections.push({ icon: '🚘', label: 'Όχημα', value: data.vehicle_name || '—' });
     sections.push({ icon: '⏰', label: 'Χρόνος', value: schedule || tariffLabel });
     sections.push({ icon: '💳', label: 'Πληρωμή', value: data.payment_method === 'pos' ? 'POS' : 'Μετρητά' });
@@ -242,8 +255,14 @@
     if (data.passenger_name) {
       sections.push({ icon: '👤', label: 'Όνομα', value: data.passenger_name });
     }
+    if (data.flight_number) {
+      sections.push({ icon: '🛫', label: 'Δρομολόγιο', value: data.flight_number });
+    }
     if (data.room_number) {
       sections.push({ icon: '🚪', label: 'Δωμάτιο', value: data.room_number });
+    }
+    if (data.notes) {
+      sections.push({ icon: '📝', label: 'Σημειώσεις', value: data.notes });
     }
     sections.push({ icon: '👥', label: 'Άτομα', value: data.passengers || '—' });
     var luggageParts = [];
@@ -279,7 +298,7 @@
         '<div class="pc-value">€' + price.toFixed(0) + '</div>' +
       '</div>' +
       '<div class="price-card hotel">' +
-        '<div class="pc-label">🏨 Ξενοδόχος</div>' +
+        '<div class="pc-label">🏨 Ξενοδοχείο</div>' +
         '<div class="pc-value">€' + hotelCut.toFixed(0) + '</div>' +
       '</div>' +
       '<div class="price-card service">' +
@@ -328,27 +347,46 @@
       }
 
     } else if (uiState === 'accepted') {
-      // ── NAVIGATE TO HOTEL ──
-      // Use hotel address for navigation (hotels don't have lat/lng yet)
-      var hotelAddr = '';
-      if (tripData.hotel_name) hotelAddr += tripData.hotel_name;
-      if (tripData.hotel_address) hotelAddr += ', ' + tripData.hotel_address;
-      if (tripData.hotel_municipality) hotelAddr += ', ' + tripData.hotel_municipality;
-      openNavigation(null, null, hotelAddr || 'Athens');
+      // ── NAVIGATE TO FIRST POINT ──
+      if (tripData.is_arrival) {
+        // Arrival: navigate to destination (airport/port) first
+        openNavigation(
+          tripData.destination_lat,
+          tripData.destination_lng,
+          tripData.destination_name
+        );
+      } else {
+        // Departure: navigate to hotel first
+        var hotelAddr = '';
+        if (tripData.hotel_name) hotelAddr += tripData.hotel_name;
+        if (tripData.hotel_address) hotelAddr += ', ' + tripData.hotel_address;
+        if (tripData.hotel_municipality) hotelAddr += ', ' + tripData.hotel_municipality;
+        openNavigation(null, null, hotelAddr || 'Athens');
+      }
 
     } else if (uiState === 'arrived') {
-      // ── NAVIGATE TO FINAL DESTINATION ──
+      // ── NAVIGATE TO SECOND POINT ──
       // Record navigating_dest_at on server (fire-and-forget)
       fetch('/api/moveathens/driver-navigating/' + token, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       }).catch(function() {});
 
-      openNavigation(
-        tripData.destination_lat,
-        tripData.destination_lng,
-        tripData.destination_name
-      );
+      if (tripData.is_arrival) {
+        // Arrival: second point is the hotel
+        var hotelAddr2 = '';
+        if (tripData.hotel_name) hotelAddr2 += tripData.hotel_name;
+        if (tripData.hotel_address) hotelAddr2 += ', ' + tripData.hotel_address;
+        if (tripData.hotel_municipality) hotelAddr2 += ', ' + tripData.hotel_municipality;
+        openNavigation(null, null, hotelAddr2 || 'Athens');
+      } else {
+        // Departure: second point is the destination
+        openNavigation(
+          tripData.destination_lat,
+          tripData.destination_lng,
+          tripData.destination_name
+        );
+      }
     }
   });
 

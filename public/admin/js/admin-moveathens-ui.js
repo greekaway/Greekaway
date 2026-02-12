@@ -289,6 +289,7 @@
     const fIconPreview = $('#maCategoryIconPreview');
     const fOrder = $('#maCategoryOrder');
     const fActive = $('#maCategoryActive');
+    const fArrival = $('#maCategoryArrival');
 
     const updateIconPreview = () => {
       const url = fIcon?.value;
@@ -315,12 +316,14 @@
         const iconDisplay = isIconUrl 
           ? `<img src="${c.icon}" alt="" class="ma-cat-icon-img">`
           : `<span class="ma-cat-icon">${c.icon || '📁'}</span>`;
+        const arrivalBadge = c.is_arrival ? '<span class="ma-badge ma-badge-arrival">↩ Άφιξη</span>' : '';
         return `
           <div class="ma-zone-card" data-id="${c.id}">
             <div class="ma-zone-card__header">
               <div class="ma-zone-card__title">
                 ${iconDisplay}
                 <h4>${c.name}</h4>
+                ${arrivalBadge}
                 <span class="ma-zone-status" data-active="${c.is_active}">${c.is_active ? 'Ενεργή' : 'Ανενεργή'}</span>
               </div>
             </div>
@@ -360,6 +363,7 @@
       if (fIconFile) fIconFile.value = '';
       fOrder.value = '0';
       fActive.checked = true;
+      if (fArrival) fArrival.checked = false;
       updateIconPreview();
       setStatus(status, '', '');
     };
@@ -372,6 +376,7 @@
       fIcon.value = cat.icon || '';
       fOrder.value = cat.display_order || 0;
       fActive.checked = cat.is_active !== false;
+      if (fArrival) fArrival.checked = cat.is_arrival === true;
       updateIconPreview();
       form.hidden = false;
     };
@@ -439,6 +444,7 @@
         icon: fIcon.value.trim(),
         display_order: parseInt(fOrder.value, 10) || 0,
         is_active: fActive.checked,
+        is_arrival: fArrival ? fArrival.checked : false,
         created_at: new Date().toISOString()
       };
 

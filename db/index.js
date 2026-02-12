@@ -485,20 +485,21 @@ const ma = {
   },
 
   async upsertDestinationCategory(data) {
-    const { id, name, icon, display_order, is_active } = data;
+    const { id, name, icon, display_order, is_active, is_arrival } = data;
     const catId = id || `dc_${Date.now()}`;
     const sql = `
-      INSERT INTO ma_destination_categories (id, name, icon, display_order, is_active)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO ma_destination_categories (id, name, icon, display_order, is_active, is_arrival)
+      VALUES ($1, $2, $3, $4, $5, $6)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         icon = EXCLUDED.icon,
         display_order = EXCLUDED.display_order,
         is_active = EXCLUDED.is_active,
+        is_arrival = EXCLUDED.is_arrival,
         updated_at = NOW()
       RETURNING *
     `;
-    const rows = await query(sql, [catId, name, icon || '', display_order || 0, is_active ?? true]);
+    const rows = await query(sql, [catId, name, icon || '', display_order || 0, is_active ?? true, is_arrival ?? false]);
     return rows[0];
   },
 
@@ -691,20 +692,20 @@ const ma = {
         id, origin_zone_id, origin_zone_name, hotel_name, hotel_address, hotel_municipality,
         destination_id, destination_name, vehicle_type_id, vehicle_name,
         tariff, booking_type, scheduled_date, scheduled_time,
-        passenger_name, room_number, passengers, luggage_large, luggage_medium, luggage_cabin,
+        passenger_name, room_number, notes, flight_number, passengers, luggage_large, luggage_medium, luggage_cabin,
         payment_method, price, commission_driver, commission_hotel, commission_service,
-        status, accept_token, orderer_phone
+        status, accept_token, orderer_phone, is_arrival
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31
       ) RETURNING *
     `;
     const rows = await query(sql, [
       data.id, data.origin_zone_id, data.origin_zone_name || '', data.hotel_name || '', data.hotel_address || '', data.hotel_municipality || '',
       data.destination_id || '', data.destination_name || '', data.vehicle_type_id || '', data.vehicle_name || '',
       data.tariff || 'day', data.booking_type || 'instant', data.scheduled_date || '', data.scheduled_time || '',
-      data.passenger_name || '', data.room_number || '', data.passengers || 0, data.luggage_large || 0, data.luggage_medium || 0, data.luggage_cabin || 0,
+      data.passenger_name || '', data.room_number || '', data.notes || '', data.flight_number || '', data.passengers || 0, data.luggage_large || 0, data.luggage_medium || 0, data.luggage_cabin || 0,
       data.payment_method || 'cash', data.price || 0, data.commission_driver || 0, data.commission_hotel || 0, data.commission_service || 0,
-      data.status || 'pending', data.accept_token || null, data.orderer_phone || ''
+      data.status || 'pending', data.accept_token || null, data.orderer_phone || '', data.is_arrival ?? false
     ]);
     return rows[0];
   },

@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS ma_destination_categories (
     icon VARCHAR(512),
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
+    is_arrival BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -240,6 +241,8 @@ CREATE TABLE IF NOT EXISTS ma_transfer_requests (
     scheduled_time VARCHAR(10) DEFAULT '',
     passenger_name VARCHAR(200) DEFAULT '',
     room_number VARCHAR(50) DEFAULT '',
+    notes TEXT DEFAULT '',
+    flight_number VARCHAR(50) DEFAULT '',
     passengers INTEGER DEFAULT 0,
     luggage_large INTEGER DEFAULT 0,
     luggage_medium INTEGER DEFAULT 0,
@@ -253,6 +256,7 @@ CREATE TABLE IF NOT EXISTS ma_transfer_requests (
     driver_name VARCHAR(200) DEFAULT '',
     driver_phone VARCHAR(50) DEFAULT '',
     orderer_phone VARCHAR(50) DEFAULT '',
+    is_arrival BOOLEAN DEFAULT false,
     accept_token VARCHAR(100) UNIQUE,
     status VARCHAR(30) DEFAULT 'pending',
     created_at TIMESTAMPTZ DEFAULT NOW(),

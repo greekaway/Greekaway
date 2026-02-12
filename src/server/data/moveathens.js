@@ -647,6 +647,7 @@ async function getDestinationCategories(activeOnly = false) {
           icon: row.icon || '',
           display_order: row.display_order,
           is_active: row.is_active,
+          is_arrival: row.is_arrival ?? false,
           created_at: row.created_at
         }));
       }
@@ -662,7 +663,8 @@ async function getDestinationCategories(activeOnly = false) {
               name: c.name,
               icon: c.icon || '',
               display_order: c.display_order || 0,
-              is_active: c.is_active !== false
+              is_active: c.is_active !== false,
+              is_arrival: c.is_arrival ?? false
             });
           } catch (e) {
             console.error('[moveathens] Failed to migrate dest category:', c.id, e.message);
@@ -675,6 +677,7 @@ async function getDestinationCategories(activeOnly = false) {
           icon: row.icon || '',
           display_order: row.display_order,
           is_active: row.is_active,
+          is_arrival: row.is_arrival ?? false,
           created_at: row.created_at
         }));
       }
@@ -702,7 +705,8 @@ async function upsertDestinationCategory(data) {
         name: data.name,
         icon: data.icon || '',
         display_order: data.display_order || 0,
-        is_active: data.is_active !== false
+        is_active: data.is_active !== false,
+        is_arrival: data.is_arrival ?? false
       });
       console.log('[moveathens] Dest category saved to DB:', row.id);
       return {
@@ -711,6 +715,7 @@ async function upsertDestinationCategory(data) {
         icon: row.icon || '',
         display_order: row.display_order,
         is_active: row.is_active,
+        is_arrival: row.is_arrival ?? false,
         created_at: row.created_at
       };
     } catch (err) {
@@ -728,6 +733,7 @@ async function upsertDestinationCategory(data) {
     icon: data.icon || '',
     display_order: data.display_order || 0,
     is_active: data.is_active !== false,
+    is_arrival: data.is_arrival ?? false,
     created_at: idx >= 0 ? cats[idx].created_at : new Date().toISOString()
   };
   

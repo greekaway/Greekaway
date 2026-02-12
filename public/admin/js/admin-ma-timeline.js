@@ -32,23 +32,34 @@
     return json;
   }
 
-  /* ─── Styled confirm dialog (reuses #dr-confirm shared DOM) ─── */
-  var _confirmResolve = null;
+  /* ─── Styled confirm dialog (reuses #maConfirmModal) ─── */
   function showConfirm(title, msg) {
     return new Promise(function (resolve) {
-      _confirmResolve = resolve;
-      var ov = _$('#dr-confirm');
-      _$('#dr-confirm-title').textContent = title;
-      _$('#dr-confirm-msg').textContent = msg;
-      ov.classList.remove('hidden');
-      var okBtn = _$('#dr-confirm-ok');
-      var handler = function () {
-        okBtn.removeEventListener('click', handler);
-        _confirmResolve = null;
-        _$('#dr-confirm').classList.add('hidden');
-        resolve(true);
-      };
-      okBtn.addEventListener('click', handler);
+      var root = _$('#maConfirmModal');
+      if (!root) { resolve(confirm(msg)); return; }
+      var titleEl = _$('#maConfirmTitle');
+      var msgEl   = _$('#maConfirmMessage');
+      var okBtn   = _$('#maConfirmOk');
+      var cancelBtn = _$('#maConfirmCancel');
+      if (titleEl) titleEl.textContent = title || 'Επιβεβαίωση';
+      if (msgEl) msgEl.textContent = msg || '';
+      okBtn.textContent = 'Διαγραφή';
+      root.setAttribute('data-open', 'true');
+      root.setAttribute('aria-hidden', 'false');
+      function close(result) {
+        root.removeAttribute('data-open');
+        root.setAttribute('aria-hidden', 'true');
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        root.removeEventListener('click', onBackdrop);
+        resolve(result);
+      }
+      function onOk() { close(true); }
+      function onCancel() { close(false); }
+      function onBackdrop(e) { if (e.target && e.target.matches && e.target.matches('[data-action="close"]')) close(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      root.addEventListener('click', onBackdrop);
     });
   }
 

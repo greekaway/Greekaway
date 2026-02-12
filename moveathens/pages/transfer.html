@@ -27,6 +27,17 @@
   <main class="ma-main">
     <!-- Step 1: Categories -->
     <section id="step-categories" class="ma-step active">
+      <!-- Destination quick-search -->
+      <div class="ma-dest-search-wrapper">
+        <label class="ma-dest-search-label" for="dest-quick-search">Αναζήτηση Προορισμού</label>
+        <div class="ma-dest-search-box">
+          <span class="ma-dest-search-icon">🔍</span>
+          <input id="dest-quick-search" class="ma-dest-search-input" type="text" placeholder="Πληκτρολογήστε προορισμό…" autocomplete="off">
+          <button id="dest-search-clear" class="ma-dest-search-clear" type="button" hidden aria-label="Καθαρισμός">✕</button>
+        </div>
+        <ul id="dest-search-results" class="ma-dest-search-results" hidden aria-live="polite"></ul>
+      </div>
+
       <h2 class="ma-step-title">Επιλέξτε Κατηγορία</h2>
       <div id="categories-grid" class="ma-categories-grid" aria-live="polite">
         <div class="ma-loading">Φόρτωση...</div>
@@ -49,12 +60,12 @@
       <div class="ma-tariff-grid">
         <button class="ma-tariff-card" data-tariff="day" type="button">
           <span class="ma-tariff-icon">☀️</span>
-          <span class="ma-tariff-name">Ημερήσια Ταρίφα</span>
+          <span class="ma-tariff-name">Ημερήσια Χρέωση</span>
           <span class="ma-tariff-hours">05:00 - 00:00</span>
         </button>
         <button class="ma-tariff-card" data-tariff="night" type="button">
           <span class="ma-tariff-icon">🌙</span>
-          <span class="ma-tariff-name">Νυχτερινή Ταρίφα</span>
+          <span class="ma-tariff-name">Νυχτερινή Χρέωση</span>
           <span class="ma-tariff-hours">00:00 - 05:00</span>
         </button>
       </div>
@@ -129,7 +140,7 @@
           <span id="confirm-destination" class="ma-confirm-value"></span>
         </div>
         <div class="ma-confirm-row">
-          <span class="ma-confirm-label">Ταρίφα:</span>
+          <span class="ma-confirm-label">Χρέωση:</span>
           <span id="confirm-tariff" class="ma-confirm-value"></span>
         </div>
         <div class="ma-confirm-row">
@@ -158,7 +169,18 @@
             <span id="passenger-name-required" class="ma-input-required" hidden>*</span>
           </label>
           <input type="text" id="passenger-name" class="ma-text-input" placeholder="π.χ. Γιάννης Παπαδόπουλος" autocomplete="name">
-          <p id="passenger-name-error" class="ma-input-error" hidden>Το ονοματεπώνυμο είναι υποχρεωτικό για αυτό το όχημα</p>
+          <p id="passenger-name-error" class="ma-input-error" hidden>Το ονοματεπώνυμο είναι υποχρεωτικό</p>
+        </div>
+
+        <!-- Flight Number (arrival only — required) -->
+        <div class="ma-input-row" id="flight-number-row" hidden>
+          <label for="flight-number" class="ma-input-label">
+            <span class="ma-input-icon">🛫</span>
+            <span>Αριθμός Δρομολογίου</span>
+            <span id="flight-number-required" class="ma-input-required">*</span>
+          </label>
+          <input type="text" id="flight-number" class="ma-text-input" placeholder="π.χ. FR4521, BLUESTAR 3" maxlength="30" autocomplete="off">
+          <p id="flight-number-error" class="ma-input-error" hidden>Ο αριθμός δρομολογίου είναι υποχρεωτικός για αφίξεις</p>
         </div>
 
         <!-- Room Number (optional) -->
@@ -168,6 +190,16 @@
             <span>Αριθμός Δωματίου</span>
           </label>
           <input type="text" id="room-number" class="ma-text-input" placeholder="π.χ. 304" maxlength="20" autocomplete="off">
+          <p class="ma-selection-hint" style="margin-top:4px">💡 Προαιρετικό</p>
+        </div>
+
+        <!-- Notes (optional) -->
+        <div class="ma-input-row">
+          <label for="booking-notes" class="ma-input-label">
+            <span class="ma-input-icon">📝</span>
+            <span>Σημειώσεις</span>
+          </label>
+          <textarea id="booking-notes" class="ma-text-input ma-textarea-notes" placeholder="π.χ. Ο επιβάτης θα περιμένει στη ρεσεψιόν, χρειάζεται παιδικό κάθισμα κ.λπ." maxlength="500" rows="3"></textarea>
           <p class="ma-selection-hint" style="margin-top:4px">💡 Προαιρετικό</p>
         </div>
         

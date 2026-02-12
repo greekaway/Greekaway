@@ -170,6 +170,69 @@
     border-bottom-color: #e0e0e0 !important;
   }
 
+  /* ========================================
+     DESTINATION QUICK-SEARCH
+     ======================================== */
+  .ma-transfer-page .ma-dest-search-label {
+    color: #e8edf3 !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    color: #f0f4f8 !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-input:focus {
+    border-color: #46d3ff !important;
+    box-shadow: 0 0 0 3px rgba(70, 211, 255, 0.2) !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-clear {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-clear:hover {
+    color: #e8edf3 !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-results {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-results li {
+    color: #e8edf3 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-results li:hover,
+  .ma-transfer-page .ma-dest-search-results li:focus {
+    background: rgba(70, 211, 255, 0.1) !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-results li:active {
+    background: rgba(70, 211, 255, 0.18) !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-result-name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-result-cat {
+    color: #8896a6 !important;
+  }
+
+  .ma-transfer-page .ma-dest-search-results .ma-dest-search-empty {
+    color: #8896a6 !important;
+  }
+
   /* Categories grid */
   .ma-transfer-page .ma-category-card {
     background: linear-gradient(145deg, #132742 0%, #132742 100%) !important;

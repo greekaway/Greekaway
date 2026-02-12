@@ -411,7 +411,8 @@ async function migrateMoveAthens() {
           name: cat.name,
           icon: cat.icon,
           display_order: cat.display_order,
-          is_active: cat.is_active
+          is_active: cat.is_active,
+          is_arrival: cat.is_arrival ?? false
         });
         console.log(`      ✅ ${cat.name} - migrated`);
         stats.destCategories.migrated++;

@@ -88,6 +88,8 @@ async function createRequest(data) {
     scheduled_time: data.scheduled_time || '',
     passenger_name: data.passenger_name || '',
     room_number: data.room_number || '',
+    notes: data.notes || '',
+    flight_number: data.flight_number || '',
     passengers: parseInt(data.passengers, 10) || 0,
     luggage_large: parseInt(data.luggage_large, 10) || 0,
     luggage_medium: parseInt(data.luggage_medium, 10) || 0,

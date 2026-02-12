@@ -62,10 +62,6 @@
     if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) modal.classList.add('hidden'); });
     var payBtn = _$('#dm-pay-btn');
     if (payBtn) payBtn.addEventListener('click', recordPayment);
-    var cancelBtn = _$('#dr-confirm-cancel');
-    if (cancelBtn) cancelBtn.addEventListener('click', closeConfirm);
-    var overlay = _$('#dr-confirm');
-    if (overlay) overlay.addEventListener('click', function (e) { if (e.target === overlay) closeConfirm(); });
   }
 
   /* ─── lazy init ─── */
@@ -119,29 +115,36 @@
   }, 200);
 
   /* ═══════════════════════════════════════════
-     STYLED CONFIRM DIALOG
+     STYLED CONFIRM DIALOG (uses #maConfirmModal)
      ═══════════════════════════════════════════ */
-  var _confirmResolve = null;
   function showConfirm(title, msg) {
     return new Promise(function (resolve) {
-      _confirmResolve = resolve;
-      var ov = _$('#dr-confirm');
-      _$('#dr-confirm-title').textContent = title;
-      _$('#dr-confirm-msg').textContent = msg;
-      ov.classList.remove('hidden');
-      var okBtn = _$('#dr-confirm-ok');
-      var handler = function () {
-        okBtn.removeEventListener('click', handler);
-        _confirmResolve = null;
-        _$('#dr-confirm').classList.add('hidden');
-        resolve(true);
-      };
-      okBtn.addEventListener('click', handler);
+      var root = _$('#maConfirmModal');
+      if (!root) { resolve(confirm(msg)); return; }
+      var titleEl = _$('#maConfirmTitle');
+      var msgEl   = _$('#maConfirmMessage');
+      var okBtn   = _$('#maConfirmOk');
+      var cancelBtn = _$('#maConfirmCancel');
+      if (titleEl) titleEl.textContent = title || 'Επιβεβαίωση';
+      if (msgEl) msgEl.textContent = msg || '';
+      okBtn.textContent = 'Διαγραφή';
+      root.setAttribute('data-open', 'true');
+      root.setAttribute('aria-hidden', 'false');
+      function close(result) {
+        root.removeAttribute('data-open');
+        root.setAttribute('aria-hidden', 'true');
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        root.removeEventListener('click', onBackdrop);
+        resolve(result);
+      }
+      function onOk() { close(true); }
+      function onCancel() { close(false); }
+      function onBackdrop(e) { if (e.target && e.target.matches && e.target.matches('[data-action="close"]')) close(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      root.addEventListener('click', onBackdrop);
     });
-  }
-  function closeConfirm() {
-    _$('#dr-confirm').classList.add('hidden');
-    if (_confirmResolve) { _confirmResolve(false); _confirmResolve = null; }
   }
 
   /* ═══════════════════════════════════════════
@@ -254,13 +257,16 @@
     tbody.innerHTML = list.map(function (r) {
       var canSend = r.status === 'pending' || r.status === 'sent';
       var phoneVal = savedPhones[r.id] || r.driver_phone || '';
+      var dirIcon = r.is_arrival ? '✈️ ' : '';
+      var routeDisplay = r.is_arrival
+        ? (dirIcon + (r.destination_name || '—') + ' → ' + (r.hotel_name || '—'))
+        : ((r.hotel_name || '—') + ' → ' + (r.destination_name || '—'));
       return '<tr data-id="' + r.id + '">' +
         '<td title="' + r.id + '">' + String(r.id).slice(-6) + '</td>' +
-        '<td>' + (r.hotel_name || '—') + '</td>' +
-        '<td>' + (r.destination_name || '—') + '</td>' +
+        '<td colspan="2">' + routeDisplay + '</td>' +
         '<td>' + (r.vehicle_name || '—') + '</td>' +
         '<td>€' + parseFloat(r.price || 0).toFixed(0) + '</td>' +
-        '<td>' + (r.passenger_name || '—') + '</td>' +
+        '<td>' + (r.passenger_name || '—') + (r.flight_number ? '<br><small style="color:#6b7280">✈ ' + r.flight_number + '</small>' : '') + '</td>' +
         '<td>' + statusBadge(r.status) + '</td>' +
         '<td>' + (canSend
           ? '<input class="dr-inline-input req-phone" value="' + phoneVal + '" placeholder="+30…">'

@@ -25,6 +25,8 @@
   let selectedPaymentMethod = null; // 'cash' or 'pos'
   let passengerName = ''; // Name of passenger (required for non-taxi vehicles)
   let roomNumber = ''; // Room number (optional)
+  let bookingNotes = ''; // Notes (optional)
+  let flightNumber = ''; // Flight/ferry number (required for arrivals)
 
   // Tariff labels for UI
   const TARIFF_LABELS = {
@@ -129,7 +131,7 @@
     }
 
     categoriesGrid.innerHTML = data.categories.map(cat => `
-      <button class="ma-category-card" data-id="${cat.id}" data-name="${cat.name}">
+      <button class="ma-category-card" data-id="${cat.id}" data-name="${cat.name}" data-arrival="${cat.is_arrival ? '1' : '0'}">
         <span class="ma-category-icon">${renderCategoryIcon(cat.icon)}</span>
         <span class="ma-category-name">${cat.name}</span>
       </button>
@@ -140,7 +142,8 @@
       card.addEventListener('click', () => {
         selectedCategory = {
           id: card.dataset.id,
-          name: card.dataset.name
+          name: card.dataset.name,
+          is_arrival: card.dataset.arrival === '1'
         };
         loadDestinations();
       });
@@ -465,6 +468,8 @@
     selectedPaymentMethod = null;
     passengerName = '';
     roomNumber = '';
+    bookingNotes = '';
+    flightNumber = '';
 
     // Setup passenger name field
     const passengerNameInput = $('#passenger-name');
@@ -484,9 +489,30 @@
       passengerNameError.hidden = true;
     }
 
+    // Flight number field — show only for arrivals
+    const isArrivalCategory = selectedCategory && selectedCategory.is_arrival;
+    const flightRow = $('#flight-number-row');
+    const flightInput = $('#flight-number');
+    const flightError = $('#flight-number-error');
+    if (flightRow) flightRow.hidden = !isArrivalCategory;
+    if (flightInput) {
+      flightInput.value = '';
+      flightInput.classList.remove('ma-input-error-state');
+    }
+    if (flightError) flightError.hidden = true;
+
+    // For arrivals, passenger name is ALWAYS required (regardless of vehicle type)
+    if (isArrivalCategory && passengerNameRequired) {
+      passengerNameRequired.hidden = false;
+    }
+
     // Reset room number field
     const roomNumberInput = $('#room-number');
     if (roomNumberInput) roomNumberInput.value = '';
+
+    // Reset notes field
+    const notesInput = $('#booking-notes');
+    if (notesInput) notesInput.value = '';
 
     // Update max values display
     $('#passengers-max').textContent = `(μέγ. ${selectedVehicle.max_passengers})`;
@@ -511,6 +537,12 @@
 
     // Setup room number input listener
     setupRoomNumberListener();
+
+    // Setup notes listener
+    setupNotesListener();
+
+    // Setup flight number listener
+    setupFlightNumberListener();
 
     // Reset button states
     updateCounterButtons();
@@ -630,15 +662,76 @@
     });
   };
 
-  // Validate passenger name before allowing CTA actions (for non-taxi only)
+  // Setup notes input listener
+  const setupNotesListener = () => {
+    const input = $('#booking-notes');
+    if (!input) return;
+    
+    // Clone to remove old listeners
+    const newInput = input.cloneNode(true);
+    input.parentNode.replaceChild(newInput, input);
+    
+    newInput.addEventListener('input', (e) => {
+      bookingNotes = e.target.value.trim();
+      updateCtaLinks();
+    });
+  };
+
+  // Setup flight number input listener
+  const setupFlightNumberListener = () => {
+    const input = $('#flight-number');
+    const errorEl = $('#flight-number-error');
+    if (!input) return;
+
+    const newInput = input.cloneNode(true);
+    input.parentNode.replaceChild(newInput, input);
+
+    newInput.addEventListener('input', (e) => {
+      flightNumber = e.target.value.trim();
+      newInput.classList.remove('ma-input-error-state');
+      if (errorEl) errorEl.hidden = true;
+      updateCtaLinks();
+    });
+
+    newInput.addEventListener('blur', () => {
+      const isArrival = selectedCategory && selectedCategory.is_arrival;
+      if (isArrival && !flightNumber) {
+        newInput.classList.add('ma-input-error-state');
+        if (errorEl) errorEl.hidden = false;
+      }
+    });
+  };
+
+  // Validate passenger name before allowing CTA actions
   const validatePassengerName = () => {
     const isNonTaxi = selectedVehicle && !selectedVehicle.allow_instant;
-    if (!isNonTaxi) return true; // Taxi vehicles don't require name
+    const isArrival = selectedCategory && selectedCategory.is_arrival;
+    // Required for non-taxi vehicles OR for arrivals
+    if (!isNonTaxi && !isArrival) return true;
     
     const input = $('#passenger-name');
     const errorEl = $('#passenger-name-error');
     
     if (!passengerName) {
+      if (input) {
+        input.classList.add('ma-input-error-state');
+        input.focus();
+      }
+      if (errorEl) errorEl.hidden = false;
+      return false;
+    }
+    return true;
+  };
+
+  // Validate flight number (required for arrivals)
+  const validateFlightNumber = () => {
+    const isArrival = selectedCategory && selectedCategory.is_arrival;
+    if (!isArrival) return true;
+
+    const input = $('#flight-number');
+    const errorEl = $('#flight-number-error');
+
+    if (!flightNumber) {
       if (input) {
         input.classList.add('ma-input-error-state');
         input.focus();
@@ -708,6 +801,12 @@
       const paymentLabel = selectedPaymentMethod === 'cash' ? 'Μετρητά' : 'POS';
       travelDetails += `💳 Πληρωμή: ${paymentLabel}\n`;
     }
+    if (flightNumber) {
+      travelDetails += `🛫 Αρ. Δρομολογίου: ${flightNumber}\n`;
+    }
+    if (bookingNotes) {
+      travelDetails += `📝 Σημειώσεις: ${bookingNotes}\n`;
+    }
 
     // Get tariff label
     const tariffLabel = TARIFF_LABELS[selectedTariff] || selectedTariff;
@@ -729,7 +828,15 @@
 
     // Build message content — ordered: destination, time, vehicle, hotel, passenger details, price
     const parts = [];
-    parts.push(`🎯 Προορισμός: ${selectedDestination.name}`);
+    const isArrival = selectedCategory && selectedCategory.is_arrival;
+    if (isArrival) {
+      // Arrival: pickup FROM destination → hotel
+      parts.push(`✈️ Άφιξη - Παραλαβή: ${selectedDestination.name}`);
+      parts.push(`🏨 Προορισμός: ${hotelName}`);
+    } else {
+      // Departure: hotel → destination (default)
+      parts.push(`🎯 Προορισμός: ${selectedDestination.name}`);
+    }
     if (bookingTimeText) parts.push(`⏰ Χρόνος: ${bookingTimeText}`);
     parts.push(`🚗 Όχημα: ${selectedVehicle.name}`);
     parts.push('');
@@ -777,9 +884,12 @@
         luggage_cabin:     selectedLuggageCabin || 0,
         passenger_name:    passengerName || '',
         room_number:       roomNumber || '',
+        notes:             bookingNotes || '',
+        flight_number:     flightNumber || '',
         price:             selectedVehicle.price || 0,
         payment_method:    selectedPaymentMethod || 'cash',
-        orderer_phone:     hotelContext.orderer_phone || hotelContext.phone || ''
+        orderer_phone:     hotelContext.orderer_phone || hotelContext.phone || '',
+        is_arrival:        selectedCategory?.is_arrival || false
       };
       await fetch('/api/moveathens/transfer-request', {
         method: 'POST',
@@ -804,6 +914,11 @@
       // Remove existing validation listeners by setting onclick
       link.onclick = (e) => {
         if (!validatePassengerName()) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        if (!validateFlightNumber()) {
           e.preventDefault();
           e.stopPropagation();
           return false;
@@ -865,6 +980,82 @@
   };
 
   // ========================================
+  // DESTINATION QUICK-SEARCH
+  // ========================================
+  let allDestinations = []; // cached list for search
+  let cameFromSearch = false; // track if user bypassed categories via search
+
+  const initDestinationSearch = async () => {
+    const searchInput = $('#dest-quick-search');
+    const clearBtn = $('#dest-search-clear');
+    const resultsList = $('#dest-search-results');
+    if (!searchInput || !resultsList) return;
+
+    // Fetch ALL active destinations (no category filter)
+    const data = await api('/api/moveathens/destinations');
+    if (!data?.destinations) return;
+    allDestinations = data.destinations;
+
+    // Build a category-id → name map from CONFIG
+    const catMap = {};
+    (CONFIG?.destinationCategories || []).forEach(c => { catMap[c.id] = c.name; });
+
+    const showResults = (items, query) => {
+      if (!items.length) {
+        resultsList.innerHTML = `<li class="ma-dest-search-empty">Δεν βρέθηκε προορισμός για «${query}»</li>`;
+        resultsList.hidden = false;
+        return;
+      }
+      resultsList.innerHTML = items.map(d => `
+        <li data-id="${d.id}" data-name="${d.name}">
+          <span class="ma-dest-search-result-name">${d.name}</span>
+          ${catMap[d.category_id] ? `<span class="ma-dest-search-result-cat">${catMap[d.category_id]}</span>` : ''}
+        </li>
+      `).join('');
+      resultsList.hidden = false;
+
+      // Click handlers
+      resultsList.querySelectorAll('li[data-id]').forEach(li => {
+        li.addEventListener('click', () => {
+          selectedDestination = { id: li.dataset.id, name: li.dataset.name };
+          cameFromSearch = true;
+          // Clear search UI
+          searchInput.value = '';
+          clearBtn.hidden = true;
+          resultsList.hidden = true;
+          // Skip straight to tariff selection
+          showTariffSelection();
+        });
+      });
+    };
+
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      clearBtn.hidden = !q;
+      if (!q) { resultsList.hidden = true; return; }
+      const filtered = allDestinations.filter(d =>
+        d.name.toLowerCase().includes(q) ||
+        (d.description || '').toLowerCase().includes(q)
+      );
+      showResults(filtered, searchInput.value.trim());
+    });
+
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      clearBtn.hidden = true;
+      resultsList.hidden = true;
+      searchInput.focus();
+    });
+
+    // Close results when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.ma-dest-search-wrapper')) {
+        resultsList.hidden = true;
+      }
+    });
+  };
+
+  // ========================================
   // INIT
   // ========================================
   const init = async () => {
@@ -901,17 +1092,25 @@
     // Show categories
     await renderCategories();
 
+    // Init quick-search for destinations
+    await initDestinationSearch();
+
     // Back buttons
     $('#back-to-categories')?.addEventListener('click', () => {
       selectedCategory = null;
       showStep('categories');
     });
 
-    // From tariff back to destinations
+    // From tariff back: if user came from search, go back to categories (where the search is)
     $('#back-to-destinations-from-tariff')?.addEventListener('click', () => {
       selectedDestination = null;
       selectedTariff = null;
-      showStep('destinations');
+      if (cameFromSearch) {
+        cameFromSearch = false;
+        showStep('categories');
+      } else {
+        showStep('destinations');
+      }
     });
 
     // From vehicles back to tariff

@@ -107,7 +107,7 @@
 }
 
 .ma-zone-form {
-  border: 1px solid rgba(9, 30, 66, 0.12);
+  border: 1px solid var(--ga-border);
   border-radius: 12px;
   padding: 14px;
   margin-bottom: 16px;
@@ -153,7 +153,7 @@
 }
 
 .ma-zone-card {
-  border: 1px solid rgba(9, 30, 66, 0.18);
+  border: 1px solid var(--ga-border);
   border-radius: 14px;
   padding: 16px 18px;
   background: var(--ga-card);
@@ -192,8 +192,8 @@
   height: 64px;
   object-fit: cover;
   border-radius: 10px;
-  border: 1px solid rgba(9, 30, 66, 0.12);
-  background: rgba(9, 30, 66, 0.04);
+  border: 1px solid var(--ga-border);
+  background: rgba(128, 128, 128, 0.08);
   display: none;
 }
 
@@ -206,8 +206,8 @@
   height: 48px;
   object-fit: cover;
   border-radius: 8px;
-  border: 1px solid rgba(9, 30, 66, 0.12);
-  background: rgba(9, 30, 66, 0.04);
+  border: 1px solid var(--ga-border);
+  background: rgba(128, 128, 128, 0.08);
 }
 
 .ma-zone-card__header {
@@ -228,13 +228,36 @@
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(21, 101, 192, 0.1);
-  color: #1b4d89;
+  background: rgba(21, 101, 192, 0.15);
+  color: #4a90d9;
 }
 
 .ma-zone-status[data-active="false"] {
-  background: rgba(196, 67, 67, 0.12);
+  background: rgba(196, 67, 67, 0.15);
+  color: #e06060;
+}
+
+html[data-theme='light'] .ma-zone-status {
+  color: #1b4d89;
+}
+
+html[data-theme='light'] .ma-zone-status[data-active="false"] {
   color: #8b2e2e;
+}
+
+.ma-badge-arrival {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 152, 0, 0.18);
+  color: #e68a00;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+html[data-theme='light'] .ma-badge-arrival {
+  background: rgba(255, 152, 0, 0.12);
+  color: #b36b00;
 }
 
 .ma-price-controls {
@@ -262,7 +285,7 @@
   grid-template-columns: minmax(100px, 1.2fr) repeat(4, minmax(70px, 1fr));
   gap: 8px;
   align-items: center;
-  border: 1px solid rgba(9, 30, 66, 0.12);
+  border: 1px solid var(--ga-border);
   border-radius: 12px;
   padding: 10px 12px;
   background: var(--ga-card);
@@ -358,7 +381,7 @@
   padding: 18px;
   width: min(92vw, 420px);
   box-shadow: 0 20px 50px rgba(5, 15, 25, 0.28);
-  border: 1px solid rgba(9, 30, 66, 0.12);
+  border: 1px solid var(--ga-border);
   display: grid;
   gap: 12px;
 }
@@ -455,7 +478,7 @@
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(9, 30, 66, 0.08);
+  background: rgba(128, 128, 128, 0.12);
   color: var(--ga-muted, #7b8794);
   text-transform: uppercase;
 }
@@ -517,7 +540,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  border: 1px solid rgba(9, 30, 66, 0.12);
+  border: 1px solid var(--ga-border);
   border-radius: 8px;
   background: var(--ga-card);
 }
@@ -551,8 +574,8 @@
   height: 48px;
   object-fit: contain;
   border-radius: 8px;
-  border: 1px solid rgba(9, 30, 66, 0.12);
-  background: rgba(9, 30, 66, 0.04);
+  border: 1px solid var(--ga-border);
+  background: rgba(128, 128, 128, 0.08);
   display: none;
 }
 
@@ -612,7 +635,7 @@
 /* Info Section Groups */
 .ma-info-section {
   background: var(--ga-bg-card, #0f1c29);
-  border: 1px solid rgba(9, 30, 66, 0.12);
+  border: 1px solid var(--ga-border);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 16px;
@@ -651,7 +674,7 @@ html[data-theme='light'] .ma-infopage-form label {
   color: var(--ga-primary, #4E6BFF);
   margin: 0 0 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(9, 30, 66, 0.08);
+  border-bottom: 1px solid var(--ga-border);
 }
 
 .ma-preview-scroll {
@@ -675,7 +698,7 @@ html[data-theme='light'] .ma-infopage-form label {
 .ma-preview-section {
   margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid rgba(9, 30, 66, 0.12);
+  border-top: 1px solid var(--ga-border);
   max-width: 800px;
 }
 
@@ -687,25 +710,25 @@ html[data-theme='light'] .ma-infopage-form label {
 }
 
 .ma-preview-box {
-  background: #fff;
-  border: 1px solid rgba(9, 30, 66, 0.12);
+  background: var(--ga-card);
+  border: 1px solid var(--ga-border);
   border-radius: 12px;
   padding: 20px;
   min-height: 150px;
   font-size: 15px;
   line-height: 1.6;
-  color: #1a2232;
+  color: var(--ga-text);
 }
 
 .ma-preview-box h2 {
-  color: #1a2232;
+  color: var(--ga-text);
   margin: 0 0 12px;
   font-size: 20px;
 }
 
 .ma-preview-box p {
   margin: 0 0 12px;
-  color: #1a2232;
+  color: var(--ga-text);
 }
 
 .ma-preview-box p:last-child {
@@ -714,7 +737,7 @@ html[data-theme='light'] .ma-infopage-form label {
 
 .ma-preview-box strong {
   font-weight: 600;
-  color: #1a2232;
+  color: var(--ga-text);
 }
 
 .ma-preview-box em {
@@ -725,7 +748,7 @@ html[data-theme='light'] .ma-infopage-form label {
 .ma-preview-box ol {
   margin: 0 0 12px;
   padding-left: 20px;
-  color: #1a2232;
+  color: var(--ga-text);
 }
 
 .ma-preview-box li {
@@ -750,9 +773,9 @@ html[data-theme='light'] .ma-infopage-form label {
   z-index: 50;
   max-height: 220px;
   overflow-y: auto;
-  background: #ffffff;
-  color: #1a1a2e;
-  border: 1px solid rgba(9, 30, 66, 0.25);
+  background: var(--ga-card);
+  color: var(--ga-text);
+  border: 1px solid var(--ga-border);
   border-radius: 8px;
   box-shadow: 0 4px 14px rgba(0,0,0,.18);
 }
@@ -761,12 +784,12 @@ html[data-theme='light'] .ma-infopage-form label {
   padding: 8px 12px;
   cursor: pointer;
   font-size: 14px;
-  color: #1a1a2e;
+  color: var(--ga-text);
 }
 
 .ma-ac-item:hover {
-  background: #e8ecf1;
-  color: #0d1b2a;
+  background: rgba(128, 128, 128, 0.15);
+  color: var(--ga-text);
 }
 
 /* Hotel detail row */
@@ -782,7 +805,7 @@ html[data-theme='light'] .ma-infopage-form label {
 /* ── Hotel multi-phone management ── */
 .ma-hotel-phones {
   padding: 10px 0 0;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid var(--ga-border);
   margin-top: 6px;
 }
 .ma-hotel-phones__header {

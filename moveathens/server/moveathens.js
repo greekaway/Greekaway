@@ -194,6 +194,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     const icon = normalizeString(entry.icon || '');
     const displayOrder = toInt(entry.display_order, 0);
     const isActive = typeof entry.is_active === 'boolean' ? entry.is_active : true;
+    const isArrival = typeof entry.is_arrival === 'boolean' ? entry.is_arrival : false;
     const createdAt = normalizeString(entry.created_at) || new Date().toISOString();
     return {
       id,
@@ -201,6 +202,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       icon,
       display_order: displayOrder,
       is_active: isActive,
+      is_arrival: isArrival,
       created_at: createdAt
     };
   };
@@ -792,7 +794,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
       const categories = data.destinationCategories
         .filter(c => c.is_active)
-        .map(c => ({ id: c.id, name: c.name, icon: c.icon, display_order: c.display_order }));
+        .map(c => ({ id: c.id, name: c.name, icon: c.icon, display_order: c.display_order, is_arrival: c.is_arrival ?? false }));
       return res.json({ categories });
     } catch (err) {
       return res.status(500).json({ error: 'Categories unavailable' });

@@ -93,6 +93,8 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         scheduled_time: body.scheduled_time || '',
         passenger_name: body.passenger_name || '',
         room_number: body.room_number || '',
+        notes: body.notes || '',
+        flight_number: body.flight_number || '',
         passengers: body.passengers || 0,
         luggage_large: body.luggage_large || 0,
         luggage_medium: body.luggage_medium || 0,
@@ -102,7 +104,8 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         commission_driver: commissions ? commissions.commission_driver : 0,
         commission_hotel: commissions ? commissions.commission_hotel : 0,
         commission_service: commissions ? commissions.commission_service : 0,
-        orderer_phone: body.orderer_phone || ''
+        orderer_phone: body.orderer_phone || '',
+        is_arrival: body.is_arrival === true || body.is_arrival === 'true'
       });
 
       console.log('[ma-requests] Request created:', record.id, 'status:', record.status);
@@ -193,6 +196,8 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         scheduled_time: request.scheduled_time,
         passenger_name: request.passenger_name,
         room_number: request.room_number || '',
+        notes: request.notes || '',
+        flight_number: request.flight_number || '',
         passengers: request.passengers,
         luggage_large: request.luggage_large || 0,
         luggage_medium: request.luggage_medium || 0,
@@ -202,7 +207,8 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         commission_hotel: request.commission_hotel || 0,
         commission_service: request.commission_service,
         payment_method: request.payment_method,
-        status: request.status
+        status: request.status,
+        is_arrival: request.is_arrival ?? false
       });
     } catch (err) {
       maLogger.log('error', 'driver-view', { token: req.params.token, reason: err.message, stack: err.stack });
@@ -411,8 +417,13 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       const msg = [
         `🚗 *Νέα Διαδρομή MoveAthens*`,
         ``,
-        `🏨 ${request.hotel_name || '—'}`,
-        `🎯 ${request.destination_name || '—'}`,
+        request.is_arrival
+          ? `✈️ Άφιξη - Παραλαβή: ${request.destination_name || '—'}`
+          : `🏨 ${request.hotel_name || '—'}`,
+        request.is_arrival
+          ? `🏨 Προς: ${request.hotel_name || '—'}`
+          : `🎯 ${request.destination_name || '—'}`,
+        request.flight_number ? `🛫 Δρομολόγιο: ${request.flight_number}` : '',
         scheduleText,
         ``,
         `� Πατήστε παρακάτω για αποδοχή:`,
