@@ -1,0 +1,269 @@
+/* DriversSystem Dark Mode - System Preference Based */
+/* Does NOT affect .ds-hero-page (home/welcome page - already dark) */
+
+@media (prefers-color-scheme: dark) {
+  /* ========================================
+     PAGE BACKGROUNDS
+     ======================================== */
+  
+  /* Light background pages -> dark blue */
+  .ds-page,
+  .ds-ai-page,
+  .ds-info-page,
+  .ds-listings-page,
+  .ds-profile-page {
+    background: linear-gradient(135deg, #0d1a2d 0%, #0a1525 100%) !important;
+  }
+
+  /* Header - dark blue gradient */
+  .ds-page .ds-page-header,
+  .ds-ai-page .ds-page-header,
+  .ds-info-page .ds-page-header,
+  .ds-listings-page .ds-page-header,
+  .ds-profile-page .ds-page-header {
+    background: linear-gradient(145deg, #0f2035 0%, #0a1828 100%) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* ========================================
+     LOGO - WHITE IN DARK MODE
+     ======================================== */
+  .ds-page .ds-page-logo,
+  .ds-ai-page .ds-page-logo,
+  .ds-info-page .ds-page-logo,
+  .ds-listings-page .ds-page-logo,
+  .ds-profile-page .ds-page-logo {
+    filter: brightness(0) invert(1) !important;
+  }
+
+  /* ========================================
+     PAGE TITLES
+     ======================================== */
+  .ds-page .ds-page-title,
+  .ds-ai-page .ds-page-title,
+  .ds-info-page .ds-page-title,
+  .ds-listings-page .ds-page-title,
+  .ds-profile-page .ds-page-title {
+    color: #f0f4f8 !important;
+  }
+
+  /* ========================================
+     CARDS
+     ======================================== */
+  .ds-page .ds-card,
+  .ds-ai-page .ds-card,
+  .ds-info-page .ds-card,
+  .ds-listings-page .ds-card,
+  .ds-profile-page .ds-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* ========================================
+     TEXT COLORS - White on dark
+     ======================================== */
+  .ds-page .ds-title,
+  .ds-page .ds-muted,
+  .ds-page label,
+  .ds-ai-page .ds-title,
+  .ds-info-page .ds-title,
+  .ds-listings-page .ds-title,
+  .ds-profile-page .ds-title {
+    color: #e8edf3 !important;
+  }
+
+  /* Subtitle / muted text */
+  .ds-page .ds-subtitle,
+  .ds-ai-page .ds-subtitle,
+  .ds-info-page .ds-subtitle,
+  .ds-listings-page .ds-subtitle,
+  .ds-profile-page .ds-subtitle {
+    color: #8896a6 !important;
+  }
+
+  /* Info page content */
+  .ds-info-page .ds-info-content,
+  .ds-info-page .ds-info-content p,
+  .ds-info-page .ds-info-content li {
+    color: #d0d8e0 !important;
+  }
+
+  .ds-info-page .ds-info-content strong {
+    color: #00c896 !important;
+  }
+
+  /* ========================================
+     FORM INPUTS
+     ======================================== */
+  .ds-page .ds-input,
+  .ds-page .ds-select,
+  .ds-listings-page .ds-input,
+  .ds-listings-page .ds-select,
+  .ds-profile-page .ds-input,
+  .ds-profile-page .ds-select {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #f0f4f8 !important;
+  }
+
+  .ds-page .ds-input::placeholder,
+  .ds-listings-page .ds-input::placeholder,
+  .ds-profile-page .ds-input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .ds-page .ds-input:focus,
+  .ds-page .ds-select:focus,
+  .ds-listings-page .ds-input:focus,
+  .ds-profile-page .ds-input:focus {
+    border-color: #00c896 !important;
+    box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.2) !important;
+  }
+
+  /* ========================================
+     BUTTONS
+     ======================================== */
+  .ds-page .ds-btn-primary,
+  .ds-listings-page .ds-btn-primary,
+  .ds-profile-page .ds-btn-primary {
+    background: linear-gradient(135deg, #00c896 0%, #00a87a 100%) !important;
+    color: #fff !important;
+  }
+
+  .ds-page .ds-btn-secondary,
+  .ds-listings-page .ds-btn-secondary,
+  .ds-profile-page .ds-btn-secondary {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #e8edf3 !important;
+  }
+
+  .ds-page .ds-btn-secondary:hover,
+  .ds-listings-page .ds-btn-secondary:hover,
+  .ds-profile-page .ds-btn-secondary:hover {
+    background: linear-gradient(145deg, #1a2d4d 0%, #132540 100%) !important;
+  }
+
+  /* ========================================
+     LISTING ITEMS
+     ======================================== */
+  .ds-listings-page .ds-listing-item {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ds-listings-page .ds-listing-item:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ds-listings-page .ds-listing-title {
+    color: #e8edf3 !important;
+  }
+
+  .ds-listings-page .ds-listing-desc {
+    color: #8896a6 !important;
+  }
+
+  .ds-listings-page .ds-listing-price {
+    color: #00c896 !important;
+  }
+
+  /* ========================================
+     FOOTER - Dark glass on dark pages
+     ======================================== */
+  .ds-page .ds-footer,
+  .ds-ai-page .ds-footer,
+  .ds-info-page .ds-footer,
+  .ds-listings-page .ds-footer,
+  .ds-profile-page .ds-footer {
+    background: rgba(10, 16, 28, 0.45) !important;
+    backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32), 0 0 18px rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ds-page .ds-footer__item,
+  .ds-ai-page .ds-footer__item,
+  .ds-info-page .ds-footer__item,
+  .ds-listings-page .ds-footer__item,
+  .ds-profile-page .ds-footer__item {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  .ds-page .ds-footer__item.active,
+  .ds-ai-page .ds-footer__item.active,
+  .ds-info-page .ds-footer__item.active,
+  .ds-listings-page .ds-footer__item.active,
+  .ds-profile-page .ds-footer__item.active {
+    color: rgba(0, 200, 150, 0.98) !important;
+    background: rgba(0, 200, 150, 0.12) !important;
+    box-shadow: 0 0 24px rgba(0, 200, 150, 0.45), 0 10px 24px rgba(0, 0, 0, 0.35) !important;
+  }
+
+  /* Footer icons in dark mode */
+  .ds-page .ds-footer__icon svg,
+  .ds-ai-page .ds-footer__icon svg,
+  .ds-info-page .ds-footer__icon svg,
+  .ds-listings-page .ds-footer__icon svg,
+  .ds-profile-page .ds-footer__icon svg {
+    filter: brightness(0) invert(1);
+    opacity: 0.85;
+  }
+
+  .ds-page .ds-footer__item.active .ds-footer__icon svg,
+  .ds-ai-page .ds-footer__item.active .ds-footer__icon svg,
+  .ds-info-page .ds-footer__item.active .ds-footer__icon svg,
+  .ds-listings-page .ds-footer__item.active .ds-footer__icon svg,
+  .ds-profile-page .ds-footer__item.active .ds-footer__icon svg {
+    filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(135deg);
+    opacity: 1;
+  }
+
+  /* ========================================
+     PROFILE PAGE
+     ======================================== */
+  .ds-profile-page .ds-profile-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ds-profile-page .ds-profile-name {
+    color: #e8edf3 !important;
+  }
+
+  .ds-profile-page .ds-profile-email {
+    color: #8896a6 !important;
+  }
+
+  .ds-profile-page .ds-profile-stat {
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ds-profile-page .ds-profile-stat-value {
+    color: #00c896 !important;
+  }
+
+  .ds-profile-page .ds-profile-stat-label {
+    color: #8896a6 !important;
+  }
+
+  /* ========================================
+     LOADING & EMPTY STATES
+     ======================================== */
+  .ds-page .ds-loading,
+  .ds-page .ds-empty,
+  .ds-listings-page .ds-loading,
+  .ds-listings-page .ds-empty {
+    color: #8896a6 !important;
+  }
+
+  /* ========================================
+     FINANCIAL CARDS on welcome (already dark bg)
+     These look great by default, but ensure
+     contrast in light-mode OS with dark site
+     ======================================== */
+  /* No overrides needed — welcome page is always dark */
+}

@@ -1,0 +1,127 @@
+:root {
+  --ds-bg: #0b0f1a;
+  --ds-surface: #141a2a;
+  --ds-card: #1c2438;
+  --ds-text: #f7f7fb;
+  --ds-muted: #b2b8c7;
+  --ds-accent: #00c896;
+  --ds-accent-light: #33d4a8;
+  --ds-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  --ds-radius: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--ds-bg);
+  color: var(--ds-text);
+  min-height: 100vh;
+  padding-bottom: 86px;
+}
+
+.ds-page,
+.ds-ai-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.ds-hero-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.ds-main {
+  padding: 20px 18px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ds-card {
+  background: var(--ds-card);
+  border-radius: var(--ds-radius);
+  padding: 18px;
+  box-shadow: var(--ds-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ds-title {
+  font-size: 22px;
+  margin: 0;
+}
+
+.ds-subtitle {
+  font-size: 16px;
+  margin: 0;
+  color: var(--ds-muted);
+}
+
+img, video {
+  max-width: 100%;
+}
+
+a {
+  color: var(--ds-accent);
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ds-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+}
+
+/* ========================================
+   LIGHT MODE — Base overrides
+   ======================================== */
+@media (prefers-color-scheme: light) {
+  :root {
+    --ds-bg: #f5f7fa;
+    --ds-surface: #ffffff;
+    --ds-card: #ffffff;
+    --ds-text: #1a2232;
+    --ds-muted: #6b7280;
+    --ds-accent: #059669;
+    --ds-accent-light: #10b981;
+    --ds-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  body {
+    background: var(--ds-bg);
+    color: var(--ds-text);
+  }
+
+  .ds-card {
+    background: var(--ds-card);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: var(--ds-shadow);
+  }
+
+  a {
+    color: var(--ds-accent);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f0f0f0;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.18);
+  }
+}

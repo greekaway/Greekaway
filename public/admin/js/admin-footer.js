@@ -8,13 +8,15 @@
   const currentPath = window.location.pathname;
 
   // Detect which section we're in
-  const isMoveathensPage = currentPath.includes('moveathens');
+  const isDriversSystemPage = currentPath.includes('driverssystem');
+  const isMoveathensPage = currentPath.includes('moveathens') && !isDriversSystemPage;
   const isHomePage = currentPath.includes('admin-home');
-  const isGreekawayPage = !isHomePage && !isMoveathensPage;
+  const isGreekawayPage = !isHomePage && !isMoveathensPage && !isDriversSystemPage;
 
   // Default landing pages for each project
   const greekawayDefault = '/admin-bookings.html';
   const moveathensDefault = '/admin/moveathens-ui';
+  const driverssystemDefault = '/admin/driverssystem-ui';
 
   function createFooter() {
     // Create the simple bottom-nav (same as original)
@@ -24,6 +26,7 @@
       <a href="/admin-home.html"${isHomePage ? ' class="active"' : ''}>Home</a>
       <a href="${greekawayDefault}"${isGreekawayPage ? ' class="active"' : ''}>Greekaway</a>
       <a href="${moveathensDefault}"${isMoveathensPage ? ' class="active"' : ''}>MoveAthens</a>
+      <a href="${driverssystemDefault}"${isDriversSystemPage ? ' class="active"' : ''}>DriversSystem</a>
     `;
 
     // Create version footer

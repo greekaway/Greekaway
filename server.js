@@ -481,6 +481,7 @@ const STEP3_PAGE_FILE = path.join(__dirname, 'public', 'step3.html');
 const ADMIN_HOME_FILE = path.join(__dirname, 'public', 'admin-home.html');
 const ADMIN_MOVEATHENS_UI_FILE = path.join(__dirname, 'public', 'admin', 'pages', 'admin-moveathens-ui.html');
 const ADMIN_MA_DRIVERS_FILE = path.join(__dirname, 'public', 'admin', 'pages', 'admin-ma-drivers.html');
+const ADMIN_DRIVERSSYSTEM_UI_FILE = path.join(__dirname, 'public', 'admin', 'pages', 'admin-driverssystem-ui.html');
 const LOCAL_UPLOADS_DIR = path.join(__dirname, 'uploads');
 const UPLOADS_DIR = process.env.RENDER ? getUploadsRoot() : (ensureDir(LOCAL_UPLOADS_DIR) || LOCAL_UPLOADS_DIR);
 
@@ -1340,6 +1341,10 @@ require('./moveathens/server/moveathens-hotel-revenue')(app, { checkAdminAuth })
 require('./moveathens/server/moveathens-driver-timeline')(app, { checkAdminAuth });
 console.log('MoveAthens requests/drivers/hotel-revenue/timeline routes loaded');
 
+// DriversSystem (isolated subsystem)
+require('./driverssystem/server/driverssystem')(app, { isDev: IS_DEV, checkAdminAuth });
+console.log('DriversSystem routes loaded');
+
 // Auto-expire + driver-accept page now live inside moveathens-requests.js
 
 // MoveAthens AI Assistant
@@ -1393,6 +1398,15 @@ app.get('/admin/moveathens-ui', (req, res) => {
     return res.redirect(`/admin-home.html?next=${nextUrl}`);
   }
   try { return res.sendFile(ADMIN_MOVEATHENS_UI_FILE); }
+  catch (_) { return res.status(404).send('Not found'); }
+});
+
+app.get('/admin/driverssystem-ui', (req, res) => {
+  if (!checkAdminAuth(req)) {
+    const nextUrl = encodeURIComponent(req.originalUrl || '/admin/driverssystem-ui');
+    return res.redirect(`/admin-home.html?next=${nextUrl}`);
+  }
+  try { return res.sendFile(ADMIN_DRIVERSSYSTEM_UI_FILE); }
   catch (_) { return res.status(404).send('Not found'); }
 });
 

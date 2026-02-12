@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DriversSystem</title>
+    <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
+    <link rel="preload" href="/driverssystem/css/welcome.css" as="style" />
+    <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
+    <link rel="stylesheet" href="/driverssystem/css/footer.css" />
+    <link rel="stylesheet" href="/driverssystem/css/welcome.css" />
+    <link rel="stylesheet" href="/driverssystem/css/dark-mode.css" />
+  </head>
+  <body class="ds-hero-page">
+    <main class="ds-hero-stage">
+      <section class="ds-hero">
+        <div class="ds-hero__scrim"></div>
+        <div class="ds-hero__overlay">
+          <img class="ds-hero__logo" data-ds-hero-logo alt="DriversSystem" style="display:none" />
+          <div class="ds-hero__text-group">
+            <h1 class="ds-hero__headline" data-ds-hero-headline></h1>
+            <p class="ds-hero__subtext" data-ds-hero-subtext></p>
+          </div>
+        </div>
+
+        <!-- Financial summary cards -->
+        <div class="ds-financials" data-ds-financials></div>
+        <div class="ds-financials-empty" data-ds-financials-empty style="display:none">
+          Δεν υπάρχουν οικονομικά στοιχεία
+        </div>
+      </section>
+    </main>
+
+    <div data-ds-footer-slot></div>
+
+    <script src="/driverssystem/js/driverssystem-config.js"></script>
+    <script src="/driverssystem/js/footer.js"></script>
+    <script src="/driverssystem/js/welcome.js"></script>
+  </body>
+</html>

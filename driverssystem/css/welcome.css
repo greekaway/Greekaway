@@ -1,0 +1,247 @@
+.ds-hero-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.ds-hero-stage {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+}
+
+.ds-hero {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  background: linear-gradient(160deg, #0b1120 0%, #0d1b2a 35%, #102030 65%, #0b0f1a 100%);
+}
+
+.ds-hero__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.55) 100%);
+}
+
+.ds-hero__overlay {
+  position: absolute !important;
+  top: 0; left: 0; right: 0;
+  z-index: 3;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  padding: 16px !important;
+  box-sizing: border-box !important;
+  pointer-events: none;
+}
+
+.ds-hero__logo {
+  width: 110px !important;
+  max-width: 110px !important;
+  min-width: 110px !important;
+  height: auto !important;
+  flex-shrink: 0 !important;
+  display: block !important;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+  background: transparent;
+  margin-top: -28px !important;
+}
+
+/* Dark mode (system default = dark bg) → brighten logo so \"Driver\" + car show white,
+   \"System\" text stays its lighter shade but boosted for contrast */
+@media (prefers-color-scheme: dark) {
+  .ds-hero__logo {
+    filter: brightness(3) contrast(0.85) drop-shadow(0 2px 10px rgba(0,0,0,0.4)) !important;
+  }
+}
+
+.ds-hero__text-group {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  text-align: right !important;
+  padding-left: 12px !important;
+  gap: 2px;
+}
+
+.ds-hero__headline {
+  font-size: 20px;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  text-shadow: 0 0 26px rgba(255,255,255,0.9), 0 0 52px rgba(255,255,255,0.65), 0 2px 6px rgba(0,0,0,0.85);
+}
+
+.ds-hero__subtext {
+  font-size: 13px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  text-shadow: 0 0 22px rgba(255,255,255,0.8), 0 0 40px rgba(255,255,255,0.55), 0 2px 6px rgba(0,0,0,0.85);
+}
+
+/* ── Financial summary cards on welcome page ── */
+.ds-financials {
+  position: absolute;
+  bottom: 110px;
+  left: 16px;
+  right: 16px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.ds-fin-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 14px;
+  text-align: center;
+}
+
+.ds-fin-card__label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.ds-fin-card__value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ds-fin-card__value.positive {
+  color: var(--ds-accent, #00c896);
+}
+
+.ds-fin-card__value.negative {
+  color: #ff6b6b;
+}
+
+.ds-financials-empty {
+  position: absolute;
+  bottom: 140px;
+  left: 16px;
+  right: 16px;
+  z-index: 4;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+}
+
+@media (max-width: 380px) {
+  .ds-hero__headline {
+    font-size: 17px !important;
+  }
+  .ds-hero__subtext {
+    font-size: 11px !important;
+  }
+  .ds-hero__logo {
+    width: 90px !important;
+    max-width: 90px !important;
+    min-width: 90px !important;
+  }
+  .ds-financials {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ========================================
+   LIGHT MODE — Welcome Page
+   ======================================== */
+@media (prefers-color-scheme: light) {
+
+  .ds-hero {
+    background: linear-gradient(160deg, #f0f4f8 0%, #e8eef5 35%, #dfe7f0 65%, #f5f7fa 100%) !important;
+  }
+
+  .ds-hero__scrim {
+    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.25) 55%, rgba(255,255,255,0.4) 100%) !important;
+  }
+
+  /* Text — dark on light */
+  .ds-hero__headline {
+    color: #1a2232 !important;
+    text-shadow: none !important;
+  }
+
+  .ds-hero__subtext {
+    color: #4a5568 !important;
+    text-shadow: none !important;
+  }
+
+  /* Logo — no white glow */
+  .ds-hero__logo {
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15)) !important;
+  }
+
+  /* Financial cards — light glass */
+  .ds-fin-card {
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .ds-fin-card__label {
+    color: #6b7280 !important;
+  }
+
+  .ds-fin-card__value {
+    color: #1a2232 !important;
+  }
+
+  .ds-fin-card__value.positive {
+    color: #059669 !important;
+  }
+
+  .ds-fin-card__value.negative {
+    color: #dc2626 !important;
+  }
+
+  .ds-financials-empty {
+    color: rgba(0, 0, 0, 0.4) !important;
+  }
+
+  /* Footer — light glass on light page */
+  .ds-hero-page .ds-footer {
+    background: rgba(255, 255, 255, 0.82) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .ds-hero-page .ds-footer__item {
+    color: #4a5568 !important;
+  }
+
+  .ds-hero-page .ds-footer__item.active {
+    color: #059669 !important;
+    background: rgba(5, 150, 105, 0.1) !important;
+    box-shadow: 0 0 12px rgba(5, 150, 105, 0.2) !important;
+  }
+
+  /* Footer icons — dark in light mode */
+  .ds-hero-page .ds-footer__icon svg {
+    filter: none !important;
+    opacity: 0.7;
+  }
+
+  .ds-hero-page .ds-footer__item.active .ds-footer__icon svg {
+    filter: none !important;
+    opacity: 1;
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "heroHeadline": "DriversSystem",
+  "heroSubtext": "Διαχείριση Οδηγών & Freelancers",
+  "heroLogoUrl": "/uploads/driverssystem/hero-logo-1770880148307.PNG",
+  "footerLabels": {
+    "home": "Home",
+    "listings": "Entries",
+    "assistant": "AI",
+    "info": "Info",
+    "profile": "Profile"
+  },
+  "footerIcons": {
+    "home": "/uploads/driverssystem/hero-logo-1770880224594.svg",
+    "listings": "/uploads/driverssystem/hero-logo-1770880705002.svg",
+    "assistant": "/uploads/driverssystem/hero-logo-1770880515897.svg",
+    "info": "/uploads/driverssystem/hero-logo-1770880440969.svg",
+    "profile": "/uploads/driverssystem/hero-logo-1770880356519.svg"
+  },
+  "phoneNumber": "",
+  "whatsappNumber": "",
+  "companyEmail": "",
+  "contactLabels": {
+    "email": "Email",
+    "phone": "Τηλέφωνο",
+    "whatsapp": "WhatsApp"
+  },
+  "infoPageTitle": "Πληροφορίες",
+  "infoPageContent": "",
+  "infoCancellationTitle": "",
+  "infoCancellationContent": "",
+  "infoComplianceTitle": "",
+  "infoComplianceContent": "",
+  "infoFaqTitle": "",
+  "infoFaqContent": "",
+  "financials": [],
+  "tripSources": [
+    { "id": "uber", "name": "Uber", "commission": 25, "color": "#000000", "active": true },
+    { "id": "bolt", "name": "Bolt", "commission": 20, "color": "#34D186", "active": true },
+    { "id": "beat", "name": "Beat", "commission": 20, "color": "#9B59B6", "active": true },
+    { "id": "street", "name": "\u0394\u03c1\u03cc\u03bc\u03bf\u03c2", "commission": 0, "color": "#F39C12", "active": true }
+  ]
+}

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title>Greekaway Admin – DriversSystem</title>
+    <link rel="stylesheet" href="/css/admin-common.css">
+    <link rel="stylesheet" href="/css/admin-theme-toggle.css">
+    <link rel="stylesheet" href="/admin/css/admin-driverssystem-ui.css">
+    <link rel="manifest" href="/manifest-admin.json">
+    <meta name="theme-color" content="#001f3f">
+    <link rel="stylesheet" href="/pwa.css">
+    <link rel="stylesheet" href="/css/pwa-fixes.css">
+  </head>
+  <body>
+    <header class="sticky-bar" aria-label="DriversSystem">
+      <div class="bar-inner">
+        <div class="title">DriversSystem</div>
+        <div class="bar-tabs">
+          <button class="bar-tab active" data-tab="general">General</button>
+          <button class="bar-tab" data-tab="sources">Πηγές</button>
+          <button class="bar-tab" data-tab="financials">Οικονομικά</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content-wrap">
+      <!-- ===== GENERAL TAB ===== -->
+      <div class="tab-content active" data-tab="general">
+        <section class="panel">
+          <form id="ds-form" class="ds-form" novalidate>
+            <div class="ds-grid">
+              <div class="ds-upload">
+                <label>Hero Logo Upload (png/svg/webp)
+                  <input id="heroLogoFile" class="input" type="file" accept="image/png,image/svg+xml,image/webp">
+                </label>
+                <button id="heroLogoUploadBtn" class="btn secondary" type="button">Upload Logo</button>
+                <input id="heroLogoUrl" type="hidden">
+              </div>
+              <label>Hero Headline
+                <input id="heroHeadline" class="input" type="text" maxlength="120">
+              </label>
+              <label>Hero Subtext
+                <textarea id="heroSubtext" class="input" rows="3" maxlength="220"></textarea>
+              </label>
+            </div>
+
+            <h3 class="ds-subtitle">Footer</h3>
+            <div class="ds-footer-rows">
+              <div class="ds-footer-row">
+                <div class="ds-footer-title">Home</div>
+                <label>Label <input id="footerHome" class="input" type="text" maxlength="40"></label>
+                <div class="ds-upload">
+                  <label>Icon (SVG) <input id="footerIconHomeFile" class="input" type="file" accept="image/svg+xml"></label>
+                  <button id="footerIconHomeUpload" class="btn secondary" type="button">Upload Icon</button>
+                  <input id="footerIconHomeUrl" type="hidden">
+                </div>
+              </div>
+              <div class="ds-footer-row">
+                <div class="ds-footer-title">Listings</div>
+                <label>Label <input id="footerListings" class="input" type="text" maxlength="40"></label>
+                <div class="ds-upload">
+                  <label>Icon (SVG) <input id="footerIconListingsFile" class="input" type="file" accept="image/svg+xml"></label>
+                  <button id="footerIconListingsUpload" class="btn secondary" type="button">Upload Icon</button>
+                  <input id="footerIconListingsUrl" type="hidden">
+                </div>
+              </div>
+              <div class="ds-footer-row">
+                <div class="ds-footer-title">AI Βοηθός</div>
+                <label>Label <input id="footerAssistant" class="input" type="text" maxlength="40"></label>
+                <div class="ds-upload">
+                  <label>Icon (SVG) <input id="footerIconAssistantFile" class="input" type="file" accept="image/svg+xml"></label>
+                  <button id="footerIconAssistantUpload" class="btn secondary" type="button">Upload Icon</button>
+                  <input id="footerIconAssistantUrl" type="hidden">
+                </div>
+              </div>
+              <div class="ds-footer-row">
+                <div class="ds-footer-title">Info</div>
+                <label>Label <input id="footerInfo" class="input" type="text" maxlength="40"></label>
+                <div class="ds-upload">
+                  <label>Icon (SVG) <input id="footerIconInfoFile" class="input" type="file" accept="image/svg+xml"></label>
+                  <button id="footerIconInfoUpload" class="btn secondary" type="button">Upload Icon</button>
+                  <input id="footerIconInfoUrl" type="hidden">
+                </div>
+              </div>
+              <div class="ds-footer-row">
+                <div class="ds-footer-title">Profile</div>
+                <label>Label <input id="footerProfile" class="input" type="text" maxlength="40"></label>
+                <div class="ds-upload">
+                  <label>Icon (SVG) <input id="footerIconProfileFile" class="input" type="file" accept="image/svg+xml"></label>
+                  <button id="footerIconProfileUpload" class="btn secondary" type="button">Upload Icon</button>
+                  <input id="footerIconProfileUrl" type="hidden">
+                </div>
+              </div>
+            </div>
+
+            <h3 class="ds-subtitle">Contact</h3>
+            <div class="ds-grid">
+              <label>Phone Number <input id="phoneNumber" class="input" type="text" maxlength="30"></label>
+              <label>WhatsApp Number <input id="whatsappNumber" class="input" type="text" maxlength="30"></label>
+              <label>Company Email <input id="companyEmail" class="input" type="email" maxlength="120"></label>
+            </div>
+
+            <div class="ds-actions">
+              <button id="saveBtn" class="btn" type="submit">Save</button>
+              <div id="ds-status" class="ds-status" aria-live="polite"></div>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <!-- ===== SOURCES TAB ===== -->
+      <div class="tab-content" data-tab="sources">
+        <section class="panel">
+          <div class="ds-section-header">
+            <div>
+              <h3 class="ds-subtitle">Πηγές Διαδρομών</h3>
+              <p class="ds-helper">Εφαρμογές και πηγές που χρησιμοποιεί ο οδηγός. Η προμήθεια αφαιρείται αυτόματα.</p>
+            </div>
+            <div class="ds-actions">
+              <button id="dsSrcAddBtn" class="btn secondary" type="button">➕ Νέα Πηγή</button>
+            </div>
+          </div>
+
+          <form id="ds-src-form" class="ds-src-form" hidden>
+            <div class="ds-grid ds-grid--src">
+              <label>Όνομα
+                <input id="dsSrcName" class="input" type="text" maxlength="40" placeholder="π.χ. Uber">
+              </label>
+              <label>Προμήθεια (%)
+                <input id="dsSrcCommission" class="input" type="number" step="0.5" min="0" max="100" placeholder="25">
+              </label>
+              <label>Χρώμα
+                <input id="dsSrcColor" class="input" type="color" value="#059669">
+              </label>
+              <label class="ds-checkbox-label">
+                <input id="dsSrcActive" type="checkbox" checked>
+                Ενεργή
+              </label>
+            </div>
+            <div class="ds-actions">
+              <button id="dsSrcSaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="dsSrcCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+            </div>
+          </form>
+
+          <div id="dsSrcList" class="ds-src-list"></div>
+        </section>
+      </div>
+
+      <!-- ===== FINANCIALS TAB ===== -->
+      <div class="tab-content" data-tab="financials">
+        <section class="panel">
+          <div class="ds-section-header">
+            <div>
+              <h3 class="ds-subtitle">Οικονομικά Στοιχεία</h3>
+              <p class="ds-helper">Προσθέστε οικονομικές κάρτες που εμφανίζονται στο welcome page</p>
+            </div>
+            <div class="ds-actions">
+              <button id="dsFinAddBtn" class="btn secondary" type="button">➕ Νέα Κάρτα</button>
+            </div>
+          </div>
+
+          <form id="ds-fin-form" class="ds-fin-form" hidden>
+            <div class="ds-grid">
+              <label>Label <input id="dsFinLabel" class="input" type="text" maxlength="60" placeholder="π.χ. Συνολικά Έσοδα"></label>
+              <label>Value (€) <input id="dsFinValue" class="input" type="number" step="0.01" placeholder="0.00"></label>
+            </div>
+            <div class="ds-actions">
+              <button id="dsFinSaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="dsFinCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+            </div>
+          </form>
+
+          <div id="dsFinList" class="ds-fin-list"></div>
+        </section>
+      </div>
+    </main>
+
+    <div id="ds-toast" class="ds-toast" role="status" aria-live="polite"></div>
+
+    <script src="/admin/js/admin-driverssystem-ui.js"></script>
+    <script src="/js/admin-theme-toggle.js"></script>
+    <script src="/pwa-install.js" defer></script>
+    <script src="/js/main.js"></script>
+    <script src="/admin/js/admin-footer.js"></script>
+  </body>
+</html>

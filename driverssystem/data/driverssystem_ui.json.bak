@@ -1,0 +1,36 @@
+{
+  "heroHeadline": "DriversSystem",
+  "heroSubtext": "Διαχείριση Οδηγών & Freelancers",
+  "heroLogoUrl": "/uploads/driverssystem/hero-logo-1770880148307.PNG",
+  "footerLabels": {
+    "home": "Home",
+    "listings": "Entries",
+    "assistant": "AI",
+    "info": "Info",
+    "profile": "Profile"
+  },
+  "footerIcons": {
+    "home": "/uploads/driverssystem/hero-logo-1770880224594.svg",
+    "listings": "",
+    "assistant": "/uploads/driverssystem/hero-logo-1770880515897.svg",
+    "info": "/uploads/driverssystem/hero-logo-1770880440969.svg",
+    "profile": "/uploads/driverssystem/hero-logo-1770880356519.svg"
+  },
+  "phoneNumber": "",
+  "whatsappNumber": "",
+  "companyEmail": "",
+  "contactLabels": {
+    "email": "Email",
+    "phone": "Τηλέφωνο",
+    "whatsapp": "WhatsApp"
+  },
+  "infoPageTitle": "Πληροφορίες",
+  "infoPageContent": "",
+  "infoCancellationTitle": "",
+  "infoCancellationContent": "",
+  "infoComplianceTitle": "",
+  "infoComplianceContent": "",
+  "infoFaqTitle": "",
+  "infoFaqContent": "",
+  "financials": []
+}

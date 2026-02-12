@@ -1,0 +1,14 @@
+[
+  {
+    "id": "e_1770883633213_qldu",
+    "sourceId": "uber",
+    "sourceName": "Uber",
+    "amount": 500,
+    "commission": 25,
+    "netAmount": 375,
+    "date": "2026-02-12",
+    "time": "10:07",
+    "note": "",
+    "createdAt": "2026-02-12T08:07:13.213Z"
+  }
+]
