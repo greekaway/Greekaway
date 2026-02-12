@@ -337,7 +337,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const allowed = ['status', 'driver_phone', 'driver_id', 'notes',
-        'commission_driver', 'commission_hotel', 'commission_service', 'price'];
+        'commission_driver', 'commission_hotel', 'commission_service', 'price', 'is_arrival'];
       const updates = {};
       for (const key of allowed) {
         if (req.body[key] !== undefined) updates[key] = req.body[key];

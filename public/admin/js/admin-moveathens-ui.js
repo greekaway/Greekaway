@@ -1358,9 +1358,15 @@
         const sumComm = driver + hotel + service;
 
         const errorEl = row.querySelector('.ma-comm-error');
-        if (sumComm > total && total > 0) {
+        if (total > 0 && sumComm > total) {
           if (errorEl) {
             errorEl.textContent = `⚠️ Σύνολο προμηθειών (${sumComm.toFixed(2)}€) > τιμή (${total.toFixed(2)}€)`;
+            errorEl.hidden = false;
+          }
+          allOk = false;
+        } else if (total > 0 && sumComm < total) {
+          if (errorEl) {
+            errorEl.textContent = `⚠️ Σύνολο προμηθειών (${sumComm.toFixed(2)}€) < τιμή (${total.toFixed(2)}€)`;
             errorEl.hidden = false;
           }
           allOk = false;

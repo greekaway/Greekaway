@@ -99,6 +99,7 @@ async function createRequest(data) {
     commission_driver: parseFloat(data.commission_driver) || 0,
     commission_hotel: parseFloat(data.commission_hotel) || 0,
     commission_service: parseFloat(data.commission_service) || 0,
+    is_arrival: data.is_arrival === true || data.is_arrival === 'true',
     driver_id: null,
     driver_phone: '',
     accept_token: token,

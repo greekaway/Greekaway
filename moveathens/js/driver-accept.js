@@ -81,15 +81,28 @@
     var greeting = getGreeting();
     var details = [];
     if (tripData.passenger_name) details.push('Επιβάτη: ' + tripData.passenger_name);
-    details.push('Προορισμό: ' + (tripData.destination_name || '—'));
+    if (tripData.is_arrival) {
+      details.push('Αφετηρία: ' + (tripData.destination_name || '—'));
+      details.push('Προορισμό: ' + (tripData.hotel_name || '—'));
+    } else {
+      details.push('Προορισμό: ' + (tripData.destination_name || '—'));
+    }
     if (tripData.room_number) details.push('Δωμάτιο: ' + tripData.room_number);
     var detailsText = details.join(' – ');
 
-    var msg = greeting + '\n\n' +
-      'Είμαι ο οδηγός που έχει αναλάβει ' + detailsText + '.\n\n' +
-      'Έχω φτάσει στο σημείο παραλαβής. Βρίσκομαι έξω και είμαι έτοιμος για αναχώρηση.\n\n' +
-      'Παρακαλώ ενημερώστε τον ότι τον περιμένω.\n\n' +
-      'Ευχαριστώ πολύ.';
+    var msg;
+    if (tripData.is_arrival) {
+      msg = greeting + '\n\n' +
+        'Είμαι ο οδηγός που έχει αναλάβει ' + detailsText + '.\n\n' +
+        'Έχω φτάσει στο σημείο παραλαβής (' + (tripData.destination_name || '—') + '). Βρίσκομαι εδώ κι έτοιμος να παραλάβω τον επιβάτη.\n\n' +
+        'Ευχαριστώ πολύ.';
+    } else {
+      msg = greeting + '\n\n' +
+        'Είμαι ο οδηγός που έχει αναλάβει ' + detailsText + '.\n\n' +
+        'Έχω φτάσει στο σημείο παραλαβής. Βρίσκομαι έξω και είμαι έτοιμος για αναχώρηση.\n\n' +
+        'Παρακαλώ ενημερώστε τον ότι τον περιμένω.\n\n' +
+        'Ευχαριστώ πολύ.';
+    }
 
     return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
   }
@@ -332,7 +345,11 @@
           saveState();
           applyUIState();
           statusMsg.className = 'status ok';
-          statusMsg.textContent = 'Αποδέχτηκες τη διαδρομή! Πάτα πλοήγηση για να πας στο ξενοδοχείο.';
+          if (tripData && tripData.is_arrival) {
+            statusMsg.textContent = 'Αποδέχτηκες τη διαδρομή! Πάτα πλοήγηση για να πας στο σημείο παραλαβής.';
+          } else {
+            statusMsg.textContent = 'Αποδέχτηκες τη διαδρομή! Πάτα πλοήγηση για να πας στο ξενοδοχείο.';
+          }
         } else {
           statusMsg.className = 'status error';
           statusMsg.textContent = data.error || 'Σφάλμα. Δοκίμασε ξανά.';
@@ -413,7 +430,11 @@
       saveState();
       applyUIState();
       statusMsg.className = 'status ok';
-      statusMsg.textContent = 'Ενημέρωσες τον ξενοδόχο! Πάτα πλοήγηση για τον τελικό προορισμό.';
+      if (tripData && tripData.is_arrival) {
+        statusMsg.textContent = 'Παρέλαβες τον επιβάτη! Πάτα πλοήγηση για το ξενοδοχείο.';
+      } else {
+        statusMsg.textContent = 'Ενημέρωσες τον ξενοδόχο! Πάτα πλοήγηση για τον τελικό προορισμό.';
+      }
 
     } else if (uiState === 'arrived') {
       // ── COMPLETE the trip ──
