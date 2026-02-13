@@ -252,9 +252,17 @@
       list.querySelectorAll('[data-delete-id]').forEach((btn) => {
         btn.addEventListener('click', async () => {
           const id = btn.dataset.deleteId;
-          if (!confirm('Διαγραφή αυτής της καταχώρησης;')) return;
+          const entry = entries.find(e => e.id === id);
+          const label = entry
+            ? `${entry.sourceName || entry.sourceId} — ${fmtEur(entry.amount)}`
+            : '';
+          const msg = label
+            ? `Διαγραφή καταχώρησης;\n\n${label}\n\nΕίσαι σίγουρος;`
+            : 'Διαγραφή αυτής της καταχώρησης;\n\nΕίσαι σίγουρος;';
+          if (!confirm(msg)) return;
           const res = await api(`/api/driverssystem/entries/${id}`, 'DELETE');
           if (res.ok) {
+            if (navigator.vibrate) navigator.vibrate(30);
             await Promise.all([loadEntries(), loadSummary()]);
           }
         });

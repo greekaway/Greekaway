@@ -221,9 +221,9 @@
 
 .ds-amount-input {
   width: 100%;
-  font-size: 28px;
+  font-size: 34px;
   font-weight: 700;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: 14px;
   border: 2px solid #e0e4ea;
   background: #f8f9fb;
@@ -247,8 +247,8 @@
 /* Net preview */
 .ds-net-preview {
   text-align: center;
-  min-width: 90px;
-  padding: 8px 12px;
+  min-width: 105px;
+  padding: 10px 14px;
   background: rgba(5, 150, 105, 0.08);
   border-radius: 14px;
 }
@@ -264,7 +264,7 @@
 
 .ds-net-preview__value {
   display: block;
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 700;
   color: #059669;
 }
@@ -394,18 +394,18 @@
   position: absolute;
   top: 6px;
   right: 8px;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border: none;
-  background: transparent;
-  color: #d1d5db;
-  font-size: 14px;
+  background: rgba(239, 68, 68, 0.06);
+  color: #c4c9d0;
+  font-size: 16px;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 8px;
   display: grid;
   place-items: center;
-  transition: color 0.15s, background 0.15s;
-  opacity: 0;
+  transition: color 0.15s, background 0.15s, opacity 0.15s;
+  opacity: 0.6;
 }
 
 .ds-entry-item:hover .ds-entry-item__delete,
@@ -415,18 +415,18 @@
 
 .ds-entry-item__delete:hover {
   color: #ef4444;
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba(239, 68, 68, 0.12);
 }
 
 /* Touch - always show delete on mobile */
 @media (hover: none) {
-  .ds-entry-item__delete { opacity: 0.5; }
+  .ds-entry-item__delete { opacity: 0.7; }
 }
 
 /* ── Responsive ── */
 @media (max-width: 380px) {
-  .ds-amount-input { font-size: 24px; }
-  .ds-net-preview__value { font-size: 18px; }
+  .ds-amount-input { font-size: 29px; }
+  .ds-net-preview__value { font-size: 22px; }
   .ds-summary-card__value { font-size: 17px; }
 }
 
@@ -542,9 +542,9 @@
 
   .ds-entries-empty { color: #6b7a8d !important; }
 
-  .ds-entry-item__delete { color: rgba(255, 255, 255, 0.25) !important; }
+  .ds-entry-item__delete { color: rgba(255, 255, 255, 0.35) !important; background: rgba(239, 68, 68, 0.08) !important; }
   .ds-entry-item__delete:hover {
     color: #ef4444 !important;
-    background: rgba(239, 68, 68, 0.15) !important;
+    background: rgba(239, 68, 68, 0.2) !important;
   }
 }
