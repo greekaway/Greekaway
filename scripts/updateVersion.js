@@ -61,7 +61,8 @@ function main(){
   const patch = buildNumber != null ? buildNumber : (parts[2] || '0');
   const version = `${major}.${minor}.${patch}`;
 
-  const build = (process.env.BUILD_DATE_OVERRIDE || '').trim() || gitCommitDate || nowStamp();
+  const build = (process.env.BUILD_DATE_OVERRIDE || '').trim() || nowStamp();
+  // Always use current time as build stamp so every deploy/start gets a fresh timestamp
   const obj = { version, build };
   if (buildNumber != null) obj.buildNumber = buildNumber;
   if (commit) obj.commit = commit;

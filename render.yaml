@@ -10,7 +10,7 @@ services:
     name: greekaway
     env: node
     plan: free
-    buildCommand: npm ci && node tools/migrate_to_postgres.js || true
+    buildCommand: npm ci && node scripts/updateVersion.js && node tools/migrate_to_postgres.js || true
     startCommand: npm start
     autoDeploy: true
     envVars:
