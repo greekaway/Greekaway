@@ -90,52 +90,131 @@
 }
 
 /* ── Financial summary cards on welcome page ── */
-.ds-financials {
-  position: relative;
-  left: 0; right: 0;
+/* (removed — replaced by ds-perf performance cards) */
+
+/* ── Performance Estimation Cards (ds-perf) ── */
+.ds-perf {
   z-index: 4;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 12px;
-  margin-bottom: 12px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 16px;
 }
 
-.ds-fin-card {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  padding: 14px;
+.ds-perf__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  margin: 0 0 14px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.ds-perf__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ds-perf__card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 12px 10px;
   text-align: center;
 }
 
-.ds-fin-card__label {
+.ds-perf__label {
+  display: block;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255,255,255,0.55);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   margin-bottom: 4px;
 }
 
-.ds-fin-card__value {
-  font-size: 22px;
+.ds-perf__value {
+  display: block;
+  font-size: 18px;
   font-weight: 700;
   color: #fff;
 }
 
-.ds-fin-card__value.positive {
+.ds-perf__value--accent {
   color: var(--ds-accent, #00c896);
 }
 
-.ds-fin-card__value.negative {
-  color: #ff6b6b;
+/* Projections rows */
+.ds-perf__proj {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
-.ds-financials-empty {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.4);
+.ds-perf__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.ds-perf__row--highlight {
+  border-top: 1px solid rgba(255,255,255,0.15);
+  padding-top: 10px;
+  margin-top: 2px;
+}
+
+.ds-perf__row-label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+}
+
+.ds-perf__row-value {
   font-size: 14px;
-  margin-bottom: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ds-perf__row-value--expense {
+  color: #f87171;
+}
+
+.ds-perf__row-value.positive { color: #34d399; }
+.ds-perf__row-value.negative { color: #f87171; }
+
+/* Expense breakdown (collapsible) */
+.ds-perf__details {
+  margin-top: 6px;
+}
+
+.ds-perf__summary {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  padding: 4px 0;
+  user-select: none;
+}
+
+.ds-perf__summary:hover {
+  color: rgba(255,255,255,0.75);
+}
+
+.ds-perf__breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.ds-perf__break-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  padding: 2px 0;
 }
 
 /* ── Welcome Dashboard (scrollable content area) ── */
@@ -177,135 +256,7 @@
 }
 .ds-welcome-login-btn:active { transform: scale(0.97); }
 
-/* ── Monthly Overview ── */
-.ds-monthly-overview {
-  z-index: 4;
-}
-
-.ds-monthly-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.9);
-  margin: 0 0 10px;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-}
-
-.ds-monthly-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.ds-monthly-card {
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 14px;
-  padding: 12px 10px;
-  text-align: center;
-}
-
-.ds-monthly-card--balance {
-  grid-column: 1 / -1;
-  border: 1px solid rgba(255,255,255,0.2);
-}
-
-.ds-monthly-card__label {
-  display: block;
-  font-size: 11px;
-  color: rgba(255,255,255,0.55);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-bottom: 4px;
-}
-
-.ds-monthly-card__value {
-  display: block;
-  font-size: 18px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.ds-monthly-card__value--expense {
-  color: #f87171;
-}
-
-.ds-monthly-card__value.positive {
-  color: #34d399 !important;
-}
-.ds-monthly-card__value.negative {
-  color: #f87171 !important;
-}
-
-/* ── Business Plan ── */
-.ds-business-plan {
-  z-index: 4;
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 16px;
-  padding: 16px;
-}
-
-.ds-bplan-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.9);
-  margin: 0 0 12px;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-}
-
-.ds-bplan-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.ds-bplan-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.ds-bplan-label {
-  font-size: 13px;
-  color: rgba(255,255,255,0.6);
-}
-
-.ds-bplan-value {
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.ds-bplan-value.positive { color: #34d399; }
-.ds-bplan-value.negative { color: #f87171; }
-
-.ds-bplan-progress-wrap {
-  margin-top: 6px;
-}
-
-.ds-bplan-progress-bar {
-  height: 8px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.ds-bplan-progress-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease;
-  width: 0%;
-}
-
-.ds-bplan-progress-text {
-  display: block;
-  font-size: 11px;
-  color: rgba(255,255,255,0.5);
-  margin-top: 4px;
-  text-align: right;
-}
+/* ── (old monthly overview / business plan styles removed) ── */
 
 @media (max-width: 380px) {
   .ds-hero__headline {
@@ -354,60 +305,43 @@
   }
 
   /* Financial cards — light glass */
-  .ds-fin-card {
-    background: rgba(255, 255, 255, 0.75) !important;
-    backdrop-filter: blur(14px) !important;
-    border: 1px solid rgba(0, 0, 0, 0.08) !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  /* (old ds-fin-card styles removed) */
+
+  /* Performance cards — light mode */
+  .ds-perf {
+    background: rgba(255,255,255,0.75) !important;
+    border: 1px solid rgba(0,0,0,0.08) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
   }
 
-  .ds-fin-card__label {
-    color: #6b7280 !important;
-  }
-
-  .ds-fin-card__value {
-    color: #1a2232 !important;
-  }
-
-  .ds-fin-card__value.positive {
-    color: #059669 !important;
-  }
-
-  .ds-fin-card__value.negative {
-    color: #dc2626 !important;
-  }
-
-  .ds-financials-empty {
-    color: rgba(0, 0, 0, 0.4) !important;
-  }
-
-  /* Monthly overview — light */
-  .ds-monthly-title,
-  .ds-bplan-title {
+  .ds-perf__title {
     color: #1a2232 !important;
     text-shadow: none !important;
   }
-  .ds-monthly-card {
-    background: rgba(255,255,255,0.75) !important;
+
+  .ds-perf__card {
+    background: rgba(255,255,255,0.85) !important;
     border: 1px solid rgba(0,0,0,0.08) !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
   }
-  .ds-monthly-card__label { color: #6b7280 !important; }
-  .ds-monthly-card__value { color: #1a2232 !important; }
-  .ds-monthly-card__value--expense { color: #dc2626 !important; }
-  .ds-monthly-card__value.positive { color: #059669 !important; }
-  .ds-monthly-card__value.negative { color: #dc2626 !important; }
 
-  .ds-business-plan {
-    background: rgba(255,255,255,0.75) !important;
-    border: 1px solid rgba(0,0,0,0.08) !important;
-  }
-  .ds-bplan-label { color: #6b7280 !important; }
-  .ds-bplan-value { color: #1a2232 !important; }
-  .ds-bplan-value.positive { color: #059669 !important; }
-  .ds-bplan-value.negative { color: #dc2626 !important; }
-  .ds-bplan-progress-bar { background: rgba(0,0,0,0.08) !important; }
-  .ds-bplan-progress-text { color: rgba(0,0,0,0.5) !important; }
+  .ds-perf__label { color: #6b7280 !important; }
+  .ds-perf__value { color: #1a2232 !important; }
+  .ds-perf__value--accent { color: #059669 !important; }
+
+  .ds-perf__row-label { color: #6b7280 !important; }
+  .ds-perf__row-value { color: #1a2232 !important; }
+  .ds-perf__row-value--expense { color: #dc2626 !important; }
+  .ds-perf__row-value.positive { color: #059669 !important; }
+  .ds-perf__row-value.negative { color: #dc2626 !important; }
+
+  .ds-perf__row--highlight { border-top-color: rgba(0,0,0,0.1) !important; }
+
+  .ds-perf__summary { color: rgba(0,0,0,0.45) !important; }
+  .ds-perf__summary:hover { color: rgba(0,0,0,0.7) !important; }
+  .ds-perf__break-row { color: #6b7280 !important; }
+
+  /* (old business plan light mode styles removed) */
 
   .ds-welcome-login-prompt { color: #4a5568 !important; }
 

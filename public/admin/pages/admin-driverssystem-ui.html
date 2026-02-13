@@ -21,6 +21,8 @@
           <button class="bar-tab active" data-tab="general">General</button>
           <button class="bar-tab" data-tab="sources">Πηγές Διαδρομών</button>
           <button class="bar-tab" data-tab="car-expense-cats">Έξοδα Αυτοκινήτου</button>
+          <button class="bar-tab" data-tab="personal-expense-cats">Προσωπικά / Σπιτιού</button>
+          <button class="bar-tab" data-tab="tax-expense-cats">Φόροι / Ασφαλιστικά</button>
           <button class="bar-tab" data-tab="financials">Οικονομικά</button>
           <button class="bar-tab" data-tab="overview">Επισκόπηση</button>
           <button class="bar-tab" data-tab="drivers">Οδηγοί</button>
@@ -208,6 +210,114 @@
         </section>
       </div>
 
+      <!-- ===== PERSONAL EXPENSE CATEGORIES TAB ===== -->
+      <div class="tab-content" data-tab="personal-expense-cats">
+        <section class="panel">
+          <div class="ds-section-header">
+            <div>
+              <h3 class="ds-subtitle">Προσωπικά / Σπιτιού</h3>
+              <p class="ds-helper">Ομάδες προσωπικών εξόδων και κουμπιά που βλέπει ο οδηγός. Δύο επίπεδα: Ομάδα → Είδος εξόδου.</p>
+            </div>
+            <div class="ds-actions">
+              <button id="dsPecAddGroupBtn" class="btn secondary" type="button">➕ Νέα Ομάδα</button>
+            </div>
+          </div>
+
+          <!-- Add/Edit Group form -->
+          <form id="ds-pec-group-form" class="ds-src-form" hidden>
+            <div class="ds-grid ds-grid--cec-group">
+              <label>Όνομα Ομάδας
+                <input id="dsPecGroupName" class="input" type="text" maxlength="60" placeholder="π.χ. Πάγια Μηνιαία">
+              </label>
+              <label class="ds-checkbox-label">
+                <input id="dsPecGroupActive" type="checkbox" checked>
+                Ενεργή
+              </label>
+            </div>
+            <div class="ds-actions">
+              <button id="dsPecGroupSaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="dsPecGroupCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+            </div>
+          </form>
+
+          <!-- Add/Edit Item form -->
+          <form id="ds-pec-item-form" class="ds-src-form" hidden>
+            <div class="ds-grid ds-grid--cec-item">
+              <label>Ομάδα
+                <input id="dsPecItemGroupLabel" class="input" type="text" readonly disabled>
+              </label>
+              <label>Όνομα Εξόδου
+                <input id="dsPecItemName" class="input" type="text" maxlength="60" placeholder="π.χ. Ενοίκιο">
+              </label>
+              <label class="ds-checkbox-label">
+                <input id="dsPecItemActive" type="checkbox" checked>
+                Ενεργό
+              </label>
+            </div>
+            <div class="ds-actions">
+              <button id="dsPecItemSaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="dsPecItemCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+            </div>
+          </form>
+
+          <div id="dsPecList" class="ds-cec-list"></div>
+        </section>
+      </div>
+
+      <!-- ===== TAX / INSURANCE EXPENSE CATEGORIES TAB ===== -->
+      <div class="tab-content" data-tab="tax-expense-cats">
+        <section class="panel">
+          <div class="ds-section-header">
+            <div>
+              <h3 class="ds-subtitle">Φόροι / Ασφαλιστικά</h3>
+              <p class="ds-helper">Ομάδες φόρων, ασφαλιστικών και επαγγελματικών εξόδων. Δύο επίπεδα: Ομάδα → Είδος εξόδου.</p>
+            </div>
+            <div class="ds-actions">
+              <button id="dsTecAddGroupBtn" class="btn secondary" type="button">➕ Νέα Ομάδα</button>
+            </div>
+          </div>
+
+          <!-- Add/Edit Group form -->
+          <form id="ds-tec-group-form" class="ds-src-form" hidden>
+            <div class="ds-grid ds-grid--cec-group">
+              <label>Όνομα Ομάδας
+                <input id="dsTecGroupName" class="input" type="text" maxlength="60" placeholder="π.χ. Φορολογικά">
+              </label>
+              <label class="ds-checkbox-label">
+                <input id="dsTecGroupActive" type="checkbox" checked>
+                Ενεργή
+              </label>
+            </div>
+            <div class="ds-actions">
+              <button id="dsTecGroupSaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="dsTecGroupCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+            </div>
+          </form>
+
+          <!-- Add/Edit Item form -->
+          <form id="ds-tec-item-form" class="ds-src-form" hidden>
+            <div class="ds-grid ds-grid--cec-item">
+              <label>Ομάδα
+                <input id="dsTecItemGroupLabel" class="input" type="text" readonly disabled>
+              </label>
+              <label>Όνομα Εξόδου
+                <input id="dsTecItemName" class="input" type="text" maxlength="60" placeholder="π.χ. ΕΦΚΑ / ΤΕΒΕ">
+              </label>
+              <label class="ds-checkbox-label">
+                <input id="dsTecItemActive" type="checkbox" checked>
+                Ενεργό
+              </label>
+            </div>
+            <div class="ds-actions">
+              <button id="dsTecItemSaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="dsTecItemCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+            </div>
+          </form>
+
+          <div id="dsTecList" class="ds-cec-list"></div>
+        </section>
+      </div>
+
       <!-- ===== FINANCIALS TAB ===== -->
       <div class="tab-content" data-tab="financials">
         <section class="panel">
@@ -282,6 +392,41 @@
             <div class="ds-admin-summary-card">
               <span class="ds-admin-summary-label">Διαδρομές</span>
               <span class="ds-admin-summary-value ds-admin-summary-value--trips" data-admin-count>0</span>
+            </div>
+          </div>
+
+          <!-- ═══ Performance Analysis (from real data) ═══ -->
+          <h3 class="ds-admin-subtitle">📊 Ρυθμός Απόδοσης</h3>
+          <div class="ds-admin-perf" data-admin-perf>
+            <div class="ds-admin-perf__grid">
+              <div class="ds-admin-perf__item">
+                <span class="ds-admin-perf__label">Μέρες Εργασίας</span>
+                <span class="ds-admin-perf__value" data-admin-perf-days>—</span>
+              </div>
+              <div class="ds-admin-perf__item">
+                <span class="ds-admin-perf__label">Σύνολο Διαδρομών</span>
+                <span class="ds-admin-perf__value" data-admin-perf-trips>—</span>
+              </div>
+              <div class="ds-admin-perf__item">
+                <span class="ds-admin-perf__label">Καθαρά Έσοδα</span>
+                <span class="ds-admin-perf__value ds-admin-perf__value--accent" data-admin-perf-net>—</span>
+              </div>
+              <div class="ds-admin-perf__item">
+                <span class="ds-admin-perf__label">Μ.Ο. / Ημέρα</span>
+                <span class="ds-admin-perf__value" data-admin-perf-avg>—</span>
+              </div>
+              <div class="ds-admin-perf__item">
+                <span class="ds-admin-perf__label">Πρόβλεψη Μήνα</span>
+                <span class="ds-admin-perf__value" data-admin-perf-proj>—</span>
+              </div>
+              <div class="ds-admin-perf__item">
+                <span class="ds-admin-perf__label">Έξοδα Μήνα</span>
+                <span class="ds-admin-perf__value ds-admin-perf__value--expense" data-admin-perf-expenses>—</span>
+              </div>
+              <div class="ds-admin-perf__item ds-admin-perf__item--wide">
+                <span class="ds-admin-perf__label">Εκτίμηση μετά τα έξοδα</span>
+                <span class="ds-admin-perf__value" data-admin-perf-after>—</span>
+              </div>
             </div>
           </div>
 
@@ -422,10 +567,9 @@
               <label>Κατηγορία:
                 <select id="adminExpCatSelect" class="input ds-admin-select">
                   <option value="">Όλες</option>
-                  <option value="car">🚗 Αυτ/του</option>
-                  <option value="fixed">🏢 Πάγια</option>
-                  <option value="personal">👤 Προσωπικά</option>
-                  <option value="family">👨‍👩‍👧 Οικογενειακά</option>
+                  <option value="car">Αυτοκίνητο</option>
+                  <option value="personal">Προσωπικά / Σπιτιού</option>
+                  <option value="tax">Φόροι / Ασφαλιστικά</option>
                 </select>
               </label>
               <label>Από:
@@ -438,24 +582,36 @@
             </div>
           </div>
 
-          <!-- Expense Summary Cards -->
+          <!-- Expense Summary Cards (click to drill-down) -->
           <div class="ds-admin-summary ds-admin-summary--expenses" data-admin-exp-summary>
-            <div class="ds-admin-summary-card">
-              <span class="ds-admin-summary-label">🚗 Αυτ/του</span>
+            <div class="ds-admin-summary-card ds-admin-summary-card--clickable" data-admin-exp-car-card>
+              <span class="ds-admin-summary-label">🚗 Αυτοκίνητο</span>
               <span class="ds-admin-summary-value ds-admin-summary-value--commission" data-admin-exp-car>0,00 €</span>
+              <span class="ds-admin-summary-hint">Πατήστε για ανάλυση</span>
             </div>
-            <div class="ds-admin-summary-card">
-              <span class="ds-admin-summary-label">🏢 Πάγια</span>
-              <span class="ds-admin-summary-value ds-admin-summary-value--commission" data-admin-exp-fixed>0,00 €</span>
-            </div>
-            <div class="ds-admin-summary-card">
-              <span class="ds-admin-summary-label">👤 Προσωπικά</span>
+            <div class="ds-admin-summary-card ds-admin-summary-card--clickable" data-admin-exp-personal-card>
+              <span class="ds-admin-summary-label">🏠 Προσωπικά / Σπιτιού</span>
               <span class="ds-admin-summary-value ds-admin-summary-value--commission" data-admin-exp-personal>0,00 €</span>
+              <span class="ds-admin-summary-hint">Πατήστε για ανάλυση</span>
+            </div>
+            <div class="ds-admin-summary-card ds-admin-summary-card--clickable" data-admin-exp-tax-card>
+              <span class="ds-admin-summary-label">🏛️ Φόροι / Ασφαλιστικά</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--commission" data-admin-exp-tax>0,00 €</span>
+              <span class="ds-admin-summary-hint">Πατήστε για ανάλυση</span>
             </div>
             <div class="ds-admin-summary-card">
-              <span class="ds-admin-summary-label">👨‍👩‍👧 Οικογενειακά</span>
-              <span class="ds-admin-summary-value ds-admin-summary-value--commission" data-admin-exp-family>0,00 €</span>
+              <span class="ds-admin-summary-label">Σύνολο Εξόδων</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--gross" data-admin-exp-total>0,00 €</span>
             </div>
+          </div>
+
+          <!-- Drill-down panel (hidden by default) -->
+          <div class="ds-admin-drilldown" data-admin-exp-drilldown hidden>
+            <div class="ds-admin-drilldown__header">
+              <button class="ds-admin-drilldown__back" data-admin-exp-drill-back>Πίσω</button>
+              <h4 class="ds-admin-drilldown__title" data-admin-exp-drill-title>Ανάλυση</h4>
+            </div>
+            <div class="ds-admin-drilldown__body" data-admin-exp-drill-body></div>
           </div>
 
           <!-- Expenses Table -->

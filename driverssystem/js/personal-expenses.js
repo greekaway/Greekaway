@@ -1,8 +1,8 @@
 /**
- * DriversSystem — Car Expenses Page
+ * DriversSystem — Personal / Home Expenses Page
  * Two-mode page based on URL:
- *   /car-expenses          → Level 1: list of groups (navigate via links)
- *   /car-expenses/:groupId → Level 2: items (toggle-select) + ATM amount + notes
+ *   /personal-expenses          → Level 1: list of groups (navigate via links)
+ *   /personal-expenses/:groupId → Level 2: items (toggle-select) + ATM amount + notes
  */
 (async () => {
   'use strict';
@@ -27,28 +27,24 @@
   if (homeLink) homeLink.href = window.DriversSystemConfig.buildRoute('/');
 
   // ── Detect groupId from URL ──
-  // URL may be /driverssystem/car-expenses/<groupId>
   const pathParts = window.location.pathname.replace(/\/$/, '').split('/');
   const lastPart = pathParts[pathParts.length - 1];
-  const groupIdFromUrl = (lastPart !== 'car-expenses') ? lastPart : null;
+  const groupIdFromUrl = (lastPart !== 'personal-expenses') ? lastPart : null;
 
   // ── DOM refs ──
-  const groupsSection = $('[data-ds-car-exp-groups]');
-  const itemsSection  = $('[data-ds-car-exp-items]');
-  const itemsGrid     = $('[data-ds-car-exp-items-grid]');
-  const amountInput   = $('[data-ds-car-exp-amount]');
-  const noteInput     = $('[data-ds-car-exp-note]');
-  const saveBtn       = $('[data-ds-car-exp-save]');
-  const msgEl         = $('[data-ds-car-exp-msg]');
-  const backBar       = $('[data-ds-car-exp-back-bar]');
-  const titleEl       = $('[data-ds-car-exp-title]');
+  const groupsSection = $('[data-ds-pers-exp-groups]');
+  const itemsSection  = $('[data-ds-pers-exp-items]');
+  const itemsGrid     = $('[data-ds-pers-exp-items-grid]');
+  const amountInput   = $('[data-ds-pers-exp-amount]');
+  const noteInput     = $('[data-ds-pers-exp-note]');
+  const saveBtn       = $('[data-ds-pers-exp-save]');
+  const msgEl         = $('[data-ds-pers-exp-msg]');
+  const backBar       = $('[data-ds-pers-exp-back-bar]');
+  const titleEl       = $('[data-ds-pers-exp-title]');
 
   // ── ATM-style helpers ──
   let amountCents = 0;
-  const centsToDisplay = (cents) => {
-    const str = (cents / 100).toFixed(2).replace('.', ',');
-    return str;
-  };
+  const centsToDisplay = (cents) => (cents / 100).toFixed(2).replace('.', ',');
   const centsToFloat = (cents) => cents / 100;
 
   // ── State ──
@@ -66,7 +62,7 @@
   // ── Load categories ──
   const loadCategories = async () => {
     try {
-      const res = await fetch('/api/driverssystem/car-expense-categories');
+      const res = await fetch('/api/driverssystem/personal-expense-categories');
       if (!res.ok) throw new Error();
       categories = await res.json();
     } catch (_) {
@@ -78,14 +74,14 @@
   const renderGroupsList = () => {
     if (!groupsSection) return;
     if (categories.length === 0) {
-      groupsSection.innerHTML = '<div class="ds-car-exp-empty">Δεν υπάρχουν κατηγορίες</div>';
+      groupsSection.innerHTML = '<div class="ds-pers-exp-empty">Δεν υπάρχουν κατηγορίες</div>';
       return;
     }
-    const base = window.DriversSystemConfig.buildRoute('/car-expenses');
+    const base = window.DriversSystemConfig.buildRoute('/personal-expenses');
     groupsSection.innerHTML = categories.map((group) => `
-      <a class="ds-car-exp-group-btn" href="${base}/${group.id}">
-        <span class="ds-car-exp-group-btn__name">${group.name}</span>
-        <span class="ds-car-exp-group-btn__count">${(group.items || []).length} είδη</span>
+      <a class="ds-pers-exp-group-btn" href="${base}/${group.id}">
+        <span class="ds-pers-exp-group-btn__name">${group.name}</span>
+        <span class="ds-pers-exp-group-btn__count">${(group.items || []).length} είδη</span>
       </a>
     `).join('');
   };
@@ -116,11 +112,11 @@
     if (!itemsGrid) return;
     const items = group.items || [];
     if (items.length === 0) {
-      itemsGrid.innerHTML = '<div class="ds-car-exp-empty">Κανένα είδος σε αυτή την ομάδα</div>';
+      itemsGrid.innerHTML = '<div class="ds-pers-exp-empty">Κανένα είδος σε αυτή την ομάδα</div>';
       return;
     }
     itemsGrid.innerHTML = items.map((item, i) => `
-      <button class="ds-car-exp-item-btn" data-item-idx="${i}">
+      <button class="ds-pers-exp-item-btn" data-item-idx="${i}">
         ${item.name}
       </button>
     `).join('');
@@ -145,7 +141,7 @@
       e.preventDefault();
 
       if (e.key >= '0' && e.key <= '9') {
-        if (amountCents >= 10000000) return; // max 99999,99
+        if (amountCents >= 10000000) return;
         amountCents = amountCents * 10 + parseInt(e.key);
         amountInput.value = centsToDisplay(amountCents);
         updateSaveState();
@@ -197,7 +193,7 @@
           body.note = noteInput.value.trim();
         }
 
-        const res = await fetch('/api/driverssystem/car-expenses', {
+        const res = await fetch('/api/driverssystem/personal-expenses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
@@ -226,10 +222,10 @@
   }
 
   // ── Back button → navigate back to groups page ──
-  const backBtn = $('[data-ds-car-exp-back]');
+  const backBtn = $('[data-ds-pers-exp-back]');
   if (backBtn) {
     backBtn.addEventListener('click', () => {
-      window.location.href = window.DriversSystemConfig.buildRoute('/car-expenses');
+      window.location.href = window.DriversSystemConfig.buildRoute('/personal-expenses');
     });
   }
 
@@ -237,16 +233,13 @@
   await loadCategories();
 
   if (groupIdFromUrl) {
-    // Level 2: find the group and show its items
     const group = categories.find(g => g.id === groupIdFromUrl);
     if (group) {
       showItemsPage(group);
     } else {
-      // Group not found, redirect back
-      window.location.href = window.DriversSystemConfig.buildRoute('/car-expenses');
+      window.location.href = window.DriversSystemConfig.buildRoute('/personal-expenses');
     }
   } else {
-    // Level 1: show groups list
     renderGroupsList();
   }
 

@@ -1,24 +1,25 @@
 /* ─────────────────────────────────────
-   DriversSystem — Car Expenses Page
+   DriversSystem — Tax / Insurance Expenses Page
    Two-mode page:
-     /car-expenses          → groups list (links)
-     /car-expenses/:groupId → items + ATM amount + notes
+     /tax-expenses          → groups list (links)
+     /tax-expenses/:groupId → items + ATM amount + notes
+   Accent colour: amber/orange (#f59e0b / #d97706)
    ───────────────────────────────────── */
 
-.ds-car-expenses-page {
+.ds-tax-expenses-page {
   background: linear-gradient(160deg, #f5f7fa 0%, #eef1f6 100%);
   min-height: 100vh;
   overflow-y: auto;
 }
 
 /* ── Back bar (top, below header) ── */
-.ds-car-exp-back-bar {
+.ds-tax-exp-back-bar {
   max-width: 560px;
   margin: 0 auto;
   padding: 10px 14px 0;
 }
 
-.ds-car-exp-back-btn {
+.ds-tax-exp-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -33,12 +34,12 @@
   transition: all 0.15s;
 }
 
-.ds-car-exp-back-btn:active {
+.ds-tax-exp-back-btn:active {
   transform: scale(0.96);
 }
 
 /* ── Main container ── */
-.ds-car-exp-main {
+.ds-tax-exp-main {
   padding: 14px 14px 120px;
   max-width: 560px;
   margin: 0 auto;
@@ -48,19 +49,19 @@
 }
 
 /* ── Hidden state (override display: grid/flex) ── */
-.ds-car-exp-groups[hidden],
-.ds-car-exp-items[hidden],
-.ds-car-exp-back-bar[hidden] {
+.ds-tax-exp-groups[hidden],
+.ds-tax-exp-items[hidden],
+.ds-tax-exp-back-bar[hidden] {
   display: none !important;
 }
 
 /* ── Groups (links styled as cards) ── */
-.ds-car-exp-groups {
+.ds-tax-exp-groups {
   display: grid;
   gap: 10px;
 }
 
-.ds-car-exp-group-btn {
+.ds-tax-exp-group-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -75,21 +76,21 @@
   text-decoration: none;
 }
 
-.ds-car-exp-group-btn:active {
+.ds-tax-exp-group-btn:active {
   transform: scale(0.97);
 }
 
-.ds-car-exp-group-btn:hover {
+.ds-tax-exp-group-btn:hover {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
 }
 
-.ds-car-exp-group-btn__name {
+.ds-tax-exp-group-btn__name {
   font-size: 17px;
   font-weight: 700;
   color: #1a2232;
 }
 
-.ds-car-exp-group-btn__count {
+.ds-tax-exp-group-btn__count {
   font-size: 13px;
   font-weight: 500;
   color: #9ca3af;
@@ -99,20 +100,20 @@
 }
 
 /* ── Items section (level 2) ── */
-.ds-car-exp-items {
+.ds-tax-exp-items {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
 /* ── Item buttons grid (toggle-select) ── */
-.ds-car-exp-items-grid {
+.ds-tax-exp-items-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
-.ds-car-exp-item-btn {
+.ds-tax-exp-item-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,11 +131,11 @@
   min-height: 60px;
 }
 
-.ds-car-exp-item-btn:active {
+.ds-tax-exp-item-btn:active {
   transform: scale(0.97);
 }
 
-.ds-car-exp-item-btn.selected {
+.ds-tax-exp-item-btn.selected {
   border-color: #00c896;
   background: rgba(0, 200, 150, 0.08);
   box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.18);
@@ -142,7 +143,7 @@
 }
 
 /* ── Amount area (card) ── */
-.ds-car-exp-amount-area {
+.ds-tax-exp-amount-area {
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 16px;
@@ -153,19 +154,19 @@
   gap: 14px;
 }
 
-.ds-car-exp-amount-field {
+.ds-tax-exp-amount-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.ds-car-exp-amount-label {
+.ds-tax-exp-amount-label {
   font-size: 13px;
   font-weight: 600;
   color: #6b7280;
 }
 
-.ds-car-exp-amount-input {
+.ds-tax-exp-amount-input {
   width: 100%;
   padding: 14px 16px;
   border: 2px solid #e0e4ea;
@@ -181,14 +182,14 @@
   user-select: none;
 }
 
-.ds-car-exp-amount-input:focus {
+.ds-tax-exp-amount-input:focus {
   outline: none;
   border-color: #00c896;
   box-shadow: 0 0 0 4px rgba(0, 200, 150, 0.15);
 }
 
 /* ── Note input ── */
-.ds-car-exp-note-input {
+.ds-tax-exp-note-input {
   width: 100%;
   font-size: 14px;
   padding: 10px 14px;
@@ -200,17 +201,17 @@
   transition: border-color 0.15s;
 }
 
-.ds-car-exp-note-input::placeholder {
+.ds-tax-exp-note-input::placeholder {
   color: #9ca3af;
 }
 
-.ds-car-exp-note-input:focus {
+.ds-tax-exp-note-input:focus {
   outline: none;
   border-color: #00c896;
 }
 
 /* ── Save button ── */
-.ds-car-exp-save-btn {
+.ds-tax-exp-save-btn {
   width: 100%;
   padding: 14px;
   font-size: 16px;
@@ -223,16 +224,16 @@
   transition: transform 0.15s, opacity 0.15s;
 }
 
-.ds-car-exp-save-btn:active {
+.ds-tax-exp-save-btn:active {
   transform: scale(0.97);
 }
 
-.ds-car-exp-save-btn:disabled {
+.ds-tax-exp-save-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.ds-car-exp-msg {
+.ds-tax-exp-msg {
   text-align: center;
   font-size: 14px;
   font-weight: 600;
@@ -240,18 +241,18 @@
   min-height: 20px;
 }
 
-.ds-car-exp-msg.success {
+.ds-tax-exp-msg.success {
   color: #059669;
 }
 
-.ds-car-exp-empty {
+.ds-tax-exp-empty {
   text-align: center;
   color: #9ca3af;
   font-size: 14px;
   padding: 20px 0;
 }
 
-.ds-car-exp-loading {
+.ds-tax-exp-loading {
   text-align: center;
   color: #9ca3af;
   font-size: 14px;
@@ -262,86 +263,86 @@
    DARK MODE
    ════════════════════════════════════ */
 @media (prefers-color-scheme: dark) {
-  .ds-car-expenses-page {
+  .ds-tax-expenses-page {
     background: linear-gradient(135deg, #0d1a2d 0%, #0a1525 100%) !important;
   }
 
-  .ds-car-exp-back-btn {
+  .ds-tax-exp-back-btn {
     background: rgba(255, 255, 255, 0.08) !important;
     border-color: rgba(255, 255, 255, 0.12) !important;
     color: #d0d8e0 !important;
   }
 
-  .ds-car-exp-group-btn {
+  .ds-tax-exp-group-btn {
     background: linear-gradient(145deg, #132742, #0f1f35) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     box-shadow: 0 3px 14px rgba(0, 0, 0, 0.25) !important;
   }
 
-  .ds-car-exp-group-btn__name {
+  .ds-tax-exp-group-btn__name {
     color: #f0f4f8 !important;
   }
 
-  .ds-car-exp-group-btn__count {
+  .ds-tax-exp-group-btn__count {
     color: #8896a6 !important;
     background: rgba(255, 255, 255, 0.08) !important;
   }
 
-  .ds-car-exp-item-btn {
+  .ds-tax-exp-item-btn {
     background: linear-gradient(145deg, #132742, #0f1f35) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     color: #f0f4f8 !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
   }
 
-  .ds-car-exp-item-btn.selected {
+  .ds-tax-exp-item-btn.selected {
     border-color: #00c896 !important;
     background: rgba(0, 200, 150, 0.12) !important;
     box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.2) !important;
     color: #34d399 !important;
   }
 
-  .ds-car-exp-amount-area {
+  .ds-tax-exp-amount-area {
     background: linear-gradient(145deg, #132742, #0f1f35) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
   }
 
-  .ds-car-exp-amount-label {
+  .ds-tax-exp-amount-label {
     color: #8896a6 !important;
   }
 
-  .ds-car-exp-amount-input {
+  .ds-tax-exp-amount-input {
     background: rgba(255, 255, 255, 0.08) !important;
     border-color: rgba(255, 255, 255, 0.12) !important;
     color: #f0f4f8 !important;
   }
 
-  .ds-car-exp-amount-input:focus {
+  .ds-tax-exp-amount-input:focus {
     border-color: #00c896 !important;
     box-shadow: 0 0 0 4px rgba(0, 200, 150, 0.2) !important;
   }
 
-  .ds-car-exp-note-input {
+  .ds-tax-exp-note-input {
     background: rgba(255, 255, 255, 0.06) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     color: #f0f4f8 !important;
   }
 
-  .ds-car-exp-note-input::placeholder {
+  .ds-tax-exp-note-input::placeholder {
     color: #6b7a8d !important;
   }
 
-  .ds-car-exp-empty,
-  .ds-car-exp-loading {
+  .ds-tax-exp-empty,
+  .ds-tax-exp-loading {
     color: #6b7a8d !important;
   }
 
-  .ds-car-exp-msg {
+  .ds-tax-exp-msg {
     color: #f87171 !important;
   }
 
-  .ds-car-exp-msg.success {
+  .ds-tax-exp-msg.success {
     color: #34d399 !important;
   }
 }

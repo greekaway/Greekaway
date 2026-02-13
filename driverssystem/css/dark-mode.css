@@ -20,7 +20,10 @@
   .ds-ai-page .ds-page-header,
   .ds-info-page .ds-page-header,
   .ds-listings-page .ds-page-header,
-  .ds-profile-page .ds-page-header {
+  .ds-profile-page .ds-page-header,
+  .ds-car-expenses-page .ds-page-header,
+  .ds-personal-expenses-page .ds-page-header,
+  .ds-tax-expenses-page .ds-page-header {
     background: linear-gradient(145deg, #0f2035 0%, #0a1828 100%) !important;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -33,7 +36,10 @@
   .ds-ai-page .ds-page-logo,
   .ds-info-page .ds-page-logo,
   .ds-listings-page .ds-page-logo,
-  .ds-profile-page .ds-page-logo {
+  .ds-profile-page .ds-page-logo,
+  .ds-car-expenses-page .ds-page-logo,
+  .ds-personal-expenses-page .ds-page-logo,
+  .ds-tax-expenses-page .ds-page-logo {
     filter: brightness(0) invert(1) !important;
   }
 
@@ -44,7 +50,10 @@
   .ds-ai-page .ds-page-title,
   .ds-info-page .ds-page-title,
   .ds-listings-page .ds-page-title,
-  .ds-profile-page .ds-page-title {
+  .ds-profile-page .ds-page-title,
+  .ds-car-expenses-page .ds-page-title,
+  .ds-personal-expenses-page .ds-page-title,
+  .ds-tax-expenses-page .ds-page-title {
     color: #f0f4f8 !important;
   }
 

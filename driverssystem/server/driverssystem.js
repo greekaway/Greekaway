@@ -5,6 +5,7 @@ let multer = null;
 try { multer = require('multer'); } catch (_) { multer = null; }
 
 const dataLayer = require('../../src/server/data/driverssystem');
+const { registerDriversSystemAssistant } = require('./assistant');
 
 module.exports = function registerDriversSystem(app, opts = {}) {
   const isDev = !!opts.isDev;
@@ -27,7 +28,8 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     '/listings': 'entries.html',
     '/info': 'stats.html',
     '/stats': 'stats.html',
-    '/profile': 'profile.html'
+    '/profile': 'profile.html',
+    '/assistant': 'assistant.html'
   };
 
   Object.keys(pageMap).forEach((routePath) => {
@@ -225,7 +227,13 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       if (req.query.date) filters.date = req.query.date;
       if (req.query.sourceId) filters.sourceId = req.query.sourceId;
       if (req.query.driverId) filters.driverId = req.query.driverId;
-      const items = await dataLayer.getEntries(filters);
+      // Support date-range queries for overlay drill-downs
+      if (req.query.from) filters.from = req.query.from;
+      if (req.query.to) filters.to = req.query.to;
+      const useRange = filters.from || filters.to;
+      const items = useRange
+        ? await dataLayer.getEntriesRange(filters)
+        : await dataLayer.getEntries(filters);
       return res.json(items);
     } catch (err) {
       return res.status(500).json({ error: 'Server error' });
@@ -319,6 +327,21 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     }
   });
 
+  // ── Dashboard API (Driver - monthly performance from real data) ──
+
+  app.get('/api/driverssystem/dashboard', async (req, res) => {
+    try {
+      const opts = {};
+      if (req.query.driverId) opts.driverId = req.query.driverId;
+      if (req.query.month) opts.month = req.query.month;
+      const dashboard = await dataLayer.getDashboard(opts);
+      return res.json(dashboard);
+    } catch (err) {
+      console.error('[driverssystem] dashboard error:', err.message);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
   // ── Admin: Drivers list ──
 
   app.get('/api/admin/driverssystem/drivers', requireAdmin, async (req, res) => {
@@ -398,6 +421,20 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       if (req.query.sourceId) filters.sourceId = req.query.sourceId;
       const stats = await dataLayer.getStatsRange(filters);
       return res.json(stats);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Admin: Dashboard (monthly performance) ──
+
+  app.get('/api/admin/driverssystem/dashboard', requireAdmin, async (req, res) => {
+    try {
+      const opts = {};
+      if (req.query.driverId) opts.driverId = req.query.driverId;
+      if (req.query.month) opts.month = req.query.month;
+      const dashboard = await dataLayer.getDashboard(opts);
+      return res.json(dashboard);
     } catch (err) {
       return res.status(500).json({ error: 'Server error' });
     }
@@ -553,14 +590,17 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   // ── Car expense records (driver submissions) ──
   app.post('/api/driverssystem/car-expenses', async (req, res) => {
     try {
-      const { driverId, groupId, groupName, itemId, itemName, amount, date } = req.body || {};
+      const { driverId, groupId, groupName, itemId, itemName, amount, date, note } = req.body || {};
       if (!amount || !groupId || !itemId) {
         return res.status(400).json({ error: 'Απαιτείται ομάδα, είδος και ποσό' });
       }
+      const desc = note
+        ? `${groupName || groupId} → ${itemName || itemId} | ${note}`
+        : `${groupName || groupId} → ${itemName || itemId}`;
       const expense = await dataLayer.addExpense({
         driverId: driverId || '',
         category: 'car',
-        description: `${groupName || groupId} → ${itemName || itemId}`,
+        description: desc,
         amount: parseFloat(amount) || 0,
         date: date || new Date().toISOString().slice(0, 10),
         groupId,
@@ -576,6 +616,170 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   router.get('/car-expenses', (req, res) => {
     return res.sendFile(path.join(pagesDir, 'car-expenses.html'));
   });
+  // Group sub-page (same HTML, JS reads groupId from URL)
+  router.get('/car-expenses/:groupId', (req, res) => {
+    return res.sendFile(path.join(pagesDir, 'car-expenses.html'));
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // PERSONAL / HOME EXPENSE CATEGORIES (Admin-managed groups & items)
+  // ══════════════════════════════════════════════════════════
+
+  // Admin: get all personal expense categories
+  app.get('/api/admin/driverssystem/personal-expense-categories', requireAdmin, async (req, res) => {
+    try {
+      const items = await dataLayer.getPersonalExpenseCategories();
+      return res.json(items);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Admin: save all personal expense categories
+  app.put('/api/admin/driverssystem/personal-expense-categories', requireAdmin, async (req, res) => {
+    try {
+      const items = req.body;
+      if (!Array.isArray(items)) return res.status(400).json({ error: 'Expected array' });
+      const saved = await dataLayer.updatePersonalExpenseCategories(items);
+      return res.json(saved);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Public: get active personal expense categories (for driver app)
+  app.get('/api/driverssystem/personal-expense-categories', async (req, res) => {
+    try {
+      const all = await dataLayer.getPersonalExpenseCategories();
+      const active = all
+        .filter(g => g.active !== false)
+        .map(g => ({
+          ...g,
+          items: (g.items || []).filter(i => i.active !== false)
+        }))
+        .filter(g => g.items.length > 0);
+      return res.json(active);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Personal expense records (driver submissions) ──
+  app.post('/api/driverssystem/personal-expenses', async (req, res) => {
+    try {
+      const { driverId, groupId, groupName, itemId, itemName, amount, date, note } = req.body || {};
+      if (!amount || !groupId || !itemId) {
+        return res.status(400).json({ error: 'Απαιτείται ομάδα, είδος και ποσό' });
+      }
+      const desc = note
+        ? `${groupName || groupId} → ${itemName || itemId} | ${note}`
+        : `${groupName || groupId} → ${itemName || itemId}`;
+      const expense = await dataLayer.addExpense({
+        driverId: driverId || '',
+        category: 'personal',
+        description: desc,
+        amount: parseFloat(amount) || 0,
+        date: date || new Date().toISOString().slice(0, 10),
+        groupId,
+        itemId
+      });
+      return res.status(201).json(expense);
+    } catch (err) {
+      return res.status(500).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // ── Personal Expenses page route ──
+  router.get('/personal-expenses', (req, res) => {
+    return res.sendFile(path.join(pagesDir, 'personal-expenses.html'));
+  });
+  router.get('/personal-expenses/:groupId', (req, res) => {
+    return res.sendFile(path.join(pagesDir, 'personal-expenses.html'));
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // TAX / INSURANCE EXPENSE CATEGORIES (Admin-managed groups & items)
+  // ══════════════════════════════════════════════════════════
+
+  // Admin: get all tax expense categories
+  app.get('/api/admin/driverssystem/tax-expense-categories', requireAdmin, async (req, res) => {
+    try {
+      const items = await dataLayer.getTaxExpenseCategories();
+      return res.json(items);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Admin: save all tax expense categories
+  app.put('/api/admin/driverssystem/tax-expense-categories', requireAdmin, async (req, res) => {
+    try {
+      const items = req.body;
+      if (!Array.isArray(items)) return res.status(400).json({ error: 'Expected array' });
+      const saved = await dataLayer.updateTaxExpenseCategories(items);
+      return res.json(saved);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Public: get active tax expense categories (for driver app)
+  app.get('/api/driverssystem/tax-expense-categories', async (req, res) => {
+    try {
+      const all = await dataLayer.getTaxExpenseCategories();
+      const active = all
+        .filter(g => g.active !== false)
+        .map(g => ({
+          ...g,
+          items: (g.items || []).filter(i => i.active !== false)
+        }))
+        .filter(g => g.items.length > 0);
+      return res.json(active);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Tax expense records (driver submissions) ──
+  app.post('/api/driverssystem/tax-expenses', async (req, res) => {
+    try {
+      const { driverId, groupId, groupName, itemId, itemName, amount, date, note } = req.body || {};
+      if (!amount || !groupId || !itemId) {
+        return res.status(400).json({ error: 'Απαιτείται ομάδα, είδος και ποσό' });
+      }
+      const desc = note
+        ? `${groupName || groupId} → ${itemName || itemId} | ${note}`
+        : `${groupName || groupId} → ${itemName || itemId}`;
+      const expense = await dataLayer.addExpense({
+        driverId: driverId || '',
+        category: 'tax',
+        description: desc,
+        amount: parseFloat(amount) || 0,
+        date: date || new Date().toISOString().slice(0, 10),
+        groupId,
+        itemId
+      });
+      return res.status(201).json(expense);
+    } catch (err) {
+      return res.status(500).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // ── Tax Expenses page route ──
+  router.get('/tax-expenses', (req, res) => {
+    return res.sendFile(path.join(pagesDir, 'tax-expenses.html'));
+  });
+  router.get('/tax-expenses/:groupId', (req, res) => {
+    return res.sendFile(path.join(pagesDir, 'tax-expenses.html'));
+  });
+
+  // ── AI Assistant routes ──
+  try {
+    const OPENAI_API_KEY = (process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || '').trim() || null;
+    registerDriversSystemAssistant(app, { OPENAI_API_KEY });
+  } catch (err) {
+    console.error('[driverssystem] assistant registration failed:', err.message);
+  }
 
   console.log('[driverssystem] routes registered');
 };

@@ -25,52 +25,17 @@
       <span class="ds-page-header__spacer"></span>
     </header>
 
-    <!-- ─── Category Tabs ─── -->
-    <nav class="ds-expenses-tabs">
-      <button class="ds-expenses-tab active" data-expense-tab="car">🚗 Αυτοκίνητο</button>
-      <button class="ds-expenses-tab" data-expense-tab="fixed">🏢 Πάγια</button>
-      <button class="ds-expenses-tab" data-expense-tab="personal">👤 Προσωπικά</button>
-      <button class="ds-expenses-tab" data-expense-tab="family">👨‍👩‍👧 Οικογένεια</button>
-    </nav>
-
     <!-- ─── Main Content ─── -->
     <main class="ds-expenses-main">
 
-      <!-- ── Month Total ── -->
-      <div class="ds-expenses-month-total">
-        <span class="ds-expenses-month-label">Σύνολο μήνα:</span>
-        <span class="ds-expenses-month-value" data-ds-expenses-total>0,00 €</span>
+      <!-- Redirect to car-expenses -->
+      <div style="text-align:center;padding:40px 20px;">
+        <p style="color:var(--ds-muted);font-size:15px;margin-bottom:16px;">Η ενότητα εξόδων έχει αναβαθμιστεί.</p>
+        <a class="ds-btn-primary" href="" data-ds-car-exp-link
+           style="display:inline-block;padding:14px 28px;border-radius:14px;background:linear-gradient(135deg,#00c896,#00a87a);color:#fff;font-weight:700;text-decoration:none;font-size:15px;">
+          Έξοδα Αυτοκινήτου
+        </a>
       </div>
-
-      <!-- ── Add Expense Form ── -->
-      <section class="ds-expenses-form-section ds-card">
-        <h3 class="ds-expenses-form-title">Νέα Καταχώρηση</h3>
-        <form data-ds-expense-form>
-          <div class="ds-expenses-form-grid">
-            <div class="ds-expenses-field">
-              <label>Περιγραφή</label>
-              <input class="ds-input" type="text" data-ds-expense-desc placeholder="π.χ. Βενζίνη" maxlength="100" />
-            </div>
-            <div class="ds-expenses-field">
-              <label>Ποσό (€)</label>
-              <input class="ds-input" type="number" data-ds-expense-amount step="0.01" min="0" placeholder="0.00" />
-            </div>
-            <div class="ds-expenses-field">
-              <label>Ημερομηνία</label>
-              <input class="ds-input" type="date" data-ds-expense-date />
-            </div>
-          </div>
-          <button type="submit" class="ds-btn-primary ds-expenses-submit">Αποθήκευση</button>
-        </form>
-      </section>
-
-      <!-- ── Expenses List ── -->
-      <section class="ds-expenses-list-section ds-card">
-        <h3 class="ds-expenses-list-title">Καταχωρήσεις</h3>
-        <div class="ds-expenses-list" data-ds-expenses-list>
-          <div class="ds-expenses-empty">Δεν υπάρχουν καταχωρήσεις</div>
-        </div>
-      </section>
 
     </main>
 

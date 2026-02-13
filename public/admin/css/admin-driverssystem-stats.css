@@ -164,6 +164,114 @@
   }
 }
 
+/* ── Single summary card (expenses) ── */
+.ds-admin-summary--single {
+  grid-template-columns: 1fr;
+  max-width: 320px;
+}
+
+.ds-admin-summary-card--clickable {
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.1s;
+}
+
+.ds-admin-summary-card--clickable:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+  transform: translateY(-1px);
+}
+
+.ds-admin-summary-hint {
+  display: block;
+  font-size: 11px;
+  color: var(--ga-muted);
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+/* ── Drill-down panel ── */
+.ds-admin-drilldown {
+  background: var(--ga-card);
+  border: 1px solid var(--ga-border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.ds-admin-drilldown__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.ds-admin-drilldown__back {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--ga-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ga-text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ds-admin-drilldown__back:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.ds-admin-drilldown__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ga-text);
+  margin: 0;
+}
+
+.ds-admin-drilldown__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ds-admin-drilldown__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.ds-admin-drilldown__row--clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ds-admin-drilldown__row--clickable:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.ds-admin-drilldown__row-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ga-text);
+}
+
+.ds-admin-drilldown__row-amount {
+  font-size: 15px;
+  font-weight: 700;
+  color: #e74c3c;
+}
+
+.ds-admin-drilldown__empty {
+  text-align: center;
+  color: var(--ga-muted);
+  font-size: 13px;
+  padding: 16px 0;
+}
+
 /* ── Subtitles ── */
 .ds-admin-subtitle {
   font-size: 16px;
@@ -597,4 +705,89 @@
 
 .btn-danger-solid:hover {
   background: #dc2626;
+}
+
+/* ═══════════════════════════════════════════
+   Performance Analysis (Ρυθμός Απόδοσης)
+   ═══════════════════════════════════════════ */
+.ds-admin-perf {
+  margin-bottom: 20px;
+}
+
+.ds-admin-perf__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.ds-admin-perf__item {
+  background: var(--card-bg, #f8fafc);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.ds-admin-perf__item--wide {
+  grid-column: 1 / -1;
+  background: var(--card-bg-accent, #f0fdf4);
+  border-color: var(--border-accent, #bbf7d0);
+}
+
+.ds-admin-perf__label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.ds-admin-perf__value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+
+.ds-admin-perf__value--accent {
+  color: #059669;
+}
+
+.ds-admin-perf__value--expense {
+  color: #dc2626;
+}
+
+.ds-admin-perf__value.positive {
+  color: #059669;
+}
+
+.ds-admin-perf__value.negative {
+  color: #dc2626;
+}
+
+/* Dark mode for admin perf */
+@media (prefers-color-scheme: dark) {
+  .ds-admin-perf__item {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.1);
+  }
+  .ds-admin-perf__item--wide {
+    background: rgba(0,200,150,0.08);
+    border-color: rgba(0,200,150,0.2);
+  }
+  .ds-admin-perf__label {
+    color: #8896a6;
+  }
+  .ds-admin-perf__value {
+    color: #e8edf3;
+  }
+  .ds-admin-perf__value--accent {
+    color: #34d399;
+  }
+  .ds-admin-perf__value--expense {
+    color: #f87171;
+  }
+  .ds-admin-perf__value.positive { color: #34d399; }
+  .ds-admin-perf__value.negative { color: #f87171; }
 }

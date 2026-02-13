@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, interactive-widget=resizes-content" />
+    <title>Βοηθός – DriversSystem</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/driverssystem/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/driverssystem/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/driverssystem/icons/apple-touch-icon.png">
+    <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
+    <link rel="preload" href="/driverssystem/css/assistant.css" as="style" />
+    <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
+    <link rel="stylesheet" href="/driverssystem/css/assistant.css" />
+  </head>
+  <body class="ds-ai-page">
+
+    <!-- ─── Header ─── -->
+    <header class="ds-page-header ds-assistant-header">
+      <button class="ds-assistant-back" data-ds-back aria-label="Πίσω">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <a class="ds-page-logo-link" data-ds-home-link href="/driverssystem">
+        <img class="ds-page-logo" data-ds-hero-logo alt="DriversSystem" style="display:none" />
+      </a>
+      <h1 class="ds-page-title">AI Βοηθός <span class="ds-live-badge"><span class="ds-live-dot"></span>live</span></h1>
+      <span class="ds-page-header__spacer"></span>
+    </header>
+
+    <!-- ─── Financial Snapshot (quick glance) ─── -->
+    <div class="ds-assistant-snapshot" data-ds-snapshot style="display:none">
+      <div class="ds-snap-card">
+        <span class="ds-snap-label">Καθαρά</span>
+        <span class="ds-snap-value" data-snap-net>—</span>
+      </div>
+      <div class="ds-snap-card">
+        <span class="ds-snap-label">Έξοδα</span>
+        <span class="ds-snap-value ds-snap-value--expense" data-snap-expenses>—</span>
+      </div>
+      <div class="ds-snap-card">
+        <span class="ds-snap-label">Τσέπη</span>
+        <span class="ds-snap-value ds-snap-value--balance" data-snap-balance>—</span>
+      </div>
+    </div>
+
+    <!-- ─── Chat Container ─── -->
+    <main class="ds-chat" data-ds-chat>
+      <div class="ds-chat-messages" data-ds-chat-messages>
+
+        <!-- Welcome message (shown on first load) -->
+        <div class="ds-chat-msg ds-chat-msg--bot">
+          <div class="ds-chat-msg__bubble">
+            Γεια σου! Είμαι ο οικονομικός σου βοηθός. Ρώτα με οτιδήποτε σχετικά με τα έσοδα, τα έξοδα, ή την πορεία σου.
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ─── Quick Actions ─── -->
+    <div class="ds-chat-quick" data-ds-quick-actions>
+      <button class="ds-quick-btn" data-quick="Πώς πάω αυτόν τον μήνα;">💰 Πώς πάω;</button>
+      <button class="ds-quick-btn" data-quick="Πού φεύγουν τα χρήματα;">📊 Πού φεύγουν;</button>
+      <button class="ds-quick-btn" data-quick="Δουλεύω αρκετά;">🚗 Δουλεύω αρκετά;</button>
+      <button class="ds-quick-btn" data-quick="Με τον ρυθμό που πάω πού θα φτάσω;">📈 Πρόβλεψη</button>
+    </div>
+
+    <!-- ─── Chat Input ─── -->
+    <div class="ds-chat-input-bar">
+      <div class="ds-chat-input-wrap">
+        <textarea
+          class="ds-chat-input"
+          data-ds-chat-input
+          placeholder="Ρώτα τον βοηθό σου..."
+          rows="1"
+          maxlength="500"
+        ></textarea>
+        <button class="ds-chat-send" data-ds-chat-send aria-label="Αποστολή">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── Scripts ─── -->
+    <script src="/driverssystem/js/driverssystem-config.js"></script>
+    <script src="/driverssystem/js/assistant.js"></script>
+  </body>
+</html>

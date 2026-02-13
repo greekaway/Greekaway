@@ -25,32 +25,31 @@
       <span class="ds-page-header__spacer"></span>
     </header>
 
+    <!-- ─── Back bar (shown on group sub-page, below header) ─── -->
+    <div class="ds-car-exp-back-bar" data-ds-car-exp-back-bar hidden>
+      <button class="ds-car-exp-back-btn" data-ds-car-exp-back>&larr; Πίσω</button>
+    </div>
+
     <!-- ─── Main Content ─── -->
     <main class="ds-car-exp-main">
 
-      <!-- ── Level 1: Groups ── -->
+      <!-- ── Level 1: Groups (shown on /car-expenses) ── -->
       <section class="ds-car-exp-groups" data-ds-car-exp-groups>
         <div class="ds-car-exp-loading">Φόρτωση…</div>
       </section>
 
-      <!-- ── Level 2: Items in selected group (hidden initially) ── -->
+      <!-- ── Level 2: Items + amount (shown on /car-expenses/:groupId) ── -->
       <section class="ds-car-exp-items" data-ds-car-exp-items hidden>
-        <button class="ds-car-exp-back" data-ds-car-exp-back>← Πίσω</button>
-        <h2 class="ds-car-exp-items-title" data-ds-car-exp-items-title></h2>
         <div class="ds-car-exp-items-grid" data-ds-car-exp-items-grid></div>
-      </section>
-
-      <!-- ── Level 3: Amount input (hidden initially) ── -->
-      <section class="ds-car-exp-amount" data-ds-car-exp-amount hidden>
-        <button class="ds-car-exp-back" data-ds-car-exp-amount-back>← Πίσω</button>
-        <div class="ds-car-exp-amount-card ds-card">
-          <h3 class="ds-car-exp-amount-title" data-ds-car-exp-amount-label></h3>
+        <div class="ds-car-exp-amount-area">
           <div class="ds-car-exp-amount-field">
-            <label>Ποσό (€)</label>
-            <input class="ds-input ds-car-exp-amount-input" type="number" inputmode="decimal"
-                   step="0.01" min="0" placeholder="0.00" data-ds-car-exp-amount-input />
+            <label class="ds-car-exp-amount-label" for="ds-car-amount">Ποσό (€)</label>
+            <input class="ds-car-exp-amount-input" id="ds-car-amount" type="text" inputmode="numeric"
+                   pattern="[0-9]*" placeholder="0,00" readonly data-ds-car-exp-amount />
           </div>
-          <button class="ds-btn-primary ds-car-exp-save-btn" data-ds-car-exp-save disabled>
+          <input class="ds-car-exp-note-input" type="text" placeholder="Σημείωση (προαιρετικά)"
+                 maxlength="100" data-ds-car-exp-note />
+          <button class="ds-car-exp-save-btn" data-ds-car-exp-save disabled>
             Αποθήκευση
           </button>
           <div class="ds-car-exp-msg" data-ds-car-exp-msg></div>

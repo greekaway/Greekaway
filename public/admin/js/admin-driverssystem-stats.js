@@ -158,6 +158,36 @@
       const stats = await res.json();
       renderOverview(stats, period);
     } catch (_) {}
+
+    // ── Load performance dashboard (real data) ──
+    try {
+      const dashParams = new URLSearchParams();
+      if (driverId) dashParams.set('driverId', driverId);
+      const dashRes = await api(`/api/admin/driverssystem/dashboard?${dashParams}`);
+      if (dashRes && dashRes.ok) {
+        const dash = await dashRes.json();
+        renderPerformance(dash);
+      }
+    } catch (_) {}
+  };
+
+  const renderPerformance = (d) => {
+    const set = (attr, val) => {
+      const el = $(`[${attr}]`);
+      if (el) el.textContent = val;
+    };
+    set('data-admin-perf-days', d.workingDays);
+    set('data-admin-perf-trips', d.totalTrips);
+    set('data-admin-perf-net', fmtEur(d.totalNet));
+    set('data-admin-perf-avg', fmtEur(d.avgNetPerDay));
+    set('data-admin-perf-proj', fmtEur(d.projectedNet));
+    set('data-admin-perf-expenses', fmtEur(d.totalExpenses));
+    const afterEl = $('[data-admin-perf-after]');
+    if (afterEl) {
+      afterEl.textContent = fmtEur(d.projectedNetAfterExpenses);
+      afterEl.classList.remove('positive', 'negative');
+      afterEl.classList.add(d.projectedNetAfterExpenses >= 0 ? 'positive' : 'negative');
+    }
   };
 
   const renderOverview = (stats, period) => {
@@ -428,7 +458,34 @@
 
   // ── EXPENSES TAB ──
 
-  const catLabels = { car: '🚗 Αυτ/του', fixed: '🏢 Πάγια', personal: '👤 Προσωπικά', family: '👨‍👩‍👧 Οικογενειακά' };
+  const catLabels = { car: 'Αυτοκίνητο', personal: 'Προσωπικά / Σπιτιού', tax: 'Φόροι / Ασφαλιστικά' };
+
+  // Cache for car expense categories (from admin API)
+  let carExpCatsCache = [];
+  const loadCarExpCats = async () => {
+    try {
+      const res = await api('/api/admin/driverssystem/car-expense-categories');
+      if (res && res.ok) carExpCatsCache = await res.json();
+    } catch (_) {}
+  };
+
+  // Cache for personal expense categories
+  let persExpCatsCache = [];
+  const loadPersExpCats = async () => {
+    try {
+      const res = await api('/api/admin/driverssystem/personal-expense-categories');
+      if (res && res.ok) persExpCatsCache = await res.json();
+    } catch (_) {}
+  };
+
+  // Cache for tax / insurance expense categories
+  let taxExpCatsCache = [];
+  const loadTaxExpCats = async () => {
+    try {
+      const res = await api('/api/admin/driverssystem/tax-expense-categories');
+      if (res && res.ok) taxExpCatsCache = await res.json();
+    } catch (_) {}
+  };
 
   const populateExpDriverDropdown = () => {
     const el = $('#adminExpDriverSelect');
@@ -443,6 +500,9 @@
     });
     el.value = current;
   };
+
+  // Keep the full expenses array for drill-down
+  let lastExpenses = [];
 
   const loadExpenses = async () => {
     const driverId = ($('#adminExpDriverSelect') || {}).value || '';
@@ -460,23 +520,29 @@
     const emptyEl = $('[data-admin-expenses-empty]');
     if (!tbody) return;
 
+    // Hide drill-down when reloading
+    const drilldown = $('[data-admin-exp-drilldown]');
+    if (drilldown) drilldown.hidden = true;
+
     try {
       const res = await api(`/api/admin/driverssystem/expenses?${params}`);
       if (!res || !res.ok) return;
       const expenses = await res.json();
+      lastExpenses = expenses;
 
-      // Compute category totals
-      const totals = { car: 0, fixed: 0, personal: 0, family: 0 };
-      expenses.forEach(e => { if (totals[e.category] !== undefined) totals[e.category] += (e.amount || 0); });
-
+      // Compute totals per category
+      const carTotal = expenses.reduce((s, e) => s + (e.category === 'car' ? (e.amount || 0) : 0), 0);
+      const personalTotal = expenses.reduce((s, e) => s + (e.category === 'personal' ? (e.amount || 0) : 0), 0);
+      const taxTotal = expenses.reduce((s, e) => s + (e.category === 'tax' ? (e.amount || 0) : 0), 0);
+      const grandTotal = carTotal + personalTotal + taxTotal;
       const carEl = $('[data-admin-exp-car]');
-      const fixedEl = $('[data-admin-exp-fixed]');
-      const personalEl = $('[data-admin-exp-personal]');
-      const familyEl = $('[data-admin-exp-family]');
-      if (carEl) carEl.textContent = fmtEur(totals.car);
-      if (fixedEl) fixedEl.textContent = fmtEur(totals.fixed);
-      if (personalEl) personalEl.textContent = fmtEur(totals.personal);
-      if (familyEl) familyEl.textContent = fmtEur(totals.family);
+      if (carEl) carEl.textContent = fmtEur(carTotal);
+      const persEl = $('[data-admin-exp-personal]');
+      if (persEl) persEl.textContent = fmtEur(personalTotal);
+      const taxEl = $('[data-admin-exp-tax]');
+      if (taxEl) taxEl.textContent = fmtEur(taxTotal);
+      const totalEl = $('[data-admin-exp-total]');
+      if (totalEl) totalEl.textContent = fmtEur(grandTotal);
 
       if (expenses.length === 0) {
         tbody.innerHTML = '';
@@ -491,12 +557,13 @@
 
       tbody.innerHTML = expenses.map(e => {
         const driverName = e.driverId ? (driverMap[e.driverId] || e.driverId) : '—';
+        const groupItem = e.groupName && e.itemName ? `${e.groupName} / ${e.itemName}` : (e.description || '—');
         return `
           <tr>
             <td>${fmtDate(e.date)}</td>
             <td>${driverName}</td>
             <td>${catLabels[e.category] || e.category}</td>
-            <td>${e.description || '—'}</td>
+            <td>${groupItem}</td>
             <td class="col-commission">${fmtEur(e.amount)}</td>
           </tr>`;
       }).join('');
@@ -506,6 +573,117 @@
     }
   };
 
+  // ── Drill-down logic (3 levels) ──
+  const initDrilldown = () => {
+    const carCard = $('[data-admin-exp-car-card]');
+    const personalCard = $('[data-admin-exp-personal-card]');
+    const taxCard = $('[data-admin-exp-tax-card]');
+    const drilldown = $('[data-admin-exp-drilldown]');
+    const drillTitle = $('[data-admin-exp-drill-title]');
+    const drillBody = $('[data-admin-exp-drill-body]');
+    const drillBack = $('[data-admin-exp-drill-back]');
+    if (!drilldown) return;
+
+    let drillLevel = 0; // 0 = closed, 1 = groups, 2 = items
+    let drillGroupId = null;
+    let drillCategory = null; // 'car' or 'personal'
+
+    const closeDrill = () => {
+      drilldown.hidden = true;
+      drillLevel = 0;
+      drillGroupId = null;
+      drillCategory = null;
+    };
+
+    // Generic: open group-level drill-down for a category
+    const openCategoryDrill = (category) => {
+      if (drillLevel === 1 && drillCategory === category && !drillGroupId) { closeDrill(); return; }
+      drillLevel = 1;
+      drillGroupId = null;
+      drillCategory = category;
+      drilldown.hidden = false;
+      drillTitle.textContent = 'Ανάλυση - ' + (catLabels[category] || category);
+
+      // Sum by groupName
+      const catExps = lastExpenses.filter(e => e.category === category);
+      const groupTotals = {};
+      catExps.forEach(e => {
+        const gn = e.groupName || 'Άλλο';
+        const gid = e.groupId || gn;
+        if (!groupTotals[gid]) groupTotals[gid] = { name: gn, total: 0 };
+        groupTotals[gid].total += (e.amount || 0);
+      });
+
+      const groups = Object.entries(groupTotals);
+      if (groups.length === 0) {
+        drillBody.innerHTML = '<div class="ds-admin-drilldown__empty">Δεν υπάρχουν δεδομένα</div>';
+        return;
+      }
+
+      drillBody.innerHTML = groups.map(([gid, g]) => `
+        <div class="ds-admin-drilldown__row ds-admin-drilldown__row--clickable" data-drill-group="${gid}">
+          <span class="ds-admin-drilldown__row-name">${g.name}</span>
+          <span class="ds-admin-drilldown__row-amount">${fmtEur(g.total)}</span>
+        </div>
+      `).join('');
+
+      // Level 2: click on a group → show items
+      drillBody.querySelectorAll('[data-drill-group]').forEach(row => {
+        row.addEventListener('click', () => {
+          const gid = row.dataset.drillGroup;
+          drillLevel = 2;
+          drillGroupId = gid;
+          const groupName = groupTotals[gid] ? groupTotals[gid].name : gid;
+          drillTitle.textContent = groupName;
+
+          const itemExps = catExps.filter(e => (e.groupId || e.groupName || 'Άλλο') === gid);
+          const itemTotals = {};
+          itemExps.forEach(e => {
+            const iname = e.itemName || e.description || 'Άλλο';
+            if (!itemTotals[iname]) itemTotals[iname] = 0;
+            itemTotals[iname] += (e.amount || 0);
+          });
+
+          const items = Object.entries(itemTotals);
+          if (items.length === 0) {
+            drillBody.innerHTML = '<div class="ds-admin-drilldown__empty">Δεν υπάρχουν δεδομένα</div>';
+            return;
+          }
+
+          drillBody.innerHTML = items.map(([name, total]) => `
+            <div class="ds-admin-drilldown__row">
+              <span class="ds-admin-drilldown__row-name">${name}</span>
+              <span class="ds-admin-drilldown__row-amount">${fmtEur(total)}</span>
+            </div>
+          `).join('');
+        });
+      });
+    };
+
+    // Bind car card
+    if (carCard) carCard.addEventListener('click', () => openCategoryDrill('car'));
+
+    // Bind personal card
+    if (personalCard) personalCard.addEventListener('click', () => openCategoryDrill('personal'));
+
+    // Bind tax card
+    if (taxCard) taxCard.addEventListener('click', () => openCategoryDrill('tax'));
+
+    // Back button
+    if (drillBack) {
+      drillBack.addEventListener('click', () => {
+        if (drillLevel === 2) {
+          // Go back to groups for the current category
+          openCategoryDrill(drillCategory);
+        } else {
+          closeDrill();
+        }
+      });
+    }
+  };
+
+  initDrilldown();
+
   const expLoadBtn = $('#adminExpLoad');
   if (expLoadBtn) expLoadBtn.addEventListener('click', loadExpenses);
 
@@ -514,6 +692,9 @@
     await loadSources();
     await loadDriversList();
     populateExpDriverDropdown();
+    await loadCarExpCats();
+    await loadPersExpCats();
+    await loadTaxExpCats();
     // Set default date range to current month
     const today = new Date();
     const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);

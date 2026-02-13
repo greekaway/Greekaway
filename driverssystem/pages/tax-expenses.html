@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Φόροι / Ασφαλιστικά – DriversSystem</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/driverssystem/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/driverssystem/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/driverssystem/icons/apple-touch-icon.png">
+    <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
+    <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
+    <link rel="stylesheet" href="/driverssystem/css/footer.css" />
+    <link rel="stylesheet" href="/driverssystem/css/profile.css" />
+    <link rel="stylesheet" href="/driverssystem/css/tax-expenses.css" />
+    <link rel="stylesheet" href="/driverssystem/css/dark-mode.css" />
+  </head>
+  <body class="ds-tax-expenses-page">
+
+    <!-- ─── Header ─── -->
+    <header class="ds-page-header">
+      <a class="ds-page-logo-link" data-ds-home-link href="/driverssystem">
+        <img class="ds-page-logo" data-ds-hero-logo alt="DriversSystem" style="display:none" />
+      </a>
+      <h1 class="ds-page-title" data-ds-tax-exp-title>Φόροι / Ασφαλιστικά</h1>
+      <span class="ds-page-header__spacer"></span>
+    </header>
+
+    <!-- ─── Back bar (shown on group sub-page, below header) ─── -->
+    <div class="ds-tax-exp-back-bar" data-ds-tax-exp-back-bar hidden>
+      <button class="ds-tax-exp-back-btn" data-ds-tax-exp-back>&larr; Πίσω</button>
+    </div>
+
+    <!-- ─── Main Content ─── -->
+    <main class="ds-tax-exp-main">
+
+      <!-- ── Level 1: Groups (shown on /tax-expenses) ── -->
+      <section class="ds-tax-exp-groups" data-ds-tax-exp-groups>
+        <div class="ds-tax-exp-loading">Φόρτωση…</div>
+      </section>
+
+      <!-- ── Level 2: Items + amount (shown on /tax-expenses/:groupId) ── -->
+      <section class="ds-tax-exp-items" data-ds-tax-exp-items hidden>
+        <div class="ds-tax-exp-items-grid" data-ds-tax-exp-items-grid></div>
+        <div class="ds-tax-exp-amount-area">
+          <div class="ds-tax-exp-amount-field">
+            <label class="ds-tax-exp-amount-label" for="ds-tax-amount">Ποσό (€)</label>
+            <input class="ds-tax-exp-amount-input" id="ds-tax-amount" type="text" inputmode="numeric"
+                   pattern="[0-9]*" placeholder="0,00" readonly data-ds-tax-exp-amount />
+          </div>
+          <input class="ds-tax-exp-note-input" type="text" placeholder="Σημείωση (προαιρετικά)"
+                 maxlength="100" data-ds-tax-exp-note />
+          <button class="ds-tax-exp-save-btn" data-ds-tax-exp-save disabled>
+            Αποθήκευση
+          </button>
+          <div class="ds-tax-exp-msg" data-ds-tax-exp-msg></div>
+        </div>
+      </section>
+
+    </main>
+
+    <div data-ds-footer-slot></div>
+
+    <script src="/driverssystem/js/driverssystem-config.js"></script>
+    <script src="/driverssystem/js/footer.js"></script>
+    <script src="/driverssystem/js/tax-expenses.js"></script>
+  </body>
+</html>

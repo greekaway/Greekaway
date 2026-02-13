@@ -244,7 +244,7 @@
               <span class="ds-entry-item__gross">${fmtEur(e.amount)}</span>
               <span class="ds-entry-item__net">καθ. ${fmtEur(e.netAmount)}</span>
             </div>
-            <button class="ds-entry-item__delete" data-delete-id="${e.id}" aria-label="Διαγραφή">✕</button>
+            <button class="ds-entry-item__delete" data-delete-id="${e.id}" aria-label="Διαγραφή">&times;</button>
           </div>`;
       }).join('');
 

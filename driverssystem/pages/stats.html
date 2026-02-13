@@ -29,55 +29,44 @@
     <!-- ─── Main Content ─── -->
     <main class="ds-stats-main">
 
-      <!-- ── Expense Category Buttons ── -->
+      <!-- ── Expense Navigation ── -->
       <section class="ds-expense-nav">
-        <button class="ds-expense-nav-btn" data-expense-cat="car">🚗 Έξοδα Αυτ/του</button>
-        <button class="ds-expense-nav-btn" data-expense-cat="fixed">🏢 Πάγια</button>
-        <button class="ds-expense-nav-btn" data-expense-cat="personal">👤 Προσωπικά</button>
-        <button class="ds-expense-nav-btn" data-expense-cat="family">👨‍👩‍👧 Οικογενειακά</button>
+        <button class="ds-expense-nav-btn" data-expense-cat="car">Έξοδα Αυτοκινήτου</button>
+        <button class="ds-expense-nav-btn" data-expense-cat="personal">Προσωπικά / Σπιτιού</button>
+        <button class="ds-expense-nav-btn" data-expense-cat="tax">Φόροι / Ασφαλιστικά</button>
       </section>
 
-      <!-- ── Summary Cards (clickable for breakdown) ── -->
+      <!-- ── Summary Cards (clickable → open overlay) ── -->
       <section class="ds-stats-summary">
-        <div class="ds-stats-card ds-stats-card--gross ds-stats-card--clickable" data-stats-detail="gross">
+        <div class="ds-stats-card ds-stats-card--gross ds-stats-card--clickable" data-stats-overlay="gross">
           <span class="ds-stats-card__label">Μεικτά</span>
           <span class="ds-stats-card__value" data-ds-stats-gross>0,00 €</span>
-          <span class="ds-stats-card__expand">▼</span>
         </div>
-        <div class="ds-stats-card ds-stats-card--net ds-stats-card--clickable" data-stats-detail="net">
+        <div class="ds-stats-card ds-stats-card--net ds-stats-card--clickable" data-stats-overlay="net">
           <span class="ds-stats-card__label">Καθαρά</span>
           <span class="ds-stats-card__value" data-ds-stats-net>0,00 €</span>
-          <span class="ds-stats-card__expand">▼</span>
         </div>
-        <div class="ds-stats-card ds-stats-card--trips ds-stats-card--clickable" data-stats-detail="trips">
+        <div class="ds-stats-card ds-stats-card--trips ds-stats-card--clickable" data-stats-overlay="trips">
           <span class="ds-stats-card__label">Διαδρομές</span>
           <span class="ds-stats-card__value" data-ds-stats-count>0</span>
-          <span class="ds-stats-card__expand">▼</span>
         </div>
-        <div class="ds-stats-card ds-stats-card--commission ds-stats-card--clickable" data-stats-detail="commission">
+        <div class="ds-stats-card ds-stats-card--commission ds-stats-card--clickable" data-stats-overlay="commission">
           <span class="ds-stats-card__label">Προμήθειες</span>
           <span class="ds-stats-card__value" data-ds-stats-commission>0,00 €</span>
-          <span class="ds-stats-card__expand">▼</span>
         </div>
       </section>
 
-      <!-- ── Expandable Detail Panels ── -->
-      <section class="ds-stats-detail-panel" data-ds-detail-panel="gross" style="display:none">
-        <h3 class="ds-stats-detail-title">Ανάλυση Μεικτών ανά Πηγή</h3>
-        <div class="ds-stats-detail-body" data-ds-detail-body="gross"></div>
-      </section>
-      <section class="ds-stats-detail-panel" data-ds-detail-panel="net" style="display:none">
-        <h3 class="ds-stats-detail-title">Ανάλυση Καθαρών ανά Πηγή</h3>
-        <div class="ds-stats-detail-body" data-ds-detail-body="net"></div>
-      </section>
-      <section class="ds-stats-detail-panel" data-ds-detail-panel="trips" style="display:none">
-        <h3 class="ds-stats-detail-title">Διαδρομές ανά Εφαρμογή</h3>
-        <div class="ds-stats-detail-body" data-ds-detail-body="trips"></div>
-      </section>
-      <section class="ds-stats-detail-panel" data-ds-detail-panel="commission" style="display:none">
-        <h3 class="ds-stats-detail-title">Προμήθειες ανά Εφαρμογή</h3>
-        <div class="ds-stats-detail-body" data-ds-detail-body="commission"></div>
-      </section>
+      <!-- ── Stats Overlay (opens on card tap) ── -->
+      <div class="ds-overlay" data-ds-stats-overlay style="display:none">
+        <div class="ds-overlay__backdrop" data-ds-overlay-close></div>
+        <div class="ds-overlay__panel">
+          <div class="ds-overlay__header">
+            <h2 class="ds-overlay__title" data-ds-overlay-title></h2>
+            <button class="ds-overlay__close" data-ds-overlay-close aria-label="Κλείσιμο">&times;</button>
+          </div>
+          <div class="ds-overlay__body" data-ds-overlay-body></div>
+        </div>
+      </div>
 
       <!-- ── Filters ── -->
       <section class="ds-stats-filters ds-card">

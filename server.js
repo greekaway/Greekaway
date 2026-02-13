@@ -686,7 +686,8 @@ const DRIVERSSYSTEM_PAGE_MAP = {
   '/listings': 'entries.html',
   '/info': 'stats.html',
   '/stats': 'stats.html',
-  '/profile': 'profile.html'
+  '/profile': 'profile.html',
+  '/assistant': 'assistant.html'
 };
 
 // ─────────────────────────────────────────────────────────

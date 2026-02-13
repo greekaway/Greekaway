@@ -237,6 +237,80 @@ async function updateCarExpenseCategories(items) {
   return cfg.carExpenseCategories;
 }
 
+// ── Personal / Home Expense Categories (2-level: groups → items) ──
+
+function getDefaultPersonalExpenseCategories() {
+  return [
+    { id: 'fixed_monthly', name: 'Πάγια Μηνιαία', active: true, items: [
+      { id: 'rent', name: 'Ενοίκιο', active: true },
+      { id: 'electricity', name: 'Ρεύμα', active: true },
+      { id: 'water', name: 'Νερό', active: true },
+      { id: 'internet_phone', name: 'Internet / Τηλέφωνο', active: true },
+      { id: 'shared_costs', name: 'Κοινόχρηστα', active: true },
+      { id: 'subscriptions', name: 'Συνδρομές', active: true }
+    ]},
+    { id: 'daily_family', name: 'Καθημερινά / Οικογενειακά', active: true, items: [
+      { id: 'supermarket', name: 'Σούπερ μάρκετ', active: true },
+      { id: 'health', name: 'Υγεία / Φάρμακα', active: true },
+      { id: 'kids_school', name: 'Παιδιά / Σχολείο', active: true },
+      { id: 'clothing', name: 'Ρούχα / Αγορές', active: true },
+      { id: 'emergency', name: 'Έκτακτο έξοδο', active: true }
+    ]}
+  ];
+}
+
+async function getPersonalExpenseCategories() {
+  const cfg = readConfig();
+  if (!Array.isArray(cfg.personalExpenseCategories) || cfg.personalExpenseCategories.length === 0) {
+    return getDefaultPersonalExpenseCategories();
+  }
+  return cfg.personalExpenseCategories;
+}
+
+async function updatePersonalExpenseCategories(items) {
+  const cfg = readConfig();
+  cfg.personalExpenseCategories = Array.isArray(items) ? items : [];
+  writeConfig(cfg);
+  return cfg.personalExpenseCategories;
+}
+
+// ── Tax / Insurance Expense Categories (2-level: groups → items) ──
+
+function getDefaultTaxExpenseCategories() {
+  return [
+    { id: 'tax_fiscal', name: 'Φορολογικά', active: true, items: [
+      { id: 'income_tax', name: 'Φόρος εισοδήματος', active: true },
+      { id: 'tax_prepayment', name: 'Προκαταβολή φόρου', active: true },
+      { id: 'accountant', name: 'Λογιστής', active: true }
+    ]},
+    { id: 'tax_insurance', name: 'Ασφαλιστικά', active: true, items: [
+      { id: 'efka_tebe', name: 'ΕΦΚΑ / ΤΕΒΕ', active: true },
+      { id: 'health_insurance', name: 'Ασφάλεια υγείας', active: true }
+    ]},
+    { id: 'tax_professional', name: 'Επαγγελματικές Υποχρεώσεις', active: true, items: [
+      { id: 'union', name: 'Σωματείο', active: true },
+      { id: 'licenses', name: 'Άδειες', active: true },
+      { id: 'stamps', name: 'Παράβολα', active: true },
+      { id: 'profession_fees', name: 'Τέλη επαγγέλματος', active: true }
+    ]}
+  ];
+}
+
+async function getTaxExpenseCategories() {
+  const cfg = readConfig();
+  if (!Array.isArray(cfg.taxExpenseCategories) || cfg.taxExpenseCategories.length === 0) {
+    return getDefaultTaxExpenseCategories();
+  }
+  return cfg.taxExpenseCategories;
+}
+
+async function updateTaxExpenseCategories(items) {
+  const cfg = readConfig();
+  cfg.taxExpenseCategories = Array.isArray(items) ? items : [];
+  writeConfig(cfg);
+  return cfg.taxExpenseCategories;
+}
+
 // ── Entries ──
 
 function readEntries() {
@@ -517,6 +591,106 @@ async function getStatsRange(filters = {}) {
   };
 }
 
+// =========================================================
+// DASHBOARD — Monthly performance summary (from real data)
+// =========================================================
+
+/**
+ * Build a monthly performance dashboard for one or all drivers.
+ * Uses only real entries + expenses (no hardcoded values).
+ *
+ * @param {Object} opts - { driverId, month (YYYY-MM) }
+ * @returns {Object} dashboard payload
+ */
+async function getDashboard(opts = {}) {
+  const now = new Date();
+  const month = opts.month || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const [year, mon] = month.split('-').map(Number);
+  const daysInMonth = new Date(year, mon, 0).getDate();
+  const firstDay = `${month}-01`;
+  const lastDay = `${month}-${String(daysInMonth).padStart(2, '0')}`;
+
+  // Determine if we are in the current month
+  const isCurrentMonth = (now.getFullYear() === year && now.getMonth() + 1 === mon);
+  const today = now.toISOString().slice(0, 10);
+  const toDate = isCurrentMonth ? today : lastDay;
+  const dayOfMonth = isCurrentMonth ? now.getDate() : daysInMonth;
+  const remainingDays = daysInMonth - dayOfMonth;
+
+  // ── Entries (revenue) ──
+  const entryFilters = { from: firstDay, to: toDate };
+  if (opts.driverId) entryFilters.driverId = opts.driverId;
+  const entries = await getEntriesRange(entryFilters);
+
+  const totalTrips = entries.length;
+  const totalGross = entries.reduce((s, e) => s + (e.amount || 0), 0);
+  const totalNet = entries.reduce((s, e) => s + (e.netAmount || 0), 0);
+  const totalCommission = totalGross - totalNet;
+
+  // Count distinct working days (dates with ≥ 1 entry)
+  const workingDaysSet = new Set(entries.map(e => e.date));
+  const workingDays = workingDaysSet.size;
+
+  // Daily average (based on days actually worked)
+  const effectiveDays = Math.max(workingDays, 1);
+  const avgNetPerDay = totalNet / effectiveDays;
+  const avgGrossPerDay = totalGross / effectiveDays;
+
+  // Monthly projection (if driver keeps same pace)
+  const projectedNet = avgNetPerDay * daysInMonth;
+  const projectedGross = avgGrossPerDay * daysInMonth;
+
+  // ── Expenses ──
+  const expFilters = { from: firstDay, to: toDate };
+  if (opts.driverId) expFilters.driverId = opts.driverId;
+  const expData = await getExpensesRange(expFilters);
+  const totalExpenses = expData.totalExpenses || 0;
+  const expCar = (expData.byCategory && expData.byCategory.car) ? expData.byCategory.car.total : 0;
+  const expPersonal = (expData.byCategory && expData.byCategory.personal) ? expData.byCategory.personal.total : 0;
+  const expTax = (expData.byCategory && expData.byCategory.tax) ? expData.byCategory.tax.total : 0;
+  const expFixed = (expData.byCategory && expData.byCategory.fixed) ? expData.byCategory.fixed.total : 0;
+  const expFamily = (expData.byCategory && expData.byCategory.family) ? expData.byCategory.family.total : 0;
+
+  // Projection after expenses
+  const projectedNetAfterExpenses = projectedNet - totalExpenses;
+
+  // Balance so far
+  const balanceSoFar = totalNet - totalExpenses;
+
+  return {
+    month,
+    daysInMonth,
+    dayOfMonth,
+    remainingDays,
+    isCurrentMonth,
+    // Revenue
+    totalTrips,
+    totalGross,
+    totalNet,
+    totalCommission,
+    // Working days
+    workingDays,
+    // Averages
+    avgNetPerDay,
+    avgGrossPerDay,
+    // Projections
+    projectedNet,
+    projectedGross,
+    projectedNetAfterExpenses,
+    // Expenses
+    totalExpenses,
+    expenses: {
+      car: expCar,
+      personal: expPersonal,
+      tax: expTax,
+      fixed: expFixed,
+      family: expFamily
+    },
+    // Balance
+    balanceSoFar
+  };
+}
+
 module.exports = {
   getConfig,
   updateConfig,
@@ -539,6 +713,8 @@ module.exports = {
   // Stats
   getEntriesRange,
   getStatsRange,
+  // Dashboard
+  getDashboard,
   // Expenses
   getExpenses,
   addExpense,
@@ -548,14 +724,20 @@ module.exports = {
   getExpensesSummary,
   // Car Expense Categories
   getCarExpenseCategories,
-  updateCarExpenseCategories
+  updateCarExpenseCategories,
+  // Personal Expense Categories
+  getPersonalExpenseCategories,
+  updatePersonalExpenseCategories,
+  // Tax / Insurance Expense Categories
+  getTaxExpenseCategories,
+  updateTaxExpenseCategories
 };
 
 // =========================================================
 // EXPENSES (Car / Fixed / Personal / Family)
 // =========================================================
 
-const EXPENSE_CATEGORIES = ['car', 'fixed', 'personal', 'family'];
+const EXPENSE_CATEGORIES = ['car', 'fixed', 'personal', 'family', 'tax'];
 
 function readExpenses() {
   try {

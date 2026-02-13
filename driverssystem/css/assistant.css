@@ -1,0 +1,642 @@
+/* ═══════════════════════════════════════════
+   DriversSystem — AI Assistant Chat
+   Light mode default + dark mode via system
+   ═══════════════════════════════════════════ */
+
+/* ── Layout ── */
+
+/* Override base body padding (86px for footer) — assistant has no footer */
+body.ds-ai-page {
+  padding-bottom: 0 !important;
+  min-height: 0;               /* kill base min-height: 100vh */
+  margin: 0;
+}
+
+.ds-ai-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;               /* fallback */
+  height: -webkit-fill-available; /* Safari mobile fallback */
+  height: 100dvh;              /* modern: adjusts to browser chrome  */
+  max-height: 100vh;
+  max-height: -webkit-fill-available;
+  max-height: 100dvh;
+  overflow: hidden;
+  background: #f4f6f9;
+  /* visual-viewport resize sets --vv-offset via JS */
+  --vv-offset: 0px;
+}
+
+.ds-assistant-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  background: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  z-index: 10;
+}
+
+.ds-assistant-back {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 50%;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ds-assistant-back:hover {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.ds-assistant-header .ds-page-logo {
+  height: 26px;
+  width: auto;
+}
+
+.ds-assistant-header .ds-page-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #1a1a2e;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Live Badge ── */
+.ds-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #00c896;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.ds-live-dot {
+  width: 8px;
+  height: 8px;
+  background: #00c896;
+  border-radius: 50%;
+  display: inline-block;
+  animation: ds-live-pulse 1.8s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(0, 200, 150, 0.5);
+}
+
+@keyframes ds-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.75); }
+}
+
+/* ── Financial Snapshot Bar ── */
+.ds-assistant-snapshot {
+  flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ds-snap-card {
+  flex: 1;
+  min-width: 80px;
+  background: #f0f2f5;
+  border-radius: 10px;
+  padding: 5px 8px;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.ds-snap-label {
+  display: block;
+  font-size: 10px;
+  color: #6b7280;
+  margin-bottom: 1px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ds-snap-value {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: #00a87a;
+}
+
+.ds-snap-value--expense {
+  color: #e74c3c;
+}
+
+.ds-snap-value--balance {
+  color: #2ecc71;
+}
+
+/* ── Chat Messages Area ── */
+.ds-chat {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px 14px 8px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ds-chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ── Message Bubbles ── */
+.ds-chat-msg {
+  display: flex;
+  align-items: flex-end;
+  animation: ds-msg-in 0.2s ease-out both;
+}
+
+@keyframes ds-msg-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ds-chat-msg--user {
+  justify-content: flex-end;
+}
+
+.ds-chat-msg__bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.ds-chat-msg--bot .ds-chat-msg__bubble {
+  background: #fff;
+  color: #1a1a2e;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom-left-radius: 4px;
+}
+
+.ds-chat-msg--user .ds-chat-msg__bubble {
+  background: linear-gradient(135deg, #00c896 0%, #00a87a 100%);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.ds-chat-msg__bubble p {
+  margin: 0 0 4px;
+}
+.ds-chat-msg__bubble p:last-child {
+  margin-bottom: 0;
+}
+.ds-chat-msg__bubble p:empty {
+  display: none;
+}
+
+.ds-chat-msg__bubble ul {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+.ds-chat-msg__bubble li {
+  margin: 2px 0;
+}
+
+.ds-chat-msg__bubble strong,
+.ds-chat-msg__bubble b {
+  color: #00a87a;
+}
+
+.ds-chat-msg--user .ds-chat-msg__bubble strong,
+.ds-chat-msg--user .ds-chat-msg__bubble b {
+  color: #fff;
+}
+
+/* ── Typing indicator ── */
+.ds-chat-typing {
+  display: flex;
+  gap: 5px;
+  padding: 4px 0;
+}
+
+.ds-chat-typing span {
+  width: 7px;
+  height: 7px;
+  background: rgba(0, 168, 122, 0.5);
+  border-radius: 50%;
+  animation: ds-typing 1.2s infinite ease-in-out;
+}
+.ds-chat-typing span:nth-child(2) { animation-delay: 0.15s; }
+.ds-chat-typing span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes ds-typing {
+  0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+  30%           { opacity: 1;   transform: scale(1); }
+}
+
+/* ── Quick Action Buttons ── */
+.ds-chat-quick {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  padding: 6px 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.ds-chat-quick::-webkit-scrollbar { display: none; }
+
+.ds-quick-btn {
+  flex-shrink: 0;
+  background: #fff;
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ds-quick-btn:hover,
+.ds-quick-btn:active {
+  background: rgba(0, 200, 150, 0.08);
+  border-color: rgba(0, 200, 150, 0.3);
+  color: #00a87a;
+}
+
+/* ── Chat Input Bar ── */
+.ds-chat-input-bar {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px) + var(--vv-offset, 0px));
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  /* ensure it's never clipped by browser chrome */
+  position: relative;
+  z-index: 20;
+}
+
+.ds-chat-input-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 600px;
+  margin: 0 auto;
+  background: #f0f2f5;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 22px;
+  padding: 5px 8px 5px 16px;
+  transition: border-color 0.2s;
+}
+
+.ds-chat-input-wrap:focus-within {
+  border-color: rgba(0, 200, 150, 0.5);
+}
+
+.ds-chat-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #1a1a2e;
+  font-size: 15px;
+  font-family: inherit;
+  resize: none;
+  max-height: 100px;
+  line-height: 1.4;
+  padding: 6px 0;
+}
+
+.ds-chat-input::placeholder {
+  color: #9ca3af;
+}
+
+.ds-chat-send {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: var(--ds-accent, #00c896);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.ds-chat-send:hover {
+  background: #00a87a;
+}
+
+.ds-chat-send:active {
+  transform: scale(0.92);
+}
+
+.ds-chat-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Auth Guard Overlay ── */
+.ds-assistant-auth {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(244, 246, 249, 0.97);
+  padding: 20px;
+}
+
+.ds-assistant-auth__card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.ds-assistant-auth__card h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  color: #1a1a2e;
+}
+
+.ds-assistant-auth__card p {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+
+.ds-assistant-auth__card a {
+  display: inline-block;
+  background: var(--ds-accent, #00c896);
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.ds-assistant-auth__card a:hover {
+  background: #00a87a;
+}
+
+/* ── Responsive — tablets ── */
+@media (min-width: 768px) {
+  .ds-chat-msg__bubble {
+    max-width: 60%;
+  }
+
+  .ds-chat-input-wrap {
+    max-width: 640px;
+  }
+}
+
+/* ── Responsive — phones (≤ 430px, all iPhones/Androids) ── */
+@media (max-width: 430px) {
+  .ds-assistant-header {
+    padding: 10px 12px;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
+  }
+
+  .ds-chat-quick {
+    padding: 4px 12px;
+  }
+
+  .ds-quick-btn {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+
+  .ds-chat-input-bar {
+    padding: 6px 12px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px) + var(--vv-offset, 0px));
+  }
+}
+
+/* ── Responsive — small phones (≤ 360px, e.g. iPhone SE) ── */
+@media (max-width: 360px) {
+  .ds-assistant-header {
+    padding: 8px 10px;
+    padding-top: calc(8px + env(safe-area-inset-top, 0px));
+    gap: 6px;
+  }
+
+  .ds-assistant-header .ds-page-title {
+    font-size: 14px;
+  }
+
+  .ds-chat-input-bar {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .ds-chat-input {
+    font-size: 14px;
+  }
+
+  .ds-quick-btn {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .ds-snap-card {
+    min-width: 72px;
+    padding: 6px 6px;
+  }
+
+  .ds-snap-label { font-size: 10px; }
+  .ds-snap-value { font-size: 13px; }
+}
+
+/* ── Responsive — large desktop (≥ 1024px) ── */
+@media (min-width: 1024px) {
+  .ds-chat-messages {
+    max-width: 720px;
+  }
+
+  .ds-chat-input-wrap {
+    max-width: 720px;
+  }
+
+  .ds-chat-msg__bubble {
+    max-width: 55%;
+  }
+
+  .ds-chat-quick {
+    justify-content: center;
+  }
+}
+
+/* ── iPad portrait / landscape ── */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .ds-chat-quick {
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 20px;
+  }
+}
+
+/* ── Landscape phones / very short viewports ── */
+@media (max-height: 500px) {
+  .ds-assistant-snapshot {
+    display: none !important; /* hide snapshot to save vertical space */
+  }
+
+  .ds-assistant-header {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  .ds-chat-quick {
+    padding: 2px 12px;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   DARK MODE — matches rest of DriversSystem
+   ═══════════════════════════════════════════ */
+@media (prefers-color-scheme: dark) {
+  .ds-ai-page {
+    background: linear-gradient(135deg, #0d1a2d 0%, #0a1525 100%);
+  }
+
+  .ds-assistant-header {
+    background: linear-gradient(145deg, #0f2035 0%, #0a1828 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .ds-assistant-back {
+    color: #e0e4ea;
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  .ds-assistant-back:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .ds-assistant-header .ds-page-logo {
+    filter: brightness(0) invert(1);
+  }
+
+  .ds-assistant-header .ds-page-title {
+    color: #f0f4f8;
+  }
+
+  /* Snapshot */
+  .ds-assistant-snapshot {
+    background: rgba(15, 24, 40, 0.8);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+  .ds-snap-card {
+    background: rgba(20, 32, 52, 0.9);
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+  .ds-snap-label {
+    color: #8896a6;
+  }
+  .ds-snap-value {
+    color: #00c896;
+  }
+  .ds-snap-value--expense {
+    color: #ff6b6b;
+  }
+  .ds-snap-value--balance {
+    color: #4ecdc4;
+  }
+
+  /* Chat */
+  .ds-chat-msg--bot .ds-chat-msg__bubble {
+    background: rgba(20, 32, 56, 0.9);
+    color: #e0e6ef;
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .ds-chat-msg__bubble strong,
+  .ds-chat-msg__bubble b {
+    color: #33d4a8;
+  }
+
+  .ds-chat-typing span {
+    background: rgba(0, 200, 150, 0.5);
+  }
+
+  /* Quick actions */
+  .ds-quick-btn {
+    background: rgba(20, 32, 52, 0.8);
+    color: #c8d0e0;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .ds-quick-btn:hover,
+  .ds-quick-btn:active {
+    background: rgba(0, 200, 150, 0.12);
+    border-color: rgba(0, 200, 150, 0.3);
+    color: #00c896;
+  }
+
+  /* Input bar */
+  .ds-chat-input-bar {
+    background: rgba(10, 16, 28, 0.95);
+    border-top-color: rgba(255, 255, 255, 0.06);
+  }
+  .ds-chat-input-wrap {
+    background: rgba(20, 32, 52, 0.7);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .ds-chat-input-wrap:focus-within {
+    border-color: rgba(0, 200, 150, 0.4);
+  }
+  .ds-chat-input {
+    color: #e0e6ef;
+  }
+  .ds-chat-input::placeholder {
+    color: #5a6374;
+  }
+
+  /* Auth */
+  .ds-assistant-auth {
+    background: rgba(11, 15, 26, 0.95);
+  }
+  .ds-assistant-auth__card {
+    background: #132742;
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+  .ds-assistant-auth__card h2 {
+    color: #f0f4f8;
+  }
+  .ds-assistant-auth__card p {
+    color: #8896a6;
+  }
+}

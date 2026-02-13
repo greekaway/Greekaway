@@ -122,5 +122,32 @@
         { "id": "crash", "name": "Τρακάρισμα", "active": true }
       ]
     }
+  ],
+  "personalExpenseCategories": [
+    {
+      "id": "fixed_monthly",
+      "name": "Πάγια Μηνιαία",
+      "active": true,
+      "items": [
+        { "id": "rent", "name": "Ενοίκιο", "active": true },
+        { "id": "electricity", "name": "Ρεύμα", "active": true },
+        { "id": "water", "name": "Νερό", "active": true },
+        { "id": "internet_phone", "name": "Internet / Τηλέφωνο", "active": true },
+        { "id": "shared_costs", "name": "Κοινόχρηστα", "active": true },
+        { "id": "subscriptions", "name": "Συνδρομές", "active": true }
+      ]
+    },
+    {
+      "id": "daily_family",
+      "name": "Καθημερινά / Οικογενειακά",
+      "active": true,
+      "items": [
+        { "id": "supermarket", "name": "Σούπερ μάρκετ", "active": true },
+        { "id": "health", "name": "Υγεία / Φάρμακα", "active": true },
+        { "id": "kids_school", "name": "Παιδιά / Σχολείο", "active": true },
+        { "id": "clothing", "name": "Ρούχα / Αγορές", "active": true },
+        { "id": "emergency", "name": "Έκτακτο έξοδο", "active": true }
+      ]
+    }
   ]
 }

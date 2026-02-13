@@ -151,6 +151,25 @@
     }
   };
 
+  // ── Fetch entries for overlay ──
+  const fetchEntries = async () => {
+    const range = getDateRange();
+    const driverId = getDriverId();
+    const params = new URLSearchParams();
+    if (driverId) params.set('driverId', driverId);
+    params.set('from', range.from);
+    params.set('to', range.to);
+    if (currentSourceFilter !== 'all') params.set('sourceId', currentSourceFilter);
+
+    try {
+      const res = await fetch(`/api/driverssystem/entries?${params}`);
+      if (!res.ok) throw new Error('Fetch failed');
+      return await res.json();
+    } catch (_) {
+      return [];
+    }
+  };
+
   // ── Load trip sources ──
   const loadSources = async () => {
     try {
@@ -174,54 +193,334 @@
     if (commEl) commEl.textContent = fmtEur(stats.totalCommission);
   };
 
-  // ── Render Expandable Detail Panels (bySource breakdown) ──
-  const renderDetailPanels = (stats) => {
-    const bySource = stats.bySource || {};
-    const keys = Object.keys(bySource);
+  // ── Render Expandable Detail Panels — REMOVED (replaced by overlay) ──
 
-    const makeRows = (field) => {
-      if (keys.length === 0) return '<div class="ds-detail-empty">Δεν υπάρχουν δεδομένα</div>';
-      return keys.map(key => {
-        const s = bySource[key];
-        const src = sources.find(x => x.id === key);
-        const color = src ? src.color : '#9ca3af';
-        let value;
-        if (field === 'gross') value = fmtEur(s.gross);
-        else if (field === 'net') value = fmtEur(s.net);
-        else if (field === 'trips') value = s.count;
-        else if (field === 'commission') value = fmtEur(s.gross - s.net);
-        return `
-          <div class="ds-detail-row">
-            <span class="ds-detail-dot" style="background:${color}"></span>
-            <span class="ds-detail-name">${s.name}</span>
-            <span class="ds-detail-value">${value}</span>
-          </div>`;
-      }).join('');
-    };
+  // ── Overlay System ──
+  const overlayEl = $('[data-ds-stats-overlay]');
+  const overlayTitle = $('[data-ds-overlay-title]');
+  const overlayBody = $('[data-ds-overlay-body]');
 
-    ['gross', 'net', 'trips', 'commission'].forEach(type => {
-      const body = $(`[data-ds-detail-body="${type}"]`);
-      if (body) body.innerHTML = makeRows(type);
-    });
+  const openOverlay = () => {
+    if (!overlayEl) return;
+    overlayEl.style.display = 'flex';
+    document.body.classList.add('ds-overlay-open');
+  };
+  const closeOverlay = () => {
+    if (!overlayEl) return;
+    overlayEl.style.display = 'none';
+    document.body.classList.remove('ds-overlay-open');
   };
 
-  // ── Clickable Summary Cards (toggle detail panels) ──
+  // Close on backdrop / X button click
+  if (overlayEl) {
+    overlayEl.querySelectorAll('[data-ds-overlay-close]').forEach(el => {
+      el.addEventListener('click', closeOverlay);
+    });
+  }
+
+  // Helper: find best day from timeline
+  const findBestDay = (timeline, field) => {
+    if (!timeline || timeline.length === 0) return null;
+    let best = timeline[0];
+    for (const row of timeline) {
+      if ((row[field] || 0) > (best[field] || 0)) best = row;
+    }
+    return best;
+  };
+
+  // Helper: count distinct days in entries
+  const countDistinctDays = (entries) => {
+    const days = new Set();
+    entries.forEach(e => { if (e.date) days.add(e.date); });
+    return days.size || 1;
+  };
+
+  // ── Build Overlay content per type ──
+
+  const buildGrossOverlay = (stats, entries) => {
+    const bySource = stats.bySource || {};
+    const keys = Object.keys(bySource);
+    const timeline = stats.timeline || [];
+    const noData = stats.count === 0;
+
+    if (noData) return '<div class="ds-ov-empty">Δεν υπάρχουν δεδομένα για την επιλεγμένη περίοδο</div>';
+
+    let html = '';
+
+    // Total
+    html += `<div class="ds-ov-section"><div class="ds-ov-total ds-ov-total--blue">${fmtEur(stats.totalGross)}</div></div>`;
+
+    // By source
+    html += '<div class="ds-ov-section"><div class="ds-ov-section__title">Ανά Πηγή</div>';
+    keys.forEach(key => {
+      const s = bySource[key];
+      const src = sources.find(x => x.id === key);
+      const color = src ? src.color : '#9ca3af';
+      html += `<div class="ds-ov-source-row">
+        <span class="ds-ov-source-dot" style="background:${color}"></span>
+        <span class="ds-ov-source-name">${s.name}</span>
+        <span class="ds-ov-source-val">${fmtEur(s.gross)}</span>
+      </div>`;
+    });
+    html += '</div>';
+
+    // Timeline
+    if (timeline.length > 0) {
+      html += '<div class="ds-ov-section"><div class="ds-ov-section__title">Χρονολόγιο</div>';
+      html += '<div class="ds-ov-table-wrap"><table class="ds-ov-table"><thead><tr><th>Περίοδος</th><th>Μεικτά</th><th>Δρομ.</th></tr></thead><tbody>';
+      timeline.forEach(row => {
+        html += `<tr><td>${fmtPeriodLabel(row.period, currentGroup)}</td><td style="color:#2563eb;font-weight:700">${fmtEur(row.gross)}</td><td>${row.count}</td></tr>`;
+      });
+      html += '</tbody></table></div></div>';
+    }
+
+    // Best day
+    const best = findBestDay(timeline, 'gross');
+    if (best) {
+      html += `<div class="ds-ov-section"><div class="ds-ov-best">
+        <span class="ds-ov-best__icon">🏆</span>
+        <span class="ds-ov-best__text">Καλύτερη: ${fmtPeriodLabel(best.period, currentGroup)}</span>
+        <span class="ds-ov-best__val">${fmtEur(best.gross)}</span>
+      </div></div>`;
+    }
+
+    // Entries list
+    if (entries.length > 0) {
+      html += '<div class="ds-ov-section"><div class="ds-ov-section__title">Καταχωρήσεις</div><div class="ds-ov-entries">';
+      entries.forEach(e => {
+        html += `<div class="ds-ov-entry-row">
+          <span class="ds-ov-entry-date">${fmtDate(e.date)}</span>
+          <span class="ds-ov-entry-source">${e.sourceName || e.sourceId}</span>
+          <span class="ds-ov-entry-val">${fmtEur(e.amount)}</span>
+        </div>`;
+      });
+      html += '</div></div>';
+    }
+
+    return html;
+  };
+
+  const buildNetOverlay = (stats, entries) => {
+    const bySource = stats.bySource || {};
+    const keys = Object.keys(bySource);
+    const timeline = stats.timeline || [];
+    const noData = stats.count === 0;
+
+    if (noData) return '<div class="ds-ov-empty">Δεν υπάρχουν δεδομένα για την επιλεγμένη περίοδο</div>';
+
+    let html = '';
+
+    // Total
+    html += `<div class="ds-ov-section"><div class="ds-ov-total ds-ov-total--green">${fmtEur(stats.totalNet)}</div></div>`;
+
+    // Formula
+    html += `<div class="ds-ov-section"><div class="ds-ov-formula">
+      <span>${fmtEur(stats.totalGross)}</span>
+      <span>−</span>
+      <span style="color:#dc2626">${fmtEur(stats.totalCommission)}</span>
+      <span>=</span>
+      <span style="color:#059669;font-weight:700">${fmtEur(stats.totalNet)}</span>
+    </div></div>`;
+
+    // Net by source
+    html += '<div class="ds-ov-section"><div class="ds-ov-section__title">Καθαρά Ανά Πηγή</div>';
+    keys.forEach(key => {
+      const s = bySource[key];
+      const src = sources.find(x => x.id === key);
+      const color = src ? src.color : '#9ca3af';
+      html += `<div class="ds-ov-source-row">
+        <span class="ds-ov-source-dot" style="background:${color}"></span>
+        <span class="ds-ov-source-name">${s.name}</span>
+        <span class="ds-ov-source-val">${fmtEur(s.net)}</span>
+      </div>`;
+    });
+    html += '</div>';
+
+    // Timeline (net)
+    if (timeline.length > 0) {
+      html += '<div class="ds-ov-section"><div class="ds-ov-section__title">Χρονολόγιο</div>';
+      html += '<div class="ds-ov-table-wrap"><table class="ds-ov-table"><thead><tr><th>Περίοδος</th><th>Καθαρά</th><th>Προμ.</th></tr></thead><tbody>';
+      timeline.forEach(row => {
+        html += `<tr><td>${fmtPeriodLabel(row.period, currentGroup)}</td><td style="color:#059669;font-weight:700">${fmtEur(row.net)}</td><td style="color:#dc2626">${fmtEur(row.commission)}</td></tr>`;
+      });
+      html += '</tbody></table></div></div>';
+    }
+
+    // Entries list with Gross / Commission / Net
+    if (entries.length > 0) {
+      html += '<div class="ds-ov-section"><div class="ds-ov-section__title">Καταχωρήσεις</div><div class="ds-ov-entries">';
+      entries.forEach(e => {
+        const comm = (e.amount || 0) - (e.netAmount || 0);
+        html += `<div class="ds-ov-entry-row">
+          <span class="ds-ov-entry-date">${fmtDate(e.date)}</span>
+          <span class="ds-ov-entry-source">${e.sourceName || e.sourceId}</span>
+          <span class="ds-ov-entry-val">${fmtEur(e.netAmount)}</span>
+          <span class="ds-ov-entry-sub">${fmtEur(e.amount)} − ${fmtEur(comm)}</span>
+        </div>`;
+      });
+      html += '</div></div>';
+    }
+
+    return html;
+  };
+
+  const buildTripsOverlay = (stats, entries) => {
+    const bySource = stats.bySource || {};
+    const keys = Object.keys(bySource);
+    const timeline = stats.timeline || [];
+    const noData = stats.count === 0;
+
+    if (noData) return '<div class="ds-ov-empty">Δεν υπάρχουν δεδομένα για την επιλεγμένη περίοδο</div>';
+
+    let html = '';
+
+    // Total count
+    html += `<div class="ds-ov-section"><div class="ds-ov-total ds-ov-total--purple">${stats.count}</div></div>`;
+
+    // By source (counts)
+    html += '<div class="ds-ov-section"><div class="ds-ov-section__title">Διαδρομές Ανά Πηγή</div>';
+    keys.forEach(key => {
+      const s = bySource[key];
+      const src = sources.find(x => x.id === key);
+      const color = src ? src.color : '#9ca3af';
+      html += `<div class="ds-ov-source-row">
+        <span class="ds-ov-source-dot" style="background:${color}"></span>
+        <span class="ds-ov-source-name">${s.name}</span>
+        <span class="ds-ov-source-val" style="color:#7c3aed">${s.count}</span>
+      </div>`;
+    });
+    html += '</div>';
+
+    // Average trips per day
+    const distinctDays = countDistinctDays(entries);
+    const avgPerDay = (stats.count / distinctDays).toFixed(1);
+    html += `<div class="ds-ov-section"><div class="ds-ov-avg">
+      <span class="ds-ov-avg__icon">📊</span>
+      <span class="ds-ov-avg__text">Μ.Ο. ανά ημέρα</span>
+      <span class="ds-ov-avg__val">${avgPerDay}</span>
+    </div></div>`;
+
+    // Best day (by count)
+    const best = findBestDay(timeline, 'count');
+    if (best) {
+      html += `<div class="ds-ov-section"><div class="ds-ov-best">
+        <span class="ds-ov-best__icon">🏆</span>
+        <span class="ds-ov-best__text">Καλύτερη: ${fmtPeriodLabel(best.period, currentGroup)}</span>
+        <span class="ds-ov-best__val" style="color:#7c3aed">${best.count} δρομ.</span>
+      </div></div>`;
+    }
+
+    // Entries list
+    if (entries.length > 0) {
+      html += '<div class="ds-ov-section"><div class="ds-ov-section__title">Καταχωρήσεις</div><div class="ds-ov-entries">';
+      entries.forEach(e => {
+        html += `<div class="ds-ov-entry-row">
+          <span class="ds-ov-entry-date">${fmtDate(e.date)}</span>
+          <span class="ds-ov-entry-source">${e.sourceName || e.sourceId}</span>
+          <span class="ds-ov-entry-val">${fmtEur(e.amount)}</span>
+        </div>`;
+      });
+      html += '</div></div>';
+    }
+
+    return html;
+  };
+
+  const buildCommissionOverlay = (stats, entries) => {
+    const bySource = stats.bySource || {};
+    const keys = Object.keys(bySource);
+    const timeline = stats.timeline || [];
+    const noData = stats.count === 0;
+
+    if (noData) return '<div class="ds-ov-empty">Δεν υπάρχουν δεδομένα για την επιλεγμένη περίοδο</div>';
+
+    let html = '';
+
+    // Total
+    html += `<div class="ds-ov-section"><div class="ds-ov-total ds-ov-total--red">${fmtEur(stats.totalCommission)}</div></div>`;
+
+    // By source (amount + % of gross)
+    html += '<div class="ds-ov-section"><div class="ds-ov-section__title">Προμήθειες Ανά Πηγή</div>';
+    keys.forEach(key => {
+      const s = bySource[key];
+      const src = sources.find(x => x.id === key);
+      const color = src ? src.color : '#9ca3af';
+      const comm = s.gross - s.net;
+      const pct = s.gross > 0 ? ((comm / s.gross) * 100).toFixed(1) : '0.0';
+      html += `<div class="ds-ov-source-row">
+        <span class="ds-ov-source-dot" style="background:${color}"></span>
+        <span class="ds-ov-source-name">${s.name}</span>
+        <span class="ds-ov-source-val" style="color:#dc2626">${fmtEur(comm)}</span>
+        <span class="ds-ov-source-pct">${pct}%</span>
+      </div>`;
+    });
+    html += '</div>';
+
+    // Timeline (commissions)
+    if (timeline.length > 0) {
+      html += '<div class="ds-ov-section"><div class="ds-ov-section__title">Χρονολόγιο</div>';
+      html += '<div class="ds-ov-table-wrap"><table class="ds-ov-table"><thead><tr><th>Περίοδος</th><th>Προμήθεια</th><th>Μεικτά</th></tr></thead><tbody>';
+      timeline.forEach(row => {
+        html += `<tr><td>${fmtPeriodLabel(row.period, currentGroup)}</td><td style="color:#dc2626;font-weight:700">${fmtEur(row.commission)}</td><td>${fmtEur(row.gross)}</td></tr>`;
+      });
+      html += '</tbody></table></div></div>';
+    }
+
+    // Entries list with commission per entry
+    if (entries.length > 0) {
+      html += '<div class="ds-ov-section"><div class="ds-ov-section__title">Καταχωρήσεις</div><div class="ds-ov-entries">';
+      entries.forEach(e => {
+        const comm = (e.amount || 0) - (e.netAmount || 0);
+        html += `<div class="ds-ov-entry-row">
+          <span class="ds-ov-entry-date">${fmtDate(e.date)}</span>
+          <span class="ds-ov-entry-source">${e.sourceName || e.sourceId}</span>
+          <span class="ds-ov-entry-val" style="color:#dc2626">${fmtEur(comm)}</span>
+          <span class="ds-ov-entry-sub">από ${fmtEur(e.amount)}</span>
+        </div>`;
+      });
+      html += '</div></div>';
+    }
+
+    return html;
+  };
+
+  // ── Clickable Summary Cards → open overlay ──
+  const overlayTitles = {
+    gross: 'Ανάλυση Μεικτών',
+    net: 'Ανάλυση Καθαρών',
+    trips: 'Ανάλυση Διαδρομών',
+    commission: 'Ανάλυση Προμηθειών'
+  };
+  const overlayBuilders = {
+    gross: buildGrossOverlay,
+    net: buildNetOverlay,
+    trips: buildTripsOverlay,
+    commission: buildCommissionOverlay
+  };
+
   const initClickableCards = () => {
-    $$('[data-stats-detail]').forEach(card => {
-      card.addEventListener('click', () => {
-        const type = card.dataset.statsDetail;
-        const panel = $(`[data-ds-detail-panel="${type}"]`);
-        if (!panel) return;
+    $$('[data-stats-overlay]').forEach(card => {
+      card.addEventListener('click', async () => {
+        const type = card.dataset.statsOverlay;
+        if (!overlayTitle || !overlayBody) return;
 
-        const isOpen = panel.style.display !== 'none';
-        // Close all panels first
-        $$('[data-ds-detail-panel]').forEach(p => p.style.display = 'none');
-        $$('[data-stats-detail]').forEach(c => c.classList.remove('ds-stats-card--open'));
+        overlayTitle.textContent = overlayTitles[type] || '';
+        overlayBody.innerHTML = '<div style="text-align:center;padding:30px 0;color:#9ca3af">Φόρτωση…</div>';
+        openOverlay();
 
-        if (!isOpen) {
-          panel.style.display = 'block';
-          card.classList.add('ds-stats-card--open');
+        // Fetch both stats and entries in parallel
+        const [stats, entries] = await Promise.all([
+          lastStats ? Promise.resolve(lastStats) : fetchStats(),
+          fetchEntries()
+        ]);
+
+        if (!stats) {
+          overlayBody.innerHTML = '<div class="ds-ov-empty">Σφάλμα φόρτωσης δεδομένων</div>';
+          return;
         }
+
+        const builder = overlayBuilders[type];
+        overlayBody.innerHTML = builder ? builder(stats, entries) : '';
       });
     });
   };
@@ -231,6 +530,21 @@
     $$('[data-expense-cat]').forEach(btn => {
       btn.addEventListener('click', () => {
         const cat = btn.dataset.expenseCat;
+        // Car expenses → dedicated 2-level page
+        if (cat === 'car') {
+          window.location.href = window.DriversSystemConfig.buildRoute('/car-expenses');
+          return;
+        }
+        // Personal expenses → dedicated 2-level page
+        if (cat === 'personal') {
+          window.location.href = window.DriversSystemConfig.buildRoute('/personal-expenses');
+          return;
+        }
+        // Tax / Insurance expenses → dedicated 2-level page
+        if (cat === 'tax') {
+          window.location.href = window.DriversSystemConfig.buildRoute('/tax-expenses');
+          return;
+        }
         const url = window.DriversSystemConfig.buildRoute(`/expenses/${cat}`);
         window.location.href = url;
       });
@@ -326,7 +640,6 @@
     if (!stats) return;
     lastStats = stats;
     renderSummary(stats);
-    renderDetailPanels(stats);
     renderSourceBars(stats);
     renderTimeline(stats);
   };
