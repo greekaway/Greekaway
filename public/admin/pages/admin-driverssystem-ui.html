@@ -23,7 +23,6 @@
           <button class="bar-tab" data-tab="car-expense-cats">Έξοδα Αυτοκινήτου</button>
           <button class="bar-tab" data-tab="personal-expense-cats">Προσωπικά / Σπιτιού</button>
           <button class="bar-tab" data-tab="tax-expense-cats">Φόροι / Ασφαλιστικά</button>
-          <button class="bar-tab" data-tab="financials">Οικονομικά</button>
           <button class="bar-tab" data-tab="overview">Επισκόπηση</button>
           <button class="bar-tab" data-tab="drivers">Οδηγοί</button>
           <button class="bar-tab" data-tab="entries">Καταχωρήσεις</button>
@@ -315,34 +314,6 @@
           </form>
 
           <div id="dsTecList" class="ds-cec-list"></div>
-        </section>
-      </div>
-
-      <!-- ===== FINANCIALS TAB ===== -->
-      <div class="tab-content" data-tab="financials">
-        <section class="panel">
-          <div class="ds-section-header">
-            <div>
-              <h3 class="ds-subtitle">Οικονομικά Στοιχεία</h3>
-              <p class="ds-helper">Προσθέστε οικονομικές κάρτες που εμφανίζονται στο welcome page</p>
-            </div>
-            <div class="ds-actions">
-              <button id="dsFinAddBtn" class="btn secondary" type="button">➕ Νέα Κάρτα</button>
-            </div>
-          </div>
-
-          <form id="ds-fin-form" class="ds-fin-form" hidden>
-            <div class="ds-grid">
-              <label>Label <input id="dsFinLabel" class="input" type="text" maxlength="60" placeholder="π.χ. Συνολικά Έσοδα"></label>
-              <label>Value (€) <input id="dsFinValue" class="input" type="number" step="0.01" placeholder="0.00"></label>
-            </div>
-            <div class="ds-actions">
-              <button id="dsFinSaveBtn" class="btn" type="submit">Αποθήκευση</button>
-              <button id="dsFinCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
-            </div>
-          </form>
-
-          <div id="dsFinList" class="ds-fin-list"></div>
         </section>
       </div>
 

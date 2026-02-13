@@ -43,6 +43,16 @@
     .price-card.service .pc-value{color:#5b21b6}
     .name-input{width:100%;padding:12px 16px;border:2px solid #d1d5db;border-radius:10px;font-size:16px;margin:12px 0;outline:none;transition:border-color .2s,background .3s,color .3s;background:#fff;color:#1a1a2e}
     .name-input:focus{border-color:#0d6efd}
+    .name-input.shake{animation:headShake .5s ease-in-out}
+    .name-input.error-border{border-color:#ef4444}
+    .name-required{font-size:12px;color:#ef4444;margin:-8px 0 6px;display:none}
+    .name-required.show{display:block}
+    @keyframes headShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-6px)}30%{transform:translateX(6px)}45%{transform:translateX(-4px)}60%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
+    .iris-notice{margin-top:10px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border:1px solid #c4b5fd;border-radius:10px;padding:12px 14px;font-size:13px;color:#5b21b6;line-height:1.5;display:flex;gap:10px;align-items:flex-start}
+    .iris-notice .iris-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+    .iris-notice .iris-phone{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #c4b5fd;border-radius:6px;padding:3px 10px;font-weight:700;font-size:14px;color:#5b21b6;cursor:pointer;user-select:all;transition:background .15s}
+    .iris-notice .iris-phone:active{background:#ede9fe}
+    .iris-copied{font-size:11px;color:#059669;font-weight:600;opacity:0;transition:opacity .3s;margin-left:4px}
     .btn{display:block;width:100%;padding:14px;border:none;border-radius:12px;font-size:17px;font-weight:600;cursor:pointer;transition:all .2s}
     .btn-accept{background:linear-gradient(135deg,#10b981,#059669);color:#fff;margin-top:12px}
     .btn-accept:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(16,185,129,.3)}
@@ -64,6 +74,7 @@
     .spinner{width:32px;height:32px;border:3px solid #e5e7eb;border-top-color:#0d6efd;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
     @keyframes spin{to{transform:rotate(360deg)}}
     .expired-msg{padding:24px;text-align:center;color:#991b1b}
+    .trip-subtitle{color:#6b7280;font-size:14px;margin-bottom:8px}
 
     /* ── dark mode (follows device preference) ── */
     @media (prefers-color-scheme: dark) {
@@ -81,9 +92,14 @@
       .price-card.hotel .pc-value{color:#fbbf24}
       .price-card.service{background:#2e1065}
       .price-card.service .pc-value{color:#a78bfa}
+      .trip-subtitle{color:#8b9db0}
+      .price-card .pc-label{color:#8b9db0}
       .name-input{background:#1b2d3e;color:#e0e6ed;border-color:#2d4a5e}
       .name-input:focus{border-color:#0d6efd}
+      .name-input.error-border{border-color:#f87171}
+      .name-required{color:#f87171}
       .spinner{border-color:#2d4a5e;border-top-color:#0d6efd}
+      .iris-copied{color:#6ee7b7}
       .expired-msg{color:#fca5a5}
       .expired-msg p[style]{color:#8b9db0 !important}
       .status.ok{background:#064e3b;color:#6ee7b7}
@@ -91,6 +107,9 @@
       .status.info{background:#1e3a5f;color:#93c5fd}
       #accepted-content h3{color:#6ee7b7 !important}
       #accepted-content p[style]{color:#8b9db0 !important}
+      .iris-notice{background:linear-gradient(135deg,#2e1065,#1e1b4b);border-color:#6d28d9;color:#c4b5fd}
+      .iris-notice .iris-phone{background:#1b2d3e;color:#c4b5fd;border-color:#6d28d9}
+      .iris-notice .iris-phone:active{background:#2e1065}
     }
   </style>
 </head>
@@ -105,15 +124,16 @@
 
     <div id="trip-content" style="display:none">
       <h2 style="font-size:18px;margin-bottom:4px">Νέα Διαδρομή</h2>
-      <p style="color:#6b7280;font-size:14px;margin-bottom:8px">Δες τα στοιχεία και πάτα αποδοχή</p>
-      <p style="color:#6b7280;font-size:14px;margin-bottom:8px">Μόλις αποβιβάσεις πάτα ολοκλήρωση</p>
+      <p class="trip-subtitle">Δες τα στοιχεία και πάτα αποδοχή</p>
+      <p class="trip-subtitle">Μόλις αποβιβάσεις πάτα ολοκλήρωση</p>
 
       <div class="trip-info" id="trip-details"></div>
 
       <div class="price-grid" id="price-grid"></div>
 
       <input type="text" class="name-input" id="driver-name"
-        placeholder="Το όνομά σου (προαιρετικά)" maxlength="100">
+        placeholder="✍️ Γράψε το όνομά σου" maxlength="100" required>
+      <p class="name-required" id="name-error">⚠️ Το όνομα είναι υποχρεωτικό για να αποδεχτείς τη διαδρομή</p>
 
       <!-- Button 1: Accept → Navigate to Hotel → Navigate to Destination -->
       <button class="btn btn-accept" id="primary-btn">✅ Αποδοχή Διαδρομής</button>

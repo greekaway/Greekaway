@@ -20,6 +20,7 @@
   const primaryBtn = document.getElementById('primary-btn');
   const secondaryBtn = document.getElementById('secondary-btn');
   const driverNameInput = document.getElementById('driver-name');
+  const nameError = document.getElementById('name-error');
   const statusMsg = document.getElementById('status-msg');
 
   // Trip data stored after load
@@ -317,6 +318,13 @@
       '<div class="price-card service">' +
         '<div class="pc-label">🔧 Υπηρεσία</div>' +
         '<div class="pc-value">€' + serviceCut.toFixed(0) + '</div>' +
+      '</div>' +
+      '<div class="iris-notice" style="grid-column:1/-1">' +
+        '<span class="iris-icon">🏦</span>' +
+        '<div>' +
+          'Η προμήθεια υπηρεσίας <strong>€' + serviceCut.toFixed(0) + '</strong> πληρώνεται με <strong>IRIS</strong> στο: ' +
+          '<span class="iris-phone" id="iris-phone" onclick="(function(el){navigator.clipboard.writeText(\'+306909169503\');var t=el.querySelector(\'.__cp\');if(t){t.style.opacity=1;setTimeout(function(){t.style.opacity=0},1500)}})( this)">+30 690 916 9503<span class="iris-copied __cp"> ✓ copied</span></span>' +
+        '</div>' +
       '</div>';
 
     loading.classList.remove('show');
@@ -326,6 +334,18 @@
   // ── PRIMARY BUTTON handler ──
   primaryBtn.addEventListener('click', async function() {
     if (uiState === 'pending') {
+      // ── Require name before accept ──
+      if (!driverNameInput.value.trim()) {
+        driverNameInput.classList.add('error-border', 'shake');
+        nameError.classList.add('show');
+        driverNameInput.focus();
+        driverNameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(function() { driverNameInput.classList.remove('shake'); }, 600);
+        return;
+      }
+      nameError.classList.remove('show');
+      driverNameInput.classList.remove('error-border');
+
       // ── ACCEPT the trip ──
       primaryBtn.disabled = true;
       primaryBtn.textContent = 'Αποστολή…';
@@ -466,6 +486,14 @@
         secondaryBtn.disabled = false;
         secondaryBtn.textContent = '🏁 Ολοκλήρωση Διαδρομής';
       }
+    }
+  });
+
+  // Clear name error when user starts typing
+  driverNameInput.addEventListener('input', function() {
+    if (driverNameInput.value.trim()) {
+      nameError.classList.remove('show');
+      driverNameInput.classList.remove('error-border');
     }
   });
 

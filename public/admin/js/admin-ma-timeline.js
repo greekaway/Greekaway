@@ -274,7 +274,7 @@
     var html = '';
 
     // Trip info
-    html += '<div style="margin-bottom:16px;font-size:13px;color:#6b7280">';
+    html += '<div class="tl-modal-info">';
     html += '<strong>' + (r.hotel_name || '—') + '</strong> → <strong>' + (r.destination_name || '—') + '</strong><br>';
     html += '👤 ' + (r.driver_name || '—') + ' &nbsp;|&nbsp; 🧑 ' + (r.passenger_name || '—') + ' &nbsp;|&nbsp; €' + parseFloat(r.price || 0).toFixed(0);
     html += '</div>';
@@ -288,14 +288,14 @@
     html += '</div>';
 
     // Total
-    html += '<div style="margin-top:16px;padding:12px;background:#f0fdf4;border-radius:8px;text-align:center">';
-    html += '<div style="font-size:12px;color:#6b7280">⏱️ Συνολικός Χρόνος</div>';
-    html += '<div style="font-size:24px;font-weight:700;color:#166534">' + fmtDuration(r.dur_total) + '</div>';
+    html += '<div class="tl-modal-total">';
+    html += '<div class="tl-modal-total-label">⏱️ Συνολικός Χρόνος</div>';
+    html += '<div class="tl-modal-total-value">' + fmtDuration(r.dur_total) + '</div>';
     html += '</div>';
 
     // Warning if waiting > 15 minutes
     if (r.dur_waiting && r.dur_waiting > 15 * 60000) {
-      html += '<div style="margin-top:12px;padding:10px;background:#fef2f2;border-radius:8px;font-size:13px;color:#991b1b">';
+      html += '<div class="tl-modal-warning">';
       html += '⚠️ Μεγάλη αναμονή επιβάτη: <strong>' + fmtDuration(r.dur_waiting) + '</strong> (πάνω από 15 λεπτά)';
       html += '</div>';
     }
@@ -320,34 +320,55 @@
   var style = document.createElement('style');
   style.textContent = [
     /* Summary cards */
-    '.tl-card{flex:1;min-width:100px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;text-align:center}',
+    '.tl-card{flex:1;min-width:100px;background:var(--ga-bg-2,#223345);border:1px solid var(--ga-border,rgba(212,175,55,.25));border-radius:10px;padding:10px 14px;text-align:center}',
     '.tl-card-icon{font-size:20px}',
-    '.tl-card-value{font-size:18px;font-weight:700;margin:2px 0}',
-    '.tl-card-label{font-size:11px;color:#6b7280}',
-    '.tl-card-warn{background:#fef2f2;border-color:#fecaca}',
-    '.tl-card-warn .tl-card-value{color:#991b1b}',
+    '.tl-card-value{font-size:18px;font-weight:700;margin:2px 0;color:var(--ga-text,#E8EDF3)}',
+    '.tl-card-label{font-size:11px;color:var(--ga-muted,#A6B2C2)}',
+    '.tl-card-warn{background:rgba(127,29,29,.35);border-color:#991b1b}',
+    '.tl-card-warn .tl-card-value{color:#fca5a5}',
     /* Duration cells */
     '.tl-dur{font-weight:600;font-variant-numeric:tabular-nums}',
-    '.tl-na{color:#d1d5db}',
-    '.tl-warn{color:#dc2626;font-weight:700}',
-    '.tl-caution{color:#d97706}',
+    '.tl-na{color:#4b5563}',
+    '.tl-warn{color:#f87171;font-weight:700}',
+    '.tl-caution{color:#fbbf24}',
+    /* Modal info section */
+    '.tl-modal-info{margin-bottom:16px;font-size:13px;color:var(--ga-muted,#A6B2C2)}',
+    '.tl-modal-info strong{color:var(--ga-text,#E8EDF3)}',
+    /* Modal total section */
+    '.tl-modal-total{margin-top:16px;padding:12px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);border-radius:8px;text-align:center}',
+    '.tl-modal-total-label{font-size:12px;color:var(--ga-muted,#A6B2C2)}',
+    '.tl-modal-total-value{font-size:24px;font-weight:700;color:#34d399}',
+    /* Modal warning section */
+    '.tl-modal-warning{margin-top:12px;padding:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:8px;font-size:13px;color:#fca5a5}',
     /* Timeline steps in modal */
     '.tl-steps{display:flex;flex-direction:column;gap:0;position:relative;padding-left:18px}',
-    '.tl-steps::before{content:"";position:absolute;left:27px;top:18px;bottom:18px;width:2px;background:#e5e7eb}',
+    '.tl-steps::before{content:"";position:absolute;left:27px;top:18px;bottom:18px;width:2px;background:var(--ga-border,rgba(212,175,55,.25))}',
     '.tl-step{display:flex;align-items:center;gap:12px;padding:10px 0;position:relative}',
-    '.tl-step-dot{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;background:#fff;border:2px solid #e5e7eb;border-radius:50%;z-index:1}',
+    '.tl-step-dot{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--ga-card,#162432);border:2px solid var(--ga-border,rgba(212,175,55,.25));border-radius:50%;z-index:1}',
     '.tl-step-info{flex:1}',
-    '.tl-step-label{font-size:13px;font-weight:600;color:#374151}',
-    '.tl-step-time{font-size:12px;color:#9ca3af}',
-    '.tl-step-dur{font-size:13px;font-weight:700;color:#2563eb;background:#eff6ff;padding:2px 8px;border-radius:6px}',
-    /* Dark mode */
-    '[data-theme="dark"] .tl-card{background:#1f2937;border-color:#374151}',
-    '[data-theme="dark"] .tl-card-label{color:#9ca3af}',
-    '[data-theme="dark"] .tl-card-warn{background:#7f1d1d;border-color:#991b1b}',
-    '[data-theme="dark"] .tl-card-warn .tl-card-value{color:#fca5a5}',
-    '[data-theme="dark"] .tl-step-dot{background:#1f2937;border-color:#4b5563}',
-    '[data-theme="dark"] .tl-step-label{color:#e5e7eb}',
-    '[data-theme="dark"] .tl-step-dur{background:#1e3a5f;color:#93c5fd}'
+    '.tl-step-label{font-size:13px;font-weight:600;color:var(--ga-text,#E8EDF3)}',
+    '.tl-step-time{font-size:12px;color:var(--ga-muted,#A6B2C2)}',
+    '.tl-step-dur{font-size:13px;font-weight:700;color:#93c5fd;background:rgba(37,99,235,.15);padding:2px 8px;border-radius:6px}',
+    /* Light mode overrides */
+    'html[data-theme="light"] .tl-card{background:var(--ga-bg-2,#e4ebf9);border-color:var(--ga-border)}',
+    'html[data-theme="light"] .tl-card-value{color:var(--ga-text,#0f1b2c)}',
+    'html[data-theme="light"] .tl-card-label{color:var(--ga-muted,#5d6472)}',
+    'html[data-theme="light"] .tl-card-warn{background:#fef2f2;border-color:#fecaca}',
+    'html[data-theme="light"] .tl-card-warn .tl-card-value{color:#991b1b}',
+    'html[data-theme="light"] .tl-na{color:#d1d5db}',
+    'html[data-theme="light"] .tl-warn{color:#dc2626}',
+    'html[data-theme="light"] .tl-caution{color:#d97706}',
+    'html[data-theme="light"] .tl-modal-info{color:#6b7280}',
+    'html[data-theme="light"] .tl-modal-info strong{color:#1f2937}',
+    'html[data-theme="light"] .tl-modal-total{background:#f0fdf4;border-color:#bbf7d0}',
+    'html[data-theme="light"] .tl-modal-total-label{color:#6b7280}',
+    'html[data-theme="light"] .tl-modal-total-value{color:#166534}',
+    'html[data-theme="light"] .tl-modal-warning{background:#fef2f2;border-color:#fecaca;color:#991b1b}',
+    'html[data-theme="light"] .tl-steps::before{background:#e5e7eb}',
+    'html[data-theme="light"] .tl-step-dot{background:#fff;border-color:#e5e7eb}',
+    'html[data-theme="light"] .tl-step-label{color:#374151}',
+    'html[data-theme="light"] .tl-step-time{color:#9ca3af}',
+    'html[data-theme="light"] .tl-step-dur{color:#2563eb;background:#eff6ff}'
   ].join('\n');
   document.head.appendChild(style);
 })();

@@ -155,4 +155,16 @@
     showLogin();
   }
 
+  // ── Version badge ──
+  try {
+    const vRes = await fetch('/version.json');
+    if (vRes.ok) {
+      const vData = await vRes.json();
+      const verEl = $('[data-ds-version]');
+      const buildEl = $('[data-ds-version-build]');
+      if (verEl && vData.version) verEl.textContent = vData.version;
+      if (buildEl && vData.build) buildEl.textContent = `(${vData.build})`;
+    }
+  } catch (_) {}
+
 })();

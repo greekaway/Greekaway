@@ -163,28 +163,6 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     });
   }
 
-  // ── Financials API ──
-
-  app.get('/api/admin/driverssystem/financials', requireAdmin, async (req, res) => {
-    try {
-      const items = await dataLayer.getFinancials();
-      return res.json(items);
-    } catch (err) {
-      return res.status(500).json({ error: 'Server error' });
-    }
-  });
-
-  app.put('/api/admin/driverssystem/financials', requireAdmin, async (req, res) => {
-    try {
-      const items = req.body;
-      if (!Array.isArray(items)) return res.status(400).json({ error: 'Expected array' });
-      const saved = await dataLayer.updateFinancials(items);
-      return res.json(saved);
-    } catch (err) {
-      return res.status(500).json({ error: 'Server error' });
-    }
-  });
-
   // ── Trip Sources API (Admin) ──
 
   app.get('/api/admin/driverssystem/trip-sources', requireAdmin, async (req, res) => {
@@ -274,28 +252,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     }
   });
 
-  // ── Driver Registration / Identity ──
-
-  app.post('/api/driverssystem/drivers/register', async (req, res) => {
-    try {
-      const { phone, fullName, email } = req.body || {};
-      if (!phone || !phone.trim()) {
-        return res.status(400).json({ error: 'Απαιτείται αριθμός τηλεφώνου' });
-      }
-      if (!fullName || !fullName.trim()) {
-        return res.status(400).json({ error: 'Απαιτείται ονοματεπώνυμο' });
-      }
-      if (!email || !email.trim()) {
-        return res.status(400).json({ error: 'Απαιτείται email' });
-      }
-      const driver = await dataLayer.registerDriver({ phone: phone.trim(), fullName: fullName.trim(), email: email.trim() });
-      if (!driver) return res.status(500).json({ error: 'Registration failed' });
-      return res.json(driver);
-    } catch (err) {
-      console.error('[driverssystem] register error:', err.message);
-      return res.status(500).json({ error: 'Server error' });
-    }
-  });
+  // ── Driver Identity ──
 
   app.get('/api/driverssystem/drivers/me', async (req, res) => {
     try {
@@ -456,70 +413,6 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     }
   });
 
-  // ══════════════════════════════════════════════════════════
-  // EXPENSES API (Driver — car / fixed / personal / family)
-  // ══════════════════════════════════════════════════════════
-
-  app.get('/api/driverssystem/expenses', async (req, res) => {
-    try {
-      const filters = {};
-      if (req.query.driverId) filters.driverId = req.query.driverId;
-      if (req.query.category) filters.category = req.query.category;
-      if (req.query.from) filters.from = req.query.from;
-      if (req.query.to) filters.to = req.query.to;
-      const items = await dataLayer.getExpenses(filters);
-      return res.json(items);
-    } catch (err) {
-      return res.status(500).json({ error: 'Server error' });
-    }
-  });
-
-  // Summary MUST come before /:id routes
-  app.get('/api/driverssystem/expenses/summary', async (req, res) => {
-    try {
-      const driverId = req.query.driverId || '';
-      const from = req.query.from || '';
-      const to = req.query.to || '';
-      const summary = await dataLayer.getExpensesSummary(driverId, from, to);
-      return res.json(summary);
-    } catch (err) {
-      return res.status(500).json({ error: 'Server error' });
-    }
-  });
-
-  app.post('/api/driverssystem/expenses', async (req, res) => {
-    try {
-      const expense = req.body;
-      if (!expense || !expense.category || !expense.amount) {
-        return res.status(400).json({ error: 'Απαιτείται κατηγορία και ποσό' });
-      }
-      const saved = await dataLayer.addExpense(expense);
-      return res.status(201).json(saved);
-    } catch (err) {
-      return res.status(500).json({ error: err.message || 'Server error' });
-    }
-  });
-
-  app.put('/api/driverssystem/expenses/:id', async (req, res) => {
-    try {
-      const updated = await dataLayer.updateExpense(req.params.id, req.body);
-      if (!updated) return res.status(404).json({ error: 'Not found' });
-      return res.json(updated);
-    } catch (err) {
-      return res.status(500).json({ error: 'Server error' });
-    }
-  });
-
-  app.delete('/api/driverssystem/expenses/:id', async (req, res) => {
-    try {
-      const ok = await dataLayer.deleteExpense(req.params.id);
-      if (!ok) return res.status(404).json({ error: 'Not found' });
-      return res.json({ ok: true });
-    } catch (err) {
-      return res.status(500).json({ error: 'Server error' });
-    }
-  });
-
   // ── Admin: Expenses view (all drivers) ──
 
   app.get('/api/admin/driverssystem/expenses', requireAdmin, async (req, res) => {
@@ -534,14 +427,6 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     } catch (err) {
       return res.status(500).json({ error: 'Server error' });
     }
-  });
-
-  // ── Expenses page routes ──
-  const expensePages = ['/expenses', '/expenses/car', '/expenses/fixed', '/expenses/personal', '/expenses/family'];
-  expensePages.forEach(route => {
-    router.get(route, (req, res) => {
-      return res.sendFile(path.join(pagesDir, 'expenses.html'));
-    });
   });
 
   // ══════════════════════════════════════════════════════════

@@ -338,6 +338,28 @@
   border-color: #d1d5db;
 }
 
+/* ── Version Badge ── */
+.ds-version-badge {
+  text-align: center;
+  padding: 16px 0 8px;
+  font-size: 11px;
+  color: #9ca3af;
+  letter-spacing: 0.3px;
+}
+.ds-version-badge__label {
+  font-weight: 600;
+}
+.ds-version-badge__value {
+  font-weight: 700;
+  color: #7b8794;
+}
+.ds-version-badge__build {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  color: #b0b8c4;
+}
+
 /* ──────────────────────────────────
    AUTH GUARD OVERLAY (for stats page)
    ────────────────────────────────── */
@@ -492,4 +514,8 @@
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.15);
   }
+
+  .ds-version-badge { color: #6b7a8d; }
+  .ds-version-badge__value { color: #8896a6; }
+  .ds-version-badge__build { color: #4a5568; }
 }

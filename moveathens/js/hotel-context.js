@@ -160,4 +160,16 @@
   } else {
     showLogin();
   }
+
+  // ── Version badge ──
+  try {
+    const vRes = await fetch('/version.json');
+    if (vRes.ok) {
+      const vData = await vRes.json();
+      const verEl = document.getElementById('ma-version-value');
+      const buildEl = document.getElementById('ma-version-build');
+      if (verEl && vData.version) verEl.textContent = vData.version;
+      if (buildEl && vData.build) buildEl.textContent = `(${vData.build})`;
+    }
+  } catch (_) {}
 })();

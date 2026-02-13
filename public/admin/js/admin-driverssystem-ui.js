@@ -1,6 +1,6 @@
 /**
  * DriversSystem Admin Panel
- * Manages: General config (hero, footer, contact), Financials
+ * Manages: General config (hero, footer, contact)
  */
 (() => {
   'use strict';
@@ -29,8 +29,7 @@
 
   let CONFIG = {};
   let configLoaded = false;
-  let financials = [];
-  let editingFinIdx = -1;
+
 
   const api = async (url, method = 'GET', body = null) => {
     const opts = { method, credentials: 'include' };
@@ -49,7 +48,6 @@
     if (!res.ok) { showToast('Σφάλμα φόρτωσης'); return; }
     CONFIG = await res.json();
     configLoaded = true;
-    financials = Array.isArray(CONFIG.financials) ? CONFIG.financials : [];
     return CONFIG;
   };
 
@@ -194,97 +192,6 @@
         }
       });
     });
-  };
-
-  // ========================================
-  // FINANCIALS TAB
-  // ========================================
-  const renderFinancials = () => {
-    const list = $('#dsFinList');
-    if (!list) return;
-    if (!financials.length) {
-      list.innerHTML = '<p style="color:var(--ga-muted);font-size:14px;">Δεν υπάρχουν καταχωρήσεις</p>';
-      return;
-    }
-    list.innerHTML = financials.map((item, idx) => {
-      const valClass = (item.value || 0) >= 0 ? 'positive' : 'negative';
-      const formatted = typeof item.value === 'number'
-        ? item.value.toLocaleString('el-GR', { minimumFractionDigits: 2 }) + ' €'
-        : (item.value || '—');
-      return `
-        <div class="ds-fin-item">
-          <span class="ds-fin-item__label">${item.label || ''}</span>
-          <span class="ds-fin-item__value ${valClass}">${formatted}</span>
-          <div class="ds-fin-item__actions">
-            <button class="btn secondary" onclick="window._dsEditFin(${idx})">✏️</button>
-            <button class="btn secondary" onclick="window._dsDeleteFin(${idx})">🗑️</button>
-          </div>
-        </div>`;
-    }).join('');
-  };
-
-  const initFinancials = () => {
-    const addBtn = $('#dsFinAddBtn');
-    const form = $('#ds-fin-form');
-    const saveBtn = $('#dsFinSaveBtn');
-    const cancelBtn = $('#dsFinCancelBtn');
-    if (!addBtn || !form) return;
-
-    addBtn.addEventListener('click', () => {
-      editingFinIdx = -1;
-      $('#dsFinLabel').value = '';
-      $('#dsFinValue').value = '';
-      form.hidden = false;
-    });
-
-    cancelBtn.addEventListener('click', () => {
-      form.hidden = true;
-      editingFinIdx = -1;
-    });
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const label = ($('#dsFinLabel') || {}).value || '';
-      const value = parseFloat(($('#dsFinValue') || {}).value) || 0;
-      if (!label.trim()) { showToast('Συμπλήρωσε label'); return; }
-
-      if (editingFinIdx >= 0) {
-        financials[editingFinIdx] = { label, value };
-      } else {
-        financials.push({ label, value });
-      }
-
-      const res = await api('/api/admin/driverssystem/financials', 'PUT', financials);
-      if (res && res.ok) {
-        financials = await res.json();
-        showToast('Αποθηκεύτηκε ✓');
-      } else {
-        showToast('Σφάλμα αποθήκευσης');
-      }
-      form.hidden = true;
-      editingFinIdx = -1;
-      renderFinancials();
-    });
-
-    window._dsEditFin = (idx) => {
-      const item = financials[idx];
-      if (!item) return;
-      editingFinIdx = idx;
-      $('#dsFinLabel').value = item.label || '';
-      $('#dsFinValue').value = item.value || 0;
-      form.hidden = false;
-    };
-
-    window._dsDeleteFin = async (idx) => {
-      if (!confirm('Διαγραφή αυτής της κάρτας;')) return;
-      financials.splice(idx, 1);
-      const res = await api('/api/admin/driverssystem/financials', 'PUT', financials);
-      if (res && res.ok) {
-        financials = await res.json();
-        showToast('Διαγράφηκε');
-      }
-      renderFinancials();
-    };
   };
 
   // ========================================
@@ -975,7 +882,6 @@
     initTabs();
     initLogoUpload();
     initFooterIconUploads();
-    initFinancials();
     initTripSources();
     initCarExpCats();
     initPersExpCats();
@@ -987,7 +893,6 @@
     await loadPersExpCats();
     await loadTaxExpCats();
     populateGeneral();
-    renderFinancials();
     renderTripSources();
     renderCarExpCats();
     renderPersExpCats();

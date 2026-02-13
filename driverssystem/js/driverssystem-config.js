@@ -78,32 +78,6 @@
     });
   };
 
-  const applyFinancials = (root, cfg) => {
-    const container = root.querySelector('[data-ds-financials]');
-    const emptyMsg = root.querySelector('[data-ds-financials-empty]');
-    if (!container) return;
-
-    const items = Array.isArray(cfg.financials) ? cfg.financials : [];
-    if (items.length === 0) {
-      container.innerHTML = '';
-      if (emptyMsg) emptyMsg.style.display = 'block';
-      return;
-    }
-
-    if (emptyMsg) emptyMsg.style.display = 'none';
-    container.innerHTML = items.map((item) => {
-      const valClass = (item.value || 0) >= 0 ? 'positive' : 'negative';
-      const formatted = typeof item.value === 'number'
-        ? item.value.toLocaleString('el-GR', { style: 'currency', currency: 'EUR' })
-        : (item.value || '—');
-      return `
-        <div class="ds-fin-card">
-          <div class="ds-fin-card__label">${item.label || ''}</div>
-          <div class="ds-fin-card__value ${valClass}">${formatted}</div>
-        </div>`;
-    }).join('');
-  };
-
   const load = async () => {
     if (state.data) return state.data;
     if (!state.promise) {
@@ -142,7 +116,6 @@
     applyFooterLabels,
     applyPageTitles,
     applyContactInfo,
-    applyFinancials,
     isDevHost,
     isDriversSystemDomain,
     getRoutePrefix,

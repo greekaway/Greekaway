@@ -640,4 +640,9 @@
   .ma-transfer-page .ma-warning-help p {
     color: #b8a005 !important;
   }
+
+  /* Version badge dark mode */
+  .ma-version-badge { color: #6b7a8d !important; }
+  .ma-version-badge__value { color: #8896a6 !important; }
+  .ma-version-badge__build { color: #4a5568 !important; }
 }

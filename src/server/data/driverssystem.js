@@ -130,7 +130,6 @@ function getDefaultConfig() {
     infoComplianceContent: '',
     infoFaqTitle: '',
     infoFaqContent: '',
-    financials: [],
     tripSources: [
       { id: 'uber', name: 'Uber', commission: 25, color: '#000000', active: true },
       { id: 'bolt', name: 'Bolt', commission: 20, color: '#34D186', active: true },
@@ -157,20 +156,6 @@ async function updateConfig(incoming) {
 
 async function getFullConfig() {
   return readConfig();
-}
-
-// ── Financials ──
-
-async function getFinancials() {
-  const cfg = readConfig();
-  return Array.isArray(cfg.financials) ? cfg.financials : [];
-}
-
-async function updateFinancials(items) {
-  const cfg = readConfig();
-  cfg.financials = Array.isArray(items) ? items : [];
-  writeConfig(cfg);
-  return cfg.financials;
 }
 
 // ── Trip Sources ──
@@ -695,9 +680,6 @@ module.exports = {
   getConfig,
   updateConfig,
   getFullConfig,
-  getFinancials,
-  updateFinancials,
-  getDefaultConfig,
   getTripSources,
   updateTripSources,
   getEntries,
@@ -718,10 +700,7 @@ module.exports = {
   // Expenses
   getExpenses,
   addExpense,
-  updateExpense,
-  deleteExpense,
   getExpensesRange,
-  getExpensesSummary,
   // Car Expense Categories
   getCarExpenseCategories,
   updateCarExpenseCategories,
@@ -795,27 +774,6 @@ async function addExpense(expense) {
   return newExpense;
 }
 
-async function updateExpense(id, data) {
-  const expenses = readExpenses();
-  const idx = expenses.findIndex(e => e.id === id);
-  if (idx === -1) return null;
-  if (data.description !== undefined) expenses[idx].description = (data.description || '').trim();
-  if (data.amount !== undefined) expenses[idx].amount = parseFloat(data.amount) || 0;
-  if (data.date !== undefined) expenses[idx].date = data.date;
-  if (data.category !== undefined) expenses[idx].category = data.category;
-  writeExpenses(expenses);
-  return expenses[idx];
-}
-
-async function deleteExpense(id) {
-  const expenses = readExpenses();
-  const idx = expenses.findIndex(e => e.id === id);
-  if (idx === -1) return false;
-  expenses.splice(idx, 1);
-  writeExpenses(expenses);
-  return true;
-}
-
 async function getExpensesRange(filters = {}) {
   let expenses = readExpenses();
   if (filters.driverId) expenses = expenses.filter(e => e.driverId === filters.driverId);
@@ -837,9 +795,4 @@ async function getExpensesRange(filters = {}) {
   return { expenses, totalExpenses, byCategory, count: expenses.length };
 }
 
-async function getExpensesSummary(driverId, from, to) {
-  const filters = { driverId };
-  if (from) filters.from = from;
-  if (to) filters.to = to;
-  return getExpensesRange(filters);
-}
+

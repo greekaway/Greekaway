@@ -199,37 +199,6 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* Financial list */
-.ds-fin-list {
-  display: grid;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.ds-fin-item__label {
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--ga-text);
-}
-
-.ds-fin-item__value {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.ds-fin-item__value.positive {
-  color: #2ecc71;
-}
-
-.ds-fin-item__value.negative {
-  color: #e74c3c;
-}
-
-.ds-fin-item__actions {
-  display: flex;
-  gap: 6px;
-}
-
 /* ── Trip Sources ── */
 
 .ds-grid--src {
@@ -344,32 +313,6 @@ html[data-theme='light'] .ds-src-item__status.negative {
 .ds-src-item__actions {
   display: flex;
   gap: 6px;
-}
-
-/* ── Financial form (same pattern) ── */
-.ds-fin-form {
-  border: 1px solid var(--ga-border);
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 16px;
-  background: var(--ga-card);
-}
-
-.ds-fin-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  background: var(--ga-card);
-  border: 1px solid var(--ga-border);
-  border-radius: 14px;
-  color: var(--ga-text);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.15s ease;
-}
-
-.ds-fin-item:hover {
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
 }
 
 /* ── Light-mode overrides for tab bar ── */
