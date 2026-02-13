@@ -19,7 +19,8 @@
         <div class="title">DriversSystem</div>
         <div class="bar-tabs">
           <button class="bar-tab active" data-tab="general">General</button>
-          <button class="bar-tab" data-tab="sources">Πηγές</button>
+          <button class="bar-tab" data-tab="sources">Πηγές Διαδρομών</button>
+          <button class="bar-tab" data-tab="car-expense-cats">Έξοδα Αυτοκινήτου</button>
           <button class="bar-tab" data-tab="financials">Οικονομικά</button>
           <button class="bar-tab" data-tab="overview">Επισκόπηση</button>
           <button class="bar-tab" data-tab="drivers">Οδηγοί</button>
@@ -150,6 +151,60 @@
           </form>
 
           <div id="dsSrcList" class="ds-src-list"></div>
+        </section>
+      </div>
+
+      <!-- ===== CAR EXPENSE CATEGORIES TAB ===== -->
+      <div class="tab-content" data-tab="car-expense-cats">
+        <section class="panel">
+          <div class="ds-section-header">
+            <div>
+              <h3 class="ds-subtitle">Έξοδα Αυτοκινήτου</h3>
+              <p class="ds-helper">Ομάδες εξόδων και κουμπιά που βλέπει ο οδηγός. Δύο επίπεδα: Ομάδα → Είδος εξόδου.</p>
+            </div>
+            <div class="ds-actions">
+              <button id="dsCecAddGroupBtn" class="btn secondary" type="button">➕ Νέα Ομάδα</button>
+            </div>
+          </div>
+
+          <!-- Add/Edit Group form -->
+          <form id="ds-cec-group-form" class="ds-src-form" hidden>
+            <div class="ds-grid ds-grid--cec-group">
+              <label>Όνομα Ομάδας
+                <input id="dsCecGroupName" class="input" type="text" maxlength="60" placeholder="π.χ. Service">
+              </label>
+              <label class="ds-checkbox-label">
+                <input id="dsCecGroupActive" type="checkbox" checked>
+                Ενεργή
+              </label>
+            </div>
+            <div class="ds-actions">
+              <button id="dsCecGroupSaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="dsCecGroupCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+            </div>
+          </form>
+
+          <!-- Add/Edit Item form (hidden until editing items) -->
+          <form id="ds-cec-item-form" class="ds-src-form" hidden>
+            <div class="ds-grid ds-grid--cec-item">
+              <label>Ομάδα
+                <input id="dsCecItemGroupLabel" class="input" type="text" readonly disabled>
+              </label>
+              <label>Όνομα Εξόδου
+                <input id="dsCecItemName" class="input" type="text" maxlength="60" placeholder="π.χ. Λάστιχα">
+              </label>
+              <label class="ds-checkbox-label">
+                <input id="dsCecItemActive" type="checkbox" checked>
+                Ενεργό
+              </label>
+            </div>
+            <div class="ds-actions">
+              <button id="dsCecItemSaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="dsCecItemCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+            </div>
+          </form>
+
+          <div id="dsCecList" class="ds-cec-list"></div>
         </section>
       </div>
 

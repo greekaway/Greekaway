@@ -387,3 +387,155 @@ html[data-theme='light'] .bar-tab.active {
   color: #ffffff;
   border-color: transparent;
 }
+
+/* ── Car Expense Categories ── */
+
+.ds-grid--cec-group {
+  grid-template-columns: 1fr auto;
+  align-items: end;
+}
+
+.ds-grid--cec-item {
+  grid-template-columns: 160px 1fr auto;
+  align-items: end;
+}
+
+@media (max-width: 600px) {
+  .ds-grid--cec-group,
+  .ds-grid--cec-item {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ds-cec-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.ds-cec-group {
+  background: var(--ga-card);
+  border: 1px solid var(--ga-border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.15s ease;
+}
+
+.ds-cec-group:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+}
+
+.ds-cec-group__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--ga-card);
+  border-bottom: 1px solid var(--ga-border);
+}
+
+.ds-cec-group__name {
+  font-weight: 700;
+  font-size: 16px;
+  flex: 1;
+  color: var(--ga-text);
+}
+
+.ds-cec-group__count {
+  font-size: 13px;
+  color: var(--ga-muted, #7b8794);
+  font-weight: 500;
+}
+
+.ds-cec-group__status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  min-width: 70px;
+  text-align: center;
+}
+
+.ds-cec-group__status.positive {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+}
+
+.ds-cec-group__status.negative {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+
+html[data-theme='light'] .ds-cec-group__status.positive {
+  background: rgba(30, 130, 76, 0.12);
+  color: #1a7a48;
+}
+
+html[data-theme='light'] .ds-cec-group__status.negative {
+  background: rgba(196, 67, 67, 0.12);
+  color: #8b2e2e;
+}
+
+.ds-cec-group__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ds-cec-group__items {
+  padding: 10px 18px 14px;
+  display: grid;
+  gap: 6px;
+}
+
+.ds-cec-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--ga-border);
+  border-radius: 10px;
+  color: var(--ga-text);
+}
+
+.ds-cec-item__name {
+  font-weight: 600;
+  font-size: 14px;
+  flex: 1;
+  color: var(--ga-text);
+}
+
+.ds-cec-item__status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.ds-cec-item__status.positive {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+}
+
+.ds-cec-item__status.negative {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+
+html[data-theme='light'] .ds-cec-item__status.positive {
+  background: rgba(30, 130, 76, 0.12);
+  color: #1a7a48;
+}
+
+html[data-theme='light'] .ds-cec-item__status.negative {
+  background: rgba(196, 67, 67, 0.12);
+  color: #8b2e2e;
+}
+
+.ds-cec-item__actions {
+  display: flex;
+  gap: 6px;
+}

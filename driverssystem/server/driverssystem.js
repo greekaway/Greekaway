@@ -507,5 +507,75 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     });
   });
 
+  // ══════════════════════════════════════════════════════════
+  // CAR EXPENSE CATEGORIES (Admin-managed groups & items)
+  // ══════════════════════════════════════════════════════════
+
+  // Admin: get all car expense categories
+  app.get('/api/admin/driverssystem/car-expense-categories', requireAdmin, async (req, res) => {
+    try {
+      const items = await dataLayer.getCarExpenseCategories();
+      return res.json(items);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Admin: save all car expense categories
+  app.put('/api/admin/driverssystem/car-expense-categories', requireAdmin, async (req, res) => {
+    try {
+      const items = req.body;
+      if (!Array.isArray(items)) return res.status(400).json({ error: 'Expected array' });
+      const saved = await dataLayer.updateCarExpenseCategories(items);
+      return res.json(saved);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Public: get active car expense categories (for driver app)
+  app.get('/api/driverssystem/car-expense-categories', async (req, res) => {
+    try {
+      const all = await dataLayer.getCarExpenseCategories();
+      const active = all
+        .filter(g => g.active !== false)
+        .map(g => ({
+          ...g,
+          items: (g.items || []).filter(i => i.active !== false)
+        }))
+        .filter(g => g.items.length > 0);
+      return res.json(active);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Car expense records (driver submissions) ──
+  app.post('/api/driverssystem/car-expenses', async (req, res) => {
+    try {
+      const { driverId, groupId, groupName, itemId, itemName, amount, date } = req.body || {};
+      if (!amount || !groupId || !itemId) {
+        return res.status(400).json({ error: 'Απαιτείται ομάδα, είδος και ποσό' });
+      }
+      const expense = await dataLayer.addExpense({
+        driverId: driverId || '',
+        category: 'car',
+        description: `${groupName || groupId} → ${itemName || itemId}`,
+        amount: parseFloat(amount) || 0,
+        date: date || new Date().toISOString().slice(0, 10),
+        groupId,
+        itemId
+      });
+      return res.status(201).json(expense);
+    } catch (err) {
+      return res.status(500).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // ── Car Expenses page route ──
+  router.get('/car-expenses', (req, res) => {
+    return res.sendFile(path.join(pagesDir, 'car-expenses.html'));
+  });
+
   console.log('[driverssystem] routes registered');
 };

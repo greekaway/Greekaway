@@ -399,6 +399,198 @@
   };
 
   // ========================================
+  // CAR EXPENSE CATEGORIES TAB
+  // ========================================
+  let carExpCats = [];
+  let editingGroupIdx = -1;
+  let editingItemGroupIdx = -1;
+  let editingItemIdx = -1;
+
+  const loadCarExpCats = async () => {
+    const res = await api('/api/admin/driverssystem/car-expense-categories');
+    if (!res) return;
+    if (res.ok) carExpCats = await res.json();
+  };
+
+  const saveCarExpCats = async () => {
+    const res = await api('/api/admin/driverssystem/car-expense-categories', 'PUT', carExpCats);
+    if (res && res.ok) {
+      carExpCats = await res.json();
+      showToast('Αποθηκεύτηκε ✓');
+    } else {
+      showToast('Σφάλμα αποθήκευσης');
+    }
+  };
+
+  const renderCarExpCats = () => {
+    const list = $('#dsCecList');
+    if (!list) return;
+    if (!carExpCats.length) {
+      list.innerHTML = '<p style="color:var(--ga-muted);font-size:14px;">Δεν υπάρχουν ομάδες</p>';
+      return;
+    }
+    list.innerHTML = carExpCats.map((group, gi) => {
+      const statusText = group.active !== false ? 'Ενεργή' : 'Ανενεργή';
+      const statusClass = group.active !== false ? 'positive' : 'negative';
+      const items = Array.isArray(group.items) ? group.items : [];
+      const itemsHtml = items.map((item, ii) => {
+        const iStatus = item.active !== false ? 'Ενεργό' : 'Ανενεργό';
+        const iClass = item.active !== false ? 'positive' : 'negative';
+        return `
+          <div class="ds-cec-item">
+            <span class="ds-cec-item__name">${item.name || ''}</span>
+            <span class="ds-cec-item__status ${iClass}">${iStatus}</span>
+            <div class="ds-cec-item__actions">
+              <button class="btn secondary" onclick="window._dsCecEditItem(${gi},${ii})">✏️</button>
+              <button class="btn secondary" onclick="window._dsCecDeleteItem(${gi},${ii})">🗑️</button>
+            </div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="ds-cec-group">
+          <div class="ds-cec-group__header">
+            <span class="ds-cec-group__name">${group.name || ''}</span>
+            <span class="ds-cec-group__count">${items.length} είδη</span>
+            <span class="ds-cec-group__status ${statusClass}">${statusText}</span>
+            <div class="ds-cec-group__actions">
+              <button class="btn secondary" onclick="window._dsCecAddItem(${gi})" title="Νέο Είδος">➕</button>
+              <button class="btn secondary" onclick="window._dsCecEditGroup(${gi})">✏️</button>
+              <button class="btn secondary" onclick="window._dsCecDeleteGroup(${gi})">🗑️</button>
+            </div>
+          </div>
+          <div class="ds-cec-group__items">
+            ${itemsHtml || '<p style="color:var(--ga-muted);font-size:13px;margin:4px 0;">Κανένα είδος</p>'}
+          </div>
+        </div>`;
+    }).join('');
+  };
+
+  const initCarExpCats = () => {
+    const addGroupBtn = $('#dsCecAddGroupBtn');
+    const groupForm = $('#ds-cec-group-form');
+    const groupCancelBtn = $('#dsCecGroupCancelBtn');
+    const itemForm = $('#ds-cec-item-form');
+    const itemCancelBtn = $('#dsCecItemCancelBtn');
+    if (!addGroupBtn || !groupForm) return;
+
+    // --- Group form ---
+    addGroupBtn.addEventListener('click', () => {
+      editingGroupIdx = -1;
+      $('#dsCecGroupName').value = '';
+      $('#dsCecGroupActive').checked = true;
+      groupForm.hidden = false;
+      itemForm.hidden = true;
+    });
+
+    groupCancelBtn.addEventListener('click', () => {
+      groupForm.hidden = true;
+      editingGroupIdx = -1;
+    });
+
+    groupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = ($('#dsCecGroupName') || {}).value || '';
+      const active = $('#dsCecGroupActive') ? $('#dsCecGroupActive').checked : true;
+      if (!name.trim()) { showToast('Συμπλήρωσε όνομα ομάδας'); return; }
+
+      if (editingGroupIdx >= 0) {
+        carExpCats[editingGroupIdx].name = name.trim();
+        carExpCats[editingGroupIdx].active = active;
+      } else {
+        const id = name.toLowerCase().replace(/[^a-zα-ωά-ώ0-9]/gi, '_').replace(/_+/g, '_');
+        carExpCats.push({ id, name: name.trim(), active, items: [] });
+      }
+
+      await saveCarExpCats();
+      groupForm.hidden = true;
+      editingGroupIdx = -1;
+      renderCarExpCats();
+    });
+
+    // --- Item form ---
+    itemCancelBtn.addEventListener('click', () => {
+      itemForm.hidden = true;
+      editingItemGroupIdx = -1;
+      editingItemIdx = -1;
+    });
+
+    itemForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = ($('#dsCecItemName') || {}).value || '';
+      const active = $('#dsCecItemActive') ? $('#dsCecItemActive').checked : true;
+      if (!name.trim()) { showToast('Συμπλήρωσε όνομα εξόδου'); return; }
+
+      const group = carExpCats[editingItemGroupIdx];
+      if (!group) return;
+      if (!Array.isArray(group.items)) group.items = [];
+
+      if (editingItemIdx >= 0) {
+        group.items[editingItemIdx].name = name.trim();
+        group.items[editingItemIdx].active = active;
+      } else {
+        const id = name.toLowerCase().replace(/[^a-zα-ωά-ώ0-9]/gi, '_').replace(/_+/g, '_');
+        group.items.push({ id, name: name.trim(), active });
+      }
+
+      await saveCarExpCats();
+      itemForm.hidden = true;
+      editingItemGroupIdx = -1;
+      editingItemIdx = -1;
+      renderCarExpCats();
+    });
+
+    // --- Global handlers ---
+    window._dsCecEditGroup = (gi) => {
+      const group = carExpCats[gi];
+      if (!group) return;
+      editingGroupIdx = gi;
+      $('#dsCecGroupName').value = group.name || '';
+      $('#dsCecGroupActive').checked = group.active !== false;
+      groupForm.hidden = false;
+      itemForm.hidden = true;
+    };
+
+    window._dsCecDeleteGroup = async (gi) => {
+      if (!confirm('Διαγραφή αυτής της ομάδας και όλων των ειδών της;')) return;
+      carExpCats.splice(gi, 1);
+      await saveCarExpCats();
+      renderCarExpCats();
+    };
+
+    window._dsCecAddItem = (gi) => {
+      const group = carExpCats[gi];
+      if (!group) return;
+      editingItemGroupIdx = gi;
+      editingItemIdx = -1;
+      $('#dsCecItemGroupLabel').value = group.name || '';
+      $('#dsCecItemName').value = '';
+      $('#dsCecItemActive').checked = true;
+      itemForm.hidden = false;
+      groupForm.hidden = true;
+    };
+
+    window._dsCecEditItem = (gi, ii) => {
+      const group = carExpCats[gi];
+      if (!group || !group.items || !group.items[ii]) return;
+      editingItemGroupIdx = gi;
+      editingItemIdx = ii;
+      $('#dsCecItemGroupLabel').value = group.name || '';
+      $('#dsCecItemName').value = group.items[ii].name || '';
+      $('#dsCecItemActive').checked = group.items[ii].active !== false;
+      itemForm.hidden = false;
+      groupForm.hidden = true;
+    };
+
+    window._dsCecDeleteItem = async (gi, ii) => {
+      if (!confirm('Διαγραφή αυτού του εξόδου;')) return;
+      carExpCats[gi].items.splice(ii, 1);
+      await saveCarExpCats();
+      renderCarExpCats();
+    };
+  };
+
+  // ========================================
   // INIT
   // ========================================
   const init = async () => {
@@ -407,12 +599,15 @@
     initFooterIconUploads();
     initFinancials();
     initTripSources();
+    initCarExpCats();
 
     await loadConfig();
     await loadTripSources();
+    await loadCarExpCats();
     populateGeneral();
     renderFinancials();
     renderTripSources();
+    renderCarExpCats();
 
     // General form save
     const form = $('#ds-form');

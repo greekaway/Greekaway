@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Έξοδα Αυτοκινήτου – DriversSystem</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/driverssystem/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/driverssystem/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/driverssystem/icons/apple-touch-icon.png">
+    <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
+    <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
+    <link rel="stylesheet" href="/driverssystem/css/footer.css" />
+    <link rel="stylesheet" href="/driverssystem/css/profile.css" />
+    <link rel="stylesheet" href="/driverssystem/css/car-expenses.css" />
+    <link rel="stylesheet" href="/driverssystem/css/dark-mode.css" />
+  </head>
+  <body class="ds-car-expenses-page">
+
+    <!-- ─── Header ─── -->
+    <header class="ds-page-header">
+      <a class="ds-page-logo-link" data-ds-home-link href="/driverssystem">
+        <img class="ds-page-logo" data-ds-hero-logo alt="DriversSystem" style="display:none" />
+      </a>
+      <h1 class="ds-page-title" data-ds-car-exp-title>Έξοδα Αυτοκινήτου</h1>
+      <span class="ds-page-header__spacer"></span>
+    </header>
+
+    <!-- ─── Main Content ─── -->
+    <main class="ds-car-exp-main">
+
+      <!-- ── Level 1: Groups ── -->
+      <section class="ds-car-exp-groups" data-ds-car-exp-groups>
+        <div class="ds-car-exp-loading">Φόρτωση…</div>
+      </section>
+
+      <!-- ── Level 2: Items in selected group (hidden initially) ── -->
+      <section class="ds-car-exp-items" data-ds-car-exp-items hidden>
+        <button class="ds-car-exp-back" data-ds-car-exp-back>← Πίσω</button>
+        <h2 class="ds-car-exp-items-title" data-ds-car-exp-items-title></h2>
+        <div class="ds-car-exp-items-grid" data-ds-car-exp-items-grid></div>
+      </section>
+
+      <!-- ── Level 3: Amount input (hidden initially) ── -->
+      <section class="ds-car-exp-amount" data-ds-car-exp-amount hidden>
+        <button class="ds-car-exp-back" data-ds-car-exp-amount-back>← Πίσω</button>
+        <div class="ds-car-exp-amount-card ds-card">
+          <h3 class="ds-car-exp-amount-title" data-ds-car-exp-amount-label></h3>
+          <div class="ds-car-exp-amount-field">
+            <label>Ποσό (€)</label>
+            <input class="ds-input ds-car-exp-amount-input" type="number" inputmode="decimal"
+                   step="0.01" min="0" placeholder="0.00" data-ds-car-exp-amount-input />
+          </div>
+          <button class="ds-btn-primary ds-car-exp-save-btn" data-ds-car-exp-save disabled>
+            Αποθήκευση
+          </button>
+          <div class="ds-car-exp-msg" data-ds-car-exp-msg></div>
+        </div>
+      </section>
+
+    </main>
+
+    <div data-ds-footer-slot></div>
+
+    <script src="/driverssystem/js/driverssystem-config.js"></script>
+    <script src="/driverssystem/js/footer.js"></script>
+    <script src="/driverssystem/js/car-expenses.js"></script>
+  </body>
+</html>

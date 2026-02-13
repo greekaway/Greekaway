@@ -187,6 +187,56 @@ async function updateTripSources(items) {
   return cfg.tripSources;
 }
 
+// ── Car Expense Categories (2-level: groups → items) ──
+
+function getDefaultCarExpenseCategories() {
+  return [
+    { id: 'service', name: 'Service', active: true, items: [
+      { id: 'small_service', name: 'Μικρό service', active: true },
+      { id: 'large_service', name: 'Μεγάλο service', active: true }
+    ]},
+    { id: 'maintenance', name: 'Συντήρηση', active: true, items: [
+      { id: 'brakes', name: 'Φρένα', active: true },
+      { id: 'tires', name: 'Λάστιχα', active: true },
+      { id: 'battery', name: 'Μπαταρία', active: true },
+      { id: 'shocks', name: 'Αμορτισέρ', active: true }
+    ]},
+    { id: 'fuel_movement', name: 'Καύσιμα & Κίνηση', active: true, items: [
+      { id: 'fuel', name: 'Καύσιμα', active: true },
+      { id: 'tolls', name: 'Διόδια', active: true },
+      { id: 'parking', name: 'Πάρκινγκ', active: true },
+      { id: 'car_wash', name: 'Πλύσιμο', active: true }
+    ]},
+    { id: 'legal', name: 'Νομικά / Υποχρεωτικά', active: true, items: [
+      { id: 'insurance', name: 'Ασφάλεια', active: true },
+      { id: 'road_tax', name: 'Τέλη κυκλοφορίας', active: true },
+      { id: 'kteo', name: 'ΚΤΕΟ', active: true }
+    ]},
+    { id: 'breakdowns', name: 'Βλάβες / Έκτακτα', active: true, items: [
+      { id: 'emergency_part', name: 'Έκτακτο ανταλλακτικό', active: true },
+      { id: 'roadside_assist', name: 'Οδική βοήθεια', active: true }
+    ]},
+    { id: 'accident', name: 'Ατύχημα', active: true, items: [
+      { id: 'crash', name: 'Τρακάρισμα', active: true }
+    ]}
+  ];
+}
+
+async function getCarExpenseCategories() {
+  const cfg = readConfig();
+  if (!Array.isArray(cfg.carExpenseCategories) || cfg.carExpenseCategories.length === 0) {
+    return getDefaultCarExpenseCategories();
+  }
+  return cfg.carExpenseCategories;
+}
+
+async function updateCarExpenseCategories(items) {
+  const cfg = readConfig();
+  cfg.carExpenseCategories = Array.isArray(items) ? items : [];
+  writeConfig(cfg);
+  return cfg.carExpenseCategories;
+}
+
 // ── Entries ──
 
 function readEntries() {
@@ -495,7 +545,10 @@ module.exports = {
   updateExpense,
   deleteExpense,
   getExpensesRange,
-  getExpensesSummary
+  getExpensesSummary,
+  // Car Expense Categories
+  getCarExpenseCategories,
+  updateCarExpenseCategories
 };
 
 // =========================================================
@@ -551,6 +604,8 @@ async function addExpense(expense) {
     description: (expense.description || '').trim(),
     amount: parseFloat(expense.amount) || 0,
     date: expense.date || new Date().toISOString().slice(0, 10),
+    groupId: expense.groupId || '',
+    itemId: expense.itemId || '',
     createdAt: new Date().toISOString()
   };
   expenses.push(newExpense);
