@@ -634,6 +634,11 @@ app.use((req, res, next) => {
     return next();
   }
 
+  // B.3) version.json — pass through to registered route handler
+  if (url === '/version.json') {
+    return next();
+  }
+
   // B.5) Favicon for MoveAthens domain
   if (url === '/favicon.ico') {
     return res.sendFile(path.join(MOVEATHENS_BASE_DIR, 'icons', 'favicon-32x32.png'));
@@ -687,8 +692,18 @@ const DRIVERSSYSTEM_PAGE_MAP = {
   '/info': 'stats.html',
   '/stats': 'stats.html',
   '/profile': 'profile.html',
-  '/assistant': 'assistant.html'
+  '/assistant': 'assistant.html',
+  '/car-expenses': 'car-expenses.html',
+  '/personal-expenses': 'personal-expenses.html',
+  '/tax-expenses': 'tax-expenses.html'
 };
+
+// DriversSystem prefix routes (e.g. /car-expenses/abc123 → car-expenses.html)
+const DRIVERSSYSTEM_PREFIX_PAGES = [
+  { prefix: '/car-expenses/', file: 'car-expenses.html' },
+  { prefix: '/personal-expenses/', file: 'personal-expenses.html' },
+  { prefix: '/tax-expenses/', file: 'tax-expenses.html' }
+];
 
 // ─────────────────────────────────────────────────────────
 // 2) GLOBAL DOMAIN GATE: DriversSystem
@@ -718,6 +733,11 @@ app.use((req, res, next) => {
 
   // B) Uploads folder (shared between brands — persistent disk)
   if (url.startsWith('/uploads/')) {
+    return next();
+  }
+
+  // B.1) version.json — pass through to registered route handler
+  if (url === '/version.json') {
     return next();
   }
 
@@ -766,6 +786,12 @@ app.use((req, res, next) => {
   // D) DriversSystem pages
   if (DRIVERSSYSTEM_PAGE_MAP[url]) {
     return res.sendFile(path.join(DRIVERSSYSTEM_PAGES_DIR, DRIVERSSYSTEM_PAGE_MAP[url]));
+  }
+
+  // D.2) DriversSystem prefix-based sub-routes (e.g. /car-expenses/groupId)
+  const prefixMatch = DRIVERSSYSTEM_PREFIX_PAGES.find(p => url.startsWith(p.prefix));
+  if (prefixMatch) {
+    return res.sendFile(path.join(DRIVERSSYSTEM_PAGES_DIR, prefixMatch.file));
   }
 
   // E) FALLBACK: Any unknown route on DriversSystem domain → welcome.html
