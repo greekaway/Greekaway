@@ -206,6 +206,58 @@
     btn.querySelector('.ds-save-btn__text').textContent = 'Αποθήκευση';
   };
 
+  // ── Delete confirmation modal ──
+  const showDeleteConfirm = (label) => {
+    return new Promise((resolve) => {
+      // Remove any existing modal
+      const existing = document.getElementById('dsDeleteConfirm');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.id = 'dsDeleteConfirm';
+      overlay.className = 'ds-confirm-overlay';
+      overlay.innerHTML = `
+        <div class="ds-confirm-dialog" role="dialog" aria-modal="true">
+          <div class="ds-confirm-dialog__icon">🗑️</div>
+          <h3 class="ds-confirm-dialog__title">Διαγραφή Καταχώρησης</h3>
+          <p class="ds-confirm-dialog__body">${
+            label
+              ? `<strong>${label}</strong><br>Είσαι σίγουρος ότι θέλεις να διαγράψεις αυτή την καταχώρηση;`
+              : 'Είσαι σίγουρος ότι θέλεις να διαγράψεις αυτή την καταχώρηση;'
+          }</p>
+          <div class="ds-confirm-dialog__actions">
+            <button class="ds-confirm-btn ds-confirm-btn--cancel" data-ds-confirm-cancel>Άκυρο</button>
+            <button class="ds-confirm-btn ds-confirm-btn--danger" data-ds-confirm-ok>Διαγραφή</button>
+          </div>
+        </div>`;
+
+      document.body.appendChild(overlay);
+
+      const okBtn     = overlay.querySelector('[data-ds-confirm-ok]');
+      const cancelBtn = overlay.querySelector('[data-ds-confirm-cancel]');
+
+      const close = (result) => {
+        overlay.remove();
+        document.removeEventListener('keydown', onKey);
+        resolve(result);
+      };
+
+      const onKey = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); close(false); }
+      };
+
+      okBtn.addEventListener('click', () => close(true));
+      cancelBtn.addEventListener('click', () => close(false));
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close(false);
+      });
+      document.addEventListener('keydown', onKey);
+
+      // Focus danger button after paint
+      setTimeout(() => { try { okBtn.focus(); } catch (_) {} }, 30);
+    });
+  };
+
   // ── Load entries ──
   const loadEntries = async () => {
     const list = $('[data-ds-entries-list]');
@@ -256,10 +308,8 @@
           const label = entry
             ? `${entry.sourceName || entry.sourceId} — ${fmtEur(entry.amount)}`
             : '';
-          const msg = label
-            ? `Διαγραφή καταχώρησης;\n\n${label}\n\nΕίσαι σίγουρος;`
-            : 'Διαγραφή αυτής της καταχώρησης;\n\nΕίσαι σίγουρος;';
-          if (!confirm(msg)) return;
+          const confirmed = await showDeleteConfirm(label);
+          if (!confirmed) return;
           const res = await api(`/api/driverssystem/entries/${id}`, 'DELETE');
           if (res.ok) {
             if (navigator.vibrate) navigator.vibrate(30);
