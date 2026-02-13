@@ -339,10 +339,22 @@
   };
 
   // ── Date navigation ──
+  const today = new Date().toISOString().slice(0, 10);
+
+  const updateNextBtnState = () => {
+    const nextBtn = $('[data-ds-date-next]');
+    if (nextBtn) {
+      nextBtn.disabled = currentDate >= today;
+    }
+  };
+
   const setDate = (dateStr) => {
+    // Clamp to today — no future dates
+    if (dateStr > today) dateStr = today;
     currentDate = dateStr;
     const picker = $('[data-ds-date-picker]');
     if (picker) picker.value = dateStr;
+    updateNextBtnState();
     loadEntries();
     loadSummary();
   };
@@ -354,17 +366,22 @@
 
     if (picker) {
       picker.value = currentDate;
+      picker.max = today; // HTML max attribute blocks future dates in native picker
       picker.addEventListener('change', () => setDate(picker.value));
     }
 
     const shiftDate = (days) => {
       const d = new Date(currentDate + 'T12:00:00');
       d.setDate(d.getDate() + days);
-      setDate(d.toISOString().slice(0, 10));
+      const newDate = d.toISOString().slice(0, 10);
+      if (newDate > today) return; // extra guard
+      setDate(newDate);
     };
 
     if (prevBtn) prevBtn.addEventListener('click', () => shiftDate(-1));
     if (nextBtn) nextBtn.addEventListener('click', () => shiftDate(1));
+
+    updateNextBtnState();
   };
 
   // ── Bind form ──

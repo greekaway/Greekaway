@@ -121,6 +121,12 @@
 
 .ds-date-btn:active { background: #f0f0f0; }
 
+.ds-date-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .ds-date-input {
   font-size: 15px;
   font-weight: 600;
