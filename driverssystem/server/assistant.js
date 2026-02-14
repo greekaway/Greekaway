@@ -28,11 +28,13 @@ function pct(a, b) {
 }
 
 async function buildDriverFinancialContext(driverId) {
-  const now = new Date();
+  // Greece timezone
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Athens' }));
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
   const dayOfMonth = now.getDate();
-  const today = now.toISOString().slice(0, 10);
+  const toStr = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const today = toStr(now);
 
   // Current month range
   const curMonthStr = `${year}-${String(month).padStart(2, '0')}`;
@@ -49,12 +51,12 @@ async function buildDriverFinancialContext(driverId) {
   // Last 7 days range
   const sevenDaysAgo = new Date(now);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
+  const sevenDaysAgoStr = toStr(sevenDaysAgo);
 
   // Previous 7 days (7-14 days ago) for comparison
   const fourteenDaysAgo = new Date(now);
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  const fourteenDaysAgoStr = fourteenDaysAgo.toISOString().slice(0, 10);
+  const fourteenDaysAgoStr = toStr(fourteenDaysAgo);
 
   // ── Fetch all data in parallel ──
   const [

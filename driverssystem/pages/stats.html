@@ -73,12 +73,15 @@
         <h2 class="ds-stats-filters__title">Φίλτρα</h2>
 
         <!-- Quick period buttons -->
-        <div class="ds-stats-quick-filters">
-          <button class="ds-stats-quick-btn active" data-period-quick="today">Σήμερα</button>
-          <button class="ds-stats-quick-btn" data-period-quick="week">Εβδομάδα</button>
-          <button class="ds-stats-quick-btn" data-period-quick="month">Μήνας</button>
-          <button class="ds-stats-quick-btn" data-period-quick="3months">3 Μήνες</button>
-          <button class="ds-stats-quick-btn" data-period-quick="custom">Προσαρμοσμένο</button>
+        <div class="ds-stats-period-section">
+          <span class="ds-stats-period-label">Περίοδος:</span>
+          <div class="ds-stats-quick-filters">
+            <button class="ds-stats-quick-btn active" data-period-quick="today">Σήμερα</button>
+            <button class="ds-stats-quick-btn" data-period-quick="week">Εβδομάδα</button>
+            <button class="ds-stats-quick-btn" data-period-quick="month">Μήνας</button>
+            <button class="ds-stats-quick-btn" data-period-quick="3months">3 Μήνες</button>
+            <button class="ds-stats-quick-btn" data-period-quick="custom">Προσαρμοσμένο</button>
+          </div>
         </div>
 
         <!-- Custom date range (hidden by default) -->
@@ -95,11 +98,11 @@
 
         <!-- Group by -->
         <div class="ds-stats-group-row">
-          <span class="ds-stats-group-label">Ομαδοποίηση:</span>
+          <span class="ds-stats-group-label">Προβολή ανά:</span>
           <div class="ds-stats-group-pills">
-            <button class="ds-stats-group-pill active" data-group="day">Ημέρα</button>
-            <button class="ds-stats-group-pill" data-group="week">Εβδομάδα</button>
-            <button class="ds-stats-group-pill" data-group="month">Μήνας</button>
+            <button class="ds-stats-group-pill active" data-group="day">Ανά Ημέρα</button>
+            <button class="ds-stats-group-pill" data-group="week">Ανά Εβδομάδα</button>
+            <button class="ds-stats-group-pill" data-group="month">Ανά Μήνα</button>
           </div>
         </div>
 

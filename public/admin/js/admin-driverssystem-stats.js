@@ -527,7 +527,9 @@
     try {
       const res = await api(`/api/admin/driverssystem/expenses?${params}`);
       if (!res || !res.ok) return;
-      const expenses = await res.json();
+      const payload = await res.json();
+      // API returns { expenses: [...], totalExpenses, byCategory, count }
+      const expenses = Array.isArray(payload) ? payload : (payload.expenses || []);
       lastExpenses = expenses;
 
       // Compute totals per category
@@ -695,19 +697,32 @@
     await loadCarExpCats();
     await loadPersExpCats();
     await loadTaxExpCats();
-    // Set default date range to current month
-    const today = new Date();
+    // Set default date range to current month (Greece timezone)
+    const greeceNow = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Athens' }));
+    const today = greeceNow();
     const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const toDateStr = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     const fromInput = $('#adminFrom');
     const toInput = $('#adminTo');
-    if (fromInput) fromInput.value = firstOfMonth.toISOString().slice(0, 10);
-    if (toInput) toInput.value = today.toISOString().slice(0, 10);
+    if (fromInput) fromInput.value = toDateStr(firstOfMonth);
+    if (toInput) toInput.value = toDateStr(today);
     // Also set expense date defaults
     const expFromInput = $('#adminExpFrom');
     const expToInput = $('#adminExpTo');
-    if (expFromInput) expFromInput.value = firstOfMonth.toISOString().slice(0, 10);
-    if (expToInput) expToInput.value = today.toISOString().slice(0, 10);
+    if (expFromInput) expFromInput.value = toDateStr(firstOfMonth);
+    if (expToInput) expToInput.value = toDateStr(today);
     await loadOverview();
+
+    // ── Live updates: auto-refresh entries and overview every 30s ──
+    setInterval(async () => {
+      // Refresh the currently active tab
+      const activeTab = document.querySelector('.bar-tab.active');
+      const target = activeTab ? activeTab.dataset.tab : 'overview';
+      if (target === 'overview') await loadOverview();
+      if (target === 'entries') await loadEntries();
+      if (target === 'expenses') await loadExpenses();
+      if (target === 'drivers') await loadDrivers(searchInput ? searchInput.value.trim() : '');
+    }, 30000);
   })();
 
 })();

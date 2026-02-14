@@ -7,6 +7,13 @@ try { multer = require('multer'); } catch (_) { multer = null; }
 const dataLayer = require('../../src/server/data/driverssystem');
 const { registerDriversSystemAssistant } = require('./assistant');
 
+// ── Greece Timezone Helper ──
+function greeceDateStr() {
+  const now = new Date();
+  const gr = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Athens' }));
+  return gr.getFullYear() + '-' + String(gr.getMonth() + 1).padStart(2, '0') + '-' + String(gr.getDate()).padStart(2, '0');
+}
+
 module.exports = function registerDriversSystem(app, opts = {}) {
   const isDev = !!opts.isDev;
   const checkAdminAuth = typeof opts.checkAdminAuth === 'function' ? opts.checkAdminAuth : null;
@@ -243,7 +250,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
 
   app.get('/api/driverssystem/entries/summary', async (req, res) => {
     try {
-      const date = req.query.date || new Date().toISOString().slice(0, 10);
+      const date = req.query.date || greeceDateStr();
       const driverId = req.query.driverId || null;
       const summary = await dataLayer.getEntriesSummary(date, driverId);
       return res.json(summary);
@@ -487,9 +494,11 @@ module.exports = function registerDriversSystem(app, opts = {}) {
         category: 'car',
         description: desc,
         amount: parseFloat(amount) || 0,
-        date: date || new Date().toISOString().slice(0, 10),
+        date: date || greeceDateStr(),
         groupId,
-        itemId
+        groupName: groupName || '',
+        itemId,
+        itemName: itemName || ''
       });
       return res.status(201).json(expense);
     } catch (err) {
@@ -564,9 +573,11 @@ module.exports = function registerDriversSystem(app, opts = {}) {
         category: 'personal',
         description: desc,
         amount: parseFloat(amount) || 0,
-        date: date || new Date().toISOString().slice(0, 10),
+        date: date || greeceDateStr(),
         groupId,
-        itemId
+        groupName: groupName || '',
+        itemId,
+        itemName: itemName || ''
       });
       return res.status(201).json(expense);
     } catch (err) {
@@ -640,9 +651,11 @@ module.exports = function registerDriversSystem(app, opts = {}) {
         category: 'tax',
         description: desc,
         amount: parseFloat(amount) || 0,
-        date: date || new Date().toISOString().slice(0, 10),
+        date: date || greeceDateStr(),
         groupId,
-        itemId
+        groupName: groupName || '',
+        itemId,
+        itemName: itemName || ''
       });
       return res.status(201).json(expense);
     } catch (err) {

@@ -238,12 +238,23 @@
   color: #1a2232;
 }
 
+/* Period section label */
+.ds-stats-period-section {
+  margin-bottom: 12px;
+}
+.ds-stats-period-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7b8794;
+  margin-bottom: 6px;
+}
+
 /* Quick filter buttons */
 .ds-stats-quick-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 12px;
 }
 
 .ds-stats-quick-btn {
@@ -338,6 +349,13 @@
   background: #1a2232;
   color: #fff;
   border-color: #1a2232;
+}
+
+.ds-stats-group-pill--disabled,
+.ds-stats-group-pill[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Source filter pills */

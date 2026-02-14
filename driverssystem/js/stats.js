@@ -90,18 +90,24 @@
 
   // ── Get driver ID from localStorage (phone-based identity) ──
   const getDriverId = () => {
-    try {
-      const d = JSON.parse(localStorage.getItem('ds_driver') || '{}');
-      return d.phone || '';
-    } catch (_) {
-      return '';
-    }
+    return localStorage.getItem('ds_driver_phone') || '';
+  };
+
+  // ── Greece timezone helper ──
+  const greeceNow = () => {
+    const now = new Date();
+    const gr = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Athens' }));
+    return gr;
+  };
+  const greeceToday = () => {
+    const gr = greeceNow();
+    return gr.getFullYear() + '-' + String(gr.getMonth() + 1).padStart(2, '0') + '-' + String(gr.getDate()).padStart(2, '0');
   };
 
   // ── Compute date range from quick filter ──
   const getDateRange = () => {
-    const today = new Date();
-    const toStr = (d) => d.toISOString().slice(0, 10);
+    const today = greeceNow();
+    const toStr = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
     switch (currentQuick) {
       case 'today':
@@ -644,6 +650,47 @@
     renderTimeline(stats);
   };
 
+  // ── Allowed groupings per period ──
+  // Prevents invalid combos (e.g. period=today + group=month)
+  const allowedGroupings = {
+    today:    ['day'],
+    week:     ['day', 'week'],
+    month:    ['day', 'week', 'month'],
+    '3months': ['day', 'week', 'month'],
+    custom:   ['day', 'week', 'month']
+  };
+  // Best default grouping when period changes
+  const defaultGrouping = {
+    today:    'day',
+    week:     'day',
+    month:    'week',
+    '3months': 'month',
+    custom:   'day'
+  };
+
+  // Update group pill enabled/disabled states
+  const syncGroupPills = () => {
+    const allowed = allowedGroupings[currentQuick] || ['day', 'week', 'month'];
+    $$('[data-group]').forEach(btn => {
+      const g = btn.dataset.group;
+      if (allowed.includes(g)) {
+        btn.disabled = false;
+        btn.classList.remove('ds-stats-group-pill--disabled');
+      } else {
+        btn.disabled = true;
+        btn.classList.remove('active');
+        btn.classList.add('ds-stats-group-pill--disabled');
+      }
+    });
+    // If current group is not allowed, switch to default
+    if (!allowed.includes(currentGroup)) {
+      currentGroup = defaultGrouping[currentQuick] || 'day';
+      $$('[data-group]').forEach(b => b.classList.remove('active'));
+      const activeBtn = $$('[data-group]').find(b => b.dataset.group === currentGroup);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+  };
+
   // ── Quick filter handlers ──
   const initQuickFilters = () => {
     $$('[data-period-quick]').forEach(btn => {
@@ -658,6 +705,14 @@
         } else {
           if (customRange) customRange.style.display = 'none';
         }
+
+        // Auto-adjust grouping to best default for this period
+        currentGroup = defaultGrouping[currentQuick] || 'day';
+        $$('[data-group]').forEach(b => b.classList.remove('active'));
+        const grpBtn = $$('[data-group]').find(b => b.dataset.group === currentGroup);
+        if (grpBtn) grpBtn.classList.add('active');
+        syncGroupPills();
+
         loadStats();
       });
     });
@@ -682,6 +737,7 @@
   const initGroupPills = () => {
     $$('[data-group]').forEach(btn => {
       btn.addEventListener('click', () => {
+        if (btn.disabled) return;
         currentGroup = btn.dataset.group;
         $$('[data-group]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -695,8 +751,33 @@
   renderSourcePills();
   initQuickFilters();
   initGroupPills();
+  syncGroupPills();   // apply initial disabled states
   initClickableCards();
   initExpenseNav();
   await loadStats();
+
+  // ── Live updates: poll every 30s + midnight detection ──
+  let lastKnownDate = greeceToday();
+
+  const liveRefresh = async () => {
+    const nowDate = greeceToday();
+    if (nowDate !== lastKnownDate) {
+      // Day changed — reset filters to today
+      lastKnownDate = nowDate;
+      currentQuick = 'today';
+      currentGroup = 'day';
+      const btns = $$('[data-period-quick]');
+      btns.forEach(b => b.classList.remove('active'));
+      const todayBtn = btns.find(b => b.dataset.periodQuick === 'today');
+      if (todayBtn) todayBtn.classList.add('active');
+      $$('[data-group]').forEach(b => b.classList.remove('active'));
+      const dayBtn = $$('[data-group]').find(b => b.dataset.group === 'day');
+      if (dayBtn) dayBtn.classList.add('active');
+      syncGroupPills();
+    }
+    await loadStats();
+  };
+
+  setInterval(liveRefresh, 30000);
 
 })();

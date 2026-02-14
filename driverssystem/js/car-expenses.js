@@ -10,6 +10,13 @@
   const $ = (sel) => document.querySelector(sel);
   const STORAGE_KEY = 'ds_driver_phone';
 
+  // ── Greece timezone helper ──
+  const greeceToday = () => {
+    const now = new Date();
+    const gr = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Athens' }));
+    return gr.getFullYear() + '-' + String(gr.getMonth() + 1).padStart(2, '0') + '-' + String(gr.getDate()).padStart(2, '0');
+  };
+
   // ── Auth guard ──
   const savedPhone = localStorage.getItem(STORAGE_KEY);
   if (!savedPhone) {
@@ -191,7 +198,7 @@
           itemId: item.id,
           itemName: item.name,
           amount,
-          date: new Date().toISOString().slice(0, 10)
+          date: greeceToday()
         };
         if (noteInput && noteInput.value.trim()) {
           body.note = noteInput.value.trim();

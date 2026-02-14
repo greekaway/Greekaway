@@ -48,10 +48,24 @@
     homeLink.href = window.DriversSystemConfig.buildRoute('/');
   }
 
+  // ── Greece timezone helper ──
+  const greeceNow = () => {
+    const now = new Date();
+    return new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Athens' }));
+  };
+  const greeceToday = () => {
+    const gr = greeceNow();
+    return gr.getFullYear() + '-' + String(gr.getMonth() + 1).padStart(2, '0') + '-' + String(gr.getDate()).padStart(2, '0');
+  };
+  const greeceTimeStr = () => {
+    const gr = greeceNow();
+    return String(gr.getHours()).padStart(2, '0') + ':' + String(gr.getMinutes()).padStart(2, '0');
+  };
+
   // ── State ──
   let sources = [];
   let selectedSource = null;
-  let currentDate = new Date().toISOString().slice(0, 10);
+  let currentDate = greeceToday();
   let amountCents = 0; // ATM-style: store amount as integer cents
 
   const fmtEur = (v) => {
@@ -176,6 +190,7 @@
         commission,
         netAmount: Math.round(netAmount * 100) / 100,
         date: currentDate,
+        time: greeceTimeStr(),
         note: noteInput?.value || ''
       });
 
@@ -339,7 +354,7 @@
   };
 
   // ── Date navigation ──
-  const today = new Date().toISOString().slice(0, 10);
+  let today = greeceToday();
 
   const updateNextBtnState = () => {
     const nextBtn = $('[data-ds-date-next]');
@@ -373,7 +388,7 @@
     const shiftDate = (days) => {
       const d = new Date(currentDate + 'T12:00:00');
       d.setDate(d.getDate() + days);
-      const newDate = d.toISOString().slice(0, 10);
+      const newDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
       if (newDate > today) return; // extra guard
       setDate(newDate);
     };
@@ -445,4 +460,22 @@
   initForm();
   updateSaveBtn();
   await Promise.all([loadEntries(), loadSummary()]);
+
+  // ── Live updates: poll every 20s + midnight detection ──
+  let lastKnownDate = greeceToday();
+
+  const liveRefresh = async () => {
+    const nowDate = greeceToday();
+    if (nowDate !== lastKnownDate) {
+      // Day changed — update today reference and switch to new day
+      lastKnownDate = nowDate;
+      today = nowDate;
+      setDate(nowDate);
+      return;
+    }
+    // Refresh current view
+    await Promise.all([loadEntries(), loadSummary()]);
+  };
+
+  setInterval(liveRefresh, 20000);
 })();

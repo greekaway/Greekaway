@@ -14,6 +14,20 @@
 const fs = require('fs');
 const path = require('path');
 
+// ── Greece Timezone Helpers ──
+function greeceNow() {
+  const now = new Date();
+  return new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Athens' }));
+}
+function greeceDateStr() {
+  const gr = greeceNow();
+  return gr.getFullYear() + '-' + String(gr.getMonth() + 1).padStart(2, '0') + '-' + String(gr.getDate()).padStart(2, '0');
+}
+function greeceTimeStr() {
+  const gr = greeceNow();
+  return String(gr.getHours()).padStart(2, '0') + ':' + String(gr.getMinutes()).padStart(2, '0');
+}
+
 const IS_RENDER = !!process.env.RENDER;
 const RENDER_PERSISTENT_ROOT = '/opt/render/project/src/uploads';
 const REPO_DATA_DIR = path.join(__dirname, '..', '..', '..', 'driverssystem', 'data');
@@ -348,8 +362,8 @@ async function addEntry(entry) {
     amount: parseFloat(entry.amount) || 0,
     commission: parseFloat(entry.commission) || 0,
     netAmount: parseFloat(entry.netAmount) || 0,
-    date: entry.date || new Date().toISOString().slice(0, 10),
-    time: entry.time || new Date().toTimeString().slice(0, 5),
+    date: entry.date || greeceDateStr(),
+    time: entry.time || greeceTimeStr(),
     note: (entry.note || '').trim(),
     createdAt: new Date().toISOString()
   };
@@ -546,10 +560,10 @@ async function getStatsRange(filters = {}) {
       key = e.date.slice(0, 7); // YYYY-MM
     } else if (period === 'week') {
       // ISO week start (Monday)
-      const d = new Date(e.date + 'T00:00:00');
+      const d = new Date(e.date + 'T12:00:00');
       const day = d.getDay() || 7;
       d.setDate(d.getDate() - day + 1);
-      key = d.toISOString().slice(0, 10);
+      key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     } else {
       key = e.date; // day
     }
@@ -588,7 +602,7 @@ async function getStatsRange(filters = {}) {
  * @returns {Object} dashboard payload
  */
 async function getDashboard(opts = {}) {
-  const now = new Date();
+  const now = greeceNow();
   const month = opts.month || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const [year, mon] = month.split('-').map(Number);
   const daysInMonth = new Date(year, mon, 0).getDate();
@@ -597,7 +611,7 @@ async function getDashboard(opts = {}) {
 
   // Determine if we are in the current month
   const isCurrentMonth = (now.getFullYear() === year && now.getMonth() + 1 === mon);
-  const today = now.toISOString().slice(0, 10);
+  const today = greeceDateStr();
   const toDate = isCurrentMonth ? today : lastDay;
   const dayOfMonth = isCurrentMonth ? now.getDate() : daysInMonth;
   const remainingDays = daysInMonth - dayOfMonth;
@@ -764,9 +778,11 @@ async function addExpense(expense) {
     category: cat,
     description: (expense.description || '').trim(),
     amount: parseFloat(expense.amount) || 0,
-    date: expense.date || new Date().toISOString().slice(0, 10),
+    date: expense.date || greeceDateStr(),
     groupId: expense.groupId || '',
+    groupName: expense.groupName || '',
     itemId: expense.itemId || '',
+    itemName: expense.itemName || '',
     createdAt: new Date().toISOString()
   };
   expenses.push(newExpense);
