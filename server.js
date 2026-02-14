@@ -581,6 +581,24 @@ const DRIVERSSYSTEM_BASE_DIR = path.join(__dirname, 'driverssystem');
 const DRIVERSSYSTEM_PAGES_DIR = path.join(DRIVERSSYSTEM_BASE_DIR, 'pages');
 const DRIVERSSYSTEM_ENTRY = path.join(DRIVERSSYSTEM_PAGES_DIR, 'welcome.html');
 
+// Pre-read footer partial once for server-side injection
+let dsFooterHtml = '';
+try { dsFooterHtml = fs.readFileSync(path.join(DRIVERSSYSTEM_BASE_DIR, 'partials', 'footer.html'), 'utf8'); } catch (_) {}
+
+// Helper: send DriversSystem page with footer pre-injected
+const sendDsPageWithFooter = (res, filePath) => {
+  if (!dsFooterHtml) return res.sendFile(filePath);
+  fs.readFile(filePath, 'utf8', (err, html) => {
+    if (err) return res.status(404).send('Not found');
+    const injected = html.replace(
+      '<div data-ds-footer-slot></div>',
+      `<div data-ds-footer-slot>${dsFooterHtml}</div>`
+    );
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    res.send(injected);
+  });
+};
+
 const GREEKAWAY_ENTRY = path.join(__dirname, 'public', 'index.html');
 
 // Helper: check if request is from MoveAthens domain
@@ -785,17 +803,17 @@ app.use((req, res, next) => {
 
   // D) DriversSystem pages
   if (DRIVERSSYSTEM_PAGE_MAP[url]) {
-    return res.sendFile(path.join(DRIVERSSYSTEM_PAGES_DIR, DRIVERSSYSTEM_PAGE_MAP[url]));
+    return sendDsPageWithFooter(res, path.join(DRIVERSSYSTEM_PAGES_DIR, DRIVERSSYSTEM_PAGE_MAP[url]));
   }
 
   // D.2) DriversSystem prefix-based sub-routes (e.g. /car-expenses/groupId)
   const prefixMatch = DRIVERSSYSTEM_PREFIX_PAGES.find(p => url.startsWith(p.prefix));
   if (prefixMatch) {
-    return res.sendFile(path.join(DRIVERSSYSTEM_PAGES_DIR, prefixMatch.file));
+    return sendDsPageWithFooter(res, path.join(DRIVERSSYSTEM_PAGES_DIR, prefixMatch.file));
   }
 
   // E) FALLBACK: Any unknown route on DriversSystem domain → welcome.html
-  return res.sendFile(DRIVERSSYSTEM_ENTRY);
+  return sendDsPageWithFooter(res, DRIVERSSYSTEM_ENTRY);
 });
 
 // Serve Apple Pay domain association and other well-known files (explicitly allow dotfiles)

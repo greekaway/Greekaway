@@ -9,11 +9,12 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/driverssystem/icons/apple-touch-icon.png">
     <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
     <link rel="preload" href="/driverssystem/css/stats.css" as="style" />
+    <link rel="preload" href="/driverssystem/js/driverssystem-config.js" as="script" />
+    <link rel="preload" href="/driverssystem/js/stats.js" as="script" />
     <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
     <link rel="stylesheet" href="/driverssystem/css/footer.css" />
     <link rel="stylesheet" href="/driverssystem/css/stats.css" />
-    <link rel="stylesheet" href="/driverssystem/css/profile.css" />
-    <link rel="stylesheet" href="/driverssystem/css/dark-mode.css" />
+    <link rel="stylesheet" href="/driverssystem/css/dark-mode.css" media="(prefers-color-scheme: dark)" />
   </head>
   <body class="ds-info-page">
 
@@ -152,8 +153,8 @@
 
     <div data-ds-footer-slot></div>
 
-    <script src="/driverssystem/js/driverssystem-config.js"></script>
-    <script src="/driverssystem/js/footer.js"></script>
-    <script src="/driverssystem/js/stats.js"></script>
+    <script src="/driverssystem/js/driverssystem-config.js" defer></script>
+    <script src="/driverssystem/js/footer.js" defer></script>
+    <script src="/driverssystem/js/stats.js" defer></script>
   </body>
 </html>

@@ -1,9 +1,12 @@
 (async () => {
   const slot = document.querySelector('[data-ds-footer-slot]');
   if (slot) {
-    const cacheBust = window.DriversSystemConfig.isDevHost() ? `?cb=${Date.now()}` : '';
-    const res = await fetch(`/driverssystem/partials/footer.html${cacheBust}`);
-    slot.innerHTML = await res.text();
+    // Check if footer was already server-inlined or cached
+    if (!slot.querySelector('[data-ds-footer]')) {
+      const cacheBust = window.DriversSystemConfig.isDevHost() ? `?cb=${Date.now()}` : '';
+      const res = await fetch(`/driverssystem/partials/footer.html${cacheBust}`);
+      slot.innerHTML = await res.text();
+    }
   }
 
   const cfg = await window.DriversSystemConfig.load();
@@ -33,7 +36,7 @@
         return;
       }
       try {
-        const res = await fetch(url, { cache: 'no-store' });
+        const res = await fetch(url);
         if (!res.ok) throw new Error('icon');
         const text = await res.text();
         const parser = new DOMParser();

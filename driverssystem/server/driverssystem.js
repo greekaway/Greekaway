@@ -19,11 +19,39 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   const checkAdminAuth = typeof opts.checkAdminAuth === 'function' ? opts.checkAdminAuth : null;
   const baseDir = path.join(__dirname, '..');
   const pagesDir = path.join(baseDir, 'pages');
+  const partialsDir = path.join(baseDir, 'partials');
   const router = express.Router();
+
+  // ── Footer injection: read the partial once and inject server-side ──
+  let footerHtml = '';
+  try {
+    footerHtml = fs.readFileSync(path.join(partialsDir, 'footer.html'), 'utf8');
+  } catch (_) {
+    console.warn('[driverssystem] footer.html partial not found — will use client-side fetch');
+  }
+
+  // Helper: serve page with footer pre-injected (saves a client-side fetch)
+  const sendPageWithFooter = (res, filePath) => {
+    if (!footerHtml) return res.sendFile(filePath);
+    fs.readFile(filePath, 'utf8', (err, html) => {
+      if (err) return res.status(404).send('Not found');
+      const injected = html.replace(
+        '<div data-ds-footer-slot></div>',
+        `<div data-ds-footer-slot>${footerHtml}</div>`
+      );
+      res.set('Content-Type', 'text/html; charset=utf-8');
+      res.send(injected);
+    });
+  };
 
   if (isDev) {
     router.use((req, res, next) => {
       res.set('Cache-Control', 'no-store');
+      next();
+    });
+    // Reload footer partial in dev so changes are picked up
+    router.use((req, res, next) => {
+      try { footerHtml = fs.readFileSync(path.join(partialsDir, 'footer.html'), 'utf8'); } catch (_) {}
       next();
     });
   }
@@ -42,7 +70,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   Object.keys(pageMap).forEach((routePath) => {
     router.get(routePath, (req, res) => {
       const fileName = pageMap[routePath];
-      return res.sendFile(path.join(pagesDir, fileName));
+      return sendPageWithFooter(res, path.join(pagesDir, fileName));
     });
   });
 
@@ -93,6 +121,8 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   app.get('/api/driverssystem/ui-config', async (req, res) => {
     try {
       const cfg = await dataLayer.getConfig();
+      // Allow browser to cache config for 2 minutes — reduces repeat fetches
+      if (!isDev) res.set('Cache-Control', 'public, max-age=120');
       return res.json(cfg);
     } catch (err) {
       console.error('[driverssystem] GET config error:', err.message);
@@ -508,11 +538,11 @@ module.exports = function registerDriversSystem(app, opts = {}) {
 
   // ── Car Expenses page route ──
   router.get('/car-expenses', (req, res) => {
-    return res.sendFile(path.join(pagesDir, 'car-expenses.html'));
+    return sendPageWithFooter(res, path.join(pagesDir, 'car-expenses.html'));
   });
   // Group sub-page (same HTML, JS reads groupId from URL)
   router.get('/car-expenses/:groupId', (req, res) => {
-    return res.sendFile(path.join(pagesDir, 'car-expenses.html'));
+    return sendPageWithFooter(res, path.join(pagesDir, 'car-expenses.html'));
   });
 
   // ══════════════════════════════════════════════════════════
@@ -587,10 +617,10 @@ module.exports = function registerDriversSystem(app, opts = {}) {
 
   // ── Personal Expenses page route ──
   router.get('/personal-expenses', (req, res) => {
-    return res.sendFile(path.join(pagesDir, 'personal-expenses.html'));
+    return sendPageWithFooter(res, path.join(pagesDir, 'personal-expenses.html'));
   });
   router.get('/personal-expenses/:groupId', (req, res) => {
-    return res.sendFile(path.join(pagesDir, 'personal-expenses.html'));
+    return sendPageWithFooter(res, path.join(pagesDir, 'personal-expenses.html'));
   });
 
   // ══════════════════════════════════════════════════════════
@@ -665,10 +695,10 @@ module.exports = function registerDriversSystem(app, opts = {}) {
 
   // ── Tax Expenses page route ──
   router.get('/tax-expenses', (req, res) => {
-    return res.sendFile(path.join(pagesDir, 'tax-expenses.html'));
+    return sendPageWithFooter(res, path.join(pagesDir, 'tax-expenses.html'));
   });
   router.get('/tax-expenses/:groupId', (req, res) => {
-    return res.sendFile(path.join(pagesDir, 'tax-expenses.html'));
+    return sendPageWithFooter(res, path.join(pagesDir, 'tax-expenses.html'));
   });
 
   // ── AI Assistant routes ──

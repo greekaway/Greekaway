@@ -81,7 +81,9 @@
   const load = async () => {
     if (state.data) return state.data;
     if (!state.promise) {
-      state.promise = fetch(buildConfigUrl(), { cache: 'no-store' })
+      // Dev: cache-bust; Prod: allow short browser cache (2 min)
+      const fetchOpts = isDevHost() ? { cache: 'no-store' } : {};
+      state.promise = fetch(buildConfigUrl(), fetchOpts)
         .then((res) => res.ok ? res.json() : Promise.reject(new Error('config')))
         .then((data) => {
           state.data = data || {};
