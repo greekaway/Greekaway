@@ -286,10 +286,13 @@
   display: flex;
   gap: 10px;
   margin-bottom: 12px;
+  width: 100%;
+  overflow: hidden;
 }
 
 .ds-stats-date-field {
   flex: 1;
+  min-width: 0;
 }
 
 .ds-stats-date-label {
@@ -302,13 +305,17 @@
 
 .ds-stats-date-input {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   font-size: 14px;
   font-weight: 600;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   background: #fff;
   color: #1a2232;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 /* Group pills */
@@ -333,22 +340,27 @@
 }
 
 .ds-stats-group-pill {
-  padding: 8px 14px;
-  min-height: 36px;
-  border-radius: 16px;
+  padding: 10px 16px;
+  min-height: 40px;
+  border-radius: 20px;
   border: 1.5px solid #e0e4ea;
   background: #f8f9fb;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #4a5568;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.18s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
+.ds-stats-group-pill:active { transform: scale(0.96); }
+
 .ds-stats-group-pill.active {
-  background: #1a2232;
+  background: linear-gradient(135deg, #059669, #00c896);
   color: #fff;
-  border-color: #1a2232;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
 }
 
 .ds-stats-group-pill--disabled,
@@ -545,6 +557,14 @@
   .ds-stats-table { font-size: 12px; }
   .ds-stats-table th,
   .ds-stats-table td { padding: 6px 6px; }
+
+  /* Tighter date range on very narrow screens */
+  .ds-stats-custom-range { gap: 6px; }
+  .ds-stats-date-input {
+    font-size: 13px;
+    padding: 7px 6px;
+  }
+  .ds-stats-filters { padding: 12px; }
 }
 
 /* ─────────────────────────────────────
@@ -901,9 +921,10 @@ body.ds-overlay-open {
     color: #d0d8e0 !important;
   }
   .ds-stats-group-pill.active {
-    background: rgba(255, 255, 255, 0.9) !important;
-    color: #0a1525 !important;
+    background: linear-gradient(135deg, #00c896, #059669) !important;
+    color: #fff !important;
     border-color: transparent !important;
+    box-shadow: 0 2px 12px rgba(0, 200, 150, 0.35) !important;
   }
 
   .ds-stats-source-pill {
