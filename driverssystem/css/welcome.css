@@ -185,21 +185,16 @@
 .ds-perf__row-value.positive { color: #34d399; }
 .ds-perf__row-value.negative { color: #f87171; }
 
-/* Expense breakdown (collapsible) */
-.ds-perf__details {
+/* Expense breakdown (always visible) */
+.ds-perf__expense-section {
   margin-top: 6px;
 }
 
-.ds-perf__summary {
+.ds-perf__expense-title {
   font-size: 12px;
   color: rgba(255,255,255,0.5);
-  cursor: pointer;
   padding: 4px 0;
   user-select: none;
-}
-
-.ds-perf__summary:hover {
-  color: rgba(255,255,255,0.75);
 }
 
 .ds-perf__breakdown {
@@ -217,6 +212,71 @@
   padding: 2px 0;
 }
 
+/* Spacer pushes shift card toward bottom of dashboard */
+.ds-shift-spacer {
+  flex: 1 1 0;
+  min-height: 12px;
+}
+
+/* ═══ Shift Counter Card ═══ */
+.ds-shift {
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.ds-shift:active {
+  transform: scale(0.98);
+}
+
+.ds-shift__amount {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ds-shift__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+/* ── Shift States ── */
+.ds-shift--active {
+  background: rgba(0, 200, 150, 0.18);
+  border-color: rgba(0, 200, 150, 0.4);
+  box-shadow: 0 0 24px rgba(0, 200, 150, 0.15);
+}
+
+.ds-shift--active .ds-shift__label {
+  color: #00c896;
+}
+
+.ds-shift--stopped {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: rgba(248, 113, 113, 0.4);
+  box-shadow: 0 0 24px rgba(248, 113, 113, 0.15);
+}
+
+.ds-shift--stopped .ds-shift__label {
+  color: #f87171;
+}
+
 /* ── Welcome Dashboard (scrollable content area) ── */
 .ds-welcome-dashboard {
   position: absolute;
@@ -226,7 +286,7 @@
   z-index: 4;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 16px;
+  padding: 16px 16px 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -340,6 +400,31 @@
   .ds-perf__summary { color: rgba(0,0,0,0.45) !important; }
   .ds-perf__summary:hover { color: rgba(0,0,0,0.7) !important; }
   .ds-perf__break-row { color: #6b7280 !important; }
+  .ds-perf__expense-title { color: #6b7280 !important; }
+
+  /* Shift counter — light mode */
+  .ds-shift {
+    background: rgba(255,255,255,0.75) !important;
+    border: 1px solid rgba(0,0,0,0.08) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
+  }
+  .ds-shift__amount { color: #1a2232 !important; }
+  .ds-shift__label { color: #6b7280 !important; }
+
+  .ds-shift--active {
+    background: rgba(5, 150, 105, 0.12) !important;
+    border-color: rgba(5, 150, 105, 0.3) !important;
+    box-shadow: 0 0 24px rgba(5, 150, 105, 0.12) !important;
+  }
+  .ds-shift--active .ds-shift__label { color: #059669 !important; }
+
+  .ds-shift--stopped {
+    background: rgba(220, 38, 38, 0.1) !important;
+    border-color: rgba(220, 38, 38, 0.25) !important;
+    box-shadow: 0 0 24px rgba(220, 38, 38, 0.1) !important;
+  }
+  .ds-shift--stopped .ds-shift__label { color: #dc2626 !important; }
+  .ds-shift--stopped .ds-shift__amount { color: #dc2626 !important; }
 
   /* (old business plan light mode styles removed) */
 

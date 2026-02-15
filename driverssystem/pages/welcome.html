@@ -72,9 +72,9 @@
               </div>
             </div>
 
-            <!-- Expense breakdown (collapsible) -->
-            <details class="ds-perf__details">
-              <summary class="ds-perf__summary">Ανάλυση Εξόδων</summary>
+            <!-- Expense breakdown (always visible) -->
+            <div class="ds-perf__expense-section">
+              <div class="ds-perf__expense-title">Ανάλυση Εξόδων</div>
               <div class="ds-perf__breakdown">
                 <div class="ds-perf__break-row">
                   <span>🚗 Αυτοκίνητο</span>
@@ -89,7 +89,16 @@
                   <span data-ds-perf-exp-tax>0,00 €</span>
                 </div>
               </div>
-            </details>
+            </div>
+          </div>
+
+          <!-- spacer pushes shift card toward bottom -->
+          <div class="ds-shift-spacer"></div>
+
+          <!-- ═══ Shift Counter ═══ -->
+          <div class="ds-shift" data-ds-shift>
+            <span class="ds-shift__amount" data-ds-shift-amount>0,00 €</span>
+            <span class="ds-shift__label" data-ds-shift-label>Βάρδια</span>
           </div>
 
         </div>
@@ -109,5 +118,6 @@
     <script src="/driverssystem/js/page-loader.js" defer></script>
     <script src="/driverssystem/js/footer.js" defer></script>
     <script src="/driverssystem/js/welcome.js" defer></script>
+    <script src="/driverssystem/js/shift-counter.js" defer></script>
   </body>
 </html>
