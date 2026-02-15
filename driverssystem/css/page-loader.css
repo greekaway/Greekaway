@@ -1,0 +1,59 @@
+/* ═══════════════════════════════════════════════════════
+   Page Transition Loader – DriversSystem
+   Shows a spinner overlay during page navigation
+   Adapts to light / dark mode automatically
+   ═══════════════════════════════════════════════════════ */
+
+.ds-page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.ds-page-loader--active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Spinner ring – light mode (dark ring on light overlay) */
+.ds-page-loader__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(0, 0, 0, 0.08);
+  border-top-color: var(--ds-accent, #00c896);
+  border-radius: 50%;
+  animation: ds-spin 0.65s linear infinite;
+}
+
+/* ── Hero page (always dark background) ── */
+.ds-hero-page .ds-page-loader {
+  background: rgba(11, 15, 26, 0.80);
+}
+.ds-hero-page .ds-page-loader__spinner {
+  border-color: rgba(255, 255, 255, 0.12);
+  border-top-color: var(--ds-accent, #00c896);
+}
+
+/* ── Dark mode: all pages get dark overlay ── */
+@media (prefers-color-scheme: dark) {
+  .ds-page-loader {
+    background: rgba(11, 15, 26, 0.82);
+  }
+  .ds-page-loader__spinner {
+    border-color: rgba(255, 255, 255, 0.12);
+    border-top-color: var(--ds-accent, #00c896);
+  }
+}
+
+@keyframes ds-spin {
+  to { transform: rotate(360deg); }
+}
