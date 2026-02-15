@@ -47,6 +47,8 @@ const UI_CONFIG_PATH = path.join(DATA_DIR, 'driverssystem_ui.json');
 const ENTRIES_PATH = path.join(DATA_DIR, 'entries.json');
 const DRIVERS_PATH = path.join(DATA_DIR, 'drivers.json');
 const EXPENSES_PATH = path.join(DATA_DIR, 'expenses.json');
+const DEBTS_PATH = path.join(DATA_DIR, 'debts.json');
+const APPOINTMENTS_PATH = path.join(DATA_DIR, 'appointments.json');
 
 // ── Seed persistent disk from repo defaults on first boot ──
 function seedIfNeeded() {
@@ -149,8 +151,44 @@ function getDefaultConfig() {
       { id: 'bolt', name: 'Bolt', commission: 20, color: '#34D186', active: true },
       { id: 'beat', name: 'Beat', commission: 20, color: '#9B59B6', active: true },
       { id: 'street', name: 'Δρόμος', commission: 0, color: '#F39C12', active: true }
-    ]
+    ],
+    features: {
+      debts: true,
+      appointments: true
+    }
   };
+}
+
+// =========================================================
+// FEATURES (Module Toggle Flags)
+// =========================================================
+
+const FEATURE_DEFAULTS = { debts: true, appointments: true };
+
+async function getFeatures() {
+  const cfg = readConfig();
+  return Object.assign({}, FEATURE_DEFAULTS, cfg.features || {});
+}
+
+async function updateFeatures(incoming) {
+  const cfg = readConfig();
+  cfg.features = Object.assign({}, FEATURE_DEFAULTS, cfg.features || {}, incoming);
+  const ok = writeConfig(cfg);
+  return ok ? cfg.features : null;
+}
+
+/**
+ * Synchronous check — safe to use in middleware without async.
+ * Returns true if the feature is enabled (default = true).
+ */
+function isFeatureEnabled(key) {
+  try {
+    const cfg = readConfig();
+    const features = Object.assign({}, FEATURE_DEFAULTS, cfg.features || {});
+    return features[key] !== false;
+  } catch (_) {
+    return true; // fail-open
+  }
 }
 
 // =========================================================
@@ -191,32 +229,32 @@ async function updateTripSources(items) {
 function getDefaultCarExpenseCategories() {
   return [
     { id: 'service', name: 'Service', active: true, items: [
-      { id: 'small_service', name: 'Μικρό service', active: true },
-      { id: 'large_service', name: 'Μεγάλο service', active: true }
+      { id: 'small_service', name: 'Μικρό service', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' },
+      { id: 'large_service', name: 'Μεγάλο service', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' }
     ]},
     { id: 'maintenance', name: 'Συντήρηση', active: true, items: [
-      { id: 'brakes', name: 'Φρένα', active: true },
-      { id: 'tires', name: 'Λάστιχα', active: true },
-      { id: 'battery', name: 'Μπαταρία', active: true },
-      { id: 'shocks', name: 'Αμορτισέρ', active: true }
+      { id: 'brakes', name: 'Φρένα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' },
+      { id: 'tires', name: 'Λάστιχα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' },
+      { id: 'battery', name: 'Μπαταρία', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' },
+      { id: 'shocks', name: 'Αμορτισέρ', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' }
     ]},
     { id: 'fuel_movement', name: 'Καύσιμα & Κίνηση', active: true, items: [
-      { id: 'fuel', name: 'Καύσιμα', active: true },
-      { id: 'tolls', name: 'Διόδια', active: true },
-      { id: 'parking', name: 'Πάρκινγκ', active: true },
-      { id: 'car_wash', name: 'Πλύσιμο', active: true }
+      { id: 'fuel', name: 'Καύσιμα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
+      { id: 'tolls', name: 'Διόδια', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'trip' },
+      { id: 'parking', name: 'Πάρκινγκ', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'trip' },
+      { id: 'car_wash', name: 'Πλύσιμο', active: true, type: 'frequent', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' }
     ]},
     { id: 'legal', name: 'Νομικά / Υποχρεωτικά', active: true, items: [
-      { id: 'insurance', name: 'Ασφάλεια', active: true },
-      { id: 'road_tax', name: 'Τέλη κυκλοφορίας', active: true },
-      { id: 'kteo', name: 'ΚΤΕΟ', active: true }
+      { id: 'insurance', name: 'Ασφάλεια', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
+      { id: 'road_tax', name: 'Τέλη κυκλοφορίας', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
+      { id: 'kteo', name: 'ΚΤΕΟ', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' }
     ]},
     { id: 'breakdowns', name: 'Βλάβες / Έκτακτα', active: true, items: [
-      { id: 'emergency_part', name: 'Έκτακτο ανταλλακτικό', active: true },
-      { id: 'roadside_assist', name: 'Οδική βοήθεια', active: true }
+      { id: 'emergency_part', name: 'Έκτακτο ανταλλακτικό', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' },
+      { id: 'roadside_assist', name: 'Οδική βοήθεια', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' }
     ]},
     { id: 'accident', name: 'Ατύχημα', active: true, items: [
-      { id: 'crash', name: 'Τρακάρισμα', active: true }
+      { id: 'crash', name: 'Τρακάρισμα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' }
     ]}
   ];
 }
@@ -240,20 +278,24 @@ async function updateCarExpenseCategories(items) {
 
 function getDefaultPersonalExpenseCategories() {
   return [
-    { id: 'fixed_monthly', name: 'Πάγια Μηνιαία', active: true, items: [
-      { id: 'rent', name: 'Ενοίκιο', active: true },
-      { id: 'electricity', name: 'Ρεύμα', active: true },
-      { id: 'water', name: 'Νερό', active: true },
-      { id: 'internet_phone', name: 'Internet / Τηλέφωνο', active: true },
-      { id: 'shared_costs', name: 'Κοινόχρηστα', active: true },
-      { id: 'subscriptions', name: 'Συνδρομές', active: true }
+    { id: 'housing', name: 'Στέγαση', active: true, items: [
+      { id: 'rent', name: 'Ενοίκιο', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
+      { id: 'shared_costs', name: 'Κοινόχρηστα', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' }
     ]},
-    { id: 'daily_family', name: 'Καθημερινά / Οικογενειακά', active: true, items: [
-      { id: 'supermarket', name: 'Σούπερ μάρκετ', active: true },
-      { id: 'health', name: 'Υγεία / Φάρμακα', active: true },
-      { id: 'kids_school', name: 'Παιδιά / Σχολείο', active: true },
-      { id: 'clothing', name: 'Ρούχα / Αγορές', active: true },
-      { id: 'emergency', name: 'Έκτακτο έξοδο', active: true }
+    { id: 'bills', name: 'Λογαριασμοί', active: true, items: [
+      { id: 'electricity', name: 'Ρεύμα', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
+      { id: 'water', name: 'Νερό', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
+      { id: 'internet_phone', name: 'Internet / Τηλέφωνο', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
+      { id: 'subscriptions', name: 'Συνδρομές', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' }
+    ]},
+    { id: 'groceries', name: 'Τρόφιμα', active: true, items: [
+      { id: 'supermarket', name: 'Σούπερ μάρκετ', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' }
+    ]},
+    { id: 'personal_misc', name: 'Προσωπικά έξοδα', active: true, items: [
+      { id: 'health', name: 'Υγεία / Φάρμακα', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
+      { id: 'kids_school', name: 'Παιδιά / Σχολείο', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
+      { id: 'clothing', name: 'Ρούχα / Αγορές', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
+      { id: 'emergency', name: 'Έκτακτο έξοδο', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' }
     ]}
   ];
 }
@@ -278,19 +320,19 @@ async function updatePersonalExpenseCategories(items) {
 function getDefaultTaxExpenseCategories() {
   return [
     { id: 'tax_fiscal', name: 'Φορολογικά', active: true, items: [
-      { id: 'income_tax', name: 'Φόρος εισοδήματος', active: true },
-      { id: 'tax_prepayment', name: 'Προκαταβολή φόρου', active: true },
-      { id: 'accountant', name: 'Λογιστής', active: true }
+      { id: 'income_tax', name: 'Φόρος εισοδήματος', active: true, type: 'annual', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
+      { id: 'tax_prepayment', name: 'Προκαταβολή φόρου', active: true, type: 'annual', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
+      { id: 'accountant', name: 'Λογιστής', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' }
     ]},
     { id: 'tax_insurance', name: 'Ασφαλιστικά', active: true, items: [
-      { id: 'efka_tebe', name: 'ΕΦΚΑ / ΤΕΒΕ', active: true },
-      { id: 'health_insurance', name: 'Ασφάλεια υγείας', active: true }
+      { id: 'efka_tebe', name: 'ΕΦΚΑ / ΤΕΒΕ', active: true, type: 'monthly', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
+      { id: 'health_insurance', name: 'Ασφάλεια υγείας', active: true, type: 'monthly', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' }
     ]},
     { id: 'tax_professional', name: 'Επαγγελματικές Υποχρεώσεις', active: true, items: [
-      { id: 'union', name: 'Σωματείο', active: true },
-      { id: 'licenses', name: 'Άδειες', active: true },
-      { id: 'stamps', name: 'Παράβολα', active: true },
-      { id: 'profession_fees', name: 'Τέλη επαγγέλματος', active: true }
+      { id: 'union', name: 'Σωματείο', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
+      { id: 'licenses', name: 'Άδειες', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
+      { id: 'stamps', name: 'Παράβολα', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
+      { id: 'profession_fees', name: 'Τέλη επαγγέλματος', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' }
     ]}
   ];
 }
@@ -714,7 +756,12 @@ module.exports = {
   // Expenses
   getExpenses,
   addExpense,
+  updateExpense,
+  deleteExpense,
   getExpensesRange,
+  // Driver Preferences
+  getDriverPreferences,
+  updateDriverPreferences,
   // Car Expense Categories
   getCarExpenseCategories,
   updateCarExpenseCategories,
@@ -723,7 +770,21 @@ module.exports = {
   updatePersonalExpenseCategories,
   // Tax / Insurance Expense Categories
   getTaxExpenseCategories,
-  updateTaxExpenseCategories
+  updateTaxExpenseCategories,
+  // Debts (Έλεγχος Οφειλών)
+  getDebts,
+  addDebt,
+  updateDebt,
+  deleteDebt,
+  // Appointments (Πελάτες & Ραντεβού)
+  getAppointments,
+  addAppointment,
+  updateAppointment,
+  deleteAppointment,
+  // Features (Module Toggles)
+  getFeatures,
+  updateFeatures,
+  isFeatureEnabled
 };
 
 // =========================================================
@@ -785,6 +846,10 @@ async function addExpense(expense) {
     itemName: expense.itemName || '',
     createdAt: new Date().toISOString()
   };
+  // Optional field: km (odometer reading at service/maintenance/breakdown)
+  if (expense.km !== undefined && expense.km !== null && expense.km !== '') {
+    newExpense.km = parseInt(expense.km, 10) || 0;
+  }
   expenses.push(newExpense);
   writeExpenses(expenses);
   return newExpense;
@@ -811,4 +876,252 @@ async function getExpensesRange(filters = {}) {
   return { expenses, totalExpenses, byCategory, count: expenses.length };
 }
 
+async function updateExpense(id, updates) {
+  const expenses = readExpenses();
+  const idx = expenses.findIndex(e => e.id === id);
+  if (idx === -1) return null;
+  const expense = expenses[idx];
+  // Allowed fields to update
+  if (updates.amount !== undefined) expense.amount = parseFloat(updates.amount) || 0;
+  if (updates.category !== undefined) {
+    const cat = (updates.category || '').toLowerCase();
+    if (!EXPENSE_CATEGORIES.includes(cat)) throw new Error('Invalid category: ' + cat);
+    expense.category = cat;
+  }
+  if (updates.groupId !== undefined) expense.groupId = updates.groupId;
+  if (updates.groupName !== undefined) expense.groupName = updates.groupName;
+  if (updates.itemId !== undefined) expense.itemId = updates.itemId;
+  if (updates.itemName !== undefined) expense.itemName = updates.itemName;
+  if (updates.description !== undefined) expense.description = updates.description;
+  if (updates.date !== undefined) expense.date = updates.date;
+  if (updates.km !== undefined) {
+    if (updates.km === null || updates.km === '') {
+      delete expense.km;
+    } else {
+      expense.km = parseInt(updates.km, 10) || 0;
+    }
+  }
+  expense.updatedAt = new Date().toISOString();
+  expenses[idx] = expense;
+  writeExpenses(expenses);
+  return expense;
+}
 
+async function deleteExpense(id) {
+  const expenses = readExpenses();
+  const idx = expenses.findIndex(e => e.id === id);
+  if (idx === -1) return false;
+  expenses.splice(idx, 1);
+  writeExpenses(expenses);
+  return true;
+}
+
+// =========================================================
+// DEBTS (Πιστώσεις / Χρεώσεις)
+// =========================================================
+
+function readDebts() {
+  try {
+    if (!fs.existsSync(DEBTS_PATH)) return [];
+    const raw = fs.readFileSync(DEBTS_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writeDebts(data) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tmpPath = `${DEBTS_PATH}.tmp`;
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2));
+    fs.renameSync(tmpPath, DEBTS_PATH);
+    return true;
+  } catch (err) {
+    console.error('[driverssystem] debts write failed:', err.message);
+    return false;
+  }
+}
+
+async function getDebts(filters = {}) {
+  let debts = readDebts();
+  if (filters.driverId) debts = debts.filter(d => d.driverId === filters.driverId);
+  if (filters.type) debts = debts.filter(d => d.type === filters.type);
+  debts.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
+  return debts;
+}
+
+async function addDebt(debt) {
+  const debts = readDebts();
+  const type = (debt.type || '').toLowerCase();
+  if (!['owed', 'owe'].includes(type)) {
+    throw new Error('Invalid type: must be owed or owe');
+  }
+  const newDebt = {
+    id: `debt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    driverId: debt.driverId || '',
+    name: (debt.name || '').trim(),
+    amount: parseFloat(debt.amount) || 0,
+    type,
+    date: debt.date || greeceDateStr(),
+    note: (debt.note || '').trim(),
+    createdAt: new Date().toISOString()
+  };
+  debts.push(newDebt);
+  writeDebts(debts);
+  return newDebt;
+}
+
+async function updateDebt(id, updates) {
+  const debts = readDebts();
+  const idx = debts.findIndex(d => d.id === id);
+  if (idx === -1) return null;
+  const debt = debts[idx];
+  if (updates.name !== undefined) debt.name = (updates.name || '').trim();
+  if (updates.amount !== undefined) debt.amount = parseFloat(updates.amount) || 0;
+  if (updates.type !== undefined) {
+    const t = (updates.type || '').toLowerCase();
+    if (!['owed', 'owe'].includes(t)) throw new Error('Invalid type');
+    debt.type = t;
+  }
+  if (updates.date !== undefined) debt.date = updates.date;
+  if (updates.note !== undefined) debt.note = (updates.note || '').trim();
+  debt.updatedAt = new Date().toISOString();
+  debts[idx] = debt;
+  writeDebts(debts);
+  return debt;
+}
+
+async function deleteDebt(id) {
+  const debts = readDebts();
+  const idx = debts.findIndex(d => d.id === id);
+  if (idx === -1) return false;
+  debts.splice(idx, 1);
+  writeDebts(debts);
+  return true;
+}
+
+// ── Driver Preferences ──
+
+async function getDriverPreferences(phone) {
+  const driver = await getDriverByPhone(phone);
+  if (!driver) return null;
+  return {
+    activeSources: driver.activeSources || [],
+    defaultSource: driver.defaultSource || ''
+  };
+}
+
+async function updateDriverPreferences(phone, prefs) {
+  const drivers = readDrivers();
+  const idx = drivers.findIndex(d => d.phone === phone);
+  if (idx === -1) return null;
+  if (prefs.activeSources !== undefined) {
+    drivers[idx].activeSources = Array.isArray(prefs.activeSources) ? prefs.activeSources : [];
+  }
+  if (prefs.defaultSource !== undefined) {
+    drivers[idx].defaultSource = prefs.defaultSource || '';
+  }
+  writeDrivers(drivers);
+  return {
+    activeSources: drivers[idx].activeSources || [],
+    defaultSource: drivers[idx].defaultSource || ''
+  };
+}
+
+// =========================================================
+// APPOINTMENTS (Πελάτες & Ραντεβού) — Private per driver
+// =========================================================
+
+function readAppointments() {
+  try {
+    if (!fs.existsSync(APPOINTMENTS_PATH)) return [];
+    const raw = fs.readFileSync(APPOINTMENTS_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writeAppointments(data) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tmpPath = `${APPOINTMENTS_PATH}.tmp`;
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2));
+    fs.renameSync(tmpPath, APPOINTMENTS_PATH);
+    return true;
+  } catch (err) {
+    console.error('[driverssystem] appointments write failed:', err.message);
+    return false;
+  }
+}
+
+async function getAppointments(filters = {}) {
+  let appts = readAppointments();
+  if (filters.driverId) appts = appts.filter(a => a.driverId === filters.driverId);
+  if (filters.status) appts = appts.filter(a => a.status === filters.status);
+  if (filters.from) appts = appts.filter(a => a.date >= filters.from);
+  if (filters.to) appts = appts.filter(a => a.date <= filters.to);
+  appts.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || ''));
+  return appts;
+}
+
+async function addAppointment(appt) {
+  const appts = readAppointments();
+  const status = (appt.status || 'pending').toLowerCase();
+  if (!['pending', 'completed', 'cancelled'].includes(status)) {
+    throw new Error('Invalid status: must be pending, completed, or cancelled');
+  }
+  const newAppt = {
+    id: `appt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    driverId: appt.driverId || '',
+    clientName: (appt.clientName || '').trim(),
+    phone: (appt.phone || '').trim(),
+    date: appt.date || greeceDateStr(),
+    time: (appt.time || '').trim(),
+    pickup: (appt.pickup || '').trim(),
+    dropoff: (appt.dropoff || '').trim(),
+    amount: parseFloat(appt.amount) || 0,
+    note: (appt.note || '').trim(),
+    status,
+    createdAt: new Date().toISOString()
+  };
+  appts.push(newAppt);
+  writeAppointments(appts);
+  return newAppt;
+}
+
+async function updateAppointment(id, updates) {
+  const appts = readAppointments();
+  const idx = appts.findIndex(a => a.id === id);
+  if (idx === -1) return null;
+  const appt = appts[idx];
+  if (updates.clientName !== undefined) appt.clientName = (updates.clientName || '').trim();
+  if (updates.phone !== undefined) appt.phone = (updates.phone || '').trim();
+  if (updates.date !== undefined) appt.date = updates.date;
+  if (updates.time !== undefined) appt.time = (updates.time || '').trim();
+  if (updates.pickup !== undefined) appt.pickup = (updates.pickup || '').trim();
+  if (updates.dropoff !== undefined) appt.dropoff = (updates.dropoff || '').trim();
+  if (updates.amount !== undefined) appt.amount = parseFloat(updates.amount) || 0;
+  if (updates.note !== undefined) appt.note = (updates.note || '').trim();
+  if (updates.status !== undefined) {
+    const s = (updates.status || 'pending').toLowerCase();
+    if (!['pending', 'completed', 'cancelled'].includes(s)) throw new Error('Invalid status');
+    appt.status = s;
+  }
+  appt.updatedAt = new Date().toISOString();
+  appts[idx] = appt;
+  writeAppointments(appts);
+  return appt;
+}
+
+async function deleteAppointment(id) {
+  const appts = readAppointments();
+  const idx = appts.findIndex(a => a.id === id);
+  if (idx === -1) return false;
+  appts.splice(idx, 1);
+  writeAppointments(appts);
+  return true;
+}

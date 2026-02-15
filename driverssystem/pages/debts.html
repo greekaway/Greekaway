@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Έλεγχος Οφειλών – DriversSystem</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/driverssystem/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/driverssystem/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/driverssystem/icons/apple-touch-icon.png">
+    <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
+    <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
+    <link rel="stylesheet" href="/driverssystem/css/footer.css" />
+    <link rel="stylesheet" href="/driverssystem/css/debts.css" />
+    <link rel="stylesheet" href="/driverssystem/css/dark-mode.css" media="(prefers-color-scheme: dark)" />
+  </head>
+  <body class="ds-debts-page">
+
+    <!-- ─── Back Arrow ─── -->
+    <header class="ds-debts-back-header">
+      <button class="ds-debts-back-btn" data-ds-debts-back aria-label="Πίσω">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </header>
+
+    <!-- ─── Main Content ─── -->
+    <main class="ds-debts-main">
+
+      <!-- ── Summary Cards ── -->
+      <div class="ds-debts-summary">
+        <div class="ds-debts-summary-card ds-debts-summary-card--owed">
+          <span class="ds-debts-summary-label">Πιστώσεις</span>
+          <span class="ds-debts-summary-value" data-ds-debts-total-owed>0,00 €</span>
+        </div>
+        <div class="ds-debts-summary-card ds-debts-summary-card--owe">
+          <span class="ds-debts-summary-label">Χρεώσεις</span>
+          <span class="ds-debts-summary-value" data-ds-debts-total-owe>0,00 €</span>
+        </div>
+      </div>
+
+      <!-- ── Filter Pills ── -->
+      <div class="ds-debts-filters">
+        <button class="ds-debts-filter active" data-ds-debts-filter="all">Όλα</button>
+        <button class="ds-debts-filter" data-ds-debts-filter="owed">Πιστώσεις</button>
+        <button class="ds-debts-filter" data-ds-debts-filter="owe">Χρεώσεις</button>
+      </div>
+
+      <!-- ── Debt List ── -->
+      <section class="ds-debts-list" data-ds-debts-list>
+        <div class="ds-debts-empty" data-ds-debts-empty>
+          Δεν υπάρχουν εκκρεμότητες
+        </div>
+      </section>
+
+      <!-- ── Add New Button (FAB) ── -->
+      <button class="ds-debts-fab" data-ds-debts-add aria-label="Νέα εγγραφή">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+
+    </main>
+
+    <!-- ═══════════════════════════════════════
+         ADD / EDIT DEBT OVERLAY
+         ═══════════════════════════════════════ -->
+    <div class="ds-debts-overlay" data-ds-debts-overlay style="display:none">
+      <div class="ds-debts-dialog ds-card">
+        <h3 class="ds-debts-dialog__title" data-ds-debts-dialog-title>Νέα Εγγραφή</h3>
+        <form data-ds-debts-form>
+          <input type="hidden" data-ds-debts-edit-id />
+
+          <div class="ds-debts-field">
+            <label class="ds-debts-field__label">Όνομα</label>
+            <input class="ds-debts-field__input" type="text" placeholder="π.χ. πελάτης, φίλος, συνεργάτης"
+                   maxlength="100" data-ds-debts-name required />
+          </div>
+
+          <div class="ds-debts-field">
+            <label class="ds-debts-field__label">Ποσό (€)</label>
+            <input class="ds-debts-field__input" type="number" step="0.01" min="0.01"
+                   inputmode="decimal" pattern="[0-9]*"
+                   placeholder="0,00" data-ds-debts-amount required />
+          </div>
+
+          <div class="ds-debts-field">
+            <label class="ds-debts-field__label">Τύπος</label>
+            <div class="ds-debts-type-toggle">
+              <button type="button" class="ds-debts-type-btn active" data-ds-debts-type="owed">Πίστωση</button>
+              <button type="button" class="ds-debts-type-btn" data-ds-debts-type="owe">Χρέωση</button>
+            </div>
+          </div>
+
+          <div class="ds-debts-field">
+            <label class="ds-debts-field__label">Ημερομηνία</label>
+            <input class="ds-debts-field__input" type="date" data-ds-debts-date />
+          </div>
+
+          <div class="ds-debts-field">
+            <label class="ds-debts-field__label">Σημείωση (προαιρετικά)</label>
+            <input class="ds-debts-field__input" type="text" placeholder="π.χ. Για τη μεταφορά…"
+                   maxlength="200" data-ds-debts-note />
+          </div>
+
+          <div class="ds-debts-actions">
+            <button type="button" class="ds-debts-btn ds-debts-btn--cancel" data-ds-debts-cancel>Ακύρωση</button>
+            <button type="button" class="ds-debts-btn ds-debts-btn--delete" data-ds-debts-delete style="display:none">Διαγραφή</button>
+            <button type="submit" class="ds-debts-btn ds-debts-btn--save">Αποθήκευση</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         PER-PERSON LEDGER OVERLAY
+         ═══════════════════════════════════════ -->
+    <div class="ds-debts-ledger-overlay" data-ds-debts-ledger style="display:none">
+      <div class="ds-debts-ledger-panel">
+        <div class="ds-debts-ledger-header">
+          <button class="ds-debts-ledger-back" data-ds-debts-ledger-close aria-label="Κλείσιμο">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <h3 class="ds-debts-ledger-title" data-ds-debts-ledger-name>—</h3>
+        </div>
+        <!-- Summary -->
+        <div class="ds-debts-ledger-summary">
+          <div class="ds-debts-ledger-sum ds-debts-ledger-sum--owed">
+            <span class="ds-debts-ledger-sum__label">Πιστώσεις</span>
+            <span class="ds-debts-ledger-sum__value" data-ds-debts-ledger-owed>0,00 €</span>
+          </div>
+          <div class="ds-debts-ledger-sum ds-debts-ledger-sum--owe">
+            <span class="ds-debts-ledger-sum__label">Χρεώσεις</span>
+            <span class="ds-debts-ledger-sum__value" data-ds-debts-ledger-owe>0,00 €</span>
+          </div>
+          <div class="ds-debts-ledger-sum ds-debts-ledger-sum--net">
+            <span class="ds-debts-ledger-sum__label">Υπόλοιπο</span>
+            <span class="ds-debts-ledger-sum__value" data-ds-debts-ledger-net>0,00 €</span>
+          </div>
+        </div>
+        <!-- Transaction table -->
+        <div class="ds-debts-ledger-table-wrap">
+          <table class="ds-debts-ledger-table">
+            <thead>
+              <tr>
+                <th>Ημ/νία</th>
+                <th>Τύπος</th>
+                <th>Ποσό</th>
+                <th>Υπόλοιπο</th>
+                <th>Σημείωση</th>
+              </tr>
+            </thead>
+            <tbody data-ds-debts-ledger-body></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div data-ds-footer-slot></div>
+
+    <script src="/driverssystem/js/driverssystem-config.js" defer></script>
+    <script src="/driverssystem/js/footer.js" defer></script>
+    <script src="/driverssystem/js/debts.js" defer></script>
+  </body>
+</html>

@@ -28,10 +28,6 @@
 
   // ── Config ──
   const cfg = await window.DriversSystemConfig.load();
-  const logo = $('[data-ds-hero-logo]');
-  if (logo && cfg.heroLogoUrl) { logo.src = cfg.heroLogoUrl; logo.style.display = 'block'; }
-  const homeLink = $('[data-ds-home-link]');
-  if (homeLink) homeLink.href = window.DriversSystemConfig.buildRoute('/');
 
   // ── Detect groupId from URL ──
   // URL may be /driverssystem/car-expenses/<groupId>
@@ -68,6 +64,25 @@
     const hasItem = selectedItemIdx !== null;
     const hasAmount = amountCents > 0;
     saveBtn.disabled = !(hasItem && hasAmount);
+    // Clear km error when user types km
+    if (kmValue > 0) clearKmError();
+  };
+
+  // ── km validation error helpers ──
+  const showKmError = () => {
+    const kmField = $('[data-ds-car-exp-km-field]');
+    const kmInputEl = $('[data-ds-car-exp-km]');
+    const kmError = $('[data-ds-car-exp-km-error]');
+    if (kmInputEl) kmInputEl.classList.add('ds-car-exp-km-input--error');
+    if (kmError) kmError.style.display = 'block';
+    if (kmField) kmField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (kmInputEl) kmInputEl.focus();
+  };
+  const clearKmError = () => {
+    const kmInputEl = $('[data-ds-car-exp-km]');
+    const kmError = $('[data-ds-car-exp-km-error]');
+    if (kmInputEl) kmInputEl.classList.remove('ds-car-exp-km-input--error');
+    if (kmError) kmError.style.display = 'none';
   };
 
   // ── Load categories ──
@@ -138,9 +153,29 @@
         itemsGrid.querySelectorAll('[data-item-idx]').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         selectedItemIdx = idx;
+        // Show/hide dynamic fields based on item filters
+        const item = (selectedGroup.items || [])[idx];
+        showDynamicFields(item);
         updateSaveState();
       });
     });
+  };
+
+  // ── ATM-style km state ──
+  let kmValue = 0; // whole km as integer
+  const kmToDisplay = (v) => v === 0 ? '0' : v.toLocaleString('el-GR');
+
+  // ── Dynamic km field ──
+  const showDynamicFields = (item) => {
+    const kmField = $('[data-ds-car-exp-km-field]');
+    if (kmField) {
+      const show = !!(item && item.requiresKm);
+      kmField.style.display = show ? 'flex' : 'none';
+      kmValue = 0;
+      clearKmError();
+      const kmInput = kmField.querySelector('[data-ds-car-exp-km]');
+      if (kmInput) kmInput.value = show ? '0' : '';
+    }
   };
 
   // ── ATM-style amount input ──
@@ -178,6 +213,40 @@
     amountInput.addEventListener('paste', (e) => e.preventDefault());
   }
 
+  // ── ATM-style km input ──
+  const kmInput = $('[data-ds-car-exp-km]');
+  if (kmInput) {
+    kmInput.value = '0';
+
+    kmInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab' || e.key === 'Enter') return;
+      e.preventDefault();
+
+      if (e.key >= '0' && e.key <= '9') {
+        if (kmValue >= 10000000) return; // max 9.999.999 km
+        kmValue = kmValue * 10 + parseInt(e.key);
+        kmInput.value = kmToDisplay(kmValue);
+        updateSaveState();
+      } else if (e.key === 'Backspace') {
+        kmValue = Math.floor(kmValue / 10);
+        kmInput.value = kmToDisplay(kmValue);
+        updateSaveState();
+      } else if (e.key === 'Delete') {
+        kmValue = 0;
+        kmInput.value = '0';
+        updateSaveState();
+      }
+    });
+
+    kmInput.removeAttribute('readonly');
+    kmInput.setAttribute('inputmode', 'numeric');
+    kmInput.addEventListener('input', (e) => {
+      e.preventDefault();
+      kmInput.value = kmToDisplay(kmValue);
+    });
+    kmInput.addEventListener('paste', (e) => e.preventDefault());
+  }
+
   // ── Save ──
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
@@ -186,6 +255,12 @@
       if (!item) return;
       const amount = centsToFloat(amountCents);
       if (amount <= 0) return;
+
+      // Validate km if required
+      if (item.requiresKm && kmValue <= 0) {
+        showKmError();
+        return;
+      }
 
       saveBtn.disabled = true;
       saveBtn.textContent = 'Αποθήκευση…';
@@ -203,6 +278,10 @@
         if (noteInput && noteInput.value.trim()) {
           body.note = noteInput.value.trim();
         }
+        // Send km if the item requires it (mandatory — already validated by updateSaveState)
+        if (item.requiresKm && kmValue > 0) {
+          body.km = kmValue;
+        }
 
         const res = await fetch('/api/driverssystem/car-expenses', {
           method: 'POST',
@@ -214,8 +293,15 @@
           amountCents = 0;
           amountInput.value = '0,00';
           if (noteInput) noteInput.value = '';
+          // Reset km
+          kmValue = 0;
+          clearKmError();
+          const kmInputEl = $('[data-ds-car-exp-km]');
+          if (kmInputEl) kmInputEl.value = '0';
           itemsGrid.querySelectorAll('[data-item-idx]').forEach(b => b.classList.remove('selected'));
           selectedItemIdx = null;
+          // Hide dynamic fields
+          showDynamicFields(null);
           saveBtn.textContent = 'Αποθήκευση';
           saveBtn.disabled = true;
           setTimeout(() => { if (msgEl) { msgEl.textContent = ''; msgEl.classList.remove('success'); } }, 2500);

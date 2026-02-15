@@ -27,6 +27,7 @@
           <button class="bar-tab" data-tab="drivers">Οδηγοί</button>
           <button class="bar-tab" data-tab="entries">Καταχωρήσεις</button>
           <button class="bar-tab" data-tab="expenses">Έξοδα</button>
+          <button class="bar-tab" data-tab="debts">Οφειλές</button>
         </div>
       </div>
     </header>
@@ -106,6 +107,39 @@
               <label>Phone Number <input id="phoneNumber" class="input" type="text" maxlength="30"></label>
               <label>WhatsApp Number <input id="whatsappNumber" class="input" type="text" maxlength="30"></label>
               <label>Company Email <input id="companyEmail" class="input" type="email" maxlength="120"></label>
+            </div>
+
+            <!-- ── Features / Modules ── -->
+            <h3 class="ds-subtitle">Ενότητες Εφαρμογής</h3>
+            <p class="ds-helper">Ενεργοποίηση / απενεργοποίηση ενοτήτων. Ο οδηγός δεν βλέπει τα κλειστά modules.</p>
+            <div class="ds-features-list" id="dsFeaturesList">
+              <div class="ds-feature-row">
+                <div class="ds-feature-info">
+                  <span class="ds-feature-icon">📖</span>
+                  <div>
+                    <span class="ds-feature-label">Χρωστάω / Μου Χρωστάνε</span>
+                    <span class="ds-feature-desc">Έλεγχος οφειλών &amp; πιστώσεων</span>
+                  </div>
+                </div>
+                <label class="ds-toggle">
+                  <input type="checkbox" id="feature-debts" checked>
+                  <span class="ds-toggle__slider"></span>
+                </label>
+              </div>
+              <div class="ds-feature-row">
+                <div class="ds-feature-info">
+                  <span class="ds-feature-icon">📅</span>
+                  <div>
+                    <span class="ds-feature-label">Πελάτες &amp; Ραντεβού</span>
+                    <span class="ds-feature-desc">Οργάνωση δουλειάς &amp; ημερολόγιο</span>
+                  </div>
+                </div>
+                <label class="ds-toggle">
+                  <input type="checkbox" id="feature-appointments" checked>
+                  <span class="ds-toggle__slider"></span>
+                </label>
+              </div>
+              <!-- Future modules: add another ds-feature-row here -->
             </div>
 
             <div class="ds-actions">
@@ -199,6 +233,33 @@
                 Ενεργό
               </label>
             </div>
+            <div class="ds-grid ds-grid--cec-filters">
+              <label>Τύπος
+                <select id="dsCecItemType" class="input">
+                  <option value="frequent">Καθημερινό</option>
+                  <option value="monthly">Μηνιαίο</option>
+                  <option value="annual">Ετήσιο</option>
+                </select>
+              </label>
+              <label>Επηρεάζει κόστος/km
+                <select id="dsCecItemAffectsKm" class="input">
+                  <option value="true">Ναι</option>
+                  <option value="false">Όχι</option>
+                </select>
+              </label>
+              <label>Απαιτεί χιλιόμετρα
+                <select id="dsCecItemRequiresKm" class="input">
+                  <option value="true">Ναι</option>
+                  <option value="false">Όχι</option>
+                </select>
+              </label>
+              <label>Κατανομή
+                <select id="dsCecItemAllocation" class="input">
+                  <option value="vehicle">Ανά Όχημα</option>
+                  <option value="trip">Ανά Διαδρομή</option>
+                </select>
+              </label>
+            </div>
             <div class="ds-actions">
               <button id="dsCecItemSaveBtn" class="btn" type="submit">Αποθήκευση</button>
               <button id="dsCecItemCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
@@ -253,6 +314,33 @@
                 Ενεργό
               </label>
             </div>
+            <div class="ds-grid ds-grid--cec-filters">
+              <label>Τύπος
+                <select id="dsPecItemType" class="input">
+                  <option value="frequent">Καθημερινό</option>
+                  <option value="monthly">Μηνιαίο</option>
+                  <option value="annual">Ετήσιο</option>
+                </select>
+              </label>
+              <label>Επηρεάζει κόστος/km
+                <select id="dsPecItemAffectsKm" class="input">
+                  <option value="false">Όχι</option>
+                  <option value="true">Ναι</option>
+                </select>
+              </label>
+              <label>Απαιτεί χιλιόμετρα
+                <select id="dsPecItemRequiresKm" class="input">
+                  <option value="false">Όχι</option>
+                  <option value="true">Ναι</option>
+                </select>
+              </label>
+              <label>Κατανομή
+                <select id="dsPecItemAllocation" class="input">
+                  <option value="vehicle">Ανά Όχημα</option>
+                  <option value="trip">Ανά Διαδρομή</option>
+                </select>
+              </label>
+            </div>
             <div class="ds-actions">
               <button id="dsPecItemSaveBtn" class="btn" type="submit">Αποθήκευση</button>
               <button id="dsPecItemCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
@@ -305,6 +393,33 @@
               <label class="ds-checkbox-label">
                 <input id="dsTecItemActive" type="checkbox" checked>
                 Ενεργό
+              </label>
+            </div>
+            <div class="ds-grid ds-grid--cec-filters">
+              <label>Τύπος
+                <select id="dsTecItemType" class="input">
+                  <option value="frequent">Καθημερινό</option>
+                  <option value="monthly">Μηνιαίο</option>
+                  <option value="annual">Ετήσιο</option>
+                </select>
+              </label>
+              <label>Επηρεάζει κόστος/km
+                <select id="dsTecItemAffectsKm" class="input">
+                  <option value="false">Όχι</option>
+                  <option value="true">Ναι</option>
+                </select>
+              </label>
+              <label>Απαιτεί χιλιόμετρα
+                <select id="dsTecItemRequiresKm" class="input">
+                  <option value="false">Όχι</option>
+                  <option value="true">Ναι</option>
+                </select>
+              </label>
+              <label>Κατανομή
+                <select id="dsTecItemAllocation" class="input">
+                  <option value="vehicle">Ανά Όχημα</option>
+                  <option value="trip">Ανά Διαδρομή</option>
+                </select>
               </label>
             </div>
             <div class="ds-actions">
@@ -602,6 +717,70 @@
           </div>
           <div class="ds-admin-empty" data-admin-expenses-empty style="display:none">
             Δεν υπάρχουν έξοδα
+          </div>
+        </section>
+      </div>
+
+      <!-- ===== DEBTS TAB (Οφειλές) ===== -->
+      <div class="tab-content" data-tab="debts">
+        <section class="panel">
+          <div class="ds-section-header">
+            <div>
+              <h3 class="ds-admin-subtitle">Έλεγχος Οφειλών</h3>
+              <p class="ds-admin-helper">Εκκρεμότητες χρημάτων (Πιστώσεις / Χρεώσεις)</p>
+            </div>
+            <div class="ds-admin-filters ds-admin-filters--inline">
+              <label>Οδηγός:
+                <select id="adminDebtsDriverSelect" class="input ds-admin-select">
+                  <option value="">Όλοι</option>
+                </select>
+              </label>
+              <label>Τύπος:
+                <select id="adminDebtsTypeSelect" class="input ds-admin-select">
+                  <option value="">Όλα</option>
+                  <option value="owed">Πιστώσεις</option>
+                  <option value="owe">Χρεώσεις</option>
+                </select>
+              </label>
+              <button id="adminDebtsLoad" class="btn" type="button">Φόρτωση</button>
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div class="ds-admin-summary" data-admin-debts-summary>
+            <div class="ds-admin-summary-card">
+              <span class="ds-admin-summary-label">↗ Πιστώσεις</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--gross" data-admin-debts-total-owed>0,00 €</span>
+            </div>
+            <div class="ds-admin-summary-card">
+              <span class="ds-admin-summary-label">↙ Χρεώσεις</span>
+              <span class="ds-admin-summary-value ds-admin-summary-value--commission" data-admin-debts-total-owe>0,00 €</span>
+            </div>
+            <div class="ds-admin-summary-card">
+              <span class="ds-admin-summary-label">Σύνολο εγγραφών</span>
+              <span class="ds-admin-summary-value" data-admin-debts-count>0</span>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="ds-admin-table-wrap">
+            <table class="ds-admin-table">
+              <thead>
+                <tr>
+                  <th>Ημ/νία</th>
+                  <th>Οδηγός</th>
+                  <th>Όνομα</th>
+                  <th>Τύπος</th>
+                  <th>Ποσό</th>
+                  <th>Σημείωση</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody data-admin-debts-tbody></tbody>
+            </table>
+          </div>
+          <div class="ds-admin-empty" data-admin-debts-empty style="display:none">
+            Δεν υπάρχουν οφειλές
           </div>
         </section>
       </div>

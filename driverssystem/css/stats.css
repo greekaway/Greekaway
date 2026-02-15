@@ -9,43 +9,17 @@
   overflow-y: auto;
 }
 
-/* Header (reuse entries pattern) */
+/* Header (plain text, scrolls with content) */
 .ds-info-page .ds-page-header {
-  display: flex;
-  align-items: center;
   padding: 14px 18px 12px;
-  background: #fff;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  position: sticky;
-  top: 0;
-  z-index: 20;
-}
-
-.ds-info-page .ds-page-logo-link {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  flex-shrink: 0;
-  width: 52px;
-}
-
-.ds-info-page .ds-page-logo {
-  width: 52px;
-  height: auto;
 }
 
 .ds-info-page .ds-page-title {
-  flex: 1;
   font-size: 18px;
   font-weight: 700;
   margin: 0;
   color: #1a2232;
   text-align: center;
-}
-
-.ds-info-page .ds-page-header__spacer {
-  width: 52px;
-  flex-shrink: 0;
 }
 
 /* Main */
@@ -414,9 +388,10 @@
 }
 
 .ds-stats-source-pill.active {
-  background: #1a2232;
+  background: linear-gradient(135deg, #00c896, #059669);
   color: #fff;
-  border-color: #1a2232;
+  border-color: transparent;
+  box-shadow: 0 2px 10px rgba(0, 200, 150, 0.3);
 }
 
 /* ── By Source Breakdown ── */
@@ -831,9 +806,7 @@ body.ds-overlay-open {
   }
 
   .ds-info-page .ds-page-header {
-    background: linear-gradient(145deg, #0f2035 0%, #0a1828 100%) !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    /* no bar — transparent */
   }
 
   .ds-info-page .ds-page-title { color: #f0f4f8 !important; }
@@ -933,9 +906,10 @@ body.ds-overlay-open {
     color: #d0d8e0 !important;
   }
   .ds-stats-source-pill.active {
-    background: rgba(255, 255, 255, 0.9) !important;
-    color: #0a1525 !important;
+    background: linear-gradient(135deg, #00c896, #059669) !important;
+    color: #fff !important;
     border-color: transparent !important;
+    box-shadow: 0 2px 12px rgba(0, 200, 150, 0.35) !important;
   }
 
   /* Source breakdown */

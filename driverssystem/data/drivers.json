@@ -5,6 +5,13 @@
     "fullName": "Ioannis Palmos",
     "email": "repeatpalmos@hotmail.com",
     "createdAt": "2026-02-13T10:26:27.659Z",
-    "lastLoginAt": "2026-02-13T10:26:27.659Z"
+    "lastLoginAt": "2026-02-13T10:26:27.659Z",
+    "activeSources": [
+      "uber",
+      "bolt",
+      "beat",
+      "street"
+    ],
+    "defaultSource": ""
   }
 ]

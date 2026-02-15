@@ -18,11 +18,7 @@
 
     <!-- ─── Header ─── -->
     <header class="ds-page-header">
-      <a class="ds-page-logo-link" data-ds-home-link href="/driverssystem">
-        <img class="ds-page-logo" data-ds-hero-logo alt="DriversSystem" style="display:none" />
-      </a>
       <h1 class="ds-page-title" data-ds-car-exp-title>Έξοδα Αυτοκινήτου</h1>
-      <span class="ds-page-header__spacer"></span>
     </header>
 
     <!-- ─── Back bar (shown on group sub-page, below header) ─── -->
@@ -49,6 +45,15 @@
           </div>
           <input class="ds-car-exp-note-input" type="text" placeholder="Σημείωση (προαιρετικά)"
                  maxlength="100" data-ds-car-exp-note />
+          <!-- Dynamic km field (ATM-style, for service/maintenance/breakdowns) -->
+          <div class="ds-car-exp-km-field" data-ds-car-exp-km-field style="display:none">
+            <label class="ds-car-exp-km-label" for="ds-car-km">Χιλιόμετρα (km)</label>
+            <input class="ds-car-exp-km-input" id="ds-car-km" type="text" inputmode="numeric"
+                   pattern="[0-9]*" placeholder="0" readonly data-ds-car-exp-km />
+            <div class="ds-car-exp-km-error" data-ds-car-exp-km-error style="display:none">
+              📍 Συμπλήρωσε τα χιλιόμετρα του οχήματος — σε βοηθάει να ξέρεις πότε και σε πόσα km έγινε η εργασία.
+            </div>
+          </div>
           <button class="ds-car-exp-save-btn" data-ds-car-exp-save disabled>
             Αποθήκευση
           </button>

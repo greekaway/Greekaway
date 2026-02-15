@@ -28,10 +28,6 @@
 
   // ── Config ──
   const cfg = await window.DriversSystemConfig.load();
-  const logo = $('[data-ds-hero-logo]');
-  if (logo && cfg.heroLogoUrl) { logo.src = cfg.heroLogoUrl; logo.style.display = 'block'; }
-  const homeLink = $('[data-ds-home-link]');
-  if (homeLink) homeLink.href = window.DriversSystemConfig.buildRoute('/');
 
   // ── Detect groupId from URL ──
   const pathParts = window.location.pathname.replace(/\/$/, '').split('/');

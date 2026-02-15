@@ -146,7 +146,12 @@ body {
   transition: background 0.4s, color 0.4s;
 }
 
-html, body { min-height: 100%; }
+html {
+  overscroll-behavior-y: none;
+  min-height: 100%;
+  background: #1B2A3A; /* solid fallback – prevents white flash on overscroll */
+}
+body { min-height: 100%; }
 
 /* Background video moved to welcome.css */
 

@@ -9,7 +9,9 @@ html[data-theme='light']{
   --ga-card:#ffffff; --ga-border:rgba(6,24,53,.15);
 }
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:linear-gradient(180deg,var(--ga-bg) 0%,var(--ga-bg-2) 100%);color:var(--ga-text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+html,body{margin:0;padding:0;background:var(--ga-bg);background:linear-gradient(180deg,var(--ga-bg) 0%,var(--ga-bg-2) 100%);color:var(--ga-text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+html{overscroll-behavior-y:none;min-height:100%}
+body{min-height:100vh}
 a{color:var(--ga-gold);text-decoration:none}
 header,footer{background:var(--ga-navy-deep)}
 header{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--ga-border)}

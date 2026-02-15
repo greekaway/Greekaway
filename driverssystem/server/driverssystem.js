@@ -6,6 +6,7 @@ try { multer = require('multer'); } catch (_) { multer = null; }
 
 const dataLayer = require('../../src/server/data/driverssystem');
 const { registerDriversSystemAssistant } = require('./assistant');
+const { registerVehicleStatsRoutes } = require('./vehicle-stats');
 
 // ── Greece Timezone Helper ──
 function greeceDateStr() {
@@ -110,13 +111,45 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       infoComplianceTitle: incoming.infoComplianceTitle !== undefined ? incoming.infoComplianceTitle : current.infoComplianceTitle,
       infoComplianceContent: incoming.infoComplianceContent !== undefined ? incoming.infoComplianceContent : current.infoComplianceContent,
       infoFaqTitle: incoming.infoFaqTitle !== undefined ? incoming.infoFaqTitle : current.infoFaqTitle,
-      infoFaqContent: incoming.infoFaqContent !== undefined ? incoming.infoFaqContent : current.infoFaqContent
+      infoFaqContent: incoming.infoFaqContent !== undefined ? incoming.infoFaqContent : current.infoFaqContent,
+      features: Object.assign({}, current.features || {}, incoming.features || {})
     });
 
     return { ok: true, data: merged };
   };
 
   // ── Public API ──
+
+  // Feature flags (Module Toggles) — public read
+  app.get('/api/driverssystem/features', async (req, res) => {
+    try {
+      const features = await dataLayer.getFeatures();
+      // No cache — admin changes must reflect instantly
+      res.set('Cache-Control', 'no-store');
+      return res.json(features);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Feature gate middleware — blocks API access to disabled modules
+  const FEATURE_API_PREFIXES = {
+    '/api/driverssystem/debts': 'debts',
+    '/api/driverssystem/appointments': 'appointments'
+  };
+
+  app.use((req, res, next) => {
+    const url = req.path;
+    for (const [prefix, featureKey] of Object.entries(FEATURE_API_PREFIXES)) {
+      if (url === prefix || url.startsWith(prefix + '/')) {
+        if (!dataLayer.isFeatureEnabled(featureKey)) {
+          return res.status(403).json({ error: '\u0397 \u03b5\u03bd\u03cc\u03c4\u03b7\u03c4\u03b1 \u03b5\u03af\u03bd\u03b1\u03b9 \u03b1\u03c0\u03b5\u03bd\u03b5\u03c1\u03b3\u03bf\u03c0\u03bf\u03b9\u03b7\u03bc\u03ad\u03bd\u03b7' });
+        }
+        return next();
+      }
+    }
+    next();
+  });
 
   app.get('/api/driverssystem/ui-config', async (req, res) => {
     try {
@@ -143,6 +176,26 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     try {
       const cfg = await dataLayer.getFullConfig();
       return res.json(cfg);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Admin: get / update feature flags
+  app.get('/api/admin/driverssystem/features', requireAdmin, async (req, res) => {
+    try {
+      const features = await dataLayer.getFeatures();
+      return res.json(features);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.put('/api/admin/driverssystem/features', requireAdmin, async (req, res) => {
+    try {
+      const result = await dataLayer.updateFeatures(req.body);
+      if (!result) return res.status(500).json({ error: 'Save failed' });
+      return res.json(result);
     } catch (err) {
       return res.status(500).json({ error: 'Server error' });
     }
@@ -298,6 +351,68 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       const driver = await dataLayer.getDriverByPhone(phone);
       if (!driver) return res.status(404).json({ error: 'Δεν βρέθηκε οδηγός' });
       return res.json(driver);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Driver Preferences ──
+
+  app.get('/api/driverssystem/drivers/me/preferences', async (req, res) => {
+    try {
+      const phone = req.query.phone;
+      if (!phone) return res.status(400).json({ error: 'Απαιτείται τηλέφωνο' });
+      const prefs = await dataLayer.getDriverPreferences(phone);
+      if (!prefs) return res.status(404).json({ error: 'Δεν βρέθηκε οδηγός' });
+      return res.json(prefs);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.put('/api/driverssystem/drivers/me/preferences', async (req, res) => {
+    try {
+      const phone = req.query.phone || req.body.phone;
+      if (!phone) return res.status(400).json({ error: 'Απαιτείται τηλέφωνο' });
+      const prefs = await dataLayer.updateDriverPreferences(phone, req.body);
+      if (!prefs) return res.status(404).json({ error: 'Δεν βρέθηκε οδηγός' });
+      return res.json(prefs);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Expenses (Driver — Review & Edit) ──
+
+  app.get('/api/driverssystem/expenses', async (req, res) => {
+    try {
+      const filters = {};
+      if (req.query.driverId) filters.driverId = req.query.driverId;
+      if (req.query.category) filters.category = req.query.category;
+      if (req.query.from) filters.from = req.query.from;
+      if (req.query.to) filters.to = req.query.to;
+      const expenses = await dataLayer.getExpenses(filters);
+      return res.json(expenses);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.put('/api/driverssystem/expenses/:id', async (req, res) => {
+    try {
+      const updated = await dataLayer.updateExpense(req.params.id, req.body);
+      if (!updated) return res.status(404).json({ error: 'Δεν βρέθηκε' });
+      return res.json(updated);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  app.delete('/api/driverssystem/expenses/:id', async (req, res) => {
+    try {
+      const ok = await dataLayer.deleteExpense(req.params.id);
+      if (!ok) return res.status(404).json({ error: 'Δεν βρέθηκε' });
+      return res.json({ ok: true });
     } catch (err) {
       return res.status(500).json({ error: 'Server error' });
     }
@@ -512,14 +627,14 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   // ── Car expense records (driver submissions) ──
   app.post('/api/driverssystem/car-expenses', async (req, res) => {
     try {
-      const { driverId, groupId, groupName, itemId, itemName, amount, date, note } = req.body || {};
+      const { driverId, groupId, groupName, itemId, itemName, amount, date, note, km } = req.body || {};
       if (!amount || !groupId || !itemId) {
         return res.status(400).json({ error: 'Απαιτείται ομάδα, είδος και ποσό' });
       }
       const desc = note
         ? `${groupName || groupId} → ${itemName || itemId} | ${note}`
         : `${groupName || groupId} → ${itemName || itemId}`;
-      const expense = await dataLayer.addExpense({
+      const expenseData = {
         driverId: driverId || '',
         category: 'car',
         description: desc,
@@ -529,7 +644,9 @@ module.exports = function registerDriversSystem(app, opts = {}) {
         groupName: groupName || '',
         itemId,
         itemName: itemName || ''
-      });
+      };
+      if (km !== undefined && km !== null && km !== '') expenseData.km = km;
+      const expense = await dataLayer.addExpense(expenseData);
       return res.status(201).json(expense);
     } catch (err) {
       return res.status(500).json({ error: err.message || 'Server error' });
@@ -598,7 +715,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       const desc = note
         ? `${groupName || groupId} → ${itemName || itemId} | ${note}`
         : `${groupName || groupId} → ${itemName || itemId}`;
-      const expense = await dataLayer.addExpense({
+      const expenseData = {
         driverId: driverId || '',
         category: 'personal',
         description: desc,
@@ -608,7 +725,8 @@ module.exports = function registerDriversSystem(app, opts = {}) {
         groupName: groupName || '',
         itemId,
         itemName: itemName || ''
-      });
+      };
+      const expense = await dataLayer.addExpense(expenseData);
       return res.status(201).json(expense);
     } catch (err) {
       return res.status(500).json({ error: err.message || 'Server error' });
@@ -676,7 +794,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       const desc = note
         ? `${groupName || groupId} → ${itemName || itemId} | ${note}`
         : `${groupName || groupId} → ${itemName || itemId}`;
-      const expense = await dataLayer.addExpense({
+      const expenseData = {
         driverId: driverId || '',
         category: 'tax',
         description: desc,
@@ -686,7 +804,8 @@ module.exports = function registerDriversSystem(app, opts = {}) {
         groupName: groupName || '',
         itemId,
         itemName: itemName || ''
-      });
+      };
+      const expense = await dataLayer.addExpense(expenseData);
       return res.status(201).json(expense);
     } catch (err) {
       return res.status(500).json({ error: err.message || 'Server error' });
@@ -701,12 +820,171 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     return sendPageWithFooter(res, path.join(pagesDir, 'tax-expenses.html'));
   });
 
+  // ══════════════════════════════════════════════════════════
+  // DEBTS (Πιστώσεις / Χρεώσεις — Έλεγχος Οφειλών)
+  // ══════════════════════════════════════════════════════════
+
+  // Public: get debts for a driver
+  app.get('/api/driverssystem/debts', async (req, res) => {
+    try {
+      const { driverId, type } = req.query;
+      const filters = {};
+      if (driverId) filters.driverId = driverId;
+      if (type) filters.type = type;
+      const debts = await dataLayer.getDebts(filters);
+      return res.json(debts);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Public: create debt
+  app.post('/api/driverssystem/debts', async (req, res) => {
+    try {
+      const { driverId, name, amount, type, date, note } = req.body || {};
+      if (!name || !amount || !type) {
+        return res.status(400).json({ error: 'Απαιτείται όνομα, ποσό και τύπος' });
+      }
+      const debt = await dataLayer.addDebt({ driverId, name, amount, type, date, note });
+      return res.status(201).json(debt);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // Public: update debt
+  app.put('/api/driverssystem/debts/:id', async (req, res) => {
+    try {
+      const result = await dataLayer.updateDebt(req.params.id, req.body);
+      if (!result) return res.status(404).json({ error: 'Not found' });
+      return res.json(result);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // Public: delete debt
+  app.delete('/api/driverssystem/debts/:id', async (req, res) => {
+    try {
+      const ok = await dataLayer.deleteDebt(req.params.id);
+      if (!ok) return res.status(404).json({ error: 'Not found' });
+      return res.json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Admin: get all debts
+  app.get('/api/admin/driverssystem/debts', requireAdmin, async (req, res) => {
+    try {
+      const { driverId, type } = req.query;
+      const filters = {};
+      if (driverId) filters.driverId = driverId;
+      if (type) filters.type = type;
+      const debts = await dataLayer.getDebts(filters);
+      return res.json(debts);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Admin: delete debt
+  app.delete('/api/admin/driverssystem/debts/:id', requireAdmin, async (req, res) => {
+    try {
+      const ok = await dataLayer.deleteDebt(req.params.id);
+      if (!ok) return res.status(404).json({ error: 'Not found' });
+      return res.json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Debts page route ──
+  router.get('/debts', (req, res) => {
+    if (!dataLayer.isFeatureEnabled('debts')) {
+      return res.redirect(isDev ? '/driverssystem/profile' : '/profile');
+    }
+    return sendPageWithFooter(res, path.join(pagesDir, 'debts.html'));
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // APPOINTMENTS (Πελάτες & Ραντεβού — Private per driver)
+  // No admin routes — data is strictly personal.
+  // ══════════════════════════════════════════════════════════
+
+  // Public: get appointments for a driver
+  app.get('/api/driverssystem/appointments', async (req, res) => {
+    try {
+      const { driverId, status, from, to } = req.query;
+      const filters = {};
+      if (driverId) filters.driverId = driverId;
+      if (status) filters.status = status;
+      if (from) filters.from = from;
+      if (to) filters.to = to;
+      const appts = await dataLayer.getAppointments(filters);
+      return res.json(appts);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Public: create appointment
+  app.post('/api/driverssystem/appointments', async (req, res) => {
+    try {
+      const { driverId, clientName, phone, date, time, pickup, dropoff, amount, note, status } = req.body || {};
+      if (!clientName || !date) {
+        return res.status(400).json({ error: 'Απαιτείται όνομα πελάτη και ημερομηνία' });
+      }
+      const appt = await dataLayer.addAppointment({ driverId, clientName, phone, date, time, pickup, dropoff, amount, note, status });
+      return res.status(201).json(appt);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // Public: update appointment
+  app.put('/api/driverssystem/appointments/:id', async (req, res) => {
+    try {
+      const result = await dataLayer.updateAppointment(req.params.id, req.body);
+      if (!result) return res.status(404).json({ error: 'Not found' });
+      return res.json(result);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // Public: delete appointment
+  app.delete('/api/driverssystem/appointments/:id', async (req, res) => {
+    try {
+      const ok = await dataLayer.deleteAppointment(req.params.id);
+      if (!ok) return res.status(404).json({ error: 'Not found' });
+      return res.json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Appointments page route ──
+  router.get('/appointments', (req, res) => {
+    if (!dataLayer.isFeatureEnabled('appointments')) {
+      return res.redirect(isDev ? '/driverssystem/profile' : '/profile');
+    }
+    return sendPageWithFooter(res, path.join(pagesDir, 'appointments.html'));
+  });
+
   // ── AI Assistant routes ──
   try {
     const OPENAI_API_KEY = (process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || '').trim() || null;
     registerDriversSystemAssistant(app, { OPENAI_API_KEY });
   } catch (err) {
     console.error('[driverssystem] assistant registration failed:', err.message);
+  }
+
+  // ── Vehicle Stats routes ──
+  try {
+    registerVehicleStatsRoutes(app);
+  } catch (err) {
+    console.error('[driverssystem] vehicle-stats registration failed:', err.message);
   }
 
   console.log('[driverssystem] routes registered');

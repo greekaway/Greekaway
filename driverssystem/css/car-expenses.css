@@ -209,6 +209,57 @@
   border-color: #00c896;
 }
 
+/* ── KM field (ATM-style, matches amount input) ── */
+.ds-car-exp-km-field {
+  width: 100%;
+  flex-direction: column;
+  gap: 6px;
+}
+.ds-car-exp-km-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+.ds-car-exp-km-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e0e4ea;
+  border-radius: 14px;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  background: #fff;
+  color: #1a2232;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.ds-car-exp-km-input:focus {
+  outline: none;
+  border-color: #00c896;
+  box-shadow: 0 0 0 4px rgba(0, 200, 150, 0.15);
+}
+.ds-car-exp-km-input--error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15) !important;
+  animation: ds-km-shake 0.4s ease;
+}
+@keyframes ds-km-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.ds-car-exp-km-error {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ef4444;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
 /* ── Save button ── */
 .ds-car-exp-save-btn {
   width: 100%;
@@ -330,6 +381,29 @@
 
   .ds-car-exp-note-input::placeholder {
     color: #6b7a8d !important;
+  }
+
+  .ds-car-exp-km-label {
+    color: #8896a6 !important;
+  }
+
+  .ds-car-exp-km-input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #f0f4f8 !important;
+  }
+
+  .ds-car-exp-km-input:focus {
+    border-color: #00c896 !important;
+    box-shadow: 0 0 0 4px rgba(0, 200, 150, 0.2) !important;
+  }
+
+  .ds-car-exp-km-error {
+    color: #f87171 !important;
+  }
+  .ds-car-exp-km-input--error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25) !important;
   }
 
   .ds-car-exp-empty,

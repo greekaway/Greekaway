@@ -18,15 +18,6 @@
   </head>
   <body class="ds-listings-page">
 
-    <!-- ─── Header ─── -->
-    <header class="ds-page-header">
-      <a class="ds-page-logo-link" data-ds-home-link href="/driverssystem">
-        <img class="ds-page-logo" data-ds-hero-logo alt="DriversSystem" style="display:none" />
-      </a>
-      <h1 class="ds-page-title" data-ds-page-title="listings"></h1>
-      <span class="ds-page-header__spacer"></span>
-    </header>
-
     <!-- ─── Main Content ─── -->
     <main class="ds-entries-main">
 
@@ -55,7 +46,6 @@
 
       <!-- ─── Quick Entry Form ─── -->
       <section class="ds-entry-form ds-card" data-ds-entry-form>
-        <h2 class="ds-entry-form__title">Νέα Καταχώρηση</h2>
 
         <!-- Source pills -->
         <div class="ds-source-pills" data-ds-source-pills>
@@ -65,9 +55,11 @@
         <!-- Amount input -->
         <div class="ds-amount-row">
           <div class="ds-amount-field">
-            <label class="ds-amount-label" for="ds-amount">Ποσό (€)</label>
-            <input class="ds-amount-input" id="ds-amount" type="text" inputmode="numeric"
-                   pattern="[0-9]*" placeholder="0,00" readonly data-ds-amount />
+            <div class="ds-amount-input-wrap">
+              <input class="ds-amount-input" id="ds-amount" type="text" inputmode="numeric"
+                     pattern="[0-9]*" placeholder="0,00" readonly data-ds-amount />
+              <span class="ds-amount-suffix">€</span>
+            </div>
           </div>
           <div class="ds-net-preview" data-ds-net-preview>
             <span class="ds-net-preview__label">Καθαρά</span>

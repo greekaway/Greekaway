@@ -1,0 +1,957 @@
+/* ═══════════════════════════════════════════════
+   DriversSystem — Debts (Έλεγχος Οφειλών)
+   ═══════════════════════════════════════════════ */
+
+.ds-debts-page {
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.ds-debts-page *,
+.ds-debts-page *::before,
+.ds-debts-page *::after,
+.ds-debts-overlay *,
+.ds-debts-overlay *::before,
+.ds-debts-overlay *::after {
+  box-sizing: border-box;
+}
+
+/* ── Back Arrow Header ── */
+.ds-debts-back-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 14px 16px 8px;
+  background: var(--ds-bg);
+}
+
+.ds-debts-back-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: var(--ds-card, #1a1d26);
+  color: var(--ds-text, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s;
+}
+
+.ds-debts-back-btn:active {
+  transform: scale(0.92);
+}
+
+/* ── Main ── */
+.ds-debts-main {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Summary Cards ── */
+.ds-debts-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ds-debts-summary-card {
+  background: var(--ds-card);
+  border-radius: var(--ds-radius);
+  padding: 16px 14px;
+  text-align: center;
+  box-shadow: var(--ds-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ds-debts-summary-label {
+  display: block;
+  font-size: 12px;
+  color: var(--ds-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ds-debts-summary-value {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.ds-debts-summary-card--owed .ds-debts-summary-value {
+  color: var(--ds-accent);
+}
+
+.ds-debts-summary-card--owe .ds-debts-summary-value {
+  color: #f56565;
+}
+
+/* ── Filter Pills ── */
+.ds-debts-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ds-debts-filter {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 24px;
+  background: var(--ds-card);
+  color: var(--ds-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-debts-filter.active {
+  background: var(--ds-accent);
+  color: #fff;
+}
+
+/* ── Debt List ── */
+.ds-debts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ds-debts-empty {
+  text-align: center;
+  color: var(--ds-muted);
+  padding: 40px 0;
+  font-size: 14px;
+}
+
+/* ── Debt Card ── */
+.ds-debt-card {
+  background: var(--ds-card);
+  border-radius: var(--ds-radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--ds-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-debt-card:active {
+  transform: scale(0.98);
+}
+
+.ds-debt-card__badge {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.ds-debt-card__badge--owed {
+  background: rgba(0, 200, 150, 0.15);
+  color: var(--ds-accent);
+}
+
+.ds-debt-card__badge--owe {
+  background: rgba(245, 101, 101, 0.15);
+  color: #f56565;
+}
+
+.ds-debt-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ds-debt-card__name {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ds-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-debt-card__note {
+  display: block;
+  font-size: 12px;
+  color: var(--ds-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-debt-card__date {
+  display: block;
+  font-size: 11px;
+  color: var(--ds-muted);
+  margin-top: 3px;
+  opacity: 0.7;
+}
+
+.ds-debt-card__amount {
+  flex-shrink: 0;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.ds-debt-card__amount--owed {
+  color: var(--ds-accent);
+}
+
+.ds-debt-card__amount--owe {
+  color: #f56565;
+}
+
+.ds-debt-card__type-label {
+  display: block;
+  font-size: 10px;
+  text-align: right;
+  margin-top: 2px;
+  opacity: 0.6;
+}
+
+/* ── FAB (Add Button) ── */
+.ds-debts-fab {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--ds-accent);
+  color: #fff;
+  border: none;
+  box-shadow: 0 6px 20px rgba(0, 200, 150, 0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-debts-fab:active {
+  transform: scale(0.92);
+}
+
+.ds-debts-fab svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* ── Overlay (Add/Edit Form) ── */
+.ds-debts-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: ds-debts-fade-in 0.2s ease;
+}
+
+.ds-debts-dialog {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  max-height: 90dvh;           /* dynamic viewport for mobile keyboards */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 22px 22px 0 0;
+  padding: 24px 20px 32px;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  animation: ds-debts-slide-up 0.25s ease;
+}
+
+.ds-debts-dialog__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 18px;
+}
+
+.ds-debts-field {
+  margin-bottom: 14px;
+}
+
+.ds-debts-field__label {
+  display: block;
+  font-size: 13px;
+  color: var(--ds-muted);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.ds-debts-field__input {
+  display: block;
+  width: 100%;
+  min-width: 0;                 /* prevent flex/grid children from overflowing */
+  max-width: 100%;              /* never exceed parent */
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: var(--ds-surface);
+  color: var(--ds-text);
+  font-size: 16px;              /* ≥16 px prevents iOS auto-zoom */
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Date input specific fixes */
+input[type="date"].ds-debts-field__input {
+  min-height: 48px;             /* consistent tap target */
+  line-height: 1.4;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ds-debts-field__input:focus {
+  border-color: var(--ds-accent);
+}
+
+/* Type Toggle */
+.ds-debts-type-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.ds-debts-type-btn {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ds-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-debts-type-btn.active[data-ds-debts-type="owed"] {
+  border-color: var(--ds-accent);
+  color: var(--ds-accent);
+  background: rgba(0, 200, 150, 0.1);
+}
+
+.ds-debts-type-btn.active[data-ds-debts-type="owe"] {
+  border-color: #f56565;
+  color: #f56565;
+  background: rgba(245, 101, 101, 0.1);
+}
+
+/* Actions Row */
+.ds-debts-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.ds-debts-btn {
+  flex: 1;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-debts-btn:active {
+  transform: scale(0.97);
+}
+
+.ds-debts-btn--save {
+  background: var(--ds-accent);
+  color: #fff;
+}
+
+.ds-debts-btn--cancel {
+  background: var(--ds-surface);
+  color: var(--ds-muted);
+}
+
+.ds-debts-btn--delete {
+  background: #f56565;
+  color: #fff;
+}
+
+/* ── Delete Confirmation Modal (entries-style) ── */
+.ds-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  padding: 20px;
+  animation: ds-overlay-in 0.18s ease;
+}
+
+.ds-confirm-overlay[hidden] { display: none !important; }
+
+@keyframes ds-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ds-confirm-pop {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);    }
+}
+
+.ds-confirm-dialog {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  max-width: 340px;
+  width: 100%;
+  padding: 24px 22px 20px;
+  animation: ds-confirm-pop 0.22s ease;
+}
+
+.ds-confirm-dialog__icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 14px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+}
+
+.ds-confirm-dialog__title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a2232;
+  text-align: center;
+}
+
+.ds-confirm-dialog__body {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #64748b;
+  text-align: center;
+}
+
+.ds-confirm-dialog__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ds-confirm-btn {
+  flex: 1;
+  padding: 12px 10px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s, opacity 0.12s;
+}
+
+.ds-confirm-btn:active {
+  transform: scale(0.96);
+}
+
+.ds-confirm-btn--cancel {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.ds-confirm-btn--cancel:hover {
+  background: #e2e8f0;
+}
+
+.ds-confirm-btn--danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+}
+
+.ds-confirm-btn--danger:hover {
+  opacity: 0.9;
+}
+
+/* ── Animations ── */
+@keyframes ds-debts-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ds-debts-slide-up {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes ds-debts-pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Transaction count badge on card name ── */
+.ds-debt-card__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  margin-left: 6px;
+  border-radius: 10px;
+  background: var(--ds-accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* ═══════════════════════════════════════════════
+   PER-PERSON LEDGER OVERLAY
+   ═══════════════════════════════════════════════ */
+.ds-debts-ledger-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 105;
+  background: var(--ds-bg, #0f1117);
+  display: flex;
+  flex-direction: column;
+  animation: ds-debts-fade-in 0.2s ease;
+}
+
+.ds-debts-ledger-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/* Header */
+.ds-debts-ledger-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 16px 12px;
+  flex-shrink: 0;
+}
+
+.ds-debts-ledger-back {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: var(--ds-card, #1a1d26);
+  color: var(--ds-text, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-debts-ledger-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ds-text, #fff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ledger Summary Cards */
+.ds-debts-ledger-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 0 16px 14px;
+  flex-shrink: 0;
+}
+
+.ds-debts-ledger-sum {
+  background: var(--ds-card, #1a1d26);
+  border-radius: 14px;
+  padding: 10px 8px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ds-debts-ledger-sum__label {
+  display: block;
+  font-size: 10px;
+  color: var(--ds-muted, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.ds-debts-ledger-sum__value {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ds-text, #fff);
+}
+
+.ds-debts-ledger-sum--owed .ds-debts-ledger-sum__value {
+  color: var(--ds-accent, #00c896);
+}
+
+.ds-debts-ledger-sum--owe .ds-debts-ledger-sum__value {
+  color: #f56565;
+}
+
+.ds-debts-ledger-sum__value--positive {
+  color: var(--ds-accent, #00c896) !important;
+}
+
+.ds-debts-ledger-sum__value--negative {
+  color: #f56565 !important;
+}
+
+/* Scrollable table area */
+.ds-debts-ledger-table-wrap {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.ds-debts-ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 420px;
+}
+
+.ds-debts-ledger-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.ds-debts-ledger-table th {
+  background: var(--ds-surface, #22252e);
+  color: var(--ds-muted, #888);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 10px 8px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ds-debts-ledger-table th:first-child { border-radius: 8px 0 0 0; }
+.ds-debts-ledger-table th:last-child  { border-radius: 0 8px 0 0; }
+
+.ds-debts-ledger-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--ds-text, #fff);
+  vertical-align: middle;
+}
+
+.ds-debts-ledger-table tbody tr {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.ds-debts-ledger-table tbody tr:active {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ds-debts-ledger-td--date {
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--ds-muted, #888);
+}
+
+.ds-debts-ledger-td--amount {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ds-debts-ledger-td--running {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ds-debts-ledger-td--plus   { color: var(--ds-accent, #00c896); }
+.ds-debts-ledger-td--minus  { color: #f56565; }
+
+.ds-debts-ledger-td--note {
+  font-size: 12px;
+  color: var(--ds-muted, #888);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Type badge in table */
+.ds-debts-ledger-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ds-debts-ledger-badge--owed {
+  background: rgba(0, 200, 150, 0.15);
+  color: var(--ds-accent, #00c896);
+}
+
+.ds-debts-ledger-badge--owe {
+  background: rgba(245, 101, 101, 0.15);
+  color: #f56565;
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ═══════════════════════════════════════════════ */
+
+/* ── Very small phones (≤ 350px, e.g. iPhone SE / 5) ── */
+@media (max-width: 350px) {
+  .ds-debts-main      { padding: 0 10px 120px; }
+  .ds-debts-summary   { gap: 8px; }
+  .ds-debts-summary-value { font-size: 18px; }
+  .ds-debts-summary-label { font-size: 11px; }
+  .ds-debts-dialog    { padding: 18px 14px 28px; }
+  .ds-debts-field__input { font-size: 16px; padding: 10px 12px; }
+  .ds-debts-type-btn  { font-size: 13px; padding: 8px; }
+  .ds-debts-btn       { font-size: 14px; padding: 11px; }
+  .ds-debts-dialog__title { font-size: 18px; }
+  .ds-debt-card       { padding: 12px 12px; gap: 10px; }
+  .ds-debt-card__name { font-size: 14px; }
+  .ds-debt-card__amount { font-size: 15px; }
+  .ds-debts-fab       { width: 50px; height: 50px; bottom: 90px; right: 14px; }
+  /* Ledger */
+  .ds-debts-ledger-header { padding: 12px 10px 10px; }
+  .ds-debts-ledger-summary { gap: 6px; padding: 0 10px 10px; }
+  .ds-debts-ledger-sum { padding: 8px 6px; }
+  .ds-debts-ledger-sum__value { font-size: 14px; }
+  .ds-debts-ledger-table-wrap { padding: 0 10px 20px; }
+  .ds-debts-ledger-table { font-size: 12px; min-width: 380px; }
+}
+
+/* ── Standard phones (351px – 430px) ── */
+@media (min-width: 351px) and (max-width: 430px) {
+  .ds-debts-main      { padding: 0 14px 130px; }
+}
+
+/* ── Large phones / phablets (431px – 599px) ── */
+@media (min-width: 431px) and (max-width: 599px) {
+  .ds-debts-main      { padding: 0 20px 130px; }
+  .ds-debts-summary-value { font-size: 24px; }
+}
+
+/* ── Tablets portrait / iPad Mini (600px – 834px) ── */
+@media (min-width: 600px) {
+  .ds-debts-main      { max-width: 580px; padding: 0 24px 130px; }
+  .ds-debts-dialog    { max-width: 560px; border-radius: 22px; }
+  .ds-debts-summary-value { font-size: 26px; }
+  .ds-debts-summary-label { font-size: 13px; }
+  .ds-debt-card       { padding: 16px 18px; }
+  .ds-debt-card__name { font-size: 16px; }
+  .ds-debt-card__amount { font-size: 18px; }
+  .ds-debts-fab       { right: calc(50% - 290px + 20px); bottom: 110px; }
+  .ds-debts-overlay   { align-items: center; }  /* center dialog on tablets */
+}
+
+/* ── iPad / Tablets landscape (835px – 1024px) ── */
+@media (min-width: 835px) {
+  .ds-debts-main      { max-width: 620px; }
+  .ds-debts-dialog    { max-width: 580px; }
+}
+
+/* ── Desktop / large screens (1025px+) ── */
+@media (min-width: 1025px) {
+  .ds-debts-main      { max-width: 640px; }
+  .ds-debts-dialog    { max-width: 600px; }
+}
+
+/* ── Safe area (notch / home indicator) ── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .ds-debts-fab {
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ── Light Mode ── */
+@media (prefers-color-scheme: light) {
+  .ds-debts-page {
+    background: #f5f7fa;
+  }
+  .ds-debts-back-header {
+    background: #f5f7fa;
+  }
+  .ds-debts-back-btn {
+    background: #e2e8f0;
+    color: #1a202c;
+  }
+  .ds-debts-summary-card {
+    background: #fff;
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+  .ds-debts-summary-label {
+    color: #718096;
+  }
+  .ds-debts-filter {
+    background: #fff;
+    color: #718096;
+  }
+  .ds-debts-filter.active {
+    color: #fff;
+  }
+  .ds-debt-card {
+    background: #fff;
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+  .ds-debt-card__name {
+    color: #1a202c;
+  }
+  .ds-debt-card__note,
+  .ds-debt-card__date {
+    color: #718096;
+  }
+  .ds-debts-dialog {
+    background: #fff;
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+  .ds-debts-dialog__title {
+    color: #1a202c;
+  }
+  .ds-debts-field__label {
+    color: #718096;
+  }
+  .ds-debts-field__input {
+    background: #f5f7fa;
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #1a202c;
+  }
+  .ds-debts-type-btn {
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #718096;
+  }
+  .ds-debts-btn--cancel {
+    background: #e2e8f0;
+    color: #4a5568;
+  }
+  /* Entries-style confirm dialog — light mode is default (white bg) */
+  .ds-debts-empty {
+    color: #718096;
+  }
+  /* Ledger light mode */
+  .ds-debts-ledger-overlay {
+    background: #f5f7fa;
+  }
+  .ds-debts-ledger-back {
+    background: #e2e8f0;
+    color: #1a202c;
+  }
+  .ds-debts-ledger-title {
+    color: #1a202c;
+  }
+  .ds-debts-ledger-sum {
+    background: #fff;
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+  .ds-debts-ledger-sum__label {
+    color: #718096;
+  }
+  .ds-debts-ledger-sum__value {
+    color: #1a202c;
+  }
+  .ds-debts-ledger-table th {
+    background: #e2e8f0;
+    color: #4a5568;
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+  }
+  .ds-debts-ledger-table td {
+    color: #1a202c;
+    border-bottom-color: rgba(0, 0, 0, 0.06);
+  }
+  .ds-debts-ledger-table tbody tr:active {
+    background: rgba(0, 0, 0, 0.03);
+  }
+  .ds-debts-ledger-td--date,
+  .ds-debts-ledger-td--note {
+    color: #718096;
+  }
+}
+
+/* ── Dark Mode — Confirm Dialog ── */
+@media (prefers-color-scheme: dark) {
+  .ds-confirm-overlay {
+    background: rgba(0, 0, 0, 0.65);
+  }
+  .ds-confirm-dialog {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+  }
+  .ds-confirm-dialog__icon {
+    background: rgba(239, 68, 68, 0.15);
+  }
+  .ds-confirm-dialog__title {
+    color: #f0f4f8;
+  }
+  .ds-confirm-dialog__body {
+    color: #8896a6;
+  }
+  .ds-confirm-btn--cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: #d0d8e0;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .ds-confirm-btn--cancel:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+  .ds-confirm-btn--danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+  }
+}

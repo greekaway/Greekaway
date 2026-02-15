@@ -31,12 +31,11 @@ body.ds-ai-page {
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+  position: relative;
   gap: 8px;
   padding: 12px 14px;
   padding-top: calc(12px + env(safe-area-inset-top, 0px));
-  background: #fff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  z-index: 10;
 }
 
 .ds-assistant-back {
@@ -532,8 +531,7 @@ body.ds-ai-page {
   }
 
   .ds-assistant-header {
-    background: linear-gradient(145deg, #0f2035 0%, #0a1828 100%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    /* no bar — transparent */
   }
 
   .ds-assistant-back {

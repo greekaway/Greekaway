@@ -1,0 +1,916 @@
+/* ═══════════════════════════════════════════════
+   DriversSystem — Appointments (Πελάτες & Ραντεβού)
+   ═══════════════════════════════════════════════ */
+
+.ds-appointments-page {
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.ds-appointments-page *,
+.ds-appointments-page *::before,
+.ds-appointments-page *::after,
+.ds-appt-overlay *,
+.ds-appt-overlay *::before,
+.ds-appt-overlay *::after {
+  box-sizing: border-box;
+}
+
+/* ── Back Arrow Header ── */
+.ds-appt-back-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 14px 16px 8px;
+  background: var(--ds-bg);
+}
+
+.ds-appt-back-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: var(--ds-card, #1a1d26);
+  color: var(--ds-text, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s;
+  flex-shrink: 0;
+}
+
+.ds-appt-back-btn:active {
+  transform: scale(0.92);
+}
+
+/* ── Main ── */
+.ds-appt-main {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── View Toggle ── */
+.ds-appt-view-toggle {
+  display: flex;
+  gap: 6px;
+  background: var(--ds-card);
+  border-radius: 14px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ds-appt-view-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--ds-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ds-appt-view-btn.active {
+  background: var(--ds-accent);
+  color: #fff;
+}
+
+.ds-appt-view-btn svg {
+  flex-shrink: 0;
+}
+
+/* ── Filter Pills ── */
+.ds-appt-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ds-appt-filter {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 24px;
+  background: var(--ds-card);
+  color: var(--ds-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-appt-filter.active {
+  background: var(--ds-accent);
+  color: #fff;
+}
+
+/* ── List View ── */
+.ds-appt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ds-appt-empty {
+  text-align: center;
+  color: var(--ds-muted);
+  padding: 40px 0;
+  font-size: 14px;
+}
+
+/* ── Day Group Header ── */
+.ds-appt-day-header {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ds-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 8px 0 4px;
+  margin-top: 4px;
+}
+
+/* ── Appointment Card ── */
+.ds-appt-card {
+  background: var(--ds-card);
+  border-radius: var(--ds-radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: var(--ds-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-appt-card:active {
+  transform: scale(0.98);
+}
+
+.ds-appt-card--completed {
+  opacity: 0.55;
+}
+
+.ds-appt-card--cancelled {
+  opacity: 0.4;
+}
+
+/* Time badge */
+.ds-appt-card__time-badge {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0, 200, 150, 0.12);
+  color: var(--ds-accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.ds-appt-card__time-badge-time {
+  font-size: 15px;
+}
+
+.ds-appt-card__time-badge-day {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.ds-appt-card--completed .ds-appt-card__time-badge {
+  background: rgba(100, 100, 100, 0.12);
+  color: var(--ds-muted);
+}
+
+.ds-appt-card--cancelled .ds-appt-card__time-badge {
+  background: rgba(245, 101, 101, 0.12);
+  color: #f56565;
+}
+
+/* Card body */
+.ds-appt-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ds-appt-card__client {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ds-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-appt-card__route {
+  display: block;
+  font-size: 12px;
+  color: var(--ds-muted);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-appt-card__route-arrow {
+  color: var(--ds-accent);
+  font-weight: 700;
+  margin: 0 4px;
+}
+
+.ds-appt-card__note {
+  display: block;
+  font-size: 11px;
+  color: var(--ds-muted);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: italic;
+}
+
+.ds-appt-card__phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--ds-muted);
+  margin-top: 3px;
+}
+
+/* Amount */
+.ds-appt-card__amount {
+  flex-shrink: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ds-accent);
+  text-align: right;
+  align-self: center;
+}
+
+/* Status badge on card */
+.ds-appt-card__status {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.ds-appt-card__status--completed {
+  background: rgba(0, 200, 150, 0.15);
+  color: var(--ds-accent);
+}
+
+.ds-appt-card__status--cancelled {
+  background: rgba(245, 101, 101, 0.15);
+  color: #f56565;
+}
+
+/* ══════════════════════════════════
+   CALENDAR VIEW
+   ══════════════════════════════════ */
+
+/* Calendar Navigation */
+.ds-appt-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.ds-appt-cal-nav-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: var(--ds-card);
+  color: var(--ds-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-appt-cal-nav-btn:active {
+  transform: scale(0.92);
+}
+
+.ds-appt-cal-month {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ds-text);
+}
+
+/* Weekday row */
+.ds-appt-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ds-muted);
+  padding: 8px 0 4px;
+}
+
+/* Calendar grid */
+.ds-appt-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.ds-appt-cal-day {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ds-text);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-appt-cal-day:active {
+  transform: scale(0.92);
+}
+
+.ds-appt-cal-day--other {
+  color: var(--ds-muted);
+  opacity: 0.4;
+}
+
+.ds-appt-cal-day--today {
+  background: rgba(0, 200, 150, 0.15);
+  font-weight: 700;
+}
+
+.ds-appt-cal-day--selected {
+  background: var(--ds-accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Dot indicator (has appointments) */
+.ds-appt-cal-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ds-accent);
+  position: absolute;
+  bottom: 4px;
+}
+
+.ds-appt-cal-day--selected .ds-appt-cal-dot {
+  background: #fff;
+}
+
+/* Multiple dots → bigger dot */
+.ds-appt-cal-dot--multi {
+  width: 7px;
+  height: 5px;
+  border-radius: 3px;
+}
+
+/* Calendar agenda (selected day details) */
+.ds-appt-cal-agenda {
+  margin-top: 12px;
+}
+
+.ds-appt-cal-agenda-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ds-text);
+  margin: 0 0 10px;
+}
+
+.ds-appt-cal-agenda-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ds-appt-cal-agenda-item {
+  background: var(--ds-card);
+  border-radius: var(--ds-radius);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--ds-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: transform 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-appt-cal-agenda-item:active {
+  transform: scale(0.98);
+}
+
+.ds-appt-cal-agenda-time {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ds-accent);
+  min-width: 44px;
+}
+
+.ds-appt-cal-agenda-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ds-appt-cal-agenda-client {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ds-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-appt-cal-agenda-route {
+  font-size: 12px;
+  color: var(--ds-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.ds-appt-cal-agenda-amount {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ds-accent);
+}
+
+/* ══════════════════════════════════
+   FAB (Floating Action Button)
+   ══════════════════════════════════ */
+
+.ds-appt-fab {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--ds-accent);
+  color: #fff;
+  border: none;
+  box-shadow: 0 6px 20px rgba(0, 200, 150, 0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-appt-fab svg {
+  width: 26px;
+  height: 26px;
+}
+
+.ds-appt-fab:active {
+  transform: scale(0.9);
+}
+
+/* ══════════════════════════════════
+   ADD / EDIT OVERLAY
+   ══════════════════════════════════ */
+
+.ds-appt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: dsApptFadeIn 0.2s ease;
+}
+
+@keyframes dsApptFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.ds-appt-dialog {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  animation: dsApptSlideUp 0.3s ease;
+}
+
+@keyframes dsApptSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.ds-appt-dialog__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ds-text);
+  margin: 0 0 18px;
+  text-align: center;
+}
+
+/* ── Form Fields ── */
+.ds-appt-field {
+  margin-bottom: 14px;
+}
+
+.ds-appt-field__label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ds-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ds-appt-field__input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: var(--ds-bg);
+  color: var(--ds-text);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+
+.ds-appt-field__input:focus {
+  border-color: var(--ds-accent);
+}
+
+.ds-appt-field__input::placeholder {
+  color: var(--ds-muted);
+  opacity: 0.6;
+}
+
+/* Row layout for date + time */
+.ds-appt-field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.ds-appt-field--half {
+  flex: 1;
+}
+
+/* ── Status Toggle ── */
+.ds-appt-status-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.ds-appt-status-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ds-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-appt-status-btn.active[data-ds-appt-status="pending"] {
+  background: rgba(0, 200, 150, 0.15);
+  color: var(--ds-accent);
+  border-color: var(--ds-accent);
+}
+
+.ds-appt-status-btn.active[data-ds-appt-status="completed"] {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.ds-appt-status-btn.active[data-ds-appt-status="cancelled"] {
+  background: rgba(245, 101, 101, 0.15);
+  color: #f56565;
+  border-color: #f56565;
+}
+
+/* ── Action Buttons ── */
+.ds-appt-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.ds-appt-btn {
+  flex: 1;
+  padding: 14px 12px;
+  border: none;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-appt-btn:active {
+  transform: scale(0.97);
+}
+
+.ds-appt-btn--cancel {
+  background: var(--ds-card);
+  color: var(--ds-muted);
+}
+
+.ds-appt-btn--save {
+  background: var(--ds-accent);
+  color: #fff;
+}
+
+.ds-appt-btn--delete {
+  background: rgba(245, 101, 101, 0.15);
+  color: #f56565;
+  flex: 0 0 auto;
+  padding: 14px 16px;
+}
+
+/* ══════════════════════════════════
+   DELETE CONFIRM (shared ds-confirm-* pattern)
+   ══════════════════════════════════ */
+
+.ds-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  padding: 20px;
+  animation: ds-overlay-in 0.18s ease;
+}
+
+@keyframes ds-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ds-confirm-pop {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);    }
+}
+
+.ds-confirm-dialog {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  max-width: 340px;
+  width: 100%;
+  padding: 24px 22px 20px;
+  animation: ds-confirm-pop 0.22s ease;
+}
+
+.ds-confirm-dialog__icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 14px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+}
+
+.ds-confirm-dialog__title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a2232;
+  text-align: center;
+}
+
+.ds-confirm-dialog__body {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #64748b;
+  text-align: center;
+}
+
+.ds-confirm-dialog__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ds-confirm-btn {
+  flex: 1;
+  padding: 12px 10px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s, opacity 0.12s;
+}
+
+.ds-confirm-btn:active {
+  transform: scale(0.96);
+}
+
+.ds-confirm-btn--cancel {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.ds-confirm-btn--cancel:hover {
+  background: #e2e8f0;
+}
+
+.ds-confirm-btn--danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+}
+
+.ds-confirm-btn--danger:hover {
+  opacity: 0.9;
+}
+
+/* ══════════════════════════════════
+   ANIMATIONS
+   ══════════════════════════════════ */
+
+@keyframes dsApptPop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+.ds-appt-card {
+  animation: dsApptPop 0.25s ease both;
+}
+
+/* ══════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ══════════════════════════════════ */
+
+/* ≤ 350px (small phones) */
+@media (max-width: 350px) {
+  .ds-appt-main { padding: 0 10px 120px; gap: 10px; }
+  .ds-appt-card { padding: 10px 12px; gap: 8px; }
+  .ds-appt-card__time-badge { width: 40px; height: 40px; }
+  .ds-appt-card__time-badge-time { font-size: 13px; }
+  .ds-appt-card__client { font-size: 13px; }
+  .ds-appt-card__amount { font-size: 13px; }
+  .ds-appt-dialog { padding: 18px 14px calc(14px + env(safe-area-inset-bottom, 0px)); }
+  .ds-appt-field__input { padding: 10px 12px; font-size: 14px; }
+  .ds-appt-cal-day { font-size: 12px; }
+  .ds-appt-filter { padding: 6px 12px; font-size: 12px; }
+  .ds-appt-fab { width: 50px; height: 50px; bottom: 90px; right: 14px; }
+}
+
+/* 351–430px */
+@media (min-width: 351px) and (max-width: 430px) {
+  .ds-appt-main { padding: 0 14px 130px; }
+}
+
+/* 431–599px */
+@media (min-width: 431px) and (max-width: 599px) {
+  .ds-appt-main { max-width: 480px; }
+}
+
+/* 600–834px (tablets) */
+@media (min-width: 600px) and (max-width: 834px) {
+  .ds-appt-main { max-width: 520px; }
+  .ds-appt-card { padding: 16px 18px; }
+  .ds-appt-cal-grid { gap: 6px; }
+  .ds-appt-cal-day { font-size: 15px; }
+}
+
+/* 835–1024px */
+@media (min-width: 835px) and (max-width: 1024px) {
+  .ds-appt-main { max-width: 560px; }
+}
+
+/* 1025px+ */
+@media (min-width: 1025px) {
+  .ds-appt-main { max-width: 600px; }
+  .ds-appt-dialog { border-radius: 20px; margin-bottom: 40px; }
+}
+
+/* ══════════════════════════════════
+   SAFE AREA (iOS notch)
+   ══════════════════════════════════ */
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .ds-appt-fab {
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ══════════════════════════════════
+   LIGHT MODE OVERRIDES
+   ══════════════════════════════════ */
+
+@media (prefers-color-scheme: light) {
+  .ds-appt-back-btn {
+    background: #f0f0f3;
+    color: #1a1d26;
+  }
+  .ds-appt-card {
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+  .ds-appt-view-toggle {
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+  .ds-appt-field__input {
+    border-color: rgba(0, 0, 0, 0.1);
+    background: #f5f5f8;
+  }
+  .ds-appt-status-btn {
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+  .ds-appt-cal-day--today {
+    background: rgba(0, 200, 150, 0.1);
+  }
+  .ds-appt-cal-agenda-item {
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+}
+
+/* ── Dark Mode — Confirm Dialog ── */
+@media (prefers-color-scheme: dark) {
+  .ds-confirm-overlay {
+    background: rgba(0, 0, 0, 0.65);
+  }
+  .ds-confirm-dialog {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+  }
+  .ds-confirm-dialog__icon {
+    background: rgba(239, 68, 68, 0.15);
+  }
+  .ds-confirm-dialog__title {
+    color: #f0f4f8;
+  }
+  .ds-confirm-dialog__body {
+    color: #8896a6;
+  }
+  .ds-confirm-btn--cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: #d0d8e0;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .ds-confirm-btn--cancel:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+  .ds-confirm-btn--danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+  }
+}

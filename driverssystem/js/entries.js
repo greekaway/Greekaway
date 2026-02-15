@@ -35,19 +35,6 @@
   const cfg = await window.DriversSystemConfig.load();
   window.DriversSystemConfig.applyPageTitles(document, cfg);
 
-  // Apply logo
-  const logo = $('[data-ds-hero-logo]');
-  if (logo && cfg.heroLogoUrl) {
-    logo.src = cfg.heroLogoUrl;
-    logo.style.display = 'block';
-  }
-
-  // Home link — domain-aware
-  const homeLink = $('[data-ds-home-link]');
-  if (homeLink) {
-    homeLink.href = window.DriversSystemConfig.buildRoute('/');
-  }
-
   // ── Greece timezone helper ──
   const greeceNow = () => {
     const now = new Date();
@@ -103,13 +90,31 @@
     }
   };
 
+  // ── Load driver preferences & filter sources ──
+  let driverDefaultSource = '';
+  const loadDriverPrefs = async () => {
+    const phone = localStorage.getItem('ds_driver_phone');
+    if (!phone) return;
+    try {
+      const res = await api(`/api/driverssystem/drivers/me/preferences?phone=${encodeURIComponent(phone)}`);
+      if (res.ok) {
+        const prefs = await res.json();
+        // Filter sources to only active ones if driver has preferences
+        if (prefs.activeSources && prefs.activeSources.length > 0) {
+          sources = sources.filter(s => prefs.activeSources.includes(s.id));
+        }
+        driverDefaultSource = prefs.defaultSource || '';
+      }
+    } catch (_) {}
+  };
+
   // ── Render source pills ──
   const renderSourcePills = () => {
     const container = $('[data-ds-source-pills]');
     if (!container) return;
 
     container.innerHTML = sources.map((s) => `
-      <button type="button" class="ds-source-pill" 
+      <button type="button" class="ds-source-pill${driverDefaultSource === s.id ? ' selected' : ''}" 
               data-source-id="${s.id}" 
               style="--pill-color: ${s.color || '#059669'}">
         <span class="ds-source-pill__dot" style="background: ${s.color || '#059669'}"></span>
@@ -117,6 +122,11 @@
         ${s.commission > 0 ? `<span class="ds-source-pill__commission">${s.commission}%</span>` : ''}
       </button>
     `).join('');
+
+    // Auto-select default source on first render
+    if (driverDefaultSource && !selectedSource) {
+      selectedSource = sources.find(s => s.id === driverDefaultSource) || null;
+    }
 
     // Bind pill clicks
     container.querySelectorAll('.ds-source-pill').forEach((pill) => {
@@ -199,8 +209,19 @@
         if (amountInput) amountInput.value = '0,00';
         amountCents = 0;
         if (noteInput) noteInput.value = '';
-        selectedSource = null;
-        $('[data-ds-source-pills]')?.querySelectorAll('.ds-source-pill').forEach(p => p.classList.remove('selected'));
+
+        // Reset source back to default (if set), otherwise clear
+        const pills = $('[data-ds-source-pills]');
+        if (pills) pills.querySelectorAll('.ds-source-pill').forEach(p => p.classList.remove('selected'));
+        if (driverDefaultSource) {
+          selectedSource = sources.find(s => s.id === driverDefaultSource) || null;
+          if (selectedSource && pills) {
+            const defPill = pills.querySelector(`[data-source-id="${driverDefaultSource}"]`);
+            if (defPill) defPill.classList.add('selected');
+          }
+        } else {
+          selectedSource = null;
+        }
         updateNetPreview();
         updateSaveBtn();
 
@@ -455,9 +476,11 @@
 
   // ── Init ──
   await loadSources();
+  await loadDriverPrefs();
   renderSourcePills();
   initDateNav();
   initForm();
+  updateNetPreview();
   updateSaveBtn();
   await Promise.all([loadEntries(), loadSummary()]);
 

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Πελάτες &amp; Ραντεβού – DriversSystem</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/driverssystem/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/driverssystem/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/driverssystem/icons/apple-touch-icon.png">
+    <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
+    <link rel="preload" href="/driverssystem/css/appointments.css" as="style" />
+    <link rel="preload" href="/driverssystem/js/driverssystem-config.js" as="script" />
+    <link rel="preload" href="/driverssystem/js/appointments.js" as="script" />
+    <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
+    <link rel="stylesheet" href="/driverssystem/css/footer.css" />
+    <link rel="stylesheet" href="/driverssystem/css/appointments.css" />
+    <link rel="stylesheet" href="/driverssystem/css/dark-mode.css" media="(prefers-color-scheme: dark)" />
+  </head>
+  <body class="ds-appointments-page">
+
+    <!-- ─── Back Arrow ─── -->
+    <header class="ds-appt-back-header">
+      <button class="ds-appt-back-btn" data-ds-appt-back aria-label="Πίσω">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </header>
+
+    <!-- ─── Main Content ─── -->
+    <main class="ds-appt-main">
+
+      <!-- ── View Toggle (List / Calendar) ── -->
+      <div class="ds-appt-view-toggle">
+        <button class="ds-appt-view-btn active" data-ds-appt-view="list">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Λίστα
+        </button>
+        <button class="ds-appt-view-btn" data-ds-appt-view="calendar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Ημερολόγιο
+        </button>
+      </div>
+
+      <!-- ── Filter Pills (Today / Tomorrow / Week / All) ── -->
+      <div class="ds-appt-filters" data-ds-appt-filters>
+        <button class="ds-appt-filter active" data-ds-appt-filter="upcoming">Επόμενα</button>
+        <button class="ds-appt-filter" data-ds-appt-filter="today">Σήμερα</button>
+        <button class="ds-appt-filter" data-ds-appt-filter="tomorrow">Αύριο</button>
+        <button class="ds-appt-filter" data-ds-appt-filter="week">Εβδομάδα</button>
+        <button class="ds-appt-filter" data-ds-appt-filter="all">Όλα</button>
+      </div>
+
+      <!-- ══ LIST VIEW ══ -->
+      <section class="ds-appt-list-view" data-ds-appt-list-view>
+        <div class="ds-appt-list" data-ds-appt-list>
+          <div class="ds-appt-empty" data-ds-appt-empty>
+            Δεν υπάρχουν ραντεβού
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ CALENDAR VIEW ══ -->
+      <section class="ds-appt-calendar-view" data-ds-appt-calendar-view style="display:none">
+
+        <!-- Calendar Navigation -->
+        <div class="ds-appt-cal-nav">
+          <button class="ds-appt-cal-nav-btn" data-ds-appt-cal-prev aria-label="Προηγούμενος μήνας">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="ds-appt-cal-month" data-ds-appt-cal-month>Φεβρουάριος 2026</span>
+          <button class="ds-appt-cal-nav-btn" data-ds-appt-cal-next aria-label="Επόμενος μήνας">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="ds-appt-cal-weekdays">
+          <span>Δε</span><span>Τρ</span><span>Τε</span><span>Πε</span><span>Πα</span><span>Σα</span><span>Κυ</span>
+        </div>
+        <div class="ds-appt-cal-grid" data-ds-appt-cal-grid>
+          <!-- Dynamically filled -->
+        </div>
+
+        <!-- Selected Day Agenda -->
+        <div class="ds-appt-cal-agenda" data-ds-appt-cal-agenda style="display:none">
+          <h4 class="ds-appt-cal-agenda-title" data-ds-appt-cal-agenda-title>—</h4>
+          <div class="ds-appt-cal-agenda-list" data-ds-appt-cal-agenda-list></div>
+        </div>
+      </section>
+
+      <!-- ── Add New Button (FAB) ── -->
+      <button class="ds-appt-fab" data-ds-appt-add aria-label="Νέο ραντεβού">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+
+    </main>
+
+    <!-- ═══════════════════════════════════════
+         ADD / EDIT APPOINTMENT OVERLAY
+         ═══════════════════════════════════════ -->
+    <div class="ds-appt-overlay" data-ds-appt-overlay style="display:none">
+      <div class="ds-appt-dialog ds-card">
+        <h3 class="ds-appt-dialog__title" data-ds-appt-dialog-title>Νέο Ραντεβού</h3>
+        <form data-ds-appt-form>
+          <input type="hidden" data-ds-appt-edit-id />
+
+          <div class="ds-appt-field">
+            <label class="ds-appt-field__label">Όνομα πελάτη</label>
+            <input class="ds-appt-field__input" type="text" placeholder="π.χ. Νίκος Παπαδόπουλος"
+                   maxlength="120" data-ds-appt-client required />
+          </div>
+
+          <div class="ds-appt-field">
+            <label class="ds-appt-field__label">Τηλέφωνο</label>
+            <input class="ds-appt-field__input" type="tel" placeholder="π.χ. 6971234567"
+                   maxlength="20" data-ds-appt-phone inputmode="tel" />
+          </div>
+
+          <div class="ds-appt-field-row">
+            <div class="ds-appt-field ds-appt-field--half">
+              <label class="ds-appt-field__label">Ημερομηνία</label>
+              <input class="ds-appt-field__input" type="date" data-ds-appt-date required />
+            </div>
+            <div class="ds-appt-field ds-appt-field--half">
+              <label class="ds-appt-field__label">Ώρα</label>
+              <input class="ds-appt-field__input" type="time" data-ds-appt-time />
+            </div>
+          </div>
+
+          <div class="ds-appt-field">
+            <label class="ds-appt-field__label">Από (σημείο παραλαβής)</label>
+            <input class="ds-appt-field__input" type="text" placeholder="π.χ. Αεροδρόμιο Αθηνών"
+                   maxlength="200" data-ds-appt-pickup />
+          </div>
+
+          <div class="ds-appt-field">
+            <label class="ds-appt-field__label">Προς (προορισμός)</label>
+            <input class="ds-appt-field__input" type="text" placeholder="π.χ. Σύνταγμα"
+                   maxlength="200" data-ds-appt-dropoff />
+          </div>
+
+          <div class="ds-appt-field">
+            <label class="ds-appt-field__label">Ποσό (€) — προαιρετικά</label>
+            <input class="ds-appt-field__input" type="number" step="0.01" min="0"
+                   inputmode="decimal" pattern="[0-9]*"
+                   placeholder="0,00" data-ds-appt-amount />
+          </div>
+
+          <div class="ds-appt-field">
+            <label class="ds-appt-field__label">Σημείωση (προαιρετικά)</label>
+            <input class="ds-appt-field__input" type="text" placeholder="π.χ. βαλίτσες, παιδί, νωρίς"
+                   maxlength="300" data-ds-appt-note />
+          </div>
+
+          <!-- Status toggle -->
+          <div class="ds-appt-field">
+            <label class="ds-appt-field__label">Κατάσταση</label>
+            <div class="ds-appt-status-toggle">
+              <button type="button" class="ds-appt-status-btn active" data-ds-appt-status="pending">Εκκρεμεί</button>
+              <button type="button" class="ds-appt-status-btn" data-ds-appt-status="completed">Ολοκληρώθηκε</button>
+              <button type="button" class="ds-appt-status-btn" data-ds-appt-status="cancelled">Ακυρώθηκε</button>
+            </div>
+          </div>
+
+          <div class="ds-appt-actions">
+            <button type="button" class="ds-appt-btn ds-appt-btn--cancel" data-ds-appt-cancel>Ακύρωση</button>
+            <button type="button" class="ds-appt-btn ds-appt-btn--delete" data-ds-appt-delete style="display:none">Διαγραφή</button>
+            <button type="submit" class="ds-appt-btn ds-appt-btn--save">Αποθήκευση</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer slot (server-injected) -->
+    <div data-ds-footer-slot></div>
+
+    <script src="/driverssystem/js/driverssystem-config.js" defer></script>
+    <script src="/driverssystem/js/footer.js" defer></script>
+    <script src="/driverssystem/js/appointments.js" defer></script>
+  </body>
+</html>

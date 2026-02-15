@@ -39,19 +39,6 @@
   // Apply dynamic page title from admin panel
   window.DriversSystemConfig.applyPageTitles(document, cfg);
 
-  // Apply logo
-  const logo = $('[data-ds-hero-logo]');
-  if (logo && cfg.heroLogoUrl) {
-    logo.src = cfg.heroLogoUrl;
-    logo.style.display = 'block';
-  }
-
-  // Home link
-  const homeLink = $('[data-ds-home-link]');
-  if (homeLink) {
-    homeLink.href = window.DriversSystemConfig.buildRoute('/');
-  }
-
   // ── Formatting ──
   const fmtEur = (v) => {
     const num = (v || 0).toFixed(2);

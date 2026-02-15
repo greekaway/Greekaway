@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "id": "exp_1771150590942_z4cx",
+    "driverId": "test",
+    "category": "car",
+    "description": "Service → Μικρό service",
+    "amount": 55,
+    "date": "2025-07-20",
+    "groupId": "service",
+    "groupName": "Service",
+    "itemId": "small_service",
+    "itemName": "Μικρό service",
+    "createdAt": "2026-02-15T10:16:30.942Z",
+    "km": 254474
+  },
+  {
+    "id": "exp_1771150597633_vd7p",
+    "driverId": "test",
+    "category": "car",
+    "description": "Καύσιμα → Καύσιμα",
+    "amount": 40,
+    "date": "2025-07-20",
+    "groupId": "fuel_movement",
+    "groupName": "Καύσιμα",
+    "itemId": "fuel",
+    "itemName": "Καύσιμα",
+    "createdAt": "2026-02-15T10:16:37.633Z"
+  }
+]

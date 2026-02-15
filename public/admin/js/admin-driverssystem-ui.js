@@ -22,6 +22,36 @@
     el.className = 'ds-status' + (kind ? ` ${kind}` : '');
   };
 
+  // ── Styled Confirm Modal ──
+  const openConfirm = (message, opts = {}) => new Promise((resolve) => {
+    const root = $('#dsConfirmModal');
+    if (!root) { resolve(confirm(message)); return; }
+    const titleEl = $('#dsConfirmTitle');
+    const msgEl = $('#dsConfirmMessage');
+    const okBtn = $('#dsConfirmOk');
+    const cancelBtn = $('#dsConfirmCancel');
+    if (titleEl) titleEl.textContent = opts.title || 'Επιβεβαίωση';
+    if (msgEl) msgEl.textContent = message || '';
+    if (okBtn) okBtn.textContent = opts.okLabel || 'Διαγραφή';
+    root.setAttribute('data-open', 'true');
+    root.setAttribute('aria-hidden', 'false');
+
+    const close = (result) => {
+      root.removeAttribute('data-open');
+      root.setAttribute('aria-hidden', 'true');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      root.removeEventListener('click', onBackdrop);
+      resolve(result);
+    };
+    const onOk = () => close(true);
+    const onCancel = () => close(false);
+    const onBackdrop = (e) => { if (e.target && e.target.matches && e.target.matches('[data-action="close"]')) close(false); };
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    root.addEventListener('click', onBackdrop);
+  });
+
   const authRedirect = () => {
     const next = encodeURIComponent('/admin/driverssystem-ui');
     window.location.href = `/admin-home.html?next=${next}`;
@@ -102,6 +132,12 @@
     v('phoneNumber', c.phoneNumber);
     v('whatsappNumber', c.whatsappNumber);
     v('companyEmail', c.companyEmail);
+
+    // Features (Module Toggles)
+    const features = c.features || {};
+    const cb = (id, val) => { const el = $(`#${id}`); if (el) el.checked = val !== false; };
+    cb('feature-debts', features.debts);
+    cb('feature-appointments', features.appointments);
   };
 
   const saveGeneral = async () => {
@@ -127,7 +163,11 @@
       },
       phoneNumber: val('phoneNumber'),
       whatsappNumber: val('whatsappNumber'),
-      companyEmail: val('companyEmail')
+      companyEmail: val('companyEmail'),
+      features: {
+        debts: ($('#feature-debts') || {}).checked !== false,
+        appointments: ($('#feature-appointments') || {}).checked !== false
+      }
     });
 
     const status = $('#ds-status');
@@ -294,7 +334,7 @@
     };
 
     window._dsDeleteSrc = async (idx) => {
-      if (!confirm('Διαγραφή αυτής της πηγής;')) return;
+      if (!(await openConfirm('Διαγραφή αυτής της πηγής;', { title: 'Διαγραφή Πηγής' }))) return;
       tripSources.splice(idx, 1);
       const res = await api('/api/admin/driverssystem/trip-sources', 'PUT', tripSources);
       if (res && res.ok) {
@@ -388,6 +428,7 @@
       $('#dsCecGroupActive').checked = true;
       groupForm.hidden = false;
       itemForm.hidden = true;
+      groupForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
     groupCancelBtn.addEventListener('click', () => {
@@ -428,16 +469,26 @@
       const active = $('#dsCecItemActive') ? $('#dsCecItemActive').checked : true;
       if (!name.trim()) { showToast('Συμπλήρωσε όνομα εξόδου'); return; }
 
+      const type = ($('#dsCecItemType') || {}).value || 'frequent';
+      const affectsKmCost = ($('#dsCecItemAffectsKm') || {}).value === 'true';
+      const requiresKm = ($('#dsCecItemRequiresKm') || {}).value === 'true';
+      const allocation = ($('#dsCecItemAllocation') || {}).value || 'vehicle';
+
       const group = carExpCats[editingItemGroupIdx];
       if (!group) return;
       if (!Array.isArray(group.items)) group.items = [];
 
       if (editingItemIdx >= 0) {
-        group.items[editingItemIdx].name = name.trim();
-        group.items[editingItemIdx].active = active;
+        const it = group.items[editingItemIdx];
+        it.name = name.trim();
+        it.active = active;
+        it.type = type;
+        it.affectsKmCost = affectsKmCost;
+        it.requiresKm = requiresKm;
+        it.allocation = allocation;
       } else {
         const id = name.toLowerCase().replace(/[^a-zα-ωά-ώ0-9]/gi, '_').replace(/_+/g, '_');
-        group.items.push({ id, name: name.trim(), active });
+        group.items.push({ id, name: name.trim(), active, type, affectsKmCost, requiresKm, allocation });
       }
 
       await saveCarExpCats();
@@ -456,10 +507,11 @@
       $('#dsCecGroupActive').checked = group.active !== false;
       groupForm.hidden = false;
       itemForm.hidden = true;
+      groupForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     window._dsCecDeleteGroup = async (gi) => {
-      if (!confirm('Διαγραφή αυτής της ομάδας και όλων των ειδών της;')) return;
+      if (!(await openConfirm('Διαγραφή αυτής της ομάδας και όλων των ειδών της;', { title: 'Διαγραφή Ομάδας' }))) return;
       carExpCats.splice(gi, 1);
       await saveCarExpCats();
       renderCarExpCats();
@@ -473,24 +525,35 @@
       $('#dsCecItemGroupLabel').value = group.name || '';
       $('#dsCecItemName').value = '';
       $('#dsCecItemActive').checked = true;
+      $('#dsCecItemType').value = 'frequent';
+      $('#dsCecItemAffectsKm').value = 'true';
+      $('#dsCecItemRequiresKm').value = 'false';
+      $('#dsCecItemAllocation').value = 'vehicle';
       itemForm.hidden = false;
       groupForm.hidden = true;
+      itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     window._dsCecEditItem = (gi, ii) => {
       const group = carExpCats[gi];
       if (!group || !group.items || !group.items[ii]) return;
+      const item = group.items[ii];
       editingItemGroupIdx = gi;
       editingItemIdx = ii;
       $('#dsCecItemGroupLabel').value = group.name || '';
-      $('#dsCecItemName').value = group.items[ii].name || '';
-      $('#dsCecItemActive').checked = group.items[ii].active !== false;
+      $('#dsCecItemName').value = item.name || '';
+      $('#dsCecItemActive').checked = item.active !== false;
+      $('#dsCecItemType').value = item.type || 'frequent';
+      $('#dsCecItemAffectsKm').value = String(item.affectsKmCost !== false);
+      $('#dsCecItemRequiresKm').value = String(item.requiresKm === true);
+      $('#dsCecItemAllocation').value = item.allocation || 'vehicle';
       itemForm.hidden = false;
       groupForm.hidden = true;
+      itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     window._dsCecDeleteItem = async (gi, ii) => {
-      if (!confirm('Διαγραφή αυτού του εξόδου;')) return;
+      if (!(await openConfirm('Διαγραφή αυτού του εξόδου;', { title: 'Διαγραφή Εξόδου' }))) return;
       carExpCats[gi].items.splice(ii, 1);
       await saveCarExpCats();
       renderCarExpCats();
@@ -579,6 +642,7 @@
       $('#dsPecGroupActive').checked = true;
       groupForm.hidden = false;
       itemForm.hidden = true;
+      groupForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
     groupCancelBtn.addEventListener('click', () => {
@@ -618,16 +682,26 @@
       const active = $('#dsPecItemActive') ? $('#dsPecItemActive').checked : true;
       if (!name.trim()) { showToast('Συμπλήρωσε όνομα εξόδου'); return; }
 
+      const type = ($('#dsPecItemType') || {}).value || 'frequent';
+      const affectsKmCost = ($('#dsPecItemAffectsKm') || {}).value === 'true';
+      const requiresKm = ($('#dsPecItemRequiresKm') || {}).value === 'true';
+      const allocation = ($('#dsPecItemAllocation') || {}).value || 'vehicle';
+
       const group = persExpCats[editingPersItemGroupIdx];
       if (!group) return;
       if (!Array.isArray(group.items)) group.items = [];
 
       if (editingPersItemIdx >= 0) {
-        group.items[editingPersItemIdx].name = name.trim();
-        group.items[editingPersItemIdx].active = active;
+        const it = group.items[editingPersItemIdx];
+        it.name = name.trim();
+        it.active = active;
+        it.type = type;
+        it.affectsKmCost = affectsKmCost;
+        it.requiresKm = requiresKm;
+        it.allocation = allocation;
       } else {
         const id = name.toLowerCase().replace(/[^a-zα-ωά-ώ0-9]/gi, '_').replace(/_+/g, '_');
-        group.items.push({ id, name: name.trim(), active });
+        group.items.push({ id, name: name.trim(), active, type, affectsKmCost, requiresKm, allocation });
       }
 
       await savePersExpCats();
@@ -645,10 +719,11 @@
       $('#dsPecGroupActive').checked = group.active !== false;
       groupForm.hidden = false;
       itemForm.hidden = true;
+      groupForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     window._dsPecDeleteGroup = async (gi) => {
-      if (!confirm('Διαγραφή αυτής της ομάδας και όλων των ειδών της;')) return;
+      if (!(await openConfirm('Διαγραφή αυτής της ομάδας και όλων των ειδών της;', { title: 'Διαγραφή Ομάδας' }))) return;
       persExpCats.splice(gi, 1);
       await savePersExpCats();
       renderPersExpCats();
@@ -662,24 +737,35 @@
       $('#dsPecItemGroupLabel').value = group.name || '';
       $('#dsPecItemName').value = '';
       $('#dsPecItemActive').checked = true;
+      $('#dsPecItemType').value = 'frequent';
+      $('#dsPecItemAffectsKm').value = 'false';
+      $('#dsPecItemRequiresKm').value = 'false';
+      $('#dsPecItemAllocation').value = 'vehicle';
       itemForm.hidden = false;
       groupForm.hidden = true;
+      itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     window._dsPecEditItem = (gi, ii) => {
       const group = persExpCats[gi];
       if (!group || !group.items || !group.items[ii]) return;
+      const item = group.items[ii];
       editingPersItemGroupIdx = gi;
       editingPersItemIdx = ii;
       $('#dsPecItemGroupLabel').value = group.name || '';
-      $('#dsPecItemName').value = group.items[ii].name || '';
-      $('#dsPecItemActive').checked = group.items[ii].active !== false;
+      $('#dsPecItemName').value = item.name || '';
+      $('#dsPecItemActive').checked = item.active !== false;
+      $('#dsPecItemType').value = item.type || 'frequent';
+      $('#dsPecItemAffectsKm').value = String(item.affectsKmCost === true);
+      $('#dsPecItemRequiresKm').value = String(item.requiresKm === true);
+      $('#dsPecItemAllocation').value = item.allocation || 'vehicle';
       itemForm.hidden = false;
       groupForm.hidden = true;
+      itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     window._dsPecDeleteItem = async (gi, ii) => {
-      if (!confirm('Διαγραφή αυτού του εξόδου;')) return;
+      if (!(await openConfirm('Διαγραφή αυτού του εξόδου;', { title: 'Διαγραφή Εξόδου' }))) return;
       persExpCats[gi].items.splice(ii, 1);
       await savePersExpCats();
       renderPersExpCats();
@@ -768,6 +854,7 @@
       $('#dsTecGroupActive').checked = true;
       groupForm.hidden = false;
       itemForm.hidden = true;
+      groupForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
     groupCancelBtn.addEventListener('click', () => {
@@ -807,16 +894,26 @@
       const active = $('#dsTecItemActive') ? $('#dsTecItemActive').checked : true;
       if (!name.trim()) { showToast('Συμπλήρωσε όνομα εξόδου'); return; }
 
+      const type = ($('#dsTecItemType') || {}).value || 'frequent';
+      const affectsKmCost = ($('#dsTecItemAffectsKm') || {}).value === 'true';
+      const requiresKm = ($('#dsTecItemRequiresKm') || {}).value === 'true';
+      const allocation = ($('#dsTecItemAllocation') || {}).value || 'vehicle';
+
       const group = taxExpCats[editingTaxItemGroupIdx];
       if (!group) return;
       if (!Array.isArray(group.items)) group.items = [];
 
       if (editingTaxItemIdx >= 0) {
-        group.items[editingTaxItemIdx].name = name.trim();
-        group.items[editingTaxItemIdx].active = active;
+        const it = group.items[editingTaxItemIdx];
+        it.name = name.trim();
+        it.active = active;
+        it.type = type;
+        it.affectsKmCost = affectsKmCost;
+        it.requiresKm = requiresKm;
+        it.allocation = allocation;
       } else {
         const id = name.toLowerCase().replace(/[^a-zα-ωά-ώ0-9]/gi, '_').replace(/_+/g, '_');
-        group.items.push({ id, name: name.trim(), active });
+        group.items.push({ id, name: name.trim(), active, type, affectsKmCost, requiresKm, allocation });
       }
 
       await saveTaxExpCats();
@@ -834,10 +931,11 @@
       $('#dsTecGroupActive').checked = group.active !== false;
       groupForm.hidden = false;
       itemForm.hidden = true;
+      groupForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     window._dsTecDeleteGroup = async (gi) => {
-      if (!confirm('Διαγραφή αυτής της ομάδας και όλων των ειδών της;')) return;
+      if (!(await openConfirm('Διαγραφή αυτής της ομάδας και όλων των ειδών της;', { title: 'Διαγραφή Ομάδας' }))) return;
       taxExpCats.splice(gi, 1);
       await saveTaxExpCats();
       renderTaxExpCats();
@@ -851,24 +949,35 @@
       $('#dsTecItemGroupLabel').value = group.name || '';
       $('#dsTecItemName').value = '';
       $('#dsTecItemActive').checked = true;
+      $('#dsTecItemType').value = 'frequent';
+      $('#dsTecItemAffectsKm').value = 'false';
+      $('#dsTecItemRequiresKm').value = 'false';
+      $('#dsTecItemAllocation').value = 'vehicle';
       itemForm.hidden = false;
       groupForm.hidden = true;
+      itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     window._dsTecEditItem = (gi, ii) => {
       const group = taxExpCats[gi];
       if (!group || !group.items || !group.items[ii]) return;
+      const item = group.items[ii];
       editingTaxItemGroupIdx = gi;
       editingTaxItemIdx = ii;
       $('#dsTecItemGroupLabel').value = group.name || '';
-      $('#dsTecItemName').value = group.items[ii].name || '';
-      $('#dsTecItemActive').checked = group.items[ii].active !== false;
+      $('#dsTecItemName').value = item.name || '';
+      $('#dsTecItemActive').checked = item.active !== false;
+      $('#dsTecItemType').value = item.type || 'frequent';
+      $('#dsTecItemAffectsKm').value = String(item.affectsKmCost === true);
+      $('#dsTecItemRequiresKm').value = String(item.requiresKm === true);
+      $('#dsTecItemAllocation').value = item.allocation || 'vehicle';
       itemForm.hidden = false;
       groupForm.hidden = true;
+      itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     window._dsTecDeleteItem = async (gi, ii) => {
-      if (!confirm('Διαγραφή αυτού του εξόδου;')) return;
+      if (!(await openConfirm('Διαγραφή αυτού του εξόδου;', { title: 'Διαγραφή Εξόδου' }))) return;
       taxExpCats[gi].items.splice(ii, 1);
       await saveTaxExpCats();
       renderTaxExpCats();
@@ -897,6 +1006,38 @@
     renderCarExpCats();
     renderPersExpCats();
     renderTaxExpCats();
+
+    // Feature toggles — instant save on change (no need for Save button)
+    const initFeatureToggles = () => {
+      $$('.ds-feature-row input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', async () => {
+          const featureKey = cb.id.replace('feature-', '');
+          const enabled = cb.checked;
+          const row = cb.closest('.ds-feature-row');
+          // Optimistic visual feedback
+          if (row) row.style.opacity = '0.6';
+          try {
+            const res = await api('/api/admin/driverssystem/features', 'PUT', { [featureKey]: enabled });
+            if (res && res.ok) {
+              const saved = await res.json();
+              // Update CONFIG in memory
+              if (!CONFIG.features) CONFIG.features = {};
+              Object.assign(CONFIG.features, saved);
+              showToast(`${enabled ? '✓ Ενεργοποιήθηκε' : '✗ Απενεργοποιήθηκε'}`);
+            } else {
+              // Revert on failure
+              cb.checked = !enabled;
+              showToast('Σφάλμα αποθήκευσης');
+            }
+          } catch (_) {
+            cb.checked = !enabled;
+            showToast('Σφάλμα σύνδεσης');
+          }
+          if (row) row.style.opacity = '1';
+        });
+      });
+    };
+    initFeatureToggles();
 
     // General form save
     const form = $('#ds-form');

@@ -6,15 +6,15 @@
     "home": "Home",
     "listings": "Entries",
     "assistant": "AI",
-    "info": "Info",
-    "profile": "Profile"
+    "info": "Statistics",
+    "profile": "Menu"
   },
   "footerIcons": {
     "home": "/uploads/driverssystem/hero-logo-1770880224594.svg",
     "listings": "/uploads/driverssystem/hero-logo-1770880705002.svg",
     "assistant": "/uploads/driverssystem/hero-logo-1770880515897.svg",
     "info": "/uploads/driverssystem/hero-logo-1770884877809.svg",
-    "profile": "/uploads/driverssystem/hero-logo-1770880356519.svg"
+    "profile": "/uploads/driverssystem/hero-logo-1771153635299.svg"
   },
   "phoneNumber": "",
   "whatsappNumber": "",
@@ -62,5 +62,293 @@
       "color": "#F39C12",
       "active": true
     }
-  ]
+  ],
+  "carExpenseCategories": [
+    {
+      "id": "service",
+      "name": "Service",
+      "active": true,
+      "items": [
+        {
+          "id": "small_service",
+          "name": "Μικρό service",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": true,
+          "requiresKm": true,
+          "allocation": "vehicle"
+        },
+        {
+          "id": "large_service",
+          "name": "Μεγάλο service",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": true,
+          "requiresKm": true,
+          "allocation": "vehicle"
+        }
+      ]
+    },
+    {
+      "id": "maintenance",
+      "name": "Συντήρηση",
+      "active": true,
+      "items": [
+        {
+          "id": "brakes",
+          "name": "Φρένα",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": true,
+          "requiresKm": true,
+          "allocation": "vehicle"
+        },
+        {
+          "id": "tires",
+          "name": "Λάστιχα",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": true,
+          "requiresKm": true,
+          "allocation": "vehicle"
+        },
+        {
+          "id": "battery",
+          "name": "Μπαταρία",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": true,
+          "requiresKm": true,
+          "allocation": "vehicle"
+        },
+        {
+          "id": "shocks",
+          "name": "Αμορτισέρ",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": true,
+          "requiresKm": true,
+          "allocation": "vehicle"
+        }
+      ]
+    },
+    {
+      "id": "fuel_movement",
+      "name": "Καύσιμα & Κίνηση",
+      "active": true,
+      "items": [
+        {
+          "id": "fuel",
+          "name": "Καύσιμα",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": true,
+          "requiresKm": false,
+          "allocation": "vehicle"
+        },
+        {
+          "id": "tolls",
+          "name": "Διόδια",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": false,
+          "requiresKm": false,
+          "allocation": "trip"
+        },
+        {
+          "id": "parking",
+          "name": "Πάρκινγκ",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": false,
+          "requiresKm": false,
+          "allocation": "trip"
+        },
+        {
+          "id": "car_wash",
+          "name": "Πλύσιμο",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": true,
+          "requiresKm": false,
+          "allocation": "vehicle"
+        }
+      ]
+    },
+    {
+      "id": "legal",
+      "name": "Νομικά / Υποχρεωτικά",
+      "active": true,
+      "items": [
+        {
+          "id": "insurance",
+          "name": "Ασφάλεια",
+          "active": true,
+          "type": "annual",
+          "affectsKmCost": true,
+          "requiresKm": false,
+          "allocation": "vehicle"
+        },
+        {
+          "id": "road_tax",
+          "name": "Τέλη κυκλοφορίας",
+          "active": true,
+          "type": "annual",
+          "affectsKmCost": true,
+          "requiresKm": false,
+          "allocation": "vehicle"
+        },
+        {
+          "id": "kteo",
+          "name": "ΚΤΕΟ",
+          "active": true,
+          "type": "annual",
+          "affectsKmCost": true,
+          "requiresKm": false,
+          "allocation": "vehicle"
+        }
+      ]
+    },
+    {
+      "id": "breakdowns",
+      "name": "Βλάβες / Έκτακτα",
+      "active": true,
+      "items": [
+        {
+          "id": "emergency_part",
+          "name": "Έκτακτο ανταλλακτικό",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": true,
+          "requiresKm": true,
+          "allocation": "vehicle"
+        },
+        {
+          "id": "roadside_assist",
+          "name": "Οδική βοήθεια",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": true,
+          "requiresKm": true,
+          "allocation": "vehicle"
+        }
+      ]
+    },
+    {
+      "id": "accident",
+      "name": "Ατύχημα",
+      "active": true,
+      "items": [
+        {
+          "id": "crash",
+          "name": "Τρακάρισμα",
+          "active": true,
+          "type": "frequent",
+          "affectsKmCost": true,
+          "requiresKm": false,
+          "allocation": "vehicle"
+        }
+      ]
+    }
+  ],
+  "personalExpenseCategories": [
+    {
+      "id": "housing",
+      "name": "Στέγαση",
+      "active": true,
+      "items": [
+        {
+          "id": "rent",
+          "name": "Ενοίκιο",
+          "active": true,
+          "type": "monthly"
+        },
+        {
+          "id": "shared_costs",
+          "name": "Κοινόχρηστα",
+          "active": true,
+          "type": "monthly"
+        }
+      ]
+    },
+    {
+      "id": "bills",
+      "name": "Λογαριασμοί",
+      "active": true,
+      "items": [
+        {
+          "id": "electricity",
+          "name": "Ρεύμα",
+          "active": true,
+          "type": "monthly"
+        },
+        {
+          "id": "water",
+          "name": "Νερό",
+          "active": true,
+          "type": "monthly"
+        },
+        {
+          "id": "internet_phone",
+          "name": "Internet / Τηλέφωνο",
+          "active": true,
+          "type": "monthly"
+        },
+        {
+          "id": "subscriptions",
+          "name": "Συνδρομές",
+          "active": true,
+          "type": "monthly"
+        }
+      ]
+    },
+    {
+      "id": "groceries",
+      "name": "Τρόφιμα",
+      "active": true,
+      "items": [
+        {
+          "id": "supermarket",
+          "name": "Σούπερ μάρκετ",
+          "active": true,
+          "type": "frequent"
+        }
+      ]
+    },
+    {
+      "id": "personal_misc",
+      "name": "Προσωπικά έξοδα",
+      "active": true,
+      "items": [
+        {
+          "id": "health",
+          "name": "Υγεία / Φάρμακα",
+          "active": true,
+          "type": "frequent"
+        },
+        {
+          "id": "kids_school",
+          "name": "Παιδιά / Σχολείο",
+          "active": true,
+          "type": "monthly"
+        },
+        {
+          "id": "clothing",
+          "name": "Ρούχα / Αγορές",
+          "active": true,
+          "type": "frequent"
+        },
+        {
+          "id": "emergency",
+          "name": "Έκτακτο έξοδο",
+          "active": true,
+          "type": "frequent"
+        }
+      ]
+    }
+  ],
+  "features": {
+    "debts": true,
+    "appointments": false
+  }
 }

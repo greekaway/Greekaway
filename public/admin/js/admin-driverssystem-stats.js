@@ -33,6 +33,14 @@
   // ── Format ──
   const fmtEur = (v) => (v || 0).toFixed(2).replace('.', ',') + ' €';
 
+  const showToastMsg = (msg) => {
+    const el = $('#ds-toast');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2200);
+  };
+
   const fmtDate = (dateStr) => {
     if (!dateStr) return '';
     const parts = dateStr.split('-');
@@ -96,6 +104,7 @@
       if (target === 'drivers') loadDrivers();
       if (target === 'entries') loadEntries();
       if (target === 'expenses') loadExpenses();
+      if (target === 'debts') loadDebts();
     });
   });
 
@@ -713,6 +722,9 @@
     if (expToInput) expToInput.value = toDateStr(today);
     await loadOverview();
 
+    // ── Debts tab init ──
+    initDebtsTab();
+
     // ── Live updates: auto-refresh entries and overview every 30s ──
     setInterval(async () => {
       // Refresh the currently active tab
@@ -722,7 +734,109 @@
       if (target === 'entries') await loadEntries();
       if (target === 'expenses') await loadExpenses();
       if (target === 'drivers') await loadDrivers(searchInput ? searchInput.value.trim() : '');
+      if (target === 'debts') await loadDebts();
     }, 30000);
   })();
+
+  // ═══════════════════════════════════════════
+  // DEBTS TAB (Οφειλές)
+  // ═══════════════════════════════════════════
+
+  const initDebtsTab = () => {
+    const loadBtn = $('#adminDebtsLoad');
+    if (loadBtn) loadBtn.addEventListener('click', loadDebts);
+
+    // Populate driver dropdown
+    const sel = $('#adminDebtsDriverSelect');
+    if (sel && driversCache.length) {
+      driversCache.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.phone || d.id;
+        opt.textContent = d.name || d.phone;
+        sel.appendChild(opt);
+      });
+    }
+  };
+
+  const loadDebts = async () => {
+    const driverSel = $('#adminDebtsDriverSelect');
+    const typeSel = $('#adminDebtsTypeSelect');
+    const tbody = $('[data-admin-debts-tbody]');
+    const emptyEl = $('[data-admin-debts-empty]');
+    const totalOwedEl = $('[data-admin-debts-total-owed]');
+    const totalOweEl = $('[data-admin-debts-total-owe]');
+    const countEl = $('[data-admin-debts-count]');
+
+    if (!tbody) return;
+
+    const params = new URLSearchParams();
+    const driverId = driverSel ? driverSel.value : '';
+    const type = typeSel ? typeSel.value : '';
+    if (driverId) params.set('driverId', driverId);
+    if (type) params.set('type', type);
+
+    try {
+      const res = await api(`/api/admin/driverssystem/debts?${params}`);
+      if (!res || !res.ok) throw new Error();
+      const debts = await res.json();
+
+      // Update summary
+      let totalOwed = 0, totalOwe = 0;
+      debts.forEach(d => {
+        if (d.type === 'owed') totalOwed += d.amount || 0;
+        else totalOwe += d.amount || 0;
+      });
+      if (totalOwedEl) totalOwedEl.textContent = fmtEur(totalOwed);
+      if (totalOweEl) totalOweEl.textContent = fmtEur(totalOwe);
+      if (countEl) countEl.textContent = debts.length;
+
+      // Table
+      tbody.innerHTML = '';
+      if (debts.length === 0) {
+        if (emptyEl) emptyEl.style.display = '';
+        return;
+      }
+      if (emptyEl) emptyEl.style.display = 'none';
+
+      debts.forEach(d => {
+        const tr = document.createElement('tr');
+        const typeLabel = d.type === 'owed' ? 'Πίστωση' : 'Χρέωση';
+        const typeColor = d.type === 'owed' ? '#00c896' : '#f56565';
+        const driverName = driversCache.find(dr => dr.phone === d.driverId);
+        tr.innerHTML = `
+          <td>${d.date || '—'}</td>
+          <td>${driverName ? driverName.name : (d.driverId || '—')}</td>
+          <td>${esc(d.name)}</td>
+          <td style="color:${typeColor};font-weight:600">${typeLabel}</td>
+          <td style="font-weight:700">${fmtEur(d.amount)}</td>
+          <td>${esc(d.note || '')}</td>
+          <td><button class="btn btn-sm btn-danger-solid" data-delete-debt="${d.id}">✕</button></td>
+        `;
+        const delBtn = tr.querySelector('[data-delete-debt]');
+        if (delBtn) {
+          delBtn.addEventListener('click', async () => {
+            const ok = await openConfirm(`Διαγραφή οφειλής "${esc(d.name)}" (${fmtEur(d.amount)});`, { title: 'Διαγραφή Οφειλής', okLabel: 'Διαγραφή' });
+            if (!ok) return;
+            try {
+              await api(`/api/admin/driverssystem/debts/${d.id}`, 'DELETE');
+              showToastMsg('Η οφειλή διαγράφηκε');
+              await loadDebts();
+            } catch (_) {
+              showToastMsg('Αποτυχία διαγραφής');
+            }
+          });
+        }
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error('[admin-debts]', err);
+    }
+  };
+
+  const esc = (s) => {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+  };
 
 })();

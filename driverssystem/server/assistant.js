@@ -10,6 +10,7 @@
  */
 
 const dataLayer = require('../../src/server/data/driverssystem');
+const { buildVehicleStatsContext } = require('./vehicle-stats');
 
 // ─────────────────────────────────────────────────────────
 // FINANCIAL CONTEXT BUILDER
@@ -69,7 +70,8 @@ async function buildDriverFinancialContext(driverId) {
     expCurrent,
     expPrev,
     expLast7,
-    tripSources
+    tripSources,
+    driverDebts
   ] = await Promise.all([
     dataLayer.getDashboard({ driverId, month: curMonthStr }),
     dataLayer.getDashboard({ driverId, month: prevMonthStr }),
@@ -80,7 +82,8 @@ async function buildDriverFinancialContext(driverId) {
     dataLayer.getExpensesRange({ driverId, from: firstDay, to: today }),
     dataLayer.getExpensesRange({ driverId, from: prevFirst, to: prevLast }),
     dataLayer.getExpensesRange({ driverId, from: sevenDaysAgoStr, to: today }),
-    dataLayer.getTripSources()
+    dataLayer.getTripSources(),
+    dataLayer.getDebts({ driverId })
   ]);
 
   const dc = dashboardCurrent;
@@ -224,6 +227,37 @@ async function buildDriverFinancialContext(driverId) {
   lines.push(`Έξοδα 7ημέρου: ${formatEUR(expLast7.totalExpenses || 0)}`);
   lines.push(`Σύγκριση με προηγ. 7ήμερο: Μεικτά ${pct(grossLast7, grossPrev7)}, Καθαρά ${pct(netLast7, netPrev7)}`);
 
+  // ── Vehicle stats (cost/km, group breakdown, km readings) ──
+  try {
+    const vehicleCtx = await buildVehicleStatsContext(driverId);
+    if (vehicleCtx) lines.push(vehicleCtx);
+  } catch (err) {
+    lines.push('\n⚠️ Δεν ήταν δυνατός ο υπολογισμός στατιστικών οχήματος.');
+  }
+
+  // ── Debts (Πιστώσεις / Χρεώσεις) ──
+  if (driverDebts && driverDebts.length > 0) {
+    lines.push('');
+    lines.push('── ΕΚΚΡΕΜΟΤΗΤΕΣ ΟΦΕΙΛΩΝ ──');
+    let totalOwed = 0, totalOwe = 0;
+    driverDebts.forEach(d => {
+      if (d.type === 'owed') totalOwed += d.amount || 0;
+      else totalOwe += d.amount || 0;
+    });
+    lines.push(`Πιστώσεις συνολικά: ${formatEUR(totalOwed)} (${driverDebts.filter(d => d.type === 'owed').length} εγγραφές)`);
+    lines.push(`Χρεώσεις συνολικά: ${formatEUR(totalOwe)} (${driverDebts.filter(d => d.type === 'owe').length} εγγραφές)`);
+    lines.push(`Ισοζύγιο: ${formatEUR(totalOwed - totalOwe)}`);
+    driverDebts.forEach(d => {
+      const dir = d.type === 'owed' ? 'Πίστωση από' : 'Χρέωση προς';
+      const note = d.note ? ` (${d.note})` : '';
+      lines.push(`  • ${dir}: ${d.name} — ${formatEUR(d.amount)} — ${d.date}${note}`);
+    });
+  } else {
+    lines.push('');
+    lines.push('── ΕΚΚΡΕΜΟΤΗΤΕΣ ΟΦΕΙΛΩΝ ──');
+    lines.push('Δεν υπάρχουν εκκρεμότητες οφειλών.');
+  }
+
   return lines.join('\n');
 }
 
@@ -248,14 +282,20 @@ function buildSystemPrompt() {
 - «Δεν έχω λεφτά στην τσέπη μου, τι πάει λάθος;» → δείξε καθαρά αυτού μήνα vs έξοδα, πού φεύγουν τα χρήματα
 - «Ξοδεύω πολλά;» → ανάλυση εξόδων κατά κατηγορία, σύγκριση με προηγ. μήνα
 - «Πού φεύγουν τα χρήματα;» → breakdown εξόδων με ποσά
+- «Πόσο μου κοστίζει το χιλιόμετρο;» → κόστος/km = Σ(έξοδα αυτοκινήτου με affectsKmCost) ÷ (maxKm − minKm). Αν δεν υπάρχουν 2+ καταγραφές km, ζήτα από τον οδηγό να συμπληρώνει τα km στις εργασίες service/συντήρηση/βλάβες.
+- «Πόσα ξοδεύω στο αμάξι;» → σύνολο εξόδων αυτοκινήτου, ανάλυση ανά ομάδα (service, συντήρηση, καύσιμα, νομικά, βλάβες, ατύχημα)
 - «Δουλεύω αρκετά;» → μέρες εργασίας, μέσος ανά μέρα, σύγκριση
 - «Με τον ρυθμό που πάω πού θα φτάσω;» → πρόβλεψη τέλους μήνα
+- «Ποιες πιστώσεις έχω;» / «Τι χρεώσεις έχω;» / «Ποιος μου χρωστάει;» / «Τι χρωστάω;» → δείξε τα δεδομένα από τις εκκρεμότητες οφειλών (debts). Πιστώσεις = μου χρωστάνε, Χρεώσεις = χρωστάω. Αν δεν υπάρχουν, πες ότι δεν έχει καταγράψει εκκρεμότητες.
 
 ΥΠΟΛΟΓΙΣΜΟΙ:
 - Υπόλοιπο (τσέπη) = Καθαρά έσοδα − Σύνολο εξόδων (αυτοκίνητο + προσωπικά + φόροι + πάγια + οικογένεια)
 - Μέσος/μέρα = Καθαρά ÷ Μέρες εργασίας
 - Πρόβλεψη = Μέσος/μέρα × Μέρες μήνα
 - Μεταβολή = (Τρέχον − Προηγούμενο) ÷ |Προηγούμενο| × 100%
+- Κόστος/km = Σ(έξοδα αυτοκινήτου που επηρεάζουν κόστος/km) ÷ (μέγιστο km − ελάχιστο km)
+  Πρέπει να υπάρχουν 2+ καταγραφές km (από service/συντήρηση/βλάβες) για να υπολογιστεί.
+  Αν δεν υπάρχουν, ενημέρωσε ότι χρειάζεται να συμπληρώνει τα km.
 
 ΜΟΡΦΟΠΟΙΗΣΗ:
 - Χρησιμοποίησε ελληνικά ποσά (€).
