@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "id": "ptxn_1771283070401_uzgy",
+    "partnerId": "partner_1771282899615_hkyy",
+    "driverId": "6985700007",
+    "type": "charge",
+    "amount": 18.28,
+    "description": "",
+    "date": "2026-02-17",
+    "createdAt": "2026-02-16T23:04:30.401Z"
+  },
+  {
+    "id": "ptxn_1771283115799_7tom",
+    "partnerId": "partner_1771282989119_gtiz",
+    "driverId": "6985700007",
+    "type": "payment",
+    "amount": 93.72,
+    "description": "",
+    "date": "2026-02-17",
+    "createdAt": "2026-02-16T23:05:15.799Z"
+  }
+]
