@@ -1,10 +1,31 @@
 /* ═══════════════════════════════════════════════════════
    Page Transition Loader – DriversSystem
-   Injects a spinner overlay and shows it during navigation
+   
+   Two roles:
+   A) INCOMING – page-loader.css creates a body::before/::after
+      overlay visible from first paint. This script adds
+      .ds-page-ready to <body> once everything is rendered,
+      which fades the overlay out and reveals the page instantly.
+   B) OUTGOING – Injects a .ds-page-loader div that is shown
+      on nav-click so the user sees a spinner while the browser
+      navigates to the next page.
    ═══════════════════════════════════════════════════════ */
 
 (() => {
-  /* ── 1. Create loader element ── */
+  /* ── A. Hide the INCOMING overlay once page is ready ── */
+  const markReady = () => {
+    requestAnimationFrame(() => {
+      document.body.classList.add('ds-page-ready');
+    });
+  };
+
+  if (document.readyState === 'complete') {
+    markReady();
+  } else {
+    window.addEventListener('load', markReady);
+  }
+
+  /* ── B. Create OUTGOING loader element ── */
   const loader = document.createElement('div');
   loader.className = 'ds-page-loader';
   loader.id = 'dsPageLoader';
@@ -15,10 +36,14 @@
   const show = () => loader.classList.add('ds-page-loader--active');
   const hide = () => loader.classList.remove('ds-page-loader--active');
 
-  /* ── 2. Hide on pageshow (handles bfcache / back-forward) ── */
-  window.addEventListener('pageshow', hide);
+  /* ── Hide on pageshow (handles bfcache / back-forward) ── */
+  window.addEventListener('pageshow', (e) => {
+    hide();
+    // Also re-mark body ready in case of bfcache restore
+    if (e.persisted) document.body.classList.add('ds-page-ready');
+  });
 
-  /* ── 3. Intercept internal navigation clicks (capturing phase) ── */
+  /* ── Intercept internal navigation clicks (capturing phase) ── */
   document.addEventListener('click', (e) => {
     const el = e.target.closest('a[href], [data-route]');
     if (!el) return;

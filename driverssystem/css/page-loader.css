@@ -1,9 +1,76 @@
 /* ═══════════════════════════════════════════════════════
    Page Transition Loader – DriversSystem
    Shows a spinner overlay during page navigation
-   Adapts to light / dark mode automatically
+   Adapts to light / dark mode automatically.
+   
+   Two layers:
+   A) body::before / ::after  – "incoming" cover.
+      Visible from first paint while the CSS lives in <head>.
+      Hidden once page-loader.js adds .ds-page-ready to <body>.
+   B) .ds-page-loader div     – "outgoing" cover.
+      Shown by JS on nav-click so the OLD page is masked
+      until the browser switches to the new document.
    ═══════════════════════════════════════════════════════ */
 
+/* ──────────────────────────────────────────────────────
+   A. INCOMING overlay (CSS-only, no HTML needed)
+   ────────────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: rgba(255, 255, 255, 0.95);
+  pointer-events: all;
+  transition: opacity 200ms ease;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  z-index: 99999;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border: 3px solid rgba(0, 0, 0, 0.08);
+  border-top-color: var(--ds-accent, #00c896);
+  border-radius: 50%;
+  animation: ds-spin 0.65s linear infinite;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+/* Once JS marks the body ready → fade away and stop blocking */
+body.ds-page-ready::before,
+body.ds-page-ready::after {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Hero page (dark bg) */
+.ds-hero-page::before {
+  background: rgba(11, 15, 26, 0.95);
+}
+.ds-hero-page::after {
+  border-color: rgba(255, 255, 255, 0.12);
+  border-top-color: var(--ds-accent, #00c896);
+}
+
+@media (prefers-color-scheme: dark) {
+  body::before {
+    background: rgba(11, 15, 26, 0.95);
+  }
+  body::after {
+    border-color: rgba(255, 255, 255, 0.12);
+    border-top-color: var(--ds-accent, #00c896);
+  }
+}
+
+/* ──────────────────────────────────────────────────────
+   B. OUTGOING overlay (JS-injected div)
+   ────────────────────────────────────────────────────── */
 .ds-page-loader {
   position: fixed;
   inset: 0;
