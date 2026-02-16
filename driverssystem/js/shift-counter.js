@@ -246,7 +246,8 @@
     }
 
     // No active shift — start new shift automatically
-    const now = new Date().toISOString();
+    // Backdate startISO by 5 seconds so the entry that triggered auto-start is included
+    const now = new Date(Date.now() - 5000).toISOString();
     const newShift = { active: true, startISO: now, total: 0, gross: 0, count: 0, lastActivity: Date.now() };
     saveShift(newShift);
     render(newShift);

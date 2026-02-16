@@ -18,6 +18,7 @@
  * @param {Function} deps.getTaxExpenseCategories
  * @param {Function} deps.getExpensesRange
  * @param {Function} deps.getEntriesRange
+ * @param {Function} deps.getDriverByPhone
  * @param {Object}   opts – { driverId }
  * @returns {Object} target data
  */
@@ -29,7 +30,8 @@ async function getDailyTarget(deps, opts = {}) {
     getPersonalExpenseCategories,
     getTaxExpenseCategories,
     getExpensesRange,
-    getEntriesRange
+    getEntriesRange,
+    getDriverByPhone
   } = deps;
 
   const now = greeceNow();
@@ -179,8 +181,48 @@ async function getDailyTarget(deps, opts = {}) {
   // Amount still needed
   const amountNeeded = Math.max(estimatedMonthly - totalNet, 0);
 
-  // Daily target
-  const dailyTarget = estimatedRemainingWorkDays > 0 ? amountNeeded / estimatedRemainingWorkDays : amountNeeded;
+  // Load driver savings target (deadline-aware)
+  let monthlySavings = 0;
+  let savingsNote = '';
+  if (opts.driverId && getDriverByPhone) {
+    try {
+      const driver = await getDriverByPhone(opts.driverId);
+      if (driver) {
+        // Calculate effective monthly savings from goals with deadlines
+        const goals = driver.savingsGoals || [];
+        if (goals.length > 0) {
+          const nowDate = greeceNow();
+          const nowYear = nowDate.getFullYear();
+          const nowMonth = nowDate.getMonth() + 1;
+          goals.forEach(g => {
+            if (g.deadline) {
+              const [dy, dm] = g.deadline.split('-').map(Number);
+              const monthsLeft = (dy - nowYear) * 12 + (dm - nowMonth);
+              if (monthsLeft > 0) {
+                monthlySavings += (g.amount || 0) / monthsLeft;
+              } else {
+                // Deadline passed or is this month — full amount this month
+                monthlySavings += g.amount || 0;
+              }
+            } else {
+              // Legacy goal without deadline — use amount as monthly
+              monthlySavings += g.amount || 0;
+            }
+          });
+        } else {
+          monthlySavings = driver.monthlySavings || 0;
+        }
+        savingsNote = driver.savingsNote || '';
+      }
+    } catch (_) { /* silent */ }
+  }
+
+  // Total needed including savings
+  const totalMonthlyNeeded = estimatedMonthly + monthlySavings;
+  const amountNeededWithSavings = Math.max(totalMonthlyNeeded - totalNet, 0);
+
+  // Daily target (includes savings)
+  const dailyTarget = estimatedRemainingWorkDays > 0 ? amountNeededWithSavings / estimatedRemainingWorkDays : amountNeededWithSavings;
 
   // Breakdown per €1 earned
   const breakdownPer1 = {};
@@ -260,6 +302,9 @@ async function getDailyTarget(deps, opts = {}) {
     byRole,
     breakdownPer1,
     costPerKm,
+    monthlySavings,
+    savingsNote,
+    totalMonthlyNeeded,
     todayNet: entries.filter(e => e.date === today).reduce((s, e) => s + (e.netAmount || 0), 0),
     todayGross: entries.filter(e => e.date === today).reduce((s, e) => s + (e.amount || 0), 0)
   };

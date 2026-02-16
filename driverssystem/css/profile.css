@@ -31,6 +31,11 @@
   gap: 16px;
 }
 
+/* When settings hub is open, shrink bottom padding so it fits on screen */
+.ds-profile-main.ds-settings-active {
+  padding-bottom: 20px;
+}
+
 /* ══════════════════════════════════════
    LOGIN SECTION
    ══════════════════════════════════════ */
@@ -258,7 +263,15 @@
 .ds-settings-overlay {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  min-height: calc(100vh - 140px);
+  min-height: calc(100dvh - 140px);
+  justify-content: flex-start;
+  animation: ds-fade-in 0.2s ease;
+}
+
+/* When sub-panels have more content, allow natural flow */
+.ds-settings-overlay.ds-settings--subpanel-open {
+  justify-content: flex-start;
 }
 
 @keyframes ds-fade-in {
@@ -276,6 +289,27 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 0 0 20px;
+}
+
+.ds-settings-back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.ds-settings-back-btn:active { background: #f3f4f6; }
+.ds-settings-back-btn svg {
+  width: 18px;
+  height: 18px;
+  color: #374151;
 }
 
 .ds-settings-panel__title {
@@ -284,8 +318,6 @@
   color: #1a1a2e;
   margin: 0;
 }
-
-/* (removed — replaced by .ds-review-back) */
 
 /* Settings sections */
 .ds-settings-section {
@@ -823,6 +855,12 @@
     border-bottom-color: rgba(255, 255, 255, 0.08);
   }
   .ds-settings-panel__title { color: #f0f4f8; }
+  .ds-settings-back-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .ds-settings-back-btn svg { color: #d0d8e0; }
+  .ds-settings-back-btn:active { background: rgba(255, 255, 255, 0.1); }
 
   .ds-settings-section__label { color: #6b7a8a; }
   .ds-settings-section__desc { color: #6b7a8a; }
@@ -933,4 +971,474 @@
   }
   .ds-edit-btn--cancel { background: rgba(255, 255, 255, 0.06); color: #8896a6; }
   .ds-edit-btn--delete { background: rgba(239, 68, 68, 0.12); color: #fca5a5; }
+
+}
+
+/* ══════════════════════════════════════
+   SETTINGS — CATEGORY LIST (separated cards)
+   ══════════════════════════════════════ */
+.ds-settings-catlist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.ds-settings-catrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  width: 100%;
+  border: none;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, transform 0.1s;
+  position: relative;
+}
+
+.ds-settings-catrow:active {
+  background: #f9fafb;
+  transform: scale(0.98);
+}
+
+.ds-settings-catrow__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ds-settings-catrow__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.ds-settings-catrow__icon--blue {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+}
+.ds-settings-catrow__icon--green {
+  background: rgba(0, 200, 150, 0.12);
+  color: #00c896;
+}
+.ds-settings-catrow__icon--purple {
+  background: rgba(139, 92, 246, 0.12);
+  color: #8b5cf6;
+}
+
+.ds-settings-catrow__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ds-settings-catrow__title {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.ds-settings-catrow__desc {
+  display: block;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-settings-catrow__chevron {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: #c5c9d0;
+}
+.ds-settings-catrow__chevron svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Sub-panel */
+.ds-settings-subpanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: ds-fade-in 0.2s ease;
+}
+
+/* ── Settings sub-panel sections: inherit card styles ── */
+.ds-settings-subpanel .ds-settings-section {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+}
+
+/* ══════════════════════════════════════
+   SAVINGS — MULTI-GOAL CARDS
+   ══════════════════════════════════════ */
+.ds-savings-goals {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ds-savings-goal-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+}
+
+.ds-savings-goal-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(0, 200, 150, 0.12);
+  color: #00c896;
+}
+.ds-savings-goal-card__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.ds-savings-goal-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ds-savings-goal-card__title {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-savings-goal-card__amount {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: #00c896;
+  margin-top: 2px;
+}
+
+.ds-savings-goal-card__deadline {
+  display: block;
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.ds-savings-goal-card__permonth {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3b82f6;
+  margin-top: 1px;
+}
+
+.ds-savings-goal-card__delete {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.ds-savings-goal-card__delete:active { background: rgba(239, 68, 68, 0.18); }
+.ds-savings-goal-card__delete svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Total row */
+.ds-savings-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+  margin-top: 4px;
+  margin-bottom: 16px;
+}
+
+.ds-savings-total__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.ds-savings-total__value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1a1a2e;
+}
+
+/* Add button */
+.ds-savings-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  border: 2px dashed #d1d5db;
+  border-radius: 14px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.15s;
+}
+.ds-savings-add-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.ds-savings-add-btn:active {
+  background: rgba(0, 200, 150, 0.04);
+  border-color: #00c896;
+  color: #00c896;
+}
+
+/* Empty state */
+.ds-savings-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════════════
+   SAVINGS — ADD/EDIT MODAL (bottom sheet)
+   ══════════════════════════════════════ */
+.ds-savings-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: ds-fade-in 0.2s ease;
+}
+
+.ds-savings-modal__dialog {
+  width: 100%;
+  max-width: 480px;
+  padding: 28px 24px 32px;
+  border-radius: 20px 20px 0 0;
+  background: #fff;
+  animation: ds-slide-up 0.25s ease;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+@keyframes ds-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.ds-savings-modal__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 24px;
+  text-align: center;
+}
+
+.ds-savings-modal__field {
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.ds-savings-modal__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.ds-savings-modal__input {
+  width: 100%;
+  max-width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+  outline: none;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Month input — prevent iOS overflow */
+.ds-savings-modal__input[type="month"] {
+  min-width: 0;
+  -webkit-min-logical-width: 0;
+}
+.ds-savings-modal__input:focus {
+  border-color: #00c896;
+  box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.12);
+}
+.ds-savings-modal__input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.ds-savings-modal__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.ds-savings-modal__btn {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.ds-savings-modal__btn:active { transform: scale(0.96); }
+
+.ds-savings-modal__btn--cancel {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.ds-savings-modal__btn--save {
+  background: linear-gradient(135deg, #00c896 0%, #00a87a 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 200, 150, 0.25);
+}
+
+/* ══════════════════════════════════════════════════
+   DARK MODE — Settings, Savings, Sub-panels
+   (Must appear AFTER light-mode rules to override)
+   ══════════════════════════════════════════════════ */
+@media (prefers-color-scheme: dark) {
+
+  /* ── Settings category cards ── */
+  .ds-settings-catrow {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+  .ds-settings-catrow:active {
+    background: rgba(255, 255, 255, 0.05);
+    transform: scale(0.98);
+  }
+  .ds-settings-catrow__icon--blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+  .ds-settings-catrow__icon--green { background: rgba(0, 200, 150, 0.15); color: #34d399; }
+  .ds-settings-catrow__icon--purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+  .ds-settings-catrow__title { color: #f0f4f8; }
+  .ds-settings-catrow__desc { color: #6b7a8a; }
+  .ds-settings-catrow__chevron { color: #4a5568; }
+
+  /* ── Settings sub-panel sections ── */
+  .ds-settings-subpanel .ds-settings-section {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  /* ── Savings goal cards ── */
+  .ds-savings-goal-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+  .ds-savings-goal-card__title { color: #f0f4f8; }
+  .ds-savings-goal-card__amount { color: #34d399; }
+  .ds-savings-goal-card__deadline { color: #6b7a8a; }
+  .ds-savings-goal-card__permonth { color: #6ea8fe; }
+  .ds-savings-goal-card__delete {
+    background: rgba(239, 68, 68, 0.12);
+    color: #fca5a5;
+  }
+
+  /* ── Savings total row ── */
+  .ds-savings-total {
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .ds-savings-total__label { color: #6b7a8a; }
+  .ds-savings-total__value { color: #f0f4f8; }
+
+  /* ── Savings add button ── */
+  .ds-savings-add-btn {
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #6b7a8a;
+  }
+  .ds-savings-add-btn:active {
+    border-color: #00c896;
+    color: #34d399;
+    background: rgba(0, 200, 150, 0.05);
+  }
+
+  /* ── Savings empty state ── */
+  .ds-savings-empty { color: #6b7a8a; }
+
+  /* ── Savings modal (bottom sheet) ── */
+  .ds-savings-modal { background: rgba(0, 0, 0, 0.7); }
+  .ds-savings-modal__dialog {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .ds-savings-modal__title { color: #f0f4f8; }
+  .ds-savings-modal__label { color: #d0d8e0; }
+  .ds-savings-modal__input {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #f0f4f8;
+  }
+  .ds-savings-modal__input::placeholder { color: rgba(255, 255, 255, 0.35); }
+  .ds-savings-modal__input:focus {
+    border-color: #00c896;
+    box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.2);
+  }
+  .ds-savings-modal__btn--cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: #d0d8e0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .ds-savings-modal__btn--save {
+    background: linear-gradient(135deg, #00c896 0%, #00a87a 100%);
+    color: #fff;
+  }
+  .ds-savings-modal__preview {
+    color: #34d399 !important;
+  }
 }

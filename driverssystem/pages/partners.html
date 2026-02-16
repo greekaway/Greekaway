@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <title>Συνεργάτες – DriversSystem</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/driverssystem/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/driverssystem/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/driverssystem/icons/apple-touch-icon.png">
+    <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
+    <link rel="stylesheet" href="/driverssystem/css/auth-gate.css" />
+    <script>if(!localStorage.getItem('ds_driver_phone')){document.documentElement.className+=' ds-gate-pending'}</script>
+    <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
+    <link rel="stylesheet" href="/driverssystem/css/footer.css" />
+    <link rel="stylesheet" href="/driverssystem/css/page-loader.css" />
+    <link rel="stylesheet" href="/driverssystem/css/partners.css" />
+    <link rel="stylesheet" href="/driverssystem/css/dark-mode.css" media="(prefers-color-scheme: dark)" />
+  </head>
+  <body class="ds-partners-page">
+
+    <!-- ═══════════════════════════════════════
+         VIEW 1 — PARTNER LIST
+         ═══════════════════════════════════════ -->
+    <div class="ds-partners-view" data-ds-partners-list-view>
+
+      <header class="ds-partners-header">
+        <h2 class="ds-partners-title">Συνεργάτες</h2>
+      </header>
+
+      <main class="ds-partners-main">
+
+        <!-- ── Partner Cards ── -->
+        <section class="ds-partners-list" data-ds-partners-list>
+          <div class="ds-partners-empty" data-ds-partners-empty>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.35; margin-bottom:8px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Δεν υπάρχουν συνεργάτες ακόμα</span>
+          </div>
+        </section>
+
+        <!-- ── FAB: Add Partner ── -->
+        <button class="ds-partners-fab" data-ds-partners-add-btn aria-label="Νέος Συνεργάτης">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+
+      </main>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         OVERLAY — ADD / EDIT PARTNER
+         ═══════════════════════════════════════ -->
+    <div class="ds-partners-overlay" data-ds-partners-overlay style="display:none">
+      <div class="ds-partners-dialog ds-card">
+        <h3 class="ds-partners-dialog__title" data-ds-partners-dialog-title>Νέος Συνεργάτης</h3>
+        <form data-ds-partners-form>
+          <input type="hidden" data-ds-partners-edit-id />
+
+          <div class="ds-partners-field">
+            <label class="ds-partners-field__label">Όνομα Συνεργάτη</label>
+            <input class="ds-partners-field__input" type="text" placeholder="π.χ. Hotel Athena, Νίκος"
+                   maxlength="100" data-ds-partners-name required />
+          </div>
+
+          <div class="ds-partners-field">
+            <label class="ds-partners-field__label">WhatsApp Κινητό (προαιρετικά)</label>
+            <input class="ds-partners-field__input" type="tel" placeholder="π.χ. +306912345678"
+                   maxlength="20" data-ds-partners-phone />
+          </div>
+
+          <div class="ds-partners-field">
+            <label class="ds-partners-field__label">Σημείωση (προαιρετικά)</label>
+            <input class="ds-partners-field__input" type="text" placeholder="π.χ. Ξενοδοχείο Σύνταγμα"
+                   maxlength="200" data-ds-partners-note />
+          </div>
+
+          <div class="ds-partners-actions">
+            <button type="button" class="ds-partners-btn ds-partners-btn--cancel" data-ds-partners-cancel>Ακύρωση</button>
+            <button type="button" class="ds-partners-btn ds-partners-btn--delete" data-ds-partners-delete style="display:none">Διαγραφή</button>
+            <button type="submit" class="ds-partners-btn ds-partners-btn--save">Αποθήκευση</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         VIEW 2 — PARTNER LEDGER (DETAIL)
+         ═══════════════════════════════════════ -->
+    <div class="ds-partners-view ds-partners-ledger-view" data-ds-partners-ledger-view style="display:none">
+
+      <header class="ds-partners-ledger-header">
+        <button class="ds-partners-back-btn" data-ds-partners-ledger-back aria-label="Πίσω">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <h2 class="ds-partners-ledger-name" data-ds-partners-ledger-name>—</h2>
+        <button class="ds-partners-edit-partner-btn" data-ds-partners-edit-btn aria-label="Επεξεργασία">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </header>
+
+      <!-- ── Balance Summary ── -->
+      <div class="ds-partners-ledger-summary">
+        <div class="ds-partners-ledger-sum ds-partners-ledger-sum--charges">
+          <span class="ds-partners-ledger-sum__label">Χρεώσεις</span>
+          <span class="ds-partners-ledger-sum__value" data-ds-partners-ledger-charges>0,00 €</span>
+        </div>
+        <div class="ds-partners-ledger-sum ds-partners-ledger-sum--payments">
+          <span class="ds-partners-ledger-sum__label">Πληρωμές</span>
+          <span class="ds-partners-ledger-sum__value" data-ds-partners-ledger-payments>0,00 €</span>
+        </div>
+        <div class="ds-partners-ledger-sum ds-partners-ledger-sum--balance">
+          <span class="ds-partners-ledger-sum__label">Υπόλοιπο</span>
+          <span class="ds-partners-ledger-sum__value" data-ds-partners-ledger-balance>0,00 €</span>
+        </div>
+      </div>
+
+      <!-- ── Transaction Table ── -->
+      <div class="ds-partners-ledger-table-wrap">
+        <table class="ds-partners-ledger-table">
+          <thead>
+            <tr>
+              <th>Ημ/νία</th>
+              <th>Περιγραφή</th>
+              <th>Ποσό</th>
+              <th>Υπόλοιπο</th>
+            </tr>
+          </thead>
+          <tbody data-ds-partners-ledger-body></tbody>
+        </table>
+        <div class="ds-partners-ledger-empty" data-ds-partners-ledger-empty>
+          Δεν υπάρχουν κινήσεις
+        </div>
+      </div>
+
+      <!-- ── Action Buttons ── -->
+      <div class="ds-partners-ledger-actions">
+        <button class="ds-partners-ledger-action-btn ds-partners-ledger-action-btn--add" data-ds-partners-txn-add>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Νέα Κίνηση
+        </button>
+        <button class="ds-partners-ledger-action-btn ds-partners-ledger-action-btn--share" data-ds-partners-share-btn>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Κοινοποίηση
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         OVERLAY — ADD TRANSACTION
+         ═══════════════════════════════════════ -->
+    <div class="ds-partners-overlay" data-ds-partners-txn-overlay style="display:none">
+      <div class="ds-partners-dialog ds-card">
+        <h3 class="ds-partners-dialog__title">Νέα Κίνηση</h3>
+        <form data-ds-partners-txn-form>
+
+          <div class="ds-partners-field">
+            <label class="ds-partners-field__label">Ποσό (€)</label>
+            <input class="ds-partners-field__input" type="text" inputmode="numeric"
+                   placeholder="0,00" data-ds-partners-txn-amount required />
+          </div>
+
+          <div class="ds-partners-field">
+            <label class="ds-partners-field__label">Τύπος</label>
+            <div class="ds-partners-type-toggle">
+              <button type="button" class="ds-partners-type-btn active" data-ds-partners-txn-type="charge">Χρέωση (σου χρωστάει)</button>
+              <button type="button" class="ds-partners-type-btn" data-ds-partners-txn-type="payment">Πληρωμή (σε πλήρωσε)</button>
+            </div>
+          </div>
+
+          <div class="ds-partners-field">
+            <label class="ds-partners-field__label">Περιγραφή</label>
+            <input class="ds-partners-field__input" type="text" placeholder="π.χ. Airport transfer, Πληρωμή, Κάβα"
+                   maxlength="200" data-ds-partners-txn-desc />
+          </div>
+
+          <div class="ds-partners-field">
+            <label class="ds-partners-field__label">Ημερομηνία</label>
+            <input class="ds-partners-field__input" type="date" data-ds-partners-txn-date />
+          </div>
+
+          <div class="ds-partners-actions">
+            <button type="button" class="ds-partners-btn ds-partners-btn--cancel" data-ds-partners-txn-cancel>Ακύρωση</button>
+            <button type="submit" class="ds-partners-btn ds-partners-btn--save">Αποθήκευση</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         OVERLAY — SHARE / WHATSAPP
+         ═══════════════════════════════════════ -->
+    <div class="ds-partners-overlay" data-ds-partners-share-overlay style="display:none">
+      <div class="ds-partners-dialog ds-card ds-partners-share-dialog">
+        <h3 class="ds-partners-dialog__title">Κοινοποίηση Σύνοψης</h3>
+
+        <!-- Filter -->
+        <div class="ds-partners-share-filter">
+          <label class="ds-partners-field__label">Περίοδος</label>
+          <div class="ds-partners-share-pills">
+            <button type="button" class="ds-partners-share-pill active" data-ds-partners-share-range="30">Τελ. 30 ημέρες</button>
+            <button type="button" class="ds-partners-share-pill" data-ds-partners-share-range="month">Τρέχων μήνας</button>
+            <button type="button" class="ds-partners-share-pill" data-ds-partners-share-range="custom">Από–Έως</button>
+          </div>
+          <div class="ds-partners-share-custom" data-ds-partners-share-custom style="display:none">
+            <input class="ds-partners-field__input" type="date" data-ds-partners-share-from />
+            <span style="color:var(--ds-muted)">—</span>
+            <input class="ds-partners-field__input" type="date" data-ds-partners-share-to />
+          </div>
+        </div>
+
+        <!-- Summary Preview -->
+        <div class="ds-partners-share-preview" data-ds-partners-share-preview>
+          <pre data-ds-partners-share-text></pre>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="ds-partners-share-actions">
+          <button type="button" class="ds-partners-btn ds-partners-btn--copy" data-ds-partners-share-copy>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Αντιγραφή
+          </button>
+          <button type="button" class="ds-partners-btn ds-partners-btn--whatsapp" data-ds-partners-share-wa>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+            WhatsApp
+          </button>
+        </div>
+
+        <button type="button" class="ds-partners-btn ds-partners-btn--cancel ds-partners-share-close" data-ds-partners-share-close>Κλείσιμο</button>
+      </div>
+    </div>
+
+    <div data-ds-footer-slot></div>
+
+    <script src="/driverssystem/js/driverssystem-config.js" defer></script>
+    <script src="/driverssystem/js/auth-gate.js" defer></script>
+    <script src="/driverssystem/js/page-loader.js" defer></script>
+    <script src="/driverssystem/js/footer.js" defer></script>
+    <script src="/driverssystem/js/partners.js" defer></script>
+  </body>
+</html>

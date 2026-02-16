@@ -12,6 +12,9 @@
       "beat",
       "street"
     ],
-    "defaultSource": ""
+    "defaultSource": "",
+    "monthlySavings": 0,
+    "savingsNote": "",
+    "savingsGoals": []
   }
 ]

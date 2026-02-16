@@ -111,6 +111,11 @@
   font-weight: 600;
 }
 
+.ds-summary-card--target .ds-summary-card__sub.ds-target--today-ok {
+  color: #059669;
+  font-weight: 600;
+}
+
 /* Gross card */
 .ds-summary-card--gross .ds-summary-card__value { color: #2563eb; }
 

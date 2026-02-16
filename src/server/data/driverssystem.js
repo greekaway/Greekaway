@@ -49,6 +49,8 @@ const DRIVERS_PATH = path.join(DATA_DIR, 'drivers.json');
 const EXPENSES_PATH = path.join(DATA_DIR, 'expenses.json');
 const DEBTS_PATH = path.join(DATA_DIR, 'debts.json');
 const APPOINTMENTS_PATH = path.join(DATA_DIR, 'appointments.json');
+const PARTNERS_PATH = path.join(DATA_DIR, 'partners.json');
+const PARTNER_TXNS_PATH = path.join(DATA_DIR, 'partner_transactions.json');
 
 // ── Seed persistent disk from repo defaults on first boot ──
 function seedIfNeeded() {
@@ -163,7 +165,7 @@ function getDefaultConfig() {
 // FEATURES (Module Toggle Flags)
 // =========================================================
 
-const FEATURE_DEFAULTS = { debts: true, appointments: true };
+const FEATURE_DEFAULTS = { debts: true, appointments: true, partners: true };
 
 async function getFeatures() {
   const cfg = readConfig();
@@ -745,7 +747,8 @@ function getDailyTarget(opts) {
     getPersonalExpenseCategories,
     getTaxExpenseCategories,
     getExpensesRange,
-    getEntriesRange
+    getEntriesRange,
+    getDriverByPhone
   }, opts);
 }
 
@@ -800,6 +803,15 @@ module.exports = {
   addAppointment,
   updateAppointment,
   deleteAppointment,
+  // Partners (Συνεργάτες / Τεφτέρι)
+  getPartners,
+  addPartner,
+  updatePartner,
+  deletePartner,
+  getPartnerTransactions,
+  addPartnerTransaction,
+  deletePartnerTransaction,
+  getPartnersSummary,
   // Features (Module Toggles)
   getFeatures,
   updateFeatures,
@@ -1028,7 +1040,10 @@ async function getDriverPreferences(phone) {
   if (!driver) return null;
   return {
     activeSources: driver.activeSources || [],
-    defaultSource: driver.defaultSource || ''
+    defaultSource: driver.defaultSource || '',
+    monthlySavings: driver.monthlySavings || 0,
+    savingsNote: driver.savingsNote || '',
+    savingsGoals: driver.savingsGoals || []
   };
 }
 
@@ -1042,10 +1057,29 @@ async function updateDriverPreferences(phone, prefs) {
   if (prefs.defaultSource !== undefined) {
     drivers[idx].defaultSource = prefs.defaultSource || '';
   }
+  if (prefs.monthlySavings !== undefined) {
+    drivers[idx].monthlySavings = parseFloat(prefs.monthlySavings) || 0;
+  }
+  if (prefs.savingsNote !== undefined) {
+    drivers[idx].savingsNote = (prefs.savingsNote || '').slice(0, 60);
+  }
+  if (prefs.savingsGoals !== undefined) {
+    drivers[idx].savingsGoals = Array.isArray(prefs.savingsGoals)
+      ? prefs.savingsGoals.slice(0, 5).map(g => ({
+          id: g.id || Date.now().toString(36),
+          title: (g.title || '').slice(0, 40),
+          amount: parseFloat(g.amount) || 0,
+          deadline: (g.deadline || '').slice(0, 7) // "YYYY-MM"
+        }))
+      : [];
+  }
   writeDrivers(drivers);
   return {
     activeSources: drivers[idx].activeSources || [],
-    defaultSource: drivers[idx].defaultSource || ''
+    defaultSource: drivers[idx].defaultSource || '',
+    monthlySavings: drivers[idx].monthlySavings || 0,
+    savingsNote: drivers[idx].savingsNote || '',
+    savingsGoals: drivers[idx].savingsGoals || []
   };
 }
 
@@ -1144,3 +1178,162 @@ async function deleteAppointment(id) {
   writeAppointments(appts);
   return true;
 }
+
+// =========================================================
+// PARTNERS (Συνεργάτες / Τεφτέρι)
+// =========================================================
+
+function readPartners() {
+  try {
+    if (!fs.existsSync(PARTNERS_PATH)) return [];
+    const raw = fs.readFileSync(PARTNERS_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writePartners(data) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tmpPath = `${PARTNERS_PATH}.tmp`;
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2));
+    fs.renameSync(tmpPath, PARTNERS_PATH);
+    return true;
+  } catch (err) {
+    console.error('[driverssystem] partners write failed:', err.message);
+    return false;
+  }
+}
+
+function readPartnerTxns() {
+  try {
+    if (!fs.existsSync(PARTNER_TXNS_PATH)) return [];
+    const raw = fs.readFileSync(PARTNER_TXNS_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writePartnerTxns(data) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tmpPath = `${PARTNER_TXNS_PATH}.tmp`;
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2));
+    fs.renameSync(tmpPath, PARTNER_TXNS_PATH);
+    return true;
+  } catch (err) {
+    console.error('[driverssystem] partner_transactions write failed:', err.message);
+    return false;
+  }
+}
+
+async function getPartners(filters = {}) {
+  let partners = readPartners();
+  if (filters.driverId) partners = partners.filter(p => p.driverId === filters.driverId);
+  partners.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'el'));
+  return partners;
+}
+
+async function addPartner(partner) {
+  const partners = readPartners();
+  const newPartner = {
+    id: `partner_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    driverId: partner.driverId || '',
+    name: (partner.name || '').trim(),
+    phone: (partner.phone || '').trim(),
+    note: (partner.note || '').trim(),
+    createdAt: new Date().toISOString()
+  };
+  if (!newPartner.name) throw new Error('Απαιτείται όνομα');
+  partners.push(newPartner);
+  writePartners(partners);
+  return newPartner;
+}
+
+async function updatePartner(id, updates) {
+  const partners = readPartners();
+  const idx = partners.findIndex(p => p.id === id);
+  if (idx === -1) return null;
+  const partner = partners[idx];
+  if (updates.name !== undefined) partner.name = (updates.name || '').trim();
+  if (updates.phone !== undefined) partner.phone = (updates.phone || '').trim();
+  if (updates.note !== undefined) partner.note = (updates.note || '').trim();
+  partner.updatedAt = new Date().toISOString();
+  partners[idx] = partner;
+  writePartners(partners);
+  return partner;
+}
+
+async function deletePartner(id) {
+  const partners = readPartners();
+  const idx = partners.findIndex(p => p.id === id);
+  if (idx === -1) return false;
+  partners.splice(idx, 1);
+  writePartners(partners);
+  // Also delete all transactions for this partner
+  const txns = readPartnerTxns();
+  const filtered = txns.filter(t => t.partnerId !== id);
+  writePartnerTxns(filtered);
+  return true;
+}
+
+async function getPartnerTransactions(partnerId, filters = {}) {
+  let txns = readPartnerTxns();
+  txns = txns.filter(t => t.partnerId === partnerId);
+  if (filters.driverId) txns = txns.filter(t => t.driverId === filters.driverId);
+  if (filters.from) txns = txns.filter(t => t.date >= filters.from);
+  if (filters.to) txns = txns.filter(t => t.date <= filters.to);
+  txns.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.createdAt || '').localeCompare(b.createdAt || ''));
+  return txns;
+}
+
+async function addPartnerTransaction(partnerId, txn) {
+  const txns = readPartnerTxns();
+  const type = (txn.type || '').toLowerCase();
+  if (!['charge', 'payment'].includes(type)) {
+    throw new Error('Μη έγκυρος τύπος: charge ή payment');
+  }
+  const newTxn = {
+    id: `ptxn_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    partnerId,
+    driverId: txn.driverId || '',
+    type,
+    amount: parseFloat(txn.amount) || 0,
+    description: (txn.description || '').trim(),
+    date: txn.date || greeceDateStr(),
+    createdAt: new Date().toISOString()
+  };
+  txns.push(newTxn);
+  writePartnerTxns(txns);
+  return newTxn;
+}
+
+async function deletePartnerTransaction(txnId) {
+  const txns = readPartnerTxns();
+  const idx = txns.findIndex(t => t.id === txnId);
+  if (idx === -1) return false;
+  txns.splice(idx, 1);
+  writePartnerTxns(txns);
+  return true;
+}
+
+async function getPartnersSummary(driverId) {
+  const txns = readPartnerTxns();
+  const driverTxns = driverId ? txns.filter(t => t.driverId === driverId) : txns;
+  const summary = {};
+  driverTxns.forEach(t => {
+    if (!summary[t.partnerId]) {
+      summary[t.partnerId] = { balance: 0, lastTxnDate: '' };
+    }
+    const s = summary[t.partnerId];
+    if (t.type === 'charge') s.balance += (t.amount || 0);
+    else s.balance -= (t.amount || 0);
+    if (!s.lastTxnDate || t.date > s.lastTxnDate) s.lastTxnDate = t.date;
+  });
+  return summary;
+}
+

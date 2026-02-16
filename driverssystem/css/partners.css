@@ -1,0 +1,807 @@
+/* ═══════════════════════════════════════════════
+   DriversSystem — Partners (Συνεργάτες / Τεφτέρι)
+   ═══════════════════════════════════════════════ */
+
+.ds-partners-page {
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.ds-partners-page *,
+.ds-partners-page *::before,
+.ds-partners-page *::after,
+.ds-partners-overlay *,
+.ds-partners-overlay *::before,
+.ds-partners-overlay *::after {
+  box-sizing: border-box;
+}
+
+/* ── Header ── */
+.ds-partners-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 18px 16px 10px;
+  background: var(--ds-bg);
+}
+
+.ds-partners-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ds-text, #fff);
+}
+
+/* ── Main ── */
+.ds-partners-main {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Partner List ── */
+.ds-partners-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ds-partners-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--ds-muted, #888);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Partner Card ── */
+.ds-partner-card {
+  background: var(--ds-card, #1a1d26);
+  border-radius: var(--ds-radius, 14px);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--ds-shadow, 0 2px 8px rgba(0,0,0,.18));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s, box-shadow 0.12s;
+  scroll-margin-top: 84px;
+}
+
+.ds-partner-card:active {
+  transform: scale(0.98);
+}
+
+.ds-partner-card__avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #059669, #34d399);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.ds-partner-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ds-partner-card__name {
+  display: block;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ds-text, #fff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-partner-card__last-txn {
+  display: block;
+  font-size: 12px;
+  color: var(--ds-muted, #888);
+  margin-top: 2px;
+}
+
+.ds-partner-card__balance {
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ds-partner-card__balance--positive {
+  color: var(--ds-accent, #34d399);
+}
+
+.ds-partner-card__balance--negative {
+  color: #f56565;
+}
+
+.ds-partner-card__balance--zero {
+  color: var(--ds-muted, #888);
+}
+
+/* ── FAB ── */
+.ds-partners-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 108px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #059669, #34d399);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(5, 150, 105, 0.45);
+  cursor: pointer;
+  z-index: 30;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s;
+}
+
+.ds-partners-fab svg {
+  width: 26px;
+  height: 26px;
+}
+
+.ds-partners-fab:active {
+  transform: scale(0.9);
+}
+
+/* ═══════════════════════════════════
+   Overlay (shared for partner + txn + share)
+   ═══════════════════════════════════ */
+.ds-partners-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 10px 0 env(safe-area-inset-bottom, 0px);
+  animation: dsPartnersFadeIn 180ms ease;
+}
+
+/* ═══════════════════════════════════
+   Delete Confirm Dialog (shared pattern)
+   ═══════════════════════════════════ */
+.ds-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  padding: 20px;
+  animation: ds-overlay-in 0.18s ease;
+}
+
+.ds-confirm-dialog {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  max-width: 340px;
+  width: 100%;
+  padding: 24px 22px 20px;
+  animation: ds-confirm-pop 0.22s ease;
+}
+
+.ds-confirm-dialog__icon {
+  width: 48px; height: 48px;
+  margin: 0 auto 14px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 22px;
+}
+
+.ds-confirm-dialog__title {
+  margin: 0 0 6px; font-size: 17px; font-weight: 700;
+  color: #1a2232; text-align: center;
+}
+
+.ds-confirm-dialog__body {
+  margin: 0 0 20px; font-size: 14px; line-height: 1.45;
+  color: #64748b; text-align: center;
+}
+
+.ds-confirm-dialog__actions { display: flex; gap: 10px; }
+
+.ds-confirm-btn {
+  flex: 1; padding: 12px 10px; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: transform 0.12s, opacity 0.12s;
+}
+.ds-confirm-btn:active { transform: scale(0.96); }
+
+.ds-confirm-btn--cancel {
+  background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;
+}
+.ds-confirm-btn--danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ds-confirm-overlay { background: rgba(0, 0, 0, 0.65); }
+  .ds-confirm-dialog {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+  }
+  .ds-confirm-dialog__icon { background: rgba(239, 68, 68, 0.15); }
+  .ds-confirm-dialog__title { color: #f0f4f8; }
+  .ds-confirm-dialog__body { color: #8896a6; }
+  .ds-confirm-btn--cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: #d0d8e0; border-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+@keyframes ds-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ds-confirm-pop {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes dsPartnersFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ds-partners-dialog {
+  width: 100%;
+  max-width: 520px;
+  background: var(--ds-card, #1a1d26);
+  border-radius: 22px 22px 0 0;
+  padding: 24px 20px 32px;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: dsPartnersSlideUp 220ms ease;
+}
+
+@keyframes dsPartnersSlideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.ds-partners-dialog__title {
+  margin: 0 0 18px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ds-text, #fff);
+}
+
+.ds-partners-field {
+  margin-bottom: 14px;
+}
+
+.ds-partners-field__label {
+  display: block;
+  font-size: 13px;
+  color: var(--ds-muted, #888);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.ds-partners-field__input {
+  width: 100%;
+  max-width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ds-text, #fff);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+/* Constrain native date picker width on mobile */
+.ds-partners-field__input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+}
+
+.ds-partners-field__input:focus {
+  border-color: var(--ds-accent, #34d399);
+}
+
+.ds-partners-field__input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Type Toggle ── */
+.ds-partners-type-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.ds-partners-type-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ds-muted, #888);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-partners-type-btn.active[data-ds-partners-txn-type="charge"] {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: var(--ds-accent, #34d399);
+  color: var(--ds-accent, #34d399);
+}
+
+.ds-partners-type-btn.active[data-ds-partners-txn-type="payment"] {
+  background: rgba(245, 101, 101, 0.15);
+  border-color: #f56565;
+  color: #f56565;
+}
+
+/* ── Action Buttons ── */
+.ds-partners-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.ds-partners-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ds-partners-btn:active {
+  transform: scale(0.96);
+}
+
+.ds-partners-btn--cancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ds-muted, #888);
+}
+
+.ds-partners-btn--save {
+  background: linear-gradient(135deg, #059669, #34d399);
+  color: #fff;
+}
+
+.ds-partners-btn--delete {
+  background: rgba(245, 101, 101, 0.15);
+  color: #f56565;
+}
+
+.ds-partners-btn--copy {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ds-text, #fff);
+}
+
+.ds-partners-btn--whatsapp {
+  background: #25d366;
+  color: #fff;
+}
+
+/* ═══════════════════════════════════
+   LEDGER VIEW (Partner Detail)
+   ═══════════════════════════════════ */
+.ds-partners-ledger-view {
+  padding-bottom: 140px;
+}
+
+.ds-partners-ledger-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 14px 16px 10px;
+  background: var(--ds-bg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ds-partners-back-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: var(--ds-card, #1a1d26);
+  color: var(--ds-text, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s;
+  flex-shrink: 0;
+}
+
+.ds-partners-back-btn:active {
+  transform: scale(0.92);
+}
+
+.ds-partners-ledger-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ds-text, #fff);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-partners-edit-partner-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: var(--ds-card, #1a1d26);
+  color: var(--ds-muted, #888);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+/* ── Summary Cards ── */
+.ds-partners-ledger-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 8px 16px 4px;
+}
+
+.ds-partners-ledger-sum {
+  background: var(--ds-card, #1a1d26);
+  border-radius: var(--ds-radius, 14px);
+  padding: 12px 10px;
+  text-align: center;
+  box-shadow: var(--ds-shadow, 0 2px 8px rgba(0,0,0,.18));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ds-partners-ledger-sum__label {
+  display: block;
+  font-size: 11px;
+  color: var(--ds-muted, #888);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ds-partners-ledger-sum__value {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ds-partners-ledger-sum--charges .ds-partners-ledger-sum__value {
+  color: var(--ds-accent, #34d399);
+}
+
+.ds-partners-ledger-sum--payments .ds-partners-ledger-sum__value {
+  color: #f56565;
+}
+
+.ds-partners-ledger-sum--balance .ds-partners-ledger-sum__value {
+  color: var(--ds-text, #fff);
+}
+
+.ds-partners-ledger-sum--balance .ds-partners-ledger-sum__value.positive {
+  color: var(--ds-accent, #34d399);
+}
+
+.ds-partners-ledger-sum--balance .ds-partners-ledger-sum__value.negative {
+  color: #f56565;
+}
+
+/* ── Transaction Table ── */
+.ds-partners-ledger-table-wrap {
+  max-width: 520px;
+  margin: 8px auto;
+  padding: 0 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ds-partners-ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ds-partners-ledger-table thead th {
+  text-align: left;
+  color: var(--ds-muted, #888);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+.ds-partners-ledger-table tbody td {
+  padding: 10px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--ds-text, #fff);
+  vertical-align: middle;
+}
+
+.ds-partners-ledger-table tbody tr {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.ds-partners-ledger-table tbody tr:active {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ds-partners-txn-amount--charge {
+  color: var(--ds-accent, #34d399);
+  font-weight: 600;
+}
+
+.ds-partners-txn-amount--payment {
+  color: #f56565;
+  font-weight: 600;
+}
+
+.ds-partners-txn-balance--positive {
+  color: var(--ds-accent, #34d399);
+}
+
+.ds-partners-txn-balance--negative {
+  color: #f56565;
+}
+
+.ds-partners-ledger-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--ds-muted, #888);
+  font-size: 14px;
+}
+
+/* ── Ledger Action Buttons ── */
+.ds-partners-ledger-actions {
+  max-width: 520px;
+  margin: 12px auto;
+  padding: 0 16px;
+  display: flex;
+  gap: 10px;
+}
+
+.ds-partners-ledger-action-btn {
+  flex: 1;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform 0.1s;
+}
+
+.ds-partners-ledger-action-btn:active {
+  transform: scale(0.96);
+}
+
+.ds-partners-ledger-action-btn--add {
+  background: linear-gradient(135deg, #059669, #34d399);
+  color: #fff;
+}
+
+.ds-partners-ledger-action-btn--share {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ds-text, #fff);
+}
+
+/* ═══════════════════════════════════
+   SHARE DIALOG
+   ═══════════════════════════════════ */
+.ds-partners-share-dialog {
+  max-height: 92vh;
+}
+
+.ds-partners-share-filter {
+  margin-bottom: 14px;
+}
+
+.ds-partners-share-pills {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.ds-partners-share-pill {
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--ds-muted, #888);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-partners-share-pill.active {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: var(--ds-accent, #34d399);
+  color: var(--ds-accent, #34d399);
+}
+
+.ds-partners-share-custom {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.ds-partners-share-custom .ds-partners-field__input {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ds-partners-share-preview {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.ds-partners-share-preview pre {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ds-text, #fff);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+}
+
+.ds-partners-share-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ds-partners-share-close {
+  width: 100%;
+}
+
+/* ═══════════════════════════════════
+   LIGHT MODE
+   ═══════════════════════════════════ */
+@media (prefers-color-scheme: light) {
+  .ds-partners-overlay {
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .ds-partners-field__input {
+    border-color: rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.03);
+    color: #1a1d26;
+  }
+
+  .ds-partners-field__input::placeholder {
+    color: rgba(0, 0, 0, 0.3);
+  }
+
+  .ds-partners-type-btn {
+    border-color: rgba(0, 0, 0, 0.12);
+    color: #666;
+  }
+
+  .ds-partners-btn--cancel {
+    background: rgba(0, 0, 0, 0.06);
+    color: #666;
+  }
+
+  .ds-partners-btn--copy {
+    background: rgba(0, 0, 0, 0.06);
+    color: #333;
+  }
+
+  .ds-partners-share-pill {
+    border-color: rgba(0, 0, 0, 0.12);
+    color: #666;
+  }
+
+  .ds-partners-share-preview {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .ds-partners-share-preview pre {
+    color: #333;
+  }
+
+  .ds-partners-ledger-table thead th {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .ds-partners-ledger-table tbody td {
+    border-bottom-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .ds-partner-card {
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .ds-partners-ledger-sum {
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .ds-partners-ledger-action-btn--share {
+    background: rgba(0, 0, 0, 0.06);
+    color: #333;
+  }
+}
+
+/* ── Responsive ── */
+@media (min-width: 600px) {
+  .ds-partners-dialog {
+    border-radius: 20px;
+    margin-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .ds-partners-overlay {
+    align-items: center;
+  }
+}

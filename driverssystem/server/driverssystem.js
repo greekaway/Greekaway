@@ -135,7 +135,8 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   // Feature gate middleware — blocks API access to disabled modules
   const FEATURE_API_PREFIXES = {
     '/api/driverssystem/debts': 'debts',
-    '/api/driverssystem/appointments': 'appointments'
+    '/api/driverssystem/appointments': 'appointments',
+    '/api/driverssystem/partners': 'partners'
   };
 
   app.use((req, res, next) => {
@@ -921,6 +922,117 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       return res.redirect(isDev ? '/driverssystem/profile' : '/profile');
     }
     return sendPageWithFooter(res, path.join(pagesDir, 'debts.html'));
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // PARTNERS (Συνεργάτες / Τεφτέρι — Private per driver)
+  // ══════════════════════════════════════════════════════════
+
+  // Get partners for a driver
+  app.get('/api/driverssystem/partners', async (req, res) => {
+    try {
+      const { driverId } = req.query;
+      const filters = {};
+      if (driverId) filters.driverId = driverId;
+      const partners = await dataLayer.getPartners(filters);
+      return res.json(partners);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Get partners summary (balances + last txn date)
+  app.get('/api/driverssystem/partners/summary', async (req, res) => {
+    try {
+      const { driverId } = req.query;
+      const summary = await dataLayer.getPartnersSummary(driverId);
+      return res.json(summary);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Create partner
+  app.post('/api/driverssystem/partners', async (req, res) => {
+    try {
+      const { driverId, name, phone, note } = req.body || {};
+      if (!name) {
+        return res.status(400).json({ error: 'Απαιτείται όνομα' });
+      }
+      const partner = await dataLayer.addPartner({ driverId, name, phone, note });
+      return res.status(201).json(partner);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // Update partner
+  app.put('/api/driverssystem/partners/:id', async (req, res) => {
+    try {
+      const result = await dataLayer.updatePartner(req.params.id, req.body);
+      if (!result) return res.status(404).json({ error: 'Not found' });
+      return res.json(result);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // Delete partner (and all transactions)
+  app.delete('/api/driverssystem/partners/:id', async (req, res) => {
+    try {
+      const ok = await dataLayer.deletePartner(req.params.id);
+      if (!ok) return res.status(404).json({ error: 'Not found' });
+      return res.json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Get transactions for a partner
+  app.get('/api/driverssystem/partners/:id/transactions', async (req, res) => {
+    try {
+      const filters = {};
+      if (req.query.driverId) filters.driverId = req.query.driverId;
+      if (req.query.from) filters.from = req.query.from;
+      if (req.query.to) filters.to = req.query.to;
+      const txns = await dataLayer.getPartnerTransactions(req.params.id, filters);
+      return res.json(txns);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Add transaction to a partner
+  app.post('/api/driverssystem/partners/:id/transactions', async (req, res) => {
+    try {
+      const { driverId, type, amount, description, date } = req.body || {};
+      if (!type || !amount) {
+        return res.status(400).json({ error: 'Απαιτείται τύπος και ποσό' });
+      }
+      const txn = await dataLayer.addPartnerTransaction(req.params.id, { driverId, type, amount, description, date });
+      return res.status(201).json(txn);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // Delete transaction
+  app.delete('/api/driverssystem/partners/:partnerId/transactions/:txnId', async (req, res) => {
+    try {
+      const ok = await dataLayer.deletePartnerTransaction(req.params.txnId);
+      if (!ok) return res.status(404).json({ error: 'Not found' });
+      return res.json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Partners page route ──
+  router.get('/partners', (req, res) => {
+    if (!dataLayer.isFeatureEnabled('partners')) {
+      return res.redirect(isDev ? '/driverssystem/profile' : '/profile');
+    }
+    return sendPageWithFooter(res, path.join(pagesDir, 'partners.html'));
   });
 
   // ══════════════════════════════════════════════════════════

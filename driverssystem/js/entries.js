@@ -376,14 +376,25 @@
       targetValueEl.textContent = fmtEur(t.dailyTarget || 0);
 
       if (targetRemainingEl) {
-        const todayNet = t.earnedThisMonth || 0;
-        const needed = t.monthlyExpenses || 0;
-        const remaining = needed - todayNet;
+        const todayNet = t.todayNet || 0;
+        const dailyTarget = t.dailyTarget || 0;
+        const totalNeeded = t.totalMonthlyNeeded || t.monthlyExpenses || 0;
+        const earnedMonth = t.earnedThisMonth || 0;
+        const remaining = totalNeeded - earnedMonth;
+        const estDays = t.estimatedRemainingWorkDays || 0;
+
         if (remaining <= 0) {
-          targetRemainingEl.textContent = 'Στόχος επιτεύχθηκε';
+          // Monthly target fully reached
+          targetRemainingEl.textContent = 'Στόχος μήνα επιτεύχθηκε ✓';
+          targetRemainingEl.classList.add('ds-target--reached');
+        } else if (todayNet >= dailyTarget && dailyTarget > 0) {
+          // Today's target met, but month not done yet
+          targetRemainingEl.textContent = `Ημέρα OK · Υπόλοιπο: ${fmtEur(remaining)} ✓`;
           targetRemainingEl.classList.add('ds-target--reached');
         } else {
-          targetRemainingEl.textContent = `Υπόλοιπο μήνα: ${fmtEur(remaining)}`;
+          // Still working — show remaining + estimated work days
+          const daysLabel = estDays === 1 ? 'μέρα' : 'μέρες';
+          targetRemainingEl.textContent = `Λείπουν ${fmtEur(remaining)} · ~${estDays} ${daysLabel}`;
           targetRemainingEl.classList.remove('ds-target--reached');
         }
       }
