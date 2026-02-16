@@ -715,7 +715,8 @@ const DRIVERSSYSTEM_PAGE_MAP = {
   '/personal-expenses': 'personal-expenses.html',
   '/tax-expenses': 'tax-expenses.html',
   '/debts': 'debts.html',
-  '/appointments': 'appointments.html'
+  '/appointments': 'appointments.html',
+  '/partners': 'partners.html'
 };
 
 // DriversSystem prefix routes (e.g. /car-expenses/abc123 → car-expenses.html)
@@ -749,6 +750,23 @@ app.use((req, res, next) => {
   // A) DriversSystem API routes — let them pass through to registered handlers
   if (url.startsWith('/api/driverssystem/') || url.startsWith('/api/admin/driverssystem/')) {
     return next();
+  }
+
+  // A.1) Serve a self-destructing service worker to clear stale Greekaway caches
+  if (url === '/service-worker.js') {
+    res.set('Content-Type', 'application/javascript; charset=utf-8');
+    res.set('Cache-Control', 'no-store');
+    return res.send(
+      '// DriversSystem — clear stale Greekaway service worker\n' +
+      'self.addEventListener("install", () => self.skipWaiting());\n' +
+      'self.addEventListener("activate", (e) => {\n' +
+      '  e.waitUntil(\n' +
+      '    caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k))))\n' +
+      '      .then(() => self.registration.unregister())\n' +
+      '      .then(() => self.clients.matchAll()).then(cs => cs.forEach(c => c.navigate(c.url)))\n' +
+      '  );\n' +
+      '});\n'
+    );
   }
 
   // B) Uploads folder (shared between brands — persistent disk)
@@ -806,7 +824,7 @@ app.use((req, res, next) => {
   // D) DriversSystem pages
   if (DRIVERSSYSTEM_PAGE_MAP[url]) {
     // Feature gate: redirect to profile if module is disabled
-    const PAGE_FEATURE_GATE = { '/debts': 'debts', '/appointments': 'appointments' };
+    const PAGE_FEATURE_GATE = { '/debts': 'debts', '/appointments': 'appointments', '/partners': 'partners' };
     const gatedFeature = PAGE_FEATURE_GATE[url];
     if (gatedFeature) {
       try {

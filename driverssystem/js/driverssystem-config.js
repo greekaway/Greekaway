@@ -112,6 +112,16 @@
     return `${prefix}${normalized}`;
   };
 
+  // ── Clean up stale Greekaway service workers on DriversSystem domain ──
+  if (isDriversSystemDomain() && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      regs.forEach((reg) => {
+        // Force the browser to fetch the updated /service-worker.js (self-destructing version)
+        reg.update().catch(() => {});
+      });
+    }).catch(() => {});
+  }
+
   window.DriversSystemConfig = {
     load,
     applyHero,
