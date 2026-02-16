@@ -110,11 +110,12 @@
   text-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
 
+/* 3×3 grid for 9 key cards */
 .ds-perf__grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .ds-perf__card {
@@ -122,22 +123,27 @@
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 14px;
-  padding: 12px 10px;
+  padding: 10px 6px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 62px;
 }
 
 .ds-perf__label {
   display: block;
-  font-size: 11px;
+  font-size: 9px;
   color: rgba(255,255,255,0.55);
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
   margin-bottom: 4px;
+  line-height: 1.2;
 }
 
 .ds-perf__value {
   display: block;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: #fff;
 }
@@ -146,135 +152,51 @@
   color: var(--ds-accent, #00c896);
 }
 
-/* Projections rows */
-.ds-perf__proj {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.ds-perf__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0;
-}
-
-.ds-perf__row--highlight {
-  border-top: 1px solid rgba(255,255,255,0.15);
-  padding-top: 10px;
-  margin-top: 2px;
-}
-
-.ds-perf__row-label {
-  font-size: 13px;
-  color: rgba(255,255,255,0.6);
-}
-
-.ds-perf__row-value {
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.ds-perf__row-value--expense {
+.ds-perf__value--expense {
   color: #f87171;
 }
 
-.ds-perf__row-value.positive { color: #34d399; }
-.ds-perf__row-value.negative { color: #f87171; }
-
-/* Expense breakdown (always visible) */
-.ds-perf__expense-section {
-  margin-top: 6px;
-}
-
-.ds-perf__expense-title {
-  font-size: 12px;
-  color: rgba(255,255,255,0.5);
-  padding: 4px 0;
-  user-select: none;
-}
-
-.ds-perf__breakdown {
+/* ── Compact Details (5 remaining numbers) ── */
+.ds-perf__details {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 8px;
+  gap: 12px;
+  margin-top: 4px;
 }
 
-.ds-perf__break-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: rgba(255,255,255,0.5);
-  padding: 2px 0;
+.ds-perf__details-group {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px;
 }
 
-/* Spacer pushes shift card toward bottom of dashboard */
-.ds-shift-spacer {
-  flex: 1 1 0;
-  min-height: 12px;
-}
-
-/* ═══ Shift Counter Card ═══ */
-.ds-shift {
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 20px;
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 16px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
-  -webkit-tap-highlight-color: transparent;
-  flex-shrink: 0;
-}
-
-.ds-shift:active {
-  transform: scale(0.98);
-}
-
-.ds-shift__amount {
-  font-size: 28px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -0.5px;
-  font-variant-numeric: tabular-nums;
-}
-
-.ds-shift__label {
-  font-size: 14px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.55);
+.ds-perf__details-head {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
   text-transform: uppercase;
-  letter-spacing: 1.2px;
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
-/* ── Shift States ── */
-.ds-shift--active {
-  background: rgba(0, 200, 150, 0.18);
-  border-color: rgba(0, 200, 150, 0.4);
-  box-shadow: 0 0 24px rgba(0, 200, 150, 0.15);
+.ds-perf__details-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 3px 0;
 }
 
-.ds-shift--active .ds-shift__label {
-  color: #00c896;
+.ds-perf__details-row span:first-child {
+  color: rgba(255,255,255,0.45);
 }
 
-.ds-shift--stopped {
-  background: rgba(248, 113, 113, 0.18);
-  border-color: rgba(248, 113, 113, 0.4);
-  box-shadow: 0 0 24px rgba(248, 113, 113, 0.15);
-}
-
-.ds-shift--stopped .ds-shift__label {
-  color: #f87171;
+.ds-perf__details-row span:last-child {
+  color: rgba(255,255,255,0.75);
+  font-weight: 600;
 }
 
 /* ── Welcome Dashboard (scrollable content area) ── */
@@ -388,19 +310,19 @@
   .ds-perf__label { color: #6b7280 !important; }
   .ds-perf__value { color: #1a2232 !important; }
   .ds-perf__value--accent { color: #059669 !important; }
+  .ds-perf__value--expense { color: #dc2626 !important; }
 
-  .ds-perf__row-label { color: #6b7280 !important; }
-  .ds-perf__row-value { color: #1a2232 !important; }
-  .ds-perf__row-value--expense { color: #dc2626 !important; }
-  .ds-perf__row-value.positive { color: #059669 !important; }
-  .ds-perf__row-value.negative { color: #dc2626 !important; }
-
-  .ds-perf__row--highlight { border-top-color: rgba(0,0,0,0.1) !important; }
-
-  .ds-perf__summary { color: rgba(0,0,0,0.45) !important; }
-  .ds-perf__summary:hover { color: rgba(0,0,0,0.7) !important; }
-  .ds-perf__break-row { color: #6b7280 !important; }
-  .ds-perf__expense-title { color: #6b7280 !important; }
+  /* Compact details — light mode */
+  .ds-perf__details-group {
+    background: rgba(0,0,0,0.03) !important;
+    border-color: rgba(0,0,0,0.08) !important;
+  }
+  .ds-perf__details-head {
+    color: #6b7280 !important;
+    border-bottom-color: rgba(0,0,0,0.08) !important;
+  }
+  .ds-perf__details-row span:first-child { color: #9ca3af !important; }
+  .ds-perf__details-row span:last-child { color: #374151 !important; }
 
   /* Shift counter — light mode */
   .ds-shift {

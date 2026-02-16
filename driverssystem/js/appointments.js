@@ -49,6 +49,32 @@
   const dropoffInput = $('[data-ds-appt-dropoff]');
   const amountInput  = $('[data-ds-appt-amount]');
   const noteInput    = $('[data-ds-appt-note]');
+
+  // ── ATM-style amount input ──
+  let _apptAmountCents = 0;
+  const _centsToDisplay = (c) => (c / 100).toFixed(2).replace('.', ',');
+
+  if (amountInput) {
+    amountInput.value = '0,00';
+    amountInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab' || e.key === 'Enter') return;
+      e.preventDefault();
+      if (e.key >= '0' && e.key <= '9') {
+        if (_apptAmountCents >= 10000000) return;
+        _apptAmountCents = _apptAmountCents * 10 + parseInt(e.key);
+        amountInput.value = _centsToDisplay(_apptAmountCents);
+      } else if (e.key === 'Backspace') {
+        _apptAmountCents = Math.floor(_apptAmountCents / 10);
+        amountInput.value = _centsToDisplay(_apptAmountCents);
+      } else if (e.key === 'Delete') {
+        _apptAmountCents = 0;
+        amountInput.value = '0,00';
+      }
+    });
+    // Keep value in sync without blocking other events
+    amountInput.addEventListener('beforeinput', (e) => e.preventDefault());
+    amountInput.addEventListener('paste', (e) => e.preventDefault());
+  }
   const editIdInput  = $('[data-ds-appt-edit-id]');
   const deleteBtn    = $('[data-ds-appt-delete]');
   const calMonthEl   = $('[data-ds-appt-cal-month]');
@@ -65,6 +91,13 @@
       window.location.href = prefix + '/profile';
     });
   }
+
+  // Clear validation error on input
+  [clientInput, dateInput, timeInput].forEach(inp => {
+    if (!inp) return;
+    inp.addEventListener('input', () => inp.classList.remove('ds-appt-field--error'));
+    inp.addEventListener('change', () => inp.classList.remove('ds-appt-field--error'));
+  });
 
   // ══════════════════════════════════════
   // HELPERS
@@ -337,12 +370,16 @@
     const startWeekday = (firstDay.getDay() + 6) % 7; // Monday = 0
     const daysInMonth = lastDay.getDate();
 
-    // Count appointments per date this month
+    // Count appointments per date this month + track statuses
     const prefix = calYear + '-' + String(calMonth + 1).padStart(2, '0');
     const countByDate = {};
+    const statusByDate = {};
     appointments.forEach(a => {
       if (a.date && a.date.startsWith(prefix)) {
         countByDate[a.date] = (countByDate[a.date] || 0) + 1;
+        // Track dominant status: pending > cancelled > completed
+        if (!statusByDate[a.date]) statusByDate[a.date] = a.status || 'pending';
+        else if ((a.status || 'pending') === 'pending') statusByDate[a.date] = 'pending';
       }
     });
 
@@ -370,11 +407,16 @@
 
       el.textContent = d;
 
-      // Dot for appointments
+      // Dot for appointments — colored by status
       const cnt = countByDate[dateStr] || 0;
       if (cnt > 0) {
         const dot = document.createElement('span');
-        dot.className = 'ds-appt-cal-dot' + (cnt > 1 ? ' ds-appt-cal-dot--multi' : '');
+        const dotStatus = statusByDate[dateStr] || 'pending';
+        let dotClass = 'ds-appt-cal-dot';
+        if (cnt > 1) dotClass += ' ds-appt-cal-dot--multi';
+        if (dotStatus === 'completed') dotClass += ' ds-appt-cal-dot--completed';
+        else if (dotStatus === 'cancelled') dotClass += ' ds-appt-cal-dot--cancelled';
+        dot.className = dotClass;
         el.appendChild(dot);
       }
 
@@ -502,8 +544,11 @@
     timeInput.value = '';
     pickupInput.value = '';
     dropoffInput.value = '';
-    amountInput.value = '';
+    _apptAmountCents = 0;
+    amountInput.value = '0,00';
     noteInput.value = '';
+    // Clear any validation errors
+    [clientInput, dateInput, timeInput].forEach(inp => inp && inp.classList.remove('ds-appt-field--error'));
     setStatus('pending');
     overlay.style.display = '';
     clientInput.focus();
@@ -519,7 +564,8 @@
     timeInput.value = appt.time || '';
     pickupInput.value = appt.pickup || '';
     dropoffInput.value = appt.dropoff || '';
-    amountInput.value = appt.amount || '';
+    _apptAmountCents = Math.round((parseFloat(appt.amount) || 0) * 100);
+    amountInput.value = _centsToDisplay(_apptAmountCents);
     noteInput.value = appt.note || '';
     setStatus(appt.status || 'pending');
     overlay.style.display = '';
@@ -555,9 +601,22 @@
   // ── Save ──
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // Required fields validation
+    let valid = true;
+    [clientInput, dateInput, timeInput].forEach(inp => {
+      if (!inp) return;
+      const val = (inp.value || '').trim();
+      if (!val) {
+        inp.classList.add('ds-appt-field--error');
+        valid = false;
+      } else {
+        inp.classList.remove('ds-appt-field--error');
+      }
+    });
+    if (!valid) return;
+
     const clientName = (clientInput.value || '').trim();
-    if (!clientName) return;
-    if (!dateInput.value) return;
 
     const data = {
       driverId: phone,
@@ -567,7 +626,7 @@
       time: (timeInput.value || '').trim(),
       pickup: (pickupInput.value || '').trim(),
       dropoff: (dropoffInput.value || '').trim(),
-      amount: parseFloat(amountInput.value) || 0,
+      amount: _apptAmountCents / 100,
       note: (noteInput.value || '').trim(),
       status: selectedStatus
     };

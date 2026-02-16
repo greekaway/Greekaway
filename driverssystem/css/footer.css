@@ -16,24 +16,38 @@
   z-index: 50;
 }
 
-/* Light background pages */
-.ds-page .ds-footer,
-.ds-ai-page .ds-footer {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-}
+/* ══════════════════════════════════
+   LIGHT MODE FOOTER
+   Auto-detected from device settings.
+   Applies to ALL page types.
+   ══════════════════════════════════ */
+@media (prefers-color-scheme: light) {
+  .ds-footer {
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  }
 
-.ds-page .ds-footer__item,
-.ds-ai-page .ds-footer__item {
-  color: #1a1a2e;
-}
+  .ds-footer__item {
+    color: #374151;
+  }
 
-.ds-page .ds-footer__item.active,
-.ds-ai-page .ds-footer__item.active {
-  color: #00c896;
-  background: rgba(0, 200, 150, 0.12);
-  box-shadow: 0 0 16px rgba(128, 128, 128, 0.3);
+  .ds-footer__item.active {
+    color: #059669;
+    background: rgba(0, 200, 150, 0.12);
+    box-shadow: 0 0 16px rgba(5, 150, 105, 0.2);
+  }
+
+  /* Icons in light mode — darken */
+  .ds-footer__icon svg {
+    filter: brightness(0);
+    opacity: 0.65;
+  }
+
+  .ds-footer__item.active .ds-footer__icon svg {
+    filter: brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(503%) hue-rotate(118deg);
+    opacity: 1;
+  }
 }
 
 .ds-footer__item {

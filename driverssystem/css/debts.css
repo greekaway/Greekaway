@@ -284,6 +284,7 @@
   padding: 24px 20px 32px;
   padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
   animation: ds-debts-slide-up 0.25s ease;
+  background: var(--ds-card);
 }
 
 .ds-debts-dialog__title {

@@ -8,6 +8,8 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/driverssystem/icons/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/driverssystem/icons/apple-touch-icon.png">
     <link rel="preload" href="/driverssystem/css/driverssystem-base.css" as="style" />
+    <link rel="stylesheet" href="/driverssystem/css/auth-gate.css" />
+    <script>if(!localStorage.getItem('ds_driver_phone')){document.documentElement.className+=' ds-gate-pending'}</script>
     <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
     <link rel="stylesheet" href="/driverssystem/css/footer.css" />
     <link rel="stylesheet" href="/driverssystem/css/page-loader.css" />
@@ -76,9 +78,9 @@
 
           <div class="ds-debts-field">
             <label class="ds-debts-field__label">Ποσό (€)</label>
-            <input class="ds-debts-field__input" type="number" step="0.01" min="0.01"
-                   inputmode="decimal" pattern="[0-9]*"
-                   placeholder="0,00" data-ds-debts-amount required />
+            <input class="ds-debts-field__input" type="text" inputmode="numeric"
+                   placeholder="0,00"
+                   data-ds-debts-amount required />
           </div>
 
           <div class="ds-debts-field">
@@ -156,6 +158,7 @@
     <div data-ds-footer-slot></div>
 
     <script src="/driverssystem/js/driverssystem-config.js" defer></script>
+    <script src="/driverssystem/js/auth-gate.js" defer></script>
     <script src="/driverssystem/js/page-loader.js" defer></script>
     <script src="/driverssystem/js/footer.js" defer></script>
     <script src="/driverssystem/js/debts.js" defer></script>

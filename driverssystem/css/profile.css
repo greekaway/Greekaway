@@ -698,6 +698,7 @@
   width: 100%; max-width: 480px; padding: 24px;
   border-radius: 20px 20px 0 0; animation: ds-slide-up 0.25s ease;
   max-height: 90vh; overflow-y: auto;
+  background: #fff;
 }
 .ds-edit-dialog__title {
   font-size: 18px; font-weight: 700; color: #1a1a2e;
@@ -853,6 +854,12 @@
   }
   .ds-settings-default-row__name { color: #f0f4f8; }
   .ds-settings-default-row__lock { color: #34d399; }
+
+  /* Settings none label */
+  .ds-settings-none-label { color: #6b7a8a; }
+
+  /* Profile field label */
+  .ds-profile-field__label { color: #8896a6; }
 
   /* Delete confirm (dark) */
   .ds-confirm-overlay { background: rgba(0, 0, 0, 0.65) !important; }

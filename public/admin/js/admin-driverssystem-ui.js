@@ -473,6 +473,7 @@
       const affectsKmCost = ($('#dsCecItemAffectsKm') || {}).value === 'true';
       const requiresKm = ($('#dsCecItemRequiresKm') || {}).value === 'true';
       const allocation = ($('#dsCecItemAllocation') || {}).value || 'vehicle';
+      const expenseRole = ($('#dsCecItemExpenseRole') || {}).value || 'professional';
 
       const group = carExpCats[editingItemGroupIdx];
       if (!group) return;
@@ -486,9 +487,10 @@
         it.affectsKmCost = affectsKmCost;
         it.requiresKm = requiresKm;
         it.allocation = allocation;
+        it.expenseRole = expenseRole;
       } else {
         const id = name.toLowerCase().replace(/[^a-zα-ωά-ώ0-9]/gi, '_').replace(/_+/g, '_');
-        group.items.push({ id, name: name.trim(), active, type, affectsKmCost, requiresKm, allocation });
+        group.items.push({ id, name: name.trim(), active, type, affectsKmCost, requiresKm, allocation, expenseRole });
       }
 
       await saveCarExpCats();
@@ -529,6 +531,7 @@
       $('#dsCecItemAffectsKm').value = 'true';
       $('#dsCecItemRequiresKm').value = 'false';
       $('#dsCecItemAllocation').value = 'vehicle';
+      $('#dsCecItemExpenseRole').value = 'professional';
       itemForm.hidden = false;
       groupForm.hidden = true;
       itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -547,6 +550,7 @@
       $('#dsCecItemAffectsKm').value = String(item.affectsKmCost !== false);
       $('#dsCecItemRequiresKm').value = String(item.requiresKm === true);
       $('#dsCecItemAllocation').value = item.allocation || 'vehicle';
+      $('#dsCecItemExpenseRole').value = item.expenseRole || 'professional';
       itemForm.hidden = false;
       groupForm.hidden = true;
       itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -686,6 +690,7 @@
       const affectsKmCost = ($('#dsPecItemAffectsKm') || {}).value === 'true';
       const requiresKm = ($('#dsPecItemRequiresKm') || {}).value === 'true';
       const allocation = ($('#dsPecItemAllocation') || {}).value || 'vehicle';
+      const expenseRole = ($('#dsPecItemExpenseRole') || {}).value || 'personal';
 
       const group = persExpCats[editingPersItemGroupIdx];
       if (!group) return;
@@ -699,9 +704,10 @@
         it.affectsKmCost = affectsKmCost;
         it.requiresKm = requiresKm;
         it.allocation = allocation;
+        it.expenseRole = expenseRole;
       } else {
         const id = name.toLowerCase().replace(/[^a-zα-ωά-ώ0-9]/gi, '_').replace(/_+/g, '_');
-        group.items.push({ id, name: name.trim(), active, type, affectsKmCost, requiresKm, allocation });
+        group.items.push({ id, name: name.trim(), active, type, affectsKmCost, requiresKm, allocation, expenseRole });
       }
 
       await savePersExpCats();
@@ -741,6 +747,7 @@
       $('#dsPecItemAffectsKm').value = 'false';
       $('#dsPecItemRequiresKm').value = 'false';
       $('#dsPecItemAllocation').value = 'vehicle';
+      $('#dsPecItemExpenseRole').value = 'personal';
       itemForm.hidden = false;
       groupForm.hidden = true;
       itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -759,6 +766,7 @@
       $('#dsPecItemAffectsKm').value = String(item.affectsKmCost === true);
       $('#dsPecItemRequiresKm').value = String(item.requiresKm === true);
       $('#dsPecItemAllocation').value = item.allocation || 'vehicle';
+      $('#dsPecItemExpenseRole').value = item.expenseRole || 'personal';
       itemForm.hidden = false;
       groupForm.hidden = true;
       itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -898,6 +906,7 @@
       const affectsKmCost = ($('#dsTecItemAffectsKm') || {}).value === 'true';
       const requiresKm = ($('#dsTecItemRequiresKm') || {}).value === 'true';
       const allocation = ($('#dsTecItemAllocation') || {}).value || 'vehicle';
+      const expenseRole = ($('#dsTecItemExpenseRole') || {}).value || 'tax';
 
       const group = taxExpCats[editingTaxItemGroupIdx];
       if (!group) return;
@@ -911,9 +920,10 @@
         it.affectsKmCost = affectsKmCost;
         it.requiresKm = requiresKm;
         it.allocation = allocation;
+        it.expenseRole = expenseRole;
       } else {
         const id = name.toLowerCase().replace(/[^a-zα-ωά-ώ0-9]/gi, '_').replace(/_+/g, '_');
-        group.items.push({ id, name: name.trim(), active, type, affectsKmCost, requiresKm, allocation });
+        group.items.push({ id, name: name.trim(), active, type, affectsKmCost, requiresKm, allocation, expenseRole });
       }
 
       await saveTaxExpCats();
@@ -953,6 +963,7 @@
       $('#dsTecItemAffectsKm').value = 'false';
       $('#dsTecItemRequiresKm').value = 'false';
       $('#dsTecItemAllocation').value = 'vehicle';
+      $('#dsTecItemExpenseRole').value = 'tax';
       itemForm.hidden = false;
       groupForm.hidden = true;
       itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -971,6 +982,7 @@
       $('#dsTecItemAffectsKm').value = String(item.affectsKmCost === true);
       $('#dsTecItemRequiresKm').value = String(item.requiresKm === true);
       $('#dsTecItemAllocation').value = item.allocation || 'vehicle';
+      $('#dsTecItemExpenseRole').value = item.expenseRole || 'tax';
       itemForm.hidden = false;
       groupForm.hidden = true;
       itemForm.scrollIntoView({ behavior: 'smooth', block: 'center' });

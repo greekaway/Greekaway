@@ -198,8 +198,8 @@
 }
 
 .ds-appt-card--completed .ds-appt-card__time-badge {
-  background: rgba(100, 100, 100, 0.12);
-  color: var(--ds-muted);
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
 }
 
 .ds-appt-card--cancelled .ds-appt-card__time-badge {
@@ -282,8 +282,8 @@
 }
 
 .ds-appt-card__status--completed {
-  background: rgba(0, 200, 150, 0.15);
-  color: var(--ds-accent);
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
 }
 
 .ds-appt-card__status--cancelled {
@@ -392,6 +392,14 @@
   bottom: 4px;
 }
 
+.ds-appt-cal-dot--completed {
+  background: #3b82f6;
+}
+
+.ds-appt-cal-dot--cancelled {
+  background: #f56565;
+}
+
 .ds-appt-cal-day--selected .ds-appt-cal-dot {
   background: #fff;
 }
@@ -401,6 +409,12 @@
   width: 7px;
   height: 5px;
   border-radius: 3px;
+}
+
+/* Validation error highlight */
+.ds-appt-field--error {
+  border: 2px solid #f56565 !important;
+  box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.2) !important;
 }
 
 /* Calendar agenda (selected day details) */
@@ -538,6 +552,7 @@
   border-radius: 20px 20px 0 0;
   padding: 24px 20px calc(20px + env(safe-area-inset-bottom, 0px));
   animation: dsApptSlideUp 0.3s ease;
+  background: var(--ds-card);
 }
 
 @keyframes dsApptSlideUp {

@@ -229,32 +229,32 @@ async function updateTripSources(items) {
 function getDefaultCarExpenseCategories() {
   return [
     { id: 'service', name: 'Service', active: true, items: [
-      { id: 'small_service', name: 'Μικρό service', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' },
-      { id: 'large_service', name: 'Μεγάλο service', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' }
+      { id: 'small_service', name: 'Μικρό service', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle', expenseRole: 'professional' },
+      { id: 'large_service', name: 'Μεγάλο service', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle', expenseRole: 'professional' }
     ]},
     { id: 'maintenance', name: 'Συντήρηση', active: true, items: [
-      { id: 'brakes', name: 'Φρένα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' },
-      { id: 'tires', name: 'Λάστιχα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' },
-      { id: 'battery', name: 'Μπαταρία', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' },
-      { id: 'shocks', name: 'Αμορτισέρ', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' }
+      { id: 'brakes', name: 'Φρένα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle', expenseRole: 'professional' },
+      { id: 'tires', name: 'Λάστιχα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle', expenseRole: 'professional' },
+      { id: 'battery', name: 'Μπαταρία', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle', expenseRole: 'professional' },
+      { id: 'shocks', name: 'Αμορτισέρ', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle', expenseRole: 'professional' }
     ]},
     { id: 'fuel_movement', name: 'Καύσιμα & Κίνηση', active: true, items: [
-      { id: 'fuel', name: 'Καύσιμα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
-      { id: 'tolls', name: 'Διόδια', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'trip' },
-      { id: 'parking', name: 'Πάρκινγκ', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'trip' },
-      { id: 'car_wash', name: 'Πλύσιμο', active: true, type: 'frequent', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' }
+      { id: 'fuel', name: 'Καύσιμα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: false, allocation: 'vehicle', expenseRole: 'professional' },
+      { id: 'tolls', name: 'Διόδια', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'trip', expenseRole: 'professional' },
+      { id: 'parking', name: 'Πάρκινγκ', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'trip', expenseRole: 'professional' },
+      { id: 'car_wash', name: 'Πλύσιμο', active: true, type: 'frequent', affectsKmCost: true, requiresKm: false, allocation: 'vehicle', expenseRole: 'professional' }
     ]},
     { id: 'legal', name: 'Νομικά / Υποχρεωτικά', active: true, items: [
-      { id: 'insurance', name: 'Ασφάλεια', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
-      { id: 'road_tax', name: 'Τέλη κυκλοφορίας', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
-      { id: 'kteo', name: 'ΚΤΕΟ', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' }
+      { id: 'insurance', name: 'Ασφάλεια', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle', expenseRole: 'professional' },
+      { id: 'road_tax', name: 'Τέλη κυκλοφορίας', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle', expenseRole: 'professional' },
+      { id: 'kteo', name: 'ΚΤΕΟ', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle', expenseRole: 'professional' }
     ]},
     { id: 'breakdowns', name: 'Βλάβες / Έκτακτα', active: true, items: [
-      { id: 'emergency_part', name: 'Έκτακτο ανταλλακτικό', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' },
-      { id: 'roadside_assist', name: 'Οδική βοήθεια', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle' }
+      { id: 'emergency_part', name: 'Έκτακτο ανταλλακτικό', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle', expenseRole: 'professional' },
+      { id: 'roadside_assist', name: 'Οδική βοήθεια', active: true, type: 'frequent', affectsKmCost: true, requiresKm: true, allocation: 'vehicle', expenseRole: 'professional' }
     ]},
     { id: 'accident', name: 'Ατύχημα', active: true, items: [
-      { id: 'crash', name: 'Τρακάρισμα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' }
+      { id: 'crash', name: 'Τρακάρισμα', active: true, type: 'frequent', affectsKmCost: true, requiresKm: false, allocation: 'vehicle', expenseRole: 'professional' }
     ]}
   ];
 }
@@ -279,23 +279,23 @@ async function updateCarExpenseCategories(items) {
 function getDefaultPersonalExpenseCategories() {
   return [
     { id: 'housing', name: 'Στέγαση', active: true, items: [
-      { id: 'rent', name: 'Ενοίκιο', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
-      { id: 'shared_costs', name: 'Κοινόχρηστα', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' }
+      { id: 'rent', name: 'Ενοίκιο', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'personal' },
+      { id: 'shared_costs', name: 'Κοινόχρηστα', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'personal' }
     ]},
     { id: 'bills', name: 'Λογαριασμοί', active: true, items: [
-      { id: 'electricity', name: 'Ρεύμα', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
-      { id: 'water', name: 'Νερό', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
-      { id: 'internet_phone', name: 'Internet / Τηλέφωνο', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
-      { id: 'subscriptions', name: 'Συνδρομές', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' }
+      { id: 'electricity', name: 'Ρεύμα', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'personal' },
+      { id: 'water', name: 'Νερό', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'personal' },
+      { id: 'internet_phone', name: 'Internet / Τηλέφωνο', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'personal' },
+      { id: 'subscriptions', name: 'Συνδρομές', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'personal' }
     ]},
     { id: 'groceries', name: 'Τρόφιμα', active: true, items: [
-      { id: 'supermarket', name: 'Σούπερ μάρκετ', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' }
+      { id: 'supermarket', name: 'Σούπερ μάρκετ', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'personal' }
     ]},
     { id: 'personal_misc', name: 'Προσωπικά έξοδα', active: true, items: [
-      { id: 'health', name: 'Υγεία / Φάρμακα', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
-      { id: 'kids_school', name: 'Παιδιά / Σχολείο', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
-      { id: 'clothing', name: 'Ρούχα / Αγορές', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
-      { id: 'emergency', name: 'Έκτακτο έξοδο', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' }
+      { id: 'health', name: 'Υγεία / Φάρμακα', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'personal' },
+      { id: 'kids_school', name: 'Παιδιά / Σχολείο', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'personal' },
+      { id: 'clothing', name: 'Ρούχα / Αγορές', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'personal' },
+      { id: 'emergency', name: 'Έκτακτο έξοδο', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'personal' }
     ]}
   ];
 }
@@ -320,19 +320,19 @@ async function updatePersonalExpenseCategories(items) {
 function getDefaultTaxExpenseCategories() {
   return [
     { id: 'tax_fiscal', name: 'Φορολογικά', active: true, items: [
-      { id: 'income_tax', name: 'Φόρος εισοδήματος', active: true, type: 'annual', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
-      { id: 'tax_prepayment', name: 'Προκαταβολή φόρου', active: true, type: 'annual', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
-      { id: 'accountant', name: 'Λογιστής', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' }
+      { id: 'income_tax', name: 'Φόρος εισοδήματος', active: true, type: 'annual', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'tax' },
+      { id: 'tax_prepayment', name: 'Προκαταβολή φόρου', active: true, type: 'annual', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'tax' },
+      { id: 'accountant', name: 'Λογιστής', active: true, type: 'monthly', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'tax' }
     ]},
     { id: 'tax_insurance', name: 'Ασφαλιστικά', active: true, items: [
-      { id: 'efka_tebe', name: 'ΕΦΚΑ / ΤΕΒΕ', active: true, type: 'monthly', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
-      { id: 'health_insurance', name: 'Ασφάλεια υγείας', active: true, type: 'monthly', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' }
+      { id: 'efka_tebe', name: 'ΕΦΚΑ / ΤΕΒΕ', active: true, type: 'monthly', affectsKmCost: true, requiresKm: false, allocation: 'vehicle', expenseRole: 'professional' },
+      { id: 'health_insurance', name: 'Ασφάλεια υγείας', active: true, type: 'monthly', affectsKmCost: true, requiresKm: false, allocation: 'vehicle', expenseRole: 'professional' }
     ]},
     { id: 'tax_professional', name: 'Επαγγελματικές Υποχρεώσεις', active: true, items: [
-      { id: 'union', name: 'Σωματείο', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
-      { id: 'licenses', name: 'Άδειες', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' },
-      { id: 'stamps', name: 'Παράβολα', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle' },
-      { id: 'profession_fees', name: 'Τέλη επαγγέλματος', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle' }
+      { id: 'union', name: 'Σωματείο', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle', expenseRole: 'professional' },
+      { id: 'licenses', name: 'Άδειες', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle', expenseRole: 'professional' },
+      { id: 'stamps', name: 'Παράβολα', active: true, type: 'frequent', affectsKmCost: false, requiresKm: false, allocation: 'vehicle', expenseRole: 'tax' },
+      { id: 'profession_fees', name: 'Τέλη επαγγέλματος', active: true, type: 'annual', affectsKmCost: true, requiresKm: false, allocation: 'vehicle', expenseRole: 'professional' }
     ]}
   ];
 }
@@ -732,6 +732,23 @@ async function getDashboard(opts = {}) {
   };
 }
 
+// =========================================================
+// DAILY TARGET CALCULATOR  (logic in driverssystem-target.js)
+// =========================================================
+const { getDailyTarget: _getDailyTarget } = require('./driverssystem-target');
+
+function getDailyTarget(opts) {
+  return _getDailyTarget({
+    greeceNow,
+    greeceDateStr,
+    getCarExpenseCategories,
+    getPersonalExpenseCategories,
+    getTaxExpenseCategories,
+    getExpensesRange,
+    getEntriesRange
+  }, opts);
+}
+
 module.exports = {
   getConfig,
   updateConfig,
@@ -753,6 +770,8 @@ module.exports = {
   getStatsRange,
   // Dashboard
   getDashboard,
+  // Daily Target
+  getDailyTarget,
   // Expenses
   getExpenses,
   addExpense,

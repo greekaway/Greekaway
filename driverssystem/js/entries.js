@@ -228,8 +228,12 @@
         // Haptic feedback (if available)
         if (navigator.vibrate) navigator.vibrate(50);
 
-        // Reload list & summary
-        await Promise.all([loadEntries(), loadSummary()]);
+        // Reload list & summary & target, auto-start shift
+        await Promise.all([loadEntries(), loadDailyTarget()]);
+        // Auto-start shift if not active
+        if (typeof window._dsShiftAutoStart === 'function') {
+          window._dsShiftAutoStart();
+        }
       } else {
         const err = await res.json().catch(() => ({}));
         alert(err.error || 'Σφάλμα αποθήκευσης');
@@ -349,76 +353,45 @@
           const res = await api(`/api/driverssystem/entries/${id}`, 'DELETE');
           if (res.ok) {
             if (navigator.vibrate) navigator.vibrate(30);
-            await Promise.all([loadEntries(), loadSummary()]);
+            await Promise.all([loadEntries(), loadDailyTarget()]);
           }
         });
       });
     } catch (_) { /* silent */ }
   };
 
-  // ── Load summary ──
-  const loadSummary = async () => {
+  // ── Load daily target ──
+  const loadDailyTarget = async () => {
+    const targetValueEl = $('[data-ds-target-value]');
+    const targetRemainingEl = $('[data-ds-target-remaining]');
+    if (!targetValueEl) return;
+
     try {
       const driverPhone = localStorage.getItem('ds_driver_phone') || '';
-      const res = await api(`/api/driverssystem/entries/summary?date=${currentDate}&driverId=${encodeURIComponent(driverPhone)}`);
+      const params = new URLSearchParams({ driverId: driverPhone });
+      const res = await api(`/api/driverssystem/daily-target?${params}`);
       if (!res.ok) return;
-      const s = await res.json();
+      const t = await res.json();
 
-      const grossEl = $('[data-ds-summary-gross]');
-      const netEl = $('[data-ds-summary-net]');
-      const countEl = $('[data-ds-summary-count]');
+      targetValueEl.textContent = fmtEur(t.dailyTarget || 0);
 
-      if (grossEl) grossEl.textContent = fmtEur(s.totalGross);
-      if (netEl) netEl.textContent = fmtEur(s.totalNet);
-      if (countEl) countEl.textContent = s.count || 0;
+      if (targetRemainingEl) {
+        const todayNet = t.earnedThisMonth || 0;
+        const needed = t.monthlyExpenses || 0;
+        const remaining = needed - todayNet;
+        if (remaining <= 0) {
+          targetRemainingEl.textContent = 'Στόχος επιτεύχθηκε';
+          targetRemainingEl.classList.add('ds-target--reached');
+        } else {
+          targetRemainingEl.textContent = `Υπόλοιπο μήνα: ${fmtEur(remaining)}`;
+          targetRemainingEl.classList.remove('ds-target--reached');
+        }
+      }
     } catch (_) { /* silent */ }
   };
 
-  // ── Date navigation ──
+  // ── Date navigation — always today (date picker removed) ──
   let today = greeceToday();
-
-  const updateNextBtnState = () => {
-    const nextBtn = $('[data-ds-date-next]');
-    if (nextBtn) {
-      nextBtn.disabled = currentDate >= today;
-    }
-  };
-
-  const setDate = (dateStr) => {
-    // Clamp to today — no future dates
-    if (dateStr > today) dateStr = today;
-    currentDate = dateStr;
-    const picker = $('[data-ds-date-picker]');
-    if (picker) picker.value = dateStr;
-    updateNextBtnState();
-    loadEntries();
-    loadSummary();
-  };
-
-  const initDateNav = () => {
-    const picker = $('[data-ds-date-picker]');
-    const prevBtn = $('[data-ds-date-prev]');
-    const nextBtn = $('[data-ds-date-next]');
-
-    if (picker) {
-      picker.value = currentDate;
-      picker.max = today; // HTML max attribute blocks future dates in native picker
-      picker.addEventListener('change', () => setDate(picker.value));
-    }
-
-    const shiftDate = (days) => {
-      const d = new Date(currentDate + 'T12:00:00');
-      d.setDate(d.getDate() + days);
-      const newDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-      if (newDate > today) return; // extra guard
-      setDate(newDate);
-    };
-
-    if (prevBtn) prevBtn.addEventListener('click', () => shiftDate(-1));
-    if (nextBtn) nextBtn.addEventListener('click', () => shiftDate(1));
-
-    updateNextBtnState();
-  };
 
   // ── Bind form ──
   const initForm = () => {
@@ -460,10 +433,7 @@
       amountInput.removeAttribute('readonly');
       amountInput.setAttribute('inputmode', 'numeric');
       // Prevent native input handling (we handle keydown)
-      amountInput.addEventListener('input', (e) => {
-        e.preventDefault();
-        amountInput.value = centsToDisplay(amountCents);
-      });
+      amountInput.addEventListener('beforeinput', (e) => e.preventDefault());
 
       // Prevent paste
       amountInput.addEventListener('paste', (e) => e.preventDefault());
@@ -478,11 +448,10 @@
   await loadSources();
   await loadDriverPrefs();
   renderSourcePills();
-  initDateNav();
   initForm();
   updateNetPreview();
   updateSaveBtn();
-  await Promise.all([loadEntries(), loadSummary()]);
+  await Promise.all([loadEntries(), loadDailyTarget()]);
 
   // ── Live updates: poll every 20s + midnight detection ──
   let lastKnownDate = greeceToday();
@@ -493,11 +462,12 @@
       // Day changed — update today reference and switch to new day
       lastKnownDate = nowDate;
       today = nowDate;
-      setDate(nowDate);
+      currentDate = nowDate;
+      await Promise.all([loadEntries(), loadDailyTarget()]);
       return;
     }
     // Refresh current view
-    await Promise.all([loadEntries(), loadSummary()]);
+    await Promise.all([loadEntries(), loadDailyTarget()]);
   };
 
   setInterval(liveRefresh, 20000);

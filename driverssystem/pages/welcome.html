@@ -11,6 +11,8 @@
     <link rel="preload" href="/driverssystem/css/welcome.css" as="style" />
     <link rel="preload" href="/driverssystem/js/driverssystem-config.js" as="script" />
     <link rel="preload" href="/driverssystem/js/welcome.js" as="script" />
+    <link rel="stylesheet" href="/driverssystem/css/auth-gate.css" />
+    <script>if(!localStorage.getItem('ds_driver_phone')){document.documentElement.className+=' ds-gate-pending'}</script>
     <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
     <link rel="stylesheet" href="/driverssystem/css/footer.css" />
     <link rel="stylesheet" href="/driverssystem/css/page-loader.css" />
@@ -32,19 +34,16 @@
         <!-- Monthly Dashboard (visible when logged in) -->
         <div class="ds-welcome-dashboard" data-ds-welcome-dashboard style="display:none">
 
-          <!-- ═══ Month Performance ═══ -->
+          <!-- Monthly Performance -->
           <div class="ds-perf" data-ds-perf>
-            <h3 class="ds-perf__title">📊 Εκτίμηση Μήνα</h3>
+            <h3 class="ds-perf__title">Στατιστικά Μήνα</h3>
 
-            <!-- Quick stats row -->
+            <!-- 9 key cards — 3×3 grid -->
             <div class="ds-perf__grid">
+              <!-- Row 1: Performance -->
               <div class="ds-perf__card">
                 <span class="ds-perf__label">Μέρες Εργασίας</span>
                 <span class="ds-perf__value" data-ds-perf-days>—</span>
-              </div>
-              <div class="ds-perf__card">
-                <span class="ds-perf__label">Διαδρομές</span>
-                <span class="ds-perf__value" data-ds-perf-trips>—</span>
               </div>
               <div class="ds-perf__card">
                 <span class="ds-perf__label">Καθαρά Έσοδα</span>
@@ -54,51 +53,59 @@
                 <span class="ds-perf__label">Μ.Ο. / Ημέρα</span>
                 <span class="ds-perf__value" data-ds-perf-avg>—</span>
               </div>
-            </div>
-
-            <!-- Projections -->
-            <div class="ds-perf__proj">
-              <div class="ds-perf__row">
-                <span class="ds-perf__row-label">Πρόβλεψη μήνα (καθαρά)</span>
-                <span class="ds-perf__row-value" data-ds-perf-proj-net>—</span>
+              <!-- Row 2: Expenses by category -->
+              <div class="ds-perf__card">
+                <span class="ds-perf__label">Αυτοκίνητο</span>
+                <span class="ds-perf__value ds-perf__value--expense" data-ds-perf-exp-car>—</span>
               </div>
-              <div class="ds-perf__row">
-                <span class="ds-perf__row-label">Σύνολο εξόδων μήνα</span>
-                <span class="ds-perf__row-value ds-perf__row-value--expense" data-ds-perf-expenses>—</span>
+              <div class="ds-perf__card">
+                <span class="ds-perf__label">Προσωπικά</span>
+                <span class="ds-perf__value ds-perf__value--expense" data-ds-perf-exp-personal>—</span>
               </div>
-              <div class="ds-perf__row ds-perf__row--highlight">
-                <span class="ds-perf__row-label">Εκτίμηση μετά τα έξοδα</span>
-                <span class="ds-perf__row-value" data-ds-perf-proj-after>—</span>
+              <div class="ds-perf__card">
+                <span class="ds-perf__label">Φόροι</span>
+                <span class="ds-perf__value ds-perf__value--expense" data-ds-perf-exp-tax>—</span>
               </div>
-            </div>
-
-            <!-- Expense breakdown (always visible) -->
-            <div class="ds-perf__expense-section">
-              <div class="ds-perf__expense-title">Ανάλυση Εξόδων</div>
-              <div class="ds-perf__breakdown">
-                <div class="ds-perf__break-row">
-                  <span>🚗 Αυτοκίνητο</span>
-                  <span data-ds-perf-exp-car>0,00 €</span>
-                </div>
-                <div class="ds-perf__break-row">
-                  <span>🏠 Προσωπικά / Σπιτιού</span>
-                  <span data-ds-perf-exp-personal>0,00 €</span>
-                </div>
-                <div class="ds-perf__break-row">
-                  <span>📋 Φόροι / Ασφαλιστικά</span>
-                  <span data-ds-perf-exp-tax>0,00 €</span>
-                </div>
+              <!-- Row 3: Efficiency -->
+              <div class="ds-perf__card">
+                <span class="ds-perf__label">Σύνολο Εξόδων</span>
+                <span class="ds-perf__value ds-perf__value--expense" data-ds-perf-expenses>—</span>
+              </div>
+              <div class="ds-perf__card">
+                <span class="ds-perf__label">Σου Μένουν</span>
+                <span class="ds-perf__value ds-perf__value--accent" data-ds-perf-per-euro-left>—</span>
+              </div>
+              <div class="ds-perf__card">
+                <span class="ds-perf__label">Κόστος / km</span>
+                <span class="ds-perf__value" data-ds-perf-km-total>—</span>
               </div>
             </div>
-          </div>
 
-          <!-- spacer pushes shift card toward bottom -->
-          <div class="ds-shift-spacer"></div>
+            <!-- Compact details (5 remaining numbers) -->
+            <div class="ds-perf__details">
+              <div class="ds-perf__details-group">
+                <span class="ds-perf__details-head">Ανά €1 (% εσόδων)</span>
+                <div class="ds-perf__details-row">
+                  <span>Επαγγελματικά</span><span data-ds-perf-per-euro-pro>—</span>
+                </div>
+                <div class="ds-perf__details-row">
+                  <span>Προσωπικά</span><span data-ds-perf-per-euro-pers>—</span>
+                </div>
+                <div class="ds-perf__details-row">
+                  <span>Φόροι</span><span data-ds-perf-per-euro-tax>—</span>
+                </div>
+              </div>
+              <div class="ds-perf__details-group">
+                <span class="ds-perf__details-head">Κόστος / km</span>
+                <div class="ds-perf__details-row">
+                  <span>Καύσιμο</span><span data-ds-perf-km-fuel>—</span>
+                </div>
+                <div class="ds-perf__details-row">
+                  <span>Συντήρηση</span><span data-ds-perf-km-maint>—</span>
+                </div>
+              </div>
+            </div>
 
-          <!-- ═══ Shift Counter ═══ -->
-          <div class="ds-shift" data-ds-shift>
-            <span class="ds-shift__amount" data-ds-shift-amount>0,00 €</span>
-            <span class="ds-shift__label" data-ds-shift-label>Βάρδια</span>
           </div>
 
         </div>
@@ -115,9 +122,9 @@
     <div data-ds-footer-slot></div>
 
     <script src="/driverssystem/js/driverssystem-config.js" defer></script>
+    <script src="/driverssystem/js/auth-gate.js" defer></script>
     <script src="/driverssystem/js/page-loader.js" defer></script>
     <script src="/driverssystem/js/footer.js" defer></script>
     <script src="/driverssystem/js/welcome.js" defer></script>
-    <script src="/driverssystem/js/shift-counter.js" defer></script>
   </body>
 </html>

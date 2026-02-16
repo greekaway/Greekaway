@@ -42,6 +42,31 @@
   const editIdInput = $('[data-ds-debts-edit-id]');
   const deleteBtn   = $('[data-ds-debts-delete]');
 
+  // ── ATM-style amount input ──
+  let _debtAmountCents = 0;
+  const _centsToDisplay = (c) => (c / 100).toFixed(2).replace('.', ',');
+
+  if (amountInput) {
+    amountInput.value = '0,00';
+    amountInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab' || e.key === 'Enter') return;
+      e.preventDefault();
+      if (e.key >= '0' && e.key <= '9') {
+        if (_debtAmountCents >= 10000000) return;
+        _debtAmountCents = _debtAmountCents * 10 + parseInt(e.key);
+        amountInput.value = _centsToDisplay(_debtAmountCents);
+      } else if (e.key === 'Backspace') {
+        _debtAmountCents = Math.floor(_debtAmountCents / 10);
+        amountInput.value = _centsToDisplay(_debtAmountCents);
+      } else if (e.key === 'Delete') {
+        _debtAmountCents = 0;
+        amountInput.value = '0,00';
+      }
+    });
+    amountInput.addEventListener('beforeinput', (e) => e.preventDefault());
+    amountInput.addEventListener('paste', (e) => e.preventDefault());
+  }
+
   // ── Back button ──
   const backBtn = $('[data-ds-debts-back]');
   if (backBtn) {
@@ -200,7 +225,8 @@
     dialogTitle.textContent = 'Νέα Εγγραφή';
     deleteBtn.style.display = 'none';
     nameInput.value = '';
-    amountInput.value = '';
+    _debtAmountCents = 0;
+    amountInput.value = '0,00';
     dateInput.value = greeceDateStr();
     noteInput.value = '';
     setType('owed');
@@ -214,7 +240,8 @@
     dialogTitle.textContent = 'Επεξεργασία';
     deleteBtn.style.display = '';
     nameInput.value = debt.name || '';
-    amountInput.value = debt.amount || '';
+    _debtAmountCents = Math.round((parseFloat(debt.amount) || 0) * 100);
+    amountInput.value = _centsToDisplay(_debtAmountCents);
     dateInput.value = debt.date || '';
     noteInput.value = debt.note || '';
     setType(debt.type || 'owed');
@@ -252,7 +279,7 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = (nameInput.value || '').trim();
-    const amount = parseFloat(amountInput.value) || 0;
+    const amount = _debtAmountCents / 100;
     if (!name || amount <= 0) return;
 
     const data = {

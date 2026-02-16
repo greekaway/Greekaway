@@ -1,0 +1,192 @@
+/* ═══════════════════════════════════════════════════════
+   Auth Gate – Full-screen login wall for DriversSystem
+   Blocks ALL content (including footer) until driver logs in.
+   ═══════════════════════════════════════════════════════ */
+
+/* Gate overlay — covers everything */
+.ds-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--ds-bg, #0b0f1a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+.ds-gate--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/*
+ * Immediate hide: the inline <script> in <head> adds
+ * ds-gate-pending to <html> before first paint.
+ * auth-gate.js then adds ds-gate-locked to <body>.
+ * Both hide ALL page content so nothing leaks.
+ */
+
+/* Phase 1: <html> class from inline script (before body exists) */
+html.ds-gate-pending body {
+  overflow: hidden !important;
+}
+html.ds-gate-pending body > *:not(.ds-gate):not(script) {
+  display: none !important;
+}
+
+/* Phase 2: <body> class from auth-gate.js */
+body.ds-gate-locked {
+  overflow: hidden !important;
+}
+
+body.ds-gate-locked > *:not(.ds-gate):not(script) {
+  display: none !important;
+}
+
+/* Card */
+.ds-gate__card {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+/* Logo */
+.ds-gate__logo {
+  width: 100px;
+  height: auto;
+  margin: 0 auto 24px;
+  display: block;
+  border-radius: 18px;
+}
+
+.ds-gate__logo[src=""] ,
+.ds-gate__logo:not([src]) {
+  display: none;
+}
+
+/* Icon fallback */
+.ds-gate__icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  opacity: 0.85;
+  line-height: 1;
+}
+
+/* Title */
+.ds-gate__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ds-text, #f7f7fb);
+  margin: 0 0 8px;
+}
+
+/* Subtitle */
+.ds-gate__desc {
+  font-size: 14px;
+  color: var(--ds-muted, #b2b8c7);
+  margin: 0 0 28px;
+  line-height: 1.55;
+}
+
+/* Form */
+.ds-gate__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ds-gate__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ds-muted, #b2b8c7);
+  text-align: left;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.ds-gate__input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-family: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: var(--ds-card, #1c2438);
+  color: var(--ds-text, #f7f7fb);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+
+.ds-gate__input::placeholder {
+  color: rgba(178, 184, 199, 0.5);
+}
+
+.ds-gate__input:focus {
+  border-color: var(--ds-accent, #00c896);
+}
+
+.ds-gate__btn {
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #00c896 0%, #00a87a 100%);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+  margin-top: 6px;
+}
+
+.ds-gate__btn:active {
+  transform: scale(0.97);
+}
+
+.ds-gate__btn:hover {
+  box-shadow: 0 4px 16px rgba(0, 200, 150, 0.35);
+}
+
+.ds-gate__btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Error message */
+.ds-gate__error {
+  min-height: 1.25em;
+  font-size: 14px;
+  color: #ff8a8a;
+  margin: 0;
+}
+
+/* ══ Light mode overrides ══ */
+@media (prefers-color-scheme: light) {
+  .ds-gate {
+    background: #f5f7fa;
+  }
+  .ds-gate__title {
+    color: #1a1a2e;
+  }
+  .ds-gate__desc {
+    color: #6b7280;
+  }
+  .ds-gate__label {
+    color: #6b7280;
+  }
+  .ds-gate__input {
+    background: #fff;
+    border-color: #d1d5db;
+    color: #1a1a2e;
+  }
+  .ds-gate__input:focus {
+    border-color: #00c896;
+  }
+  .ds-gate__error {
+    color: #dc2626;
+  }
+}

@@ -451,6 +451,22 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     }
   });
 
+  // ── Daily Target API (Driver - financial target calculator) ──
+
+  app.get('/api/driverssystem/daily-target', async (req, res) => {
+    try {
+      const opts = {};
+      if (req.query.driverId)   opts.driverId   = req.query.driverId;
+      if (req.query.month)      opts.month      = req.query.month;
+      if (req.query.workDays)   opts.workDays   = parseInt(req.query.workDays, 10);
+      const target = await dataLayer.getDailyTarget(opts);
+      return res.json(target);
+    } catch (err) {
+      console.error('[driverssystem] daily-target error:', err.message);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
   // ── Admin: Drivers list ──
 
   app.get('/api/admin/driverssystem/drivers', requireAdmin, async (req, res) => {

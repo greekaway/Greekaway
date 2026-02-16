@@ -11,6 +11,8 @@
     <link rel="preload" href="/driverssystem/css/entries.css" as="style" />
     <link rel="preload" href="/driverssystem/js/driverssystem-config.js" as="script" />
     <link rel="preload" href="/driverssystem/js/entries.js" as="script" />
+    <link rel="stylesheet" href="/driverssystem/css/auth-gate.css" />
+    <script>if(!localStorage.getItem('ds_driver_phone')){document.documentElement.className+=' ds-gate-pending'}</script>
     <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
     <link rel="stylesheet" href="/driverssystem/css/footer.css" />
     <link rel="stylesheet" href="/driverssystem/css/page-loader.css" />
@@ -22,28 +24,27 @@
     <!-- ─── Main Content ─── -->
     <main class="ds-entries-main">
 
-      <!-- Daily summary cards -->
+      <!-- Daily stats 2×2 grid -->
       <section class="ds-day-summary" data-ds-day-summary>
+        <div class="ds-summary-card ds-summary-card--shift" data-ds-shift>
+          <span class="ds-summary-card__label" data-ds-shift-label>Βάρδια</span>
+          <span class="ds-summary-card__value" data-ds-shift-amount>0,00 €</span>
+          <span class="ds-summary-card__sub" data-ds-shift-timer></span>
+        </div>
+        <div class="ds-summary-card ds-summary-card--target">
+          <span class="ds-summary-card__label">Ημερήσιος Στόχος</span>
+          <span class="ds-summary-card__value" data-ds-target-value>—</span>
+          <span class="ds-summary-card__sub" data-ds-target-remaining></span>
+        </div>
         <div class="ds-summary-card ds-summary-card--gross">
           <span class="ds-summary-card__label">Μεικτά</span>
           <span class="ds-summary-card__value" data-ds-summary-gross>0,00 €</span>
-        </div>
-        <div class="ds-summary-card ds-summary-card--net">
-          <span class="ds-summary-card__label">Καθαρά</span>
-          <span class="ds-summary-card__value" data-ds-summary-net>0,00 €</span>
         </div>
         <div class="ds-summary-card ds-summary-card--trips">
           <span class="ds-summary-card__label">Διαδρομές</span>
           <span class="ds-summary-card__value" data-ds-summary-count>0</span>
         </div>
       </section>
-
-      <!-- Date selector -->
-      <div class="ds-date-row">
-        <button class="ds-date-btn" data-ds-date-prev aria-label="Προηγούμενη μέρα">‹</button>
-        <input class="ds-date-input" type="date" data-ds-date-picker />
-        <button class="ds-date-btn" data-ds-date-next aria-label="Επόμενη μέρα">›</button>
-      </div>
 
       <!-- ─── Quick Entry Form ─── -->
       <section class="ds-entry-form ds-card" data-ds-entry-form>
@@ -58,7 +59,7 @@
           <div class="ds-amount-field">
             <div class="ds-amount-input-wrap">
               <input class="ds-amount-input" id="ds-amount" type="text" inputmode="numeric"
-                     pattern="[0-9]*" placeholder="0,00" readonly data-ds-amount />
+                     placeholder="0,00" data-ds-amount />
               <span class="ds-amount-suffix">€</span>
             </div>
           </div>
@@ -90,8 +91,10 @@
     <div data-ds-footer-slot></div>
 
     <script src="/driverssystem/js/driverssystem-config.js" defer></script>
+    <script src="/driverssystem/js/auth-gate.js" defer></script>
     <script src="/driverssystem/js/page-loader.js" defer></script>
     <script src="/driverssystem/js/footer.js" defer></script>
+    <script src="/driverssystem/js/shift-counter.js" defer></script>
     <script src="/driverssystem/js/entries.js" defer></script>
   </body>
 </html>

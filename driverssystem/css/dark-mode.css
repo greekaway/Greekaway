@@ -250,4 +250,105 @@
      contrast in light-mode OS with dark site
      ======================================== */
   /* No overrides needed — welcome page is always dark */
+
+  /* ========================================
+     ENTRIES PAGE — Summary cards + form
+     ======================================== */
+  .ds-summary-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .ds-summary-card__label {
+    color: #8896a6 !important;
+  }
+
+  .ds-summary-card__value {
+    color: #e8edf3 !important;
+  }
+
+  .ds-summary-card__sub {
+    color: #6b7d90 !important;
+  }
+
+  .ds-summary-card--shift .ds-summary-card__value { color: #00c896 !important; }
+  .ds-summary-card--shift.ds-shift--active {
+    border-color: rgba(0, 200, 150, 0.4) !important;
+    box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.15) !important;
+  }
+  .ds-summary-card--shift.ds-shift--active .ds-summary-card__sub {
+    color: #00c896 !important;
+  }
+  .ds-summary-card--shift.ds-shift--stopped .ds-summary-card__value { color: #6b7d90 !important; }
+
+  .ds-summary-card--target .ds-summary-card__value { color: #6ea8fe !important; }
+  .ds-summary-card--target .ds-summary-card__sub.ds-target--reached { color: #00c896 !important; }
+
+  .ds-summary-card--gross .ds-summary-card__value { color: #6ea8fe !important; }
+  .ds-summary-card--trips .ds-summary-card__value { color: #a78bfa !important; }
+
+  /* Entry form dark */
+  .ds-entry-form {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .ds-amount-input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #f0f4f8 !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+  }
+
+  .ds-amount-suffix { color: #8896a6 !important; }
+  .ds-net-preview__label { color: #8896a6 !important; }
+  .ds-net-preview__value { color: #00c896 !important; }
+  .ds-note-input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #f0f4f8 !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+  }
+  .ds-note-input::placeholder { color: rgba(255,255,255,0.4) !important; }
+
+  .ds-source-pill {
+    background: rgba(255,255,255,0.06) !important;
+    border-color: rgba(255,255,255,0.12) !important;
+    color: #c8d3e0 !important;
+  }
+  .ds-source-pill.selected {
+    background: color-mix(in srgb, var(--pill-color, #059669) 15%, #0f1f35) !important;
+    border-color: var(--pill-color, #059669) !important;
+    color: #e8edf3 !important;
+  }
+  .ds-source-pill__commission { color: #6b7d90 !important; }
+
+  .ds-save-btn {
+    background: linear-gradient(135deg, #00c896 0%, #00a87a 100%) !important;
+  }
+
+  /* Entry items dark */
+  .ds-entry-item {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+  }
+  .ds-entry-item__source-name { color: #e8edf3 !important; }
+  .ds-entry-item__time { color: #6b7d90 !important; }
+  .ds-entry-item__note { color: #8896a6 !important; }
+  .ds-entry-item__gross { color: #e8edf3 !important; }
+  .ds-entry-item__net { color: #8896a6 !important; }
+  .ds-entry-item__delete { color: #6b7d90 !important; }
+  .ds-entries-empty { color: #6b7d90 !important; }
+
+  /* Confirm dialog dark */
+  .ds-confirm-dialog {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;
+  }
+  .ds-confirm-dialog__title { color: #e8edf3 !important; }
+  .ds-confirm-dialog__body { color: #8896a6 !important; }
+  .ds-confirm-btn--cancel {
+    background: rgba(255,255,255,0.08) !important;
+    color: #c8d3e0 !important;
+  }
 }

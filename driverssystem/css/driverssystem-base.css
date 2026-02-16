@@ -14,6 +14,13 @@
   box-sizing: border-box;
 }
 
+/* Hide scrollbars globally — content still scrollable */
+::-webkit-scrollbar { display: none; }
+html, body, * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 html {
   overscroll-behavior-y: none;
   min-height: 100%;
@@ -27,6 +34,8 @@ body {
   color: var(--ds-text);
   min-height: 100vh;
   padding-bottom: 86px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .ds-page,

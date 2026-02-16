@@ -11,6 +11,8 @@
     <link rel="preload" href="/driverssystem/css/appointments.css" as="style" />
     <link rel="preload" href="/driverssystem/js/driverssystem-config.js" as="script" />
     <link rel="preload" href="/driverssystem/js/appointments.js" as="script" />
+    <link rel="stylesheet" href="/driverssystem/css/auth-gate.css" />
+    <script>if(!localStorage.getItem('ds_driver_phone')){document.documentElement.className+=' ds-gate-pending'}</script>
     <link rel="stylesheet" href="/driverssystem/css/driverssystem-base.css" />
     <link rel="stylesheet" href="/driverssystem/css/footer.css" />
     <link rel="stylesheet" href="/driverssystem/css/page-loader.css" />
@@ -141,9 +143,9 @@
 
           <div class="ds-appt-field">
             <label class="ds-appt-field__label">Ποσό (€) — προαιρετικά</label>
-            <input class="ds-appt-field__input" type="number" step="0.01" min="0"
-                   inputmode="decimal" pattern="[0-9]*"
-                   placeholder="0,00" data-ds-appt-amount />
+            <input class="ds-appt-field__input" type="text" inputmode="numeric"
+                   placeholder="0,00"
+                   data-ds-appt-amount />
           </div>
 
           <div class="ds-appt-field">
@@ -175,6 +177,7 @@
     <div data-ds-footer-slot></div>
 
     <script src="/driverssystem/js/driverssystem-config.js" defer></script>
+    <script src="/driverssystem/js/auth-gate.js" defer></script>
     <script src="/driverssystem/js/page-loader.js" defer></script>
     <script src="/driverssystem/js/footer.js" defer></script>
     <script src="/driverssystem/js/appointments.js" defer></script>
