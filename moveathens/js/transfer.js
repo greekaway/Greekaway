@@ -984,9 +984,13 @@
       }
     } else {
       // Departure: pickup at hotel
-      const addrQuery = hotelAddress ? `${hotelAddress}, ${hotelMunicipality}`.trim().replace(/,\s*$/, '') : hotelName;
-      if (addrQuery) {
-        pickupMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(addrQuery)}`;
+      if (hotelContext && hotelContext.lat && hotelContext.lng) {
+        pickupMapsUrl = `https://maps.google.com/?q=${hotelContext.lat},${hotelContext.lng}`;
+      } else {
+        const addrQuery = hotelAddress ? `${hotelAddress}, ${hotelMunicipality}`.trim().replace(/,\s*$/, '') : hotelName;
+        if (addrQuery) {
+          pickupMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(addrQuery)}`;
+        }
       }
     }
 

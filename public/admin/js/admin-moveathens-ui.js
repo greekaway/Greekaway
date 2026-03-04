@@ -929,6 +929,8 @@
     const fAddress = $('#maZoneAddress');
     const fPhone = $('#maZonePhone');
     const fEmail = $('#maZoneEmail');
+    const fLat = $('#maZoneLat');
+    const fLng = $('#maZoneLng');
     const fAccommodationType = $('#maZoneAccommodationType');
     const fActive = $('#maZoneActive');
     const fSearch = $('#maZoneSearch');
@@ -1152,6 +1154,8 @@
       if (fAddress) fAddress.value = '';
       if (fPhone) fPhone.value = '';
       if (fEmail) fEmail.value = '';
+      if (fLat) fLat.value = '';
+      if (fLng) fLng.value = '';
       if (fAccommodationType) fAccommodationType.value = 'hotel';
       fActive.checked = true;
       setStatus(status, '', '');
@@ -1166,6 +1170,8 @@
       if (fAddress) fAddress.value = z.address || '';
       if (fPhone) fPhone.value = z.phone || '';
       if (fEmail) fEmail.value = z.email || '';
+      if (fLat) fLat.value = z.lat != null ? z.lat : '';
+      if (fLng) fLng.value = z.lng != null ? z.lng : '';
       if (fAccommodationType) fAccommodationType.value = z.accommodation_type || 'hotel';
       fActive.checked = z.is_active !== false;
       form.hidden = false;
@@ -1216,6 +1222,8 @@
         address: (fAddress?.value || '').trim(),
         phone: (fPhone?.value || '').trim(),
         email: (fEmail?.value || '').trim(),
+        lat: fLat?.value?.trim() ? parseFloat(fLat.value.trim()) : null,
+        lng: fLng?.value?.trim() ? parseFloat(fLng.value.trim()) : null,
         accommodation_type: fAccommodationType?.value || 'hotel',
         is_active: fActive.checked,
         created_at: new Date().toISOString()

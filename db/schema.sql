@@ -91,6 +91,8 @@ CREATE TABLE IF NOT EXISTS ma_transfer_zones (
     phone VARCHAR(50) DEFAULT '',
     email VARCHAR(255) DEFAULT '',
     accommodation_type VARCHAR(30) DEFAULT 'hotel' CHECK (accommodation_type IN ('hotel', 'rental_rooms')),
+    lat DOUBLE PRECISION DEFAULT NULL,
+    lng DOUBLE PRECISION DEFAULT NULL,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

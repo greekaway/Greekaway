@@ -387,13 +387,15 @@ const ma = {
 
   async upsertZone(data) {
     const { id, name, description, zone_type, is_active,
-            municipality, address, phone, email, accommodation_type } = data;
+            municipality, address, phone, email, accommodation_type,
+            lat, lng } = data;
     const zoneId = id || `tz_${Date.now()}`;
     const sql = `
       INSERT INTO ma_transfer_zones
         (id, name, description, zone_type, is_active,
-         municipality, address, phone, email, accommodation_type)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         municipality, address, phone, email, accommodation_type,
+         lat, lng)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,
@@ -404,13 +406,16 @@ const ma = {
         phone = EXCLUDED.phone,
         email = EXCLUDED.email,
         accommodation_type = EXCLUDED.accommodation_type,
+        lat = EXCLUDED.lat,
+        lng = EXCLUDED.lng,
         updated_at = NOW()
       RETURNING *
     `;
     const rows = await query(sql, [
       zoneId, name, description || '', zone_type || 'suburb', is_active ?? true,
       municipality || '', address || '', phone || '', email || '',
-      accommodation_type || 'hotel'
+      accommodation_type || 'hotel',
+      lat != null ? lat : null, lng != null ? lng : null
     ]);
     return rows[0];
   },

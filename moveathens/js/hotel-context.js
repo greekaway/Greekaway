@@ -62,6 +62,8 @@
       phone:              myPhone || '',
       email:              zone.email || '',
       accommodation_type: zone.accommodation_type || '',
+      lat:                zone.lat != null ? zone.lat : null,
+      lng:                zone.lng != null ? zone.lng : null,
       orderer_phone:      myPhone || ''
     };
     localStorage.setItem('moveathens_hotel', JSON.stringify(obj));

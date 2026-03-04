@@ -315,6 +315,8 @@ function mapZoneRow(row) {
     phone: row.phone || '',
     email: row.email || '',
     accommodation_type: row.accommodation_type || 'hotel',
+    lat: row.lat != null ? parseFloat(row.lat) : null,
+    lng: row.lng != null ? parseFloat(row.lng) : null,
     is_active: row.is_active,
     created_at: row.created_at
   };
@@ -388,6 +390,8 @@ async function upsertZone(data) {
         phone: data.phone || '',
         email: data.email || '',
         accommodation_type: data.accommodation_type || 'hotel',
+        lat: data.lat != null ? parseFloat(data.lat) : null,
+        lng: data.lng != null ? parseFloat(data.lng) : null,
         is_active: data.is_active !== false
       });
       console.log('[moveathens] Hotel saved to DB:', row.id);
@@ -411,6 +415,8 @@ async function upsertZone(data) {
     phone: data.phone || '',
     email: data.email || '',
     accommodation_type: data.accommodation_type || 'hotel',
+    lat: data.lat != null ? parseFloat(data.lat) : null,
+    lng: data.lng != null ? parseFloat(data.lng) : null,
     is_active: data.is_active !== false,
     created_at: idx >= 0 ? zones[idx].created_at : new Date().toISOString()
   };

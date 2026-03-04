@@ -205,8 +205,16 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
 
       // Look up hotel (zone) coordinates for navigation to pickup
       let hotel_lat = null, hotel_lng = null;
-      // Hotels don't have lat/lng yet — we rely on address for now
-      // (could be added similarly to destinations in future)
+      if (request.origin_zone_id) {
+        try {
+          const zones = await moveathensData.getZones({ activeOnly: false });
+          const zone = zones.find(z => z.id === request.origin_zone_id);
+          if (zone && zone.lat && zone.lng) {
+            hotel_lat = zone.lat;
+            hotel_lng = zone.lng;
+          }
+        } catch (e) { /* ignore */ }
+      }
 
       // Look up known driver name from driver profile (for pre-fill)
       let known_driver_name = '';
@@ -238,6 +246,8 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         destination_name: request.destination_name,
         destination_lat,
         destination_lng,
+        hotel_lat,
+        hotel_lng,
         vehicle_name: request.vehicle_name,
         tariff: request.tariff,
         booking_type: request.booking_type,
@@ -472,13 +482,28 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
             pickupMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(request.destination_name)}`;
           }
         } else {
-          // Departure: driver picks up from hotel
-          const addr = request.hotel_address || '';
-          const muni = request.hotel_municipality || '';
-          const hotelName = request.hotel_name || '';
-          const query = addr ? `${addr}, ${muni}`.trim().replace(/,\s*$/, '') : hotelName;
-          if (query) {
-            pickupMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(query)}`;
+          // Departure: driver picks up from hotel — use zone coordinates if available
+          let hotelLat = null, hotelLng = null;
+          if (request.origin_zone_id) {
+            try {
+              const zones = await moveathensData.getZones({ activeOnly: false });
+              const zone = zones.find(z => z.id === request.origin_zone_id);
+              if (zone && zone.lat && zone.lng) {
+                hotelLat = zone.lat;
+                hotelLng = zone.lng;
+              }
+            } catch (e) { /* ignore */ }
+          }
+          if (hotelLat && hotelLng) {
+            pickupMapsUrl = `https://maps.google.com/?q=${hotelLat},${hotelLng}`;
+          } else {
+            const addr = request.hotel_address || '';
+            const muni = request.hotel_municipality || '';
+            const hotelName = request.hotel_name || '';
+            const query = addr ? `${addr}, ${muni}`.trim().replace(/,\s*$/, '') : hotelName;
+            if (query) {
+              pickupMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(query)}`;
+            }
           }
         }
       } catch (e) { /* ignore */ }

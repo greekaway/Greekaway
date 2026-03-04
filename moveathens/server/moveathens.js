@@ -154,6 +154,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     const email = normalizeString(zone.email || '');
     let accommodationType = normalizeString(zone.accommodation_type || 'hotel');
     if (!allowedAccommodationTypes.has(accommodationType)) accommodationType = 'hotel';
+    const lat = zone.lat != null && zone.lat !== '' ? parseFloat(zone.lat) : null;
+    const lng = zone.lng != null && zone.lng !== '' ? parseFloat(zone.lng) : null;
     const isActive = typeof zone.is_active === 'boolean' ? zone.is_active : true;
     const id = normalizeString(zone.id) || makeId('tz');
     const createdAt = normalizeString(zone.created_at) || new Date().toISOString();
@@ -167,6 +169,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       phone,
       email,
       accommodation_type: accommodationType,
+      lat: (lat !== null && !isNaN(lat)) ? lat : null,
+      lng: (lng !== null && !isNaN(lng)) ? lng : null,
       is_active: isActive,
       created_at: createdAt
     };
@@ -776,7 +780,9 @@ module.exports = function registerMoveAthens(app, opts = {}) {
           municipality: zone.municipality || '',
           address: zone.address || '',
           email: zone.email || '',
-          accommodation_type: zone.accommodation_type || 'hotel'
+          accommodation_type: zone.accommodation_type || 'hotel',
+          lat: zone.lat != null ? zone.lat : null,
+          lng: zone.lng != null ? zone.lng : null
         },
         phones: (result.phones || []).map(p => ({
           id: p.id,
