@@ -929,8 +929,7 @@
     const fAddress = $('#maZoneAddress');
     const fPhone = $('#maZonePhone');
     const fEmail = $('#maZoneEmail');
-    const fLat = $('#maZoneLat');
-    const fLng = $('#maZoneLng');
+    const fLatLng = $('#maZoneLatLng');
     const fAccommodationType = $('#maZoneAccommodationType');
     const fActive = $('#maZoneActive');
     const fSearch = $('#maZoneSearch');
@@ -1154,8 +1153,7 @@
       if (fAddress) fAddress.value = '';
       if (fPhone) fPhone.value = '';
       if (fEmail) fEmail.value = '';
-      if (fLat) fLat.value = '';
-      if (fLng) fLng.value = '';
+      if (fLatLng) fLatLng.value = '';
       if (fAccommodationType) fAccommodationType.value = 'hotel';
       fActive.checked = true;
       setStatus(status, '', '');
@@ -1170,8 +1168,9 @@
       if (fAddress) fAddress.value = z.address || '';
       if (fPhone) fPhone.value = z.phone || '';
       if (fEmail) fEmail.value = z.email || '';
-      if (fLat) fLat.value = z.lat != null ? z.lat : '';
-      if (fLng) fLng.value = z.lng != null ? z.lng : '';
+      if (fLatLng) {
+        fLatLng.value = (z.lat != null && z.lng != null) ? `${z.lat}, ${z.lng}` : '';
+      }
       if (fAccommodationType) fAccommodationType.value = z.accommodation_type || 'hotel';
       fActive.checked = z.is_active !== false;
       form.hidden = false;
@@ -1212,6 +1211,23 @@
       const name = fName.value.trim();
       if (!name) { setStatus(status, 'Το όνομα είναι υποχρεωτικό', 'error'); return; }
 
+      // Parse combined lat,lng field (same format as destinations)
+      let lat = null, lng = null;
+      if (fLatLng && fLatLng.value.trim()) {
+        const parts = fLatLng.value.trim().split(',');
+        if (parts.length === 2) {
+          lat = parseFloat(parts[0].trim());
+          lng = parseFloat(parts[1].trim());
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+            setStatus(status, 'Μη έγκυρες συντεταγμένες (lat,lng)', 'error');
+            return;
+          }
+        } else {
+          setStatus(status, 'Οι συντεταγμένες πρέπει να είναι lat,lng', 'error');
+          return;
+        }
+      }
+
       let zones = [...(CONFIG.transferZones || [])];
       const entry = {
         id: editingZoneId || `tz_${Date.now()}`,
@@ -1222,8 +1238,8 @@
         address: (fAddress?.value || '').trim(),
         phone: (fPhone?.value || '').trim(),
         email: (fEmail?.value || '').trim(),
-        lat: fLat?.value?.trim() ? parseFloat(fLat.value.trim()) : null,
-        lng: fLng?.value?.trim() ? parseFloat(fLng.value.trim()) : null,
+        lat,
+        lng,
         accommodation_type: fAccommodationType?.value || 'hotel',
         is_active: fActive.checked,
         created_at: new Date().toISOString()
