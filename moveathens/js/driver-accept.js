@@ -251,10 +251,7 @@
       schedule = '📅 ' + dayName + ' ' + dt.getDate() + ', ' + monthName + tStr;
     }
 
-    // Pre-fill driver name if server already knows it
-    if (data.driver_name && !driverNameInput.value.trim()) {
-      driverNameInput.value = data.driver_name;
-    }
+    // Driver must always enter their name manually – no pre-fill
 
     // ── Section: Route ──
     var sections = [];
