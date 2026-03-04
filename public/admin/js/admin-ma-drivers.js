@@ -440,9 +440,8 @@
           b.textContent = n + '\'';
           b.style.cssText = 'padding:10px;border:none;background:#3b82f6;color:#fff;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600';
           b.addEventListener('click', function () {
-            var msg = grGreeting() + '! Βρήκαμε οδηγό για τη διαδρομή σας';
-            if (rData.passenger_name) msg += ' (' + rData.passenger_name + ')';
-            msg += '.\n\n🕐 Θα είναι εκεί σε ' + n + ' λεπτ' + (n === 1 ? 'ό' : 'ά') + '!\n\nΕυχαριστούμε! 🙏';
+            var route = (rData.destination_name || rData.hotel_name || 'τη διαδρομή σας');
+            var msg = grGreeting() + '! Βρήκαμε οδηγό για ' + route + '.\n\n🕐 Θα είναι εκεί σε ' + n + ' λεπτ' + (n === 1 ? 'ό' : 'ά') + '!\n\nΕυχαριστούμε! 🙏';
             var a = document.createElement('a'); a.href = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg); a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
             overlay.remove();
           });

@@ -855,6 +855,40 @@
       }
     }
 
+    // Get tariff label
+    const tariffLabel = TARIFF_LABELS[selectedTariff] || selectedTariff;
+
+    // Build booking time text — MUST be computed before travelDetails (flight ETA dedup check)
+    let bookingTimeText = '';
+    if (selectedBookingType === 'instant') {
+      // If flight data has a future ETA, override "ΑΜΕΣΑ" with the real arrival time
+      if (lastFlightData && lastFlightData.eta && lastFlightData.status !== 'landed') {
+        const etaDt = new Date(lastFlightData.eta);
+        if (etaDt.getTime() > Date.now()) {
+          const etaH = etaDt.getHours();
+          const etaM = String(etaDt.getMinutes()).padStart(2, '0');
+          const etaSuffix = etaH < 12 ? 'πμ' : 'μμ';
+          const etaH12 = etaH === 0 ? 12 : etaH > 12 ? etaH - 12 : etaH;
+          const dayNames = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
+          const monthNames = ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+          bookingTimeText = `📅 ${dayNames[etaDt.getDay()]} ${etaDt.getDate()} ${monthNames[etaDt.getMonth()]}, ώρα ${etaH12}:${etaM} ${etaSuffix} (ETA πτήσης)`;
+        } else {
+          bookingTimeText = '⚡ ΑΜΕΣΑ (πτήση προσγειώθηκε)';
+        }
+      } else {
+        bookingTimeText = '⚡ ΑΜΕΣΑ';
+      }
+    } else if (selectedBookingType === 'scheduled' && selectedDateTime) {
+      const dt = new Date(`${selectedDateTime.date}T${selectedDateTime.time}`);
+      const dayNames = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
+      const monthNames = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
+      const hh = parseInt(selectedDateTime.time.split(':')[0], 10);
+      const mm = selectedDateTime.time.split(':')[1];
+      const ampm = hh < 12 ? 'πμ' : 'μμ';
+      const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+      bookingTimeText = `📅 ${dayNames[dt.getDay()]} ${dt.getDate()} ${monthNames[dt.getMonth()]}, ώρα ${h12}:${mm} ${ampm}`;
+    }
+
     // Build passenger/luggage info only if selected
     let travelDetails = '';
     if (passengerName) {
@@ -897,40 +931,6 @@
     }
     if (bookingNotes) {
       travelDetails += `📝 Σημειώσεις: ${bookingNotes}\n`;
-    }
-
-    // Get tariff label
-    const tariffLabel = TARIFF_LABELS[selectedTariff] || selectedTariff;
-
-    // Build booking time text
-    let bookingTimeText = '';
-    if (selectedBookingType === 'instant') {
-      // If flight data has a future ETA, override "ΑΜΕΣΑ" with the real arrival time
-      if (lastFlightData && lastFlightData.eta && lastFlightData.status !== 'landed') {
-        const etaDt = new Date(lastFlightData.eta);
-        if (etaDt.getTime() > Date.now()) {
-          const etaH = etaDt.getHours();
-          const etaM = String(etaDt.getMinutes()).padStart(2, '0');
-          const etaSuffix = etaH < 12 ? 'πμ' : 'μμ';
-          const etaH12 = etaH === 0 ? 12 : etaH > 12 ? etaH - 12 : etaH;
-          const dayNames = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
-          const monthNames = ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
-          bookingTimeText = `📅 ${dayNames[etaDt.getDay()]} ${etaDt.getDate()} ${monthNames[etaDt.getMonth()]}, ώρα ${etaH12}:${etaM} ${etaSuffix} (ETA πτήσης)`;
-        } else {
-          bookingTimeText = '⚡ ΑΜΕΣΑ (πτήση προσγειώθηκε)';
-        }
-      } else {
-        bookingTimeText = '⚡ ΑΜΕΣΑ';
-      }
-    } else if (selectedBookingType === 'scheduled' && selectedDateTime) {
-      const dt = new Date(`${selectedDateTime.date}T${selectedDateTime.time}`);
-      const dayNames = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
-      const monthNames = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
-      const hh = parseInt(selectedDateTime.time.split(':')[0], 10);
-      const mm = selectedDateTime.time.split(':')[1];
-      const ampm = hh < 12 ? 'πμ' : 'μμ';
-      const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
-      bookingTimeText = `📅 ${dayNames[dt.getDay()]} ${dt.getDate()} ${monthNames[dt.getMonth()]}, ώρα ${h12}:${mm} ${ampm}`;
     }
 
     // Build message content — ordered: destination, time, vehicle, hotel, passenger details, price
