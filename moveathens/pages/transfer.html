@@ -7,6 +7,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/moveathens/icons/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/moveathens/icons/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/moveathens/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="/moveathens/css/auth-gate.css">
+  <script>if(!localStorage.getItem('moveathens_hotel')){document.documentElement.className+=' ma-gate-pending'}</script>
   <!-- Preload critical assets -->
   <link rel="preload" href="/moveathens/css/transfer.css" as="style">
   <link rel="preload" href="/moveathens/videos/hero-logo.png" as="image">
@@ -341,6 +343,7 @@
 
   <div data-ma-footer-slot></div>
 
+  <script src="/moveathens/js/auth-gate.js"></script>
   <script src="/moveathens/js/moveathens-config.js?v=765"></script>
   <script src="/moveathens/js/footer.js?v=765"></script>
   <script src="/moveathens/js/transfer.js?v=765"></script>

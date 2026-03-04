@@ -1,4 +1,15 @@
 (async () => {
+  // ── Cookie helpers (sync with auth-gate.js) ──
+  const CK_NAME = 'ma_hotel_phone';
+  const CK_DAYS = 365;
+  const setCookie = (name, value, days) => {
+    const d = new Date(); d.setTime(d.getTime() + days * 86400000);
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/;SameSite=Lax`;
+  };
+  const clearCookie = (name) => {
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax`;
+  };
+
   // Apply domain-aware home links
   if (window.MoveAthensConfig?.applyHomeLinks) {
     window.MoveAthensConfig.applyHomeLinks();
@@ -6,12 +17,8 @@
 
   const cfg = await window.MoveAthensConfig.load();
 
-  // DOM refs
-  const loginSection = document.getElementById('hotel-login-section');
+  // DOM refs (login section removed — auth gate handles login)
   const infoSection  = document.getElementById('hotel-info-section');
-  const phoneLogin   = document.getElementById('hotel-phone-login');
-  const loginBtn     = document.getElementById('hotel-login-btn');
-  const loginError   = document.getElementById('hotel-login-error');
   const logoutBtn    = document.getElementById('hotel-logout-btn');
   const displayName  = document.getElementById('hotel-display-name');
   const connectedPhone = document.getElementById('hotel-connected-phone');
@@ -26,15 +33,8 @@
     rental_rooms: 'Ενοικιαζόμενα Δωμάτια'
   };
 
-  // ── Show login or info based on stored session ──
-  const showLogin = () => {
-    if (loginSection) loginSection.style.display = '';
-    if (infoSection) infoSection.style.display = 'none';
-    if (loginError) { loginError.style.display = 'none'; loginError.textContent = ''; }
-  };
-
+  // ── Show hotel info (auth gate guarantees user is logged in) ──
   const showInfo = (zone, phones, myPhone) => {
-    if (loginSection) loginSection.style.display = 'none';
     if (infoSection) infoSection.style.display = '';
     if (displayName) displayName.textContent = zone.name || '';
     if (municipalityInput) municipalityInput.value = zone.municipality || '';
@@ -51,7 +51,7 @@
     }
   };
 
-  // ── Persist hotel to localStorage (for transfer flow) ──
+  // ── Persist hotel to localStorage (for transfer flow + auth gate cookie) ──
   const persistHotel = (zone, myPhone) => {
     const obj = {
       origin_zone_id:     zone.id || '',
@@ -72,53 +72,11 @@
     localStorage.setItem('moveathens_hotel_zone', obj.origin_zone_name);
     localStorage.setItem('moveathens_hotel_address', obj.address);
     localStorage.setItem('moveathens_hotel_email', obj.email);
+    // Sync cookie backup
+    setCookie(CK_NAME, myPhone, CK_DAYS);
   };
 
-  // ── Login via phone ──
-  const doLogin = async (phone) => {
-    if (!phone || phone.length < 5) {
-      if (loginError) { loginError.textContent = 'Εισάγετε ένα έγκυρο τηλέφωνο.'; loginError.style.display = ''; }
-      return;
-    }
-    try {
-      const res = await fetch(`/api/moveathens/hotel-by-phone?phone=${encodeURIComponent(phone)}`);
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        if (res.status === 404) {
-          if (loginError) { loginError.textContent = 'Το τηλέφωνο δεν βρέθηκε. Επικοινωνήστε με τη διαχείριση.'; loginError.style.display = ''; }
-        } else {
-          if (loginError) { loginError.textContent = err.error || 'Σφάλμα σύνδεσης.'; loginError.style.display = ''; }
-        }
-        return;
-      }
-      const data = await res.json();
-      persistHotel(data.zone, phone);
-      showInfo(data.zone, data.phones, phone);
-    } catch (e) {
-      if (loginError) { loginError.textContent = 'Σφάλμα σύνδεσης. Δοκιμάστε ξανά.'; loginError.style.display = ''; }
-    }
-  };
-
-  // ── Login button ──
-  if (loginBtn) {
-    loginBtn.addEventListener('click', () => {
-      const phone = (phoneLogin?.value || '').trim();
-      doLogin(phone);
-    });
-  }
-
-  // ── Enter key on phone input ──
-  if (phoneLogin) {
-    phoneLogin.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const phone = phoneLogin.value.trim();
-        doLogin(phone);
-      }
-    });
-  }
-
-  // ── Logout ──
+  // ── Logout (clears session, reload triggers auth gate) ──
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       localStorage.removeItem('moveathens_hotel');
@@ -126,28 +84,29 @@
       localStorage.removeItem('moveathens_hotel_zone');
       localStorage.removeItem('moveathens_hotel_address');
       localStorage.removeItem('moveathens_hotel_email');
-      if (phoneLogin) phoneLogin.value = '';
-      showLogin();
+      clearCookie(CK_NAME);
+      window.location.reload();
     });
   }
 
-  // ── Restore session from localStorage on load ──
+  // ── Load hotel data on page open (auth gate guarantees session exists) ──
   const stored = (() => {
     try { return JSON.parse(localStorage.getItem('moveathens_hotel') || 'null'); } catch { return null; }
   })();
 
   if (stored && stored.orderer_phone && stored.origin_zone_id) {
-    // Re-verify phone is still valid
+    // Re-verify phone & get latest data from server
     try {
       const res = await fetch(`/api/moveathens/hotel-by-phone?phone=${encodeURIComponent(stored.orderer_phone)}`);
       if (res.ok) {
         const data = await res.json();
-        // Refresh stored data with latest from server
         persistHotel(data.zone, stored.orderer_phone);
         showInfo(data.zone, data.phones, stored.orderer_phone);
       } else {
-        // Phone no longer valid — force re-login
-        showLogin();
+        // Phone no longer valid — clear and reload (gate handles re-login)
+        localStorage.removeItem('moveathens_hotel');
+        clearCookie(CK_NAME);
+        window.location.reload();
       }
     } catch {
       // Offline — show stored data
@@ -159,8 +118,6 @@
         accommodation_type: stored.accommodation_type
       }, [], stored.orderer_phone);
     }
-  } else {
-    showLogin();
   }
 
   // ── Version badge ──

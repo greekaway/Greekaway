@@ -1,0 +1,194 @@
+/* ═══════════════════════════════════════════════════════
+   Auth Gate – Full-screen login wall for MoveAthens
+   Blocks ALL content (including footer) until hotel
+   phone is verified. Mirrors DriversSystem auth-gate
+   but uses MoveAthens colour tokens.
+   ═══════════════════════════════════════════════════════ */
+
+/* Gate overlay — covers everything */
+.ma-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--ma-bg, #0b0f1a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+.ma-gate--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/*
+ * Immediate hide: the inline <script> in <head> adds
+ * ma-gate-pending to <html> before first paint.
+ * auth-gate.js then adds ma-gate-locked to <body>.
+ * Both hide ALL page content so nothing leaks.
+ */
+
+/* Phase 1: <html> class from inline script (before body exists) */
+html.ma-gate-pending body {
+  overflow: hidden !important;
+}
+html.ma-gate-pending body > *:not(.ma-gate):not(script) {
+  display: none !important;
+}
+
+/* Phase 2: <body> class from auth-gate.js */
+body.ma-gate-locked {
+  overflow: hidden !important;
+}
+
+body.ma-gate-locked > *:not(.ma-gate):not(script) {
+  display: none !important;
+}
+
+/* Card */
+.ma-gate__card {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+/* Logo */
+.ma-gate__logo {
+  width: 100px;
+  height: auto;
+  margin: 0 auto 24px;
+  display: block;
+  border-radius: 18px;
+}
+
+.ma-gate__logo[src=""],
+.ma-gate__logo:not([src]) {
+  display: none;
+}
+
+/* Icon fallback */
+.ma-gate__icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  opacity: 0.85;
+  line-height: 1;
+}
+
+/* Title */
+.ma-gate__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ma-text, #f7f7fb);
+  margin: 0 0 8px;
+}
+
+/* Subtitle */
+.ma-gate__desc {
+  font-size: 14px;
+  color: var(--ma-muted, #b2b8c7);
+  margin: 0 0 28px;
+  line-height: 1.55;
+}
+
+/* Form */
+.ma-gate__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ma-gate__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ma-muted, #b2b8c7);
+  text-align: left;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.ma-gate__input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-family: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: var(--ma-card, #1c2438);
+  color: var(--ma-text, #f7f7fb);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+
+.ma-gate__input::placeholder {
+  color: rgba(178, 184, 199, 0.5);
+}
+
+.ma-gate__input:focus {
+  border-color: var(--ma-accent, #46d3ff);
+}
+
+.ma-gate__btn {
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #46d3ff 0%, #1da1f2 100%);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+  margin-top: 6px;
+}
+
+.ma-gate__btn:active {
+  transform: scale(0.97);
+}
+
+.ma-gate__btn:hover {
+  box-shadow: 0 4px 16px rgba(70, 211, 255, 0.35);
+}
+
+.ma-gate__btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Error message */
+.ma-gate__error {
+  min-height: 1.25em;
+  font-size: 14px;
+  color: #ff8a8a;
+  margin: 0;
+}
+
+/* ══ Light mode overrides ══ */
+@media (prefers-color-scheme: light) {
+  .ma-gate {
+    background: #f5f7fa;
+  }
+  .ma-gate__title {
+    color: #1a1a2e;
+  }
+  .ma-gate__desc {
+    color: #6b7280;
+  }
+  .ma-gate__label {
+    color: #6b7280;
+  }
+  .ma-gate__input {
+    background: #fff;
+    border-color: #d1d5db;
+    color: #1a1a2e;
+  }
+  .ma-gate__input:focus {
+    border-color: var(--ma-accent, #46d3ff);
+  }
+  .ma-gate__error {
+    color: #dc2626;
+  }
+}

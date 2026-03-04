@@ -7,6 +7,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/moveathens/icons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/moveathens/icons/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/moveathens/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="/moveathens/css/auth-gate.css" />
+    <script>if(!localStorage.getItem('moveathens_hotel')){document.documentElement.className+=' ma-gate-pending'}</script>
     <link rel="preload" href="/moveathens/videos/hero-logo.png" as="image" />
     <link rel="stylesheet" href="/moveathens/css/moveathens-base.css" />
     <link rel="stylesheet" href="/moveathens/css/footer.css" />
@@ -24,23 +26,8 @@
     </header>
     
     <main class="ma-main ma-main--with-header">
-      <!-- Step 1: Phone login -->
-      <section class="ma-card ma-section" id="hotel-login-section">
-        <h2 class="ma-title">Σύνδεση Ξενοδοχείου</h2>
-        <p class="ma-muted" style="margin-bottom:1rem;">Εισάγετε τον αριθμό τηλεφώνου σας για πρόσβαση.</p>
-        <div class="ma-field">
-          <label class="ma-muted">Τηλέφωνο</label>
-          <input class="ma-input" type="tel" id="hotel-phone-login"
-                 placeholder="6912345678" autocomplete="tel" inputmode="tel" />
-        </div>
-        <button class="ma-button ma-button--save" id="hotel-login-btn">
-          <span class="ma-button__text">🔑 Σύνδεση</span>
-        </button>
-        <p class="ma-error-msg" id="hotel-login-error" style="display:none; color:#e74c3c; margin-top:0.5rem;"></p>
-      </section>
-
-      <!-- Step 2: Hotel info (read-only) — shown after successful login -->
-      <section class="ma-card ma-section" id="hotel-info-section" style="display:none;">
+      <!-- Hotel info (read-only) — auth gate ensures user is logged in -->
+      <section class="ma-card ma-section" id="hotel-info-section">
         <h2 class="ma-title" id="hotel-display-name"></h2>
 
         <div class="ma-field">
@@ -88,6 +75,7 @@
     <div data-ma-modal-slot></div>
     <div data-ma-footer-slot></div>
 
+    <script src="/moveathens/js/auth-gate.js"></script>
     <script src="/moveathens/js/moveathens-config.js"></script>
     <script src="/moveathens/js/contact-modal.js"></script>
     <script src="/moveathens/js/footer.js"></script>
