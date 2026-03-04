@@ -448,6 +448,20 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
           timeStr = ` ώρα ${h12}:${mm} ${suffix}`;
         }
         scheduleText = `\n📅 ${dayName} ${dt.getDate()}, ${monthName}${timeStr}`;
+      } else if (request.booking_type === 'instant' && request.flight_eta && request.flight_status !== 'landed') {
+        // Auto-upgrade: instant booking with future flight ETA → show ETA time
+        const etaDt = new Date(request.flight_eta);
+        if (etaDt.getTime() > Date.now()) {
+          const etaH = etaDt.getHours();
+          const etaM = String(etaDt.getMinutes()).padStart(2, '0');
+          const sfx = etaH < 12 ? 'πμ' : 'μμ';
+          const h12 = etaH === 0 ? 12 : etaH > 12 ? etaH - 12 : etaH;
+          scheduleText = `\n📅 ETA πτήσης: ${h12}:${etaM} ${sfx}`;
+        } else {
+          scheduleText = `\n⚡ Άμεσα (πτήση προσγειώθηκε)`;
+        }
+      } else if (request.booking_type === 'instant') {
+        scheduleText = `\n⚡ Άμεσα`;
       }
 
       const msg = [

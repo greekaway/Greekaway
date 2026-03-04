@@ -27,6 +27,7 @@
   let roomNumber = ''; // Room number (optional)
   let bookingNotes = ''; // Notes (optional)
   let flightNumber = ''; // Flight/ferry number (required for arrivals)
+  let lastFlightData = null; // Cached flight lookup result from AeroAPI
 
   // Tariff labels for UI
   const TARIFF_LABELS = {
@@ -752,6 +753,7 @@
       if (data.ok && data.flight) {
         const f = data.flight;
         lastFlightLookup = ident;
+        lastFlightData = f; // Store for WhatsApp message & time override
         feedbackEl.style.color = '#059669';
         let text = `✅ ${f.airline || ident}`;
         if (f.origin) text += ` | Από: ${f.origin}`;
@@ -763,15 +765,18 @@
         else if (f.status === 'landed') text += ' (Προσγειώθηκε ✅)';
         feedbackEl.textContent = text;
         inputEl.classList.remove('ma-input-error-state');
+        updateCtaLinks(); // Refresh WhatsApp message with flight info
       } else {
         feedbackEl.style.color = '#dc2626';
         feedbackEl.textContent = '⚠️ Δεν βρέθηκε πτήση — ελέγξτε τον αριθμό';
         lastFlightLookup = '';
+        lastFlightData = null;
       }
     } catch (err) {
       feedbackEl.style.color = '#9ca3af';
       feedbackEl.textContent = '⚠️ Αδυναμία ελέγχου — η καταχώρηση θα γίνει χωρίς live tracking';
       lastFlightLookup = '';
+      lastFlightData = null;
     }
   };
 
@@ -875,7 +880,19 @@
       travelDetails += `💳 Πληρωμή: ${paymentLabel}\n`;
     }
     if (flightNumber) {
-      travelDetails += `🛫 Αρ. Δρομολογίου: ${flightNumber}\n`;
+      let flightLine = `🛫 Αρ. Δρομολογίου: ${flightNumber}`;
+      if (lastFlightData) {
+        if (lastFlightData.airline) flightLine += ` (${lastFlightData.airline})`;
+        if (lastFlightData.origin) flightLine += `\n📍 Από: ${lastFlightData.origin}`;
+        if (lastFlightData.eta) {
+          const etaT = new Date(lastFlightData.eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+          flightLine += `\n⏱️ ETA: ${etaT}`;
+          if (lastFlightData.status === 'en_route') flightLine += ' ✈️ (σε πτήση)';
+          else if (lastFlightData.status === 'landed') flightLine += ' ✅ (προσγειώθηκε)';
+          else if (lastFlightData.status === 'scheduled') flightLine += ' (προγρ/μένη)';
+        }
+      }
+      travelDetails += flightLine + '\n';
     }
     if (bookingNotes) {
       travelDetails += `📝 Σημειώσεις: ${bookingNotes}\n`;
@@ -887,7 +904,23 @@
     // Build booking time text
     let bookingTimeText = '';
     if (selectedBookingType === 'instant') {
-      bookingTimeText = '⚡ ΑΜΕΣΑ';
+      // If flight data has a future ETA, override "ΑΜΕΣΑ" with the real arrival time
+      if (lastFlightData && lastFlightData.eta && lastFlightData.status !== 'landed') {
+        const etaDt = new Date(lastFlightData.eta);
+        if (etaDt.getTime() > Date.now()) {
+          const etaH = etaDt.getHours();
+          const etaM = String(etaDt.getMinutes()).padStart(2, '0');
+          const etaSuffix = etaH < 12 ? 'πμ' : 'μμ';
+          const etaH12 = etaH === 0 ? 12 : etaH > 12 ? etaH - 12 : etaH;
+          const dayNames = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
+          const monthNames = ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+          bookingTimeText = `📅 ${dayNames[etaDt.getDay()]} ${etaDt.getDate()} ${monthNames[etaDt.getMonth()]}, ώρα ${etaH12}:${etaM} ${etaSuffix} (ETA πτήσης)`;
+        } else {
+          bookingTimeText = '⚡ ΑΜΕΣΑ (πτήση προσγειώθηκε)';
+        }
+      } else {
+        bookingTimeText = '⚡ ΑΜΕΣΑ';
+      }
     } else if (selectedBookingType === 'scheduled' && selectedDateTime) {
       const dt = new Date(`${selectedDateTime.date}T${selectedDateTime.time}`);
       const dayNames = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];

@@ -221,6 +221,17 @@
   function renderTrip(data) {
     var tariffLabel = data.tariff === 'night' ? '🌙 Νυχτερινή' : '☀️ Ημερήσια';
     var schedule = data.booking_type === 'instant' ? '⚡ Άμεσα' : '';
+    // If flight has a future ETA, override "Άμεσα" with the scheduled arrival time
+    if (data.booking_type === 'instant' && data.flight_eta && data.flight_status !== 'landed') {
+      var etaDt = new Date(data.flight_eta);
+      if (etaDt.getTime() > Date.now()) {
+        var etaH = etaDt.getHours();
+        var etaM = String(etaDt.getMinutes()).padStart(2, '0');
+        var sfx = etaH < 12 ? 'πμ' : 'μμ';
+        var h12v = etaH === 0 ? 12 : etaH > 12 ? etaH - 12 : etaH;
+        schedule = '📅 ETA πτήσης: ' + h12v + ':' + etaM + ' ' + sfx;
+      }
+    }
     if (data.scheduled_date) {
       var dayNames = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
       var monthNames = ['Ιανουαρίου','Φεβρουαρίου','Μαρτίου','Απριλίου','Μαΐου','Ιουνίου','Ιουλίου','Αυγούστου','Σεπτεμβρίου','Οκτωβρίου','Νοεμβρίου','Δεκεμβρίου'];
