@@ -884,7 +884,8 @@
       if (lastFlightData) {
         if (lastFlightData.airline) flightLine += ` (${lastFlightData.airline})`;
         if (lastFlightData.origin) flightLine += `\n📍 Από: ${lastFlightData.origin}`;
-        if (lastFlightData.eta) {
+        // Only show ETA here if bookingTimeText didn't already include it
+        if (lastFlightData.eta && !bookingTimeText.includes('ETA')) {
           const etaT = new Date(lastFlightData.eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
           flightLine += `\n⏱️ ETA: ${etaT}`;
           if (lastFlightData.status === 'en_route') flightLine += ' ✈️ (σε πτήση)';
@@ -945,8 +946,16 @@
     }
     if (bookingTimeText) parts.push(`⏰ Χρόνος: ${bookingTimeText}`);
     parts.push(`🚗 Όχημα: ${selectedVehicle.name}`);
-    parts.push('');
-    parts.push(locationInfo);
+
+    // Hotel address section — only for departures (arrivals already show hotel as destination)
+    // For arrivals, put address inline
+    if (isArrival) {
+      if (hotelMunicipality) parts.push(`📌 Δήμος: ${hotelMunicipality}`);
+      if (hotelAddress) parts.push(`📍 Διεύθυνση: ${hotelAddress}`);
+    } else {
+      parts.push('');
+      parts.push(locationInfo);
+    }
     if (travelDetails) parts.push(`\n${travelDetails.trim()}`);
     // Price — only if admin has enabled it
     const showPrice = CONFIG?.showPriceInMessage !== false;

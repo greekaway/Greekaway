@@ -289,7 +289,7 @@
       // Hotel reply button (for pending/sent requests that have orderer_phone)
       var replyBtns = '';
       if (canSend && r.orderer_phone) {
-        replyBtns = '<button class="dr-btn req-reply-btn" style="background:#3b82f6;color:#fff;font-size:11px;padding:2px 6px;margin-right:2px" title="Απάντηση στο ξενοδοχείο">💬</button>';
+        replyBtns = '<button class="dr-btn req-reply-btn" style="background:#3b82f6;color:#fff;margin-right:2px">Μήνυμα</button>';
       }
 
       return '<tr data-id="' + r.id + '" data-json=\'' + JSON.stringify({
@@ -369,8 +369,13 @@
         var tr = btn.closest('tr');
         var rData = {};
         try { rData = JSON.parse(tr.dataset.json || '{}'); } catch (_) {}
-        var phone = (rData.orderer_phone || '').replace(/[^0-9+]/g, '').replace(/^\+/, '');
-        if (!phone) { toast('Δεν υπάρχει τηλέφωνο ξενοδοχείου'); return; }
+        // Normalize phone for wa.me: digits only, ensure Greek +30 prefix
+        var rawPhone = (rData.orderer_phone || '').replace(/[\s\-().]/g, '');
+        // If starts with 69 (Greek mobile without country code), prefix 30
+        if (/^69\d{8}$/.test(rawPhone)) rawPhone = '30' + rawPhone;
+        // Strip + and keep digits only
+        var phone = rawPhone.replace(/^\+/, '').replace(/[^0-9]/g, '');
+        if (!phone || phone.length < 10) { toast('Δεν υπάρχει τηλέφωνο ξενοδοχείου'); return; }
 
         // Greece-time greeting: 00:00-11:59 → Καλημέρα, 12:00-23:59 → Καλησπέρα
         function grGreeting() {
@@ -417,7 +422,7 @@
             }
           }
           msg += '\nΣύντομα θα σας ενημερώσω για τον οδηγό! 🙏';
-          window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+          var a = document.createElement('a'); a.href = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg); a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
           overlay.remove();
         });
 
@@ -438,7 +443,7 @@
             var msg = grGreeting() + '! Βρήκαμε οδηγό για τη διαδρομή σας';
             if (rData.passenger_name) msg += ' (' + rData.passenger_name + ')';
             msg += '.\n\n🕐 Θα είναι εκεί σε ' + n + ' λεπτ' + (n === 1 ? 'ό' : 'ά') + '!\n\nΕυχαριστούμε! 🙏';
-            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+            var a = document.createElement('a'); a.href = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg); a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
             overlay.remove();
           });
           grid.appendChild(b);
