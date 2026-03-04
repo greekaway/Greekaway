@@ -270,8 +270,37 @@
       sections.push({ icon: '👤', label: 'Όνομα', value: data.passenger_name });
     }
     if (data.flight_number) {
-      sections.push({ icon: '🛫', label: 'Δρομολόγιο', value: data.flight_number });
+      sections.push({ icon: '🛫', label: 'Δρομολόγιο', value: data.flight_number + (data.flight_airline ? ' (' + data.flight_airline + ')' : '') });
     }
+
+    // ── Flight tracking live status (arrival only) ──
+    if (data.flight_number && data.is_arrival && data.flight_tracking_active !== false) {
+      sections.push({ type: 'divider' });
+      sections.push({ type: 'title', text: '✈️ Live Πτήση' });
+      // Flight status banner — will be updated by poller
+      sections.push({ type: 'custom', html: '<div id="flight-live-banner" style="padding:10px;border-radius:8px;text-align:center;font-weight:600;margin:4px 0"></div>' });
+
+      if (data.flight_origin) {
+        sections.push({ icon: '📍', label: 'Από', value: data.flight_origin });
+      }
+      if (data.flight_eta) {
+        var etaDate = new Date(data.flight_eta);
+        var etaTime = etaDate.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+        sections.push({ icon: '⏰', label: 'ETA', value: etaTime, id: 'flight-eta-row' });
+      }
+      if (data.flight_actual_arrival) {
+        var actDate = new Date(data.flight_actual_arrival);
+        var actTime = actDate.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+        sections.push({ icon: '✅', label: 'Προσγείωση', value: actTime });
+      }
+      if (data.flight_gate) {
+        sections.push({ icon: '🚪', label: 'Gate', value: data.flight_gate });
+      }
+      if (data.flight_terminal) {
+        sections.push({ icon: '🏢', label: 'Terminal', value: data.flight_terminal });
+      }
+    }
+
     if (data.room_number) {
       sections.push({ icon: '🚪', label: 'Δωμάτιο', value: data.room_number });
     }
@@ -289,12 +318,22 @@
     tripDetails.innerHTML = sections.map(function(r) {
       if (r.type === 'divider') return '<div class="section-divider"></div>';
       if (r.type === 'title') return '<div class="section-title">' + r.text + '</div>';
-      return '<div class="trip-row">' +
+      if (r.type === 'custom') return r.html;
+      var idAttr = r.id ? ' id="' + r.id + '"' : '';
+      return '<div class="trip-row"' + idAttr + '>' +
         '<span class="icon">' + r.icon + '</span>' +
         '<span class="label">' + r.label + '</span>' +
         '<span class="value">' + r.value + '</span>' +
       '</div>';
     }).join('');
+
+    // ── Update flight live banner ──
+    updateFlightBanner(data);
+
+    // ── Start flight status polling (every 60s) for arrival flights ──
+    if (data.is_arrival && data.flight_number && data.flight_tracking_active) {
+      startFlightPolling();
+    }
 
     // ── Price cards ──
     var price = parseFloat(data.price || 0);
@@ -496,6 +535,93 @@
       driverNameInput.classList.remove('error-border');
     }
   });
+
+  // ── Flight live banner updater ──
+  function updateFlightBanner(data) {
+    var banner = document.getElementById('flight-live-banner');
+    if (!banner) return;
+
+    var st = data.flight_status || '';
+    var text = '';
+    var bg = '#f3f4f6';
+    var color = '#374151';
+
+    if (st === 'scheduled') {
+      text = '📅 Προγραμματισμένη';
+      bg = '#dbeafe'; color = '#1e40af';
+    } else if (st === 'en_route') {
+      text = '✈️ Σε πτήση';
+      bg = '#fef3c7'; color = '#92400e';
+      if (data.flight_eta) {
+        var eta = new Date(data.flight_eta);
+        text += ' — ETA ' + eta.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+      }
+    } else if (st === 'landed') {
+      text = '✅ Προσγειώθηκε';
+      bg = '#d1fae5'; color = '#065f46';
+      if (data.flight_actual_arrival) {
+        var act = new Date(data.flight_actual_arrival);
+        text += ' ' + act.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+      }
+      if (data.flight_gate) text += ' | Gate ' + data.flight_gate;
+      if (data.flight_terminal) text += ' | T' + data.flight_terminal;
+    } else if (st === 'cancelled') {
+      text = '❌ Πτήση ακυρώθηκε';
+      bg = '#fee2e2'; color = '#991b1b';
+    } else if (st === 'diverted') {
+      text = '⚠️ Πτήση εκτράπηκε';
+      bg = '#fef3c7'; color = '#92400e';
+    } else {
+      text = '📡 Live tracking ενεργό';
+      bg = '#f3f4f6'; color = '#6b7280';
+    }
+
+    banner.textContent = text;
+    banner.style.background = bg;
+    banner.style.color = color;
+  }
+
+  // ── Flight status polling (every 60s) ──
+  var flightPollTimer = null;
+
+  function startFlightPolling() {
+    if (flightPollTimer) return; // already running
+    flightPollTimer = setInterval(pollFlightStatus, 60 * 1000);
+  }
+
+  async function pollFlightStatus() {
+    if (!token) return;
+    if (uiState === 'completed') {
+      clearInterval(flightPollTimer);
+      return;
+    }
+    try {
+      var res = await fetch('/api/moveathens/flight-status/' + token);
+      if (!res.ok) return;
+      var data = await res.json();
+
+      // Update banner
+      updateFlightBanner(data);
+
+      // Update ETA row if it exists
+      var etaRow = document.getElementById('flight-eta-row');
+      if (etaRow && data.flight_eta) {
+        var etaVal = etaRow.querySelector('.value');
+        if (etaVal) {
+          var etaDate = new Date(data.flight_eta);
+          etaVal.textContent = etaDate.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+        }
+      }
+
+      // If landed, stop polling
+      if (data.flight_status === 'landed') {
+        clearInterval(flightPollTimer);
+        flightPollTimer = null;
+      }
+    } catch (_) {
+      // Silent fail — next poll will retry
+    }
+  }
 
   loadTrip();
 })();

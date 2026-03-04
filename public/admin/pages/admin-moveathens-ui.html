@@ -124,6 +124,18 @@
               <label>Company Email <input id="companyEmail" class="input" type="email" maxlength="120"></label>
             </div>
 
+            <h3 class="ma-subtitle">✈️ Flight Tracking (AeroAPI)</h3>
+            <div class="ma-grid">
+              <label class="ma-zone-toggle">
+                <input id="flightTrackingEnabled" type="checkbox" checked>
+                Live Flight Tracking ενεργό
+              </label>
+              <label>Δεύτερη κλήση πτήσης (λεπτά πριν ETA)
+                <input id="flightCheckMinsBefore" class="input" type="number" min="5" max="120" value="25">
+                <small class="ma-hint">Πόσα λεπτά πριν την εκτιμώμενη άφιξη θα γίνει η 2η κλήση στο FlightAware API</small>
+              </label>
+            </div>
+
             <div class="ma-actions">
               <button id="saveBtn" class="btn" type="submit">Save</button>
               <div id="ma-status" class="ma-status" aria-live="polite"></div>

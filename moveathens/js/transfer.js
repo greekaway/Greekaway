@@ -677,20 +677,52 @@
     });
   };
 
-  // Setup flight number input listener
+  // Setup flight number input listener — with live AeroAPI validation
+  let flightLookupTimer = null;
+  let lastFlightLookup = '';
+
   const setupFlightNumberListener = () => {
     const input = $('#flight-number');
     const errorEl = $('#flight-number-error');
     if (!input) return;
 
+    // Create (or reuse) feedback element below the input
+    let feedbackEl = document.getElementById('flight-lookup-feedback');
+    if (!feedbackEl) {
+      feedbackEl = document.createElement('p');
+      feedbackEl.id = 'flight-lookup-feedback';
+      feedbackEl.className = 'ma-input-hint';
+      feedbackEl.style.cssText = 'margin-top:4px;font-size:0.82rem;transition:opacity .2s';
+      feedbackEl.hidden = true;
+      if (errorEl) {
+        errorEl.parentNode.insertBefore(feedbackEl, errorEl.nextSibling);
+      } else {
+        input.parentNode.appendChild(feedbackEl);
+      }
+    }
+
     const newInput = input.cloneNode(true);
     input.parentNode.replaceChild(newInput, input);
 
     newInput.addEventListener('input', (e) => {
-      flightNumber = e.target.value.trim();
+      // Uppercase normalization + strip spaces: "oa 123" → "OA123"
+      const raw = e.target.value;
+      const normalised = raw.toUpperCase().replace(/\s+/g, '');
+      if (normalised !== raw) {
+        e.target.value = normalised;
+      }
+      flightNumber = normalised;
       newInput.classList.remove('ma-input-error-state');
       if (errorEl) errorEl.hidden = true;
       updateCtaLinks();
+
+      // Debounced AeroAPI lookup (1 second after user stops typing)
+      if (flightLookupTimer) clearTimeout(flightLookupTimer);
+      feedbackEl.hidden = true;
+
+      if (normalised.length >= 4 && normalised !== lastFlightLookup) {
+        flightLookupTimer = setTimeout(() => doFlightLookup(normalised, feedbackEl, newInput), 1000);
+      }
     });
 
     newInput.addEventListener('blur', () => {
@@ -700,6 +732,44 @@
         if (errorEl) errorEl.hidden = false;
       }
     });
+  };
+
+  // AeroAPI live lookup — called after debounce
+  const doFlightLookup = async (ident, feedbackEl, inputEl) => {
+    if (!feedbackEl) return;
+    feedbackEl.hidden = false;
+    feedbackEl.style.color = '#6b7280';
+    feedbackEl.textContent = '🔍 Αναζήτηση πτήσης…';
+
+    try {
+      const dateParam = selectedDateTime?.date || '';
+      const res = await fetch(`/api/moveathens/flight-lookup/${encodeURIComponent(ident)}${dateParam ? '?date=' + dateParam : ''}`);
+      const data = await res.json();
+
+      if (data.ok && data.flight) {
+        const f = data.flight;
+        lastFlightLookup = ident;
+        feedbackEl.style.color = '#059669';
+        let text = `✅ ${f.airline || ident}`;
+        if (f.origin) text += ` | Από: ${f.origin}`;
+        if (f.eta) {
+          const etaTime = new Date(f.eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+          text += ` | ETA: ${etaTime}`;
+        }
+        if (f.status === 'en_route') text += ' ✈️';
+        else if (f.status === 'landed') text += ' (Προσγειώθηκε ✅)';
+        feedbackEl.textContent = text;
+        inputEl.classList.remove('ma-input-error-state');
+      } else {
+        feedbackEl.style.color = '#dc2626';
+        feedbackEl.textContent = '⚠️ Δεν βρέθηκε πτήση — ελέγξτε τον αριθμό';
+        lastFlightLookup = '';
+      }
+    } catch (err) {
+      feedbackEl.style.color = '#9ca3af';
+      feedbackEl.textContent = '⚠️ Αδυναμία ελέγχου — η καταχώρηση θα γίνει χωρίς live tracking';
+      lastFlightLookup = '';
+    }
   };
 
   // Validate passenger name before allowing CTA actions

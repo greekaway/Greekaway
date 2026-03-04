@@ -185,6 +185,16 @@
       if (priceToggle) {
         priceToggle.checked = CONFIG.showPriceInMessage !== false; // default ON
       }
+
+      // Flight tracking settings
+      const ftEnabled = document.getElementById('flightTrackingEnabled');
+      if (ftEnabled) {
+        ftEnabled.checked = CONFIG.flightTrackingEnabled !== false; // default ON
+      }
+      const ftMins = document.getElementById('flightCheckMinsBefore');
+      if (ftMins) {
+        ftMins.value = CONFIG.flightCheckMinsBefore || 25;
+      }
     };
 
     if (form) {
@@ -212,7 +222,9 @@
           phoneNumber: fields.phoneNumber?.value || '',
           whatsappNumber: fields.whatsappNumber?.value || '',
           companyEmail: fields.companyEmail?.value || '',
-          showPriceInMessage: document.getElementById('showPriceToggle')?.checked !== false
+          showPriceInMessage: document.getElementById('showPriceToggle')?.checked !== false,
+          flightTrackingEnabled: document.getElementById('flightTrackingEnabled')?.checked !== false,
+          flightCheckMinsBefore: parseInt(document.getElementById('flightCheckMinsBefore')?.value, 10) || 25
         };
         const res = await api('/api/admin/moveathens/ui-config', 'POST', payload);
         if (!res) return;

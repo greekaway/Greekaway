@@ -18,6 +18,7 @@ const rateLimit = require('express-rate-limit');
 const requestsData = require('../../src/server/data/moveathens-requests');
 const driversData = require('../../src/server/data/moveathens-drivers');
 const maLogger = require('../../services/maLogger');
+const flightTracker = require('../../services/flightTracker');
 
 const DRIVER_ACCEPT_FILE = path.join(__dirname, '..', 'pages', 'driver-accept.html');
 
@@ -109,6 +110,33 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       });
 
       console.log('[ma-requests] Request created:', record.id, 'status:', record.status);
+
+      // ── Flight tracking: if arrival + flight number, store data from 1st AeroAPI call ──
+      if (record.is_arrival && record.flight_number) {
+        try {
+          const flightResult = await flightTracker.lookupFlight(record.flight_number, record.scheduled_date);
+          if (flightResult.ok && flightResult.flight) {
+            const f = flightResult.flight;
+            await requestsData.updateRequest(record.id, {
+              flight_status:         f.flight_status,
+              flight_airline:        f.flight_airline,
+              flight_origin:         f.flight_origin,
+              flight_eta:            f.flight_eta || null,
+              flight_gate:           f.flight_gate || '',
+              flight_terminal:       f.flight_terminal || '',
+              flight_tracking_active: true,
+              flight_last_checked:   new Date().toISOString(),
+              flight_raw_json:       JSON.stringify(f.raw)
+            });
+            console.log('[ma-requests] Flight tracking activated for', record.id, ':', f.flight_airline, f.flight_origin, '→ ETA', f.flight_eta);
+          } else {
+            console.warn('[ma-requests] Flight lookup failed for', record.flight_number, ':', flightResult.error);
+          }
+        } catch (flightErr) {
+          console.warn('[ma-requests] Flight lookup error (non-blocking):', flightErr.message);
+        }
+      }
+
       return res.json({ ok: true, requestId: record.id });
     } catch (err) {
       console.error('[ma-requests] POST /transfer-request failed:', err.message);
@@ -198,6 +226,14 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         room_number: request.room_number || '',
         notes: request.notes || '',
         flight_number: request.flight_number || '',
+        flight_status: request.flight_status || '',
+        flight_airline: request.flight_airline || '',
+        flight_origin: request.flight_origin || '',
+        flight_eta: request.flight_eta || null,
+        flight_actual_arrival: request.flight_actual_arrival || null,
+        flight_gate: request.flight_gate || '',
+        flight_terminal: request.flight_terminal || '',
+        flight_tracking_active: request.flight_tracking_active || false,
         passengers: request.passengers,
         luggage_large: request.luggage_large || 0,
         luggage_medium: request.luggage_medium || 0,
@@ -423,7 +459,9 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         request.is_arrival
           ? `🏨 Προς: ${request.hotel_name || '—'}`
           : `🎯 ${request.destination_name || '—'}`,
-        request.flight_number ? `🛫 Δρομολόγιο: ${request.flight_number}` : '',
+        request.flight_number ? `🛫 Πτήση: ${request.flight_number}${request.flight_airline ? ` (${request.flight_airline})` : ''}` : '',
+        request.flight_origin ? `📍 Από: ${request.flight_origin}` : '',
+        request.flight_eta ? `⏰ ETA: ${new Date(request.flight_eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' })}${request.flight_status === 'en_route' ? ' — Σε πτήση ✈️' : request.flight_status === 'landed' ? ' — Προσγειώθηκε ✅' : request.flight_status === 'scheduled' ? ' — Προγραμματισμένη' : ''}` : '',
         scheduleText,
         ``,
         `� Πατήστε παρακάτω για αποδοχή:`,
@@ -446,6 +484,65 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
   });
 
   // ========================================
+  // PUBLIC: Flight lookup (used by hotel form for live validation)
+  // ========================================
+  app.get('/api/moveathens/flight-lookup/:ident', driverRateLimit, async (req, res) => {
+    try {
+      const ident = req.params.ident;
+      const scheduledDate = req.query.date || '';
+      if (!ident || ident.length < 3) {
+        return res.status(400).json({ ok: false, error: 'Invalid flight number' });
+      }
+      const result = await flightTracker.lookupFlight(ident, scheduledDate);
+      if (!result.ok) {
+        return res.json({ ok: false, error: result.error });
+      }
+      // Return only safe fields (no raw AeroAPI data to client)
+      const f = result.flight;
+      return res.json({
+        ok: true,
+        fromCache: result.fromCache || false,
+        flight: {
+          ident:    f.flight_ident,
+          status:   f.flight_status,
+          airline:  f.flight_airline,
+          origin:   f.flight_origin,
+          origin_code: f.flight_origin_code,
+          eta:      f.flight_eta,
+          gate:     f.flight_gate,
+          terminal: f.flight_terminal
+        }
+      });
+    } catch (err) {
+      console.error('[ma-requests] flight-lookup error:', err.message);
+      return res.status(500).json({ ok: false, error: 'Lookup failed' });
+    }
+  });
+
+  // ========================================
+  // PUBLIC: Flight status for driver page (live polling)
+  // ========================================
+  app.get('/api/moveathens/flight-status/:token', driverRateLimit, async (req, res) => {
+    try {
+      const request = await requestsData.getRequestByToken(req.params.token);
+      if (!request) return res.status(404).json({ error: 'Not found' });
+      return res.json({
+        flight_number:         request.flight_number || '',
+        flight_status:         request.flight_status || '',
+        flight_airline:        request.flight_airline || '',
+        flight_origin:         request.flight_origin || '',
+        flight_eta:            request.flight_eta || null,
+        flight_actual_arrival: request.flight_actual_arrival || null,
+        flight_gate:           request.flight_gate || '',
+        flight_terminal:       request.flight_terminal || '',
+        flight_tracking_active: request.flight_tracking_active || false
+      });
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ========================================
   // PUBLIC: Driver accept page (HTML — no auth)
   // ========================================
   app.get('/moveathens/driver-accept', (req, res) => {
@@ -462,5 +559,12 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       .catch(e => console.warn('[ma-requests] expire error:', e.message));
   }, 5 * 60 * 1000);
 
-  console.log('[ma-requests] Routes mounted (incl. driver-accept page + auto-expiry)');
+  // ── Start flight tracking background poller ──
+  const moveathensData = require('../../src/server/data/moveathens');
+  flightTracker.startPoller({
+    getConfig: () => moveathensData.getConfig(),
+    requestsData: requestsData
+  });
+
+  console.log('[ma-requests] Routes mounted (incl. driver-accept page + auto-expiry + flight poller)');
 };

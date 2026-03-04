@@ -1373,6 +1373,12 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       if (typeof body.showPriceInMessage === 'boolean') {
         updates.showPriceInMessage = body.showPriceInMessage;
       }
+      if (typeof body.flightTrackingEnabled === 'boolean') {
+        updates.flightTrackingEnabled = body.flightTrackingEnabled;
+      }
+      if (typeof body.flightCheckMinsBefore === 'number') {
+        updates.flightCheckMinsBefore = Math.max(5, Math.min(120, body.flightCheckMinsBefore));
+      }
       
       // Save to database (with JSON fallback)
       await dataLayer.updateConfig({ ...current, ...updates });

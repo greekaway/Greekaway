@@ -261,12 +261,37 @@
       var routeDisplay = r.is_arrival
         ? (dirIcon + (r.destination_name || '—') + ' → ' + (r.hotel_name || '—'))
         : ((r.hotel_name || '—') + ' → ' + (r.destination_name || '—'));
+
+      // Flight tracking info for arrivals
+      var flightInfo = '';
+      if (r.flight_number) {
+        flightInfo = '<br><small style="color:#6b7280">✈ ' + r.flight_number;
+        if (r.flight_airline) flightInfo += ' (' + r.flight_airline + ')';
+        if (r.flight_origin) flightInfo += ' — ' + r.flight_origin;
+        flightInfo += '</small>';
+        if (r.flight_eta) {
+          var etaDate = new Date(r.flight_eta);
+          var etaTime = etaDate.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+          var statusColor = '#6b7280';
+          var statusLabel = '';
+          if (r.flight_status === 'en_route') { statusColor = '#f59e0b'; statusLabel = '✈️ Σε πτήση'; }
+          else if (r.flight_status === 'landed') { statusColor = '#10b981'; statusLabel = '✅ Προσγειώθηκε'; }
+          else if (r.flight_status === 'scheduled') { statusColor = '#3b82f6'; statusLabel = '📅 Προγρ/μένη'; }
+          else if (r.flight_status === 'cancelled') { statusColor = '#ef4444'; statusLabel = '❌ Ακυρώθηκε'; }
+          flightInfo += '<br><small style="color:' + statusColor + ';font-weight:600">ETA ' + etaTime;
+          if (statusLabel) flightInfo += ' — ' + statusLabel;
+          if (r.flight_gate) flightInfo += ' | Gate ' + r.flight_gate;
+          if (r.flight_terminal) flightInfo += ' | T' + r.flight_terminal;
+          flightInfo += '</small>';
+        }
+      }
+
       return '<tr data-id="' + r.id + '">' +
         '<td title="' + r.id + '">' + String(r.id).slice(-6) + '</td>' +
         '<td colspan="2">' + routeDisplay + '</td>' +
         '<td>' + (r.vehicle_name || '—') + '</td>' +
         '<td>€' + parseFloat(r.price || 0).toFixed(0) + '</td>' +
-        '<td>' + (r.passenger_name || '—') + (r.flight_number ? '<br><small style="color:#6b7280">✈ ' + r.flight_number + '</small>' : '') + '</td>' +
+        '<td>' + (r.passenger_name || '—') + flightInfo + '</td>' +
         '<td>' + statusBadge(r.status) + '</td>' +
         '<td>' + (canSend
           ? '<input class="dr-inline-input req-phone" value="' + phoneVal + '" placeholder="+30…">'
