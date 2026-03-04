@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS ma_config (
     info_page_title VARCHAR(255),
     info_page_content TEXT,
     show_price_in_message BOOLEAN DEFAULT true,
+    iris_phone VARCHAR(50) DEFAULT '',
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

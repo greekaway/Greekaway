@@ -447,7 +447,12 @@
         '<span class="iris-icon">🏦</span>' +
         '<div>' +
           'Η προμήθεια υπηρεσίας <strong>€' + serviceCut.toFixed(0) + '</strong> πληρώνεται με <strong>IRIS</strong> στο: ' +
-          '<span class="iris-phone" id="iris-phone" onclick="(function(el){navigator.clipboard.writeText(\'+306909169503\');var t=el.querySelector(\'.__cp\');if(t){t.style.opacity=1;setTimeout(function(){t.style.opacity=0},1500)}})( this)">+30 690 916 9503<span class="iris-copied __cp"> ✓ copied</span></span>' +
+          (function() {
+            var ph = (data.iris_phone || '').replace(/[^0-9+]/g, '');
+            var display = (data.iris_phone || '').trim();
+            if (!ph) return '<em>Δεν έχει οριστεί</em>';
+            return '<span class="iris-phone" id="iris-phone" onclick="(function(el){navigator.clipboard.writeText(\'' + ph + '\');var t=el.querySelector(\'.__cp\');if(t){t.style.opacity=1;setTimeout(function(){t.style.opacity=0},1500)}})(this)">' + display + '<span class="iris-copied __cp"> ✓ copied</span></span>';
+          })() +
         '</div>' +
       '</div>';
 

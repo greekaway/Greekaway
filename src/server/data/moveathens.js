@@ -96,6 +96,7 @@ function getDefaultConfig() {
     infoCancellationContent: '',
     infoComplianceTitle: '',
     infoComplianceContent: '',
+    irisPhone: '',
     infoFaqTitle: '',
     infoFaqContent: '',
     transferZones: [],
@@ -188,7 +189,8 @@ async function getConfig() {
             infoComplianceContent: migrated.info_compliance_content || '',
             infoFaqTitle: migrated.info_faq_title || '',
             infoFaqContent: migrated.info_faq_content || '',
-            showPriceInMessage: migrated.show_price_in_message !== false
+            showPriceInMessage: migrated.show_price_in_message !== false,
+            irisPhone: migrated.iris_phone || ''
           };
         }
       }
@@ -216,7 +218,8 @@ async function getConfig() {
         infoComplianceContent: row.info_compliance_content || '',
         infoFaqTitle: row.info_faq_title || '',
         infoFaqContent: row.info_faq_content || '',
-        showPriceInMessage: row.show_price_in_message !== false
+        showPriceInMessage: row.show_price_in_message !== false,
+        irisPhone: row.iris_phone || ''
       };
     } catch (err) {
       console.error('[moveathens] DB config read failed:', err.message);
@@ -246,7 +249,8 @@ async function getConfig() {
     infoComplianceContent: full.infoComplianceContent || '',
     infoFaqTitle: full.infoFaqTitle || '',
     infoFaqContent: full.infoFaqContent || '',
-    showPriceInMessage: full.showPriceInMessage !== false
+    showPriceInMessage: full.showPriceInMessage !== false,
+    irisPhone: full.irisPhone || ''
   };
 }
 

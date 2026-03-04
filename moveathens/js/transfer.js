@@ -972,6 +972,24 @@
     // Build message content — ordered: destination, time, vehicle, hotel, passenger details, price
     const parts = [];
     const isArrival = selectedCategory && selectedCategory.is_arrival;
+
+    // Build Google Maps pickup link
+    let pickupMapsUrl = '';
+    if (isArrival) {
+      // Arrival: pickup at destination (airport etc.)
+      if (selectedDestination.lat && selectedDestination.lng) {
+        pickupMapsUrl = `https://maps.google.com/?q=${selectedDestination.lat},${selectedDestination.lng}`;
+      } else {
+        pickupMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(selectedDestination.name)}`;
+      }
+    } else {
+      // Departure: pickup at hotel
+      const addrQuery = hotelAddress ? `${hotelAddress}, ${hotelMunicipality}`.trim().replace(/,\s*$/, '') : hotelName;
+      if (addrQuery) {
+        pickupMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(addrQuery)}`;
+      }
+    }
+
     if (isArrival) {
       // Arrival: pickup FROM destination → hotel
       parts.push(`✈️ Άφιξη : ${selectedDestination.name}`);
@@ -992,6 +1010,8 @@
       parts.push('');
       parts.push(locationInfo);
     }
+    // Google Maps link for pickup point (auto-clickable in WhatsApp)
+    if (pickupMapsUrl) parts.push(`🗺️ Χάρτης: ${pickupMapsUrl}`);
     if (travelDetails) parts.push(`\n${travelDetails.trim()}`);
     // Price — only if admin has enabled it
     const showPrice = CONFIG?.showPriceInMessage !== false;

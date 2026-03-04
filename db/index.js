@@ -344,7 +344,9 @@ const ma = {
       'info_compliance_title', 'info_compliance_content',
       'info_faq_title', 'info_faq_content',
       // Price toggle (2026-02-10)
-      'show_price_in_message'
+      'show_price_in_message',
+      // IRIS payment phone (2026-03-04)
+      'iris_phone'
     ];
     
     const updates = [];

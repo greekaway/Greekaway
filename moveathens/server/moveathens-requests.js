@@ -219,6 +219,14 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         } catch (e) { /* ignore */ }
       }
 
+      // Look up IRIS payment phone from admin config
+      let iris_phone = '';
+      try {
+        const moveathensData = require('../../src/server/data/moveathens');
+        const cfg = await moveathensData.getConfig();
+        iris_phone = cfg.irisPhone || '';
+      } catch (e) { /* ignore */ }
+
       // Return trip info (no sensitive admin data)
       return res.json({
         id: request.id,
@@ -258,7 +266,8 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         commission_service: request.commission_service,
         payment_method: request.payment_method,
         status: request.status,
-        is_arrival: request.is_arrival ?? false
+        is_arrival: request.is_arrival ?? false,
+        iris_phone: iris_phone
       });
     } catch (err) {
       maLogger.log('error', 'driver-view', { token: req.params.token, reason: err.message, stack: err.stack });
@@ -449,6 +458,31 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       // The 2nd & final API call is scheduled by the background poller
       // X minutes before ETA (configurable in admin panel).
 
+      // Look up pickup-point coordinates for Google Maps link
+      let pickupMapsUrl = '';
+      try {
+        const moveathensData = require('../../src/server/data/moveathens');
+        if (request.is_arrival && request.destination_id) {
+          // Arrival: driver picks up from destination (airport etc.)
+          const dests = await moveathensData.getDestinations({ activeOnly: false });
+          const dest = dests.find(d => d.id === request.destination_id);
+          if (dest && dest.lat && dest.lng) {
+            pickupMapsUrl = `https://maps.google.com/?q=${dest.lat},${dest.lng}`;
+          } else if (request.destination_name) {
+            pickupMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(request.destination_name)}`;
+          }
+        } else {
+          // Departure: driver picks up from hotel
+          const addr = request.hotel_address || '';
+          const muni = request.hotel_municipality || '';
+          const hotelName = request.hotel_name || '';
+          const query = addr ? `${addr}, ${muni}`.trim().replace(/,\s*$/, '') : hotelName;
+          if (query) {
+            pickupMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(query)}`;
+          }
+        }
+      } catch (e) { /* ignore */ }
+
       // Build WhatsApp message
       let scheduleText = '';
       if (request.scheduled_date) {
@@ -488,13 +522,14 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         request.is_arrival
           ? `🏨 Προς: ${request.hotel_name || '—'}`
           : `🎯 ${request.destination_name || '—'}`,
+        pickupMapsUrl ? `📍 Παραλαβή: ${pickupMapsUrl}` : '',
         request.flight_number ? `🛫 Πτήση: ${request.flight_number}${request.flight_airline ? ` (${request.flight_airline})` : ''}` : '',
         request.flight_origin ? `📍 Από: ${request.flight_origin}` : '',
         request.flight_eta ? `⏰ ETA: ${new Date(request.flight_eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Athens' })}${request.flight_status === 'en_route' ? ' — Σε πτήση ✈️' : request.flight_status === 'landed' ? ' — Προσγειώθηκε ✅' : request.flight_status === 'scheduled' ? ' — Προγραμματισμένη' : ''}` : '',
         // Only show scheduleText if it's NOT a duplicate of the ETA line above
         (request.flight_eta && scheduleText.includes('ETA')) ? '' : scheduleText,
         ``,
-        `� Πατήστε παρακάτω για αποδοχή:`,
+        `👆 Πατήστε παρακάτω για αποδοχή:`,
         ``,
         `${acceptUrl}`
       ].filter(l => l !== undefined).join('\n');

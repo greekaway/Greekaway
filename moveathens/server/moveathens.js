@@ -80,9 +80,11 @@ module.exports = function registerMoveAthens(app, opts = {}) {
 
     const phone = normalizeString(incoming.phoneNumber);
     const whatsapp = normalizeString(incoming.whatsappNumber);
+    const irisPhone = normalizeString(incoming.irisPhone || '');
     const phoneRe = /^[+0-9][0-9 ()\-]{5,24}$/;
     if (phone && !phoneRe.test(phone)) return { ok: false, error: 'Invalid phoneNumber' };
     if (whatsapp && !phoneRe.test(whatsapp)) return { ok: false, error: 'Invalid whatsappNumber' };
+    if (irisPhone && !phoneRe.test(irisPhone)) return { ok: false, error: 'Invalid irisPhone' };
 
     const merged = {
       ...(current || {}),
@@ -98,7 +100,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       },
       phoneNumber: phone,
       whatsappNumber: whatsapp,
-      companyEmail: normalizeString(incoming.companyEmail)
+      companyEmail: normalizeString(incoming.companyEmail),
+      irisPhone: irisPhone
     };
 
     if (typeof incoming.heroLogoUrl === 'string') {
@@ -817,7 +820,9 @@ module.exports = function registerMoveAthens(app, opts = {}) {
           name: d.name,
           description: d.description,
           category_id: d.category_id,
-          display_order: d.display_order
+          display_order: d.display_order,
+          lat: d.lat || null,
+          lng: d.lng || null
         }))
       });
     } catch (err) {
@@ -1378,6 +1383,9 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       }
       if (typeof body.flightCheckMinsBefore === 'number') {
         updates.flightCheckMinsBefore = Math.max(5, Math.min(120, body.flightCheckMinsBefore));
+      }
+      if (typeof body.irisPhone === 'string') {
+        updates.irisPhone = normalizeString(body.irisPhone).slice(0, 50);
       }
       
       // Save to database (with JSON fallback)

@@ -159,7 +159,8 @@
       footerIconContextUrl: $('#footerIconContextUrl'),
       phoneNumber: $('#phoneNumber'),
       whatsappNumber: $('#whatsappNumber'),
-      companyEmail: $('#companyEmail')
+      companyEmail: $('#companyEmail'),
+      irisPhone: $('#irisPhone')
     };
 
     const populate = () => {
@@ -179,6 +180,7 @@
       if (fields.phoneNumber) fields.phoneNumber.value = CONFIG.phoneNumber || '';
       if (fields.whatsappNumber) fields.whatsappNumber.value = CONFIG.whatsappNumber || '';
       if (fields.companyEmail) fields.companyEmail.value = CONFIG.companyEmail || '';
+      if (fields.irisPhone) fields.irisPhone.value = CONFIG.irisPhone || '';
 
       // Price visibility toggle
       const priceToggle = document.getElementById('showPriceToggle');
@@ -222,6 +224,7 @@
           phoneNumber: fields.phoneNumber?.value || '',
           whatsappNumber: fields.whatsappNumber?.value || '',
           companyEmail: fields.companyEmail?.value || '',
+          irisPhone: fields.irisPhone?.value || '',
           showPriceInMessage: document.getElementById('showPriceToggle')?.checked !== false,
           flightTrackingEnabled: document.getElementById('flightTrackingEnabled')?.checked !== false,
           flightCheckMinsBefore: parseInt(document.getElementById('flightCheckMinsBefore')?.value, 10) || 25
