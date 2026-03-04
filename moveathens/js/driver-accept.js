@@ -221,15 +221,16 @@
   function renderTrip(data) {
     var tariffLabel = data.tariff === 'night' ? '🌙 Νυχτερινή' : '☀️ Ημερήσια';
     var schedule = data.booking_type === 'instant' ? '⚡ Άμεσα' : '';
-    // If flight has a future ETA, override "Άμεσα" with the scheduled arrival time
-    if (data.booking_type === 'instant' && data.flight_eta && data.flight_status !== 'landed') {
+    // If flight has ETA, ALWAYS override "Άμεσα" with the arrival time (regardless of landed status)
+    if (data.flight_eta) {
       var etaDt = new Date(data.flight_eta);
-      if (etaDt.getTime() > Date.now()) {
-        var etaH = etaDt.getHours();
-        var etaM = String(etaDt.getMinutes()).padStart(2, '0');
-        var sfx = etaH < 12 ? 'πμ' : 'μμ';
-        var h12v = etaH === 0 ? 12 : etaH > 12 ? etaH - 12 : etaH;
-        schedule = '📅 ETA πτήσης: ' + h12v + ':' + etaM + ' ' + sfx;
+      if (!isNaN(etaDt.getTime())) {
+        var etaStr = etaDt.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Athens' });
+        if (data.flight_status === 'landed') {
+          schedule = '✅ Προσγειώθηκε — ETA: ' + etaStr;
+        } else {
+          schedule = '📅 ETA πτήσης: ' + etaStr;
+        }
       }
     }
     if (data.scheduled_date) {
@@ -307,14 +308,14 @@
       };
       var statusLabel = statusLabels[flightSt] || 'Tracking';
 
-      // Format times for display
+      // Format times for display (Athens timezone)
       var depTimeStr = '—';
       var arrTimeStr = '—';
       if (depISO) {
-        depTimeStr = new Date(depISO).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+        depTimeStr = new Date(depISO).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Athens' });
       }
       if (etaISO) {
-        arrTimeStr = new Date(etaISO).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+        arrTimeStr = new Date(etaISO).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Athens' });
       }
 
       // Calculate progress percentage (simple math)
@@ -337,21 +338,51 @@
       if (data.flight_gate) gateInfo += 'Gate ' + data.flight_gate;
       if (data.flight_terminal) gateInfo += (gateInfo ? ' · ' : '') + 'Terminal ' + data.flight_terminal;
 
+      // Format dates for FlightAware-style display
+      var depDateStr = '—';
+      var arrDateStr = '—';
+      if (depISO) {
+        var depDt = new Date(depISO);
+        var depDay = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][depDt.getDay()];
+        var depMon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][depDt.getMonth()];
+        depDateStr = depDay + ', ' + String(depDt.getDate()).padStart(2,'0') + ' ' + depMon + ' ' + depDt.getFullYear();
+      }
+      if (etaISO) {
+        var arrDtF = new Date(etaISO);
+        var arrDay = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][arrDtF.getDay()];
+        var arrMon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][arrDtF.getMonth()];
+        arrDateStr = arrDay + ', ' + String(arrDtF.getDate()).padStart(2,'0') + ' ' + arrMon + ' ' + arrDtF.getFullYear();
+      }
+
+      // Origin airport name from flight_origin (e.g. "Corfu" or "Κέρκυρα")
+      var originFullName = data.flight_origin || originCode || '—';
+      var depGateStr = 'Gate --';  // We don't have origin gate info
+      var arrGateStr = data.flight_gate ? 'Gate ' + data.flight_gate : 'Gate --';
+      var arrTermStr = data.flight_terminal ? 'Terminal ' + data.flight_terminal : '';
+
       var progressHtml = '<div class="flight-progress-wrap" id="flight-progress-wrap">' +
-        '<div class="flight-progress-header">' +
-          '<span class="fp-origin">' + originCode + '</span>' +
-          '<span class="fp-status ' + flightSt + '">' + statusLabel + '</span>' +
-          '<span class="fp-dest">ATH</span>' +
-        '</div>' +
+        '<div class="fp-status-bar"><span class="fp-status ' + flightSt + '">' + statusLabel + '</span></div>' +
+        '<div class="fp-route-label">' + (originCode || '—') + ' → ATH</div>' +
         '<div class="flight-progress-track" id="flight-progress-track">' +
           '<div class="flight-progress-fill" id="flight-progress-fill" style="width:' + progressPct + '%"></div>' +
           '<span class="flight-progress-plane" id="flight-progress-plane" style="left:' + progressPct + '%">✈️</span>' +
         '</div>' +
-        '<div class="flight-progress-times">' +
-          '<span class="fp-dep">🛫 ' + depTimeStr + '</span>' +
-          '<span class="fp-arr">🛬 ' + arrTimeStr + '</span>' +
+        '<div class="fp-details-grid">' +
+          '<div class="fp-col fp-col-left">' +
+            '<div class="fp-col-date">' + depDateStr + '</div>' +
+            '<div class="fp-col-gate">' + depGateStr + '</div>' +
+            '<div class="fp-col-time">' + depTimeStr + '</div>' +
+            '<div class="fp-col-airport">' + originFullName + '</div>' +
+            '<div class="fp-col-code">' + (originCode || '—') + '</div>' +
+          '</div>' +
+          '<div class="fp-col fp-col-right">' +
+            '<div class="fp-col-date">' + arrDateStr + '</div>' +
+            '<div class="fp-col-gate">' + (arrTermStr ? arrTermStr + ' · ' + arrGateStr : arrGateStr) + '</div>' +
+            '<div class="fp-col-time">' + arrTimeStr + '</div>' +
+            '<div class="fp-col-airport">Athens Int\'l, Eleftherios Venizelos</div>' +
+            '<div class="fp-col-code">ATH</div>' +
+          '</div>' +
         '</div>' +
-        (gateInfo ? '<div class="flight-progress-gate">' + gateInfo + '</div>' : '') +
       '</div>';
 
       sections.push({ type: 'custom', html: progressHtml });
@@ -633,23 +664,26 @@
     if (fill) fill.style.width = progressPct + '%';
     if (plane) plane.style.left = progressPct + '%';
 
-    // Update ETA time display
-    var arrSpan = wrap.querySelector('.fp-arr');
-    if (arrSpan && etaISO) {
-      arrSpan.textContent = '🛬 ' + new Date(etaISO).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+    // Update arrival time in right column
+    var rightTimeEl = wrap.querySelector('.fp-col-right .fp-col-time');
+    if (rightTimeEl && etaISO) {
+      rightTimeEl.textContent = new Date(etaISO).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Athens' });
     }
 
-    // Update gate info
-    var gateEl = wrap.querySelector('.flight-progress-gate');
-    var gateInfo = '';
-    if (data.flight_gate) gateInfo += 'Gate ' + data.flight_gate;
-    if (data.flight_terminal) gateInfo += (gateInfo ? ' · ' : '') + 'Terminal ' + data.flight_terminal;
-    if (gateInfo && !gateEl) {
-      gateEl = document.createElement('div');
-      gateEl.className = 'flight-progress-gate';
-      wrap.appendChild(gateEl);
+    // Update departure time in left column
+    var leftTimeEl = wrap.querySelector('.fp-col-left .fp-col-time');
+    if (leftTimeEl && depISO) {
+      leftTimeEl.textContent = new Date(depISO).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Athens' });
     }
-    if (gateEl) gateEl.textContent = gateInfo;
+
+    // Update gate info in right column
+    var rightGateEl = wrap.querySelector('.fp-col-right .fp-col-gate');
+    if (rightGateEl) {
+      var gInfo = '';
+      if (data.flight_terminal) gInfo += 'Terminal ' + data.flight_terminal;
+      if (data.flight_gate) gInfo += (gInfo ? ' · ' : '') + 'Gate ' + data.flight_gate;
+      if (gInfo) rightGateEl.textContent = gInfo;
+    }
   }
 
   // ── Client-side progress animation (updates every 30s, no API calls) ──

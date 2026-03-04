@@ -253,6 +253,8 @@ CREATE TABLE IF NOT EXISTS ma_transfer_requests (
     flight_tracking_active BOOLEAN DEFAULT false,
     flight_last_checked TIMESTAMPTZ,
     flight_raw_json JSONB,
+    flight_departure TIMESTAMPTZ,
+    flight_poller_done BOOLEAN DEFAULT false,
     passengers INTEGER DEFAULT 0,
     luggage_large INTEGER DEFAULT 0,
     luggage_medium INTEGER DEFAULT 0,

@@ -251,14 +251,11 @@ async function pollFlights() {
     const now = Date.now();
 
     for (const req of trackable) {
-      // Skip if recently checked (< 5 min ago)
-      if (req.flight_last_checked) {
-        const lastChecked = new Date(req.flight_last_checked).getTime();
-        if (now - lastChecked < 5 * 60 * 1000) continue;
+      // Already landed? Mark done, no API call needed.
+      if (req.flight_status === 'landed') {
+        await requestsDataFn.updateRequest(req.id, { flight_tracking_active: false });
+        continue;
       }
-
-      // Already landed? No need to poll again
-      if (req.flight_status === 'landed') continue;
 
       // Check if we are within the admin-defined window before ETA
       const eta = req.flight_eta ? new Date(req.flight_eta).getTime() : null;
@@ -266,38 +263,42 @@ async function pollFlights() {
 
       const minsUntilEta = (eta - now) / (60 * 1000);
 
-      // Poll if within the window (or past ETA but not yet landed)
-      if (minsUntilEta <= minsBefore) {
-        console.log(`[flight-tracker] Polling flight ${req.flight_number} for request ${req.id} (${Math.round(minsUntilEta)} min to ETA)`);
+      // Time to make the ONE scheduled refresh call?
+      // Fire if: within the window AND poller hasn't called yet (flight_poller_done !== true)
+      if (minsUntilEta <= minsBefore && !req.flight_poller_done) {
+        console.log(`[flight-tracker] 2nd & FINAL API call for ${req.flight_number} (request ${req.id}, ${Math.round(minsUntilEta)} min to ETA)`);
 
         const result = await refreshFlight(req.flight_number, req.scheduled_date);
         if (result.ok && result.flight) {
           const f = result.flight;
-          await requestsDataFn.updateRequest(req.id, {
+          const update = {
             flight_status:        f.flight_status,
             flight_airline:       f.flight_airline,
             flight_origin:        f.flight_origin,
             flight_eta:           f.flight_eta || req.flight_eta,
+            flight_departure:     f.flight_departure || req.flight_departure,
             flight_actual_arrival: f.flight_actual_arrival || null,
             flight_gate:          f.flight_gate || req.flight_gate,
             flight_terminal:      f.flight_terminal || req.flight_terminal,
             flight_last_checked:  new Date().toISOString(),
-            flight_raw_json:      JSON.stringify(f.raw)
-          });
+            flight_raw_json:      JSON.stringify(f.raw),
+            flight_poller_done:   true  // ← Mark: 2nd call done, never call again
+          };
 
-          // If flight has landed, mark tracking done
+          // If already landed, also close tracking
           if (f.flight_status === 'landed') {
-            await requestsDataFn.updateRequest(req.id, {
-              flight_tracking_active: false,
-              flight_actual_arrival:  f.flight_actual_arrival || f.flight_eta
-            });
+            update.flight_tracking_active = false;
+            update.flight_actual_arrival = f.flight_actual_arrival || f.flight_eta;
             console.log(`[flight-tracker] Flight ${req.flight_number} LANDED — tracking done for ${req.id}`);
           }
+
+          await requestsDataFn.updateRequest(req.id, update);
         } else {
-          // Log error but don't break — continue with next request
-          console.warn(`[flight-tracker] Poll failed for ${req.flight_number}:`, result.error);
+          // API failed — mark as done anyway to avoid retrying forever
+          console.warn(`[flight-tracker] Final poll failed for ${req.flight_number}:`, result.error);
           await requestsDataFn.updateRequest(req.id, {
-            flight_last_checked: new Date().toISOString()
+            flight_last_checked: new Date().toISOString(),
+            flight_poller_done: true
           });
         }
       }

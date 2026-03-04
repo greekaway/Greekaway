@@ -394,9 +394,12 @@
         var box = document.createElement('div');
         box.style.cssText = 'background:#1e293b;border-radius:12px;padding:24px;max-width:360px;width:92%;text-align:center;color:#f1f5f9';
         box.innerHTML = '<h3 style="margin:0 0 16px;font-size:16px">💬 Απάντηση στο ξενοδοχείο</h3>' +
-          '<div style="display:flex;gap:10px;margin-bottom:16px">' +
+          '<div style="display:flex;gap:10px;margin-bottom:10px">' +
             '<button id="reply-ack" style="flex:1;padding:14px 8px;border:none;background:#3b82f6;color:#fff;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">📩 Έλαβα το αίτημα</button>' +
             '<button id="reply-found" style="flex:1;padding:14px 8px;border:none;background:#10b981;color:#fff;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">🚗 Βρήκα οδηγό</button>' +
+          '</div>' +
+          '<div style="margin-bottom:16px">' +
+            '<button id="reply-nodriver" style="width:100%;padding:14px 8px;border:none;background:#dc2626;color:#fff;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">🚫 Δε βρήκαμε οδηγό</button>' +
           '</div>' +
           '<div id="eta-section" style="display:none">' +
             '<p style="margin:0 0 8px;font-size:13px;color:#94a3b8">Σε πόσα λεπτά θα φτάσει;</p>' +
@@ -446,6 +449,27 @@
             overlay.remove();
           });
           grid.appendChild(b);
+        });
+
+        // "Δε βρήκαμε οδηγό" — send apology + auto-delete request
+        box.querySelector('#reply-nodriver').addEventListener('click', async function () {
+          var msg = grGreeting() + '!\n\n';
+          msg += 'Ζητούμε συγνώμη, δυστυχώς δεν καταφέραμε να βρούμε διαθέσιμο οδηγό για τη διαδρομή:\n\n';
+          msg += '🚗 ' + route + '\n';
+          if (rData.passenger_name) msg += '👤 Επιβάτης: ' + rData.passenger_name + '\n';
+          if (rData.flight_number) msg += '🛫 Πτήση: ' + rData.flight_number + '\n';
+          msg += '\nΠαρακαλούμε επικοινωνήστε μαζί μας αν χρειάζεστε εναλλακτική λύση.\n\nΕυχαριστούμε για την κατανόηση! 🙏';
+          var a = document.createElement('a'); a.href = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg); a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+          overlay.remove();
+          // Auto-delete the request
+          try {
+            var rid = tr.dataset.id;
+            var resp = await fetch('/api/admin/moveathens/requests/' + rid, { method: 'DELETE', credentials: 'same-origin' });
+            if (resp.ok) {
+              toast('Αίτημα διαγράφηκε (δε βρέθηκε οδηγός)');
+              loadRoutesData();
+            }
+          } catch (delErr) { console.warn('Auto-delete failed:', delErr); }
         });
 
         box.querySelector('#reply-cancel').addEventListener('click', function () { overlay.remove(); });

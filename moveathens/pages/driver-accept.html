@@ -112,34 +112,41 @@
       .iris-notice .iris-phone:active{background:#2e1065}
     }
 
-    /* ── Flight Progress Bar ── */
-    .flight-progress-wrap{margin:8px 0;padding:14px 12px 10px;border-radius:12px;background:#f0f9ff;border:1px solid #bae6fd}
-    .flight-progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px;font-weight:600}
-    .flight-progress-header .fp-origin{color:#0369a1}
-    .flight-progress-header .fp-dest{color:#0369a1}
-    .flight-progress-header .fp-status{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700}
+    /* ── Flight Progress Bar (FlightAware-style) ── */
+    .flight-progress-wrap{margin:8px 0;padding:16px 14px 14px;border-radius:12px;background:#f0f9ff;border:1px solid #bae6fd}
+    .fp-status-bar{text-align:center;margin-bottom:4px}
+    .fp-status{display:inline-block;font-size:11px;padding:3px 10px;border-radius:10px;font-weight:700}
     .fp-status.scheduled{background:#dbeafe;color:#1e40af}
     .fp-status.en_route{background:#fef3c7;color:#92400e}
     .fp-status.landed{background:#d1fae5;color:#065f46}
     .fp-status.cancelled{background:#fee2e2;color:#991b1b}
-    .flight-progress-track{position:relative;height:4px;background:#cbd5e1;border-radius:3px;margin:18px 0 6px}
+    .fp-status.diverted{background:#fef3c7;color:#9a3412}
+    .fp-route-label{text-align:center;font-size:13px;color:#475569;font-weight:600;margin:2px 0 8px}
+    .flight-progress-track{position:relative;height:4px;background:#cbd5e1;border-radius:3px;margin:16px 0 14px}
     .flight-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#0ea5e9,#2563eb);transition:width 1s ease}
     .flight-progress-plane{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:20px;transition:left 1s ease;filter:drop-shadow(0 1px 2px rgba(0,0,0,.15));line-height:1}
-    .flight-progress-times{display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-top:2px}
-    .flight-progress-times .fp-dep{font-weight:600}
-    .flight-progress-times .fp-arr{font-weight:600}
-    .flight-progress-gate{text-align:center;font-size:12px;color:#64748b;margin-top:6px}
+    .fp-details-grid{display:flex;justify-content:space-between;gap:8px}
+    .fp-col{display:flex;flex-direction:column;gap:1px}
+    .fp-col-left{text-align:left}
+    .fp-col-right{text-align:right}
+    .fp-col-date{font-size:10px;color:#94a3b8;font-weight:500}
+    .fp-col-gate{font-size:10px;color:#94a3b8;font-weight:500}
+    .fp-col-time{font-size:18px;font-weight:700;color:#0c4a6e;letter-spacing:-0.5px;margin:2px 0}
+    .fp-col-airport{font-size:10px;color:#64748b;line-height:1.3;max-width:140px}
+    .fp-col-code{font-size:11px;color:#94a3b8;font-weight:600}
 
     @media(prefers-color-scheme:dark){
       .flight-progress-wrap{background:#0c2d48;border-color:#1e4d6e}
-      .flight-progress-header .fp-origin,.flight-progress-header .fp-dest{color:#7dd3fc}
+      .fp-route-label{color:#7dd3fc}
       .flight-progress-track{background:#1e3a5f}
-      .flight-progress-times{color:#8b9db0}
-      .flight-progress-gate{color:#8b9db0}
+      .fp-col-date,.fp-col-gate,.fp-col-code{color:#6b8ba8}
+      .fp-col-time{color:#7dd3fc}
+      .fp-col-airport{color:#8b9db0}
       .fp-status.scheduled{background:#1e3a5f;color:#93c5fd}
       .fp-status.en_route{background:#422006;color:#fbbf24}
       .fp-status.landed{background:#064e3b;color:#6ee7b7}
       .fp-status.cancelled{background:#7f1d1d;color:#fca5a5}
+      .fp-status.diverted{background:#431407;color:#fdba74}
     }
   </style>
 </head>
