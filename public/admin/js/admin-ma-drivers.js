@@ -286,11 +286,10 @@
         }
       }
 
-      // Hotel reply buttons (for pending/sent requests that have orderer_phone)
+      // Hotel reply button (for pending/sent requests that have orderer_phone)
       var replyBtns = '';
       if (canSend && r.orderer_phone) {
-        replyBtns = '<button class="dr-btn req-ack-btn" style="background:#3b82f6;color:#fff;font-size:11px;padding:2px 6px;margin-right:2px" title="Στείλε απάντηση στο ξενοδοχείο ότι έλαβες">📩 Έλαβα</button>' +
-                    '<button class="dr-btn req-found-btn" style="background:#10b981;color:#fff;font-size:11px;padding:2px 6px" title="Βρήκαμε οδηγό — επέλεξε λεπτά">🚗 Οδηγός</button>';
+        replyBtns = '<button class="dr-btn req-reply-btn" style="background:#3b82f6;color:#fff;font-size:11px;padding:2px 6px;margin-right:2px" title="Απάντηση στο ξενοδοχείο">💬</button>';
       }
 
       return '<tr data-id="' + r.id + '" data-json=\'' + JSON.stringify({
@@ -364,8 +363,8 @@
       });
     });
 
-    // ── "Έλαβα" — Acknowledge receipt to hotel via WhatsApp ──
-    _$$('.req-ack-btn', tbody).forEach(function (btn) {
+    // ── "Απάντηση" — Combined reply popup (Έλαβα + Βρήκα Οδηγό) ──
+    _$$('.req-reply-btn', tbody).forEach(function (btn) {
       btn.addEventListener('click', function () {
         var tr = btn.closest('tr');
         var rData = {};
@@ -373,74 +372,79 @@
         var phone = (rData.orderer_phone || '').replace(/[^0-9+]/g, '').replace(/^\+/, '');
         if (!phone) { toast('Δεν υπάρχει τηλέφωνο ξενοδοχείου'); return; }
 
-        // Greeting based on time of day
-        var h = new Date().getHours();
-        var greeting = h < 14 ? 'Καλημέρα' : 'Καλησπέρα';
+        // Greece-time greeting: 00:00-11:59 → Καλημέρα, 12:00-23:59 → Καλησπέρα
+        function grGreeting() {
+          var gr = new Date().toLocaleString('en-US', { timeZone: 'Europe/Athens', hour: 'numeric', hour12: false });
+          return parseInt(gr, 10) < 12 ? 'Καλημέρα' : 'Καλησπέρα';
+        }
 
-        // Build personalized message with route details
+        // Build route string for messages
         var route = rData.is_arrival
           ? (rData.destination_name + ' → ' + rData.hotel_name)
           : (rData.hotel_name + ' → ' + rData.destination_name);
-        var msg = greeting + '! Έλαβα το αίτημά σας:\n\n';
-        msg += '🚗 Διαδρομή: ' + route + '\n';
-        if (rData.passenger_name) msg += '👤 Επιβάτης: ' + rData.passenger_name + '\n';
-        if (rData.flight_number) {
-          msg += '🛫 Πτήση: ' + rData.flight_number;
-          if (rData.flight_airline) msg += ' (' + rData.flight_airline + ')';
-          msg += '\n';
-          if (rData.flight_origin) msg += '📍 Από: ' + rData.flight_origin + '\n';
-          if (rData.flight_eta) {
-            var etaT = new Date(rData.flight_eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-            msg += '⏱️ ETA: ' + etaT + '\n';
-          }
-        }
-        msg += '\nΣύντομα θα σας ενημερώσω για τον οδηγό! 🙏';
-
-        var waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
-        window.open(waUrl, '_blank');
-      });
-    });
-
-    // ── "Βρήκα Οδηγό" — Popup to pick minutes, then WhatsApp hotel ──
-    _$$('.req-found-btn', tbody).forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var tr = btn.closest('tr');
-        var rData = {};
-        try { rData = JSON.parse(tr.dataset.json || '{}'); } catch (_) {}
-        var phone = (rData.orderer_phone || '').replace(/[^0-9+]/g, '').replace(/^\+/, '');
-        if (!phone) { toast('Δεν υπάρχει τηλέφωνο ξενοδοχείου'); return; }
 
         // Create modal overlay
         var overlay = document.createElement('div');
         overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
         var box = document.createElement('div');
-        box.style.cssText = 'background:#1e293b;border-radius:12px;padding:24px;max-width:340px;width:90%;text-align:center;color:#f1f5f9';
-        box.innerHTML = '<h3 style="margin:0 0 12px;font-size:16px">🚗 Σε πόσα λεπτά θα φτάσει ο οδηγός;</h3>' +
-          '<div id="eta-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0"></div>' +
-          '<button id="eta-cancel" style="margin-top:12px;padding:8px 20px;border:1px solid #475569;background:transparent;color:#94a3b8;border-radius:8px;cursor:pointer;font-size:14px">Ακύρωση</button>';
+        box.style.cssText = 'background:#1e293b;border-radius:12px;padding:24px;max-width:360px;width:92%;text-align:center;color:#f1f5f9';
+        box.innerHTML = '<h3 style="margin:0 0 16px;font-size:16px">💬 Απάντηση στο ξενοδοχείο</h3>' +
+          '<div style="display:flex;gap:10px;margin-bottom:16px">' +
+            '<button id="reply-ack" style="flex:1;padding:14px 8px;border:none;background:#3b82f6;color:#fff;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">📩 Έλαβα το αίτημα</button>' +
+            '<button id="reply-found" style="flex:1;padding:14px 8px;border:none;background:#10b981;color:#fff;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">🚗 Βρήκα οδηγό</button>' +
+          '</div>' +
+          '<div id="eta-section" style="display:none">' +
+            '<p style="margin:0 0 8px;font-size:13px;color:#94a3b8">Σε πόσα λεπτά θα φτάσει;</p>' +
+            '<div id="eta-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:0 0 12px"></div>' +
+          '</div>' +
+          '<button id="reply-cancel" style="padding:8px 20px;border:1px solid #475569;background:transparent;color:#94a3b8;border-radius:8px;cursor:pointer;font-size:14px">Ακύρωση</button>';
         overlay.appendChild(box);
         document.body.appendChild(overlay);
 
+        // "Έλαβα" — immediate WhatsApp
+        box.querySelector('#reply-ack').addEventListener('click', function () {
+          var msg = grGreeting() + '! Έλαβα το αίτημά σας:\n\n';
+          msg += '🚗 Διαδρομή: ' + route + '\n';
+          if (rData.passenger_name) msg += '👤 Επιβάτης: ' + rData.passenger_name + '\n';
+          if (rData.flight_number) {
+            msg += '🛫 Πτήση: ' + rData.flight_number;
+            if (rData.flight_airline) msg += ' (' + rData.flight_airline + ')';
+            msg += '\n';
+            if (rData.flight_origin) msg += '📍 Από: ' + rData.flight_origin + '\n';
+            if (rData.flight_eta) {
+              var etaT = new Date(rData.flight_eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+              msg += '⏱️ ETA: ' + etaT + '\n';
+            }
+          }
+          msg += '\nΣύντομα θα σας ενημερώσω για τον οδηγό! 🙏';
+          window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+          overlay.remove();
+        });
+
+        // "Βρήκα Οδηγό" — show ETA grid
+        box.querySelector('#reply-found').addEventListener('click', function () {
+          box.querySelector('#eta-section').style.display = 'block';
+          // Hide the two main buttons
+          box.querySelector('#reply-ack').parentElement.style.display = 'none';
+        });
+
+        // Build ETA grid
         var grid = box.querySelector('#eta-grid');
         [1,2,3,4,5,6,7,8,9,10,12,15,20,25,30].forEach(function (n) {
           var b = document.createElement('button');
           b.textContent = n + '\'';
           b.style.cssText = 'padding:10px;border:none;background:#3b82f6;color:#fff;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600';
           b.addEventListener('click', function () {
-            // Greeting
-            var hh = new Date().getHours();
-            var greet = hh < 14 ? 'Καλημέρα' : 'Καλησπέρα';
-            var msg = greet + '! Βρήκαμε οδηγό για τη διαδρομή σας';
+            var msg = grGreeting() + '! Βρήκαμε οδηγό για τη διαδρομή σας';
             if (rData.passenger_name) msg += ' (' + rData.passenger_name + ')';
             msg += '.\n\n🕐 Θα είναι εκεί σε ' + n + ' λεπτ' + (n === 1 ? 'ό' : 'ά') + '!\n\nΕυχαριστούμε! 🙏';
-            var waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
-            window.open(waUrl, '_blank');
+            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
             overlay.remove();
           });
           grid.appendChild(b);
         });
 
-        box.querySelector('#eta-cancel').addEventListener('click', function () { overlay.remove(); });
+        box.querySelector('#reply-cancel').addEventListener('click', function () { overlay.remove(); });
         overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
       });
     });
