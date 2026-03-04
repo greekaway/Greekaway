@@ -92,6 +92,30 @@ function pickBestFlight(flights, scheduledDate) {
   return future || sorted[sorted.length - 1]; // fallback to latest
 }
 
+// ── Common airline ICAO → friendly name map ──
+const AIRLINE_NAMES = {
+  'SEH': 'Sky Express', 'AEE': 'Aegean Airlines', 'OAL': 'Olympic Air',
+  'RYR': 'Ryanair', 'EZY': 'easyJet', 'WZZ': 'Wizz Air',
+  'VLG': 'Vueling', 'DLH': 'Lufthansa', 'BAW': 'British Airways',
+  'AFR': 'Air France', 'KLM': 'KLM', 'SAS': 'SAS',
+  'AZA': 'ITA Airways', 'THY': 'Turkish Airlines', 'SWR': 'Swiss',
+  'AUA': 'Austrian', 'TAP': 'TAP Portugal', 'IBE': 'Iberia',
+  'UAE': 'Emirates', 'ETD': 'Etihad', 'QTR': 'Qatar Airways',
+  'ELY': 'El Al', 'TRA': 'Transavia', 'BEL': 'Brussels Airlines',
+  'NOZ': 'Norwegian', 'FIN': 'Finnair', 'LOT': 'LOT Polish',
+  'ROT': 'TAROM', 'BMS': 'Blue Air', 'TVS': 'SmartWings',
+  'CFG': 'Condor', 'TUI': 'TUI fly', 'VOE': 'Volotea',
+  'HFA': 'Arkia', 'MAC': 'Air Arabia Maroc', 'RAM': 'Royal Air Maroc',
+  'FDB': 'flydubai', 'GWI': 'Eurowings', 'NLY': 'Niki/Lauda',
+  'ENT': 'Enter Air', 'NAX': 'Norse Atlantic', 'SXS': 'SunExpress'
+};
+
+function resolveAirlineName(operator, operatorIata, ident) {
+  if (AIRLINE_NAMES[operator]) return AIRLINE_NAMES[operator];
+  // Fallback: use IATA operator code or strip numbers from ident
+  return operatorIata || operator || ident?.replace(/[0-9]/g, '') || '';
+}
+
 // ── Map AeroAPI flight → our simplified format ──
 function mapFlightData(f) {
   // AeroAPI status field: null, "Scheduled", "En Route / On Time", "Arrived / Landed", etc.
@@ -109,7 +133,7 @@ function mapFlightData(f) {
   return {
     flight_ident:    f.ident || '',
     flight_status:   status,
-    flight_airline:  f.operator || f.ident?.replace(/[0-9]/g, '') || '',
+    flight_airline:  resolveAirlineName(f.operator_icao || f.operator, f.operator_iata, f.ident),
     flight_origin:   f.origin?.city || f.origin?.name || f.origin?.code_iata || '',
     flight_origin_code: f.origin?.code_iata || '',
     flight_eta:      eta,

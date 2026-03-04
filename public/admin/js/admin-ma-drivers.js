@@ -297,7 +297,11 @@
           ? '<input class="dr-inline-input req-phone" value="' + phoneVal + '" placeholder="+30…">'
           : (r.driver_phone || '—')) + '</td>' +
         '<td style="white-space:nowrap">' +
-          (canSend ? '<button class="dr-btn dr-btn-success req-send-btn">Αποστολή</button> <button class="dr-btn req-del-btn" style="background:#ef4444;color:#fff;margin-left:4px">Διαγραφή</button>' : '') +
+          (canSend
+            ? '<button class="dr-btn dr-btn-success req-send-btn">Αποστολή</button> <button class="dr-btn req-del-btn" style="background:#ef4444;color:#fff;margin-left:4px">Διαγραφή</button>'
+            : (r.status === 'expired' || r.status === 'cancelled'
+              ? '<button class="dr-btn req-del-btn" style="background:#ef4444;color:#fff">Διαγραφή</button>'
+              : '')) +
         '</td>' +
       '</tr>';
     }).join('');

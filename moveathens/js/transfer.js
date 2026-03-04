@@ -686,23 +686,26 @@
     const errorEl = $('#flight-number-error');
     if (!input) return;
 
-    // Create (or reuse) feedback element below the input
+    // Clone to remove old listeners (same pattern as other inputs)
+    const newInput = input.cloneNode(true);
+    input.parentNode.replaceChild(newInput, input);
+
+    // Create (or reuse) feedback element below the input — AFTER clone to stay in DOM
     let feedbackEl = document.getElementById('flight-lookup-feedback');
     if (!feedbackEl) {
       feedbackEl = document.createElement('p');
       feedbackEl.id = 'flight-lookup-feedback';
-      feedbackEl.className = 'ma-input-hint';
       feedbackEl.style.cssText = 'margin-top:4px;font-size:0.82rem;transition:opacity .2s';
       feedbackEl.hidden = true;
-      if (errorEl) {
-        errorEl.parentNode.insertBefore(feedbackEl, errorEl.nextSibling);
+      const errEl = document.getElementById('flight-number-error');
+      if (errEl && errEl.parentNode) {
+        errEl.parentNode.insertBefore(feedbackEl, errEl.nextSibling);
       } else {
-        input.parentNode.appendChild(feedbackEl);
+        newInput.parentNode.appendChild(feedbackEl);
       }
     }
-
-    const newInput = input.cloneNode(true);
-    input.parentNode.replaceChild(newInput, input);
+    // Reset lookup cache so same flight can be re-checked
+    lastFlightLookup = '';
 
     newInput.addEventListener('input', (e) => {
       // Uppercase normalization + strip spaces: "oa 123" → "OA123"
