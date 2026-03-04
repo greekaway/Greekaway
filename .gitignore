@@ -19,3 +19,21 @@ public/uploads/trips/*
 public/uploads/trips/**
 public/uploads/.cache/*
 public/uploads/.cache/**
+
+# DriversSystem runtime data (entries, expenses, drivers, etc.)
+# These contain personal data and are managed on persistent disk in production.
+# Only the UI config defaults should be committed (for first-boot seeding).
+driverssystem/data/entries.json
+driverssystem/data/expenses.json
+driverssystem/data/drivers.json
+driverssystem/data/debts.json
+driverssystem/data/appointments.json
+driverssystem/data/partners.json
+driverssystem/data/partner_transactions.json
+driverssystem/data/*.bak
+
+# MoveAthens runtime data (same reasoning — production uses Postgres)
+moveathens/data/drivers.json
+moveathens/data/driver_payments.json
+moveathens/data/transfer_requests.json
+moveathens/data/*.bak

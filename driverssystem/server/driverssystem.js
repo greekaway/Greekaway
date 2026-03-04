@@ -164,6 +164,26 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     }
   });
 
+  // ── Driver validation middleware ──
+  // Checks that a valid driverId (phone) is provided and belongs to a real driver.
+  // Extracts driverId from body (POST/PUT) or query (GET/DELETE).
+  const requireDriver = async (req, res, next) => {
+    const driverId = (req.body && req.body.driverId) || req.query.driverId || '';
+    if (!driverId || typeof driverId !== 'string' || driverId.trim().length < 4) {
+      return res.status(401).json({ error: 'Απαιτείται αναγνώριση οδηγού' });
+    }
+    try {
+      const driver = await dataLayer.getDriverByPhone(driverId.trim());
+      if (!driver) {
+        return res.status(403).json({ error: 'Μη εγγεγραμμένος οδηγός' });
+      }
+      req.dsDriver = driver;
+      next();
+    } catch (_) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  };
+
   // ── Admin API ──
 
   const requireAdmin = (req, res, next) => {
@@ -309,7 +329,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     }
   });
 
-  app.post('/api/driverssystem/entries', async (req, res) => {
+  app.post('/api/driverssystem/entries', requireDriver, async (req, res) => {
     try {
       const entry = req.body;
       if (!entry || !entry.sourceId || !entry.amount) {
@@ -322,7 +342,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     }
   });
 
-  app.delete('/api/driverssystem/entries/:id', async (req, res) => {
+  app.delete('/api/driverssystem/entries/:id', requireDriver, async (req, res) => {
     try {
       const ok = await dataLayer.deleteEntry(req.params.id);
       if (!ok) return res.status(404).json({ error: 'Not found' });
@@ -399,7 +419,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     }
   });
 
-  app.put('/api/driverssystem/expenses/:id', async (req, res) => {
+  app.put('/api/driverssystem/expenses/:id', requireDriver, async (req, res) => {
     try {
       const updated = await dataLayer.updateExpense(req.params.id, req.body);
       if (!updated) return res.status(404).json({ error: 'Δεν βρέθηκε' });
@@ -409,7 +429,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     }
   });
 
-  app.delete('/api/driverssystem/expenses/:id', async (req, res) => {
+  app.delete('/api/driverssystem/expenses/:id', requireDriver, async (req, res) => {
     try {
       const ok = await dataLayer.deleteExpense(req.params.id);
       if (!ok) return res.status(404).json({ error: 'Δεν βρέθηκε' });
@@ -642,7 +662,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // ── Car expense records (driver submissions) ──
-  app.post('/api/driverssystem/car-expenses', async (req, res) => {
+  app.post('/api/driverssystem/car-expenses', requireDriver, async (req, res) => {
     try {
       const { driverId, groupId, groupName, itemId, itemName, amount, date, note, km } = req.body || {};
       if (!amount || !groupId || !itemId) {
@@ -723,7 +743,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // ── Personal expense records (driver submissions) ──
-  app.post('/api/driverssystem/personal-expenses', async (req, res) => {
+  app.post('/api/driverssystem/personal-expenses', requireDriver, async (req, res) => {
     try {
       const { driverId, groupId, groupName, itemId, itemName, amount, date, note } = req.body || {};
       if (!amount || !groupId || !itemId) {
@@ -802,7 +822,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // ── Tax expense records (driver submissions) ──
-  app.post('/api/driverssystem/tax-expenses', async (req, res) => {
+  app.post('/api/driverssystem/tax-expenses', requireDriver, async (req, res) => {
     try {
       const { driverId, groupId, groupName, itemId, itemName, amount, date, note } = req.body || {};
       if (!amount || !groupId || !itemId) {
@@ -856,7 +876,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // Public: create debt
-  app.post('/api/driverssystem/debts', async (req, res) => {
+  app.post('/api/driverssystem/debts', requireDriver, async (req, res) => {
     try {
       const { driverId, name, amount, type, date, note } = req.body || {};
       if (!name || !amount || !type) {
@@ -870,7 +890,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // Public: update debt
-  app.put('/api/driverssystem/debts/:id', async (req, res) => {
+  app.put('/api/driverssystem/debts/:id', requireDriver, async (req, res) => {
     try {
       const result = await dataLayer.updateDebt(req.params.id, req.body);
       if (!result) return res.status(404).json({ error: 'Not found' });
@@ -881,7 +901,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // Public: delete debt
-  app.delete('/api/driverssystem/debts/:id', async (req, res) => {
+  app.delete('/api/driverssystem/debts/:id', requireDriver, async (req, res) => {
     try {
       const ok = await dataLayer.deleteDebt(req.params.id);
       if (!ok) return res.status(404).json({ error: 'Not found' });
@@ -953,7 +973,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // Create partner
-  app.post('/api/driverssystem/partners', async (req, res) => {
+  app.post('/api/driverssystem/partners', requireDriver, async (req, res) => {
     try {
       const { driverId, name, phone, note } = req.body || {};
       if (!name) {
@@ -967,7 +987,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // Update partner
-  app.put('/api/driverssystem/partners/:id', async (req, res) => {
+  app.put('/api/driverssystem/partners/:id', requireDriver, async (req, res) => {
     try {
       const result = await dataLayer.updatePartner(req.params.id, req.body);
       if (!result) return res.status(404).json({ error: 'Not found' });
@@ -978,7 +998,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // Delete partner (and all transactions)
-  app.delete('/api/driverssystem/partners/:id', async (req, res) => {
+  app.delete('/api/driverssystem/partners/:id', requireDriver, async (req, res) => {
     try {
       const ok = await dataLayer.deletePartner(req.params.id);
       if (!ok) return res.status(404).json({ error: 'Not found' });
@@ -1003,7 +1023,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // Add transaction to a partner
-  app.post('/api/driverssystem/partners/:id/transactions', async (req, res) => {
+  app.post('/api/driverssystem/partners/:id/transactions', requireDriver, async (req, res) => {
     try {
       const { driverId, type, amount, description, date } = req.body || {};
       if (!type || !amount) {
@@ -1017,7 +1037,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // Delete transaction
-  app.delete('/api/driverssystem/partners/:partnerId/transactions/:txnId', async (req, res) => {
+  app.delete('/api/driverssystem/partners/:partnerId/transactions/:txnId', requireDriver, async (req, res) => {
     try {
       const ok = await dataLayer.deletePartnerTransaction(req.params.txnId);
       if (!ok) return res.status(404).json({ error: 'Not found' });
@@ -1057,7 +1077,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // Public: create appointment
-  app.post('/api/driverssystem/appointments', async (req, res) => {
+  app.post('/api/driverssystem/appointments', requireDriver, async (req, res) => {
     try {
       const { driverId, clientName, phone, date, time, pickup, dropoff, amount, note, status } = req.body || {};
       if (!clientName || !date) {
@@ -1071,7 +1091,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // Public: update appointment
-  app.put('/api/driverssystem/appointments/:id', async (req, res) => {
+  app.put('/api/driverssystem/appointments/:id', requireDriver, async (req, res) => {
     try {
       const result = await dataLayer.updateAppointment(req.params.id, req.body);
       if (!result) return res.status(404).json({ error: 'Not found' });
@@ -1082,7 +1102,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // Public: delete appointment
-  app.delete('/api/driverssystem/appointments/:id', async (req, res) => {
+  app.delete('/api/driverssystem/appointments/:id', requireDriver, async (req, res) => {
     try {
       const ok = await dataLayer.deleteAppointment(req.params.id);
       if (!ok) return res.status(404).json({ error: 'Not found' });
