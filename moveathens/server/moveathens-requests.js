@@ -547,7 +547,6 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         request.is_arrival
           ? `🏨 Προς: ${request.hotel_name || '—'}`
           : `🎯 ${request.destination_name || '—'}`,
-        pickupMapsUrl ? `📍 Παραλαβή: ${pickupMapsUrl}` : '',
         request.flight_number ? `🛫 Πτήση: ${request.flight_number}${request.flight_airline ? ` (${request.flight_airline})` : ''}` : '',
         request.flight_origin ? `📍 Από: ${request.flight_origin}` : '',
         request.flight_eta ? `⏰ ETA: ${new Date(request.flight_eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Athens' })}${request.flight_status === 'en_route' ? ' — Σε πτήση ✈️' : request.flight_status === 'landed' ? ' — Προσγειώθηκε ✅' : request.flight_status === 'scheduled' ? ' — Προγραμματισμένη' : ''}` : '',
