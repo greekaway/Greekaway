@@ -122,6 +122,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
               flight_airline:        f.flight_airline,
               flight_origin:         f.flight_origin,
               flight_eta:            f.flight_eta || null,
+              flight_departure:      f.flight_departure || null,
               flight_gate:           f.flight_gate || '',
               flight_terminal:       f.flight_terminal || '',
               flight_tracking_active: true,
@@ -207,6 +208,17 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       // Hotels don't have lat/lng yet — we rely on address for now
       // (could be added similarly to destinations in future)
 
+      // Look up known driver name from driver profile (for pre-fill)
+      let known_driver_name = '';
+      if (request.driver_phone) {
+        try {
+          const driverProfile = await driversData.getDriverByPhone(request.driver_phone);
+          if (driverProfile && driverProfile.name && driverProfile.name !== driverProfile.phone) {
+            known_driver_name = driverProfile.name;
+          }
+        } catch (e) { /* ignore */ }
+      }
+
       // Return trip info (no sensitive admin data)
       return res.json({
         id: request.id,
@@ -214,6 +226,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         hotel_address: request.hotel_address || '',
         hotel_municipality: request.hotel_municipality || '',
         hotel_phone: hotel_phone,
+        driver_name: request.driver_name || known_driver_name || '',
         destination_name: request.destination_name,
         destination_lat,
         destination_lng,
@@ -230,6 +243,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         flight_airline: request.flight_airline || '',
         flight_origin: request.flight_origin || '',
         flight_eta: request.flight_eta || null,
+        flight_departure: request.flight_departure || null,
         flight_actual_arrival: request.flight_actual_arrival || null,
         flight_gate: request.flight_gate || '',
         flight_terminal: request.flight_terminal || '',
@@ -449,14 +463,11 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         }
         scheduleText = `\n📅 ${dayName} ${dt.getDate()}, ${monthName}${timeStr}`;
       } else if (request.booking_type === 'instant' && request.flight_eta && request.flight_status !== 'landed') {
-        // Auto-upgrade: instant booking with future flight ETA → show ETA time
+        // Auto-upgrade: instant booking with future flight ETA → show ETA time (Athens TZ!)
         const etaDt = new Date(request.flight_eta);
         if (etaDt.getTime() > Date.now()) {
-          const etaH = etaDt.getHours();
-          const etaM = String(etaDt.getMinutes()).padStart(2, '0');
-          const sfx = etaH < 12 ? 'πμ' : 'μμ';
-          const h12 = etaH === 0 ? 12 : etaH > 12 ? etaH - 12 : etaH;
-          scheduleText = `\n📅 ETA πτήσης: ${h12}:${etaM} ${sfx}`;
+          const etaStr = etaDt.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Athens' });
+          scheduleText = `\n📅 ETA πτήσης: ${etaStr}`;
         } else {
           scheduleText = `\n⚡ Άμεσα (πτήση προσγειώθηκε)`;
         }
@@ -475,8 +486,9 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
           : `🎯 ${request.destination_name || '—'}`,
         request.flight_number ? `🛫 Πτήση: ${request.flight_number}${request.flight_airline ? ` (${request.flight_airline})` : ''}` : '',
         request.flight_origin ? `📍 Από: ${request.flight_origin}` : '',
-        request.flight_eta ? `⏰ ETA: ${new Date(request.flight_eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' })}${request.flight_status === 'en_route' ? ' — Σε πτήση ✈️' : request.flight_status === 'landed' ? ' — Προσγειώθηκε ✅' : request.flight_status === 'scheduled' ? ' — Προγραμματισμένη' : ''}` : '',
-        scheduleText,
+        request.flight_eta ? `⏰ ETA: ${new Date(request.flight_eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Athens' })}${request.flight_status === 'en_route' ? ' — Σε πτήση ✈️' : request.flight_status === 'landed' ? ' — Προσγειώθηκε ✅' : request.flight_status === 'scheduled' ? ' — Προγραμματισμένη' : ''}` : '',
+        // Only show scheduleText if it's NOT a duplicate of the ETA line above
+        (request.flight_eta && scheduleText.includes('ETA')) ? '' : scheduleText,
         ``,
         `� Πατήστε παρακάτω για αποδοχή:`,
         ``,
@@ -546,6 +558,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         flight_airline:        request.flight_airline || '',
         flight_origin:         request.flight_origin || '',
         flight_eta:            request.flight_eta || null,
+        flight_departure:      request.flight_departure || null,
         flight_actual_arrival: request.flight_actual_arrival || null,
         flight_gate:           request.flight_gate || '',
         flight_terminal:       request.flight_terminal || '',

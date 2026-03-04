@@ -94,6 +94,7 @@ async function createRequest(data) {
     flight_airline: data.flight_airline || '',
     flight_origin: data.flight_origin || '',
     flight_eta: data.flight_eta || null,
+    flight_departure: data.flight_departure || null,
     flight_actual_arrival: data.flight_actual_arrival || null,
     flight_gate: data.flight_gate || '',
     flight_terminal: data.flight_terminal || '',

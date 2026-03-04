@@ -129,6 +129,8 @@ function mapFlightData(f) {
 
   // Use best available arrival estimate
   const eta = f.estimated_on || f.scheduled_on || null;
+  // Departure time (for progress bar calculation)
+  const departure = f.actual_off || f.scheduled_out || f.scheduled_off || null;
 
   return {
     flight_ident:    f.ident || '',
@@ -137,6 +139,7 @@ function mapFlightData(f) {
     flight_origin:   f.origin?.city || f.origin?.name || f.origin?.code_iata || '',
     flight_origin_code: f.origin?.code_iata || '',
     flight_eta:      eta,
+    flight_departure: departure,
     flight_actual_arrival: f.actual_on || null,
     flight_gate:     f.gate_destination || '',
     flight_terminal: f.terminal_destination || '',

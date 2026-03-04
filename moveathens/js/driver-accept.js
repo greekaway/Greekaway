@@ -250,6 +250,11 @@
       schedule = '📅 ' + dayName + ' ' + dt.getDate() + ', ' + monthName + tStr;
     }
 
+    // Pre-fill driver name if server already knows it
+    if (data.driver_name && !driverNameInput.value.trim()) {
+      driverNameInput.value = data.driver_name;
+    }
+
     // ── Section: Route ──
     var sections = [];
     sections.push({ type: 'title', text: 'Διαδρομή' });
@@ -284,32 +289,72 @@
       sections.push({ icon: '🛫', label: 'Δρομολόγιο', value: data.flight_number + (data.flight_airline ? ' (' + data.flight_airline + ')' : '') });
     }
 
-    // ── Flight tracking live status (arrival only) ──
+    // ── Flight tracking live status (arrival only) — with progress bar ──
     if (data.flight_number && data.is_arrival && data.flight_tracking_active !== false) {
       sections.push({ type: 'divider' });
       sections.push({ type: 'title', text: '✈️ Live Πτήση' });
-      // Flight status banner — will be updated by poller
-      sections.push({ type: 'custom', html: '<div id="flight-live-banner" style="padding:10px;border-radius:8px;text-align:center;font-weight:600;margin:4px 0"></div>' });
 
-      if (data.flight_origin) {
-        sections.push({ icon: '📍', label: 'Από', value: data.flight_origin });
+      // Build progress bar HTML (no extra API calls — pure math from departure+ETA times)
+      var depISO = data.flight_departure || '';
+      var etaISO = data.flight_eta || '';
+      var originCode = data.flight_origin || '';
+      var flightSt = data.flight_status || 'scheduled';
+
+      // Status label
+      var statusLabels = {
+        scheduled: 'Προγρ/μένη', en_route: 'Σε πτήση ✈️',
+        landed: 'Προσγειώθηκε ✅', cancelled: 'Ακυρώθηκε ❌', diverted: 'Εκτράπηκε ⚠️'
+      };
+      var statusLabel = statusLabels[flightSt] || 'Tracking';
+
+      // Format times for display
+      var depTimeStr = '—';
+      var arrTimeStr = '—';
+      if (depISO) {
+        depTimeStr = new Date(depISO).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
       }
-      if (data.flight_eta) {
-        var etaDate = new Date(data.flight_eta);
-        var etaTime = etaDate.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-        sections.push({ icon: '⏰', label: 'ETA', value: etaTime, id: 'flight-eta-row' });
+      if (etaISO) {
+        arrTimeStr = new Date(etaISO).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
       }
-      if (data.flight_actual_arrival) {
-        var actDate = new Date(data.flight_actual_arrival);
-        var actTime = actDate.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-        sections.push({ icon: '✅', label: 'Προσγείωση', value: actTime });
+
+      // Calculate progress percentage (simple math)
+      var progressPct = 0;
+      if (flightSt === 'landed') {
+        progressPct = 100;
+      } else if (flightSt === 'en_route' && depISO && etaISO) {
+        var now = Date.now();
+        var depMs = new Date(depISO).getTime();
+        var etaMs = new Date(etaISO).getTime();
+        var total = etaMs - depMs;
+        if (total > 0) {
+          progressPct = Math.min(98, Math.max(2, ((now - depMs) / total) * 100));
+        }
+      } else if (flightSt === 'cancelled') {
+        progressPct = 0;
       }
-      if (data.flight_gate) {
-        sections.push({ icon: '🚪', label: 'Gate', value: data.flight_gate });
-      }
-      if (data.flight_terminal) {
-        sections.push({ icon: '🏢', label: 'Terminal', value: data.flight_terminal });
-      }
+
+      var gateInfo = '';
+      if (data.flight_gate) gateInfo += 'Gate ' + data.flight_gate;
+      if (data.flight_terminal) gateInfo += (gateInfo ? ' · ' : '') + 'Terminal ' + data.flight_terminal;
+
+      var progressHtml = '<div class="flight-progress-wrap" id="flight-progress-wrap">' +
+        '<div class="flight-progress-header">' +
+          '<span class="fp-origin">' + originCode + '</span>' +
+          '<span class="fp-status ' + flightSt + '">' + statusLabel + '</span>' +
+          '<span class="fp-dest">ATH</span>' +
+        '</div>' +
+        '<div class="flight-progress-track" id="flight-progress-track">' +
+          '<div class="flight-progress-fill" id="flight-progress-fill" style="width:' + progressPct + '%"></div>' +
+          '<span class="flight-progress-plane" id="flight-progress-plane" style="left:' + progressPct + '%">✈️</span>' +
+        '</div>' +
+        '<div class="flight-progress-times">' +
+          '<span class="fp-dep">🛫 ' + depTimeStr + '</span>' +
+          '<span class="fp-arr">🛬 ' + arrTimeStr + '</span>' +
+        '</div>' +
+        (gateInfo ? '<div class="flight-progress-gate">' + gateInfo + '</div>' : '') +
+      '</div>';
+
+      sections.push({ type: 'custom', html: progressHtml });
     }
 
     if (data.room_number) {
@@ -338,12 +383,13 @@
       '</div>';
     }).join('');
 
-    // ── Update flight live banner ──
-    updateFlightBanner(data);
+    // ── Update flight progress bar ──
+    updateFlightProgress(data);
 
     // ── Start flight status polling (every 60s) for arrival flights ──
     if (data.is_arrival && data.flight_number && data.flight_tracking_active) {
       startFlightPolling();
+      startProgressAnimation(); // animate plane every 30s (no API calls)
     }
 
     // ── Price cards ──
@@ -547,49 +593,75 @@
     }
   });
 
-  // ── Flight live banner updater ──
-  function updateFlightBanner(data) {
-    var banner = document.getElementById('flight-live-banner');
-    if (!banner) return;
+  // ── Flight progress bar updater (no extra API calls — pure math) ──
+  function updateFlightProgress(data) {
+    var wrap = document.getElementById('flight-progress-wrap');
+    if (!wrap) return;
 
     var st = data.flight_status || '';
-    var text = '';
-    var bg = '#f3f4f6';
-    var color = '#374151';
+    var depISO = data.flight_departure || '';
+    var etaISO = data.flight_eta || '';
 
-    if (st === 'scheduled') {
-      text = '📅 Προγραμματισμένη';
-      bg = '#dbeafe'; color = '#1e40af';
-    } else if (st === 'en_route') {
-      text = '✈️ Σε πτήση';
-      bg = '#fef3c7'; color = '#92400e';
-      if (data.flight_eta) {
-        var eta = new Date(data.flight_eta);
-        text += ' — ETA ' + eta.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-      }
-    } else if (st === 'landed') {
-      text = '✅ Προσγειώθηκε';
-      bg = '#d1fae5'; color = '#065f46';
-      if (data.flight_actual_arrival) {
-        var act = new Date(data.flight_actual_arrival);
-        text += ' ' + act.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-      }
-      if (data.flight_gate) text += ' | Gate ' + data.flight_gate;
-      if (data.flight_terminal) text += ' | T' + data.flight_terminal;
-    } else if (st === 'cancelled') {
-      text = '❌ Πτήση ακυρώθηκε';
-      bg = '#fee2e2'; color = '#991b1b';
-    } else if (st === 'diverted') {
-      text = '⚠️ Πτήση εκτράπηκε';
-      bg = '#fef3c7'; color = '#92400e';
-    } else {
-      text = '📡 Live tracking ενεργό';
-      bg = '#f3f4f6'; color = '#6b7280';
+    // Update status badge
+    var statusEl = wrap.querySelector('.fp-status');
+    if (statusEl) {
+      var statusLabels = {
+        scheduled: 'Προγρ/μένη', en_route: 'Σε πτήση ✈️',
+        landed: 'Προσγειώθηκε ✅', cancelled: 'Ακυρώθηκε ❌', diverted: 'Εκτράπηκε ⚠️'
+      };
+      statusEl.textContent = statusLabels[st] || 'Tracking';
+      statusEl.className = 'fp-status ' + st;
     }
 
-    banner.textContent = text;
-    banner.style.background = bg;
-    banner.style.color = color;
+    // Calculate progress
+    var progressPct = 0;
+    if (st === 'landed') {
+      progressPct = 100;
+    } else if (st === 'en_route' && depISO && etaISO) {
+      var now = Date.now();
+      var depMs = new Date(depISO).getTime();
+      var etaMs = new Date(etaISO).getTime();
+      var total = etaMs - depMs;
+      if (total > 0) {
+        progressPct = Math.min(98, Math.max(2, ((now - depMs) / total) * 100));
+      }
+    }
+
+    // Animate fill + plane
+    var fill = document.getElementById('flight-progress-fill');
+    var plane = document.getElementById('flight-progress-plane');
+    if (fill) fill.style.width = progressPct + '%';
+    if (plane) plane.style.left = progressPct + '%';
+
+    // Update ETA time display
+    var arrSpan = wrap.querySelector('.fp-arr');
+    if (arrSpan && etaISO) {
+      arrSpan.textContent = '🛬 ' + new Date(etaISO).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Update gate info
+    var gateEl = wrap.querySelector('.flight-progress-gate');
+    var gateInfo = '';
+    if (data.flight_gate) gateInfo += 'Gate ' + data.flight_gate;
+    if (data.flight_terminal) gateInfo += (gateInfo ? ' · ' : '') + 'Terminal ' + data.flight_terminal;
+    if (gateInfo && !gateEl) {
+      gateEl = document.createElement('div');
+      gateEl.className = 'flight-progress-gate';
+      wrap.appendChild(gateEl);
+    }
+    if (gateEl) gateEl.textContent = gateInfo;
+  }
+
+  // ── Client-side progress animation (updates every 30s, no API calls) ──
+  var progressAnimTimer = null;
+
+  function startProgressAnimation() {
+    if (progressAnimTimer) return;
+    progressAnimTimer = setInterval(function() {
+      if (!tripData) return;
+      // Re-calculate progress using current time (no network calls)
+      updateFlightProgress(tripData);
+    }, 30 * 1000); // every 30s
   }
 
   // ── Flight status polling (every 60s) ──
@@ -611,22 +683,23 @@
       if (!res.ok) return;
       var data = await res.json();
 
-      // Update banner
-      updateFlightBanner(data);
+      // Update progress bar
+      updateFlightProgress(data);
 
-      // Update ETA row if it exists
-      var etaRow = document.getElementById('flight-eta-row');
-      if (etaRow && data.flight_eta) {
-        var etaVal = etaRow.querySelector('.value');
-        if (etaVal) {
-          var etaDate = new Date(data.flight_eta);
-          etaVal.textContent = etaDate.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-        }
+      // Also update tripData so progress animation uses latest ETA
+      if (tripData) {
+        tripData.flight_status = data.flight_status;
+        tripData.flight_eta = data.flight_eta;
+        tripData.flight_departure = data.flight_departure;
+        tripData.flight_actual_arrival = data.flight_actual_arrival;
+        tripData.flight_gate = data.flight_gate;
+        tripData.flight_terminal = data.flight_terminal;
       }
 
-      // If landed, stop polling
+      // If landed, stop polling + animation
       if (data.flight_status === 'landed') {
         clearInterval(flightPollTimer);
+        if (progressAnimTimer) { clearInterval(progressAnimTimer); progressAnimTimer = null; }
         flightPollTimer = null;
       }
     } catch (_) {
