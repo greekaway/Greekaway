@@ -910,6 +910,68 @@
   color: #fff;
 }
 
+/* ── Success Card (sent confirmation) ── */
+.ma-success-card {
+  text-align: center;
+  padding: 48px 24px;
+  animation: ma-success-fade-in 0.5s ease;
+}
+
+@keyframes ma-success-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ma-success-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.ma-success-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 8px;
+}
+
+.ma-success-subtitle {
+  font-size: 15px;
+  color: #6b7280;
+  margin: 0 0 32px;
+  line-height: 1.5;
+}
+
+.ma-btn-new-route {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f5a623 0%, #e8930c 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.35);
+}
+
+.ma-btn-new-route:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(245, 166, 35, 0.45);
+}
+
+.ma-btn-new-route:active {
+  transform: scale(0.97);
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .ma-success-title { color: #f1f1f1; }
+  .ma-success-subtitle { color: #9ca3af; }
+}
+
 /* Warning Card */
 .ma-warning-card {
   background: linear-gradient(145deg, #fff8e1 0%, #fff3cd 100%);

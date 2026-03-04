@@ -445,6 +445,32 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       const acceptPath = isProduction ? '/driver-accept' : '/moveathens/driver-accept';
       const acceptUrl = `${BASE_URL}${acceptPath}?token=${request.accept_token}`;
 
+      // ── Refresh flight data before building message ──
+      if (request.is_arrival && request.flight_number) {
+        try {
+          const freshFlight = await flightTracker.refreshFlight(request.flight_number, request.scheduled_date);
+          if (freshFlight.ok && freshFlight.flight) {
+            const ff = freshFlight.flight;
+            const flightUpdate = {
+              flight_status:         ff.flight_status,
+              flight_airline:        ff.flight_airline,
+              flight_origin:         ff.flight_origin,
+              flight_eta:            ff.flight_eta || null,
+              flight_departure:      ff.flight_departure || null,
+              flight_gate:           ff.flight_gate || '',
+              flight_terminal:       ff.flight_terminal || '',
+              flight_tracking_active: true,
+              flight_last_checked:   new Date().toISOString()
+            };
+            await requestsData.updateRequest(request.id, flightUpdate);
+            Object.assign(request, flightUpdate);
+            console.log('[ma-requests] send-driver: refreshed flight data for', request.flight_number, '→ ETA', ff.flight_eta, 'status', ff.flight_status);
+          }
+        } catch (flightErr) {
+          console.warn('[ma-requests] send-driver flight refresh (non-blocking):', flightErr.message);
+        }
+      }
+
       // Build WhatsApp message
       let scheduleText = '';
       if (request.scheduled_date) {
@@ -479,8 +505,8 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         `🚗 *Νέα Διαδρομή MoveAthens*`,
         ``,
         request.is_arrival
-          ? `✈️ Άφιξη - Παραλαβή: ${request.destination_name || '—'}`
-          : `🏨 ${request.hotel_name || '—'}`,
+          ? `✈️ Άφιξη : ${request.destination_name || '—'}`
+          : `🏨 ${request.hotel_name || '—'}`,        
         request.is_arrival
           ? `🏨 Προς: ${request.hotel_name || '—'}`
           : `🎯 ${request.destination_name || '—'}`,
@@ -552,6 +578,26 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
     try {
       const request = await requestsData.getRequestByToken(req.params.token);
       if (!request) return res.status(404).json({ error: 'Not found' });
+
+      // If flight data is missing but we have a flight number, do a fresh lookup
+      if (request.flight_number && request.is_arrival && !request.flight_eta) {
+        try {
+          const fresh = await flightTracker.lookupFlight(request.flight_number, request.scheduled_date);
+          if (fresh.ok && fresh.flight) {
+            const ff = fresh.flight;
+            const flightUpdate = {
+              flight_status: ff.flight_status, flight_airline: ff.flight_airline,
+              flight_origin: ff.flight_origin, flight_eta: ff.flight_eta || null,
+              flight_departure: ff.flight_departure || null, flight_gate: ff.flight_gate || '',
+              flight_terminal: ff.flight_terminal || '', flight_tracking_active: true,
+              flight_last_checked: new Date().toISOString()
+            };
+            await requestsData.updateRequest(request.id, flightUpdate);
+            Object.assign(request, flightUpdate);
+          }
+        } catch (e) { /* non-blocking */ }
+      }
+
       return res.json({
         flight_number:         request.flight_number || '',
         flight_status:         request.flight_status || '',

@@ -48,7 +48,8 @@
     vehicles: $('#step-vehicles'),
     bookingType: $('#step-booking-type'),
     confirm: $('#step-confirm'),
-    noZone: $('#step-no-zone')
+    noZone: $('#step-no-zone'),
+    sentSuccess: $('#step-sent-success')
   };
 
   const categoriesGrid = $('#categories-grid');
@@ -76,6 +77,41 @@
     Object.values(steps).forEach(s => s?.classList.remove('active'));
     steps[stepName]?.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Full state reset — returns everything to initial values
+  const resetAllState = () => {
+    selectedCategory = null;
+    selectedDestination = null;
+    selectedTariff = null;
+    selectedVehicle = null;
+    selectedBookingType = null;
+    selectedDateTime = null;
+    selectedPassengers = 0;
+    selectedLuggageLarge = 0;
+    selectedLuggageMedium = 0;
+    selectedLuggageCabin = 0;
+    selectedPaymentMethod = null;
+    passengerName = '';
+    roomNumber = '';
+    bookingNotes = '';
+    flightNumber = '';
+    lastFlightData = null;
+    // Clear form inputs
+    const nameInput = $('#passenger-name-input');
+    if (nameInput) nameInput.value = '';
+    const roomInput = $('#room-number-input');
+    if (roomInput) roomInput.value = '';
+    const notesInput = $('#booking-notes-input');
+    if (notesInput) notesInput.value = '';
+    const flightInput = $('#flight-number-input');
+    if (flightInput) flightInput.value = '';
+    // Reset datetime picker
+    const datetimePicker = $('#booking-datetime-picker');
+    if (datetimePicker) datetimePicker.hidden = true;
+    // Reset payment buttons
+    const payBtns = document.querySelectorAll('.ma-payment-btn');
+    payBtns.forEach(b => b.classList.remove('active'));
   };
 
   // ========================================
@@ -938,13 +974,13 @@
     const isArrival = selectedCategory && selectedCategory.is_arrival;
     if (isArrival) {
       // Arrival: pickup FROM destination → hotel
-      parts.push(`✈️ Άφιξη - Παραλαβή: ${selectedDestination.name}`);
+      parts.push(`✈️ Άφιξη : ${selectedDestination.name}`);
       parts.push(`🏨 Προορισμός: ${hotelName}`);
     } else {
       // Departure: hotel → destination (default)
       parts.push(`🎯 Προορισμός: ${selectedDestination.name}`);
     }
-    if (bookingTimeText) parts.push(`⏰ Χρόνος: ${bookingTimeText}`);
+    if (bookingTimeText) parts.push(bookingTimeText);
     parts.push(`🚗 Όχημα: ${selectedVehicle.name}`);
 
     // Hotel address section — only for departures (arrivals already show hotel as destination)
@@ -1041,6 +1077,8 @@
         // Auto-create transfer request for WhatsApp clicks
         if (id === '#cta-whatsapp') {
           createTransferRequest();
+          // Show success screen after short delay so WhatsApp opens first
+          setTimeout(() => showStep('sentSuccess'), 1500);
         }
       };
     });
@@ -1242,6 +1280,12 @@
       const datetimePicker = $('#booking-datetime-picker');
       if (datetimePicker) datetimePicker.hidden = true;
       showStep('bookingType');
+    });
+
+    // "New Route" button on success screen → full reset
+    $('#btn-new-route')?.addEventListener('click', () => {
+      resetAllState();
+      showStep('categories');
     });
 
     // Setup booking type listeners

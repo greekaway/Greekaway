@@ -290,7 +290,7 @@
     }
 
     // ── Flight tracking live status (arrival only) — with progress bar ──
-    if (data.flight_number && data.is_arrival && data.flight_tracking_active !== false) {
+    if (data.flight_number && data.is_arrival) {
       sections.push({ type: 'divider' });
       sections.push({ type: 'title', text: '✈️ Live Πτήση' });
 
@@ -387,7 +387,7 @@
     updateFlightProgress(data);
 
     // ── Start flight status polling (every 60s) for arrival flights ──
-    if (data.is_arrival && data.flight_number && data.flight_tracking_active) {
+    if (data.is_arrival && data.flight_number) {
       startFlightPolling();
       startProgressAnimation(); // animate plane every 30s (no API calls)
     }
