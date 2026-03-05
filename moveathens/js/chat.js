@@ -4,6 +4,17 @@
   
   let chatHistory = [];
   let isWaitingResponse = false;
+  const STORAGE_KEY = 'ma_chat_history';
+
+  function saveChatHistory() {
+    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
+  }
+  function loadChatHistory() {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) chatHistory = JSON.parse(saved);
+    } catch(e) { chatHistory = []; }
+  }
   
   function detectLanguage() {
     const lang = document.documentElement.lang || navigator.language || 'el';
@@ -101,6 +112,7 @@
       // Add user message
       appendMessage('user', message);
       chatHistory.push({ role: 'user', content: message });
+      saveChatHistory();
       
       // Show typing indicator
       const typingEl = appendMessage('assistant', t('typing'), true);
@@ -117,6 +129,7 @@
         // Add assistant response
         appendMessage('assistant', response);
         chatHistory.push({ role: 'assistant', content: response });
+        saveChatHistory();
       } catch (error) {
         typingEl?.remove();
         appendMessage('assistant', t('error'));
@@ -145,6 +158,14 @@
 
     // Focus input
     setTimeout(() => input.focus(), 100);
+
+    // Restore previous conversation from sessionStorage
+    loadChatHistory();
+    if (chatHistory.length > 0) {
+      const qWrap = document.getElementById('maChatQuickQuestions');
+      if (qWrap) qWrap.style.display = 'none';
+      chatHistory.forEach(m => appendMessage(m.role, m.content));
+    }
   }
   
   function appendMessage(role, text, isTyping = false) {

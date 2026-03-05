@@ -35,6 +35,20 @@
 
   // ── Conversation history (for OpenAI context) ──
   const history = [];
+  const DS_CHAT_KEY = 'ds_chat_history';
+
+  function saveChatHistory() {
+    try { sessionStorage.setItem(DS_CHAT_KEY, JSON.stringify(history)); } catch(e) {}
+  }
+  function loadChatHistory() {
+    try {
+      const saved = sessionStorage.getItem(DS_CHAT_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) parsed.forEach(m => history.push(m));
+      }
+    } catch(e) {}
+  }
 
   // ── Apply config (logo, labels) ──
   try {
@@ -190,6 +204,7 @@
     // Show user message
     addMessage('user', msg);
     history.push({ role: 'user', content: msg });
+    saveChatHistory();
 
     // Show typing indicator
     addTypingIndicator();
@@ -219,6 +234,7 @@
 
       addMessage('bot', reply);
       history.push({ role: 'assistant', content: reply });
+      saveChatHistory();
     } catch (err) {
       removeTypingIndicator();
       addMessage('bot', '⚠️ Σφάλμα σύνδεσης. Ελέγξε το δίκτυό σου.');
@@ -261,6 +277,13 @@
       const text = btn.getAttribute('data-quick');
       if (text) sendMessage(text);
     });
+  }
+
+  // ── Restore previous conversation from sessionStorage ──
+  loadChatHistory();
+  if (history.length > 0) {
+    if (quickActions) quickActions.style.display = 'none';
+    history.forEach(m => addMessage(m.role === 'assistant' ? 'bot' : 'user', m.content));
   }
 
   // ── VisualViewport: keep input visible above keyboard / browser chrome ──
