@@ -73,7 +73,10 @@ async function buildDriverFinancialContext(driverId) {
     tripSources,
     driverDebts,
     driverPartners,
-    partnersSummary
+    partnersSummary,
+    driverObligations,
+    obligationPayments,
+    obligationsSummary
   ] = await Promise.all([
     dataLayer.getDashboard({ driverId, month: curMonthStr }),
     dataLayer.getDashboard({ driverId, month: prevMonthStr }),
@@ -87,7 +90,10 @@ async function buildDriverFinancialContext(driverId) {
     dataLayer.getTripSources(),
     dataLayer.getDebts({ driverId }),
     dataLayer.getPartners({ driverId }),
-    dataLayer.getPartnersSummary(driverId)
+    dataLayer.getPartnersSummary(driverId),
+    dataLayer.getObligations({ driverId }),
+    dataLayer.getObligationPayments({ driverId }),
+    dataLayer.getObligationsSummary(driverId)
   ]);
 
   const dc = dashboardCurrent;
@@ -262,10 +268,10 @@ async function buildDriverFinancialContext(driverId) {
     lines.push('Δεν υπάρχουν εκκρεμότητες οφειλών.');
   }
 
-  // ── Partners (Συνεργάτες / Τεφτέρι) ──
+  // ── Partners (Συνεργάτες) ──
   if (driverPartners && driverPartners.length > 0) {
     lines.push('');
-    lines.push('── ΣΥΝΕΡΓΑΤΕΣ (Τεφτέρι) ──');
+    lines.push('── ΣΥΝΕΡΓΑΤΕΣ ──');
     let totalOwedByPartners = 0;
     let totalOwedToPartners = 0;
     driverPartners.forEach(p => {
@@ -282,8 +288,28 @@ async function buildDriverFinancialContext(driverId) {
     lines.push(`Καθαρό ισοζύγιο συνεργατών: ${formatEUR(totalOwedByPartners - totalOwedToPartners)}`);
   } else {
     lines.push('');
-    lines.push('── ΣΥΝΕΡΓΑΤΕΣ (Τεφτέρι) ──');
+    lines.push('── ΣΥΝΕΡΓΑΤΕΣ ──');
     lines.push('Δεν υπάρχουν καταχωρημένοι συνεργάτες.');
+  }
+
+  // ── Obligations (Μηνιαίες Υποχρεώσεις) ──
+  if (driverObligations && driverObligations.length > 0) {
+    lines.push('');
+    lines.push('── ΜΗΝΙΑΙΕΣ ΥΠΟΧΡΕΩΣΕΙΣ ──');
+    if (obligationsSummary) {
+      lines.push(`Σύνολο που μου χρωστάνε (ανεξόφλητα): ${formatEUR(obligationsSummary.totalOwedToMe)}`);
+      lines.push(`Σύνολο που χρωστάω (ανεξόφλητα): ${formatEUR(obligationsSummary.totalIOwe)}`);
+    }
+    const paidSet = new Set((obligationPayments || []).map(p => `${p.obligationId}__${p.period}`));
+    driverObligations.filter(o => o.active).forEach(o => {
+      const dirLabel = o.direction === 'incoming' ? 'Μου χρωστάνε' : 'Χρωστάω';
+      const freq = o.frequency === 'monthly' ? 'Μηνιαία' : o.frequency === 'quarterly' ? 'Τριμηνιαία' : 'Ετήσια';
+      lines.push(`  • ${o.title} (${o.counterparty || '—'}): ${formatEUR(o.amount)} ${freq} — ${dirLabel}`);
+    });
+  } else {
+    lines.push('');
+    lines.push('── ΜΗΝΙΑΙΕΣ ΥΠΟΧΡΕΩΣΕΙΣ ──');
+    lines.push('Δεν υπάρχουν καταχωρημένες υποχρεώσεις.');
   }
 
   return lines.join('\n');
@@ -315,7 +341,7 @@ function buildSystemPrompt() {
 - «Δουλεύω αρκετά;» → μέρες εργασίας, μέσος ανά μέρα, σύγκριση
 - «Με τον ρυθμό που πάω πού θα φτάσω;» → πρόβλεψη τέλους μήνα
 - «Ποιες πιστώσεις έχω;» / «Τι χρεώσεις έχω;» / «Ποιος μου χρωστάει;» / «Τι χρωστάω;» → δείξε τα δεδομένα από τις εκκρεμότητες οφειλών (debts). Πιστώσεις = μου χρωστάνε, Χρεώσεις = χρωστάω. Αν δεν υπάρχουν, πες ότι δεν έχει καταγράψει εκκρεμότητες.
-- «Πόσα μου χρωστάει ο Νίκος;» / «Τι υπόλοιπο έχω με το ξενοδοχείο;» / «Ποιοι συνεργάτες μου χρωστάνε;» → δείξε δεδομένα από τους Συνεργάτες (Τεφτέρι). Κάθε συνεργάτης έχει χρεώσεις (δουλειά που σου δίνει) και πληρωμές (που σε πληρώνει). Θετικό υπόλοιπο = σου χρωστάει, αρνητικό = χρωστάς εσύ. Αν δεν υπάρχουν συνεργάτες, πες ότι δεν έχει καταχωρήσει.
+- «Πόσα μου χρωστάει ο Νίκος;» / «Τι υπόλοιπο έχω με το ξενοδοχείο;» / «Ποιοι συνεργάτες μου χρωστάνε;» → δείξε δεδομένα από τους Συνεργάτες. Κάθε συνεργάτης έχει χρεώσεις (δουλειά που σου δίνει) και πληρωμές (που σε πληρώνει). Θετικό υπόλοιπο = σου χρωστάει, αρνητικό = χρωστάς εσύ. Αν δεν υπάρχουν συνεργάτες, πες ότι δεν έχει καταχωρήσει.
 
 ΥΠΟΛΟΓΙΣΜΟΙ:
 - Υπόλοιπο (τσέπη) = Καθαρά έσοδα − Σύνολο εξόδων (αυτοκίνητο + προσωπικά + φόροι + πάγια + οικογένεια)

@@ -807,6 +807,15 @@
     });
   }
 
+  // ── Obligations menu item → navigate to obligations page ──
+  const obligationsMenuItem = $('[data-ds-menu-item="obligations"]');
+  if (obligationsMenuItem) {
+    obligationsMenuItem.addEventListener('click', () => {
+      const prefix = window.DriversSystemConfig ? window.DriversSystemConfig.getRoutePrefix() : '/driverssystem';
+      window.location.href = prefix + '/obligations';
+    });
+  }
+
   const now = new Date();
   reviewMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 

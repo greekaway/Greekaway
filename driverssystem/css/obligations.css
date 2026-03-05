@@ -1,0 +1,743 @@
+/* ═══════════════════════════════════════════════
+   DriversSystem — Obligations (Μηνιαίες Υποχρεώσεις)
+   ═══════════════════════════════════════════════ */
+
+.ds-obl-page {
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.ds-obl-page *,
+.ds-obl-page *::before,
+.ds-obl-page *::after,
+.ds-obl-overlay *,
+.ds-obl-overlay *::before,
+.ds-obl-overlay *::after {
+  box-sizing: border-box;
+}
+
+/* ── Back Header ── */
+.ds-obl-back-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 14px 16px 8px;
+  background: var(--ds-bg);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ds-obl-back-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: var(--ds-card, #1c2438);
+  color: var(--ds-text, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s;
+  flex-shrink: 0;
+}
+
+.ds-obl-back-btn:active {
+  transform: scale(0.92);
+}
+
+.ds-obl-page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ds-text, #fff);
+}
+
+/* ── Main ── */
+.ds-obl-main {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Summary Cards ── */
+.ds-obl-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.ds-obl-summary-card {
+  background: var(--ds-card, #1a1d26);
+  border-radius: var(--ds-radius, 14px);
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: var(--ds-shadow, 0 2px 8px rgba(0,0,0,.18));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ds-obl-summary-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ds-muted, #888);
+}
+
+.ds-obl-summary-card__amount {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.ds-obl-summary-card--incoming .ds-obl-summary-card__amount {
+  color: #4CAF50;
+}
+
+.ds-obl-summary-card--outgoing .ds-obl-summary-card__amount {
+  color: #FF7043;
+}
+
+.ds-obl-summary-card__missed {
+  font-size: 11px;
+  color: var(--ds-muted, #888);
+  min-height: 16px;
+}
+
+/* ── Filters ── */
+.ds-obl-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+.ds-obl-filters::-webkit-scrollbar { display: none; }
+
+.ds-obl-filter {
+  border: none;
+  background: var(--ds-card, #1a1d26);
+  color: var(--ds-muted, #888);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ds-obl-filter.active {
+  background: var(--ds-accent, #00c896);
+  color: #fff;
+}
+
+/* ── Empty State ── */
+.ds-obl-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--ds-muted, #888);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Obligation Card ── */
+.ds-obl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ds-obl-card {
+  background: var(--ds-card, #1a1d26);
+  border-radius: var(--ds-radius, 14px);
+  padding: 14px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: var(--ds-shadow, 0 2px 8px rgba(0,0,0,.18));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.ds-obl-card:active {
+  transform: scale(0.98);
+}
+
+.ds-obl-card__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.ds-obl-card__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ds-obl-card--incoming .ds-obl-card__icon {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4CAF50;
+}
+
+.ds-obl-card--outgoing .ds-obl-card__icon {
+  background: rgba(255, 112, 67, 0.15);
+  color: #FF7043;
+}
+
+.ds-obl-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ds-obl-card__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ds-text, #fff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-obl-card__sub {
+  font-size: 12px;
+  color: var(--ds-muted, #888);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-obl-card__debt {
+  font-size: 12px;
+  font-weight: 600;
+  color: #FF7043;
+}
+
+.ds-obl-card__ok {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4CAF50;
+}
+
+/* Pay button on the card */
+.ds-obl-card__pay-btn {
+  min-width: 56px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid var(--ds-muted, #555);
+  background: transparent;
+  color: var(--ds-muted, #888);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.ds-obl-card__pay-btn:active {
+  transform: scale(0.92);
+}
+
+.ds-obl-card__pay-btn--paid {
+  background: rgba(76, 175, 80, 0.15);
+  border-color: #4CAF50;
+  color: #4CAF50;
+}
+
+/* ── FAB ── */
+.ds-obl-fab {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--ds-accent, #00c896);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 30;
+  transition: transform 0.15s;
+}
+.ds-obl-fab:active { transform: scale(0.9); }
+.ds-obl-fab svg { width: 26px; height: 26px; }
+
+/* ═══════════════════════════════════════
+   OVERLAY (Add / Edit)
+   ═══════════════════════════════════════ */
+
+.ds-obl-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+.ds-obl-dialog {
+  width: 100%;
+  max-width: 520px;
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px 32px;
+  background: var(--ds-card, #1a1d26);
+  box-shadow: 0 -4px 24px rgba(0,0,0,.35);
+}
+
+.ds-obl-dialog__title {
+  margin: 0 0 18px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ds-text, #fff);
+}
+
+.ds-obl-field {
+  margin-bottom: 14px;
+}
+
+.ds-obl-field__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ds-muted, #aaa);
+  margin-bottom: 6px;
+}
+
+.ds-obl-field__input {
+  width: 100%;
+  background: var(--ds-bg, #0b0f1a);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 15px;
+  color: var(--ds-text, #fff);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ds-obl-field__input:focus {
+  border-color: var(--ds-accent, #00c896);
+}
+
+select.ds-obl-field__input {
+  cursor: pointer;
+}
+
+/* Direction toggle */
+.ds-obl-direction-toggle {
+  display: flex;
+  gap: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.ds-obl-dir-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  background: var(--ds-bg, #0b0f1a);
+  color: var(--ds-muted, #888);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-obl-dir-btn.active {
+  background: var(--ds-accent, #00c896);
+  color: #fff;
+}
+
+/* Actions */
+.ds-obl-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.ds-obl-btn {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+
+.ds-obl-btn--cancel {
+  background: rgba(255,255,255,0.06);
+  color: var(--ds-muted, #aaa);
+}
+
+.ds-obl-btn--save {
+  background: var(--ds-accent, #00c896);
+  color: #fff;
+}
+
+.ds-obl-btn--delete {
+  background: rgba(239, 83, 80, 0.15);
+  color: #EF5350;
+  flex: 0 0 auto;
+  padding: 12px 16px;
+}
+
+/* ═══════════════════════════════════════
+   DETAIL / HISTORY VIEW
+   ═══════════════════════════════════════ */
+
+.ds-obl-detail-view {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 120px;
+}
+
+.ds-obl-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 14px 0 8px;
+  background: var(--ds-bg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ds-obl-detail-back-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: var(--ds-card, #1c2438);
+  color: var(--ds-text, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s;
+  flex-shrink: 0;
+}
+
+.ds-obl-detail-back-btn:active {
+  transform: scale(0.92);
+}
+
+.ds-obl-detail-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ds-text, #fff);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-obl-detail-edit-btn {
+  background: none;
+  border: none;
+  color: var(--ds-muted, #888);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Detail info rows */
+.ds-obl-detail-info {
+  background: var(--ds-card, #1a1d26);
+  border-radius: var(--ds-radius, 14px);
+  padding: 14px 16px;
+  margin: 8px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--ds-shadow, 0 2px 8px rgba(0,0,0,.18));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ds-obl-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ds-obl-detail-label {
+  font-size: 13px;
+  color: var(--ds-muted, #888);
+  font-weight: 600;
+}
+
+.ds-obl-detail-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ds-text, #fff);
+}
+
+/* History title */
+.ds-obl-history-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ds-text, #fff);
+  margin: 0 0 10px;
+}
+
+/* History filters */
+.ds-obl-history-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ds-obl-hist-filter {
+  border: none;
+  background: var(--ds-card, #1a1d26);
+  color: var(--ds-muted, #888);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ds-obl-hist-filter.active {
+  background: var(--ds-accent, #00c896);
+  color: #fff;
+}
+
+/* History rows */
+.ds-obl-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ds-obl-history-row {
+  background: var(--ds-card, #1a1d26);
+  border-radius: var(--ds-radius, 14px);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: var(--ds-shadow, 0 2px 8px rgba(0,0,0,.18));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ds-obl-history-row__left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ds-obl-history-row__period {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ds-text, #fff);
+}
+
+.ds-obl-history-row__amount {
+  font-size: 12px;
+  color: var(--ds-muted, #888);
+}
+
+.ds-obl-history-row__date {
+  font-size: 11px;
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.ds-obl-history-row__pending {
+  font-size: 11px;
+  color: #FF7043;
+  font-weight: 600;
+}
+
+.ds-obl-history-row__btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ds-muted, #555);
+  background: transparent;
+  color: var(--ds-muted, #888);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.ds-obl-history-row__btn:active {
+  transform: scale(0.9);
+}
+
+.ds-obl-history-row__btn--paid {
+  background: rgba(76, 175, 80, 0.15);
+  border-color: #4CAF50;
+  color: #4CAF50;
+}
+
+.ds-obl-history-empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--ds-muted, #888);
+  font-size: 13px;
+}
+
+/* ══════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ══════════════════════════════════ */
+
+/* ≤ 350px (small phones) */
+@media (max-width: 350px) {
+  .ds-obl-main { padding: 0 10px 120px; gap: 10px; }
+  .ds-obl-summary-card { padding: 10px 10px 8px; }
+  .ds-obl-summary-card__amount { font-size: 18px; }
+  .ds-obl-card { padding: 10px 12px; gap: 8px; }
+  .ds-obl-card__icon { width: 32px; height: 32px; }
+  .ds-obl-card__title { font-size: 13px; }
+  .ds-obl-filter { padding: 6px 12px; font-size: 12px; }
+  .ds-obl-dialog { padding: 18px 14px calc(14px + env(safe-area-inset-bottom, 0px)); }
+  .ds-obl-field__input { padding: 10px 12px; font-size: 14px; }
+  .ds-obl-fab { width: 50px; height: 50px; bottom: 90px; right: 14px; }
+  .ds-obl-detail-view { padding: 0 10px 120px; }
+}
+
+/* 351–430px */
+@media (min-width: 351px) and (max-width: 430px) {
+  .ds-obl-main { padding: 0 14px 130px; }
+}
+
+/* 431–599px */
+@media (min-width: 431px) and (max-width: 599px) {
+  .ds-obl-main { max-width: 480px; }
+}
+
+/* 600–834px (tablets) */
+@media (min-width: 600px) and (max-width: 834px) {
+  .ds-obl-main { max-width: 520px; }
+  .ds-obl-card { padding: 16px 18px; }
+  .ds-obl-summary-card__amount { font-size: 24px; }
+}
+
+/* 835–1024px */
+@media (min-width: 835px) and (max-width: 1024px) {
+  .ds-obl-main { max-width: 560px; }
+}
+
+/* 1025px+ */
+@media (min-width: 1025px) {
+  .ds-obl-main { max-width: 600px; }
+  .ds-obl-dialog { border-radius: 20px; margin-bottom: 40px; }
+}
+
+/* ══════════════════════════════════
+   SAFE AREA (iOS notch)
+   ══════════════════════════════════ */
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .ds-obl-fab {
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ══════════════════════════════════
+   LIGHT MODE OVERRIDES
+   ══════════════════════════════════ */
+
+@media (prefers-color-scheme: light) {
+  .ds-obl-back-btn {
+    background: #f0f0f3;
+    color: #1a2232;
+  }
+
+  .ds-obl-detail-back-btn {
+    background: #f0f0f3;
+    color: #1a2232;
+  }
+
+  .ds-obl-summary-card {
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .ds-obl-card {
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .ds-obl-detail-info {
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .ds-obl-history-row {
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .ds-obl-field__input {
+    border-color: rgba(0, 0, 0, 0.1);
+    background: #f5f5f8;
+  }
+
+  .ds-obl-direction-toggle {
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .ds-obl-dir-btn {
+    background: #f5f5f8;
+  }
+
+  .ds-obl-card__pay-btn {
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+
+  .ds-obl-history-row__btn {
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+}

@@ -51,6 +51,8 @@ const DEBTS_PATH = path.join(DATA_DIR, 'debts.json');
 const APPOINTMENTS_PATH = path.join(DATA_DIR, 'appointments.json');
 const PARTNERS_PATH = path.join(DATA_DIR, 'partners.json');
 const PARTNER_TXNS_PATH = path.join(DATA_DIR, 'partner_transactions.json');
+const OBLIGATIONS_PATH = path.join(DATA_DIR, 'obligations.json');
+const OBLIGATION_PAYMENTS_PATH = path.join(DATA_DIR, 'obligation_payments.json');
 
 // ── Seed persistent disk from repo defaults on first boot ──
 function seedIfNeeded() {
@@ -165,7 +167,7 @@ function getDefaultConfig() {
 // FEATURES (Module Toggle Flags)
 // =========================================================
 
-const FEATURE_DEFAULTS = { debts: true, appointments: true, partners: true };
+const FEATURE_DEFAULTS = { debts: true, appointments: true, partners: true, obligations: true };
 
 async function getFeatures() {
   const cfg = readConfig();
@@ -803,7 +805,7 @@ module.exports = {
   addAppointment,
   updateAppointment,
   deleteAppointment,
-  // Partners (Συνεργάτες / Τεφτέρι)
+  // Partners (Συνεργάτες)
   getPartners,
   addPartner,
   updatePartner,
@@ -812,6 +814,15 @@ module.exports = {
   addPartnerTransaction,
   deletePartnerTransaction,
   getPartnersSummary,
+  // Obligations (Μηνιαίες Υποχρεώσεις)
+  getObligations,
+  addObligation,
+  updateObligation,
+  deleteObligation,
+  getObligationPayments,
+  markObligationPaid,
+  unmarkObligationPaid,
+  getObligationsSummary,
   // Features (Module Toggles)
   getFeatures,
   updateFeatures,
@@ -1335,5 +1346,221 @@ async function getPartnersSummary(driverId) {
     if (!s.lastTxnDate || t.date > s.lastTxnDate) s.lastTxnDate = t.date;
   });
   return summary;
+}
+
+// =========================================================
+// OBLIGATIONS (Μηνιαίες Υποχρεώσεις — Personal per driver)
+// =========================================================
+
+function readObligations() {
+  try {
+    if (!fs.existsSync(OBLIGATIONS_PATH)) return [];
+    const raw = fs.readFileSync(OBLIGATIONS_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writeObligations(data) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tmpPath = `${OBLIGATIONS_PATH}.tmp`;
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2));
+    fs.renameSync(tmpPath, OBLIGATIONS_PATH);
+    return true;
+  } catch (err) {
+    console.error('[driverssystem] obligations write failed:', err.message);
+    return false;
+  }
+}
+
+function readObligationPayments() {
+  try {
+    if (!fs.existsSync(OBLIGATION_PAYMENTS_PATH)) return [];
+    const raw = fs.readFileSync(OBLIGATION_PAYMENTS_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writeObligationPayments(data) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tmpPath = `${OBLIGATION_PAYMENTS_PATH}.tmp`;
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2));
+    fs.renameSync(tmpPath, OBLIGATION_PAYMENTS_PATH);
+    return true;
+  } catch (err) {
+    console.error('[driverssystem] obligation_payments write failed:', err.message);
+    return false;
+  }
+}
+
+/**
+ * Obligation record:
+ * { id, driverId, title, counterparty, amount, direction, frequency, startDate, active, createdAt }
+ *   direction: 'incoming' (they pay me / μου χρωστάνε) | 'outgoing' (I pay them / χρωστάω)
+ *   frequency: 'monthly' | 'quarterly' | 'yearly'
+ *
+ * Payment record:
+ * { id, obligationId, driverId, period, paidAt, createdAt }
+ *   period: 'YYYY-MM' (the month this payment covers)
+ */
+
+async function getObligations(filters = {}) {
+  let items = readObligations();
+  if (filters.driverId) items = items.filter(o => o.driverId === filters.driverId);
+  if (filters.direction) items = items.filter(o => o.direction === filters.direction);
+  if (filters.active !== undefined) items = items.filter(o => o.active === filters.active);
+  items.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'el'));
+  return items;
+}
+
+async function addObligation(obl) {
+  const items = readObligations();
+  const newObl = {
+    id: `obl_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    driverId: obl.driverId || '',
+    title: (obl.title || '').trim(),
+    counterparty: (obl.counterparty || '').trim(),
+    amount: parseFloat(obl.amount) || 0,
+    direction: ['incoming', 'outgoing'].includes(obl.direction) ? obl.direction : 'incoming',
+    frequency: ['monthly', 'quarterly', 'yearly'].includes(obl.frequency) ? obl.frequency : 'monthly',
+    startDate: obl.startDate || greeceDateStr(),
+    active: true,
+    createdAt: new Date().toISOString()
+  };
+  if (!newObl.title) throw new Error('Απαιτείται τίτλος');
+  if (newObl.amount <= 0) throw new Error('Το ποσό πρέπει να είναι θετικό');
+  items.push(newObl);
+  writeObligations(items);
+  return newObl;
+}
+
+async function updateObligation(id, updates) {
+  const items = readObligations();
+  const idx = items.findIndex(o => o.id === id);
+  if (idx === -1) return null;
+  const obl = items[idx];
+  if (updates.title !== undefined) obl.title = (updates.title || '').trim();
+  if (updates.counterparty !== undefined) obl.counterparty = (updates.counterparty || '').trim();
+  if (updates.amount !== undefined) obl.amount = parseFloat(updates.amount) || 0;
+  if (updates.direction !== undefined && ['incoming', 'outgoing'].includes(updates.direction)) obl.direction = updates.direction;
+  if (updates.frequency !== undefined && ['monthly', 'quarterly', 'yearly'].includes(updates.frequency)) obl.frequency = updates.frequency;
+  if (updates.active !== undefined) obl.active = !!updates.active;
+  obl.updatedAt = new Date().toISOString();
+  items[idx] = obl;
+  writeObligations(items);
+  return obl;
+}
+
+async function deleteObligation(id) {
+  const items = readObligations();
+  const idx = items.findIndex(o => o.id === id);
+  if (idx === -1) return false;
+  items.splice(idx, 1);
+  writeObligations(items);
+  // Also delete all payments for this obligation
+  const payments = readObligationPayments();
+  const filtered = payments.filter(p => p.obligationId !== id);
+  writeObligationPayments(filtered);
+  return true;
+}
+
+async function getObligationPayments(filters = {}) {
+  let payments = readObligationPayments();
+  if (filters.obligationId) payments = payments.filter(p => p.obligationId === filters.obligationId);
+  if (filters.driverId) payments = payments.filter(p => p.driverId === filters.driverId);
+  if (filters.period) payments = payments.filter(p => p.period === filters.period);
+  payments.sort((a, b) => (b.period || '').localeCompare(a.period || ''));
+  return payments;
+}
+
+async function markObligationPaid(obligationId, data) {
+  const payments = readObligationPayments();
+  // Idempotency: don't duplicate if already paid for this period
+  const existing = payments.find(p => p.obligationId === obligationId && p.period === data.period && p.driverId === data.driverId);
+  if (existing) return existing;
+  const newPayment = {
+    id: `opay_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    obligationId,
+    driverId: data.driverId || '',
+    period: data.period,  // e.g. '2026-03'
+    paidAt: new Date().toISOString(),
+    createdAt: new Date().toISOString()
+  };
+  payments.push(newPayment);
+  writeObligationPayments(payments);
+  return newPayment;
+}
+
+async function unmarkObligationPaid(paymentId) {
+  const payments = readObligationPayments();
+  const idx = payments.findIndex(p => p.id === paymentId);
+  if (idx === -1) return false;
+  payments.splice(idx, 1);
+  writeObligationPayments(payments);
+  return true;
+}
+
+async function getObligationsSummary(driverId) {
+  const obligations = readObligations().filter(o => o.driverId === driverId && o.active);
+  const payments = readObligationPayments().filter(p => p.driverId === driverId);
+  const paidSet = new Set(payments.map(p => `${p.obligationId}__${p.period}`));
+
+  const now = greeceNow();
+  const currentPeriod = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+  let totalOwedToMe = 0;   // μου χρωστάνε
+  let totalIOwe = 0;       // χρωστάω
+  let missedIncoming = 0;  // missed periods incoming
+  let missedOutgoing = 0;  // missed periods outgoing
+
+  obligations.forEach(obl => {
+    // Generate all periods from startDate up to current period
+    const periods = generatePeriods(obl.startDate, currentPeriod, obl.frequency);
+    let unpaidCount = 0;
+    periods.forEach(period => {
+      if (!paidSet.has(`${obl.id}__${period}`)) {
+        unpaidCount++;
+      }
+    });
+    const unpaidAmount = unpaidCount * obl.amount;
+    if (obl.direction === 'incoming') {
+      totalOwedToMe += unpaidAmount;
+      missedIncoming += unpaidCount;
+    } else {
+      totalIOwe += unpaidAmount;
+      missedOutgoing += unpaidCount;
+    }
+  });
+
+  return { totalOwedToMe, totalIOwe, missedIncoming, missedOutgoing };
+}
+
+/**
+ * Generate period strings from startDate to endPeriod based on frequency.
+ * E.g. monthly from '2026-01-15' to '2026-03' => ['2026-01','2026-02','2026-03']
+ */
+function generatePeriods(startDate, endPeriod, frequency) {
+  const periods = [];
+  if (!startDate || !endPeriod) return periods;
+  const [sy, sm] = startDate.split('-').map(Number);
+  const [ey, em] = endPeriod.split('-').map(Number);
+  if (!sy || !sm || !ey || !em) return periods;
+
+  let y = sy, m = sm;
+  const step = frequency === 'yearly' ? 12 : frequency === 'quarterly' ? 3 : 1;
+
+  while (y < ey || (y === ey && m <= em)) {
+    periods.push(`${y}-${String(m).padStart(2, '0')}`);
+    m += step;
+    while (m > 12) { m -= 12; y++; }
+  }
+  return periods;
 }
 

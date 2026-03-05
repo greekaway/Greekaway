@@ -945,7 +945,7 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   });
 
   // ══════════════════════════════════════════════════════════
-  // PARTNERS (Συνεργάτες / Τεφτέρι — Private per driver)
+  // PARTNERS (Συνεργάτες — Private per driver)
   // ══════════════════════════════════════════════════════════
 
   // Get partners for a driver
@@ -1118,6 +1118,117 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       return res.redirect(isDev ? '/driverssystem/profile' : '/profile');
     }
     return sendPageWithFooter(res, path.join(pagesDir, 'appointments.html'));
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // OBLIGATIONS (Μηνιαίες Υποχρεώσεις — Private per driver)
+  // No admin routes — data is strictly personal.
+  // ══════════════════════════════════════════════════════════
+
+  // Get obligations for a driver
+  app.get('/api/driverssystem/obligations', async (req, res) => {
+    try {
+      const { driverId, direction, active } = req.query;
+      const filters = {};
+      if (driverId) filters.driverId = driverId;
+      if (direction) filters.direction = direction;
+      if (active !== undefined) filters.active = active === 'true';
+      const items = await dataLayer.getObligations(filters);
+      return res.json(items);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Get obligation payments for a driver
+  app.get('/api/driverssystem/obligation-payments', async (req, res) => {
+    try {
+      const { driverId, obligationId, period } = req.query;
+      const filters = {};
+      if (driverId) filters.driverId = driverId;
+      if (obligationId) filters.obligationId = obligationId;
+      if (period) filters.period = period;
+      const payments = await dataLayer.getObligationPayments(filters);
+      return res.json(payments);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Get obligations summary (totals)
+  app.get('/api/driverssystem/obligations/summary', async (req, res) => {
+    try {
+      const { driverId } = req.query;
+      if (!driverId) return res.status(400).json({ error: 'Απαιτείται driverId' });
+      const summary = await dataLayer.getObligationsSummary(driverId);
+      return res.json(summary);
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Create obligation
+  app.post('/api/driverssystem/obligations', requireDriver, async (req, res) => {
+    try {
+      const { driverId, title, counterparty, amount, direction, frequency, startDate } = req.body || {};
+      if (!title || !amount) {
+        return res.status(400).json({ error: 'Απαιτείται τίτλος και ποσό' });
+      }
+      const obl = await dataLayer.addObligation({ driverId, title, counterparty, amount, direction, frequency, startDate });
+      return res.status(201).json(obl);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // Update obligation
+  app.put('/api/driverssystem/obligations/:id', requireDriver, async (req, res) => {
+    try {
+      const result = await dataLayer.updateObligation(req.params.id, req.body);
+      if (!result) return res.status(404).json({ error: 'Not found' });
+      return res.json(result);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // Delete obligation (and all its payments)
+  app.delete('/api/driverssystem/obligations/:id', requireDriver, async (req, res) => {
+    try {
+      const ok = await dataLayer.deleteObligation(req.params.id);
+      if (!ok) return res.status(404).json({ error: 'Not found' });
+      return res.json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // Mark a period as paid
+  app.post('/api/driverssystem/obligations/:id/pay', requireDriver, async (req, res) => {
+    try {
+      const { driverId, period } = req.body || {};
+      if (!period) return res.status(400).json({ error: 'Απαιτείται περίοδος' });
+      const payment = await dataLayer.markObligationPaid(req.params.id, { driverId, period });
+      return res.status(201).json(payment);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Server error' });
+    }
+  });
+
+  // Unmark a payment (delete payment record)
+  app.delete('/api/driverssystem/obligation-payments/:paymentId', requireDriver, async (req, res) => {
+    try {
+      const ok = await dataLayer.unmarkObligationPaid(req.params.paymentId);
+      if (!ok) return res.status(404).json({ error: 'Not found' });
+      return res.json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Obligations page route ──
+  router.get('/obligations', (req, res) => {
+    return sendPageWithFooter(res, path.join(pagesDir, 'obligations.html'));
   });
 
   // ── AI Assistant routes ──

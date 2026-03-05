@@ -1,5 +1,5 @@
 /**
- * DriversSystem — Partners (Συνεργάτες / Τεφτέρι)
+ * DriversSystem — Partners (Συνεργάτες)
  *
  * Digital ledger per partner:
  *   - Manage partners (name, phone, note)
