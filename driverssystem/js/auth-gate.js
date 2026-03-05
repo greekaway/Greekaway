@@ -34,8 +34,8 @@
   // Determine the logo URL (we'll try to load it from the config API)
   gate.innerHTML = `
     <div class="ds-gate__card">
-      <div class="ds-gate__icon">🔒</div>
       <img class="ds-gate__logo" data-ds-gate-logo src="" alt="DriversSystem" />
+      <div class="ds-gate__icon">🔒</div>
       <h1 class="ds-gate__title">Σύνδεση Οδηγού</h1>
       <p class="ds-gate__desc">Εισάγετε τον αριθμό τηλεφώνου σας<br>για να αποκτήσετε πρόσβαση.</p>
       <form class="ds-gate__form" data-ds-gate-form>

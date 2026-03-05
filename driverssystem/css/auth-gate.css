@@ -55,9 +55,10 @@ body.ds-gate-locked > *:not(.ds-gate):not(script) {
 
 /* Logo */
 .ds-gate__logo {
-  width: 100px;
+  width: 300px;
+  max-width: 70vw;
   height: auto;
-  margin: 0 auto 24px;
+  margin: 0 auto 20px;
   display: block;
   border-radius: 18px;
 }
@@ -67,11 +68,11 @@ body.ds-gate-locked > *:not(.ds-gate):not(script) {
   display: none;
 }
 
-/* Icon fallback */
+/* Lock icon (below logo) */
 .ds-gate__icon {
-  font-size: 56px;
-  margin-bottom: 16px;
-  opacity: 0.85;
+  font-size: 28px;
+  margin-bottom: 12px;
+  opacity: 0.6;
   line-height: 1;
 }
 

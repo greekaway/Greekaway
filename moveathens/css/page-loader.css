@@ -1,0 +1,109 @@
+/* ═══════════════════════════════════════════════════════
+   Page Transition Loader – MoveAthens
+   Shows a spinner overlay during page navigation.
+   Adapts to light / dark mode automatically.
+   
+   Two layers:
+   A) body::before / ::after  – "incoming" cover.
+      Visible from first paint while the CSS lives in <head>.
+      Hidden once page-loader.js adds .ma-page-ready to <body>.
+   B) .ma-page-loader div     – "outgoing" cover.
+      Shown by JS on nav-click so the OLD page is masked
+      until the browser switches to the new document.
+   ═══════════════════════════════════════════════════════ */
+
+/* ──────────────────────────────────────────────────────
+   A. INCOMING overlay (CSS-only, no HTML needed)
+   ────────────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: rgba(11, 15, 26, 0.95);
+  pointer-events: all;
+  transition: opacity 200ms ease;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  z-index: 99999;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--ma-accent, #46d3ff);
+  border-radius: 50%;
+  animation: ma-spin 0.65s linear infinite;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+/* Once JS marks the body ready → fade away and stop blocking */
+body.ma-page-ready::before,
+body.ma-page-ready::after {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Light mode: light background ── */
+@media (prefers-color-scheme: light) {
+  body::before {
+    background: rgba(255, 255, 255, 0.95);
+  }
+  body::after {
+    border-color: rgba(0, 0, 0, 0.08);
+    border-top-color: var(--ma-accent, #46d3ff);
+  }
+}
+
+/* ──────────────────────────────────────────────────────
+   B. OUTGOING overlay (JS-injected div)
+   ────────────────────────────────────────────────────── */
+.ma-page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 15, 26, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.ma-page-loader--active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Spinner ring */
+.ma-page-loader__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--ma-accent, #46d3ff);
+  border-radius: 50%;
+  animation: ma-spin 0.65s linear infinite;
+}
+
+/* ── Light mode ── */
+@media (prefers-color-scheme: light) {
+  .ma-page-loader {
+    background: rgba(255, 255, 255, 0.82);
+  }
+  .ma-page-loader__spinner {
+    border-color: rgba(0, 0, 0, 0.08);
+    border-top-color: var(--ma-accent, #46d3ff);
+  }
+}
+
+@keyframes ma-spin {
+  to { transform: rotate(360deg); }
+}
