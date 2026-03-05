@@ -717,6 +717,27 @@
       <!-- ===== HOTEL REVENUE TAB (Έσοδα Ξενοδοχείων) ===== -->
       <div class="tab-content" data-tab="hotelrevenue">
         <section class="panel" id="hotel-revenue-section">
+
+          <!-- Summary Cards -->
+          <div id="hotel-rev-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">
+            <div class="dr-stat-card" style="background:var(--card-bg,#1c2438);border-radius:14px;padding:16px;text-align:center;border:1px solid rgba(255,255,255,0.08)">
+              <div style="font-size:12px;color:var(--text-muted,#888)">🏨 Ξενοδοχεία</div>
+              <div id="hotel-rev-total-hotels" style="font-size:24px;font-weight:700;margin-top:4px">—</div>
+            </div>
+            <div class="dr-stat-card" style="background:var(--card-bg,#1c2438);border-radius:14px;padding:16px;text-align:center;border:1px solid rgba(255,255,255,0.08)">
+              <div style="font-size:12px;color:var(--text-muted,#888)">🛣️ Σύνολο Διαδρομών</div>
+              <div id="hotel-rev-total-routes" style="font-size:24px;font-weight:700;margin-top:4px">—</div>
+            </div>
+            <div class="dr-stat-card" style="background:var(--card-bg,#1c2438);border-radius:14px;padding:16px;text-align:center;border:1px solid rgba(255,255,255,0.08)">
+              <div style="font-size:12px;color:var(--text-muted,#888)">💰 Σύνολο Εσόδων</div>
+              <div id="hotel-rev-total-revenue" style="font-size:24px;font-weight:700;margin-top:4px">—</div>
+            </div>
+            <div class="dr-stat-card" style="background:var(--card-bg,#1c2438);border-radius:14px;padding:16px;text-align:center;border:1px solid rgba(255,255,255,0.08)">
+              <div style="font-size:12px;color:var(--text-muted,#888)">📊 Σύνολο Προμηθειών</div>
+              <div id="hotel-rev-total-commission" style="font-size:24px;font-weight:700;margin-top:4px">—</div>
+            </div>
+          </div>
+
           <div class="ma-section-header">
             <div>
               <h3 class="ma-subtitle">🏨 Ξενοδοχεία — Οικονομική Επισκόπηση</h3>

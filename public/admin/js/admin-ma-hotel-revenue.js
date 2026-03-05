@@ -252,9 +252,35 @@
         tbody.innerHTML = '';
         if (empty) empty.style.display = 'block';
         if (info) info.textContent = from || to ? '📅 Χωρίς δεδομένα στο εύρος' : '';
+        // Clear summary cards
+        var elH = _$('#hotel-rev-total-hotels');
+        var elR = _$('#hotel-rev-total-routes');
+        var elV = _$('#hotel-rev-total-revenue');
+        var elC = _$('#hotel-rev-total-commission');
+        if (elH) elH.textContent = '0';
+        if (elR) elR.textContent = '0';
+        if (elV) elV.textContent = '€0';
+        if (elC) elC.textContent = '€0';
         return;
       }
       if (empty) empty.style.display = 'none';
+
+      // Update summary cards
+      var totalHotels = hotels.length;
+      var totalRoutes = 0, totalRevenue = 0, totalCommission = 0;
+      hotels.forEach(function (h) {
+        totalRoutes += h.total_routes || 0;
+        totalRevenue += h.total_revenue || 0;
+        totalCommission += h.total_commission || 0;
+      });
+      var elH = _$('#hotel-rev-total-hotels');
+      var elR = _$('#hotel-rev-total-routes');
+      var elV = _$('#hotel-rev-total-revenue');
+      var elC = _$('#hotel-rev-total-commission');
+      if (elH) elH.textContent = totalHotels;
+      if (elR) elR.textContent = totalRoutes.toLocaleString('el-GR');
+      if (elV) elV.textContent = '€' + totalRevenue.toLocaleString('el-GR', { maximumFractionDigits: 0 });
+      if (elC) elC.textContent = '€' + totalCommission.toLocaleString('el-GR', { maximumFractionDigits: 0 });
 
       tbody.innerHTML = hotels.map((h, idx) => {
         // Route types: count total known types

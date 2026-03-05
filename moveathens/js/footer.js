@@ -42,7 +42,6 @@
         const doc = parser.parseFromString(text, 'image/svg+xml');
         const svg = doc.querySelector('svg');
         if (!svg) throw new Error('icon');
-        svg.removeAttribute('fill');
         svg.setAttribute('aria-hidden', 'true');
         svg.setAttribute('focusable', 'false');
         slot.innerHTML = '';

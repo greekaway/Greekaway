@@ -57,6 +57,12 @@
     const raw = localStorage.getItem('moveathens_hotel');
     const hotel = raw ? JSON.parse(raw) : null;
     const zoneId = hotel && hotel.origin_zone_id;
+
+    // Show hotel name instead of "Τα Δικά Μου"
+    const hotelNameEl = document.querySelector('[data-ma-mystats-hotel-name]');
+    const hName = hotel && (hotel.hotelName || hotel.origin_zone_name || '');
+    if (hotelNameEl && hName) hotelNameEl.textContent = hName;
+
     if (zoneId) {
       const url = `/api/moveathens/my-stats?zone_id=${encodeURIComponent(zoneId)}${cb ? '&cb=' + Date.now() : ''}`;
       const res = await fetch(url, { cache: 'no-store' });
