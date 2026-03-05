@@ -96,3 +96,42 @@
     padding: 6px 4px;
   }
 }
+
+/* ─── Light mode ─── */
+html[data-theme='light'] .dr-stat-card {
+  background: #ffffff !important;
+  border-color: rgba(6,24,53,.12) !important;
+  color: #0f1b2c;
+}
+html[data-theme='light'] .dr-stat-card div[style*="color:var(--text-muted"] {
+  color: #5d6472 !important;
+}
+html[data-theme='light'] .dr-stat-card div[style*="font-size:24px"] {
+  color: #0f1b2c;
+}
+html[data-theme='light'] #hotel-revenue-section .dr-filter-bar input[type="date"] {
+  background: #ffffff;
+  color: #0f1b2c;
+  border-color: rgba(6,24,53,.18);
+}
+html[data-theme='light'] .hrt-types-badge {
+  background: #eef1f6;
+  color: #0f1b2c;
+}
+html[data-theme='light'] .hrt-expand {
+  background: #f8f9fc;
+  border-color: rgba(6,24,53,.12);
+  color: #0f1b2c;
+}
+html[data-theme='light'] #hotel-revenue-section select,
+html[data-theme='light'] #hotel-revenue-section .input {
+  background: #ffffff;
+  color: #0f1b2c;
+  border-color: rgba(6,24,53,.18);
+}
+html[data-theme='light'] #hotel-revenue-section label {
+  color: #0f1b2c;
+}
+html[data-theme='light'] #hotel-rev-date-info {
+  color: #5d6472 !important;
+}

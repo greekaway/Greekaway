@@ -155,3 +155,10 @@ html[data-theme='light'] .dr-modal .dr-table td { background: rgba(248,250,252,.
 html[data-theme='light'] .dr-modal .dr-table th { background: #f1f5f9; color: #475569; }
 html[data-theme='light'] .dr-modal .dr-table tr:hover td { background: rgba(241,245,249,.8); }
 html[data-theme='light'] .dr-modal .dr-empty { color: #9ca3af; }
+
+/* ─── Light mode: global table & filter bar ─── */
+html[data-theme='light'] .dr-table td { background: rgba(248,250,252,.6); color: #1a1a2e; border-bottom-color: #e5e7eb; }
+html[data-theme='light'] .dr-table th { background: #f1f5f9; color: #475569; }
+html[data-theme='light'] .dr-table tr:hover td { background: rgba(241,245,249,.8); }
+html[data-theme='light'] .dr-filter-bar select,
+html[data-theme='light'] .dr-filter-bar input { background: #ffffff; color: #0f1b2c; border-color: rgba(6,24,53,.18); }
