@@ -12,15 +12,15 @@
   window.MoveAthensConfig.applyContactInfo(document, cfg);
   window.MoveAthensConfig.applyHotelLabels(document, cfg);
 
-  // ── Welcome Metrics (dynamic) ──
+  const isDevHost = window.MoveAthensConfig.isDevHost();
+  const cb = isDevHost ? `?cb=${Date.now()}` : '';
+
+  // ── Welcome Metrics + System Status ──
   try {
-    const isDevHost = window.MoveAthensConfig.isDevHost();
-    const url = isDevHost
-      ? `/api/moveathens/welcome-stats?cb=${Date.now()}`
-      : '/api/moveathens/welcome-stats';
+    const url = `/api/moveathens/welcome-stats${cb}`;
     const res = await fetch(url, { cache: 'no-store' });
     if (res.ok) {
-      const { metrics } = await res.json();
+      const { metrics, status } = await res.json();
       document.querySelectorAll('[data-ma-metric]').forEach(card => {
         const key = card.getAttribute('data-ma-metric');
         const m = metrics[key];
@@ -30,22 +30,68 @@
         if (valEl) animateNumber(valEl, m.value);
         if (lblEl) lblEl.textContent = m.label || '';
       });
-      // Show the metrics container
-      const container = document.querySelector('[data-ma-metrics]');
-      if (container) container.style.opacity = '1';
+
+      // System Status cards
+      if (status) {
+        document.querySelectorAll('[data-ma-status-item]').forEach(card => {
+          const key = card.getAttribute('data-ma-status-item');
+          const s = status[key];
+          if (!s) return;
+          const valEl = card.querySelector('[data-ma-status-value]');
+          const lblEl = card.querySelector('[data-ma-status-label]');
+          if (lblEl) lblEl.textContent = s.label || '';
+          if (!valEl) return;
+          if (key === 'flightTracking') {
+            valEl.textContent = s.value ? 'Ενεργό' : 'Ανενεργό';
+            valEl.classList.add(s.value ? 'ma-status__value--active' : 'ma-status__value--inactive');
+          } else {
+            animateNumber(valEl, s.value);
+          }
+        });
+      }
     }
   } catch (_) { /* silent — metrics are enhancement only */ }
 
+  // ── Personal Hotel Stats ("Τα Δικά Μου") ──
+  try {
+    const raw = localStorage.getItem('moveathens_hotel');
+    const hotel = raw ? JSON.parse(raw) : null;
+    const zoneId = hotel && hotel.origin_zone_id;
+    if (zoneId) {
+      const url = `/api/moveathens/my-stats?zone_id=${encodeURIComponent(zoneId)}${cb ? '&cb=' + Date.now() : ''}`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        const map = {
+          myRoutes:     { value: data.myRoutes,     suffix: '' },
+          myRevenue:    { value: data.myRevenue,     suffix: '€' },
+          myCommission: { value: data.myCommission,  suffix: '€' }
+        };
+        document.querySelectorAll('[data-ma-mystats-item]').forEach(card => {
+          const key = card.getAttribute('data-ma-mystats-item');
+          const item = map[key];
+          if (!item) return;
+          const valEl = card.querySelector('[data-ma-mystats-value]');
+          if (valEl) animateNumber(valEl, item.value, item.suffix);
+        });
+      }
+    }
+  } catch (_) { /* silent */ }
+
+  // Show the dashboard container
+  const container = document.querySelector('[data-ma-metrics]');
+  if (container) container.style.opacity = '1';
+
   /** Animate a number counting up from 0 */
-  function animateNumber(el, target) {
+  function animateNumber(el, target, suffix) {
     const duration = 1400;
     const start = performance.now();
     const end = Number(target) || 0;
+    const sfx = suffix || '';
     const step = (now) => {
       const t = Math.min((now - start) / duration, 1);
-      // ease-out cubic
       const ease = 1 - Math.pow(1 - t, 3);
-      el.textContent = Math.round(ease * end).toLocaleString('el-GR');
+      el.textContent = Math.round(ease * end).toLocaleString('el-GR') + sfx;
       if (t < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);

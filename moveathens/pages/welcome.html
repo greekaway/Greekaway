@@ -35,13 +35,12 @@
 
         <!-- Dashboard area (below header, above footer) -->
         <div class="ma-welcome-dashboard" data-ma-metrics>
+
+          <!-- Πλατφόρμα -->
           <div class="ma-metrics-panel">
+            <h3 class="ma-panel__title">Πλατφόρμα</h3>
             <div class="ma-metrics__grid">
               <div class="ma-metrics__card" data-ma-metric="hotels">
-                <span class="ma-metrics__value" data-ma-metric-value>—</span>
-                <span class="ma-metrics__label" data-ma-metric-label></span>
-              </div>
-              <div class="ma-metrics__card" data-ma-metric="routes">
                 <span class="ma-metrics__value" data-ma-metric-value>—</span>
                 <span class="ma-metrics__label" data-ma-metric-label></span>
               </div>
@@ -55,6 +54,45 @@
               </div>
             </div>
           </div>
+
+          <!-- Σύστημα -->
+          <div class="ma-status-panel" data-ma-status>
+            <h3 class="ma-panel__title"><span class="ma-status__dot"></span> Σύστημα</h3>
+            <div class="ma-status__grid">
+              <div class="ma-status__card" data-ma-status-item="drivers">
+                <span class="ma-status__value" data-ma-status-value>—</span>
+                <span class="ma-status__label" data-ma-status-label>Ενεργοί Οδηγοί</span>
+              </div>
+              <div class="ma-status__card" data-ma-status-item="flightTracking">
+                <span class="ma-status__value" data-ma-status-value>—</span>
+                <span class="ma-status__label" data-ma-status-label>Flight Tracking</span>
+              </div>
+              <div class="ma-status__card" data-ma-status-item="vehicles">
+                <span class="ma-status__value" data-ma-status-value>—</span>
+                <span class="ma-status__label" data-ma-status-label>Τύποι Οχημάτων</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Τα Δικά Μου -->
+          <div class="ma-mystats-panel" data-ma-mystats>
+            <h3 class="ma-panel__title">📊 Τα Δικά Μου</h3>
+            <div class="ma-mystats__grid">
+              <div class="ma-mystats__card" data-ma-mystats-item="myRoutes">
+                <span class="ma-mystats__value" data-ma-mystats-value>—</span>
+                <span class="ma-mystats__label">Διαδρομές Μου</span>
+              </div>
+              <div class="ma-mystats__card" data-ma-mystats-item="myRevenue">
+                <span class="ma-mystats__value" data-ma-mystats-value>—</span>
+                <span class="ma-mystats__label">Έσοδά Μου</span>
+              </div>
+              <div class="ma-mystats__card" data-ma-mystats-item="myCommission">
+                <span class="ma-mystats__value" data-ma-mystats-value>—</span>
+                <span class="ma-mystats__label">Προμήθειά Μου</span>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
     </main>

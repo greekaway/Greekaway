@@ -32,6 +32,7 @@ const {
 } = require('./moveathens-helpers');
 const dataLayer = require('../../src/server/data/moveathens');
 const requestsLayer = require('../../src/server/data/moveathens-requests');
+const driversLayer = require('../../src/server/data/moveathens-drivers');
 
 module.exports = function registerMoveAthens(app, opts = {}) {
   const isDev = !!opts.isDev;
@@ -349,32 +350,66 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       // Count active hotels (transferZones)
       const hotels = (data.transferZones || []).filter(z => z.is_active).length;
 
-      // Count total transfer requests (all statuses except expired)
-      let totalRoutes = 0;
-      try {
-        const allRequests = await requestsLayer.getRequests({});
-        totalRoutes = allRequests.filter(r => r.status !== 'expired').length;
-      } catch (_) { /* fallback: 0 */ }
-
       // Count active destinations
       const destinations = (data.destinations || []).filter(d => d.is_active).length;
 
       // Count active destination categories
       const categories = (data.destinationCategories || []).filter(c => c.is_active).length;
 
+      // Count active drivers
+      let activeDrivers = 0;
+      try {
+        const drivers = await driversLayer.getDrivers(true);
+        activeDrivers = drivers.length;
+      } catch (_) { /* fallback: 0 */ }
+
+      // Flight tracking status
+      const flightEnabled = !!process.env.FLIGHTAWARE_API_KEY && data.flightTrackingEnabled !== false;
+
+      // Active vehicle types
+      const vehicleTypes = (data.vehicleTypes || []).filter(v => v.is_active).length;
+
       // Welcome metric labels (admin-editable)
       const labels = data.welcomeMetrics || {};
 
       return res.json({
         metrics: {
-          hotels:      { value: hotels,      label: labels.hotels      || 'Συνεργαζόμενα Ξενοδοχεία' },
-          routes:      { value: totalRoutes, label: labels.routes      || 'Ολοκληρωμένες Διαδρομές' },
-          destinations:{ value: destinations, label: labels.destinations || 'Προορισμοί' },
-          categories:  { value: categories,  label: labels.categories  || 'Κατηγορίες Διαδρομών' }
+          hotels:      { value: hotels,       label: labels.hotels       || 'Συνεργαζόμενα Ξενοδοχεία' },
+          destinations:{ value: destinations,  label: labels.destinations || 'Προορισμοί' },
+          categories:  { value: categories,    label: labels.categories   || 'Κατηγορίες Διαδρομών' }
+        },
+        status: {
+          drivers:        { value: activeDrivers,  label: 'Ενεργοί Οδηγοί' },
+          flightTracking: { value: flightEnabled,  label: 'Flight Tracking' },
+          vehicles:       { value: vehicleTypes,   label: 'Τύποι Οχημάτων' }
         }
       });
     } catch (err) {
       console.error('[moveathens] welcome-stats error:', err);
+      return res.status(500).json({ error: 'Stats unavailable' });
+    }
+  });
+
+  // ========================================
+  // PUBLIC: Personal hotel stats (per origin_zone_id)
+  // ========================================
+  app.get('/api/moveathens/my-stats', async (req, res) => {
+    if (isDev) res.set('Cache-Control', 'no-store');
+    try {
+      const zoneId = String(req.query.zone_id || '').trim();
+      if (!zoneId) return res.json({ myRoutes: 0, myRevenue: 0, myCommission: 0 });
+
+      const allRequests = await requestsLayer.getRequests({});
+      const mine = allRequests.filter(r => String(r.origin_zone_id) === zoneId);
+
+      const active = mine.filter(r => r.status === 'accepted' || r.status === 'completed');
+      const myRoutes = active.length;
+      const myRevenue = active.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
+      const myCommission = active.reduce((sum, r) => sum + (Number(r.commission_hotel) || 0), 0);
+
+      return res.json({ myRoutes, myRevenue, myCommission });
+    } catch (err) {
+      console.error('[moveathens] my-stats error:', err);
       return res.status(500).json({ error: 'Stats unavailable' });
     }
   });
