@@ -295,9 +295,9 @@
 
 /* Rounded-square icon container (app-icon style) */
 .ma-category-icon {
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
+  width: 88px;
+  height: 88px;
+  border-radius: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -308,14 +308,14 @@
 }
 
 .ma-category-icon-img {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
 
 .ma-category-emoji {
-  font-size: 28px;
+  font-size: 36px;
   line-height: 1;
 }
 
@@ -325,7 +325,7 @@
   text-align: center;
   color: #1a1a2e;
   line-height: 1.2;
-  max-width: 72px;
+  max-width: 92px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -1090,12 +1090,12 @@
   }
   
   .ma-category-icon-img {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
   
   .ma-category-name {
-    font-size: 13px;
+    font-size: 12px;
   }
   
   .ma-destination-item {
@@ -1196,12 +1196,12 @@
   }
   
   .ma-category-icon-img {
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
   }
   
   .ma-category-name {
-    font-size: 16px;
+    font-size: 15px;
   }
   
   .ma-destination-item {

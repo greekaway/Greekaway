@@ -44,6 +44,24 @@
         if (!svg) throw new Error('icon');
         svg.setAttribute('aria-hidden', 'true');
         svg.setAttribute('focusable', 'false');
+
+        // Normalize SVG so it adapts to light/dark via CSS currentColor.
+        // Remove hard-coded colors from all paths/shapes and let CSS control them.
+        const shapes = svg.querySelectorAll('path, circle, rect, line, polyline, polygon, ellipse');
+        shapes.forEach((el) => {
+          const f = el.getAttribute('fill');
+          const s = el.getAttribute('stroke');
+          // Convert hard-coded fills to currentColor (skip 'none')
+          if (f && f !== 'none') el.setAttribute('fill', 'currentColor');
+          // Convert hard-coded strokes to currentColor (skip 'none')
+          if (s && s !== 'none') el.setAttribute('stroke', 'currentColor');
+        });
+        // Also normalize top-level SVG attributes
+        const svgFill = svg.getAttribute('fill');
+        const svgStroke = svg.getAttribute('stroke');
+        if (svgFill && svgFill !== 'none') svg.setAttribute('fill', 'currentColor');
+        if (svgStroke && svgStroke !== 'none') svg.setAttribute('stroke', 'currentColor');
+
         slot.innerHTML = '';
         slot.appendChild(document.importNode(svg, true));
       } catch (_) {

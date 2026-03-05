@@ -68,7 +68,12 @@
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
-  transition: stroke-width 160ms ease;
+  transition: stroke-width 160ms ease, fill 160ms ease;
+}
+
+/* Support filled SVGs too — let currentColor control */
+.ma-footer__icon svg [fill="currentColor"] {
+  fill: currentColor;
 }
 
 /* Active: bolder stroke to look "filled" without hiding internal details */

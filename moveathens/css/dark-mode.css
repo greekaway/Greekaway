@@ -372,7 +372,8 @@
   .ma-transfer-page .ma-footer__icon svg,
   .ma-ai-page .ma-footer__icon svg,
   .ma-info-page .ma-footer__icon svg {
-    stroke: rgba(255, 255, 255, 0.85) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    stroke: currentColor !important;
     filter: none !important;
     opacity: 1;
   }
@@ -381,7 +382,8 @@
   .ma-transfer-page .ma-footer__item.active .ma-footer__icon svg,
   .ma-ai-page .ma-footer__item.active .ma-footer__icon svg,
   .ma-info-page .ma-footer__item.active .ma-footer__icon svg {
-    stroke: rgba(82, 183, 255, 0.98) !important;
+    color: rgba(82, 183, 255, 0.98) !important;
+    stroke: currentColor !important;
     filter: none !important;
     opacity: 1;
   }
