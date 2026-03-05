@@ -43,6 +43,36 @@
       z-index: 10;
     }
     
+    .ma-ai-back {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.2s;
+    }
+    .ma-ai-back:active {
+      background: rgba(0,0,0,0.12);
+    }
+    .ma-ai-back svg {
+      width: 20px;
+      height: 20px;
+      stroke: #1a2232;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
     .ma-ai-live-badge {
       display: inline-flex;
       align-items: center;
@@ -87,6 +117,15 @@
       .ma-ai-page {
         background: linear-gradient(135deg, #1a1a2e 0%, #16161f 100%);
       }
+      .ma-ai-back {
+        background: rgba(255,255,255,0.1);
+      }
+      .ma-ai-back:active {
+        background: rgba(255,255,255,0.18);
+      }
+      .ma-ai-back svg {
+        stroke: #e8ebf0;
+      }
       .ma-ai-live-badge {
         color: #66bb6a;
       }
@@ -99,6 +138,9 @@
 </head>
 <body class="ma-ai-page">
   <header class="ma-ai-header">
+    <button class="ma-ai-back" onclick="window.history.back()" aria-label="Πίσω">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
     <span class="ma-ai-live-badge">
       <span class="ma-ai-live-dot"></span>
       LIVE

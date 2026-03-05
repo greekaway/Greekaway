@@ -10,9 +10,9 @@
   display: flex;
   gap: 6px;
   padding: 12px 16px;
-  background: transparent;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
   position: sticky;
-  top: 60px;
+  top: 0;
   z-index: 10;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -128,7 +128,7 @@
 /* ===== Dark Mode ===== */
 @media (prefers-color-scheme: dark) {
   .ma-info-tabs {
-    background: transparent;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16161f 100%);
   }
   
   .ma-info-tab {
@@ -168,7 +168,7 @@
 
 /* Body dark mode class override */
 body.dark .ma-info-tabs {
-  background: transparent;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16161f 100%);
 }
 
 body.dark .ma-info-tab {

@@ -16,22 +16,22 @@
       el: {
         placeholder: 'Ρώτα τον βοηθό σου...',
         send: 'Αποστολή',
-        greeting: 'Γεια σου! Είμαι ο οικονομικός σου βοηθός. Ρώτα με οτιδήποτε σχετικά με τα έσοδα, τα έξοδα, ή την πορεία σου.',
+        greeting: 'Γεια σου! Είμαι ο βοηθός σου για μεταφορές. Ρώτα με για κρατήσεις, δρομολόγια, τιμές ή οτιδήποτε χρειάζεσαι.',
         error: 'Κάτι πήγε στραβά. Δοκίμασε ξανά.',
         typing: 'Πληκτρολογεί...',
-        q1: '💰 Πώς πάω;',
-        q2: '📊 Πού φεύγουν;',
-        q3: '🚗 Δουλεύω αρκετά;'
+        q1: '🚕 Πώς κλείνω μεταφορά;',
+        q2: '💰 Πόσο κοστίζει;',
+        q3: '📍 Ποιοι προορισμοί υπάρχουν;'
       },
       en: {
         placeholder: 'Ask your assistant...',
         send: 'Send',
-        greeting: 'Hello! I\'m your financial assistant. Ask me about your earnings, expenses, or how you\'re doing.',
+        greeting: 'Hello! I\'m your transfer assistant. Ask me about bookings, routes, prices, or anything you need.',
         error: 'Something went wrong. Please try again.',
         typing: 'Typing...',
-        q1: '💰 How am I doing?',
-        q2: '📊 Where does it go?',
-        q3: '🚗 Am I working enough?'
+        q1: '🚕 How do I book a transfer?',
+        q2: '💰 How much does it cost?',
+        q3: '📍 What destinations are available?'
       }
     };
     return translations[lang]?.[key] || translations['el'][key] || key;
