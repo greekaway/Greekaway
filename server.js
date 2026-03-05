@@ -716,7 +716,8 @@ const DRIVERSSYSTEM_PAGE_MAP = {
   '/tax-expenses': 'tax-expenses.html',
   '/debts': 'debts.html',
   '/appointments': 'appointments.html',
-  '/partners': 'partners.html'
+  '/partners': 'partners.html',
+  '/obligations': 'obligations.html'
 };
 
 // DriversSystem prefix routes (e.g. /car-expenses/abc123 → car-expenses.html)
@@ -824,7 +825,7 @@ app.use((req, res, next) => {
   // D) DriversSystem pages
   if (DRIVERSSYSTEM_PAGE_MAP[url]) {
     // Feature gate: redirect to profile if module is disabled
-    const PAGE_FEATURE_GATE = { '/debts': 'debts', '/appointments': 'appointments', '/partners': 'partners' };
+    const PAGE_FEATURE_GATE = { '/debts': 'debts', '/appointments': 'appointments', '/partners': 'partners', '/obligations': 'obligations' };
     const gatedFeature = PAGE_FEATURE_GATE[url];
     if (gatedFeature) {
       try {
