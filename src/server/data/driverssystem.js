@@ -1402,9 +1402,11 @@ function writeObligationPayments(data) {
 
 /**
  * Obligation record:
- * { id, driverId, title, counterparty, amount, direction, frequency, startDate, active, createdAt }
+ * { id, driverId, title, counterparty, amount, direction, frequency, startDate, active, createdAt,
+ *   oblType: 'recurring'|'installment', totalAmount, totalInstallments }
  *   direction: 'incoming' (they pay me / μου χρωστάνε) | 'outgoing' (I pay them / χρωστάω)
  *   frequency: 'monthly' | 'quarterly' | 'yearly'
+ *   oblType: 'recurring' (no end) | 'installment' (fixed count of periods)
  *
  * Payment record:
  * { id, obligationId, driverId, period, paidAt, createdAt }
@@ -1431,6 +1433,9 @@ async function addObligation(obl) {
     direction: ['incoming', 'outgoing'].includes(obl.direction) ? obl.direction : 'incoming',
     frequency: ['monthly', 'quarterly', 'yearly'].includes(obl.frequency) ? obl.frequency : 'monthly',
     startDate: obl.startDate || greeceDateStr(),
+    oblType: ['recurring', 'installment'].includes(obl.oblType) ? obl.oblType : 'recurring',
+    totalAmount: obl.oblType === 'installment' ? (parseFloat(obl.totalAmount) || 0) : 0,
+    totalInstallments: obl.oblType === 'installment' ? (parseInt(obl.totalInstallments) || 0) : 0,
     active: true,
     createdAt: new Date().toISOString()
   };
@@ -1451,6 +1456,9 @@ async function updateObligation(id, updates) {
   if (updates.amount !== undefined) obl.amount = parseFloat(updates.amount) || 0;
   if (updates.direction !== undefined && ['incoming', 'outgoing'].includes(updates.direction)) obl.direction = updates.direction;
   if (updates.frequency !== undefined && ['monthly', 'quarterly', 'yearly'].includes(updates.frequency)) obl.frequency = updates.frequency;
+  if (updates.oblType !== undefined && ['recurring', 'installment'].includes(updates.oblType)) obl.oblType = updates.oblType;
+  if (updates.totalAmount !== undefined) obl.totalAmount = parseFloat(updates.totalAmount) || 0;
+  if (updates.totalInstallments !== undefined) obl.totalInstallments = parseInt(updates.totalInstallments) || 0;
   if (updates.active !== undefined) obl.active = !!updates.active;
   obl.updatedAt = new Date().toISOString();
   items[idx] = obl;
@@ -1522,7 +1530,8 @@ async function getObligationsSummary(driverId) {
 
   obligations.forEach(obl => {
     // Generate all periods from startDate up to current period
-    const periods = generatePeriods(obl.startDate, currentPeriod, obl.frequency);
+    const maxP = obl.oblType === 'installment' && obl.totalInstallments > 0 ? obl.totalInstallments : 0;
+    const periods = generatePeriods(obl.startDate, currentPeriod, obl.frequency, maxP);
     let unpaidCount = 0;
     periods.forEach(period => {
       if (!paidSet.has(`${obl.id}__${period}`)) {
@@ -1546,7 +1555,7 @@ async function getObligationsSummary(driverId) {
  * Generate period strings from startDate to endPeriod based on frequency.
  * E.g. monthly from '2026-01-15' to '2026-03' => ['2026-01','2026-02','2026-03']
  */
-function generatePeriods(startDate, endPeriod, frequency) {
+function generatePeriods(startDate, endPeriod, frequency, maxPeriods) {
   const periods = [];
   if (!startDate || !endPeriod) return periods;
   const [sy, sm] = startDate.split('-').map(Number);
@@ -1555,8 +1564,9 @@ function generatePeriods(startDate, endPeriod, frequency) {
 
   let y = sy, m = sm;
   const step = frequency === 'yearly' ? 12 : frequency === 'quarterly' ? 3 : 1;
+  const limit = maxPeriods > 0 ? maxPeriods : Infinity;
 
-  while (y < ey || (y === ey && m <= em)) {
+  while ((y < ey || (y === ey && m <= em)) && periods.length < limit) {
     periods.push(`${y}-${String(m).padStart(2, '0')}`);
     m += step;
     while (m > 12) { m -= 12; y++; }

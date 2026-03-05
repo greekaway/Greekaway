@@ -1170,11 +1170,14 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   // Create obligation
   app.post('/api/driverssystem/obligations', requireDriver, async (req, res) => {
     try {
-      const { driverId, title, counterparty, amount, direction, frequency, startDate } = req.body || {};
-      if (!title || !amount) {
-        return res.status(400).json({ error: 'Απαιτείται τίτλος και ποσό' });
+      const { driverId, title, counterparty, amount, direction, frequency, startDate, oblType, totalAmount, totalInstallments } = req.body || {};
+      if (!title) {
+        return res.status(400).json({ error: 'Απαιτείται τίτλος' });
       }
-      const obl = await dataLayer.addObligation({ driverId, title, counterparty, amount, direction, frequency, startDate });
+      if (oblType !== 'installment' && !amount) {
+        return res.status(400).json({ error: 'Απαιτείται ποσό' });
+      }
+      const obl = await dataLayer.addObligation({ driverId, title, counterparty, amount, direction, frequency, startDate, oblType, totalAmount, totalInstallments });
       return res.status(201).json(obl);
     } catch (err) {
       return res.status(400).json({ error: err.message || 'Server error' });

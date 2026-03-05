@@ -86,6 +86,11 @@
   const startDateInput = $('[data-ds-obl-start-date]');
   const deleteBtn = $('[data-ds-obl-delete]');
   const cancelBtn = $('[data-ds-obl-cancel]');
+  const oblTypeInput = $('[data-ds-obl-obl-type]');
+  const installmentFieldsEl = $('[data-ds-obl-installment-fields]');
+  const totalAmountInput = $('[data-ds-obl-total-amount]');
+  const totalInstallmentsInput = $('[data-ds-obl-total-installments]');
+  const installmentCalcEl = $('[data-ds-obl-installment-calc]');
 
   // ── DOM refs — Detail view ──
   const detailView = $('[data-ds-obl-detail-view]');
@@ -96,6 +101,10 @@
   const detailAmount = $('[data-ds-obl-detail-amount]');
   const detailDirection = $('[data-ds-obl-detail-direction]');
   const detailFrequency = $('[data-ds-obl-detail-frequency]');
+  const detailInstallmentInfo = $('[data-ds-obl-detail-installment-info]');
+  const detailProgress = $('[data-ds-obl-detail-progress]');
+  const detailRemainingRow = $('[data-ds-obl-detail-remaining-row]');
+  const detailRemaining = $('[data-ds-obl-detail-remaining]');
   const historyList = $('[data-ds-obl-history-list]');
 
   // ═══════════════════════════════════════
@@ -142,7 +151,7 @@
   // PERIOD GENERATION (client-side mirror)
   // ═══════════════════════════════════════
 
-  function generatePeriods(startDate, endPeriod, frequency) {
+  function generatePeriods(startDate, endPeriod, frequency, maxPeriods) {
     const periods = [];
     if (!startDate || !endPeriod) return periods;
     const [sy, sm] = startDate.split('-').map(Number);
@@ -150,7 +159,8 @@
     if (!sy || !sm || !ey || !em) return periods;
     let y = sy, m = sm;
     const step = frequency === 'yearly' ? 12 : frequency === 'quarterly' ? 3 : 1;
-    while (y < ey || (y === ey && m <= em)) {
+    const limit = maxPeriods > 0 ? maxPeriods : Infinity;
+    while ((y < ey || (y === ey && m <= em)) && periods.length < limit) {
       periods.push(`${y}-${String(m).padStart(2, '0')}`);
       m += step;
       while (m > 12) { m -= 12; y++; }
@@ -169,6 +179,7 @@
     let filtered = obligations.filter(o => o.active);
     if (activeFilter === 'incoming') filtered = filtered.filter(o => o.direction === 'incoming');
     else if (activeFilter === 'outgoing') filtered = filtered.filter(o => o.direction === 'outgoing');
+    else if (activeFilter === 'installment') filtered = filtered.filter(o => o.oblType === 'installment');
 
     // Clear existing cards (keep empty el)
     $$('.ds-obl-card', listEl).forEach(c => c.remove());
@@ -180,11 +191,19 @@
     emptyEl.style.display = 'none';
 
     filtered.forEach(obl => {
-      const periods = generatePeriods(obl.startDate, cp, obl.frequency);
+      const maxP = obl.oblType === 'installment' && obl.totalInstallments > 0 ? obl.totalInstallments : 0;
+      const periods = generatePeriods(obl.startDate, cp, obl.frequency, maxP);
       let unpaid = 0;
-      periods.forEach(p => { if (!paidSet.has(`${obl.id}__${p}`)) unpaid++; });
+      let paidCount = 0;
+      periods.forEach(p => {
+        if (paidSet.has(`${obl.id}__${p}`)) paidCount++;
+        else unpaid++;
+      });
       const unpaidAmount = unpaid * obl.amount;
       const currentPaid = paidSet.has(`${obl.id}__${cp}`);
+      const isInstallment = obl.oblType === 'installment' && obl.totalInstallments > 0;
+      // Check if current period is within installment range
+      const currentPeriodInRange = periods.includes(cp);
 
       const card = document.createElement('div');
       card.className = 'ds-obl-card' + (obl.direction === 'outgoing' ? ' ds-obl-card--outgoing' : ' ds-obl-card--incoming');
@@ -194,17 +213,35 @@
         ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"/><line x1="12" y1="18" x2="12" y2="6"/></svg>'
         : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"/><line x1="12" y1="6" x2="12" y2="18"/></svg>';
 
+      let progressHtml = '';
+      if (isInstallment) {
+        const total = obl.totalInstallments;
+        const pct = Math.round((paidCount / total) * 100);
+        const allDone = paidCount >= total;
+        const remainingAmt = (total - paidCount) * obl.amount;
+        progressHtml = `
+          <div class="ds-obl-card__progress-wrap">
+            <span class="ds-obl-card__progress-text">${paidCount}/${total} δόσεις${allDone ? ' — Ολοκληρώθηκε!' : ` — Υπόλοιπο: ${fmtEUR(remainingAmt)}`}</span>
+            <div class="ds-obl-card__progress-bar">
+              <div class="ds-obl-card__progress-fill${allDone ? ' ds-obl-card__progress-fill--done' : ''}" style="width:${pct}%"></div>
+            </div>
+          </div>`;
+      }
+
       card.innerHTML = `
         <div class="ds-obl-card__left">
           <div class="ds-obl-card__icon">${dirIcon}</div>
           <div class="ds-obl-card__body">
             <span class="ds-obl-card__title">${escHtml(obl.title)}</span>
-            <span class="ds-obl-card__sub">${escHtml(obl.counterparty || '—')} · ${fmtEUR(obl.amount)} · ${FREQ_LABELS[obl.frequency] || obl.frequency}</span>
-            ${unpaid > 0 ? `<span class="ds-obl-card__debt">${unpaid} ανεξόφλητ${unpaid === 1 ? 'η' : 'ες'} · ${fmtEUR(unpaidAmount)}</span>` : '<span class="ds-obl-card__ok">Εντάξει</span>'}
+            <span class="ds-obl-card__sub">${escHtml(obl.counterparty || '—')} · ${fmtEUR(obl.amount)} · ${FREQ_LABELS[obl.frequency] || obl.frequency}${isInstallment ? ' · Δόσεις' : ''}</span>
+            ${progressHtml}
+            ${!isInstallment && unpaid > 0 ? `<span class="ds-obl-card__debt">${unpaid} ανεξόφλητ${unpaid === 1 ? 'η' : 'ες'} · ${fmtEUR(unpaidAmount)}</span>` : ''}
+            ${!isInstallment && unpaid === 0 ? '<span class="ds-obl-card__ok">Εντάξει</span>' : ''}
+            ${isInstallment && unpaid > 0 && !progressHtml.includes('Ολοκληρώθηκε') ? `<span class="ds-obl-card__debt">${unpaid} ανεξόφλητ${unpaid === 1 ? 'η' : 'ες'} · ${fmtEUR(unpaidAmount)}</span>` : ''}
           </div>
         </div>
-        <button class="ds-obl-card__pay-btn ${currentPaid ? 'ds-obl-card__pay-btn--paid' : ''}" data-obl-pay="${obl.id}" data-obl-period="${cp}" aria-label="Πληρωμή τρέχοντος μήνα">
-          ${currentPaid ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : fmtPeriod(cp)}
+        <button class="ds-obl-card__pay-btn ${currentPaid && currentPeriodInRange ? 'ds-obl-card__pay-btn--paid' : ''}" ${!currentPeriodInRange ? 'disabled style="opacity:0.3"' : ''} data-obl-pay="${obl.id}" data-obl-period="${cp}" aria-label="Πληρωμή τρέχοντος μήνα">
+          ${currentPaid && currentPeriodInRange ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : fmtPeriod(cp)}
         </button>
       `;
 
@@ -269,6 +306,11 @@
     dialogTitle.textContent = 'Νέα Υποχρέωση';
     deleteBtn.style.display = 'none';
     setDirToggle('incoming');
+    setTypeToggle('recurring');
+    if (totalAmountInput) totalAmountInput.value = '';
+    if (totalInstallmentsInput) totalInstallmentsInput.value = '';
+    if (installmentCalcEl) installmentCalcEl.textContent = '';
+    amountInput.required = true;
     overlay.style.display = '';
     titleInput.focus();
   }
@@ -284,6 +326,19 @@
     dialogTitle.textContent = 'Επεξεργασία Υποχρέωσης';
     deleteBtn.style.display = '';
     setDirToggle(obl.direction);
+    const type = obl.oblType || 'recurring';
+    setTypeToggle(type);
+    if (type === 'installment') {
+      if (totalAmountInput) totalAmountInput.value = obl.totalAmount || '';
+      if (totalInstallmentsInput) totalInstallmentsInput.value = obl.totalInstallments || '';
+      updateInstallmentCalc();
+      amountInput.required = false;
+    } else {
+      if (totalAmountInput) totalAmountInput.value = '';
+      if (totalInstallmentsInput) totalInstallmentsInput.value = '';
+      if (installmentCalcEl) installmentCalcEl.textContent = '';
+      amountInput.required = true;
+    }
     overlay.style.display = '';
     titleInput.focus();
   }
@@ -300,6 +355,37 @@
   $$('[data-ds-obl-dir]').forEach(btn => {
     btn.addEventListener('click', () => setDirToggle(btn.getAttribute('data-ds-obl-dir')));
   });
+
+  // Type toggle buttons
+  function setTypeToggle(type) {
+    $$('[data-ds-obl-type]').forEach(b => b.classList.toggle('active', b.getAttribute('data-ds-obl-type') === type));
+    if (oblTypeInput) oblTypeInput.value = type;
+    if (installmentFieldsEl) installmentFieldsEl.style.display = type === 'installment' ? '' : 'none';
+    if (type === 'installment') {
+      amountInput.required = false;
+    } else {
+      amountInput.required = true;
+    }
+  }
+  $$('[data-ds-obl-type]').forEach(btn => {
+    btn.addEventListener('click', () => setTypeToggle(btn.getAttribute('data-ds-obl-type')));
+  });
+
+  // Auto-calculate installment amount
+  function updateInstallmentCalc() {
+    if (!installmentCalcEl || !totalAmountInput || !totalInstallmentsInput) return;
+    const total = parseFloat(totalAmountInput.value) || 0;
+    const count = parseInt(totalInstallmentsInput.value) || 0;
+    if (total > 0 && count > 0) {
+      const perInstallment = Math.round((total / count) * 100) / 100;
+      installmentCalcEl.textContent = `= ${fmtEUR(perInstallment)} / δόση`;
+      amountInput.value = perInstallment;
+    } else {
+      installmentCalcEl.textContent = '';
+    }
+  }
+  if (totalAmountInput) totalAmountInput.addEventListener('input', updateInstallmentCalc);
+  if (totalInstallmentsInput) totalInstallmentsInput.addEventListener('input', updateInstallmentCalc);
 
   addBtn.addEventListener('click', openAdd);
   cancelBtn.addEventListener('click', closeOverlay);
@@ -320,8 +406,15 @@
       amount: parseFloat(amountInput.value) || 0,
       direction: directionInput.value,
       frequency: frequencyInput.value,
-      startDate: startDateInput.value || greeceDateStr()
+      startDate: startDateInput.value || greeceDateStr(),
+      oblType: oblTypeInput ? oblTypeInput.value : 'recurring'
     };
+    if (data.oblType === 'installment') {
+      data.totalAmount = parseFloat(totalAmountInput.value) || 0;
+      data.totalInstallments = parseInt(totalInstallmentsInput.value) || 0;
+      if (data.totalAmount <= 0 || data.totalInstallments <= 0) return;
+      data.amount = Math.round((data.totalAmount / data.totalInstallments) * 100) / 100;
+    }
     if (!data.title || data.amount <= 0) return;
 
     if (id) {
@@ -368,6 +461,20 @@
     detailDirection.textContent = DIR_LABELS[obl.direction] || obl.direction;
     detailFrequency.textContent = FREQ_LABELS[obl.frequency] || obl.frequency;
 
+    const isInstallment = obl.oblType === 'installment' && obl.totalInstallments > 0;
+    if (detailInstallmentInfo) detailInstallmentInfo.style.display = isInstallment ? '' : 'none';
+    if (detailRemainingRow) detailRemainingRow.style.display = isInstallment ? '' : 'none';
+
+    if (isInstallment) {
+      const cp = currentPeriod();
+      const periods = generatePeriods(obl.startDate, cp, obl.frequency, obl.totalInstallments);
+      const oblPayments = allPayments.filter(p => p.obligationId === obl.id);
+      const paidCount = periods.filter(p => oblPayments.some(pay => pay.period === p)).length;
+      const remaining = (obl.totalInstallments - paidCount) * obl.amount;
+      if (detailProgress) detailProgress.textContent = `${paidCount}/${obl.totalInstallments} δόσεις (Σύνολο: ${fmtEUR(obl.totalAmount)})`;
+      if (detailRemaining) detailRemaining.textContent = fmtEUR(remaining);
+    }
+
     // Hide main, show detail
     $('main.ds-obl-main').style.display = 'none';
     $('header.ds-obl-back-header').style.display = 'none';
@@ -406,7 +513,8 @@
     if (!obl) return;
 
     const cp = currentPeriod();
-    const periods = generatePeriods(obl.startDate, cp, obl.frequency);
+    const maxP = obl.oblType === 'installment' && obl.totalInstallments > 0 ? obl.totalInstallments : 0;
+    const periods = generatePeriods(obl.startDate, cp, obl.frequency, maxP);
     const oblPayments = allPayments.filter(p => p.obligationId === obl.id);
     const paymentMap = {};
     oblPayments.forEach(p => { paymentMap[p.period] = p; });

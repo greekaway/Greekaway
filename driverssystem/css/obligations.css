@@ -633,6 +633,79 @@ select.ds-obl-field__input {
   font-size: 13px;
 }
 
+/* ═══════════════════════════════════════
+   INSTALLMENT TYPE TOGGLE & FIELDS
+   ═══════════════════════════════════════ */
+
+.ds-obl-type-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  background: var(--ds-bg, #0b0f1a);
+  color: var(--ds-muted, #888);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-obl-type-btn.active {
+  background: var(--ds-accent, #00c896);
+  color: #fff;
+}
+
+.ds-obl-installment-fields {
+  margin-top: 4px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  margin-bottom: 14px;
+}
+
+.ds-obl-installment-fields .ds-obl-field:last-of-type {
+  margin-bottom: 0;
+}
+
+.ds-obl-installment-calc {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ds-accent, #00c896);
+  padding: 6px 0 0;
+  min-height: 20px;
+}
+
+/* ── Installment progress on card ── */
+.ds-obl-card__progress-wrap {
+  margin-top: 4px;
+}
+
+.ds-obl-card__progress-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ds-accent, #00c896);
+  margin-bottom: 3px;
+}
+
+.ds-obl-card__progress-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.ds-obl-card__progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--ds-accent, #00c896);
+  transition: width 0.3s ease;
+}
+
+.ds-obl-card__progress-fill--done {
+  background: #4CAF50;
+}
+
 /* ══════════════════════════════════
    RESPONSIVE BREAKPOINTS
    ══════════════════════════════════ */
