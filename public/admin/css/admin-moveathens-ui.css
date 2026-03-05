@@ -456,6 +456,20 @@ html[data-theme='light'] .ma-toast {
   border-color: transparent;
 }
 
+/* Light mode: tabs visible on light background */
+html[data-theme='light'] .bar-tab {
+  color: #0f1b2c;
+  border-color: rgba(6,24,53,.2);
+}
+html[data-theme='light'] .bar-tab:hover {
+  background: rgba(6,24,53,.06);
+}
+html[data-theme='light'] .bar-tab.active {
+  background: #001f3f;
+  color: #fff;
+  border-color: transparent;
+}
+
 /* Tab content */
 .tab-content {
   display: none;

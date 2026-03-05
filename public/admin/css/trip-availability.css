@@ -53,3 +53,31 @@ input[readonly]{opacity:.6}
 .legend-full{background:#b42f44}
 .legend-low{background:#b4a22f}
 .legend-available{background:#2a7ade}
+
+/* ── Light mode ── */
+html[data-theme='light'] .editor-card{background:#ffffff;border-color:rgba(6,24,53,.12);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+html[data-theme='light'] label{color:#5d6472}
+html[data-theme='light'] select,
+html[data-theme='light'] input{background:#f8f9fc;color:#0f1b2c;border-color:rgba(6,24,53,.18);box-shadow:none}
+html[data-theme='light'] select:focus,
+html[data-theme='light'] input:focus{outline-color:#2a7ade}
+html[data-theme='light'] .day-cell{background:#f8f9fc;border-color:rgba(6,24,53,.12)}
+html[data-theme='light'] .day-cell:hover{border-color:#2a7ade;background:#eef3ff}
+html[data-theme='light'] .day-cell.selected{outline-color:#2a7ade}
+html[data-theme='light'] .day-cell.full{background:#fde8eb;border-color:#d94a5c}
+html[data-theme='light'] .day-cell.low:not(.full){background:#fdf8e4;border-color:#c9a825}
+html[data-theme='light'] .day-date{color:#0f1b2c}
+html[data-theme='light'] .day-metrics{color:#5d6472}
+html[data-theme='light'] .day-metrics .metric-avail{color:#1a7a43}
+html[data-theme='light'] .day-cell.full .metric-avail{color:#b42f44}
+html[data-theme='light'] .day-cell.low .metric-avail{color:#8a7f1a}
+html[data-theme='light'] .calendar-weekday{color:#5d6472}
+html[data-theme='light'] .calendar-legend{color:#5d6472}
+html[data-theme='light'] .legend-box{border-color:rgba(6,24,53,.15)}
+html[data-theme='light'] .badges-note{color:#5d6472}
+html[data-theme='light'] .save-btn{background:#2a7ade;color:#fff}
+html[data-theme='light'] .save-btn:disabled{background:#d0d7e0;color:#8a93a0}
+html[data-theme='light'] .month-nav button{background:#f0f2f6;color:#0f1b2c;border-color:rgba(6,24,53,.15)}
+html[data-theme='light'] .month-nav button:hover{background:#e4e8ef}
+html[data-theme='light'] .month-nav button:active{background:#2a7ade;color:#fff}
+html[data-theme='light'] #selectedDateDisplay{color:#0f1b2c !important}
