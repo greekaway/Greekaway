@@ -103,8 +103,8 @@
 
   gate.innerHTML = `
     <div class="ma-gate__card">
-      <div class="ma-gate__icon">🔒</div>
       <img class="ma-gate__logo" src="/moveathens/videos/hero-logo.png" alt="MoveAthens" />
+      <div class="ma-gate__icon">🔒</div>
       <h1 class="ma-gate__title">Σύνδεση</h1>
       <p class="ma-gate__desc">Εισάγετε τον αριθμό τηλεφώνου<br>του ξενοδοχείου σας για πρόσβαση.</p>
       <form class="ma-gate__form" data-ma-gate-form>
