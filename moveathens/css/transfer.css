@@ -1661,6 +1661,9 @@
   background: rgba(0,0,0,0.5);
   padding: 16px;
 }
+.ma-schedule-overlay[hidden] {
+  display: none !important;
+}
 .ma-schedule-overlay__card {
   background: #fff;
   border-radius: 16px;
@@ -1672,6 +1675,7 @@
 .ma-schedule-overlay__title {
   font-size: 16px;
   font-weight: 600;
+  color: #1a1a2e;
   margin: 0 0 8px;
 }
 .ma-schedule-overlay__notice {

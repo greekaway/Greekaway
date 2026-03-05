@@ -551,6 +551,7 @@
     const cleanup = () => { overlay.hidden = true; };
 
     const onConfirm = () => {
+      if (errorEl) errorEl.hidden = true;
       const date = dateInput?.value;
       const time = timeInput?.value;
       if (!date || !time) {
@@ -1319,7 +1320,6 @@
     const overlay = $('#search-overlay');
     const overlayInput = $('#search-overlay-input');
     const closeBtn = $('#search-overlay-close');
-    const cancelBtn = $('#search-overlay-cancel');
     const recentSection = $('#search-recent');
     const recentList = $('#search-recent-list');
     const suggestionsSection = $('#search-suggestions');
@@ -1410,8 +1410,6 @@
 
     // Close handlers
     closeBtn?.addEventListener('click', closeOverlay);
-    cancelBtn?.addEventListener('click', closeOverlay);
-
     // All search trigger buttons open the overlay
     $$('[id^="search-trigger"]').forEach(btn => {
       btn.addEventListener('click', openOverlay);

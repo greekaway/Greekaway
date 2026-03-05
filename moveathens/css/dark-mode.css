@@ -664,6 +664,19 @@
     background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
   }
 
+  /* Schedule overlay (instant → scheduled prompt) */
+  .ma-transfer-page .ma-schedule-overlay__card {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  }
+  .ma-transfer-page .ma-schedule-overlay__title {
+    color: #e8edf3 !important;
+  }
+  .ma-transfer-page .ma-schedule-overlay__notice {
+    color: #8896a6 !important;
+  }
+
   /* Vehicle scheduled-only badge */
   .ma-transfer-page .ma-vehicle-scheduled-only {
     background: rgba(33, 150, 243, 0.2) !important;

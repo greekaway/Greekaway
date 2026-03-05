@@ -120,6 +120,14 @@
   .ma-hero--no-video .ma-mystats__label {
     color: rgba(26, 34, 50, 0.7);
   }
+  .ma-hero--no-video .ma-welcome-textblock {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+  .ma-hero--no-video .ma-welcome-textblock__text {
+    color: #1a2232;
+  }
 }
 
 .ma-hero__scrim {
