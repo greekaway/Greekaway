@@ -36,66 +36,34 @@
     .ma-ai-header {
       display: flex;
       align-items: center;
-      padding: 12px 16px;
-      background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      gap: 12px;
+      justify-content: center;
+      padding: 14px 16px;
       flex-shrink: 0;
       position: relative;
       z-index: 10;
     }
     
-    .ma-ai-back {
-      width: 36px;
-      height: 36px;
-      border: none;
-      background: rgba(0, 0, 0, 0.06);
-      cursor: pointer;
-      display: flex;
+    .ma-ai-live-badge {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      transition: background 0.2s, transform 0.1s;
-      flex-shrink: 0;
-    }
-    
-    .ma-ai-back:hover {
-      background: rgba(0, 0, 0, 0.1);
-    }
-    
-    .ma-ai-back:active {
-      background: rgba(0, 0, 0, 0.15);
-      transform: scale(0.95);
-    }
-    
-    /* Connected chevron like iPhone Notes */
-    .ma-ai-back-icon {
-      width: 10px;
-      height: 10px;
-      border-left: 2.5px solid #1a1a2e;
-      border-bottom: 2.5px solid #1a1a2e;
-      transform: rotate(45deg);
-      margin-left: 3px;
-    }
-    
-    .ma-ai-title {
-      font-size: 17px;
-      font-weight: 600;
-      margin: 0;
-      color: #1a1a2e;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-    }
-    
-    .ma-ai-title-badge {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 11px;
+      gap: 6px;
+      font-size: 13px;
       font-weight: 700;
+      color: #4CAF50;
+      letter-spacing: 0.5px;
+    }
+    
+    .ma-ai-live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4CAF50;
+      animation: ma-live-pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes ma-live-pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+      50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(76, 175, 80, 0); }
     }
     
     .ma-ai-content {
@@ -119,21 +87,11 @@
       .ma-ai-page {
         background: linear-gradient(135deg, #1a1a2e 0%, #16161f 100%);
       }
-      .ma-ai-header {
-        background: linear-gradient(145deg, #1e1e2d 0%, #16161f 100%);
+      .ma-ai-live-badge {
+        color: #66bb6a;
       }
-      .ma-ai-back {
-        background: rgba(255, 255, 255, 0.1);
-      }
-      .ma-ai-back:hover {
-        background: rgba(255, 255, 255, 0.15);
-      }
-      .ma-ai-back-icon {
-        border-left-color: #e0e0e0;
-        border-bottom-color: #e0e0e0;
-      }
-      .ma-ai-title {
-        color: #e0e0e0;
+      .ma-ai-live-dot {
+        background: #66bb6a;
       }
     }
   </style>
@@ -141,13 +99,10 @@
 </head>
 <body class="ma-ai-page">
   <header class="ma-ai-header">
-    <button class="ma-ai-back" id="maBackBtn" aria-label="Πίσω">
-      <span class="ma-ai-back-icon"></span>
-    </button>
-    <h1 class="ma-ai-title">
-      AI Βοηθός
-      <span class="ma-ai-title-badge">LIVE</span>
-    </h1>
+    <span class="ma-ai-live-badge">
+      <span class="ma-ai-live-dot"></span>
+      LIVE
+    </span>
   </header>
 
   <main class="ma-ai-content">
@@ -159,17 +114,6 @@
   <script src="/moveathens/js/moveathens-config.js"></script>
   <script src="/moveathens/js/chat.js"></script>
   <script>
-    // Back button - go to previous page or home
-    document.getElementById('maBackBtn').addEventListener('click', function() {
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        // Fallback to home
-        const isMoveAthensDomain = /moveathens/i.test(window.location.hostname);
-        window.location.href = isMoveAthensDomain ? '/' : '/moveathens';
-      }
-    });
-    
     // iOS keyboard fix - keep layout stable
     (function() {
       const page = document.querySelector('.ma-ai-page');
@@ -177,30 +121,22 @@
       
       if (!page || !input) return;
       
-      // Use visualViewport API for iOS
       if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', function() {
-          // Keep page fixed during keyboard open/close
           page.style.height = window.visualViewport.height + 'px';
         });
         
         window.visualViewport.addEventListener('scroll', function() {
-          // Prevent scroll offset issues
           window.scrollTo(0, 0);
         });
       }
       
-      // Blur input on Enter to close keyboard
       input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
-          setTimeout(function() {
-            // Scroll to top after sending
-            window.scrollTo(0, 0);
-          }, 100);
+          setTimeout(function() { window.scrollTo(0, 0); }, 100);
         }
       });
       
-      // Reset scroll on blur
       input.addEventListener('blur', function() {
         setTimeout(function() {
           window.scrollTo(0, 0);

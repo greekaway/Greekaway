@@ -6,11 +6,6 @@
 (async () => {
   'use strict';
 
-  // Apply domain-aware home links
-  if (window.MoveAthensConfig?.applyHomeLinks) {
-    window.MoveAthensConfig.applyHomeLinks();
-  }
-
   // Tab elements
   const tabs = document.querySelectorAll('.ma-info-tab');
   const panels = document.querySelectorAll('.ma-info-panel');

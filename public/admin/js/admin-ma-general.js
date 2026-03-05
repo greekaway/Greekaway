@@ -40,7 +40,8 @@
       phoneNumber: $('#phoneNumber'),
       whatsappNumber: $('#whatsappNumber'),
       companyEmail: $('#companyEmail'),
-      irisPhone: $('#irisPhone')
+      irisPhone: $('#irisPhone'),
+      welcomeTextBlock: $('#welcomeTextBlock')
     };
 
     const populate = () => {
@@ -62,6 +63,7 @@
       if (fields.whatsappNumber) fields.whatsappNumber.value = C.whatsappNumber || '';
       if (fields.companyEmail) fields.companyEmail.value = C.companyEmail || '';
       if (fields.irisPhone) fields.irisPhone.value = C.irisPhone || '';
+      if (fields.welcomeTextBlock) fields.welcomeTextBlock.value = C.welcomeTextBlock || '';
 
       const priceToggle = document.getElementById('showPriceToggle');
       if (priceToggle) priceToggle.checked = C.showPriceInMessage !== false;
@@ -101,6 +103,7 @@
           whatsappNumber: fields.whatsappNumber?.value || '',
           companyEmail: fields.companyEmail?.value || '',
           irisPhone: fields.irisPhone?.value || '',
+          welcomeTextBlock: fields.welcomeTextBlock?.value || '',
           heroVideoEnabled: !!document.getElementById('heroVideoEnabled')?.checked,
           showPriceInMessage: document.getElementById('showPriceToggle')?.checked !== false,
           flightTrackingEnabled: document.getElementById('flightTrackingEnabled')?.checked !== false,

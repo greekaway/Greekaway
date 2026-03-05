@@ -517,6 +517,23 @@
   }
 }
 
+/* ── Welcome Text Block ── */
+.ma-welcome-textblock {
+  padding: 14px 18px;
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+}
+
+.ma-welcome-textblock__text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+}
+
 /* ── Version Badge ── */
 .ma-version-badge {
   text-align: center;

@@ -99,6 +99,7 @@ function getDefaultConfig() {
     irisPhone: '',
     infoFaqTitle: '',
     infoFaqContent: '',
+    welcomeTextBlock: '',
     transferZones: [],
     vehicleTypes: [],
     destinationCategories: [],

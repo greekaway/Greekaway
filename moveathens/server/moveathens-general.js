@@ -74,6 +74,9 @@ module.exports = function registerGeneralRoutes(app, opts = {}) {
       if (typeof body.irisPhone === 'string') {
         updates.irisPhone = normalizeString(body.irisPhone).slice(0, 50);
       }
+      if (typeof body.welcomeTextBlock === 'string') {
+        updates.welcomeTextBlock = normalizeString(body.welcomeTextBlock).slice(0, 500);
+      }
 
       await dataLayer.updateConfig({ ...current, ...updates });
 

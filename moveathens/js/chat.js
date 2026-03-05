@@ -14,18 +14,24 @@
     const lang = detectLanguage();
     const translations = {
       el: {
-        placeholder: 'Γράψε το μήνυμά σου...',
+        placeholder: 'Ρώτα τον βοηθό σου...',
         send: 'Αποστολή',
-        greeting: 'Γεια σου! 👋 Είμαι ο βοηθός του MoveAthens. Ρώτησέ με για τιμές, οχήματα ή πώς να κλείσεις transfer!',
+        greeting: 'Γεια σου! Είμαι ο οικονομικός σου βοηθός. Ρώτα με οτιδήποτε σχετικά με τα έσοδα, τα έξοδα, ή την πορεία σου.',
         error: 'Κάτι πήγε στραβά. Δοκίμασε ξανά.',
-        typing: 'Πληκτρολογεί...'
+        typing: 'Πληκτρολογεί...',
+        q1: '💰 Πώς πάω;',
+        q2: '📊 Πού φεύγουν;',
+        q3: '🚗 Δουλεύω αρκετά;'
       },
       en: {
-        placeholder: 'Type your message...',
+        placeholder: 'Ask your assistant...',
         send: 'Send',
-        greeting: 'Hello! 👋 I\'m the MoveAthens assistant. Ask me about prices, vehicles or how to book a transfer!',
+        greeting: 'Hello! I\'m your financial assistant. Ask me about your earnings, expenses, or how you\'re doing.',
         error: 'Something went wrong. Please try again.',
-        typing: 'Typing...'
+        typing: 'Typing...',
+        q1: '💰 How am I doing?',
+        q2: '📊 Where does it go?',
+        q3: '🚗 Am I working enough?'
       }
     };
     return translations[lang]?.[key] || translations['el'][key] || key;
@@ -41,6 +47,11 @@
           <div class="ma-chat-message assistant">
             <div class="ma-chat-bubble">${t('greeting')}</div>
           </div>
+        </div>
+        <div class="ma-chat-quick-questions" id="maChatQuickQuestions">
+          <button class="ma-chat-quick-btn" data-q="${t('q1')}">${t('q1')}</button>
+          <button class="ma-chat-quick-btn" data-q="${t('q2')}">${t('q2')}</button>
+          <button class="ma-chat-quick-btn" data-q="${t('q3')}">${t('q3')}</button>
         </div>
         <form class="ma-chat-form" id="maChatForm">
           <div class="ma-chat-input-wrap">
@@ -117,6 +128,21 @@
       }
     });
     
+    // Quick question buttons
+    const qBtns = document.querySelectorAll('.ma-chat-quick-btn');
+    qBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (isWaitingResponse) return;
+        const q = btn.getAttribute('data-q');
+        if (!q) return;
+        // Hide quick questions after first use
+        const qWrap = document.getElementById('maChatQuickQuestions');
+        if (qWrap) qWrap.style.display = 'none';
+        input.value = q;
+        form.dispatchEvent(new Event('submit'));
+      });
+    });
+
     // Focus input
     setTimeout(() => input.focus(), 100);
   }

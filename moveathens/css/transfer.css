@@ -73,17 +73,16 @@
 }
 
 .ma-back-btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: none;
   background: rgba(0, 0, 0, 0.06);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 12px;
   transition: background 0.2s, transform 0.1s;
-  margin-bottom: 12px;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -118,6 +117,183 @@
   padding: 32px;
   color: #999;
   font-style: italic;
+}
+
+/* ===== Topbar (replaces old header) ===== */
+.ma-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 12px;
+}
+
+.ma-topbar__left {
+  width: 40px; /* placeholder to balance layout when no back btn */
+}
+
+.ma-search-trigger {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a1a2e;
+  transition: background 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.ma-search-trigger:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.ma-search-trigger:active {
+  background: rgba(0, 0, 0, 0.15);
+  transform: scale(0.95);
+}
+
+/* ===== Search Overlay (fullscreen TikTok-style) ===== */
+.ma-search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  animation: ma-overlay-in 0.25s ease;
+}
+
+.ma-search-overlay[hidden] {
+  display: none;
+}
+
+@keyframes ma-overlay-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ma-search-overlay__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  border-bottom: 1px solid #e9ecef;
+  flex-shrink: 0;
+}
+
+.ma-search-overlay__input-wrap {
+  flex: 1;
+}
+
+.ma-search-overlay__input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 16px;
+  background: #f5f7fa;
+  color: #1a1a2e;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+
+.ma-search-overlay__input:focus {
+  border-color: #2563eb;
+}
+
+.ma-search-overlay__input::placeholder {
+  color: #aaa;
+}
+
+.ma-search-overlay__cancel {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 6px 2px;
+}
+
+.ma-search-overlay__body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.ma-search-overlay__section {
+  margin-bottom: 24px;
+}
+
+.ma-search-overlay__section[hidden] {
+  display: none;
+}
+
+.ma-search-overlay__section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 10px;
+}
+
+.ma-search-overlay__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ma-search-overlay__list li {
+  padding: 13px 4px;
+  font-size: 15px;
+  color: #1a1a2e;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.12s;
+}
+
+.ma-search-overlay__list li:last-child {
+  border-bottom: none;
+}
+
+.ma-search-overlay__list li:hover {
+  background: #f0f4ff;
+}
+
+.ma-search-overlay__list li:active {
+  background: #dbeafe;
+}
+
+.ma-search-overlay__list .ma-search-empty {
+  color: #999;
+  font-style: italic;
+  cursor: default;
+  text-align: center;
+  padding: 24px 4px;
+}
+
+.ma-search-overlay__list .ma-search-empty:hover {
+  background: transparent;
+}
+
+.ma-search-overlay__cat {
+  color: #888;
+  margin-left: auto;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 /* ===== Destination Quick-Search ===== */
@@ -258,6 +434,14 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 18px 14px;
   padding: 4px 0;
+  max-height: 65vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.ma-categories-grid::-webkit-scrollbar {
+  display: none;
 }
 
 @media (min-width: 480px) {

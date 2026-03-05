@@ -84,6 +84,16 @@
     }
   } catch (_) { /* silent */ }
 
+  // ── Welcome Text Block (admin-controlled) ──
+  if (cfg.welcomeTextBlock) {
+    const tb = document.getElementById('maWelcomeTextBlock');
+    const tbText = document.getElementById('maWelcomeTextBlockText');
+    if (tb && tbText) {
+      tbText.textContent = cfg.welcomeTextBlock;
+      tb.hidden = false;
+    }
+  }
+
   // Show the dashboard container
   const container = document.querySelector('[data-ma-metrics]');
   if (container) container.style.opacity = '1';

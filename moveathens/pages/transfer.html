@@ -20,25 +20,16 @@
   <meta name="theme-color" content="#001f3f">
 </head>
 <body class="ma-transfer-page">
-  <header class="ma-header">
-    <a href="/" class="ma-logo" data-ma-home-link>
-      <img src="/moveathens/videos/hero-logo.png" alt="MoveAthens" class="ma-logo-img" fetchpriority="high">
-    </a>
-    <h1 class="ma-page-title">Transfer</h1>
-  </header>
 
   <main class="ma-main">
     <!-- Step 1: Categories -->
     <section id="step-categories" class="ma-step active">
-      <!-- Destination quick-search -->
-      <div class="ma-dest-search-wrapper">
-        <label class="ma-dest-search-label" for="dest-quick-search">Αναζήτηση Προορισμού</label>
-        <div class="ma-dest-search-box">
-          <span class="ma-dest-search-icon">🔍</span>
-          <input id="dest-quick-search" class="ma-dest-search-input" type="text" placeholder="Πληκτρολογήστε προορισμό…" autocomplete="off">
-          <button id="dest-search-clear" class="ma-dest-search-clear" type="button" hidden aria-label="Καθαρισμός">✕</button>
-        </div>
-        <ul id="dest-search-results" class="ma-dest-search-results" hidden aria-live="polite"></ul>
+      <!-- Top bar: search icon only -->
+      <div class="ma-topbar">
+        <div class="ma-topbar__left"></div>
+        <button class="ma-search-trigger" id="search-trigger" type="button" aria-label="Αναζήτηση">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
       </div>
 
       <h2 class="ma-step-title">Επιλέξτε Κατηγορία</h2>
@@ -49,7 +40,12 @@
 
     <!-- Step 2: Destinations -->
     <section id="step-destinations" class="ma-step">
-      <button class="ma-back-btn" id="back-to-categories" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
+      <div class="ma-topbar">
+        <button class="ma-back-btn" id="back-to-categories" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
+        <button class="ma-search-trigger" id="search-trigger-dest" type="button" aria-label="Αναζήτηση">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
+      </div>
       <h2 class="ma-step-title">Επιλέξτε Προορισμό</h2>
       <p class="ma-step-subtitle" id="selected-category-name"></p>
       <div id="destinations-list" class="ma-destinations-list" aria-live="polite"></div>
@@ -57,7 +53,12 @@
 
     <!-- Step 3: Tariff Selection -->
     <section id="step-tariff" class="ma-step">
-      <button class="ma-back-btn" id="back-to-destinations-from-tariff" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
+      <div class="ma-topbar">
+        <button class="ma-back-btn" id="back-to-destinations-from-tariff" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
+        <button class="ma-search-trigger" id="search-trigger-tariff" type="button" aria-label="Αναζήτηση">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
+      </div>
       <h2 class="ma-step-title">Επιλέξτε Ώρα Διαδρομής</h2>
       <p class="ma-step-subtitle" id="selected-destination-for-tariff"></p>
       <div class="ma-tariff-grid">
@@ -76,7 +77,12 @@
 
     <!-- Step 4: Vehicles -->
     <section id="step-vehicles" class="ma-step">
-      <button class="ma-back-btn" id="back-to-tariff" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
+      <div class="ma-topbar">
+        <button class="ma-back-btn" id="back-to-tariff" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
+        <button class="ma-search-trigger" id="search-trigger-vehicles" type="button" aria-label="Αναζήτηση">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
+      </div>
       <h2 class="ma-step-title">Επιλέξτε Όχημα</h2>
       <p class="ma-step-subtitle" id="selected-destination-name"></p>
       <p class="ma-step-tariff-indicator" id="selected-tariff-indicator"></p>
@@ -85,7 +91,12 @@
 
     <!-- Step 4b: Booking Type (instant vs scheduled) -->
     <section id="step-booking-type" class="ma-step">
-      <button class="ma-back-btn" id="back-to-vehicles-from-booking" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
+      <div class="ma-topbar">
+        <button class="ma-back-btn" id="back-to-vehicles-from-booking" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
+        <button class="ma-search-trigger" id="search-trigger-booking" type="button" aria-label="Αναζήτηση">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
+      </div>
       <h2 class="ma-step-title">Πότε θέλετε το όχημα;</h2>
       <p class="ma-step-subtitle" id="booking-vehicle-name"></p>
       
@@ -135,7 +146,12 @@
 
     <!-- Step 5: Confirmation / CTA -->
     <section id="step-confirm" class="ma-step">
-      <button class="ma-back-btn" id="back-to-vehicles" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
+      <div class="ma-topbar">
+        <button class="ma-back-btn" id="back-to-vehicles" type="button" aria-label="Πίσω"><span class="ma-back-chevron"></span></button>
+        <button class="ma-search-trigger" id="search-trigger-confirm" type="button" aria-label="Αναζήτηση">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
+      </div>
       <h2 class="ma-step-title">Επιβεβαίωση</h2>
       <div class="ma-confirm-card">
         <div class="ma-confirm-row">
@@ -308,6 +324,27 @@
       </div>
     </section>
   </main>
+
+  <!-- Search Overlay (fullscreen) -->
+  <div id="search-overlay" class="ma-search-overlay" hidden>
+    <div class="ma-search-overlay__header">
+      <button class="ma-back-btn" id="search-overlay-close" type="button" aria-label="Κλείσιμο"><span class="ma-back-chevron"></span></button>
+      <div class="ma-search-overlay__input-wrap">
+        <input id="search-overlay-input" class="ma-search-overlay__input" type="text" placeholder="Αναζήτηση…" autocomplete="off">
+      </div>
+      <button class="ma-search-overlay__cancel" id="search-overlay-cancel" type="button">Ακύρωση</button>
+    </div>
+    <div class="ma-search-overlay__body">
+      <div id="search-recent" class="ma-search-overlay__section">
+        <h3 class="ma-search-overlay__section-title">Πρόσφατες αναζητήσεις</h3>
+        <ul id="search-recent-list" class="ma-search-overlay__list"></ul>
+      </div>
+      <div id="search-suggestions" class="ma-search-overlay__section" hidden>
+        <h3 class="ma-search-overlay__section-title">Προτεινόμενα</h3>
+        <ul id="search-suggestions-list" class="ma-search-overlay__list"></ul>
+      </div>
+    </div>
+  </div>
 
   <div data-ma-footer-slot></div>
 

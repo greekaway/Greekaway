@@ -1156,78 +1156,133 @@
   };
 
   // ========================================
-  // DESTINATION QUICK-SEARCH
+  // SEARCH OVERLAY
   // ========================================
   let allDestinations = []; // cached list for search
   let cameFromSearch = false; // track if user bypassed categories via search
 
-  const initDestinationSearch = async () => {
-    const searchInput = $('#dest-quick-search');
-    const clearBtn = $('#dest-search-clear');
-    const resultsList = $('#dest-search-results');
-    if (!searchInput || !resultsList) return;
+  const RECENT_SEARCHES_KEY = 'ma_recent_searches';
+  const MAX_RECENT = 5;
 
-    // Fetch ALL active destinations (no category filter)
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function getRecentSearches() {
+    try {
+      return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY)) || [];
+    } catch { return []; }
+  }
+
+  function saveRecentSearch(dest) {
+    const recents = getRecentSearches().filter(r => r.id !== dest.id);
+    recents.unshift({ id: dest.id, name: dest.name });
+    if (recents.length > MAX_RECENT) recents.length = MAX_RECENT;
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recents));
+  }
+
+  const initSearchOverlay = async () => {
+    const overlay = $('#search-overlay');
+    const overlayInput = $('#search-overlay-input');
+    const closeBtn = $('#search-overlay-close');
+    const cancelBtn = $('#search-overlay-cancel');
+    const recentSection = $('#search-recent');
+    const recentList = $('#search-recent-list');
+    const suggestionsSection = $('#search-suggestions');
+    const suggestionsList = $('#search-suggestions-list');
+    if (!overlay || !overlayInput) return;
+
+    // Fetch all destinations for search
     const data = await api('/api/moveathens/destinations');
-    if (!data?.destinations) return;
-    allDestinations = data.destinations;
+    if (data?.destinations) allDestinations = data.destinations;
 
-    // Build a category-id → name map from CONFIG
+    // Build category map
     const catMap = {};
     (CONFIG?.destinationCategories || []).forEach(c => { catMap[c.id] = c.name; });
 
-    const showResults = (items, query) => {
-      if (!items.length) {
-        resultsList.innerHTML = `<li class="ma-dest-search-empty">Δεν βρέθηκε προορισμός για «${query}»</li>`;
-        resultsList.hidden = false;
+    function openOverlay() {
+      overlay.hidden = false;
+      overlayInput.value = '';
+      renderRecent();
+      if (suggestionsSection) suggestionsSection.hidden = true;
+      setTimeout(() => overlayInput.focus(), 50);
+    }
+
+    function closeOverlay() {
+      overlay.hidden = true;
+      overlayInput.blur();
+    }
+
+    function selectDestination(dest) {
+      saveRecentSearch(dest);
+      selectedDestination = dest;
+      cameFromSearch = true;
+      closeOverlay();
+      showTariffSelection();
+    }
+
+    function renderRecent() {
+      const recents = getRecentSearches();
+      if (!recents.length) {
+        if (recentSection) recentSection.hidden = true;
         return;
       }
-      resultsList.innerHTML = items.map(d => `
-        <li data-id="${d.id}" data-name="${d.name}">
-          <span class="ma-dest-search-result-name">${d.name}</span>
-          ${catMap[d.category_id] ? `<span class="ma-dest-search-result-cat">${catMap[d.category_id]}</span>` : ''}
-        </li>
-      `).join('');
-      resultsList.hidden = false;
-
-      // Click handlers
-      resultsList.querySelectorAll('li[data-id]').forEach(li => {
+      if (recentSection) recentSection.hidden = false;
+      recentList.innerHTML = recents.map(r =>
+        `<li data-id="${r.id}" data-name="${r.name}"><span>🕐</span> ${r.name}</li>`
+      ).join('');
+      recentList.querySelectorAll('li[data-id]').forEach(li => {
         li.addEventListener('click', () => {
-          selectedDestination = { id: li.dataset.id, name: li.dataset.name };
-          cameFromSearch = true;
-          // Clear search UI
-          searchInput.value = '';
-          clearBtn.hidden = true;
-          resultsList.hidden = true;
-          // Skip straight to tariff selection
-          showTariffSelection();
+          selectDestination({ id: li.dataset.id, name: li.dataset.name });
         });
       });
-    };
+    }
 
-    searchInput.addEventListener('input', () => {
-      const q = searchInput.value.trim().toLowerCase();
-      clearBtn.hidden = !q;
-      if (!q) { resultsList.hidden = true; return; }
+    function renderSuggestions(items, query) {
+      if (!items.length) {
+        if (suggestionsSection) suggestionsSection.hidden = false;
+        suggestionsList.innerHTML = `<li class="ma-search-empty">Δεν βρέθηκε «${escapeHtml(query)}»</li>`;
+        return;
+      }
+      if (suggestionsSection) suggestionsSection.hidden = false;
+      suggestionsList.innerHTML = items.map(d =>
+        `<li data-id="${d.id}" data-name="${d.name}">
+          <span>${d.name}</span>
+          ${catMap[d.category_id] ? `<small class="ma-search-overlay__cat">${catMap[d.category_id]}</small>` : ''}
+        </li>`
+      ).join('');
+      suggestionsList.querySelectorAll('li[data-id]').forEach(li => {
+        li.addEventListener('click', () => {
+          selectDestination({ id: li.dataset.id, name: li.dataset.name });
+        });
+      });
+    }
+
+    // Input filtering
+    overlayInput.addEventListener('input', () => {
+      const q = overlayInput.value.trim().toLowerCase();
+      if (!q) {
+        if (suggestionsSection) suggestionsSection.hidden = true;
+        renderRecent();
+        return;
+      }
+      if (recentSection) recentSection.hidden = true;
       const filtered = allDestinations.filter(d =>
         d.name.toLowerCase().includes(q) ||
         (d.description || '').toLowerCase().includes(q)
       );
-      showResults(filtered, searchInput.value.trim());
+      renderSuggestions(filtered, overlayInput.value.trim());
     });
 
-    clearBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      clearBtn.hidden = true;
-      resultsList.hidden = true;
-      searchInput.focus();
-    });
+    // Close handlers
+    closeBtn?.addEventListener('click', closeOverlay);
+    cancelBtn?.addEventListener('click', closeOverlay);
 
-    // Close results when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.ma-dest-search-wrapper')) {
-        resultsList.hidden = true;
-      }
+    // All search trigger buttons open the overlay
+    $$('[id^="search-trigger"]').forEach(btn => {
+      btn.addEventListener('click', openOverlay);
     });
   };
 
@@ -1247,17 +1302,12 @@
 
     // Load hotel context
     hotelContext = loadHotelContext();
-    
-    // Apply domain-aware home links
-    if (window.MoveAthensConfig?.applyHomeLinks) {
-      window.MoveAthensConfig.applyHomeLinks();
-    }
 
     // Show categories
     await renderCategories();
 
-    // Init quick-search for destinations
-    await initDestinationSearch();
+    // Init search overlay for destinations
+    await initSearchOverlay();
 
     // Back buttons
     $('#back-to-categories')?.addEventListener('click', () => {

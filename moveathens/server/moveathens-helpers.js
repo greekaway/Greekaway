@@ -121,6 +121,11 @@ const validateAndMerge = (incoming, current) => {
     };
   }
 
+  // Welcome text block (admin-editable, max 500 chars)
+  if (typeof incoming.welcomeTextBlock === 'string') {
+    merged.welcomeTextBlock = normalizeString(incoming.welcomeTextBlock).slice(0, 500);
+  }
+
   return { ok: true, data: merged };
 };
 

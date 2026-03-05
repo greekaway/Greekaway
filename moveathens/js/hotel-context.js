@@ -10,11 +10,6 @@
     document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax`;
   };
 
-  // Apply domain-aware home links
-  if (window.MoveAthensConfig?.applyHomeLinks) {
-    window.MoveAthensConfig.applyHomeLinks();
-  }
-
   const cfg = await window.MoveAthensConfig.load();
 
   // DOM refs (login section removed — auth gate handles login)
