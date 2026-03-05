@@ -205,7 +205,7 @@
 
   const loadDestinations = async () => {
     if (!selectedCategory) return;
-    selectedCategoryName.textContent = selectedCategory.name;
+    if (selectedCategoryName) selectedCategoryName.textContent = selectedCategory.name;
     destinationsList.innerHTML = '<div class="ma-loading">Φόρτωση...</div>';
     showStep('destinations');
 
@@ -350,7 +350,7 @@
 
   const loadVehicles = async () => {
     if (!selectedDestination || !hotelContext?.origin_zone_id || !selectedTariff) return;
-    selectedDestinationName.textContent = selectedDestination.name;
+    if (selectedDestinationName) selectedDestinationName.textContent = selectedDestination.name;
     
     // Show tariff indicator
     if (selectedTariffIndicator) {
