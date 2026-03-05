@@ -190,7 +190,10 @@ async function getConfig() {
             infoFaqTitle: migrated.info_faq_title || '',
             infoFaqContent: migrated.info_faq_content || '',
             showPriceInMessage: migrated.show_price_in_message !== false,
-            irisPhone: migrated.iris_phone || ''
+            irisPhone: migrated.iris_phone || '',
+            heroVideoEnabled: migrated.hero_video_enabled !== false,
+            flightTrackingEnabled: migrated.flight_tracking_enabled !== false,
+            flightCheckMinsBefore: migrated.flight_check_mins_before || 25
           };
         }
       }
@@ -219,7 +222,10 @@ async function getConfig() {
         infoFaqTitle: row.info_faq_title || '',
         infoFaqContent: row.info_faq_content || '',
         showPriceInMessage: row.show_price_in_message !== false,
-        irisPhone: row.iris_phone || ''
+        irisPhone: row.iris_phone || '',
+        heroVideoEnabled: row.hero_video_enabled !== false,
+        flightTrackingEnabled: row.flight_tracking_enabled !== false,
+        flightCheckMinsBefore: row.flight_check_mins_before || 25
       };
     } catch (err) {
       console.error('[moveathens] DB config read failed:', err.message);

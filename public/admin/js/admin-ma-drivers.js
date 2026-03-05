@@ -284,6 +284,23 @@
           if (r.flight_terminal) flightInfo += ' | T' + r.flight_terminal;
           flightInfo += '</small>';
         }
+        // ── Flight Tracking Status Badge (2nd API call visibility) ──
+        if (r.flight_poller_done && r.flight_last_checked) {
+          var checkedAt = new Date(r.flight_last_checked);
+          var checkedTime = checkedAt.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+          var checkedDate = checkedAt.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit' });
+          flightInfo += '<br><small style="color:#10b981;font-weight:600">✅ 2η κλήση API: ' + checkedDate + ' ' + checkedTime + '</small>';
+        } else if (r.flight_tracking_active && r.flight_eta && !r.flight_poller_done) {
+          var nowMs = Date.now();
+          var etaMs = new Date(r.flight_eta).getTime();
+          var minsLeft = Math.round((etaMs - nowMs) / 60000);
+          var trackLabel = minsLeft > 0
+            ? '🔄 Αναμονή 2ης κλήσης (~' + minsLeft + ' λεπτά πριν ETA)'
+            : '🔄 2η κλήση εκκρεμεί…';
+          flightInfo += '<br><small style="color:#f59e0b;font-weight:600">' + trackLabel + '</small>';
+        } else if (r.flight_number && !r.flight_tracking_active && !r.flight_poller_done) {
+          flightInfo += '<br><small style="color:#9ca3af">⏸ Flight tracking ανενεργό</small>';
+        }
       }
 
       // Hotel reply button (for pending/sent requests that have orderer_phone)
@@ -300,6 +317,9 @@
         flight_airline: r.flight_airline || '',
         flight_origin: r.flight_origin || '',
         flight_eta: r.flight_eta || '',
+        flight_tracking_active: !!r.flight_tracking_active,
+        flight_poller_done: !!r.flight_poller_done,
+        flight_last_checked: r.flight_last_checked || '',
         vehicle_name: r.vehicle_name || '',
         orderer_phone: r.orderer_phone || '',
         is_arrival: !!r.is_arrival,

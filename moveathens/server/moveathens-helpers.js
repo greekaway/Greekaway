@@ -102,6 +102,14 @@ const validateAndMerge = (incoming, current) => {
     merged.heroVideoEnabled = incoming.heroVideoEnabled;
   }
 
+  // Flight tracking toggles
+  if (typeof incoming.flightTrackingEnabled === 'boolean') {
+    merged.flightTrackingEnabled = incoming.flightTrackingEnabled;
+  }
+  if (typeof incoming.flightCheckMinsBefore === 'number' && incoming.flightCheckMinsBefore >= 5 && incoming.flightCheckMinsBefore <= 120) {
+    merged.flightCheckMinsBefore = incoming.flightCheckMinsBefore;
+  }
+
   // Welcome page metric labels (admin-editable)
   if (incoming.welcomeMetrics && typeof incoming.welcomeMetrics === 'object') {
     const wm = incoming.welcomeMetrics;

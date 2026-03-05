@@ -77,6 +77,9 @@ CREATE TABLE IF NOT EXISTS ma_config (
     info_page_content TEXT,
     show_price_in_message BOOLEAN DEFAULT true,
     iris_phone VARCHAR(50) DEFAULT '',
+    hero_video_enabled BOOLEAN DEFAULT true,
+    flight_tracking_enabled BOOLEAN DEFAULT true,
+    flight_check_mins_before INTEGER DEFAULT 25,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

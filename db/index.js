@@ -346,7 +346,11 @@ const ma = {
       // Price toggle (2026-02-10)
       'show_price_in_message',
       // IRIS payment phone (2026-03-04)
-      'iris_phone'
+      'iris_phone',
+      // Hero video & flight config (2026-03-05)
+      'hero_video_enabled',
+      'flight_tracking_enabled',
+      'flight_check_mins_before'
     ];
     
     const updates = [];
