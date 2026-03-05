@@ -21,6 +21,8 @@
     const fOrder = $('#maCategoryOrder');
     const fActive = $('#maCategoryActive');
     const fArrival = $('#maCategoryArrival');
+    const fColor = $('#maCategoryColor');
+    const fColorHex = $('#maCategoryColorHex');
 
     const updateIconPreview = () => {
       const url = fIcon?.value;
@@ -47,12 +49,14 @@
           ? `<img src="${c.icon}" alt="" class="ma-cat-icon-img">`
           : `<span class="ma-cat-icon">${c.icon || '📁'}</span>`;
         const arrivalBadge = c.is_arrival ? '<span class="ma-badge ma-badge-arrival">↩ Άφιξη</span>' : '';
+        const colorSwatch = `<span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${c.color || '#1a73e8'};vertical-align:middle;margin-left:6px;border:1px solid rgba(0,0,0,0.15)"></span>`;
         return `
           <div class="ma-zone-card" data-id="${c.id}">
             <div class="ma-zone-card__header">
               <div class="ma-zone-card__title">
                 ${iconDisplay}
                 <h4>${c.name}</h4>
+                ${colorSwatch}
                 ${arrivalBadge}
                 <span class="ma-zone-status" data-active="${c.is_active}">${c.is_active ? 'Ενεργή' : 'Ανενεργή'}</span>
               </div>
@@ -94,6 +98,8 @@
       fOrder.value = '0';
       fActive.checked = true;
       if (fArrival) fArrival.checked = false;
+      if (fColor) fColor.value = '#1a73e8';
+      if (fColorHex) fColorHex.textContent = '#1a73e8';
       updateIconPreview();
       setStatus(status, '', '');
     };
@@ -107,6 +113,8 @@
       fOrder.value = cat.display_order || 0;
       fActive.checked = cat.is_active !== false;
       if (fArrival) fArrival.checked = cat.is_arrival === true;
+      if (fColor) fColor.value = cat.color || '#1a73e8';
+      if (fColorHex) fColorHex.textContent = cat.color || '#1a73e8';
       updateIconPreview();
       form.hidden = false;
     };
@@ -129,6 +137,10 @@
     });
 
     fIcon?.addEventListener('input', updateIconPreview);
+
+    fColor?.addEventListener('input', () => {
+      if (fColorHex) fColorHex.textContent = fColor.value;
+    });
 
     const saveCategories = async (categories) => {
       if (!ensureConfigLoaded()) return false;
@@ -173,6 +185,7 @@
         display_order: parseInt(fOrder.value, 10) || 0,
         is_active: fActive.checked,
         is_arrival: fArrival ? fArrival.checked : false,
+        color: fColor ? fColor.value : '#1a73e8',
         created_at: new Date().toISOString()
       };
 

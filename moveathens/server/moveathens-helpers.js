@@ -191,6 +191,7 @@ const normalizeDestinationCategory = (entry) => {
   const displayOrder = toInt(entry.display_order, 0);
   const isActive = typeof entry.is_active === 'boolean' ? entry.is_active : true;
   const isArrival = typeof entry.is_arrival === 'boolean' ? entry.is_arrival : false;
+  const color = normalizeString(entry.color || '') || '#1a73e8';
   const createdAt = normalizeString(entry.created_at) || new Date().toISOString();
   return {
     id,
@@ -199,6 +200,7 @@ const normalizeDestinationCategory = (entry) => {
     display_order: displayOrder,
     is_active: isActive,
     is_arrival: isArrival,
+    color,
     created_at: createdAt
   };
 };

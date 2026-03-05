@@ -667,6 +667,7 @@ async function getDestinationCategories(activeOnly = false) {
           display_order: row.display_order,
           is_active: row.is_active,
           is_arrival: row.is_arrival ?? false,
+          color: row.color || '#1a73e8',
           created_at: row.created_at
         }));
       }
@@ -683,7 +684,8 @@ async function getDestinationCategories(activeOnly = false) {
               icon: c.icon || '',
               display_order: c.display_order || 0,
               is_active: c.is_active !== false,
-              is_arrival: c.is_arrival ?? false
+              is_arrival: c.is_arrival ?? false,
+              color: c.color || '#1a73e8'
             });
           } catch (e) {
             console.error('[moveathens] Failed to migrate dest category:', c.id, e.message);
@@ -697,6 +699,7 @@ async function getDestinationCategories(activeOnly = false) {
           display_order: row.display_order,
           is_active: row.is_active,
           is_arrival: row.is_arrival ?? false,
+          color: row.color || '#1a73e8',
           created_at: row.created_at
         }));
       }
@@ -725,7 +728,8 @@ async function upsertDestinationCategory(data) {
         icon: data.icon || '',
         display_order: data.display_order || 0,
         is_active: data.is_active !== false,
-        is_arrival: data.is_arrival ?? false
+        is_arrival: data.is_arrival ?? false,
+        color: data.color || '#1a73e8'
       });
       console.log('[moveathens] Dest category saved to DB:', row.id);
       return {
@@ -735,6 +739,7 @@ async function upsertDestinationCategory(data) {
         display_order: row.display_order,
         is_active: row.is_active,
         is_arrival: row.is_arrival ?? false,
+        color: row.color || '#1a73e8',
         created_at: row.created_at
       };
     } catch (err) {
@@ -753,6 +758,7 @@ async function upsertDestinationCategory(data) {
     display_order: data.display_order || 0,
     is_active: data.is_active !== false,
     is_arrival: data.is_arrival ?? false,
+    color: data.color || '#1a73e8',
     created_at: idx >= 0 ? cats[idx].created_at : new Date().toISOString()
   };
   

@@ -167,12 +167,14 @@
       return;
     }
 
-    categoriesGrid.innerHTML = data.categories.map(cat => `
+    categoriesGrid.innerHTML = data.categories.map(cat => {
+      const bgColor = cat.color || '#1a73e8';
+      return `
       <button class="ma-category-card" data-id="${cat.id}" data-name="${cat.name}" data-arrival="${cat.is_arrival ? '1' : '0'}">
-        <span class="ma-category-icon">${renderCategoryIcon(cat.icon)}</span>
+        <span class="ma-category-icon" style="background:${bgColor}">${renderCategoryIcon(cat.icon)}</span>
         <span class="ma-category-name">${cat.name}</span>
-      </button>
-    `).join('');
+      </button>`;
+    }).join('');
 
     // Event listeners
     categoriesGrid.querySelectorAll('.ma-category-card').forEach(card => {

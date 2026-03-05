@@ -233,22 +233,12 @@
     color: #8896a6 !important;
   }
 
-  /* Categories grid */
-  .ma-transfer-page .ma-category-card {
-    background: linear-gradient(145deg, #132742 0%, #132742 100%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
-  }
-
-  .ma-transfer-page .ma-category-card:hover {
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
-  }
-
+  /* Categories grid — app-icon style: only label color changes, icon bg stays */
   .ma-transfer-page .ma-category-name {
     color: #e8edf3 !important;
   }
 
-  /* Category icons - make white */
+  /* Category icons — keep white in dark mode */
   .ma-transfer-page .ma-category-icon img,
   .ma-transfer-page .ma-category-icon-img {
     filter: brightness(0) invert(1) !important;

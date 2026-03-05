@@ -288,7 +288,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
       const categories = data.destinationCategories
         .filter(c => c.is_active)
-        .map(c => ({ id: c.id, name: c.name, icon: c.icon, display_order: c.display_order, is_arrival: c.is_arrival ?? false }));
+        .map(c => ({ id: c.id, name: c.name, icon: c.icon, display_order: c.display_order, is_arrival: c.is_arrival ?? false, color: c.color || '#1a73e8' }));
       return res.json({ categories });
     } catch (err) {
       return res.status(500).json({ error: 'Categories unavailable' });

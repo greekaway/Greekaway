@@ -35,14 +35,8 @@
 .ma-page .ma-footer__item.active,
 .ma-ai-page .ma-footer__item.active {
   color: #0066cc;
-  background: transparent;
+  background: rgba(0, 102, 204, 0.10);
   box-shadow: none;
-}
-
-.ma-transfer-page .ma-footer__item.active .ma-footer__icon::before,
-.ma-page .ma-footer__item.active .ma-footer__icon::before,
-.ma-ai-page .ma-footer__item.active .ma-footer__icon::before {
-  background: rgba(0, 102, 204, 0.12);
 }
 
 .ma-footer__item {
@@ -72,6 +66,7 @@
   width: 28px;
   height: 28px;
   fill: none;
+  stroke: currentColor;
   transition: stroke-width 160ms ease;
 }
 
@@ -79,24 +74,8 @@
 .ma-footer__item.active .ma-footer__icon svg {
   stroke-width: 2.2;
 }
-.ma-footer__icon svg path[stroke="none"] {
-  fill: none !important;
-}
 
-/* Oval glow behind active icon */
-.ma-footer__item.active .ma-footer__icon::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 48px;
-  height: 36px;
-  transform: translate(-50%, -50%);
-  border-radius: 40%;
-  background: rgba(82, 183, 255, 0.14);
-  z-index: -1;
-  transition: background 160ms ease;
-}
+/* Unified glow on active item — no separate ::before needed */
 
 .ma-footer__icon:empty {
   display: none;
@@ -119,7 +98,7 @@
 
 .ma-footer__item.active {
   color: rgba(82, 183, 255, 0.98);
-  background: transparent;
+  background: rgba(82, 183, 255, 0.12);
   box-shadow: none;
 }
 
@@ -219,10 +198,6 @@
     height: 25px;
   }
 
-  .ma-footer__item.active .ma-footer__icon::before {
-    width: 40px;
-    height: 30px;
-  }
 }
 
 /* Standard phones */
@@ -256,10 +231,6 @@
     height: 30px;
   }
 
-  .ma-footer__item.active .ma-footer__icon::before {
-    width: 52px;
-    height: 38px;
-  }
 }
 
 /* Safe area for notched phones (iPhone X+) */
@@ -285,12 +256,8 @@
 
   .ma-hero-page .ma-footer__item.active {
     color: #0066cc;
-    background: transparent;
+    background: rgba(0, 102, 204, 0.10);
     box-shadow: none;
-  }
-
-  .ma-hero-page .ma-footer__item.active .ma-footer__icon::before {
-    background: rgba(0, 102, 204, 0.12);
   }
 
   .ma-hero-page .ma-footer__icon svg {

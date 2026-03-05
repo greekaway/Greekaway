@@ -252,16 +252,23 @@
   background: transparent;
 }
 
-/* Categories Grid */
+/* Categories Grid — App-Icon Layout */
 .ma-categories-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 10px;
+  padding: 4px 0;
 }
 
 @media (min-width: 480px) {
   .ma-categories-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .ma-categories-grid {
+    grid-template-columns: repeat(6, 1fr);
   }
 }
 
@@ -269,60 +276,61 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 24px 14px;
-  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  gap: 6px;
+  padding: 0;
+  background: none;
   border: none;
-  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 
-    0 4px 6px rgba(0, 0, 0, 0.07),
-    0 1px 3px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease;
 }
 
 .ma-category-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 
-    0 8px 20px rgba(0, 0, 0, 0.12),
-    0 4px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transform: scale(1.08);
 }
 
 .ma-category-card:active {
-  transform: scale(0.97);
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.1),
-    inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  transform: scale(0.93);
 }
 
+/* Rounded-square icon container (app-icon style) */
 .ma-category-icon {
-  font-size: 36px;
-  line-height: 1;
+  width: 62px;
+  height: 62px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  position: relative;
+  overflow: hidden;
 }
 
 .ma-category-icon-img {
-  width: 56px;
-  height: 56px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  filter: brightness(0) invert(1);
 }
 
 .ma-category-emoji {
-  font-size: 36px;
+  font-size: 28px;
+  line-height: 1;
 }
 
 .ma-category-name {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   text-align: center;
   color: #1a1a2e;
-  text-transform: capitalize;
+  line-height: 1.2;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 /* Destinations List */
