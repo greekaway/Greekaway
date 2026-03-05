@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS ma_config (
     hero_video_enabled BOOLEAN DEFAULT true,
     flight_tracking_enabled BOOLEAN DEFAULT true,
     flight_check_mins_before INTEGER DEFAULT 25,
+    welcome_text_block TEXT DEFAULT '',
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

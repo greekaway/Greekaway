@@ -194,7 +194,8 @@ async function getConfig() {
             irisPhone: migrated.iris_phone || '',
             heroVideoEnabled: migrated.hero_video_enabled !== false,
             flightTrackingEnabled: migrated.flight_tracking_enabled !== false,
-            flightCheckMinsBefore: migrated.flight_check_mins_before || 25
+            flightCheckMinsBefore: migrated.flight_check_mins_before || 25,
+            welcomeTextBlock: migrated.welcome_text_block || ''
           };
         }
       }
@@ -226,7 +227,8 @@ async function getConfig() {
         irisPhone: row.iris_phone || '',
         heroVideoEnabled: row.hero_video_enabled !== false,
         flightTrackingEnabled: row.flight_tracking_enabled !== false,
-        flightCheckMinsBefore: row.flight_check_mins_before || 25
+        flightCheckMinsBefore: row.flight_check_mins_before || 25,
+        welcomeTextBlock: row.welcome_text_block || ''
       };
     } catch (err) {
       console.error('[moveathens] DB config read failed:', err.message);
@@ -260,7 +262,8 @@ async function getConfig() {
     irisPhone: full.irisPhone || '',
     heroVideoEnabled: full.heroVideoEnabled !== false,
     flightTrackingEnabled: full.flightTrackingEnabled !== false,
-    flightCheckMinsBefore: full.flightCheckMinsBefore || 25
+    flightCheckMinsBefore: full.flightCheckMinsBefore || 25,
+    welcomeTextBlock: full.welcomeTextBlock || ''
   };
 }
 

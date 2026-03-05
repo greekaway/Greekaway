@@ -350,7 +350,9 @@ const ma = {
       // Hero video & flight config (2026-03-05)
       'hero_video_enabled',
       'flight_tracking_enabled',
-      'flight_check_mins_before'
+      'flight_check_mins_before',
+      // Welcome text block (2026-03-05)
+      'welcome_text_block'
     ];
     
     const updates = [];
