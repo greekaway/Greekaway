@@ -36,6 +36,10 @@
   const listEl        = $('[data-ds-partners-list]');
   const emptyEl       = $('[data-ds-partners-empty]');
   const addBtn        = $('[data-ds-partners-add-btn]');
+  const mainBackBtn   = $('[data-ds-partners-back]');
+  const totalOwedEl   = $('[data-ds-partners-total-owed]');
+  const totalOweEl    = $('[data-ds-partners-total-owe]');
+  const totalNetEl    = $('[data-ds-partners-total-net]');
 
   // ── DOM refs – Partner Overlay ──
   const partnerOverlay   = $('[data-ds-partners-overlay]');
@@ -247,6 +251,24 @@
     const n = parseFloat(v) || 0;
     return n.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
   };
+
+  function updateSummaryTotals() {
+    let owed = 0;  // positive balances = they owe you
+    let owe = 0;   // negative balances = you owe them
+    partners.forEach(p => {
+      const b = p._balance || 0;
+      if (b > 0) owed += b;
+      else if (b < 0) owe += Math.abs(b);
+    });
+    const net = owed - owe;
+    if (totalOwedEl) totalOwedEl.textContent = fmtMoney(owed);
+    if (totalOweEl)  totalOweEl.textContent = fmtMoney(owe);
+    if (totalNetEl) {
+      const prefix = net > 0 ? '+' : net < 0 ? '-' : '';
+      totalNetEl.textContent = prefix + fmtMoney(Math.abs(net));
+      totalNetEl.style.color = net > 0 ? '#4CAF50' : net < 0 ? '#FF7043' : '';
+    }
+  }
 
   const greeceDateStr = () => {
     const now = new Date();
@@ -647,6 +669,14 @@
     ledgerBackBtn.addEventListener('click', () => showListView());
   }
 
+  // ── Back from partners page ──
+  if (mainBackBtn) {
+    mainBackBtn.addEventListener('click', () => {
+      const prefix = window.DriversSystemConfig ? window.DriversSystemConfig.getRoutePrefix() : '/driverssystem';
+      window.location.href = prefix + '/home';
+    });
+  }
+
   // Edit partner button in ledger header
   if (editPartnerBtn) {
     editPartnerBtn.addEventListener('click', () => {
@@ -900,6 +930,7 @@
     // Sort by name
     partners.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'el'));
     renderPartnerList();
+    updateSummaryTotals();
   }
 
   await loadAll();

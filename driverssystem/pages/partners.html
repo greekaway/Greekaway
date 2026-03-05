@@ -24,7 +24,23 @@
     <div class="ds-partners-view" data-ds-partners-list-view>
 
       <header class="ds-partners-header">
-        <h2 class="ds-partners-title">Συνεργάτες</h2>
+        <button class="ds-partners-back-btn" data-ds-partners-back aria-label="Πίσω">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="ds-partners-summary">
+          <div class="ds-partners-summary-card ds-partners-summary-card--owed">
+            <span class="ds-partners-summary-card__label">ΣΟΥ ΧΡΩΣΤΑΝΕ</span>
+            <span class="ds-partners-summary-card__amount" data-ds-partners-total-owed>0,00 €</span>
+          </div>
+          <div class="ds-partners-summary-card ds-partners-summary-card--owe">
+            <span class="ds-partners-summary-card__label">ΧΡΩΣΤΑΣ</span>
+            <span class="ds-partners-summary-card__amount" data-ds-partners-total-owe>0,00 €</span>
+          </div>
+          <div class="ds-partners-summary-card ds-partners-summary-card--net">
+            <span class="ds-partners-summary-card__label">ΣΥΝΟΛΟ</span>
+            <span class="ds-partners-summary-card__amount" data-ds-partners-total-net>0,00 €</span>
+          </div>
+        </div>
       </header>
 
       <main class="ds-partners-main">
