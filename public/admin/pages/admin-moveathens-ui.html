@@ -136,20 +136,28 @@
                 <small class="ma-hint">Πόσα λεπτά πριν την εκτιμώμενη άφιξη θα γίνει η 2η κλήση στο FlightAware API</small>
               </label>
             </div>
-            <h3 class=\"ma-subtitle\">📊 Welcome Page — Metric Labels</h3>
-            <p class=\"ma-helper\" style=\"margin:-4px 0 10px;opacity:.6;font-size:12px\">Ετικέτες κάτω από τα 4 δυναμικά νούμερα στην αρχική σελίδα. Τα νούμερα ενημερώνονται αυτόματα.</p>
-            <div class=\"ma-grid\">
+            <h3 class="ma-subtitle">🎬 Welcome Page — Video</h3>
+            <div class="ma-grid">
+              <label class="ma-zone-toggle">
+                <input id="heroVideoEnabled" type="checkbox" checked>
+                Εμφάνιση Hero Video (απενεργοποίηση = gradient background)
+              </label>
+            </div>
+
+            <h3 class="ma-subtitle">📊 Welcome Page — Metric Labels</h3>
+            <p class="ma-helper" style="margin:-4px 0 10px;opacity:.6;font-size:12px">Ετικέτες κάτω από τα 4 δυναμικά νούμερα στην αρχική σελίδα. Τα νούμερα ενημερώνονται αυτόματα.</p>
+            <div class="ma-grid">
               <label>Ξενοδοχεία (label)
-                <input id=\"metricLabelHotels\" class=\"input\" type=\"text\" maxlength=\"100\" placeholder=\"Συνεργαζόμενα Ξενοδοχεία\">
+                <input id="metricLabelHotels" class="input" type="text" maxlength="100" placeholder="Συνεργαζόμενα Ξενοδοχεία">
               </label>
               <label>Διαδρομές (label)
-                <input id=\"metricLabelRoutes\" class=\"input\" type=\"text\" maxlength=\"100\" placeholder=\"Ολοκληρωμένες Διαδρομές\">
+                <input id="metricLabelRoutes" class="input" type="text" maxlength="100" placeholder="Ολοκληρωμένες Διαδρομές">
               </label>
               <label>Προορισμοί (label)
-                <input id=\"metricLabelDestinations\" class=\"input\" type=\"text\" maxlength=\"100\" placeholder=\"Προορισμοί\">
+                <input id="metricLabelDestinations" class="input" type="text" maxlength="100" placeholder="Προορισμοί">
               </label>
               <label>Κατηγορίες (label)
-                <input id=\"metricLabelCategories\" class=\"input\" type=\"text\" maxlength=\"100\" placeholder=\"Κατηγορίες Διαδρομών\">
+                <input id="metricLabelCategories" class="input" type="text" maxlength="100" placeholder="Κατηγορίες Διαδρομών">
               </label>
             </div>
             <div class="ma-actions">

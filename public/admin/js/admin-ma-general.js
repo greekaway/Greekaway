@@ -71,6 +71,9 @@
       const ftMins = document.getElementById('flightCheckMinsBefore');
       if (ftMins) ftMins.value = C.flightCheckMinsBefore || 25;
 
+      const heroVideoToggle = document.getElementById('heroVideoEnabled');
+      if (heroVideoToggle) heroVideoToggle.checked = C.heroVideoEnabled !== false;
+
       const wm = C.welcomeMetrics || {};
       const mlHotels = document.getElementById('metricLabelHotels');
       const mlRoutes = document.getElementById('metricLabelRoutes');
@@ -108,6 +111,7 @@
           whatsappNumber: fields.whatsappNumber?.value || '',
           companyEmail: fields.companyEmail?.value || '',
           irisPhone: fields.irisPhone?.value || '',
+          heroVideoEnabled: document.getElementById('heroVideoEnabled')?.checked !== false,
           showPriceInMessage: document.getElementById('showPriceToggle')?.checked !== false,
           flightTrackingEnabled: document.getElementById('flightTrackingEnabled')?.checked !== false,
           flightCheckMinsBefore: parseInt(document.getElementById('flightCheckMinsBefore')?.value, 10) || 25,

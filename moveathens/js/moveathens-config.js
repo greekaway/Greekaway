@@ -28,22 +28,30 @@
     const video = root.querySelector('[data-ma-hero-video]');
     const placeholder = root.querySelector('[data-ma-hero-placeholder]');
     const logo = root.querySelector('[data-ma-hero-logo]');
-    const url = resolveHeroVideoUrl(cfg.heroVideoUrl);
-    try {
-      const res = await fetch(url, { method: 'HEAD' });
-      if (res.ok && video) {
-        video.src = url;
-        video.style.display = 'block';
-        if (placeholder) placeholder.style.display = 'none';
-        video.load();
-      } else {
+
+    // If video is disabled via admin, skip video loading entirely
+    if (cfg.heroVideoEnabled === false) {
+      if (video) video.style.display = 'none';
+      if (placeholder) placeholder.style.display = 'none';
+    } else {
+      const url = resolveHeroVideoUrl(cfg.heroVideoUrl);
+      try {
+        const res = await fetch(url, { method: 'HEAD' });
+        if (res.ok && video) {
+          video.src = url;
+          video.style.display = 'block';
+          if (placeholder) placeholder.style.display = 'none';
+          video.load();
+        } else {
+          if (video) video.style.display = 'none';
+          if (placeholder) placeholder.style.display = 'block';
+        }
+      } catch (_) {
         if (video) video.style.display = 'none';
         if (placeholder) placeholder.style.display = 'block';
       }
-    } catch (_) {
-      if (video) video.style.display = 'none';
-      if (placeholder) placeholder.style.display = 'block';
     }
+
     if (logo) {
       if (cfg.heroLogoUrl) {
         logo.src = cfg.heroLogoUrl;

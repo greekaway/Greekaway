@@ -1,5 +1,12 @@
 (async () => {
   const cfg = await window.MoveAthensConfig.load();
+
+  // ── Video toggle: if disabled, add no-video class before applying hero ──
+  if (cfg.heroVideoEnabled === false) {
+    const hero = document.querySelector('.ma-hero');
+    if (hero) hero.classList.add('ma-hero--no-video');
+  }
+
   await window.MoveAthensConfig.applyHero(document, cfg);
   window.MoveAthensConfig.applyPageTitles(document, cfg);
   window.MoveAthensConfig.applyContactInfo(document, cfg);

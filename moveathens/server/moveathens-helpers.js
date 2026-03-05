@@ -97,6 +97,11 @@ const validateAndMerge = (incoming, current) => {
     merged.showPriceInMessage = incoming.showPriceInMessage;
   }
 
+  // Hero video visibility toggle (boolean, default true)
+  if (typeof incoming.heroVideoEnabled === 'boolean') {
+    merged.heroVideoEnabled = incoming.heroVideoEnabled;
+  }
+
   // Welcome page metric labels (admin-editable)
   if (incoming.welcomeMetrics && typeof incoming.welcomeMetrics === 'object') {
     const wm = incoming.welcomeMetrics;
