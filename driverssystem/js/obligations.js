@@ -71,8 +71,7 @@
   const addBtn = $('[data-ds-obl-add]');
   const totalIncomingEl = $('[data-ds-obl-total-incoming]');
   const totalOutgoingEl = $('[data-ds-obl-total-outgoing]');
-  const missedIncomingEl = $('[data-ds-obl-missed-incoming]');
-  const missedOutgoingEl = $('[data-ds-obl-missed-outgoing]');
+  const totalNetEl = $('[data-ds-obl-total-net]');
 
   // ── DOM refs — Overlay ──
   const overlay = $('[data-ds-obl-overlay]');
@@ -124,8 +123,12 @@
         const s = await res.json();
         totalIncomingEl.textContent = fmtEUR(s.totalOwedToMe);
         totalOutgoingEl.textContent = fmtEUR(s.totalIOwe);
-        missedIncomingEl.textContent = s.missedIncoming > 0 ? `${s.missedIncoming} ανεξόφλητ${s.missedIncoming === 1 ? 'η' : 'ες'} δόσ${s.missedIncoming === 1 ? 'η' : 'εις'}` : '';
-        missedOutgoingEl.textContent = s.missedOutgoing > 0 ? `${s.missedOutgoing} ανεξόφλητ${s.missedOutgoing === 1 ? 'η' : 'ες'} δόσ${s.missedOutgoing === 1 ? 'η' : 'εις'}` : '';
+        const net = (s.totalOwedToMe || 0) - (s.totalIOwe || 0);
+        const prefix = net > 0 ? '+' : net < 0 ? '-' : '';
+        if (totalNetEl) {
+          totalNetEl.textContent = prefix + fmtEUR(Math.abs(net));
+          totalNetEl.style.color = net > 0 ? '#4CAF50' : net < 0 ? '#FF7043' : '';
+        }
       }
     } catch (_) {}
   }

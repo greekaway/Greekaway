@@ -18,34 +18,36 @@
   </head>
   <body class="ds-debts-page">
 
-    <!-- ─── Back Arrow ─── -->
+    <!-- ─── Sticky Header ─── -->
     <header class="ds-debts-back-header">
       <button class="ds-debts-back-btn" data-ds-debts-back aria-label="Πίσω">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <div class="ds-debts-header-content">
+        <div class="ds-debts-summary">
+          <div class="ds-debts-summary-card ds-debts-summary-card--owed">
+            <span class="ds-debts-summary-label">ΣΟΥ ΧΡΩΣΤΑΝΕ</span>
+            <span class="ds-debts-summary-value" data-ds-debts-total-owed>0,00 €</span>
+          </div>
+          <div class="ds-debts-summary-card ds-debts-summary-card--owe">
+            <span class="ds-debts-summary-label">ΧΡΩΣΤΑΣ</span>
+            <span class="ds-debts-summary-value" data-ds-debts-total-owe>0,00 €</span>
+          </div>
+          <div class="ds-debts-summary-card ds-debts-summary-card--net">
+            <span class="ds-debts-summary-label">ΣΥΝΟΛΟ</span>
+            <span class="ds-debts-summary-value" data-ds-debts-total-net>0,00 €</span>
+          </div>
+        </div>
+        <div class="ds-debts-filters">
+          <button class="ds-debts-filter active" data-ds-debts-filter="all">Όλα</button>
+          <button class="ds-debts-filter" data-ds-debts-filter="owed">Πιστώσεις</button>
+          <button class="ds-debts-filter" data-ds-debts-filter="owe">Χρεώσεις</button>
+        </div>
+      </div>
     </header>
 
     <!-- ─── Main Content ─── -->
     <main class="ds-debts-main">
-
-      <!-- ── Summary Cards ── -->
-      <div class="ds-debts-summary">
-        <div class="ds-debts-summary-card ds-debts-summary-card--owed">
-          <span class="ds-debts-summary-label">Πιστώσεις</span>
-          <span class="ds-debts-summary-value" data-ds-debts-total-owed>0,00 €</span>
-        </div>
-        <div class="ds-debts-summary-card ds-debts-summary-card--owe">
-          <span class="ds-debts-summary-label">Χρεώσεις</span>
-          <span class="ds-debts-summary-value" data-ds-debts-total-owe>0,00 €</span>
-        </div>
-      </div>
-
-      <!-- ── Filter Pills ── -->
-      <div class="ds-debts-filters">
-        <button class="ds-debts-filter active" data-ds-debts-filter="all">Όλα</button>
-        <button class="ds-debts-filter" data-ds-debts-filter="owed">Πιστώσεις</button>
-        <button class="ds-debts-filter" data-ds-debts-filter="owe">Χρεώσεις</button>
-      </div>
 
       <!-- ── Debt List ── -->
       <section class="ds-debts-list" data-ds-debts-list>

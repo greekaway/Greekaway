@@ -16,13 +16,16 @@
   box-sizing: border-box;
 }
 
-/* ── Back Arrow Header ── */
+/* ── Sticky Header ── */
 .ds-debts-back-header {
   position: sticky;
   top: 0;
   z-index: 40;
-  padding: 14px 16px 8px;
+  padding: 14px 16px 10px;
   background: var(--ds-bg);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 }
 
 .ds-debts-back-btn {
@@ -38,10 +41,20 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.12s;
+  flex-shrink: 0;
+  margin-top: 4px;
 }
 
 .ds-debts-back-btn:active {
   transform: scale(0.92);
+}
+
+.ds-debts-header-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* ── Main ── */
@@ -57,67 +70,78 @@
 /* ── Summary Cards ── */
 .ds-debts-summary {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
 }
 
 .ds-debts-summary-card {
-  background: var(--ds-card);
-  border-radius: var(--ds-radius);
-  padding: 16px 14px;
-  text-align: center;
-  box-shadow: var(--ds-shadow);
+  background: var(--ds-card, #1a1d26);
+  border-radius: var(--ds-radius, 14px);
+  padding: 10px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: var(--ds-shadow, 0 2px 8px rgba(0,0,0,.18));
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .ds-debts-summary-label {
   display: block;
-  font-size: 12px;
-  color: var(--ds-muted);
-  margin-bottom: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ds-muted, #888);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 .ds-debts-summary-value {
   display: block;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .ds-debts-summary-card--owed .ds-debts-summary-value {
-  color: var(--ds-accent);
+  color: #4CAF50;
 }
 
 .ds-debts-summary-card--owe .ds-debts-summary-value {
-  color: #f56565;
+  color: #FF7043;
 }
 
-/* ── Filter Pills ── */
+.ds-debts-summary-card--net .ds-debts-summary-value {
+  color: var(--ds-text, #fff);
+}
+
+/* ── Filter Pills (inside sticky header) ── */
 .ds-debts-filters {
   display: flex;
   gap: 8px;
   overflow-x: auto;
   padding: 2px 0;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.ds-debts-filters::-webkit-scrollbar { display: none; }
 
 .ds-debts-filter {
   flex-shrink: 0;
-  padding: 8px 18px;
+  padding: 7px 16px;
   border: none;
-  border-radius: 24px;
-  background: var(--ds-card);
-  color: var(--ds-muted);
+  border-radius: 20px;
+  background: var(--ds-card, #1a1d26);
+  color: var(--ds-muted, #888);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.15s, color 0.15s;
   -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
 }
 
 .ds-debts-filter.active {
-  background: var(--ds-accent);
+  background: var(--ds-accent, #00c896);
   color: #fff;
 }
 

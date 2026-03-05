@@ -32,6 +32,7 @@
   const emptyEl     = $('[data-ds-debts-empty]');
   const totalOwedEl = $('[data-ds-debts-total-owed]');
   const totalOweEl  = $('[data-ds-debts-total-owe]');
+  const totalNetEl  = $('[data-ds-debts-total-net]');
   const overlay     = $('[data-ds-debts-overlay]');
   const dialogTitle = $('[data-ds-debts-dialog-title]');
   const form        = $('[data-ds-debts-form]');
@@ -134,6 +135,12 @@
     });
     totalOwedEl.textContent = fmtMoney(totalOwed);
     totalOweEl.textContent = fmtMoney(totalOwe);
+    const net = totalOwed - totalOwe;
+    if (totalNetEl) {
+      const prefix = net > 0 ? '+' : net < 0 ? '-' : '';
+      totalNetEl.textContent = prefix + fmtMoney(Math.abs(net));
+      totalNetEl.style.color = net > 0 ? '#4CAF50' : net < 0 ? '#FF7043' : '';
+    }
 
     // Filter
     const filtered = activeFilter === 'all'
