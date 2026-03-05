@@ -51,6 +51,9 @@
   let _driversMap = {};
   let _driversCacheTime = 0;
   const DRIVERS_CACHE_TTL = 30000;
+  let _flightCheckMins = 25; // cached from admin config
+  let _flightCheckMinsTime = 0;
+  let _countdownTimer = null;
 
   /* ─── shared modal / confirm bindings (run once) ─── */
   function bindSharedEvents() {
@@ -95,6 +98,31 @@
         loadAllDrivers();
       }
     }, 5000);
+
+    // Live countdown ticker — updates flight countdown every second without re-rendering
+    if (!_countdownTimer) {
+      _countdownTimer = setInterval(function () {
+        var els = _$$('.flight-countdown .cd-value');
+        if (!els.length) return;
+        var now = Date.now();
+        els.forEach(function (span) {
+          var parent = span.closest('.flight-countdown');
+          if (!parent) return;
+          var callAt = parseInt(parent.dataset.callAt, 10);
+          if (!callAt) return;
+          var secsLeft = Math.max(0, Math.round((callAt - now) / 1000));
+          if (secsLeft <= 0) {
+            span.textContent = 'τώρα!';
+            parent.style.color = '#f97316';
+            return;
+          }
+          var h = Math.floor(secsLeft / 3600);
+          var m = Math.floor((secsLeft % 3600) / 60);
+          var s = secsLeft % 60;
+          span.textContent = (h > 0 ? h + 'ω ' : '') + (m > 0 ? m + 'λ ' : '') + s + 'δ';
+        });
+      }, 1000);
+    }
   }
 
   // Watch tab system
@@ -191,6 +219,17 @@
     var accEmpty = _$('#acc-empty');
 
     await ensureDriversCache();
+
+    // Refresh flightCheckMinsBefore from config (cache 30s)
+    if (Date.now() - _flightCheckMinsTime > 30000) {
+      try {
+        var cfg = await api('/api/admin/moveathens/ui-config');
+        if (cfg && typeof cfg.flightCheckMinsBefore === 'number') {
+          _flightCheckMins = cfg.flightCheckMinsBefore;
+        }
+        _flightCheckMinsTime = Date.now();
+      } catch (_e) { /* keep previous value */ }
+    }
 
     try {
       var data = await api('/api/admin/moveathens/requests');
@@ -289,15 +328,30 @@
           var checkedAt = new Date(r.flight_last_checked);
           var checkedTime = checkedAt.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
           var checkedDate = checkedAt.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit' });
-          flightInfo += '<br><small style="color:#10b981;font-weight:600">✅ 2η κλήση API: ' + checkedDate + ' ' + checkedTime + '</small>';
+          flightInfo += '<br><small style="color:#10b981;font-weight:600">✅ 2η κλήση API ολοκληρώθηκε: ' + checkedDate + ' ' + checkedTime + '</small>';
         } else if (r.flight_tracking_active && r.flight_eta && !r.flight_poller_done) {
           var nowMs = Date.now();
           var etaMs = new Date(r.flight_eta).getTime();
-          var minsLeft = Math.round((etaMs - nowMs) / 60000);
-          var trackLabel = minsLeft > 0
-            ? '🔄 Αναμονή 2ης κλήσης (~' + minsLeft + ' λεπτά πριν ETA)'
-            : '🔄 2η κλήση εκκρεμεί…';
-          flightInfo += '<br><small style="color:#f59e0b;font-weight:600">' + trackLabel + '</small>';
+          // 2nd call fires at: ETA minus flightCheckMinsBefore
+          var callAtMs = etaMs - (_flightCheckMins * 60000);
+          var secsUntilCall = Math.round((callAtMs - nowMs) / 1000);
+          var callAtTime = new Date(callAtMs).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+          if (secsUntilCall > 0) {
+            // Show countdown to the 2nd call
+            var h = Math.floor(secsUntilCall / 3600);
+            var m = Math.floor((secsUntilCall % 3600) / 60);
+            var s = secsUntilCall % 60;
+            var countdownStr = (h > 0 ? h + 'ω ' : '') + (m > 0 ? m + 'λ ' : '') + s + 'δ';
+            flightInfo += '<br><small style="color:#f59e0b;font-weight:600" class="flight-countdown" data-call-at="' + callAtMs + '">' +
+              '⏱ 2η κλήση σε: <span class="cd-value">' + countdownStr + '</span>' +
+              ' <span style="color:#9ca3af;font-weight:400">(στις ' + callAtTime + ', ' + _flightCheckMins + '\' πριν ETA)</span>' +
+              '</small>';
+          } else {
+            // Within the window — call should fire on next poller cycle
+            flightInfo += '<br><small style="color:#f97316;font-weight:600;animation:pulse 1.5s infinite">' +
+              '🔄 2η κλήση εκτελείται σύντομα… (αναμονή poller cycle)' +
+              '</small>';
+          }
         } else if (r.flight_number && !r.flight_tracking_active && !r.flight_poller_done) {
           flightInfo += '<br><small style="color:#9ca3af">⏸ Flight tracking ανενεργό</small>';
         }

@@ -220,3 +220,32 @@
     bottom: calc(8px + env(safe-area-inset-bottom));
   }
 }
+
+/* ========================================
+   LIGHT MODE — Hero page footer
+   ======================================== */
+@media (prefers-color-scheme: light) {
+  .ma-hero-page .ma-footer {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .ma-hero-page .ma-footer__item {
+    color: #1a1a2e;
+  }
+
+  .ma-hero-page .ma-footer__item.active {
+    color: #0066cc;
+    background: rgba(0, 102, 204, 0.12);
+    box-shadow: 0 0 16px rgba(128, 128, 128, 0.3);
+  }
+
+  .ma-hero-page .ma-footer__icon svg {
+    stroke: #1a1a2e;
+  }
+
+  .ma-hero-page .ma-footer__item.active .ma-footer__icon svg {
+    stroke: #0066cc;
+  }
+}

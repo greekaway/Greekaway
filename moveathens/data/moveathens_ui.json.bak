@@ -42,6 +42,13 @@
       "name": "Αθηνα",
       "description": "",
       "type": "suburb",
+      "municipality": "Athens",
+      "address": "Roumpesi 7",
+      "phone": "6985700007",
+      "email": "repeatpalmos@hotmail.com",
+      "accommodation_type": "hotel",
+      "lat": null,
+      "lng": null,
       "is_active": true,
       "created_at": "2026-01-28T13:05:17.001Z"
     },
@@ -50,6 +57,13 @@
       "name": "Γλυφαδα",
       "description": "",
       "type": "port",
+      "municipality": "",
+      "address": "",
+      "phone": "",
+      "email": "",
+      "accommodation_type": "hotel",
+      "lat": null,
+      "lng": null,
       "is_active": true,
       "created_at": "2026-01-28T12:37:42.900Z"
     }
@@ -122,11 +136,12 @@
   "destinations": [
     {
       "id": "dest_1769606127352",
-      "name": "μουσειο ακροπολη",
-      "description": "",
-      "category_id": "dc_1769602646120",
-      "zone_id": "tz_1769602772374",
-      "display_order": 1,
+      "name": "Test Dest",
+      "description": "test",
+      "category_id": null,
+      "zone_id": null,
+      "route_type": "airport",
+      "display_order": 0,
       "is_active": true,
       "created_at": "2026-01-28T13:15:27.353Z"
     }
@@ -192,5 +207,12 @@
   "vehicleCategoryAvailability": [],
   "vehicleDestinationOverrides": [],
   "infoPageTitle": "Μεταφορές",
-  "infoPageContent": "\n\n\nΟι μεταφορές του MoveAthens λειτουργούν με απόλυτη διαφάνεια και σαφήνεια.\n\nΕπιλέγετε:\n\t•\tκατηγορία προορισμού,\n\t•\tσυγκεκριμένο προορισμό,\n\t•\tκαι το όχημα που σας εξυπηρετεί.\n\nΤο σύστημα εμφανίζει μόνο τις διαθέσιμες επιλογές και την τελική τιμή, υπολογισμένη αυτόματα βάσει της ζώνης αναχώρησης.\n\nΗ επικοινωνία γίνεται στο τέλος της επιλογής σας, με έτοιμο μήνυμα WhatsApp που περιλαμβάνει όλα τα στοιχεία της μεταφοράς.\nΧωρίς αναμονή, χωρίς τηλεφωνικές διευκρινίσεις, χωρίς ασάφειες."
+  "infoPageContent": "\n\n\nΟι μεταφορές του MoveAthens λειτουργούν με απόλυτη διαφάνεια και σαφήνεια.\n\nΕπιλέγετε:\n\t•\tκατηγορία προορισμού,\n\t•\tσυγκεκριμένο προορισμό,\n\t•\tκαι το όχημα που σας εξυπηρετεί.\n\nΤο σύστημα εμφανίζει μόνο τις διαθέσιμες επιλογές και την τελική τιμή, υπολογισμένη αυτόματα βάσει της ζώνης αναχώρησης.\n\nΗ επικοινωνία γίνεται στο τέλος της επιλογής σας, με έτοιμο μήνυμα WhatsApp που περιλαμβάνει όλα τα στοιχεία της μεταφοράς.\nΧωρίς αναμονή, χωρίς τηλεφωνικές διευκρινίσεις, χωρίς ασάφειες.",
+  "heroVideoEnabled": true,
+  "welcomeMetrics": {
+    "hotels": "Συνεργαζόμενα Ξενοδοχεία",
+    "routes": "Ολοκληρωμένες Διαδρομές",
+    "destinations": "Προορισμοί",
+    "categories": "Κατηγορίες Διαδρομών"
+  }
 }
