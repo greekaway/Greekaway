@@ -132,6 +132,18 @@
               <label>IRIS Phone <small style="opacity:.6">(πληρωμή οδηγών)</small> <input id="irisPhone" class="input" type="text" maxlength="30" placeholder="+30 xxx xxx xxxx"></label>
             </div>
 
+            <h3 class="ma-subtitle">🌙 Αυτόματη Χρέωση (Ημερήσια / Νυχτερινή)</h3>
+            <div class="ma-grid">
+              <label>Λεπτά πριν τα μεσάνυχτα → νυχτερινή
+                <input id="nightStartBufferMins" class="input" type="number" min="0" max="120" value="30">
+                <small class="ma-hint">π.χ. 30 = από τις 23:30 θεωρείται νυχτερινή χρέωση</small>
+              </label>
+              <label>Λεπτά πριν τις 05:00 → πρωινή
+                <input id="nightEndBufferMins" class="input" type="number" min="0" max="120" value="30">
+                <small class="ma-hint">π.χ. 30 = από τις 04:30 θεωρείται ημερήσια χρέωση</small>
+              </label>
+            </div>
+
             <h3 class="ma-subtitle">✈️ Flight Tracking (AeroAPI)</h3>
             <div class="ma-grid">
               <label class="ma-zone-toggle">

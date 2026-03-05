@@ -28,7 +28,8 @@ const {
   ensureTransferConfig,
   migrateHotelZones,
   getAvailableVehiclesForDestination,
-  VALID_TARIFFS
+  VALID_TARIFFS,
+  calculateTariff
 } = require('./moveathens-helpers');
 const dataLayer = require('../../src/server/data/moveathens');
 const requestsLayer = require('../../src/server/data/moveathens-requests');
@@ -327,11 +328,17 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     try {
       const originZoneId = normalizeString(req.query.origin_zone_id);
       const destinationId = normalizeString(req.query.destination_id);
-      const tariff = normalizeString(req.query.tariff) || 'day';
+      let tariff = normalizeString(req.query.tariff) || '';
       if (!originZoneId || !destinationId) {
         return res.status(400).json({ error: 'origin_zone_id and destination_id required' });
       }
       const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
+      // Auto-calculate tariff if not provided or 'auto'
+      if (!tariff || tariff === 'auto' || !VALID_TARIFFS.includes(tariff)) {
+        const refTime = normalizeString(req.query.ref_time);
+        const refDate = refTime ? new Date(refTime) : new Date();
+        tariff = calculateTariff(refDate, data);
+      }
       const vehicles = getAvailableVehiclesForDestination(originZoneId, destinationId, tariff, data);
       return res.json({ vehicles, tariff });
     } catch (err) {

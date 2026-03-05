@@ -19,6 +19,7 @@ const requestsData = require('../../src/server/data/moveathens-requests');
 const driversData = require('../../src/server/data/moveathens-drivers');
 const maLogger = require('../../services/maLogger');
 const flightTracker = require('../../services/flightTracker');
+const { calculateTariff } = require('./moveathens-helpers');
 
 const DRIVER_ACCEPT_FILE = path.join(__dirname, '..', 'pages', 'driver-accept.html');
 
@@ -72,10 +73,24 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       const body = req.body || {};
       console.log('[ma-requests] New transfer request from hotel:', body.hotel_name || '(unknown)');
 
+      // Server-side tariff calculation — never trust client
+      let tariff = body.tariff || 'day';
+      try {
+        const moveathensData = require('../../src/server/data/moveathens');
+        const config = await moveathensData.getConfig();
+        if (body.booking_type === 'scheduled' && body.scheduled_date && body.scheduled_time) {
+          tariff = calculateTariff(new Date(`${body.scheduled_date}T${body.scheduled_time}`), config);
+        } else {
+          tariff = calculateTariff(new Date(), config);
+        }
+      } catch (e) {
+        console.error('[ma-requests] tariff calc fallback:', e.message);
+      }
+
       // Look up commissions from pricing table
       const commissions = await getCommissions(
         body.origin_zone_id, body.destination_id,
-        body.vehicle_type_id, body.tariff
+        body.vehicle_type_id, tariff
       );
 
       const record = await requestsData.createRequest({
@@ -88,7 +103,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         destination_name: body.destination_name || '',
         vehicle_type_id: body.vehicle_type_id || '',
         vehicle_name: body.vehicle_name || '',
-        tariff: body.tariff || 'day',
+        tariff: tariff,
         booking_type: body.booking_type || 'instant',
         scheduled_date: body.scheduled_date || '',
         scheduled_time: body.scheduled_time || '',

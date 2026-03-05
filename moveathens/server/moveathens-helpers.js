@@ -22,6 +22,33 @@ const makeId = (prefix = 'id') => {
 };
 
 // ========================================
+// TARIFF AUTO-CALCULATION
+// Night zone: 00:00 – 05:00.  Day zone: 05:00 – 00:00.
+// Buffers (admin-configurable, stored in config):
+//   nightStartBufferMins – minutes BEFORE midnight that count as night
+//   nightEndBufferMins   – minutes BEFORE 05:00 that count as day
+// ========================================
+const calculateTariff = (dateOrIso, config) => {
+  const d = dateOrIso instanceof Date ? dateOrIso : new Date(dateOrIso);
+  if (isNaN(d.getTime())) return 'day';
+  const nightStartBuffer = toInt(config && config.nightStartBufferMins, 30);
+  const nightEndBuffer   = toInt(config && config.nightEndBufferMins, 30);
+  const totalMinutes = d.getHours() * 60 + d.getMinutes();
+  // Night zone boundaries (in minutes from midnight):
+  //   effective start = 24*60 - nightStartBuffer  (before midnight)
+  //   effective end   = 5*60  - nightEndBuffer     (before 05:00)
+  const nightEffectiveStart = 24 * 60 - nightStartBuffer; // e.g. 1410 for 30 min buffer (23:30)
+  const nightEffectiveEnd   = 5 * 60  - nightEndBuffer;   // e.g. 270  for 30 min buffer (04:30)
+  // If nightEndBuffer >= 300 mins the whole night zone disappears → always day
+  if (nightEffectiveEnd <= 0) return 'day';
+  // Night if: time >= nightEffectiveStart  OR  time < nightEffectiveEnd
+  if (totalMinutes >= nightEffectiveStart || totalMinutes < nightEffectiveEnd) {
+    return 'night';
+  }
+  return 'day';
+};
+
+// ========================================
 // GENERAL CONFIG VALIDATION
 // ========================================
 const validateAndMerge = (incoming, current) => {
@@ -108,6 +135,14 @@ const validateAndMerge = (incoming, current) => {
   }
   if (typeof incoming.flightCheckMinsBefore === 'number' && incoming.flightCheckMinsBefore >= 5 && incoming.flightCheckMinsBefore <= 120) {
     merged.flightCheckMinsBefore = incoming.flightCheckMinsBefore;
+  }
+
+  // Night tariff buffer settings (admin-configurable)
+  if (typeof incoming.nightStartBufferMins === 'number') {
+    merged.nightStartBufferMins = Math.max(0, Math.min(120, Math.round(incoming.nightStartBufferMins)));
+  }
+  if (typeof incoming.nightEndBufferMins === 'number') {
+    merged.nightEndBufferMins = Math.max(0, Math.min(120, Math.round(incoming.nightEndBufferMins)));
   }
 
   // Welcome page metric labels (admin-editable)
@@ -591,5 +626,7 @@ module.exports = {
   getPrice,
   getPricesBothTariffs,
   isVehicleAvailableForDestination,
-  getAvailableVehiclesForDestination
+  getAvailableVehiclesForDestination,
+  // Tariff auto-calculation
+  calculateTariff
 };

@@ -68,6 +68,11 @@
       const priceToggle = document.getElementById('showPriceToggle');
       if (priceToggle) priceToggle.checked = C.showPriceInMessage !== false;
 
+      const nightStart = document.getElementById('nightStartBufferMins');
+      if (nightStart) nightStart.value = C.nightStartBufferMins != null ? C.nightStartBufferMins : 30;
+      const nightEnd = document.getElementById('nightEndBufferMins');
+      if (nightEnd) nightEnd.value = C.nightEndBufferMins != null ? C.nightEndBufferMins : 30;
+
       const ftEnabled = document.getElementById('flightTrackingEnabled');
       if (ftEnabled) ftEnabled.checked = C.flightTrackingEnabled !== false;
       const ftMins = document.getElementById('flightCheckMinsBefore');
@@ -106,6 +111,8 @@
           welcomeTextBlock: fields.welcomeTextBlock?.value || '',
           heroVideoEnabled: !!document.getElementById('heroVideoEnabled')?.checked,
           showPriceInMessage: document.getElementById('showPriceToggle')?.checked !== false,
+          nightStartBufferMins: parseInt(document.getElementById('nightStartBufferMins')?.value, 10) || 30,
+          nightEndBufferMins: parseInt(document.getElementById('nightEndBufferMins')?.value, 10) || 30,
           flightTrackingEnabled: document.getElementById('flightTrackingEnabled')?.checked !== false,
           flightCheckMinsBefore: parseInt(document.getElementById('flightCheckMinsBefore')?.value, 10) || 25
         };

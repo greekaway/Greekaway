@@ -1627,6 +1627,59 @@
   display: inline-block;
 }
 
+/* Vehicle section labels (Διαθέσιμα τώρα / Διαθέσιμα με κράτηση) */
+.ma-vehicles-section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #059669;
+  padding: 10px 4px 6px;
+  letter-spacing: 0.02em;
+}
+.ma-vehicles-section-label--alt {
+  color: #6b7280;
+  margin-top: 12px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+/* Scheduled-hint vehicle card — slightly muted to differentiate */
+.ma-vehicle-card--scheduled-hint {
+  opacity: 0.85;
+}
+.ma-vehicle-card--scheduled-hint:hover {
+  opacity: 1;
+}
+
+/* Schedule overlay for switching instant → scheduled on vehicle tap */
+.ma-schedule-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.5);
+  padding: 16px;
+}
+.ma-schedule-overlay__card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 20px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.ma-schedule-overlay__title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.ma-schedule-overlay__notice {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 14px;
+}
+
 /* Responsive for booking type */
 @media (max-width: 400px) {
   .ma-datetime-inputs {
