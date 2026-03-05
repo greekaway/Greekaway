@@ -197,6 +197,17 @@
       if (ftMins) {
         ftMins.value = CONFIG.flightCheckMinsBefore || 25;
       }
+
+      // Welcome metric labels
+      const wm = CONFIG.welcomeMetrics || {};
+      const mlHotels = document.getElementById('metricLabelHotels');
+      const mlRoutes = document.getElementById('metricLabelRoutes');
+      const mlDest   = document.getElementById('metricLabelDestinations');
+      const mlCats   = document.getElementById('metricLabelCategories');
+      if (mlHotels) mlHotels.value = wm.hotels || '';
+      if (mlRoutes) mlRoutes.value = wm.routes || '';
+      if (mlDest)   mlDest.value   = wm.destinations || '';
+      if (mlCats)   mlCats.value   = wm.categories || '';
     };
 
     if (form) {
@@ -227,7 +238,13 @@
           irisPhone: fields.irisPhone?.value || '',
           showPriceInMessage: document.getElementById('showPriceToggle')?.checked !== false,
           flightTrackingEnabled: document.getElementById('flightTrackingEnabled')?.checked !== false,
-          flightCheckMinsBefore: parseInt(document.getElementById('flightCheckMinsBefore')?.value, 10) || 25
+          flightCheckMinsBefore: parseInt(document.getElementById('flightCheckMinsBefore')?.value, 10) || 25,
+          welcomeMetrics: {
+            hotels:      document.getElementById('metricLabelHotels')?.value || '',
+            routes:      document.getElementById('metricLabelRoutes')?.value || '',
+            destinations: document.getElementById('metricLabelDestinations')?.value || '',
+            categories:  document.getElementById('metricLabelCategories')?.value || ''
+          }
         };
         const res = await api('/api/admin/moveathens/ui-config', 'POST', payload);
         if (!res) return;

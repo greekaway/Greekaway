@@ -97,6 +97,17 @@ const validateAndMerge = (incoming, current) => {
     merged.showPriceInMessage = incoming.showPriceInMessage;
   }
 
+  // Welcome page metric labels (admin-editable)
+  if (incoming.welcomeMetrics && typeof incoming.welcomeMetrics === 'object') {
+    const wm = incoming.welcomeMetrics;
+    merged.welcomeMetrics = {
+      hotels:      normalizeString(wm.hotels      || '').slice(0, 100) || (current.welcomeMetrics && current.welcomeMetrics.hotels)      || '',
+      routes:      normalizeString(wm.routes      || '').slice(0, 100) || (current.welcomeMetrics && current.welcomeMetrics.routes)      || '',
+      destinations:normalizeString(wm.destinations || '').slice(0, 100) || (current.welcomeMetrics && current.welcomeMetrics.destinations) || '',
+      categories:  normalizeString(wm.categories  || '').slice(0, 100) || (current.welcomeMetrics && current.welcomeMetrics.categories)  || ''
+    };
+  }
+
   return { ok: true, data: merged };
 };
 

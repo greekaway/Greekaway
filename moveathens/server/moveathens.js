@@ -31,6 +31,7 @@ const {
   VALID_TARIFFS
 } = require('./moveathens-helpers');
 const dataLayer = require('../../src/server/data/moveathens');
+const requestsLayer = require('../../src/server/data/moveathens-requests');
 
 module.exports = function registerMoveAthens(app, opts = {}) {
   const isDev = !!opts.isDev;
@@ -334,6 +335,47 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       return res.json({ vehicles, tariff });
     } catch (err) {
       return res.status(500).json({ error: 'Vehicles unavailable' });
+    }
+  });
+
+  // ========================================
+  // PUBLIC: Welcome page stats (dynamic metrics)
+  // ========================================
+  app.get('/api/moveathens/welcome-stats', async (req, res) => {
+    if (isDev) res.set('Cache-Control', 'no-store');
+    try {
+      const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
+
+      // Count active hotels (transferZones)
+      const hotels = (data.transferZones || []).filter(z => z.is_active).length;
+
+      // Count total transfer requests (all statuses except expired)
+      let totalRoutes = 0;
+      try {
+        const allRequests = await requestsLayer.getRequests({});
+        totalRoutes = allRequests.filter(r => r.status !== 'expired').length;
+      } catch (_) { /* fallback: 0 */ }
+
+      // Count active destinations
+      const destinations = (data.destinations || []).filter(d => d.is_active).length;
+
+      // Count active destination categories
+      const categories = (data.destinationCategories || []).filter(c => c.is_active).length;
+
+      // Welcome metric labels (admin-editable)
+      const labels = data.welcomeMetrics || {};
+
+      return res.json({
+        metrics: {
+          hotels:      { value: hotels,      label: labels.hotels      || 'Συνεργαζόμενα Ξενοδοχεία' },
+          routes:      { value: totalRoutes, label: labels.routes      || 'Ολοκληρωμένες Διαδρομές' },
+          destinations:{ value: destinations, label: labels.destinations || 'Προορισμοί' },
+          categories:  { value: categories,  label: labels.categories  || 'Κατηγορίες Διαδρομών' }
+        }
+      });
+    } catch (err) {
+      console.error('[moveathens] welcome-stats error:', err);
+      return res.status(500).json({ error: 'Stats unavailable' });
     }
   });
 
