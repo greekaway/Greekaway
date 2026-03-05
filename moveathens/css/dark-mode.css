@@ -372,15 +372,17 @@
   .ma-transfer-page .ma-footer__icon svg,
   .ma-ai-page .ma-footer__icon svg,
   .ma-info-page .ma-footer__icon svg {
-    filter: brightness(0) invert(1);
-    opacity: 0.85;
+    stroke: rgba(255, 255, 255, 0.85) !important;
+    filter: none !important;
+    opacity: 1;
   }
 
   .ma-page .ma-footer__item.active .ma-footer__icon svg,
   .ma-transfer-page .ma-footer__item.active .ma-footer__icon svg,
   .ma-ai-page .ma-footer__item.active .ma-footer__icon svg,
   .ma-info-page .ma-footer__item.active .ma-footer__icon svg {
-    filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(175deg);
+    stroke: rgba(82, 183, 255, 0.98) !important;
+    filter: none !important;
     opacity: 1;
   }
 
@@ -589,46 +591,6 @@
   .ma-transfer-page .ma-vehicle-scheduled-only {
     background: rgba(33, 150, 243, 0.2) !important;
     color: #64b5f6 !important;
-  }
-
-  /* Warning Card (No Zone) */
-  .ma-transfer-page .ma-warning-card {
-    background: linear-gradient(145deg, #2a2510 0%, #1f1c0d 100%) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
-  }
-
-  .ma-transfer-page .ma-warning-card h2 {
-    color: #ffc107 !important;
-  }
-
-  .ma-transfer-page .ma-warning-card p,
-  .ma-transfer-page .ma-warning-card .ma-warning-main {
-    color: #d4b106 !important;
-  }
-
-  .ma-transfer-page .ma-warning-instructions {
-    background: rgba(255, 255, 255, 0.05) !important;
-  }
-
-  .ma-transfer-page .ma-warning-instructions h3 {
-    color: #ffc107 !important;
-  }
-
-  .ma-transfer-page .ma-warning-instructions ol,
-  .ma-transfer-page .ma-warning-instructions li {
-    color: #c9a906 !important;
-  }
-
-  .ma-transfer-page .ma-warning-instructions li strong {
-    color: #ffd54f !important;
-  }
-
-  .ma-transfer-page .ma-warning-help {
-    border-top-color: rgba(255, 193, 7, 0.2) !important;
-  }
-
-  .ma-transfer-page .ma-warning-help p {
-    color: #b8a005 !important;
   }
 
   /* Version badge dark mode */

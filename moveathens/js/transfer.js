@@ -48,7 +48,6 @@
     vehicles: $('#step-vehicles'),
     bookingType: $('#step-booking-type'),
     confirm: $('#step-confirm'),
-    noZone: $('#step-no-zone'),
     sentSuccess: $('#step-sent-success')
   };
 
@@ -67,8 +66,6 @@
   const confirmPrice = $('#confirm-price');
   const ctaWhatsapp = $('#cta-whatsapp');
   const ctaPhone = $('#cta-phone');
-  const ctaWhatsappFallback = $('#cta-whatsapp-fallback');
-  const ctaPhoneFallback = $('#cta-phone-fallback');
 
   // ========================================
   // NAVIGATION
@@ -1245,14 +1242,8 @@
       return;
     }
 
-    // Fallback CTAs (for no-zone warning)
+    // Fallback CTAs
     const phone = CONFIG?.whatsappNumber?.replace(/[^0-9+]/g, '') || '';
-    const fallbackMessage = encodeURIComponent(
-      'Χρειάζομαι βοήθεια — δεν έχω καταχωρήσει ακόμα το ξενοδοχείο μου στο MoveAthens.\n\n' +
-      'Πώς μπορώ να περάσω το όνομα του ξενοδοχείου μου;'
-    );
-    if (ctaWhatsappFallback) ctaWhatsappFallback.href = `https://wa.me/${phone}?text=${fallbackMessage}`;
-    if (ctaPhoneFallback) ctaPhoneFallback.href = `tel:${CONFIG?.phoneNumber || ''}`;
 
     // Load hotel context
     hotelContext = loadHotelContext();
@@ -1260,12 +1251,6 @@
     // Apply domain-aware home links
     if (window.MoveAthensConfig?.applyHomeLinks) {
       window.MoveAthensConfig.applyHomeLinks();
-    }
-    
-    if (!hotelContext?.origin_zone_id) {
-      // No zone - show warning
-      showStep('noZone');
-      return;
     }
 
     // Show categories

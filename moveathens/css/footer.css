@@ -67,6 +67,7 @@
   height: 28px;
   fill: none;
   stroke: currentColor;
+  stroke-width: 1.8;
   transition: stroke-width 160ms ease;
 }
 

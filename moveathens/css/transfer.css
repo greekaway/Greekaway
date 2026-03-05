@@ -255,20 +255,20 @@
 /* Categories Grid — App-Icon Layout */
 .ma-categories-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px 14px;
   padding: 4px 0;
 }
 
 @media (min-width: 480px) {
   .ma-categories-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
 @media (min-width: 768px) {
   .ma-categories-grid {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
@@ -295,9 +295,9 @@
 
 /* Rounded-square icon container (app-icon style) */
 .ma-category-icon {
-  width: 62px;
-  height: 62px;
-  border-radius: 16px;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -308,8 +308,8 @@
 }
 
 .ma-category-icon-img {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
@@ -980,106 +980,6 @@
   .ma-success-subtitle { color: #9ca3af; }
 }
 
-/* Warning Card */
-.ma-warning-card {
-  background: linear-gradient(145deg, #fff8e1 0%, #fff3cd 100%);
-  border: none;
-  border-radius: 16px;
-  padding: 24px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
-}
-
-.ma-warning-card h2 {
-  font-size: 22px;
-  margin: 0 0 14px;
-  color: #856404;
-}
-
-.ma-warning-card p {
-  font-size: 14px;
-  color: #856404;
-  margin: 0 0 8px;
-}
-
-.ma-warning-card .ma-warning-main {
-  font-size: 15px;
-  font-weight: 500;
-  margin-bottom: 20px;
-}
-
-.ma-warning-card .ma-warning-instructions {
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 12px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-.ma-warning-card .ma-warning-instructions h3 {
-  font-size: 15px;
-  font-weight: 600;
-  color: #5d4404;
-  margin: 0 0 12px;
-}
-
-.ma-warning-card .ma-warning-instructions ol {
-  margin: 0 0 16px 0;
-  padding-left: 20px;
-  color: #6b5204;
-}
-
-.ma-warning-card .ma-warning-instructions li {
-  font-size: 14px;
-  margin-bottom: 8px;
-  line-height: 1.5;
-}
-
-.ma-warning-card .ma-warning-instructions li strong {
-  color: #4a3803;
-}
-
-.ma-btn-go-hotel {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 14px 20px;
-  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-  color: white;
-  text-decoration: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-  transition: all 0.2s ease;
-}
-
-.ma-btn-go-hotel:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
-}
-
-.ma-btn-go-hotel:active {
-  transform: translateY(0);
-}
-
-.ma-warning-card .ma-warning-help {
-  padding-top: 16px;
-  border-top: 1px solid rgba(133, 100, 4, 0.15);
-}
-
-.ma-warning-card .ma-warning-help p {
-  font-size: 13px;
-  color: #7a6104;
-  margin-bottom: 12px;
-}
-
-.ma-warning-card .ma-cta-buttons {
-  margin-top: 16px;
-}
-
 /* Footer Nav */
 .ma-footer-nav {
   position: fixed;
@@ -1571,7 +1471,7 @@
   }
 
   .ma-categories-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .ma-vehicle-card {
