@@ -92,6 +92,7 @@ module.exports = function registerHotelRevenueRoutes(app, opts = {}) {
             total_routes: 0,
             total_revenue: 0,
             total_commission: 0,
+            total_service_commission: 0,
             route_types: { airport: 0, port: 0, city: 0, travel: 0, unknown: 0 }
           };
         }
@@ -99,6 +100,7 @@ module.exports = function registerHotelRevenueRoutes(app, opts = {}) {
         h.total_routes += 1;
         h.total_revenue += parseFloat(r.price) || 0;
         h.total_commission += parseFloat(r.commission_hotel) || 0;
+        h.total_service_commission += parseFloat(r.commission_service) || 0;
         const rt = resolveRouteType(r, destMap);
         h.route_types[rt] = (h.route_types[rt] || 0) + 1;
       });
@@ -200,6 +202,63 @@ module.exports = function registerHotelRevenueRoutes(app, opts = {}) {
     } catch (err) {
       console.error('[ma-hotel-revenue] GET driver-stats failed:', err.message);
       return res.status(500).json({ error: 'Failed to load driver stats' });
+    }
+  });
+
+  // ========================================
+  // Monthly Breakdown: month-by-month revenue/commission history
+  // ========================================
+  app.get('/api/admin/moveathens/monthly-breakdown', async (req, res) => {
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+
+    try {
+      const allReqs = await requestsData.getRequests({});
+      let relevant = allReqs.filter(r => r.status === 'accepted' || r.status === 'completed');
+
+      // Optional year filter
+      const yearFilter = req.query.year ? parseInt(req.query.year, 10) : null;
+
+      // Aggregate by YYYY-MM
+      const monthMap = {};
+      relevant.forEach(r => {
+        const d = new Date(r.created_at);
+        if (isNaN(d.getTime())) return;
+        const y = d.getFullYear();
+        if (yearFilter && y !== yearFilter) return;
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const key = y + '-' + m;
+        if (!monthMap[key]) {
+          monthMap[key] = {
+            month: key,
+            year: y,
+            month_number: d.getMonth() + 1,
+            total_routes: 0,
+            total_revenue: 0,
+            total_commission_hotel: 0,
+            total_commission_service: 0
+          };
+        }
+        const entry = monthMap[key];
+        entry.total_routes += 1;
+        entry.total_revenue += parseFloat(r.price) || 0;
+        entry.total_commission_hotel += parseFloat(r.commission_hotel) || 0;
+        entry.total_commission_service += parseFloat(r.commission_service) || 0;
+      });
+
+      const months = Object.values(monthMap).sort((a, b) => a.month.localeCompare(b.month));
+
+      // Collect available years for UI dropdown
+      const yearsSet = new Set();
+      relevant.forEach(r => {
+        const d = new Date(r.created_at);
+        if (!isNaN(d.getTime())) yearsSet.add(d.getFullYear());
+      });
+      const years = [...yearsSet].sort((a, b) => b - a);
+
+      return res.json({ months, years });
+    } catch (err) {
+      console.error('[ma-hotel-revenue] GET monthly-breakdown failed:', err.message);
+      return res.status(500).json({ error: 'Failed to load monthly breakdown' });
     }
   });
 

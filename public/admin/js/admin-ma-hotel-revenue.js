@@ -205,7 +205,14 @@
     if (sortField)  sortField.addEventListener('change', () => loadHotelRevenue());
     if (sortDir)    sortDir.addEventListener('change', () => loadHotelRevenue());
 
+    // Monthly breakdown controls
+    const monthlyRefresh = _$('#monthly-refresh');
+    const monthlyYear    = _$('#monthly-year-filter');
+    if (monthlyRefresh) monthlyRefresh.addEventListener('click', () => loadMonthlyBreakdown());
+    if (monthlyYear)    monthlyYear.addEventListener('change', () => loadMonthlyBreakdown());
+
     loadHotelRevenue();
+    loadMonthlyBreakdown();
   }
 
   function clearHotelDates() {
@@ -257,30 +264,35 @@
         var elR = _$('#hotel-rev-total-routes');
         var elV = _$('#hotel-rev-total-revenue');
         var elC = _$('#hotel-rev-total-commission');
+        var elS = _$('#hotel-rev-total-service-commission');
         if (elH) elH.textContent = '0';
         if (elR) elR.textContent = '0';
         if (elV) elV.textContent = '€0';
         if (elC) elC.textContent = '€0';
+        if (elS) elS.textContent = '€0';
         return;
       }
       if (empty) empty.style.display = 'none';
 
       // Update summary cards
       var totalHotels = hotels.length;
-      var totalRoutes = 0, totalRevenue = 0, totalCommission = 0;
+      var totalRoutes = 0, totalRevenue = 0, totalCommission = 0, totalServiceComm = 0;
       hotels.forEach(function (h) {
         totalRoutes += h.total_routes || 0;
         totalRevenue += h.total_revenue || 0;
         totalCommission += h.total_commission || 0;
+        totalServiceComm += h.total_service_commission || 0;
       });
       var elH = _$('#hotel-rev-total-hotels');
       var elR = _$('#hotel-rev-total-routes');
       var elV = _$('#hotel-rev-total-revenue');
       var elC = _$('#hotel-rev-total-commission');
+      var elS = _$('#hotel-rev-total-service-commission');
       if (elH) elH.textContent = totalHotels;
       if (elR) elR.textContent = totalRoutes.toLocaleString('el-GR');
       if (elV) elV.textContent = '€' + totalRevenue.toLocaleString('el-GR', { maximumFractionDigits: 0 });
       if (elC) elC.textContent = '€' + totalCommission.toLocaleString('el-GR', { maximumFractionDigits: 0 });
+      if (elS) elS.textContent = '€' + totalServiceComm.toLocaleString('el-GR', { maximumFractionDigits: 0 });
 
       tbody.innerHTML = hotels.map((h, idx) => {
         // Route types: count total known types
@@ -303,6 +315,7 @@
           '<td>' + h.total_routes + '</td>' +
           '<td>€' + h.total_revenue.toFixed(0) + '</td>' +
           '<td>€' + h.total_commission.toFixed(0) + '</td>' +
+          '<td style="color:#22c55e;font-weight:600">€' + (h.total_service_commission || 0).toFixed(0) + '</td>' +
           '<td class="hrt-types-cell">' +
             '<span class="hrt-types-badge" data-target="' + expandId + '" title="Κλικ για ανάλυση">' + typeSummary + '</span>' +
             expandHtml +
@@ -353,6 +366,120 @@
     } catch (e) {
       toast('Σφάλμα: ' + e.message);
       if (info) info.textContent = 'Σφάλμα φόρτωσης';
+    }
+  }
+
+  /* ═══════════════════════════════════════════
+     MONTHLY BREAKDOWN — Revenue history & YoY comparison
+     ═══════════════════════════════════════════ */
+  const MONTH_NAMES_EL = ['', 'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος',
+    'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος'];
+
+  async function loadMonthlyBreakdown() {
+    const tbody = _$('#monthly-breakdown-tbody');
+    const tfoot = _$('#monthly-breakdown-tfoot');
+    const empty = _$('#monthly-empty');
+    const yearSelect = _$('#monthly-year-filter');
+    if (!tbody) return;
+
+    const yearVal = yearSelect ? yearSelect.value : '';
+
+    try {
+      let url = '/api/admin/moveathens/monthly-breakdown?';
+      if (yearVal) url += 'year=' + yearVal;
+
+      const data = await api(url);
+      const months = data.months || [];
+      const years  = data.years || [];
+
+      // Populate year dropdown (keep selected value)
+      if (yearSelect && !yearSelect.dataset.populated) {
+        yearSelect.dataset.populated = '1';
+        years.forEach(function (y) {
+          var opt = document.createElement('option');
+          opt.value = y;
+          opt.textContent = y;
+          yearSelect.appendChild(opt);
+        });
+      }
+
+      if (!months.length) {
+        tbody.innerHTML = '';
+        if (tfoot) tfoot.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+
+      // Build comparison data: for each month, find same month previous year
+      var prevYearMap = {};
+      if (!yearVal) {
+        // All years loaded — build map from all data
+        months.forEach(function (m) {
+          prevYearMap[m.year + '-' + m.month_number] = m;
+        });
+      } else {
+        // Fetch previous year too for comparison
+        try {
+          var prevData = await api('/api/admin/moveathens/monthly-breakdown?year=' + (parseInt(yearVal) - 1));
+          (prevData.months || []).forEach(function (m) {
+            prevYearMap[m.year + '-' + m.month_number] = m;
+          });
+        } catch (e) { /* no prev year data */ }
+      }
+
+      // Totals
+      var totRoutes = 0, totRevenue = 0, totHotelComm = 0, totServiceComm = 0;
+
+      tbody.innerHTML = months.map(function (m) {
+        totRoutes += m.total_routes;
+        totRevenue += m.total_revenue;
+        totHotelComm += m.total_commission_hotel;
+        totServiceComm += m.total_commission_service;
+
+        var label = MONTH_NAMES_EL[m.month_number] + ' ' + m.year;
+
+        // YoY comparison for service commission
+        var compHtml = '—';
+        var prevKey = (m.year - 1) + '-' + m.month_number;
+        var prev = prevYearMap[prevKey];
+        if (prev) {
+          var diff = m.total_commission_service - prev.total_commission_service;
+          var pct = prev.total_commission_service > 0
+            ? ((diff / prev.total_commission_service) * 100).toFixed(0)
+            : (diff > 0 ? '+∞' : '0');
+          if (diff > 0) {
+            compHtml = '<span style="color:#22c55e">▲ +€' + diff.toFixed(0) + ' (' + pct + '%)</span>';
+          } else if (diff < 0) {
+            compHtml = '<span style="color:#ef4444">▼ €' + diff.toFixed(0) + ' (' + pct + '%)</span>';
+          } else {
+            compHtml = '<span style="color:var(--text-muted,#888)">— ίδιο</span>';
+          }
+        }
+
+        return '<tr>' +
+          '<td><strong>' + label + '</strong></td>' +
+          '<td>' + m.total_routes + '</td>' +
+          '<td>€' + m.total_revenue.toFixed(0) + '</td>' +
+          '<td>€' + m.total_commission_hotel.toFixed(0) + '</td>' +
+          '<td style="color:#22c55e;font-weight:600">€' + m.total_commission_service.toFixed(0) + '</td>' +
+          '<td>' + compHtml + '</td>' +
+        '</tr>';
+      }).join('');
+
+      // Footer totals
+      if (tfoot) {
+        tfoot.innerHTML = '<tr style="font-weight:700;border-top:2px solid rgba(255,255,255,0.15)">' +
+          '<td>ΣΥΝΟΛΟ</td>' +
+          '<td>' + totRoutes + '</td>' +
+          '<td>€' + totRevenue.toFixed(0) + '</td>' +
+          '<td>€' + totHotelComm.toFixed(0) + '</td>' +
+          '<td style="color:#22c55e">€' + totServiceComm.toFixed(0) + '</td>' +
+          '<td></td>' +
+        '</tr>';
+      }
+    } catch (e) {
+      toast('Σφάλμα μηνιαίων: ' + e.message);
     }
   }
 
