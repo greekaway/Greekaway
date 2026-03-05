@@ -250,7 +250,10 @@ async function getConfig() {
     infoFaqTitle: full.infoFaqTitle || '',
     infoFaqContent: full.infoFaqContent || '',
     showPriceInMessage: full.showPriceInMessage !== false,
-    irisPhone: full.irisPhone || ''
+    irisPhone: full.irisPhone || '',
+    heroVideoEnabled: full.heroVideoEnabled !== false,
+    flightTrackingEnabled: full.flightTrackingEnabled !== false,
+    flightCheckMinsBefore: full.flightCheckMinsBefore || 25
   };
 }
 

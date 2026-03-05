@@ -98,7 +98,7 @@
 }
 
 .ma-hero__logo {
-  width: 110px;
+  width: 280px;
   height: auto;
   flex-shrink: 0;
   filter: drop-shadow(0 2px 10px rgba(0,0,0,0.3));
@@ -189,30 +189,30 @@
 
 /* ── Responsive: very small phones ── */
 @media (max-width: 359px) {
-  .ma-hero__logo { width: 80px; }
-  .ma-hero__headline { font-size: 16px; }
-  .ma-hero__subtext { font-size: 11px; }
-  .ma-metrics { top: 64px; gap: 8px; }
+  .ma-hero__logo { width: 180px; }
+  .ma-hero__headline { font-size: 14px; }
+  .ma-hero__subtext { font-size: 10px; }
+  .ma-metrics { top: 80px; gap: 8px; }
   .ma-metrics__value { font-size: 20px; }
   .ma-metrics__card { padding: 10px 6px 8px; }
 }
 
 /* ── Responsive: Mobile Portrait (360-480) ── */
 @media (min-width: 360px) and (max-width: 480px) {
-  .ma-hero__logo { width: 100px; }
-  .ma-hero__headline { font-size: 18px; }
-  .ma-hero__subtext { font-size: 12px; }
-  .ma-metrics { top: 68px; }
+  .ma-hero__logo { width: 220px; }
+  .ma-hero__headline { font-size: 16px; }
+  .ma-hero__subtext { font-size: 11px; }
+  .ma-metrics { top: 80px; }
 }
 
 /* ── Responsive: Landscape & Small Tablets (481-768) ── */
 @media (min-width: 481px) and (max-width: 768px) {
   .ma-hero__overlay { padding: 16px 20px; }
-  .ma-hero__logo { width: 120px; }
-  .ma-hero__headline { font-size: 22px; }
-  .ma-hero__subtext { font-size: 14px; }
+  .ma-hero__logo { width: 280px; }
+  .ma-hero__headline { font-size: 20px; }
+  .ma-hero__subtext { font-size: 13px; }
   .ma-metrics {
-    top: 80px;
+    top: 90px;
     left: 20px;
     right: 20px;
     grid-template-columns: repeat(4, 1fr);
@@ -225,11 +225,11 @@
 /* ── Responsive: Tablets (769-1024) ── */
 @media (min-width: 769px) and (max-width: 1024px) {
   .ma-hero__overlay { padding: 20px 24px; }
-  .ma-hero__logo { width: 140px; }
+  .ma-hero__logo { width: 340px; }
   .ma-hero__headline { font-size: 26px; }
   .ma-hero__subtext { font-size: 16px; }
   .ma-metrics {
-    top: 90px;
+    top: 100px;
     left: 24px;
     right: 24px;
     grid-template-columns: repeat(4, 1fr);
@@ -243,11 +243,11 @@
 /* ── Responsive: Desktop (1025+) ── */
 @media (min-width: 1025px) {
   .ma-hero__overlay { padding: 20px 28px; }
-  .ma-hero__logo { width: 160px; }
+  .ma-hero__logo { width: 400px; }
   .ma-hero__headline { font-size: 28px; }
   .ma-hero__subtext { font-size: 16px; }
   .ma-metrics {
-    top: 100px;
+    top: 110px;
     left: 28px;
     right: 28px;
     grid-template-columns: repeat(4, 1fr);

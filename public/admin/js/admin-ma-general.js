@@ -73,16 +73,6 @@
 
       const heroVideoToggle = document.getElementById('heroVideoEnabled');
       if (heroVideoToggle) heroVideoToggle.checked = C.heroVideoEnabled !== false;
-
-      const wm = C.welcomeMetrics || {};
-      const mlHotels = document.getElementById('metricLabelHotels');
-      const mlRoutes = document.getElementById('metricLabelRoutes');
-      const mlDest   = document.getElementById('metricLabelDestinations');
-      const mlCats   = document.getElementById('metricLabelCategories');
-      if (mlHotels) mlHotels.value = wm.hotels || '';
-      if (mlRoutes) mlRoutes.value = wm.routes || '';
-      if (mlDest)   mlDest.value   = wm.destinations || '';
-      if (mlCats)   mlCats.value   = wm.categories || '';
     };
 
     if (form) {
@@ -111,16 +101,10 @@
           whatsappNumber: fields.whatsappNumber?.value || '',
           companyEmail: fields.companyEmail?.value || '',
           irisPhone: fields.irisPhone?.value || '',
-          heroVideoEnabled: document.getElementById('heroVideoEnabled')?.checked !== false,
+          heroVideoEnabled: !!document.getElementById('heroVideoEnabled')?.checked,
           showPriceInMessage: document.getElementById('showPriceToggle')?.checked !== false,
           flightTrackingEnabled: document.getElementById('flightTrackingEnabled')?.checked !== false,
-          flightCheckMinsBefore: parseInt(document.getElementById('flightCheckMinsBefore')?.value, 10) || 25,
-          welcomeMetrics: {
-            hotels:      document.getElementById('metricLabelHotels')?.value || '',
-            routes:      document.getElementById('metricLabelRoutes')?.value || '',
-            destinations: document.getElementById('metricLabelDestinations')?.value || '',
-            categories:  document.getElementById('metricLabelCategories')?.value || ''
-          }
+          flightCheckMinsBefore: parseInt(document.getElementById('flightCheckMinsBefore')?.value, 10) || 25
         };
         const res = await api('/api/admin/moveathens/ui-config', 'POST', payload);
         if (!res) return;
