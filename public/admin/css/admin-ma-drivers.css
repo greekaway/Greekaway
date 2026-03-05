@@ -103,6 +103,7 @@
 
 /* --- toast --- */
 .dr-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a1a2e; color: #fff; padding: 10px 24px; border-radius: 10px; font-size: 14px; z-index: 2000; opacity: 0; transition: opacity .3s; pointer-events: none; }
+html[data-theme='light'] .dr-toast { background: #ffffff; color: #0f1b2c; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
 .dr-toast.show { opacity: 1; }
 
 /* --- responsive --- */

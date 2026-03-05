@@ -352,6 +352,11 @@ html[data-theme='light'] .ma-badge-arrival {
   opacity: 1;
   transform: translateY(0);
 }
+html[data-theme='light'] .ma-toast {
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f1b2c;
+  box-shadow: 0 4px 16px rgba(0,0,0,.12);
+}
 
 .ma-modal {
   position: fixed;

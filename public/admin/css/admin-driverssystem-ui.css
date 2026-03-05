@@ -17,10 +17,8 @@
   align-self: center;
 }
 
-@media (prefers-color-scheme: light) {
-  .bar-tab-divider {
-    background: rgba(0, 0, 0, 0.15);
-  }
+html[data-theme='light'] .bar-tab-divider {
+  background: rgba(0, 0, 0, 0.15);
 }
 
 /* Tab navigation */

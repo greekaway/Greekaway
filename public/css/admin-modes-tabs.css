@@ -36,3 +36,18 @@
 .mode-card.is-active {
   display: block;
 }
+
+/* Light mode overrides */
+html[data-theme="light"] .modes-tabs {
+  border-bottom-color: rgba(6,24,53,.12);
+}
+html[data-theme="light"] .modes-tab {
+  color: #5d6472;
+}
+html[data-theme="light"] .modes-tab.active {
+  color: #0f1b2c;
+  border-bottom-color: var(--ga-gold);
+}
+html[data-theme="light"] .modes-tab:hover {
+  color: #0f1b2c;
+}

@@ -21,10 +21,8 @@
   align-self: center;
 }
 
-@media (prefers-color-scheme: light) {
-  .bar-tab-divider {
-    background: rgba(0, 0, 0, 0.15);
-  }
+html[data-theme='light'] .bar-tab-divider {
+  background: rgba(0, 0, 0, 0.15);
 }
 
 /* Tab navigation (reuse from admin-driverssystem-ui) */
@@ -601,27 +599,23 @@
 }
 
 /* ── Light mode overrides ── */
-@media (prefers-color-scheme: light) {
-  .bar-tab {
-    border-color: rgba(0, 0, 0, 0.15);
-    color: rgba(0, 31, 63, 0.7);
-  }
-  .bar-tab:hover {
-    background: rgba(0, 0, 0, 0.05);
-  }
-  .bar-tab.active {
-    background: #001f3f;
-    color: #fff;
-    border-color: transparent;
-  }
-
-  .ds-admin-source-bar__track {
-    background: rgba(0, 0, 0, 0.06);
-  }
-
-  .ds-admin-table tbody tr:hover {
-    background: rgba(208, 128, 0, 0.06);
-  }
+html[data-theme='light'] .bar-tab {
+  border-color: rgba(0, 0, 0, 0.15);
+  color: rgba(0, 31, 63, 0.7);
+}
+html[data-theme='light'] .bar-tab:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+html[data-theme='light'] .bar-tab.active {
+  background: #001f3f;
+  color: #fff;
+  border-color: transparent;
+}
+html[data-theme='light'] .ds-admin-source-bar__track {
+  background: rgba(0, 0, 0, 0.06);
+}
+html[data-theme='light'] .ds-admin-table tbody tr:hover {
+  background: rgba(208, 128, 0, 0.06);
 }
 
 /* ── Responsive ── */
@@ -767,27 +761,25 @@
 }
 
 /* Dark mode for admin perf */
-@media (prefers-color-scheme: dark) {
-  .ds-admin-perf__item {
-    background: rgba(255,255,255,0.06);
-    border-color: rgba(255,255,255,0.1);
-  }
-  .ds-admin-perf__item--wide {
-    background: rgba(0,200,150,0.08);
-    border-color: rgba(0,200,150,0.2);
-  }
-  .ds-admin-perf__label {
-    color: #8896a6;
-  }
-  .ds-admin-perf__value {
-    color: #e8edf3;
-  }
-  .ds-admin-perf__value--accent {
-    color: #34d399;
-  }
-  .ds-admin-perf__value--expense {
-    color: #f87171;
-  }
-  .ds-admin-perf__value.positive { color: #34d399; }
-  .ds-admin-perf__value.negative { color: #f87171; }
+html[data-theme='dark'] .ds-admin-perf__item {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
 }
+html[data-theme='dark'] .ds-admin-perf__item--wide {
+  background: rgba(0,200,150,0.08);
+  border-color: rgba(0,200,150,0.2);
+}
+html[data-theme='dark'] .ds-admin-perf__label {
+  color: #8896a6;
+}
+html[data-theme='dark'] .ds-admin-perf__value {
+  color: #e8edf3;
+}
+html[data-theme='dark'] .ds-admin-perf__value--accent {
+  color: #34d399;
+}
+html[data-theme='dark'] .ds-admin-perf__value--expense {
+  color: #f87171;
+}
+html[data-theme='dark'] .ds-admin-perf__value.positive { color: #34d399; }
+html[data-theme='dark'] .ds-admin-perf__value.negative { color: #f87171; }

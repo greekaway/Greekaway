@@ -63,3 +63,19 @@
   opacity: 0;
   pointer-events: none;
 }
+
+/* Light mode overrides */
+html[data-theme="light"] .mode-active-toggle {
+  background: #d0d4da;
+  color: #1a2232;
+}
+html[data-theme="light"] .mode-active-toggle.is-active {
+  background: #27ae60;
+  color: #fff;
+}
+html[data-theme="light"] .mode-active-control[data-state="inactive"] .state-text-inactive {
+  color: #5d6472;
+}
+html[data-theme="light"] .mode-active-control[data-state="active"] .state-text-active {
+  color: #1a6b3a;
+}
