@@ -487,6 +487,9 @@
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
+.ma-category-icon-img[data-icon-color="black"] {
+  filter: brightness(0);
+}
 
 .ma-category-emoji {
   font-size: calc(36px * var(--ma-tile-scale, 1));

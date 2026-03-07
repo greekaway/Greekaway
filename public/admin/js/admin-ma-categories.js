@@ -35,7 +35,7 @@
         const bg = c.color || '#1a73e8';
         const isUrl = c.icon && c.icon.length > 4 && (c.icon.startsWith('/') || c.icon.startsWith('http'));
         const iconHtml = isUrl
-          ? `<img src="${c.icon}" alt="" style="width:${imgW}px;height:${imgW}px;object-fit:contain;filter:brightness(0) invert(1)">`
+          ? `<img src="${c.icon}" alt="" style="width:${imgW}px;height:${imgW}px;object-fit:contain;filter:${c.icon_color === 'black' ? 'brightness(0)' : 'brightness(0) invert(1)'}">`
           : `<span style="font-size:${imgW}px;line-height:1">${c.icon || '📍'}</span>`;
         return `
           <div style="display:flex;flex-direction:column;align-items:center;gap:6px;max-width:${tileW + 10}px">
@@ -97,6 +97,7 @@
     const fArrival = $('#maCategoryArrival');
     const fColor = $('#maCategoryColor');
     const fColorHex = $('#maCategoryColorHex');
+    const fIconColor = $('#maCategoryIconColor');
 
     const updateIconPreview = () => {
       const url = fIcon?.value;
@@ -128,13 +129,14 @@
           : `<span class="ma-cat-icon">${c.icon || '📁'}</span>`;
         const arrivalBadge = c.is_arrival ? '<span class="ma-badge ma-badge-arrival">↩ Άφιξη</span>' : '';
         const colorSwatch = `<span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${c.color || '#1a73e8'};vertical-align:middle;margin-left:6px;border:1px solid rgba(0,0,0,0.15)"></span>`;
+        const iconColorLabel = c.icon_color === 'black' ? '⬛' : '⬜';
         return `
           <div class="ma-zone-card" data-id="${c.id}">
             <div class="ma-zone-card__header">
               <div class="ma-zone-card__title">
                 ${iconDisplay}
                 <h4>${c.name}</h4>
-                ${colorSwatch}
+                ${colorSwatch} ${iconColorLabel}
                 ${arrivalBadge}
                 <span class="ma-zone-status" data-active="${c.is_active}">${c.is_active ? 'Ενεργή' : 'Ανενεργή'}</span>
               </div>
@@ -181,6 +183,7 @@
       if (fArrival) fArrival.checked = false;
       if (fColor) fColor.value = '#1a73e8';
       if (fColorHex) fColorHex.textContent = '#1a73e8';
+      if (fIconColor) fIconColor.value = 'white';
       updateIconPreview();
       setStatus(status, '', '');
     };
@@ -196,6 +199,7 @@
       if (fArrival) fArrival.checked = cat.is_arrival === true;
       if (fColor) fColor.value = cat.color || '#1a73e8';
       if (fColorHex) fColorHex.textContent = cat.color || '#1a73e8';
+      if (fIconColor) fIconColor.value = cat.icon_color || 'white';
       updateIconPreview();
       form.hidden = false;
     };
@@ -267,6 +271,7 @@
         is_active: fActive.checked,
         is_arrival: fArrival ? fArrival.checked : false,
         color: fColor ? fColor.value : '#1a73e8',
+        icon_color: fIconColor ? fIconColor.value : 'white',
         created_at: new Date().toISOString()
       };
 

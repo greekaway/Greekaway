@@ -154,6 +154,8 @@ CREATE TABLE IF NOT EXISTS ma_destination_categories (
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     is_arrival BOOLEAN DEFAULT false,
+    color VARCHAR(20) DEFAULT '#1a73e8',
+    icon_color VARCHAR(10) DEFAULT 'white',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

@@ -179,11 +179,11 @@
   // ========================================
   
   // Helper: render category icon (can be URL or emoji)
-  const renderCategoryIcon = (icon) => {
+  const renderCategoryIcon = (icon, iconColor) => {
     if (!icon) return '<span class="ma-category-emoji">📍</span>';
     // If it starts with / or http, it's an image URL
     if (icon.startsWith('/') || icon.startsWith('http')) {
-      return `<img src="${icon}" alt="" class="ma-category-icon-img">`;
+      return `<img src="${icon}" alt="" class="ma-category-icon-img" data-icon-color="${iconColor || 'white'}">`;
     }
     // Otherwise it's an emoji or text
     return `<span class="ma-category-emoji">${icon}</span>`;
@@ -203,7 +203,7 @@
       const bgColor = cat.color || '#1a73e8';
       return `
       <button class="ma-category-card" data-id="${cat.id}" data-name="${cat.name}" data-arrival="${cat.is_arrival ? '1' : '0'}">
-        <span class="ma-category-icon" style="background:${bgColor}">${renderCategoryIcon(cat.icon)}</span>
+        <span class="ma-category-icon" style="background:${bgColor}">${renderCategoryIcon(cat.icon, cat.icon_color)}</span>
         <span class="ma-category-name">${cat.name}</span>
       </button>`;
     }).join('');

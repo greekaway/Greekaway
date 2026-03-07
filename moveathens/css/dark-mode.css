@@ -313,10 +313,13 @@
     color: #e8edf3 !important;
   }
 
-  /* Category icons — white in dark mode */
+  /* Category icons — per-category color, default white in dark mode */
   .ma-transfer-page .ma-category-icon img,
   .ma-transfer-page .ma-category-icon-img {
-    filter: brightness(0) invert(1) !important;
+    filter: brightness(0) invert(1);
+  }
+  .ma-transfer-page .ma-category-icon-img[data-icon-color="black"] {
+    filter: brightness(0);
   }
 
   /* Destinations */

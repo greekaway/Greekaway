@@ -772,7 +772,8 @@ async function upsertDestinationCategory(data) {
         display_order: data.display_order || 0,
         is_active: data.is_active !== false,
         is_arrival: data.is_arrival ?? false,
-        color: data.color || '#1a73e8'
+        color: data.color || '#1a73e8',
+        icon_color: data.icon_color || 'white'
       });
       console.log('[moveathens] Dest category saved to DB:', row.id);
       return {
@@ -783,6 +784,7 @@ async function upsertDestinationCategory(data) {
         is_active: row.is_active,
         is_arrival: row.is_arrival ?? false,
         color: row.color || '#1a73e8',
+        icon_color: row.icon_color || 'white',
         created_at: row.created_at
       };
     } catch (err) {
@@ -802,6 +804,7 @@ async function upsertDestinationCategory(data) {
     is_active: data.is_active !== false,
     is_arrival: data.is_arrival ?? false,
     color: data.color || '#1a73e8',
+    icon_color: data.icon_color || 'white',
     created_at: idx >= 0 ? cats[idx].created_at : new Date().toISOString()
   };
   

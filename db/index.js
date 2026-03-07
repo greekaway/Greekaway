@@ -504,11 +504,11 @@ const ma = {
   },
 
   async upsertDestinationCategory(data) {
-    const { id, name, icon, display_order, is_active, is_arrival, color } = data;
+    const { id, name, icon, display_order, is_active, is_arrival, color, icon_color } = data;
     const catId = id || `dc_${Date.now()}`;
     const sql = `
-      INSERT INTO ma_destination_categories (id, name, icon, display_order, is_active, is_arrival, color)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO ma_destination_categories (id, name, icon, display_order, is_active, is_arrival, color, icon_color)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         icon = EXCLUDED.icon,
@@ -516,10 +516,11 @@ const ma = {
         is_active = EXCLUDED.is_active,
         is_arrival = EXCLUDED.is_arrival,
         color = EXCLUDED.color,
+        icon_color = EXCLUDED.icon_color,
         updated_at = NOW()
       RETURNING *
     `;
-    const rows = await query(sql, [catId, name, icon || '', display_order || 0, is_active ?? true, is_arrival ?? false, color || '#1a73e8']);
+    const rows = await query(sql, [catId, name, icon || '', display_order || 0, is_active ?? true, is_arrival ?? false, color || '#1a73e8', icon_color || 'white']);
     return rows[0];
   },
 
