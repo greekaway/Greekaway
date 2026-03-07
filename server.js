@@ -1376,13 +1376,6 @@ try {
   console.log('categories: routes registered');
 } catch (e) { console.warn('categories: failed to register', e && e.message ? e.message : e); }
 
-// Category Display Settings (tile size, icon color, etc.)
-try {
-  const { registerCategorySettingsRoutes } = require('./src/server/routes/categorySettings');
-  registerCategorySettingsRoutes(app, { checkAdminAuth: (r)=>checkAdminAuth(r) });
-  console.log('category-settings: routes registered');
-} catch (e) { console.warn('category-settings: failed to register', e && e.message ? e.message : e); }
-
 // Trip CMS MVP routes (admin + public)
 try {
   if (!tripsModule || typeof tripsModule.registerTripsRoutes !== 'function') {

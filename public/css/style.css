@@ -795,16 +795,11 @@ body.overlay-open #aiOverlay { z-index: 20000 !important; }
 
 /* Categories container: use responsive grid so items flow into columns */
 #categories-container {
-  --cat-tile-scale: 1;
-  --cat-icon-scale: 0.8;
-  --cat-icon-color: #f4c542;
-  --cat-caption-color: #D4AF37;
-  --cat-caption-size: 0.92rem;
   margin: 0;
   font-family: Arial, sans-serif;
   display: grid;
   /* small app-icons by default (mobile) */
-  grid-template-columns: repeat(auto-fit, calc(80px * var(--cat-tile-scale)));
+  grid-template-columns: repeat(auto-fit, 80px);
   gap: 14px;
   padding: 36px 12px 100px;
   justify-content: center;
@@ -1007,8 +1002,8 @@ body[data-category] h2 {
 /* Κουμπί Κατηγορίας */
 .category-btn {
   position: relative;
-  width: calc(80px * var(--cat-tile-scale, 1));
-  height: calc(80px * var(--cat-tile-scale, 1));
+  width: 80px;
+  height: 80px;
   aspect-ratio: 1 / 1;
   overflow: hidden;
   cursor: pointer;
@@ -1105,26 +1100,26 @@ html[lang="el"] .category-btn .cat-label { font-weight: 500; }
 /* Fixed app-like sizes per breakpoint */
 @media (max-width: 399px) {
   /* very small phones */
-  #categories-container { grid-template-columns: repeat(auto-fit, calc(64px * var(--cat-tile-scale, 1))); gap: 10px; }
-  .category-btn { width: calc(64px * var(--cat-tile-scale, 1)); height: calc(64px * var(--cat-tile-scale, 1)); }
+  #categories-container { grid-template-columns: repeat(auto-fit, 64px); gap: 10px; }
+  .category-btn { width: 64px; height: 64px; }
 }
 
 @media (min-width: 400px) and (max-width: 767px) {
   /* large phones */
-  #categories-container { grid-template-columns: repeat(auto-fit, calc(96px * var(--cat-tile-scale, 1))); gap: 12px; }
-  .category-btn { width: calc(96px * var(--cat-tile-scale, 1)); height: calc(96px * var(--cat-tile-scale, 1)); }
+  #categories-container { grid-template-columns: repeat(auto-fit, 96px); gap: 12px; }
+  .category-btn { width: 96px; height: 96px; }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
   /* tablets */
-  #categories-container { grid-template-columns: repeat(auto-fit, calc(128px * var(--cat-tile-scale, 1))); gap: 18px; }
-  .category-btn { width: calc(128px * var(--cat-tile-scale, 1)); height: calc(128px * var(--cat-tile-scale, 1)); }
+  #categories-container { grid-template-columns: repeat(auto-fit, 128px); gap: 18px; }
+  .category-btn { width: 128px; height: 128px; }
 }
 
 @media (min-width: 1024px) {
   /* desktop */
-  #categories-container { grid-template-columns: repeat(auto-fit, calc(160px * var(--cat-tile-scale, 1))); gap: 24px; }
-  .category-btn { width: calc(160px * var(--cat-tile-scale, 1)); height: calc(160px * var(--cat-tile-scale, 1)); }
+  #categories-container { grid-template-columns: repeat(auto-fit, 160px); gap: 24px; }
+  .category-btn { width: 160px; height: 160px; }
 }
 
 /* Per-page background based on category */
