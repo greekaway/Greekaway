@@ -90,6 +90,60 @@
     root.addEventListener('click', onBackdrop);
   });
 
+  // ── Edit Driver Modal ──
+  const openEditDriverModal = ({ id, name, phone, email }) => {
+    const modal = $('#dsEditDriverModal');
+    if (!modal) return;
+    $('#dsEditDriverId').value = id;
+    $('#dsEditDriverName').value = name || '';
+    $('#dsEditDriverPhone').value = phone || '';
+    $('#dsEditDriverEmail').value = email || '';
+    modal.setAttribute('data-open', 'true');
+    modal.setAttribute('aria-hidden', 'false');
+
+    const closeModal = () => {
+      modal.removeAttribute('data-open');
+      modal.setAttribute('aria-hidden', 'true');
+    };
+
+    const form = $('#dsEditDriverForm');
+    const cancelBtn = $('#dsEditDriverCancel');
+
+    const onSubmit = async (e) => {
+      e.preventDefault();
+      const newName = $('#dsEditDriverName').value.trim();
+      const newPhone = $('#dsEditDriverPhone').value.trim();
+      const newEmail = $('#dsEditDriverEmail').value.trim();
+      if (!newName) return;
+      const r = await api(`/api/admin/driverssystem/drivers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName: newName, phone: newPhone, email: newEmail })
+      });
+      closeModal();
+      if (r && r.ok) {
+        loadDrivers(searchInput ? searchInput.value.trim() : '');
+        loadDriversList();
+      } else {
+        await openConfirm('Σφάλμα ενημέρωσης. Δοκιμάστε ξανά.', { title: 'Σφάλμα', okLabel: 'OK' });
+      }
+      cleanup();
+    };
+
+    const onCancel = () => { closeModal(); cleanup(); };
+    const onBackdrop = (e) => { if (e.target.matches('[data-action="close"]')) { closeModal(); cleanup(); } };
+
+    const cleanup = () => {
+      form.removeEventListener('submit', onSubmit);
+      cancelBtn.removeEventListener('click', onCancel);
+      modal.removeEventListener('click', onBackdrop);
+    };
+
+    form.addEventListener('submit', onSubmit);
+    cancelBtn.addEventListener('click', onCancel);
+    modal.addEventListener('click', onBackdrop);
+  };
+
   // ── Tab switching ──
   $$('.bar-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -316,22 +370,7 @@
           const name = btn.getAttribute('data-name');
           const phone = btn.getAttribute('data-phone');
           const email = btn.getAttribute('data-email');
-          const newName = prompt('Ονοματεπώνυμο:', name);
-          if (newName === null) return;
-          const newEmail = prompt('Email:', email);
-          if (newEmail === null) return;
-          api(`/api/admin/driverssystem/drivers/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fullName: newName, email: newEmail })
-          }).then(r => {
-            if (r && r.ok) {
-              loadDrivers(searchInput ? searchInput.value.trim() : '');
-              loadDriversList();
-            } else {
-              alert('Σφάλμα ενημέρωσης');
-            }
-          });
+          openEditDriverModal({ id, name, phone, email });
         });
       });
 

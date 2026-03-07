@@ -539,7 +539,8 @@ module.exports = function registerDriversSystem(app, opts = {}) {
       if (!driver) return res.status(404).json({ error: 'Δεν βρέθηκε' });
       const updated = await dataLayer.updateDriver(driver.phone, {
         fullName: fullName !== undefined ? fullName : driver.fullName,
-        email: email !== undefined ? email : driver.email
+        email: email !== undefined ? email : driver.email,
+        phone: phone !== undefined ? phone : driver.phone
       });
       if (!updated) return res.status(500).json({ error: 'Update failed' });
       return res.json(updated);

@@ -64,6 +64,13 @@
   const ledgerEmptyEl  = $('[data-ds-partners-ledger-empty]');
   const txnAddBtn      = $('[data-ds-partners-txn-add]');
 
+  // ── DOM refs – Ledger Filters ──
+  const filterCustomWrap = $('[data-ds-partners-filter-custom]');
+  const filterFromInput  = $('[data-ds-partners-filter-from]');
+  const filterToInput    = $('[data-ds-partners-filter-to]');
+  let ledgerFilterType   = 'all';    // 'all' | 'charge' | 'payment'
+  let ledgerFilterPeriod = 'today';  // 'today' | 'week' | 'month' | 'all' | 'custom'
+
   // ── DOM refs – Transaction Overlay ──
   const txnOverlay     = $('[data-ds-partners-txn-overlay]');
   const txnForm        = $('[data-ds-partners-txn-form]');
@@ -579,38 +586,79 @@
 
     ledgerNameEl.textContent = partner.name;
 
+    // Reset filters to defaults
+    ledgerFilterType = 'all';
+    ledgerFilterPeriod = 'today';
+    $$('[data-filter-type]').forEach(b => b.classList.toggle('active', b.getAttribute('data-filter-type') === 'all'));
+    $$('[data-filter-period]').forEach(b => b.classList.toggle('active', b.getAttribute('data-filter-period') === 'today'));
+    if (filterCustomWrap) filterCustomWrap.style.display = 'none';
+
     renderLedger();
   }
 
+  // ── Filter date range helper ──
+  function getFilterDateRange() {
+    const today = greeceDateStr();
+    if (ledgerFilterPeriod === 'today') {
+      return { from: today, to: today };
+    }
+    if (ledgerFilterPeriod === 'week') {
+      const d = new Date();
+      const day = d.getDay() || 7; // Mon=1
+      d.setDate(d.getDate() - day + 1);
+      const from = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      return { from, to: today };
+    }
+    if (ledgerFilterPeriod === 'month') {
+      const [y, m] = today.split('-');
+      return { from: `${y}-${m}-01`, to: today };
+    }
+    if (ledgerFilterPeriod === 'custom') {
+      return {
+        from: (filterFromInput && filterFromInput.value) || '2000-01-01',
+        to: (filterToInput && filterToInput.value) || today
+      };
+    }
+    // 'all'
+    return { from: '2000-01-01', to: '2099-12-31' };
+  }
+
   function renderLedger() {
-    // Sort transactions by date asc, then by createdAt asc
+    // Sort ALL transactions by date asc, then by createdAt asc
     const sorted = [...transactions].sort((a, b) =>
       (a.date || '').localeCompare(b.date || '') || (a.createdAt || '').localeCompare(b.createdAt || '')
     );
 
-    // Calculate running balance & totals
-    let totalCharges = 0;
-    let totalPayments = 0;
-    let runningBalance = 0;
-
-    const rows = sorted.map(txn => {
-      if (txn.type === 'charge') {
-        totalCharges += txn.amount;
-        runningBalance += txn.amount;
-      } else {
-        totalPayments += txn.amount;
-        runningBalance -= txn.amount;
-      }
-      return { ...txn, _balance: runningBalance };
+    // ── All-time totals (summary cards — always full picture) ──
+    let allCharges = 0;
+    let allPayments = 0;
+    sorted.forEach(txn => {
+      if (txn.type === 'charge') allCharges += txn.amount;
+      else allPayments += txn.amount;
     });
 
-    chargesEl.textContent = fmtMoney(totalCharges);
-    paymentsEl.textContent = fmtMoney(totalPayments);
+    chargesEl.textContent = fmtMoney(allCharges);
+    paymentsEl.textContent = fmtMoney(allPayments);
 
-    const balance = totalCharges - totalPayments;
-    const balanceDisplay = balance >= 0 ? fmtMoney(balance) : '-' + fmtMoney(Math.abs(balance));
-    balanceEl.textContent = balanceDisplay;
-    balanceEl.className = 'ds-partners-ledger-sum__value ' + (balance > 0 ? 'positive' : balance < 0 ? 'negative' : '');
+    const allBalance = allCharges - allPayments;
+    const allBalDisplay = allBalance >= 0 ? fmtMoney(allBalance) : '-' + fmtMoney(Math.abs(allBalance));
+    balanceEl.textContent = allBalDisplay;
+    balanceEl.className = 'ds-partners-ledger-sum__value ' + (allBalance > 0 ? 'positive' : allBalance < 0 ? 'negative' : '');
+
+    // ── Apply filters to table rows ──
+    const { from, to } = getFilterDateRange();
+    let filtered = sorted.filter(txn => txn.date >= from && txn.date <= to);
+    if (ledgerFilterType !== 'all') {
+      filtered = filtered.filter(txn => txn.type === ledgerFilterType);
+    }
+
+    // Calculate running balance on filtered set
+    let runningBalance = 0;
+    const rows = filtered.map(txn => {
+      if (txn.type === 'charge') runningBalance += txn.amount;
+      else runningBalance -= txn.amount;
+      return { ...txn, _balance: runningBalance };
+    });
 
     // Render table rows (newest first for display)
     ledgerBody.innerHTML = '';
@@ -668,6 +716,31 @@
   if (ledgerBackBtn) {
     ledgerBackBtn.addEventListener('click', () => showListView());
   }
+
+  // ── Ledger Filter Handlers ──
+  $$('[data-filter-type]').forEach(pill => {
+    pill.addEventListener('click', () => {
+      $$('[data-filter-type]').forEach(b => b.classList.remove('active'));
+      pill.classList.add('active');
+      ledgerFilterType = pill.getAttribute('data-filter-type');
+      renderLedger();
+    });
+  });
+
+  $$('[data-filter-period]').forEach(pill => {
+    pill.addEventListener('click', () => {
+      $$('[data-filter-period]').forEach(b => b.classList.remove('active'));
+      pill.classList.add('active');
+      ledgerFilterPeriod = pill.getAttribute('data-filter-period');
+      if (filterCustomWrap) {
+        filterCustomWrap.style.display = ledgerFilterPeriod === 'custom' ? '' : 'none';
+      }
+      renderLedger();
+    });
+  });
+
+  if (filterFromInput) filterFromInput.addEventListener('change', () => renderLedger());
+  if (filterToInput) filterToInput.addEventListener('change', () => renderLedger());
 
   // ── Back from partners page ──
   if (mainBackBtn) {

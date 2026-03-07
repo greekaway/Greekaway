@@ -684,6 +684,33 @@ html[data-theme='light'] .ds-admin-table tbody tr:hover {
   gap: 10px;
 }
 
+/* ── Modal form fields ── */
+.ds-modal__form {
+  display: grid;
+  gap: 12px;
+}
+.ds-modal__label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ga-text);
+}
+.ds-modal__input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--ga-border);
+  background: var(--ga-card);
+  color: var(--ga-text);
+  font-size: 14px;
+}
+.ds-modal__input:focus {
+  outline: none;
+  border-color: var(--ga-accent, #3b82f6);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
 /* ── Danger button (solid red) ── */
 .btn-danger-solid {
   background: #ef4444;

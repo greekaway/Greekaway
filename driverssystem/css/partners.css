@@ -494,8 +494,14 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  padding: 14px 16px 10px;
+  padding: 10px 16px 6px;
   background: var(--ds-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ds-partners-ledger-header__top {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -547,14 +553,77 @@
   flex-shrink: 0;
 }
 
-/* ── Summary Cards ── */
+/* ── Summary Cards (inside sticky header) ── */
 .ds-partners-ledger-summary {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+/* ── Filter Carousel ── */
+.ds-partners-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ds-partners-filters__row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.ds-partners-filters__row::-webkit-scrollbar {
+  display: none;
+}
+
+.ds-partners-filter-pill {
+  flex-shrink: 0;
+  padding: 5px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--ds-muted, #888);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+
+.ds-partners-filter-pill.active {
+  background: var(--ds-accent, #34d399);
+  color: #000;
+  border-color: var(--ds-accent, #34d399);
+}
+
+.ds-partners-filter-pill:not(.active):active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ds-partners-filters__custom {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 8px 16px 4px;
+}
+
+.ds-partners-filters__date {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--ds-card, #1a1d26);
+  color: var(--ds-text, #fff);
+  font-size: 13px;
+}
+
+.ds-partners-filters__sep {
+  color: var(--ds-muted, #888);
+  font-size: 14px;
 }
 
 .ds-partners-ledger-sum {
@@ -637,11 +706,16 @@
 
 .ds-partners-ledger-table tbody tr {
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ds-partners-ledger-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .ds-partners-ledger-table tbody tr:active {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(52, 211, 153, 0.12);
 }
 
 .ds-partners-txn-amount--charge {
