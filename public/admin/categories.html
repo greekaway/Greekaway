@@ -67,6 +67,69 @@
       </div>
     </div>
   </div>
+
+  <!-- Category Display Settings -->
+  <section id="catDisplaySettings" style="margin-top:32px;padding:20px;border:1px solid rgba(255,255,255,0.15);border-radius:12px;background:rgba(0,31,63,0.5)">
+    <h3 style="margin:0 0 16px;color:#D4AF37;font-size:1.1rem">Ρυθμίσεις Εμφάνισης Κατηγοριών</h3>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">
+      <!-- Tile Size -->
+      <label style="display:flex;flex-direction:column;gap:4px">
+        <span>Μέγεθος Πλακιδίου (Tile Scale)</span>
+        <input type="range" id="setTileScale" min="0.5" max="2.5" step="0.05" value="1">
+        <span style="font-size:12px;color:#aaa">Τρέχουσα τιμή: <strong id="setTileScaleVal">1</strong></span>
+      </label>
+
+      <!-- Icon Scale -->
+      <label style="display:flex;flex-direction:column;gap:4px">
+        <span>Μέγεθος Εικονιδίου (Icon Scale)</span>
+        <input type="range" id="setIconScale" min="0.3" max="1" step="0.05" value="0.8">
+        <span style="font-size:12px;color:#aaa">Τρέχουσα τιμή: <strong id="setIconScaleVal">0.8</strong></span>
+      </label>
+
+      <!-- Caption Size -->
+      <label style="display:flex;flex-direction:column;gap:4px">
+        <span>Μέγεθος Λεζάντας (Caption Size)</span>
+        <input type="range" id="setCaptionSize" min="0.6" max="1.6" step="0.02" value="0.92">
+        <span style="font-size:12px;color:#aaa">Τρέχουσα τιμή: <strong id="setCaptionSizeVal">0.92</strong>rem</span>
+      </label>
+
+      <!-- Icon Color -->
+      <label style="display:flex;flex-direction:column;gap:4px">
+        <span>Χρώμα Εικονιδίου</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="color" id="setIconColor" value="#f4c542" style="width:48px;height:32px;border:none;cursor:pointer">
+          <code id="setIconColorVal" style="font-size:12px;color:#aaa">#f4c542</code>
+        </div>
+      </label>
+
+      <!-- Caption Color -->
+      <label style="display:flex;flex-direction:column;gap:4px">
+        <span>Χρώμα Λεζάντας</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="color" id="setCaptionColor" value="#D4AF37" style="width:48px;height:32px;border:none;cursor:pointer">
+          <code id="setCaptionColorVal" style="font-size:12px;color:#aaa">#D4AF37</code>
+        </div>
+      </label>
+    </div>
+
+    <!-- Live Preview -->
+    <div style="margin-top:20px;padding:16px;background:var(--ga-card-bg,#0E1520);border-radius:12px;text-align:center">
+      <div style="font-size:12px;color:#666;margin-bottom:8px">Live Preview</div>
+      <div id="catPreviewTile" style="display:inline-flex;flex-direction:column;align-items:center;gap:6px">
+        <div id="catPreviewBox" style="width:80px;height:80px;border:1px solid rgba(255,255,255,0.5);border-radius:20px;display:flex;align-items:center;justify-content:center;background:#0E1520">
+          <svg id="catPreviewIcon" viewBox="0 0 64 64" width="48" height="48"><circle cx="32" cy="32" r="24" fill="#f4c542"/><path d="M32 14l4 12h12l-10 7 4 12-10-7-10 7 4-12-10-7h12z" fill="#0E1520"/></svg>
+        </div>
+        <span id="catPreviewCaption" style="color:#D4AF37;font-weight:600;font-size:0.92rem">Κατηγορία</span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn" id="saveDisplaySettings" type="button">Αποθήκευση Ρυθμίσεων</button>
+      <button class="btn secondary" id="resetDisplaySettings" type="button">Επαναφορά Αρχικών</button>
+    </div>
+    <div id="displaySettingsMsg" class="hint" style="padding:4px;margin-top:8px"></div>
+  </section>
 </main>
 <script src="/admin/js/upload-client.js"></script>
 <script src="/admin/js/categories.js"></script>
@@ -89,4 +152,120 @@ fetch('/version.json').then(r=>r.ok?r.json():null).then(v=>{ if(v){document.getE
 </script>
 <script src="/admin/js/admin-greekaway-tabs.js"></script>
 <script src="/admin/js/admin-footer.js"></script>
+<script>
+/* ===== Category Display Settings Panel ===== */
+(function(){
+  var DEFAULTS = { tileScale:1, iconScale:0.8, iconColor:'#f4c542', captionColor:'#D4AF37', captionSize:0.92 };
+  var sTile = document.getElementById('setTileScale');
+  var sIcon = document.getElementById('setIconScale');
+  var sCaptionSize = document.getElementById('setCaptionSize');
+  var sIconColor = document.getElementById('setIconColor');
+  var sCaptionColor = document.getElementById('setCaptionColor');
+  var vTile = document.getElementById('setTileScaleVal');
+  var vIcon = document.getElementById('setIconScaleVal');
+  var vCapSize = document.getElementById('setCaptionSizeVal');
+  var vIconColor = document.getElementById('setIconColorVal');
+  var vCapColor = document.getElementById('setCaptionColorVal');
+  var previewBox = document.getElementById('catPreviewBox');
+  var previewIcon = document.getElementById('catPreviewIcon');
+  var previewCaption = document.getElementById('catPreviewCaption');
+  var msgEl = document.getElementById('displaySettingsMsg');
+
+  function dsMsg(text, kind){
+    if(!msgEl) return;
+    msgEl.textContent = text||'';
+    msgEl.className = 'hint' + (kind ? ' '+kind : '');
+    if(kind === 'ok') msgEl.style.color = '#0a0';
+    else if(kind === 'error') msgEl.style.color = '#c33';
+    else msgEl.style.color = '#666';
+  }
+
+  function updatePreview(){
+    var ts = parseFloat(sTile.value) || 1;
+    var is = parseFloat(sIcon.value) || 0.8;
+    var cs = parseFloat(sCaptionSize.value) || 0.92;
+    var ic = sIconColor.value || '#f4c542';
+    var cc = sCaptionColor.value || '#D4AF37';
+
+    vTile.textContent = ts;
+    vIcon.textContent = is;
+    vCapSize.textContent = cs;
+    vIconColor.textContent = ic;
+    vCapColor.textContent = cc;
+
+    var boxSize = Math.round(80 * ts);
+    previewBox.style.width = boxSize + 'px';
+    previewBox.style.height = boxSize + 'px';
+
+    var iconSize = Math.round(64 * is);
+    previewIcon.setAttribute('width', iconSize);
+    previewIcon.setAttribute('height', iconSize);
+    var circle = previewIcon.querySelector('circle');
+    var star = previewIcon.querySelector('path');
+    if(circle) circle.setAttribute('fill', ic);
+    if(star) star.setAttribute('fill', '#0E1520');
+
+    previewCaption.style.color = cc;
+    previewCaption.style.fontSize = cs + 'rem';
+  }
+
+  function loadSettings(){
+    fetch('/api/category-settings',{cache:'no-store',credentials:'same-origin'})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(s){
+        if(!s) return;
+        if(s.tileScale!=null) sTile.value = s.tileScale;
+        if(s.iconScale!=null) sIcon.value = s.iconScale;
+        if(s.captionSize!=null) sCaptionSize.value = s.captionSize;
+        if(s.iconColor) sIconColor.value = s.iconColor;
+        if(s.captionColor) sCaptionColor.value = s.captionColor;
+        updatePreview();
+      })
+      .catch(function(){ dsMsg('Σφάλμα φόρτωσης ρυθμίσεων','error'); });
+  }
+
+  function saveSettings(){
+    dsMsg('Αποθήκευση...','');
+    var payload = {
+      tileScale: parseFloat(sTile.value),
+      iconScale: parseFloat(sIcon.value),
+      captionSize: parseFloat(sCaptionSize.value),
+      iconColor: sIconColor.value,
+      captionColor: sCaptionColor.value
+    };
+    fetch('/api/category-settings',{
+      method:'POST',
+      credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    })
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+      .then(function(res){
+        if(!res.ok || !res.j || !res.j.ok) throw new Error(res.j&&res.j.error||'save_failed');
+        dsMsg('✅ Οι ρυθμίσεις αποθηκεύτηκαν.','ok');
+      })
+      .catch(function(){ dsMsg('❌ Σφάλμα αποθήκευσης.','error'); });
+  }
+
+  function resetSettings(){
+    sTile.value = DEFAULTS.tileScale;
+    sIcon.value = DEFAULTS.iconScale;
+    sCaptionSize.value = DEFAULTS.captionSize;
+    sIconColor.value = DEFAULTS.iconColor;
+    sCaptionColor.value = DEFAULTS.captionColor;
+    updatePreview();
+    saveSettings();
+  }
+
+  sTile.addEventListener('input', updatePreview);
+  sIcon.addEventListener('input', updatePreview);
+  sCaptionSize.addEventListener('input', updatePreview);
+  sIconColor.addEventListener('input', updatePreview);
+  sCaptionColor.addEventListener('input', updatePreview);
+  document.getElementById('saveDisplaySettings').addEventListener('click', saveSettings);
+  document.getElementById('resetDisplaySettings').addEventListener('click', resetSettings);
+
+  loadSettings();
+})();
+</script>
 </body></html>

@@ -292,6 +292,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // indicate this is the category-listing view
   document.body.dataset.view = 'category';
 
+  // Load admin-defined category display settings and apply as CSS custom properties
+  (function loadCategorySettings(){
+    fetch('/api/category-settings', { cache:'no-store' })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(s){
+        if (!s) return;
+        var el = categoriesContainer;
+        if (s.tileScale != null && s.tileScale !== 1)  el.style.setProperty('--cat-tile-scale', s.tileScale);
+        if (s.iconScale != null)  el.style.setProperty('--cat-icon-scale', s.iconScale);
+        if (s.iconColor)          el.style.setProperty('--cat-icon-color', s.iconColor);
+        if (s.captionColor)       el.style.setProperty('--cat-caption-color', s.captionColor);
+        if (s.captionSize != null) el.style.setProperty('--cat-caption-size', s.captionSize + 'rem');
+      })
+      .catch(function(){});
+  })();
+
   function renderCategories(cats){
     const container = document.getElementById("categories-container");
     if (!container) return;

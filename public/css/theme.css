@@ -34,7 +34,7 @@ body.ga-variant-flat .category-btn {
 body.ga-variant-flat .category-btn img { display: none !important; }
 /* Allow new wrapper structure: button + caption. Keep previous label styling for backward compatibility but hide internal label spans if any. */
 .category-tile { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; margin: 12px; }
-.category-tile .category-caption { color: var(--ga-gold); font-weight: 600; text-align: center; font-size: 0.92rem; }
+.category-tile .category-caption { color: var(--cat-caption-color, var(--ga-gold)); font-weight: 600; text-align: center; font-size: var(--cat-caption-size, 0.92rem); }
 
 /* Gold label across all categories */
 .category-btn .cat-label { color: var(--ga-gold) !important; font-weight: 600; }
@@ -75,10 +75,10 @@ body.ga-variant-flat .category-btn::before { display: none !important; content: 
 body.ga-variant-flat .category-btn img { display: none !important; }
 body.ga-variant-flat .category-btn img.svg-icon { display: block !important; }
 
-.category-tile .category-icon { width:64px; height:64px; display:flex; align-items:center; justify-content:center; }
-.category-tile .category-icon svg, .category-tile .category-icon img.svg-icon { width:64px; height:64px; max-width:64px; max-height:64px; display:block; }
-/* Force gold color on all vector shapes */
-.category-tile .category-icon svg *, .category-tile .category-icon svg { fill:#f4c542 !important; stroke:#f4c542 !important; }
+.category-tile .category-icon { width:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); height:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); display:flex; align-items:center; justify-content:center; }
+.category-tile .category-icon svg, .category-tile .category-icon img.svg-icon { width:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); height:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); max-width:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); max-height:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); display:block; }
+/* Force icon color on all vector shapes (admin-controlled) */
+.category-tile .category-icon svg *, .category-tile .category-icon svg { fill:var(--cat-icon-color, #f4c542) !important; stroke:var(--cat-icon-color, #f4c542) !important; }
 /* Ensure no background/mask artifacts */
 .category-tile .category-icon, .category-tile .category-icon svg { background:transparent !important; }
 
@@ -166,10 +166,10 @@ body.is-loaded #categories-container .category-btn:nth-child(6){ animation-delay
 .category-btn.is-pressing::before { opacity: 1; transform: scaleX(1.06); }
 
 /* ============ Global category icon styling (all pages) ============ */
-.category-icon { width:64px; height:64px; display:flex; align-items:center; justify-content:center; background:transparent !important; }
-.category-icon svg, .category-icon img.svg-icon { width:64px; height:64px; max-width:64px; max-height:64px; display:block; }
-/* Enforce gold color for all shapes inside the icon svg */
-.category-icon svg, .category-icon svg * { fill: #f4c542 !important; stroke: #f4c542 !important; }
+.category-icon { width:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); height:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); display:flex; align-items:center; justify-content:center; background:transparent !important; }
+.category-icon svg, .category-icon img.svg-icon { width:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); height:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); max-width:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); max-height:calc(64px * var(--cat-icon-scale, 0.8) / 0.8); display:block; }
+/* Enforce icon color for all shapes inside the icon svg (admin-controlled) */
+.category-icon svg, .category-icon svg * { fill: var(--cat-icon-color, #f4c542) !important; stroke: var(--cat-icon-color, #f4c542) !important; }
 
 /* ============ Trip listing cards (category pages) ============ */
 /* Only on category listing view to avoid affecting other pages */
