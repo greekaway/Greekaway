@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS ma_config (
     about_us_phone VARCHAR(50) DEFAULT '',
     about_us_email VARCHAR(255) DEFAULT '',
     about_us_website VARCHAR(512) DEFAULT '',
+    category_style JSONB DEFAULT NULL,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

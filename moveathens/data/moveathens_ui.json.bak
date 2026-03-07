@@ -224,5 +224,20 @@
   "showPriceInMessage": false,
   "irisPhone": "",
   "flightTrackingEnabled": true,
-  "flightCheckMinsBefore": 25
+  "flightCheckMinsBefore": 25,
+  "welcomeTextBlock": "",
+  "aboutUsCompanyName": "AwaySystems Ο.Ε.",
+  "aboutUsAfm": "802723119",
+  "aboutUsDoy": "ΚΕΦΟΔΕ ΑΤΤΙΚΗΣ",
+  "aboutUsActivity": "Υπηρεσίες εκμετάλλευσης ταξί",
+  "aboutUsAddress": "18 Grigoriou Kidonion St.\nNea Smirni\nAthens 17123\nGreece",
+  "aboutUsManager": "Sakellariou Stefanos",
+  "aboutUsPhone": "+30 693 7184 551",
+  "aboutUsEmail": "info@moveathens.com",
+  "aboutUsWebsite": "https://www.moveathens.com",
+  "categoryStyle": {
+    "tileScale": 1.2,
+    "iconColor": "#ff6600",
+    "textColor": "#333333"
+  }
 }

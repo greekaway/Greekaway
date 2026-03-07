@@ -356,7 +356,9 @@ const ma = {
       // About Us company details (2026-03-07)
       'about_us_company_name', 'about_us_afm', 'about_us_doy',
       'about_us_activity', 'about_us_address', 'about_us_manager',
-      'about_us_phone', 'about_us_email', 'about_us_website'
+      'about_us_phone', 'about_us_email', 'about_us_website',
+      // Category style (2026-03-07)
+      'category_style'
     ];
     
     const updates = [];
