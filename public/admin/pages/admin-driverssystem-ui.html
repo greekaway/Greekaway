@@ -823,6 +823,30 @@
       </div>
     </div>
 
+    <!-- Edit Driver Modal -->
+    <div id="dsEditDriverModal" class="ds-modal" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="ds-modal__backdrop" data-action="close"></div>
+      <div class="ds-modal__content" role="document">
+        <h4 class="ds-modal__title">Επεξεργασία Οδηγού</h4>
+        <form id="dsEditDriverForm" class="ds-modal__form" autocomplete="off">
+          <input type="hidden" id="dsEditDriverId" />
+          <label class="ds-modal__label">Ονοματεπώνυμο
+            <input id="dsEditDriverName" class="input ds-modal__input" type="text" required />
+          </label>
+          <label class="ds-modal__label">Τηλέφωνο
+            <input id="dsEditDriverPhone" class="input ds-modal__input" type="tel" required />
+          </label>
+          <label class="ds-modal__label">Email
+            <input id="dsEditDriverEmail" class="input ds-modal__input" type="email" />
+          </label>
+          <div class="ds-modal__actions">
+            <button type="button" id="dsEditDriverCancel" class="btn secondary">Ακύρωση</button>
+            <button type="submit" class="btn">Αποθήκευση</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script src="/admin/js/admin-driverssystem-ui.js"></script>
     <script src="/admin/js/admin-driverssystem-stats.js"></script>
     <script src="/js/admin-theme-toggle.js"></script>

@@ -686,15 +686,34 @@
         <td class="${balCls}">${balDisplay}</td>
       `;
 
-      // Tap to delete with styled confirm
-      tr.addEventListener('click', async () => {
-        const desc = txn.description || (isCharge ? 'Χρέωση' : 'Πληρωμή');
-        const lbl = `${desc} — ${fmtMoney(txn.amount)}`;
-        const confirmed = await showDeleteConfirm(lbl);
-        if (!confirmed) return;
-        if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
-        await deleteTxnAndRefresh(txn.id);
-      });
+      // Long-press to delete (600ms hold)
+      let _lpTimer = null;
+      let _lpFired = false;
+      const startPress = () => {
+        _lpFired = false;
+        tr.classList.add('ds-row-pressing');
+        _lpTimer = setTimeout(async () => {
+          _lpFired = true;
+          tr.classList.remove('ds-row-pressing');
+          if (navigator.vibrate) navigator.vibrate(30);
+          const desc = txn.description || (isCharge ? 'Χρέωση' : 'Πληρωμή');
+          const lbl = `${desc} — ${fmtMoney(txn.amount)}`;
+          const confirmed = await showDeleteConfirm(lbl);
+          if (!confirmed) return;
+          if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
+          await deleteTxnAndRefresh(txn.id);
+        }, 600);
+      };
+      const cancelPress = () => {
+        clearTimeout(_lpTimer);
+        tr.classList.remove('ds-row-pressing');
+      };
+      tr.addEventListener('pointerdown', startPress);
+      tr.addEventListener('pointerup', cancelPress);
+      tr.addEventListener('pointerleave', cancelPress);
+      tr.addEventListener('pointercancel', cancelPress);
+      // Prevent context menu on long press
+      tr.addEventListener('contextmenu', (e) => { if (_lpFired) e.preventDefault(); });
 
       ledgerBody.appendChild(tr);
     });

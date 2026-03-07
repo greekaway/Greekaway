@@ -319,6 +319,38 @@
     background: rgba(255, 255, 255, 0.08);
     color: #d0d8e0; border-color: rgba(255, 255, 255, 0.12);
   }
+
+  /* Filter pills – dark */
+  .ds-partners-filter-pill {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: none;
+  }
+  .ds-partners-filter-pill.active {
+    color: #000;
+    box-shadow: 0 2px 8px rgba(0, 200, 150, 0.25);
+  }
+  .ds-partners-filter-pill:not(.active):active {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .ds-partners-filters__date {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  /* Table – dark */
+  .ds-partners-ledger-table thead th {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+  .ds-partners-ledger-table tbody td {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+  }
+  .ds-partners-ledger-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .ds-partners-ledger-table tbody tr.ds-row-pressing,
+  .ds-partners-ledger-table tbody tr:active {
+    background: rgba(52, 211, 153, 0.12);
+  }
 }
 
 @keyframes ds-overlay-in { from { opacity: 0; } to { opacity: 1; } }
@@ -583,26 +615,28 @@
 .ds-partners-filter-pill {
   flex-shrink: 0;
   padding: 5px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--ds-border-pill, rgba(0, 0, 0, 0.12));
   border-radius: 20px;
-  background: transparent;
-  color: var(--ds-muted, #888);
+  background: var(--ds-card, #fff);
+  color: var(--ds-muted, #6b7280);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
   transition: all 0.15s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .ds-partners-filter-pill.active {
-  background: var(--ds-accent, #34d399);
-  color: #000;
-  border-color: var(--ds-accent, #34d399);
+  background: var(--ds-accent, #059669);
+  color: #fff;
+  border-color: var(--ds-accent, #059669);
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
 }
 
 .ds-partners-filter-pill:not(.active):active {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .ds-partners-filters__custom {
@@ -615,9 +649,9 @@
   flex: 1;
   padding: 6px 8px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: var(--ds-card, #1a1d26);
-  color: var(--ds-text, #fff);
+  border: 1px solid var(--ds-border-pill, rgba(0, 0, 0, 0.12));
+  background: var(--ds-card, #fff);
+  color: var(--ds-text, #1a2232);
   font-size: 13px;
 }
 
@@ -687,20 +721,20 @@
 
 .ds-partners-ledger-table thead th {
   text-align: left;
-  color: var(--ds-muted, #888);
+  color: var(--ds-muted, #6b7280);
   font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 8px 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   white-space: nowrap;
 }
 
 .ds-partners-ledger-table tbody td {
   padding: 10px 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  color: var(--ds-text, #fff);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  color: var(--ds-text, #1a2232);
   vertical-align: middle;
 }
 
@@ -708,14 +742,20 @@
   cursor: pointer;
   transition: background 0.15s;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .ds-partners-ledger-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.ds-partners-ledger-table tbody tr.ds-row-pressing {
+  background: rgba(5, 150, 105, 0.10);
 }
 
 .ds-partners-ledger-table tbody tr:active {
-  background: rgba(52, 211, 153, 0.12);
+  background: rgba(5, 150, 105, 0.10);
 }
 
 .ds-partners-txn-amount--charge {
