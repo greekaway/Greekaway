@@ -165,6 +165,57 @@
 
       <!-- ===== CATEGORIES TAB ===== -->
       <div class="tab-content" data-tab="categories">
+        <!-- ── Global Category Style ── -->
+        <section class="panel" style="margin-bottom:18px">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">🎨 Εμφάνιση Κατηγοριών</h3>
+              <p class="ma-helper">Μέγεθος πλακιδίων, χρώμα εικονιδίων & κειμένου — εφαρμόζεται σε όλες τις κατηγορίες</p>
+            </div>
+          </div>
+
+          <div class="ma-zone-grid" style="gap:18px">
+            <!-- Tile size slider -->
+            <label>Μέγεθος Πλακιδίων
+              <div style="display:flex;align-items:center;gap:12px">
+                <input id="maCatTileScale" type="range" min="0.6" max="1.6" step="0.05" value="1" style="flex:1;accent-color:#1a73e8">
+                <span id="maCatTileScaleVal" style="min-width:44px;text-align:center;font-weight:600;font-size:15px">1.00</span>
+              </div>
+              <small class="ma-hint">0.60 = μικρότερα · 1.00 = κανονικό · 1.60 = μεγαλύτερα</small>
+            </label>
+
+            <!-- Icon color -->
+            <label>Χρώμα Εικονιδίων
+              <div style="display:flex;align-items:center;gap:10px">
+                <input id="maCatIconColor" class="input" type="color" value="#ffffff" style="width:60px;height:38px;padding:2px;cursor:pointer;border-radius:8px">
+                <span id="maCatIconColorHex" style="font-size:13px;color:#888">#ffffff</span>
+              </div>
+              <small class="ma-hint">Χρώμα SVG εικονιδίων μέσα στο πλακίδιο (π.χ. λευκό #ffffff)</small>
+            </label>
+
+            <!-- Text color -->
+            <label>Χρώμα Κειμένου Κατηγορίας
+              <div style="display:flex;align-items:center;gap:10px">
+                <input id="maCatTextColor" class="input" type="color" value="#1a1a2e" style="width:60px;height:38px;padding:2px;cursor:pointer;border-radius:8px">
+                <span id="maCatTextColorHex" style="font-size:13px;color:#888">#1a1a2e</span>
+              </div>
+              <small class="ma-hint">Χρώμα ονόματος κατηγορίας κάτω από το εικονίδιο</small>
+            </label>
+          </div>
+
+          <!-- Live preview -->
+          <div style="margin-top:16px">
+            <p style="font-size:13px;font-weight:600;margin-bottom:8px;color:#666">Προεπισκόπηση</p>
+            <div id="maCatStylePreview" style="display:flex;gap:18px;flex-wrap:wrap;padding:20px;background:#f5f5f5;border-radius:12px;justify-content:center"></div>
+          </div>
+
+          <div class="ma-actions" style="margin-top:12px">
+            <button id="maCatStyleSaveBtn" class="btn" type="button">Αποθήκευση Εμφάνισης</button>
+            <button id="maCatStyleResetBtn" class="btn secondary" type="button">Επαναφορά Προεπιλογών</button>
+            <span id="maCatStyleStatus" class="ma-status" aria-live="polite"></span>
+          </div>
+        </section>
+
         <section class="panel">
           <div class="ma-section-header">
             <div>

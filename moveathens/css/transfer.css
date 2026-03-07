@@ -433,7 +433,7 @@
 /* Categories Grid — App-Icon Layout */
 .ma-categories-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(var(--ma-tile-min-w, 105px), 1fr));
   gap: 18px 14px;
   padding: 4px 0;
   max-height: 65vh;
@@ -444,18 +444,6 @@
 
 .ma-categories-grid::-webkit-scrollbar {
   display: none;
-}
-
-@media (min-width: 480px) {
-  .ma-categories-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 768px) {
-  .ma-categories-grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
 }
 
 .ma-category-card {
@@ -481,9 +469,9 @@
 
 /* Rounded-square icon container (app-icon style) */
 .ma-category-icon {
-  width: min(88px, 24vw);
-  height: min(88px, 24vw);
-  border-radius: 22px;
+  width: min(calc(88px * var(--ma-tile-scale, 1)), 24vw);
+  height: min(calc(88px * var(--ma-tile-scale, 1)), 24vw);
+  border-radius: calc(22px * var(--ma-tile-scale, 1));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -494,24 +482,24 @@
 }
 
 .ma-category-icon-img {
-  width: 50px;
-  height: 50px;
+  width: calc(50px * var(--ma-tile-scale, 1));
+  height: calc(50px * var(--ma-tile-scale, 1));
   object-fit: contain;
-  filter: brightness(0) invert(1);
+  filter: var(--ma-icon-filter, brightness(0) invert(1));
 }
 
 .ma-category-emoji {
-  font-size: 36px;
+  font-size: calc(36px * var(--ma-tile-scale, 1));
   line-height: 1;
 }
 
 .ma-category-name {
-  font-size: 11px;
+  font-size: calc(11px * var(--ma-tile-scale, 1));
   font-weight: 500;
   text-align: center;
-  color: #1a1a2e;
+  color: var(--ma-cat-text-color, #1a1a2e);
   line-height: 1.2;
-  max-width: 92px;
+  max-width: calc(92px * var(--ma-tile-scale, 1));
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -1282,12 +1270,12 @@
   }
   
   .ma-category-icon-img {
-    width: 40px;
-    height: 40px;
+    width: calc(40px * var(--ma-tile-scale, 1));
+    height: calc(40px * var(--ma-tile-scale, 1));
   }
   
   .ma-category-name {
-    font-size: 12px;
+    font-size: calc(12px * var(--ma-tile-scale, 1));
   }
   
   .ma-destination-item {
@@ -1396,12 +1384,12 @@
   }
   
   .ma-category-icon-img {
-    width: 56px;
-    height: 56px;
+    width: calc(56px * var(--ma-tile-scale, 1));
+    height: calc(56px * var(--ma-tile-scale, 1));
   }
   
   .ma-category-name {
-    font-size: 15px;
+    font-size: calc(15px * var(--ma-tile-scale, 1));
   }
   
   .ma-destination-item {
@@ -1727,10 +1715,6 @@
     padding: 28px 24px 40px;
   }
 
-  .ma-categories-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
   .ma-vehicle-card {
     grid-template-columns: 120px 1fr auto;
   }
@@ -1755,10 +1739,6 @@
   .ma-transfer-page .ma-main {
     max-width: 800px;
     padding: 36px 32px 48px;
-  }
-
-  .ma-categories-grid {
-    grid-template-columns: repeat(4, 1fr);
   }
 
   .ma-tariff-grid {
