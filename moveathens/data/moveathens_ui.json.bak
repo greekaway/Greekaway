@@ -236,8 +236,8 @@
   "aboutUsEmail": "info@moveathens.com",
   "aboutUsWebsite": "https://www.moveathens.com",
   "categoryStyle": {
-    "tileScale": 1.2,
-    "iconColor": "#ff6600",
-    "textColor": "#333333"
+    "tileScale": 1,
+    "iconColor": "#ffffff",
+    "textColor": "#1a1a2e"
   }
 }

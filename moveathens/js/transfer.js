@@ -172,30 +172,6 @@
     }
     // Dynamic column width: smaller scale → more per row, larger → fewer
     root.style.setProperty('--ma-tile-min-w', Math.round(105 * scale) + 'px');
-    if (s.textColor && s.textColor !== '#1a1a2e') {
-      root.style.setProperty('--ma-cat-text-color', s.textColor);
-    }
-    if (s.iconColor && s.iconColor !== '#ffffff') {
-      // Convert hex color to CSS filter
-      const hex = s.iconColor;
-      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-      const max = Math.max(r,g,b)/255, min = Math.min(r,g,b)/255;
-      const l = (max+min)/2;
-      let sat = 0, h = 0;
-      if (max !== min) {
-        sat = l > 0.5 ? (max-min)/(2-max-min) : (max-min)/(max+min);
-        if (max === r/255) h = ((g/255)-(b/255))/(max-min)+(g<b?6:0);
-        else if (max === g/255) h = ((b/255)-(r/255))/(max-min)+2;
-        else h = ((r/255)-(g/255))/(max-min)+4;
-        h *= 60;
-      }
-      if (hex.toLowerCase() === '#000000' || hex.toLowerCase() === '#000') {
-        root.style.setProperty('--ma-icon-filter', 'brightness(0)');
-      } else {
-        root.style.setProperty('--ma-icon-filter',
-          `brightness(0) sepia(1) hue-rotate(${Math.round(h)}deg) saturate(${Math.round(sat*10*100)/100}%) brightness(${Math.round(l*200)/100}%)`);
-      }
-    }
   };
 
   // ========================================

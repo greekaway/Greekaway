@@ -313,7 +313,7 @@
     color: #e8edf3 !important;
   }
 
-  /* Category icons — keep white in dark mode */
+  /* Category icons — white in dark mode */
   .ma-transfer-page .ma-category-icon img,
   .ma-transfer-page .ma-category-icon-img {
     filter: brightness(0) invert(1) !important;

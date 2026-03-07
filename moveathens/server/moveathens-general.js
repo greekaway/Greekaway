@@ -128,9 +128,7 @@ module.exports = function registerGeneralRoutes(app, opts = {}) {
       if (body.categoryStyle && typeof body.categoryStyle === 'object') {
         const cs = body.categoryStyle;
         updates.categoryStyle = {
-          tileScale: Math.max(0.6, Math.min(1.6, parseFloat(cs.tileScale) || 1)),
-          iconColor: /^#[0-9a-fA-F]{6}$/.test(cs.iconColor) ? cs.iconColor : '#ffffff',
-          textColor: /^#[0-9a-fA-F]{6}$/.test(cs.textColor) ? cs.textColor : '#1a1a2e'
+          tileScale: Math.max(0.6, Math.min(1.6, parseFloat(cs.tileScale) || 1))
         };
       }
 

@@ -165,9 +165,7 @@ const validateAndMerge = (incoming, current) => {
   if (incoming.categoryStyle && typeof incoming.categoryStyle === 'object') {
     const cs = incoming.categoryStyle;
     merged.categoryStyle = {
-      tileScale: Math.max(0.6, Math.min(1.6, parseFloat(cs.tileScale) || 1)),
-      iconColor: /^#[0-9a-fA-F]{6}$/.test(cs.iconColor) ? cs.iconColor : '#ffffff',
-      textColor: /^#[0-9a-fA-F]{6}$/.test(cs.textColor) ? cs.textColor : '#1a1a2e'
+      tileScale: Math.max(0.6, Math.min(1.6, parseFloat(cs.tileScale) || 1))
     };
   }
 
