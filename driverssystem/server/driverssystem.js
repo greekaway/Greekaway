@@ -533,14 +533,13 @@ module.exports = function registerDriversSystem(app, opts = {}) {
   // ── Admin: Update driver ──
   app.put('/api/admin/driverssystem/drivers/:id', requireAdmin, async (req, res) => {
     try {
-      const { fullName, email, phone } = req.body || {};
+      const { fullName, email } = req.body || {};
       const drivers = await dataLayer.getDrivers({});
       const driver = drivers.find(d => d.id === req.params.id);
       if (!driver) return res.status(404).json({ error: 'Δεν βρέθηκε' });
       const updated = await dataLayer.updateDriver(driver.phone, {
         fullName: fullName !== undefined ? fullName : driver.fullName,
-        email: email !== undefined ? email : driver.email,
-        phone: phone !== undefined ? phone : driver.phone
+        email: email !== undefined ? email : driver.email
       });
       if (!updated) return res.status(500).json({ error: 'Update failed' });
       return res.json(updated);

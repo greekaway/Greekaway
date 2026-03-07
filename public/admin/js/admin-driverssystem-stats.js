@@ -112,13 +112,12 @@
     const onSubmit = async (e) => {
       e.preventDefault();
       const newName = $('#dsEditDriverName').value.trim();
-      const newPhone = $('#dsEditDriverPhone').value.trim();
       const newEmail = $('#dsEditDriverEmail').value.trim();
       if (!newName) return;
       const r = await api(`/api/admin/driverssystem/drivers/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fullName: newName, phone: newPhone, email: newEmail })
+        body: JSON.stringify({ fullName: newName, email: newEmail })
       });
       closeModal();
       if (r && r.ok) {

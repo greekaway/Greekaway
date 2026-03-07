@@ -527,7 +527,6 @@ async function updateDriver(phone, data) {
   if (idx === -1) return null;
   if (data.fullName !== undefined) drivers[idx].fullName = data.fullName.trim();
   if (data.email !== undefined) drivers[idx].email = data.email.trim();
-  if (data.phone !== undefined && data.phone.trim()) drivers[idx].phone = data.phone.trim();
   writeDrivers(drivers);
   return drivers[idx];
 }

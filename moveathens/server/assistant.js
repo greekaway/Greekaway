@@ -225,8 +225,27 @@ Our vehicles: ${vehicleNames || 'various vehicles'}.`;
     prompt += '\n';
   }
 
-  // Add admin info sections (cancellation, compliance, FAQ) from admin panel
+  // Add company / legal info (aboutUs fields) from admin panel
   const cfg = transferData?.config || {};
+  const aboutFields = [
+    { key: 'aboutUsCompanyName', label: isGreek ? 'Επωνυμία' : 'Company Name' },
+    { key: 'aboutUsAfm', label: isGreek ? 'ΑΦΜ' : 'Tax ID' },
+    { key: 'aboutUsDoy', label: isGreek ? 'ΔΟΥ' : 'Tax Office' },
+    { key: 'aboutUsActivity', label: isGreek ? 'Δραστηριότητα' : 'Activity' },
+    { key: 'aboutUsAddress', label: isGreek ? 'Διεύθυνση' : 'Address' },
+    { key: 'aboutUsManager', label: isGreek ? 'Υπεύθυνος' : 'Manager' },
+    { key: 'aboutUsPhone', label: isGreek ? 'Τηλέφωνο' : 'Phone' },
+    { key: 'aboutUsEmail', label: 'Email' },
+    { key: 'aboutUsWebsite', label: 'Website' },
+  ];
+  const filledAbout = aboutFields.filter(f => cfg[f.key]);
+  if (filledAbout.length) {
+    prompt += isGreek ? '## Νομικά Στοιχεία Εταιρείας\n' : '## Company Legal Info\n';
+    filledAbout.forEach(f => { prompt += `- ${f.label}: ${cfg[f.key]}\n`; });
+    prompt += '\n';
+  }
+
+  // Add admin info sections (cancellation, compliance, FAQ) from admin panel
   const infoSections = [
     { title: cfg.infoCancellationTitle, content: cfg.infoCancellationContent, label: isGreek ? 'Πολιτική Ακύρωσης' : 'Cancellation Policy' },
     { title: cfg.infoComplianceTitle, content: cfg.infoComplianceContent, label: isGreek ? 'Συμμόρφωση' : 'Compliance' },
