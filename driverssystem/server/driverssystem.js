@@ -31,15 +31,21 @@ module.exports = function registerDriversSystem(app, opts = {}) {
     console.warn('[driverssystem] footer.html partial not found — will use client-side fetch');
   }
 
-  // Helper: serve page with footer pre-injected (saves a client-side fetch)
+  // Update-banner script tag
+  const UPDATE_BANNER_TAG = '\n<script src="/js/update-banner.js" defer></script>';
+
+  // Helper: serve page with footer + update-banner pre-injected
   const sendPageWithFooter = (res, filePath) => {
     if (!footerHtml) return res.sendFile(filePath);
     fs.readFile(filePath, 'utf8', (err, html) => {
       if (err) return res.status(404).send('Not found');
-      const injected = html.replace(
+      let injected = html.replace(
         '<div data-ds-footer-slot></div>',
         `<div data-ds-footer-slot>${footerHtml}</div>`
       );
+      if (!injected.includes('update-banner.js')) {
+        injected = injected.replace('</body>', UPDATE_BANNER_TAG + '\n</body>');
+      }
       res.set('Content-Type', 'text/html; charset=utf-8');
       res.send(injected);
     });

@@ -350,7 +350,7 @@
             : '';
           const confirmed = await showDeleteConfirm(label);
           if (!confirmed) return;
-          const res = await api(`/api/driverssystem/entries/${id}`, 'DELETE');
+          const res = await api(`/api/driverssystem/entries/${id}?driverId=${encodeURIComponent(driverPhone)}`, 'DELETE');
           if (res.ok) {
             if (navigator.vibrate) navigator.vibrate(30);
             await Promise.all([loadEntries(), loadDailyTarget()]);

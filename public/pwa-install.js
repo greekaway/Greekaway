@@ -95,6 +95,17 @@
     } catch(_) {}
   }
 
+  // Load update-banner (checks for new deployments)
+  function loadUpdateBanner(){
+    try {
+      if (document.querySelector('script[src*="update-banner"]')) return;
+      var s = document.createElement('script');
+      s.src = '/js/update-banner.js';
+      s.defer = true;
+      document.head.appendChild(s);
+    } catch(_) {}
+  }
+
   // Events
   window.addEventListener('beforeinstallprompt', (e) => {
     // Only handle once and only if not installed
@@ -112,6 +123,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     registerSW();
+    loadUpdateBanner();
     if (!promptAllowed()) return;
     if (alreadyInstalled()) hideBanner();
   });

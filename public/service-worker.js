@@ -160,6 +160,8 @@ self.addEventListener('fetch', (event) => {
     const networkOnly = (
       // Never cache checkout page or well-known files
       path === '/checkout.html' || path.startsWith('/.well-known/') ||
+      // Never cache version endpoint (needed for update-banner freshness)
+      path === '/version.json' ||
       // Never cache any API calls (includes create-payment-intent endpoints)
       path.startsWith('/api/') ||
       // Never cache DriversSystem pages (always serve fresh from server)

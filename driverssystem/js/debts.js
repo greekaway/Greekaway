@@ -120,7 +120,7 @@
   }
 
   async function removeDebt(id) {
-    const res = await fetch(`${BASE}/${id}`, { method: 'DELETE' });
+    const res = await fetch(`${BASE}/${id}?driverId=${encodeURIComponent(phone)}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Delete failed');
   }
 

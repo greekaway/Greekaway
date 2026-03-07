@@ -1048,7 +1048,7 @@
       if (!confirmed) return;
 
       try {
-        const res = await fetch(`/api/driverssystem/expenses/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/driverssystem/expenses/${id}?driverId=${encodeURIComponent(currentPhone)}`, { method: 'DELETE' });
         if (res.ok) {
           if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
           closeEditModal();

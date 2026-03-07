@@ -585,15 +585,25 @@ const DRIVERSSYSTEM_ENTRY = path.join(DRIVERSSYSTEM_PAGES_DIR, 'welcome.html');
 let dsFooterHtml = '';
 try { dsFooterHtml = fs.readFileSync(path.join(DRIVERSSYSTEM_BASE_DIR, 'partials', 'footer.html'), 'utf8'); } catch (_) {}
 
-// Helper: send DriversSystem page with footer pre-injected
+// Update-banner script tag (injected before </body> in served HTML pages)
+const UPDATE_BANNER_TAG = '\n<script src="/js/update-banner.js" defer></script>';
+
+// Helper: inject update-banner script before </body>
+const injectUpdateBanner = (html) => {
+  if (html.includes('update-banner.js')) return html;
+  return html.replace('</body>', UPDATE_BANNER_TAG + '\n</body>');
+};
+
+// Helper: send DriversSystem page with footer + update-banner pre-injected
 const sendDsPageWithFooter = (res, filePath) => {
   if (!dsFooterHtml) return res.sendFile(filePath);
   fs.readFile(filePath, 'utf8', (err, html) => {
     if (err) return res.status(404).send('Not found');
-    const injected = html.replace(
+    let injected = html.replace(
       '<div data-ds-footer-slot></div>',
       `<div data-ds-footer-slot>${dsFooterHtml}</div>`
     );
+    injected = injectUpdateBanner(injected);
     res.set('Content-Type', 'text/html; charset=utf-8');
     res.send(injected);
   });
