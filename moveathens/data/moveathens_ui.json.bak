@@ -214,5 +214,15 @@
     "routes": "Ολοκληρωμένες Διαδρομές",
     "destinations": "Προορισμοί",
     "categories": "Κατηγορίες Διαδρομών"
-  }
+  },
+  "infoCancellationTitle": "",
+  "infoCancellationContent": "",
+  "infoComplianceTitle": "",
+  "infoComplianceContent": "",
+  "infoFaqTitle": "",
+  "infoFaqContent": "",
+  "showPriceInMessage": false,
+  "irisPhone": "",
+  "flightTrackingEnabled": true,
+  "flightCheckMinsBefore": 25
 }
