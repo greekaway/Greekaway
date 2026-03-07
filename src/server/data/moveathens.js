@@ -100,6 +100,15 @@ function getDefaultConfig() {
     infoFaqTitle: '',
     infoFaqContent: '',
     welcomeTextBlock: '',
+    aboutUsCompanyName: '',
+    aboutUsAfm: '',
+    aboutUsDoy: '',
+    aboutUsActivity: '',
+    aboutUsAddress: '',
+    aboutUsManager: '',
+    aboutUsPhone: '',
+    aboutUsEmail: '',
+    aboutUsWebsite: '',
     transferZones: [],
     vehicleTypes: [],
     destinationCategories: [],
@@ -195,7 +204,16 @@ async function getConfig() {
             heroVideoEnabled: migrated.hero_video_enabled !== false,
             flightTrackingEnabled: migrated.flight_tracking_enabled !== false,
             flightCheckMinsBefore: migrated.flight_check_mins_before || 25,
-            welcomeTextBlock: migrated.welcome_text_block || ''
+            welcomeTextBlock: migrated.welcome_text_block || '',
+            aboutUsCompanyName: migrated.about_us_company_name || '',
+            aboutUsAfm: migrated.about_us_afm || '',
+            aboutUsDoy: migrated.about_us_doy || '',
+            aboutUsActivity: migrated.about_us_activity || '',
+            aboutUsAddress: migrated.about_us_address || '',
+            aboutUsManager: migrated.about_us_manager || '',
+            aboutUsPhone: migrated.about_us_phone || '',
+            aboutUsEmail: migrated.about_us_email || '',
+            aboutUsWebsite: migrated.about_us_website || ''
           };
         }
       }
@@ -228,7 +246,16 @@ async function getConfig() {
         heroVideoEnabled: row.hero_video_enabled !== false,
         flightTrackingEnabled: row.flight_tracking_enabled !== false,
         flightCheckMinsBefore: row.flight_check_mins_before || 25,
-        welcomeTextBlock: row.welcome_text_block || ''
+        welcomeTextBlock: row.welcome_text_block || '',
+        aboutUsCompanyName: row.about_us_company_name || '',
+        aboutUsAfm: row.about_us_afm || '',
+        aboutUsDoy: row.about_us_doy || '',
+        aboutUsActivity: row.about_us_activity || '',
+        aboutUsAddress: row.about_us_address || '',
+        aboutUsManager: row.about_us_manager || '',
+        aboutUsPhone: row.about_us_phone || '',
+        aboutUsEmail: row.about_us_email || '',
+        aboutUsWebsite: row.about_us_website || ''
       };
     } catch (err) {
       console.error('[moveathens] DB config read failed:', err.message);
@@ -263,7 +290,16 @@ async function getConfig() {
     heroVideoEnabled: full.heroVideoEnabled !== false,
     flightTrackingEnabled: full.flightTrackingEnabled !== false,
     flightCheckMinsBefore: full.flightCheckMinsBefore || 25,
-    welcomeTextBlock: full.welcomeTextBlock || ''
+    welcomeTextBlock: full.welcomeTextBlock || '',
+    aboutUsCompanyName: full.aboutUsCompanyName || '',
+    aboutUsAfm: full.aboutUsAfm || '',
+    aboutUsDoy: full.aboutUsDoy || '',
+    aboutUsActivity: full.aboutUsActivity || '',
+    aboutUsAddress: full.aboutUsAddress || '',
+    aboutUsManager: full.aboutUsManager || '',
+    aboutUsPhone: full.aboutUsPhone || '',
+    aboutUsEmail: full.aboutUsEmail || '',
+    aboutUsWebsite: full.aboutUsWebsite || ''
   };
 }
 

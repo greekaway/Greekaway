@@ -81,6 +81,15 @@ CREATE TABLE IF NOT EXISTS ma_config (
     flight_tracking_enabled BOOLEAN DEFAULT true,
     flight_check_mins_before INTEGER DEFAULT 25,
     welcome_text_block TEXT DEFAULT '',
+    about_us_company_name VARCHAR(255) DEFAULT '',
+    about_us_afm VARCHAR(50) DEFAULT '',
+    about_us_doy VARCHAR(255) DEFAULT '',
+    about_us_activity VARCHAR(500) DEFAULT '',
+    about_us_address TEXT DEFAULT '',
+    about_us_manager VARCHAR(255) DEFAULT '',
+    about_us_phone VARCHAR(50) DEFAULT '',
+    about_us_email VARCHAR(255) DEFAULT '',
+    about_us_website VARCHAR(512) DEFAULT '',
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

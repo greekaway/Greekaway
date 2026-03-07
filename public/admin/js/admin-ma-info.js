@@ -16,6 +16,15 @@
     const complianceContentInput = $('#maInfoComplianceContent');
     const faqTitleInput = $('#maInfoFaqTitle');
     const faqContentInput = $('#maInfoFaqContent');
+    const aboutCompanyName = $('#maAboutUsCompanyName');
+    const aboutAfm = $('#maAboutUsAfm');
+    const aboutDoy = $('#maAboutUsDoy');
+    const aboutActivity = $('#maAboutUsActivity');
+    const aboutAddress = $('#maAboutUsAddress');
+    const aboutManager = $('#maAboutUsManager');
+    const aboutPhone = $('#maAboutUsPhone');
+    const aboutEmail = $('#maAboutUsEmail');
+    const aboutWebsite = $('#maAboutUsWebsite');
     const saveBtn = $('#maInfoPageSaveBtn');
     const status = $('#maInfoPageStatus');
     const preview = $('#maInfoPagePreview');
@@ -61,6 +70,31 @@
         html += renderSection(cancellationTitleInput?.value, cancellationContentInput?.value, '🚫');
         html += renderSection(complianceTitleInput?.value, complianceContentInput?.value, '📋');
         html += renderSection(faqTitleInput?.value, faqContentInput?.value, '❓');
+
+        // About Us preview
+        const aboutFields = [
+          { label: 'Επωνυμία', val: aboutCompanyName?.value },
+          { label: 'ΑΦΜ', val: aboutAfm?.value },
+          { label: 'ΔΟΥ', val: aboutDoy?.value },
+          { label: 'Δραστηριότητα', val: aboutActivity?.value },
+          { label: 'Επίσημη Έδρα', val: aboutAddress?.value },
+          { label: 'Νόμιμος Εκπρόσωπος', val: aboutManager?.value },
+          { label: 'Τηλέφωνο', val: aboutPhone?.value },
+          { label: 'Email', val: aboutEmail?.value },
+          { label: 'Website', val: aboutWebsite?.value }
+        ];
+        const hasAbout = aboutFields.some(f => f.val);
+        if (hasAbout) {
+          html += '<div class="ma-preview-section-divider"></div>';
+          html += '<h3>🏢 About Us</h3>';
+          aboutFields.forEach(f => {
+            if (f.val) {
+              const escaped = f.val.replace(/</g, '&lt;').replace(/\n/g, '<br>');
+              html += `<p><strong>${f.label}:</strong> ${escaped}</p>`;
+            }
+          });
+        }
+
         preview.innerHTML = html || '<span style="color:#999;">Η προεπισκόπηση θα εμφανιστεί εδώ...</span>';
       }
     };
@@ -75,6 +109,15 @@
       if (complianceContentInput) complianceContentInput.value = C.infoComplianceContent || '';
       if (faqTitleInput) faqTitleInput.value = C.infoFaqTitle || '';
       if (faqContentInput) faqContentInput.value = C.infoFaqContent || '';
+      if (aboutCompanyName) aboutCompanyName.value = C.aboutUsCompanyName || '';
+      if (aboutAfm) aboutAfm.value = C.aboutUsAfm || '';
+      if (aboutDoy) aboutDoy.value = C.aboutUsDoy || '';
+      if (aboutActivity) aboutActivity.value = C.aboutUsActivity || '';
+      if (aboutAddress) aboutAddress.value = C.aboutUsAddress || '';
+      if (aboutManager) aboutManager.value = C.aboutUsManager || '';
+      if (aboutPhone) aboutPhone.value = C.aboutUsPhone || '';
+      if (aboutEmail) aboutEmail.value = C.aboutUsEmail || '';
+      if (aboutWebsite) aboutWebsite.value = C.aboutUsWebsite || '';
       updatePreview();
     };
 
@@ -82,7 +125,9 @@
       titleInput, contentInput,
       cancellationTitleInput, cancellationContentInput,
       complianceTitleInput, complianceContentInput,
-      faqTitleInput, faqContentInput
+      faqTitleInput, faqContentInput,
+      aboutCompanyName, aboutAfm, aboutDoy, aboutActivity,
+      aboutAddress, aboutManager, aboutPhone, aboutEmail, aboutWebsite
     ];
     allInputs.forEach(input => {
       if (input) input.addEventListener('input', updatePreview);
@@ -101,7 +146,16 @@
           infoComplianceTitle: complianceTitleInput?.value || '',
           infoComplianceContent: complianceContentInput?.value || '',
           infoFaqTitle: faqTitleInput?.value || '',
-          infoFaqContent: faqContentInput?.value || ''
+          infoFaqContent: faqContentInput?.value || '',
+          aboutUsCompanyName: aboutCompanyName?.value || '',
+          aboutUsAfm: aboutAfm?.value || '',
+          aboutUsDoy: aboutDoy?.value || '',
+          aboutUsActivity: aboutActivity?.value || '',
+          aboutUsAddress: aboutAddress?.value || '',
+          aboutUsManager: aboutManager?.value || '',
+          aboutUsPhone: aboutPhone?.value || '',
+          aboutUsEmail: aboutEmail?.value || '',
+          aboutUsWebsite: aboutWebsite?.value || ''
         };
 
         const res = await api('/api/admin/moveathens/ui-config', 'PUT', payload);

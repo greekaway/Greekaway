@@ -62,6 +62,52 @@ module.exports = function registerGeneralRoutes(app, opts = {}) {
       if (typeof body.infoPageContent === 'string') {
         updates.infoPageContent = body.infoPageContent.slice(0, 10000);
       }
+      if (typeof body.infoCancellationTitle === 'string') {
+        updates.infoCancellationTitle = normalizeString(body.infoCancellationTitle).slice(0, 200);
+      }
+      if (typeof body.infoCancellationContent === 'string') {
+        updates.infoCancellationContent = body.infoCancellationContent.slice(0, 10000);
+      }
+      if (typeof body.infoComplianceTitle === 'string') {
+        updates.infoComplianceTitle = normalizeString(body.infoComplianceTitle).slice(0, 200);
+      }
+      if (typeof body.infoComplianceContent === 'string') {
+        updates.infoComplianceContent = body.infoComplianceContent.slice(0, 10000);
+      }
+      if (typeof body.infoFaqTitle === 'string') {
+        updates.infoFaqTitle = normalizeString(body.infoFaqTitle).slice(0, 200);
+      }
+      if (typeof body.infoFaqContent === 'string') {
+        updates.infoFaqContent = body.infoFaqContent.slice(0, 10000);
+      }
+      // About Us structured fields
+      if (typeof body.aboutUsCompanyName === 'string') {
+        updates.aboutUsCompanyName = normalizeString(body.aboutUsCompanyName).slice(0, 255);
+      }
+      if (typeof body.aboutUsAfm === 'string') {
+        updates.aboutUsAfm = normalizeString(body.aboutUsAfm).slice(0, 50);
+      }
+      if (typeof body.aboutUsDoy === 'string') {
+        updates.aboutUsDoy = normalizeString(body.aboutUsDoy).slice(0, 255);
+      }
+      if (typeof body.aboutUsActivity === 'string') {
+        updates.aboutUsActivity = normalizeString(body.aboutUsActivity).slice(0, 500);
+      }
+      if (typeof body.aboutUsAddress === 'string') {
+        updates.aboutUsAddress = body.aboutUsAddress.slice(0, 1000);
+      }
+      if (typeof body.aboutUsManager === 'string') {
+        updates.aboutUsManager = normalizeString(body.aboutUsManager).slice(0, 255);
+      }
+      if (typeof body.aboutUsPhone === 'string') {
+        updates.aboutUsPhone = normalizeString(body.aboutUsPhone).slice(0, 50);
+      }
+      if (typeof body.aboutUsEmail === 'string') {
+        updates.aboutUsEmail = normalizeString(body.aboutUsEmail).slice(0, 255);
+      }
+      if (typeof body.aboutUsWebsite === 'string') {
+        updates.aboutUsWebsite = normalizeString(body.aboutUsWebsite).slice(0, 512);
+      }
       if (typeof body.showPriceInMessage === 'boolean') {
         updates.showPriceInMessage = body.showPriceInMessage;
       }

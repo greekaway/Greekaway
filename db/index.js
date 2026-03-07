@@ -352,7 +352,11 @@ const ma = {
       'flight_tracking_enabled',
       'flight_check_mins_before',
       // Welcome text block (2026-03-05)
-      'welcome_text_block'
+      'welcome_text_block',
+      // About Us company details (2026-03-07)
+      'about_us_company_name', 'about_us_afm', 'about_us_doy',
+      'about_us_activity', 'about_us_address', 'about_us_manager',
+      'about_us_phone', 'about_us_email', 'about_us_website'
     ];
     
     const updates = [];

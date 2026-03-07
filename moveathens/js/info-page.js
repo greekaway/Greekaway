@@ -113,6 +113,40 @@
       'Συχνές Ερωτήσεις'
     );
 
+    // About Us — structured company info
+    const aboutEl = document.getElementById('info-content-aboutus');
+    if (aboutEl) {
+      const fields = [
+        { label: 'Επωνυμία', value: cfg.aboutUsCompanyName, cls: 'company' },
+        { label: 'ΑΦΜ', value: cfg.aboutUsAfm },
+        { label: 'ΔΟΥ', value: cfg.aboutUsDoy },
+        { label: 'Δραστηριότητα', value: cfg.aboutUsActivity },
+        { label: 'Επίσημη Έδρα', value: cfg.aboutUsAddress, multiline: true },
+        { label: 'Νόμιμος Εκπρόσωπος', value: cfg.aboutUsManager },
+        { label: 'Τηλέφωνο', value: cfg.aboutUsPhone, href: cfg.aboutUsPhone ? 'tel:' + cfg.aboutUsPhone.replace(/\s/g, '') : '' },
+        { label: 'Email', value: cfg.aboutUsEmail, href: cfg.aboutUsEmail ? 'mailto:' + cfg.aboutUsEmail : '' },
+        { label: 'Website', value: cfg.aboutUsWebsite, href: cfg.aboutUsWebsite || '' }
+      ];
+      const hasAny = fields.some(f => f.value);
+      if (hasAny) {
+        let html = '<dl class="ma-aboutus-list">';
+        fields.forEach(f => {
+          if (!f.value) return;
+          const escaped = f.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const display = f.multiline ? escaped.replace(/\n/g, '<br>') : escaped;
+          const val = f.href
+            ? `<a href="${f.href.replace(/"/g, '&quot;')}" target="_blank" rel="noopener">${display}</a>`
+            : display;
+          html += `<div class="ma-aboutus-row${f.cls ? ' ma-aboutus-row--' + f.cls : ''}">`;
+          html += `<dt>${f.label}</dt><dd>${val}</dd></div>`;
+        });
+        html += '</dl>';
+        aboutEl.innerHTML = html;
+      } else {
+        aboutEl.innerHTML = '<p class="ma-muted">Δεν υπάρχουν διαθέσιμα εταιρικά στοιχεία.</p>';
+      }
+    }
+
   } catch (err) {
     console.error('Info page error:', err);
     // Show error in all panels

@@ -206,6 +206,88 @@ body.dark .ma-muted {
   color: #7b8794;
 }
 
+/* ===== About Us Structured Layout ===== */
+.ma-aboutus-list {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ma-aboutus-row {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.ma-aboutus-row:last-child {
+  border-bottom: none;
+}
+
+.ma-aboutus-row--company dd {
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.ma-aboutus-list dt {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #7b8794;
+  margin-bottom: 2px;
+}
+
+.ma-aboutus-list dd {
+  margin: 0;
+  font-size: 15px;
+  color: #1a2232;
+  line-height: 1.5;
+}
+
+.ma-aboutus-list dd a {
+  color: #4E6BFF;
+  text-decoration: none;
+}
+
+.ma-aboutus-list dd a:hover {
+  text-decoration: underline;
+}
+
+/* About Us dark mode */
+body.dark .ma-aboutus-row {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark .ma-aboutus-list dt {
+  color: #8b96a5;
+}
+
+body.dark .ma-aboutus-list dd {
+  color: #e8ebf0;
+}
+
+body.dark .ma-aboutus-list dd a {
+  color: #6b9fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ma-aboutus-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+  .ma-aboutus-list dt {
+    color: #8b96a5;
+  }
+  .ma-aboutus-list dd {
+    color: #e8ebf0;
+  }
+  .ma-aboutus-list dd a {
+    color: #6b9fff;
+  }
+}
+
 /* ========================================
    RESPONSIVE INFO PAGE
    ======================================== */
