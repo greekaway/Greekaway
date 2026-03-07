@@ -2,7 +2,8 @@
 
 .ma-info-page {
   overflow-y: auto;
-  height: 100vh;
+  min-height: 100vh;
+  height: auto;
 }
 
 /* ===== Info Page Tabs ===== */

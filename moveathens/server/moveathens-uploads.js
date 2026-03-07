@@ -13,6 +13,8 @@ const fs = require('fs');
 const crypto = require('crypto');
 let multer = null;
 try { multer = require('multer'); } catch (_) { multer = null; }
+let sharp = null;
+try { sharp = require('sharp'); } catch (_) { sharp = null; }
 
 const dataLayer = require('../../src/server/data/moveathens');
 
@@ -65,6 +67,14 @@ module.exports = function registerUploadRoutes(app, opts = {}) {
       fs.mkdirSync(videosDir, { recursive: true });
       const outPath = path.join(videosDir, `hero-logo.${ext}`);
       fs.writeFileSync(outPath, req.file.buffer);
+
+      // Auto-generate WebP version for performance (smaller file size)
+      if (sharp && ext === 'png') {
+        try {
+          await sharp(req.file.buffer).webp({ quality: 80 }).toFile(path.join(videosDir, 'hero-logo.webp'));
+        } catch (_) { /* WebP generation is best-effort */ }
+      }
+
       const url = `/uploads/moveathens/videos/hero-logo.${ext}`;
       try {
         await dataLayer.updateConfig({ heroLogoUrl: url });

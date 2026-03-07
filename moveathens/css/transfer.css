@@ -25,6 +25,7 @@
 
 .ma-logo-img {
   height: 90px;
+  max-height: 16vw;
   width: auto;
   filter: brightness(0);
 }
@@ -35,6 +36,7 @@
   margin: 0;
   text-align: center;
   color: #1a1a2e;
+  padding: 0 100px;
 }
 
 .ma-main {
@@ -479,8 +481,8 @@
 
 /* Rounded-square icon container (app-icon style) */
 .ma-category-icon {
-  width: 88px;
-  height: 88px;
+  width: min(88px, 24vw);
+  height: min(88px, 24vw);
   border-radius: 22px;
   display: flex;
   align-items: center;
@@ -755,6 +757,7 @@
   align-items: center;
   padding: 12px 0;
   border-bottom: 1px solid #e8e8e8;
+  gap: 8px;
 }
 
 .ma-confirm-row:last-child {
@@ -766,12 +769,17 @@
   color: #666;
   font-size: 15px;
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .ma-confirm-value {
   font-weight: 600;
   color: #1a1a2e;
   font-size: 15px;
+  text-align: right;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .ma-confirm-price .ma-confirm-value {
@@ -1218,7 +1226,7 @@
 }
 
 .ma-payment-btn {
-  flex: 1;
+  flex: 1 1 120px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1292,6 +1300,14 @@
   
   .ma-vehicle-card {
     padding: 14px;
+    grid-template-columns: 80px 1fr auto;
+    gap: 10px;
+  }
+  
+  .ma-vehicle-img,
+  .ma-vehicle-placeholder {
+    width: 80px;
+    height: 56px;
   }
   
   .ma-vehicle-image {
@@ -1705,7 +1721,7 @@
 
 /* Tablets (768px+) */
 @media (min-width: 768px) {
-  .ma-transfer-main {
+  .ma-transfer-page .ma-main {
     max-width: 680px;
     margin: 0 auto;
     padding: 28px 24px 40px;
@@ -1736,7 +1752,7 @@
 
 /* Desktop (1024px+) */
 @media (min-width: 1024px) {
-  .ma-transfer-main {
+  .ma-transfer-page .ma-main {
     max-width: 800px;
     padding: 36px 32px 48px;
   }

@@ -17,6 +17,7 @@ html {
   overscroll-behavior-y: none;
   min-height: 100%;
   background: var(--ma-bg);
+  overflow-x: hidden;
 }
 
 body {
@@ -26,10 +27,11 @@ body {
   color: var(--ma-text);
   min-height: 100vh;
   padding-bottom: 86px;
+  overflow-x: hidden;
 }
 
-/* Lock scroll for pages that don't need it */
-.ma-page,
+/* Lock scroll for pages that don't need it —
+   page-header.css overrides this for scrollable pages */
 .ma-ai-page {
   height: 100vh;
   overflow: hidden;
@@ -238,6 +240,30 @@ body {
     padding: 14px 18px;
     font-size: 16px;
     border-radius: 16px;
+  }
+}
+
+/* Tablets — center content */
+@media (min-width: 768px) {
+  .ma-main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 28px 24px 36px;
+  }
+}
+
+/* Desktop — wider max */
+@media (min-width: 1024px) {
+  .ma-main {
+    max-width: 800px;
+    padding: 36px 32px 40px;
+  }
+}
+
+/* Body safe-area bottom padding for notched phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: calc(86px + env(safe-area-inset-bottom));
   }
 }
 

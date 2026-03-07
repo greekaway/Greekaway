@@ -246,6 +246,16 @@
   }
 }
 
+/* Tablets — constrain footer width */
+@media (min-width: 768px) {
+  .ma-footer {
+    max-width: 520px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+}
+
 /* ========================================
    LIGHT MODE — Hero page footer
    ======================================== */

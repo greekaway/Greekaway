@@ -213,6 +213,36 @@
   transition: opacity 0.6s ease;
 }
 
+/* Short screens / landscape: reduce dashboard spacing */
+@media (max-height: 600px) {
+  .ma-welcome-dashboard {
+    top: 64px;
+    bottom: 64px;
+    padding: 10px 12px 16px;
+    gap: 8px;
+  }
+  .ma-metrics__card,
+  .ma-status__card,
+  .ma-mystats__card {
+    padding: 8px 6px;
+    min-height: 48px;
+  }
+  .ma-metrics__value,
+  .ma-status__value,
+  .ma-mystats__value {
+    font-size: 18px;
+  }
+  .ma-panel__title {
+    font-size: 11px;
+    margin: 0 0 6px;
+  }
+  .ma-metrics-panel,
+  .ma-status-panel,
+  .ma-mystats-panel {
+    padding: 10px;
+  }
+}
+
 /* ========================================
    METRICS PANEL — frosted container
    ======================================== */
@@ -399,6 +429,7 @@
   .ma-hero__logo { width: 110px; }
   .ma-hero__headline { font-size: 17px; }
   .ma-hero__subtext { font-size: 12px; }
+  .ma-hero__overlay { padding: 12px; }
   .ma-metrics__value,
   .ma-status__value,
   .ma-mystats__value { font-size: 18px; }
