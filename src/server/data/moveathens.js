@@ -711,6 +711,7 @@ async function getDestinationCategories(activeOnly = false) {
           is_active: row.is_active,
           is_arrival: row.is_arrival ?? false,
           color: row.color || '#1a73e8',
+          icon_color: row.icon_color || 'white',
           created_at: row.created_at
         }));
       }
@@ -728,7 +729,8 @@ async function getDestinationCategories(activeOnly = false) {
               display_order: c.display_order || 0,
               is_active: c.is_active !== false,
               is_arrival: c.is_arrival ?? false,
-              color: c.color || '#1a73e8'
+              color: c.color || '#1a73e8',
+              icon_color: c.icon_color || 'white'
             });
           } catch (e) {
             console.error('[moveathens] Failed to migrate dest category:', c.id, e.message);
@@ -743,6 +745,7 @@ async function getDestinationCategories(activeOnly = false) {
           is_active: row.is_active,
           is_arrival: row.is_arrival ?? false,
           color: row.color || '#1a73e8',
+          icon_color: row.icon_color || 'white',
           created_at: row.created_at
         }));
       }
