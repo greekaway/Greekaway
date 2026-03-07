@@ -11,7 +11,7 @@
   display: flex;
   gap: 6px;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+  background: transparent;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -32,9 +32,9 @@
   align-items: center;
   gap: 4px;
   padding: 10px 14px;
-  border: none;
+  border: 1.5px solid #c5cdd8;
   border-radius: 12px;
-  background: #f0f2f5;
+  background: #fff;
   color: #5a6573;
   font-size: 12px;
   font-weight: 500;
@@ -42,6 +42,7 @@
   transition: all 0.2s ease;
   flex-shrink: 0;
   min-width: 72px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .ma-info-tab__icon {
@@ -54,12 +55,14 @@
 }
 
 .ma-info-tab:hover {
-  background: #e4e8ed;
+  background: #edf0f4;
+  border-color: #a8b3c2;
 }
 
 .ma-info-tab.active {
   background: linear-gradient(135deg, #4E6BFF 0%, #3a54cc 100%);
   color: #fff;
+  border-color: transparent;
   box-shadow: 0 4px 12px rgba(78, 107, 255, 0.35);
 }
 
@@ -129,21 +132,25 @@
 /* ===== Dark Mode ===== */
 @media (prefers-color-scheme: dark) {
   .ma-info-tabs {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16161f 100%);
+    background: transparent;
   }
   
   .ma-info-tab {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
     color: #a8b3c2;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   }
   
   .ma-info-tab:hover {
     background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
   }
   
   .ma-info-tab.active {
     background: linear-gradient(135deg, #4E6BFF 0%, #3a54cc 100%);
     color: #fff;
+    border-color: transparent;
   }
   
   .ma-info-content,
@@ -169,21 +176,25 @@
 
 /* Body dark mode class override */
 body.dark .ma-info-tabs {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16161f 100%);
+  background: transparent;
 }
 
 body.dark .ma-info-tab {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.15);
   color: #a8b3c2;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 body.dark .ma-info-tab:hover {
   background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 body.dark .ma-info-tab.active {
   background: linear-gradient(135deg, #4E6BFF 0%, #3a54cc 100%);
   color: #fff;
+  border-color: transparent;
 }
 
 body.dark .ma-info-content,

@@ -658,6 +658,60 @@ html[data-theme='light'] .bar-tab.active {
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 16px;
+  scroll-margin-top: 16px;
+}
+
+/* Jump Navigation */
+.ma-info-jumpnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.ma-info-jumpnav__btn {
+  padding: 7px 14px;
+  border: 1px solid var(--ga-border, rgba(255,255,255,0.12));
+  border-radius: 8px;
+  background: var(--ga-bg-card, #0f1c29);
+  color: var(--ga-text-secondary, #a8b3c2);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ma-info-jumpnav__btn:hover {
+  background: var(--ga-primary, #4E6BFF);
+  color: #fff;
+  border-color: var(--ga-primary, #4E6BFF);
+}
+
+.ma-info-jumpnav__btn.active {
+  background: var(--ga-primary, #4E6BFF);
+  color: #fff;
+  border-color: var(--ga-primary, #4E6BFF);
+  box-shadow: 0 2px 8px rgba(78, 107, 255, 0.3);
+}
+
+html[data-theme='light'] .ma-info-jumpnav__btn {
+  background: #fff;
+  border-color: rgba(6, 24, 53, 0.15);
+  color: #3d4a5c;
+}
+
+html[data-theme='light'] .ma-info-jumpnav__btn:hover {
+  background: #4E6BFF;
+  color: #fff;
+  border-color: #4E6BFF;
+}
+
+html[data-theme='light'] .ma-info-jumpnav__btn.active {
+  background: #4E6BFF;
+  color: #fff;
+  border-color: #4E6BFF;
+  box-shadow: 0 2px 8px rgba(78, 107, 255, 0.25);
 }
 
 /* Light theme for info sections */

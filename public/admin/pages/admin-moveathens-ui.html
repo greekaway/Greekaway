@@ -478,9 +478,17 @@
             </div>
           </div>
 
+          <nav class="ma-info-jumpnav">
+            <button type="button" class="ma-info-jumpnav__btn active" data-info-target="info-sec-transfers">📍 Μεταφορές</button>
+            <button type="button" class="ma-info-jumpnav__btn" data-info-target="info-sec-cancellation">🚫 Ακυρώσεις</button>
+            <button type="button" class="ma-info-jumpnav__btn" data-info-target="info-sec-compliance">📋 Συμμόρφωση</button>
+            <button type="button" class="ma-info-jumpnav__btn" data-info-target="info-sec-faq">❓ FAQ</button>
+            <button type="button" class="ma-info-jumpnav__btn" data-info-target="info-sec-aboutus">🏢 About Us</button>
+          </nav>
+
           <form id="ma-infopage-form" class="ma-infopage-form">
             <!-- Section 1: Γενικές Πληροφορίες Μεταφορών -->
-            <div class="ma-info-section">
+            <div class="ma-info-section" id="info-sec-transfers">
               <h4 class="ma-info-section-title">📍 Γενικές Πληροφορίες Μεταφορών</h4>
               <div class="ma-field">
                 <label>Τίτλος
@@ -495,7 +503,7 @@
             </div>
 
             <!-- Section 2: Πολιτική Ακυρώσεων -->
-            <div class="ma-info-section">
+            <div class="ma-info-section" id="info-sec-cancellation">
               <h4 class="ma-info-section-title">🚫 Πολιτική Ακυρώσεων</h4>
               <div class="ma-field">
                 <label>Τίτλος
@@ -510,7 +518,7 @@
             </div>
 
             <!-- Section 3: Πολιτική Συμμόρφωσης -->
-            <div class="ma-info-section">
+            <div class="ma-info-section" id="info-sec-compliance">
               <h4 class="ma-info-section-title">📋 Πολιτική Συμμόρφωσης Επιβατών</h4>
               <div class="ma-field">
                 <label>Τίτλος
@@ -525,7 +533,7 @@
             </div>
 
             <!-- Section 4: Συχνές Ερωτήσεις -->
-            <div class="ma-info-section">
+            <div class="ma-info-section" id="info-sec-faq">
               <h4 class="ma-info-section-title">❓ Συχνές Ερωτήσεις (FAQ)</h4>
               <div class="ma-field">
                 <label>Τίτλος
@@ -540,7 +548,7 @@
             </div>
 
             <!-- Section 5: About Us — Εταιρικά Στοιχεία -->
-            <div class="ma-info-section">
+            <div class="ma-info-section" id="info-sec-aboutus">
               <h4 class="ma-info-section-title">🏢 Εταιρικά Στοιχεία (About Us)</h4>
               <div class="ma-field">
                 <label>Επωνυμία
@@ -599,6 +607,26 @@
             <h4 class="ma-preview-title">Προεπισκόπηση (scroll down για όλες τις ενότητες)</h4>
             <div id="maInfoPagePreview" class="ma-preview-box ma-preview-scroll"></div>
           </div>
+
+          <script>
+          (function(){
+            var nav = document.querySelector('.ma-info-jumpnav');
+            if (!nav) return;
+            var sections = document.querySelectorAll('#ma-infopage-form .ma-info-section');
+            // Hide all except first on load
+            sections.forEach(function(s, i){ if(i > 0) s.style.display = 'none'; });
+            nav.addEventListener('click', function(e){
+              var btn = e.target.closest('[data-info-target]');
+              if (!btn) return;
+              var id = btn.getAttribute('data-info-target');
+              // Toggle active button
+              nav.querySelectorAll('.ma-info-jumpnav__btn').forEach(function(b){ b.classList.remove('active'); });
+              btn.classList.add('active');
+              // Show target, hide others
+              sections.forEach(function(s){ s.style.display = s.id === id ? '' : 'none'; });
+            });
+          })();
+          </script>
         </section>
       </div>
 
