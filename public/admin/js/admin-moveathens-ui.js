@@ -42,6 +42,7 @@
       const vehiclesTab     = safe('initVehiclesTab',     () => M.initVehiclesTab());
       const zonesTab        = safe('initZonesTab',        () => M.initZonesTab());
       const pricingTab      = safe('initPricingTab',      () => M.initPricingTab());
+      const pricingMatrix   = safe('initPricingMatrixTab', () => M.initPricingMatrixTab());
       const infoPageTab     = safe('initInfoPageTab',     () => M.initInfoPageTab());
 
       console.log('[admin-ma] Loading config from server…');
@@ -58,6 +59,7 @@
       safe('vehiclesTab.render',       () => vehiclesTab?.render());
       safe('zonesTab.render',          () => zonesTab?.render());
       safe('pricingTab.render',        () => pricingTab?.render());
+      safe('pricingMatrix.render',     () => pricingMatrix?.render());
       safe('infoPageTab.populate',     () => infoPageTab?.populate());
       console.log('[admin-ma] Init complete ✔');
 

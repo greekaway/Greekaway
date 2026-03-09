@@ -1247,3 +1247,96 @@ html[data-theme='light'] .ma-infopage-form label {
   display: block;
 }
 
+/* ===== Bulk Pricing Matrix ===== */
+.ma-matrix-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--ga-border, rgba(255,255,255,0.12));
+  border-radius: 12px;
+}
+
+.ma-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 600px;
+}
+
+.ma-matrix-table th,
+.ma-matrix-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--ga-border, rgba(255,255,255,0.08));
+  white-space: nowrap;
+}
+
+.ma-matrix-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--ga-bg-card, #0f1c29);
+  color: var(--ga-muted, #7b8794);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ma-matrix-table tbody tr:hover {
+  background: rgba(78, 107, 255, 0.06);
+}
+
+.ma-matrix-dest-name {
+  font-weight: 600;
+  color: var(--ga-text, #f5f5f5);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ma-matrix-cat-name {
+  font-size: 12px;
+  color: var(--ga-muted, #7b8794);
+}
+
+.ma-matrix-table .input {
+  width: 80px;
+  padding: 5px 6px;
+  font-size: 13px;
+  text-align: right;
+}
+
+.ma-matrix-th-dest { min-width: 160px; }
+.ma-matrix-th-cat  { min-width: 100px; }
+
+/* Light mode */
+html[data-theme='light'] .ma-matrix-table thead th {
+  background: #f0f3f8;
+  color: #5a6577;
+}
+html[data-theme='light'] .ma-matrix-dest-name {
+  color: #0f1b2c;
+}
+html[data-theme='light'] .ma-matrix-table tbody tr:hover {
+  background: rgba(78, 107, 255, 0.04);
+}
+html[data-theme='light'] .ma-matrix-scroll {
+  border-color: rgba(6, 24, 53, 0.12);
+}
+
+/* Matrix mobile responsive */
+@media (max-width: 720px) {
+  .ma-matrix-table .input {
+    width: 65px;
+    font-size: 12px;
+  }
+  .ma-matrix-table th,
+  .ma-matrix-table td {
+    padding: 6px 6px;
+    font-size: 12px;
+  }
+  .ma-matrix-th-dest { min-width: 120px; }
+  .ma-matrix-th-cat  { display: none; }
+  .ma-matrix-cat-name { display: none; }
+}
+

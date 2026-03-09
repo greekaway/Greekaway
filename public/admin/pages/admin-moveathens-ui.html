@@ -605,43 +605,99 @@
             </div>
           </div>
 
-          <div class="ma-price-controls">
-            <label>Ξενοδοχείο (από)
-              <div class="ma-autocomplete-wrap">
-                <input id="maPriceHotelSearch" class="input" type="text" placeholder="Πληκτρολογήστε 2+ γράμματα…" autocomplete="off">
-                <input id="maPriceOriginZone" type="hidden">
-                <div id="maPriceHotelDropdown" class="ma-autocomplete-dropdown" hidden></div>
+          <!-- Sub-navigation: Τιμολόγηση / Πίνακας -->
+          <nav class="ma-info-jumpnav" id="maPricingSubnav">
+            <button type="button" class="ma-info-jumpnav__btn active" data-pricing-view="single">💰 Τιμολόγηση</button>
+            <button type="button" class="ma-info-jumpnav__btn" data-pricing-view="matrix">📋 Πίνακας</button>
+          </nav>
+
+          <!-- === Single pricing view (existing) === -->
+          <div id="maPricingSingleView">
+            <div class="ma-price-controls">
+              <label>Ξενοδοχείο (από)
+                <div class="ma-autocomplete-wrap">
+                  <input id="maPriceHotelSearch" class="input" type="text" placeholder="Πληκτρολογήστε 2+ γράμματα…" autocomplete="off">
+                  <input id="maPriceOriginZone" type="hidden">
+                  <div id="maPriceHotelDropdown" class="ma-autocomplete-dropdown" hidden></div>
+                </div>
+              </label>
+              <label>Κατηγορία
+                <select id="maPriceFilterCategory" class="input">
+                  <option value="">Όλες οι κατηγορίες</option>
+                </select>
+              </label>
+              <label id="maPriceFilterSubcatWrap" hidden>Υποκατηγορία
+                <select id="maPriceFilterSubcategory" class="input">
+                  <option value="">Όλες</option>
+                </select>
+              </label>
+              <label>Προορισμός (προς)
+                <select id="maPriceDestination" class="input"></select>
+              </label>
+              <label>Ταρίφα
+                <select id="maPriceTariff" class="input">
+                  <option value="day">☀️ Ημερήσια (05:00 - 00:00)</option>
+                  <option value="night">🌙 Νυχτερινή (00:00 - 05:00)</option>
+                </select>
+              </label>
+              <button id="maPriceLoadBtn" class="btn secondary" type="button">Φόρτωση Τιμών</button>
+            </div>
+
+            <form id="ma-pricing-form" class="ma-pricing-form" hidden>
+              <div id="ma-pricing-grid" class="ma-pricing-grid"></div>
+              <div class="ma-actions">
+                <button id="maPriceSaveBtn" class="btn" type="submit">Αποθήκευση Τιμών</button>
+                <span id="maPriceStatus" class="ma-status" aria-live="polite"></span>
               </div>
-            </label>
-            <label>Κατηγορία
-              <select id="maPriceFilterCategory" class="input">
-                <option value="">Όλες οι κατηγορίες</option>
-              </select>
-            </label>
-            <label id="maPriceFilterSubcatWrap" hidden>Υποκατηγορία
-              <select id="maPriceFilterSubcategory" class="input">
-                <option value="">Όλες</option>
-              </select>
-            </label>
-            <label>Προορισμός (προς)
-              <select id="maPriceDestination" class="input"></select>
-            </label>
-            <label>Ταρίφα
-              <select id="maPriceTariff" class="input">
-                <option value="day">☀️ Ημερήσια (05:00 - 00:00)</option>
-                <option value="night">🌙 Νυχτερινή (00:00 - 05:00)</option>
-              </select>
-            </label>
-            <button id="maPriceLoadBtn" class="btn secondary" type="button">Φόρτωση Τιμών</button>
+            </form>
           </div>
 
-          <form id="ma-pricing-form" class="ma-pricing-form" hidden>
-            <div id="ma-pricing-grid" class="ma-pricing-grid"></div>
-            <div class="ma-actions">
-              <button id="maPriceSaveBtn" class="btn" type="submit">Αποθήκευση Τιμών</button>
-              <span id="maPriceStatus" class="ma-status" aria-live="polite"></span>
+          <!-- === Bulk matrix view (new) === -->
+          <div id="maPricingMatrixView" hidden>
+            <div class="ma-price-controls">
+              <label>Ξενοδοχείο
+                <div class="ma-autocomplete-wrap">
+                  <input id="maMatrixHotelSearch" class="input" type="text" placeholder="Πληκτρολογήστε 2+ γράμματα…" autocomplete="off">
+                  <input id="maMatrixOriginZone" type="hidden">
+                  <div id="maMatrixHotelDropdown" class="ma-autocomplete-dropdown" hidden></div>
+                </div>
+              </label>
+              <label>Όχημα
+                <select id="maMatrixVehicle" class="input"></select>
+              </label>
+              <label>Ταρίφα
+                <select id="maMatrixTariff" class="input">
+                  <option value="day">☀️ Ημερήσια (05:00 - 00:00)</option>
+                  <option value="night">🌙 Νυχτερινή (00:00 - 05:00)</option>
+                </select>
+              </label>
+              <label>Κατηγορία
+                <select id="maMatrixFilterCategory" class="input">
+                  <option value="">Όλες</option>
+                </select>
+              </label>
+              <label id="maMatrixFilterSubcatWrap" hidden>Υποκατηγορία
+                <select id="maMatrixFilterSubcategory" class="input">
+                  <option value="">Όλες</option>
+                </select>
+              </label>
+              <button id="maMatrixLoadBtn" class="btn secondary" type="button">Φόρτωση Πίνακα</button>
             </div>
-          </form>
+
+            <form id="ma-matrix-form" class="ma-pricing-form" hidden>
+              <div class="ma-matrix-scroll">
+                <table id="ma-matrix-table" class="ma-matrix-table">
+                  <thead id="ma-matrix-thead"></thead>
+                  <tbody id="ma-matrix-tbody"></tbody>
+                </table>
+              </div>
+              <div class="ma-actions" style="margin-top:12px">
+                <button id="maMatrixSaveBtn" class="btn" type="submit">Αποθήκευση Όλων</button>
+                <span id="maMatrixStatus" class="ma-status" aria-live="polite"></span>
+              </div>
+            </form>
+          </div>
+
         </section>
       </div>
 
@@ -1170,6 +1226,7 @@
     <script src="/admin/js/admin-ma-vehicles.js?v=774"></script>
     <script src="/admin/js/admin-ma-hotels.js?v=774"></script>
     <script src="/admin/js/admin-ma-pricing.js?v=774"></script>
+    <script src="/admin/js/admin-ma-pricing-matrix.js?v=774"></script>
     <script src="/admin/js/admin-ma-info.js?v=774"></script>
     <script src="/admin/js/admin-moveathens-ui.js?v=774"></script>
     <script src="/admin/js/admin-ma-drivers.js?v=774"></script>
