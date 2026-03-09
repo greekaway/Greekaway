@@ -10,6 +10,9 @@
     const originHidden = $('#maPriceOriginZone');
     const hotelSearch = $('#maPriceHotelSearch');
     const hotelDropdown = $('#maPriceHotelDropdown');
+    const filterCategory = $('#maPriceFilterCategory');
+    const filterSubcategory = $('#maPriceFilterSubcategory');
+    const filterSubcatWrap = $('#maPriceFilterSubcatWrap');
     const destSelect = $('#maPriceDestination');
     const tariffSelect = $('#maPriceTariff');
     const loadBtn = $('#maPriceLoadBtn');
@@ -78,12 +81,52 @@
       setTimeout(() => { hotelDropdown.hidden = true; }, 200);
     });
 
+    // ---- Category / Subcategory filter dropdowns ----
+    const populateCategoryFilter = () => {
+      const activeCats = (state.CONFIG.destinationCategories || []).filter(c => c.is_active !== false);
+      if (filterCategory) {
+        filterCategory.innerHTML = '<option value="">Όλες οι κατηγορίες</option>' +
+          activeCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      }
+      updateSubcategoryFilter();
+    };
+
+    const updateSubcategoryFilter = () => {
+      const catId = filterCategory?.value || '';
+      const subs = (state.CONFIG.destinationSubcategories || []).filter(s => s.category_id === catId && s.is_active !== false);
+      if (subs.length > 0 && filterSubcatWrap) {
+        filterSubcatWrap.hidden = false;
+        if (filterSubcategory) filterSubcategory.innerHTML = '<option value="">Όλες</option>' +
+          subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      } else if (filterSubcatWrap) {
+        filterSubcatWrap.hidden = true;
+        if (filterSubcategory) filterSubcategory.value = '';
+      }
+      populateDestinations();
+    };
+
+    filterCategory?.addEventListener('change', () => {
+      updateSubcategoryFilter();
+    });
+    filterSubcategory?.addEventListener('change', () => {
+      populateDestinations();
+    });
+
     // ---- Destination dropdown ----
     const populateDestinations = () => {
-      const destinations = (state.CONFIG.destinations || []).filter(d => d.is_active !== false);
+      const allDestinations = (state.CONFIG.destinations || []).filter(d => d.is_active !== false);
       const categories = state.CONFIG.destinationCategories || [];
       const getCatName = (catId) => categories.find(c => c.id === catId)?.name || 'Χωρίς κατηγορία';
-      
+
+      const selectedCat = filterCategory?.value || '';
+      const selectedSub = filterSubcategory?.value || '';
+
+      const destinations = allDestinations.filter(d => {
+        if (selectedCat && d.category_id !== selectedCat) return false;
+        if (selectedSub && d.subcategory_id !== selectedSub) return false;
+        return true;
+      });
+
       const grouped = {};
       destinations.forEach(d => {
         const catName = getCatName(d.category_id);
@@ -104,7 +147,7 @@
 
     const render = () => {
       populateHotelList();
-      populateDestinations();
+      populateCategoryFilter();
       form.hidden = true;
       if (originHidden.value && selectedHotelName) {
         hotelSearch.value = selectedHotelName;

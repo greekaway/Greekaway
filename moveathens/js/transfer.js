@@ -458,7 +458,11 @@
     if (dest.area) rows.push(`<span class="ma-dest-extra"><strong>Περιοχή:</strong> ${dest.area}</span>`);
     if (dest.vibe) rows.push(`<span class="ma-dest-extra"><strong>Vibe:</strong> ${dest.vibe}</span>`);
     if (dest.venue_type) rows.push(`<span class="ma-dest-extra"><strong>Τύπος:</strong> ${dest.venue_type}</span>`);
-    if (dest.indicative_price) rows.push(`<span class="ma-dest-extra"><strong>Ενδεικτική τιμή:</strong> ${dest.indicative_price}</span>`);
+    if (dest.indicative_price) {
+      const rawPrice = String(dest.indicative_price).trim();
+      const priceDisplay = /^\d/.test(rawPrice) && !rawPrice.includes('€') ? rawPrice + ' €' : rawPrice;
+      rows.push(`<span class="ma-dest-extra"><strong>Ενδεικτική τιμή:</strong> ${priceDisplay}</span>`);
+    }
     if (dest.suitable_for) rows.push(`<span class="ma-dest-extra"><strong>Κατάλληλο για:</strong> ${dest.suitable_for}</span>`);
     if (dest.rating) rows.push(`<span class="ma-dest-extra"><strong>Βαθμολογία:</strong> ⭐ ${dest.rating}</span>`);
     if (dest.michelin) rows.push(`<span class="ma-dest-extra"><strong>Michelin:</strong> ${dest.michelin}</span>`);
