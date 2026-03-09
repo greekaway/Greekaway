@@ -633,13 +633,22 @@
   margin-bottom: 2px;
 }
 .ma-destination-extras {
-  padding: 12px 20px 16px;
   background: #f8fafc;
   border-radius: 0 0 14px 14px;
   margin-top: -6px;
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  padding: 0 20px;
+  transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+}
+.ma-destination-card--expanded .ma-destination-extras {
+  max-height: 400px;
+  opacity: 1;
+  padding: 12px 20px 16px;
 }
 .ma-destination-card--expanded .ma-destination-item {
   border-radius: 14px 14px 0 0;
@@ -1767,23 +1776,35 @@
   display: none !important;
 }
 .ma-schedule-overlay__card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px 20px;
   max-width: 380px;
   width: 100%;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
 }
-.ma-schedule-overlay__title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin: 0 0 8px;
+.ma-schedule-overlay__icon {
+  font-size: 36px;
+  text-align: center;
+  margin-bottom: 4px;
 }
-.ma-schedule-overlay__notice {
-  font-size: 13px;
-  color: #6b7280;
-  margin: 0 0 14px;
+.ma-schedule-overlay__msg {
+  white-space: pre-line;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #4b5563;
+  margin: 0 0 20px;
+}
+.ma-schedule-overlay__actions {
+  display: flex;
+  gap: 10px;
+}
+.ma-schedule-overlay__actions .ma-btn-confirm-datetime {
+  flex: 1;
+}
+.ma-schedule-overlay__actions .ma-btn-cancel {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+.ma-schedule-overlay__actions .ma-btn-cancel:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.35);
 }
 
 /* Responsive for booking type */

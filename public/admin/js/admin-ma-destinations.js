@@ -38,9 +38,30 @@
     const fMainArtist = $('#maDestMainArtist');
     const fParticipatingArtists = $('#maDestParticipatingArtists');
     const fProgramInfo = $('#maDestProgramInfo');
-    const fOperatingDays = $('#maDestOperatingDays');
+    const fOperatingDaysWrap = $('#maDestOperatingDays');
     const fOpeningTime = $('#maDestOpeningTime');
     const fClosingTime = $('#maDestClosingTime');
+
+    // Helper: get operating_days from checkboxes as JSON string
+    const getOperatingDays = () => {
+      if (!fOperatingDaysWrap) return '';
+      const checked = [...fOperatingDaysWrap.querySelectorAll('input[type=checkbox]:checked')].map(cb => cb.value);
+      return checked.length > 0 && checked.length < 7 ? JSON.stringify(checked) : '';
+    };
+    // Helper: set operating_days checkboxes from JSON string
+    const setOperatingDays = (val) => {
+      if (!fOperatingDaysWrap) return;
+      const cbs = fOperatingDaysWrap.querySelectorAll('input[type=checkbox]');
+      cbs.forEach(cb => { cb.checked = false; });
+      if (!val) return;
+      let days = [];
+      try { days = JSON.parse(val); } catch (_) { /* legacy text — ignore */ }
+      if (!Array.isArray(days)) return;
+      days.forEach(d => {
+        const cb = fOperatingDaysWrap.querySelector(`input[value="${d}"]`);
+        if (cb) cb.checked = true;
+      });
+    };
 
     const populateDropdowns = () => {
       const activeCats = (state.CONFIG.destinationCategories || []).filter(c => c.is_active !== false);
@@ -244,7 +265,7 @@
       if (fMainArtist) fMainArtist.value = '';
       if (fParticipatingArtists) fParticipatingArtists.value = '';
       if (fProgramInfo) fProgramInfo.value = '';
-      if (fOperatingDays) fOperatingDays.value = '';
+      setOperatingDays('');
       if (fOpeningTime) fOpeningTime.value = '';
       if (fClosingTime) fClosingTime.value = '';
       setStatus(status, '', '');
@@ -282,7 +303,7 @@
       if (fMainArtist) fMainArtist.value = dest.main_artist || '';
       if (fParticipatingArtists) fParticipatingArtists.value = dest.participating_artists || '';
       if (fProgramInfo) fProgramInfo.value = dest.program_info || '';
-      if (fOperatingDays) fOperatingDays.value = dest.operating_days || '';
+      setOperatingDays(dest.operating_days || '');
       if (fOpeningTime) fOpeningTime.value = dest.opening_time || '';
       if (fClosingTime) fClosingTime.value = dest.closing_time || '';
       if (form) form.hidden = false;
@@ -374,7 +395,7 @@
           main_artist: fMainArtist?.value?.trim() || '',
           participating_artists: fParticipatingArtists?.value?.trim() || '',
           program_info: fProgramInfo?.value?.trim() || '',
-          operating_days: fOperatingDays?.value?.trim() || '',
+          operating_days: getOperatingDays(),
           opening_time: fOpeningTime?.value || '',
           closing_time: fClosingTime?.value || ''
         };

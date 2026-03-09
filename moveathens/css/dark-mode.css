@@ -341,6 +341,30 @@
     color: #8896a6 !important;
   }
 
+  .ma-transfer-page .ma-destination-chevron {
+    color: #8896a6 !important;
+  }
+
+  .ma-transfer-page .ma-destination-card--expanded .ma-destination-chevron {
+    color: #46d3ff !important;
+  }
+
+  .ma-transfer-page .ma-destination-extras {
+    background: linear-gradient(145deg, #0f1f35 0%, #0b1828 100%) !important;
+  }
+
+  .ma-transfer-page .ma-dest-extra {
+    color: #a0b0c4 !important;
+  }
+
+  .ma-transfer-page .ma-dest-extra strong {
+    color: #e8edf3 !important;
+  }
+
+  .ma-transfer-page .ma-dest-extra--details {
+    color: #8896a6 !important;
+  }
+
   .ma-transfer-page .ma-destination-arrow {
     color: #46d3ff !important;
   }
@@ -687,16 +711,17 @@
   }
 
   /* Schedule overlay (instant → scheduled prompt) */
-  .ma-transfer-page .ma-schedule-overlay__card {
-    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  .ma-transfer-page .ma-schedule-overlay {
+    background: rgba(0, 0, 0, 0.7) !important;
   }
-  .ma-transfer-page .ma-schedule-overlay__title {
-    color: #e8edf3 !important;
+  .ma-transfer-page .ma-schedule-overlay__msg {
+    color: #a0aab5 !important;
   }
-  .ma-transfer-page .ma-schedule-overlay__notice {
-    color: #8896a6 !important;
+  .ma-transfer-page .ma-schedule-overlay__actions .ma-btn-cancel {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
+  }
+  .ma-transfer-page .ma-schedule-overlay__actions .ma-btn-cancel:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
   }
 
   /* Vehicle scheduled-only badge */

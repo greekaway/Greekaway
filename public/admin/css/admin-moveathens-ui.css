@@ -147,6 +147,31 @@
   margin: 0;
 }
 
+/* ── Day chips for operating days ── */
+.ma-day-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--ga-border, #ddd);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  background: var(--ga-card, #fff);
+  color: var(--ga-text, #333);
+  transition: all 0.15s ease;
+}
+.ma-day-chip:has(input:checked) {
+  background: #1a73e8;
+  color: #fff;
+  border-color: #1a73e8;
+}
+.ma-day-chip input {
+  display: none;
+}
+
 .ma-zones-list {
   display: grid;
   gap: 16px;

@@ -6,7 +6,7 @@
     <title>Greekaway Admin – MoveAthens Transfers</title>
     <link rel="stylesheet" href="/css/admin-common.css">
     <link rel="stylesheet" href="/css/admin-theme-toggle.css">
-    <link rel="stylesheet" href="/admin/css/admin-moveathens-ui.css?v=773">
+    <link rel="stylesheet" href="/admin/css/admin-moveathens-ui.css?v=774">
     <link rel="stylesheet" href="/admin/css/admin-ma-drivers.css">
     <link rel="stylesheet" href="/admin/css/admin-ma-hotel-revenue.css">
     <link rel="manifest" href="/manifest-admin.json">
@@ -400,9 +400,19 @@
                   </label>
 
                   <h4 style="grid-column:1/-1;margin:8px 0 0;font-size:14px;color:#888">🕐 Ωράριο Λειτουργίας</h4>
-                  <label>Ημέρες Λειτουργίας
-                    <input id="maDestOperatingDays" class="input" type="text" maxlength="100" placeholder="π.χ. Δευ-Σαβ ή Καθημερινά">
-                  </label>
+                  <div style="grid-column:1/-1">
+                    <span style="font-size:14px;font-weight:600;color:#555">Ημέρες Λειτουργίας</span>
+                    <div id="maDestOperatingDays" class="ma-days-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+                      <label class="ma-day-chip"><input type="checkbox" value="mon"> Δευ</label>
+                      <label class="ma-day-chip"><input type="checkbox" value="tue"> Τρί</label>
+                      <label class="ma-day-chip"><input type="checkbox" value="wed"> Τετ</label>
+                      <label class="ma-day-chip"><input type="checkbox" value="thu"> Πέμ</label>
+                      <label class="ma-day-chip"><input type="checkbox" value="fri"> Παρ</label>
+                      <label class="ma-day-chip"><input type="checkbox" value="sat"> Σάβ</label>
+                      <label class="ma-day-chip"><input type="checkbox" value="sun"> Κυρ</label>
+                    </div>
+                    <small style="color:#6b7280">Αν δεν επιλέξετε κάτι, θεωρείται ότι λειτουργεί καθημερινά.</small>
+                  </div>
                   <label>Ώρα Ανοίγματος
                     <input id="maDestOpeningTime" class="input" type="time">
                   </label>
@@ -1143,18 +1153,18 @@
       </div>
     </div>
 
-    <script src="/admin/js/admin-ma-helpers.js?v=773"></script>
-    <script src="/admin/js/admin-ma-general.js?v=773"></script>
-    <script src="/admin/js/admin-ma-categories.js?v=773"></script>
-    <script src="/admin/js/admin-ma-destinations.js?v=773"></script>
-    <script src="/admin/js/admin-ma-vehicles.js?v=773"></script>
-    <script src="/admin/js/admin-ma-hotels.js?v=773"></script>
-    <script src="/admin/js/admin-ma-pricing.js?v=773"></script>
-    <script src="/admin/js/admin-ma-info.js?v=773"></script>
-    <script src="/admin/js/admin-moveathens-ui.js?v=773"></script>
-    <script src="/admin/js/admin-ma-drivers.js?v=773"></script>
-    <script src="/admin/js/admin-ma-hotel-revenue.js?v=773"></script>
-    <script src="/admin/js/admin-ma-timeline.js?v=773"></script>
+    <script src="/admin/js/admin-ma-helpers.js?v=774"></script>
+    <script src="/admin/js/admin-ma-general.js?v=774"></script>
+    <script src="/admin/js/admin-ma-categories.js?v=774"></script>
+    <script src="/admin/js/admin-ma-destinations.js?v=774"></script>
+    <script src="/admin/js/admin-ma-vehicles.js?v=774"></script>
+    <script src="/admin/js/admin-ma-hotels.js?v=774"></script>
+    <script src="/admin/js/admin-ma-pricing.js?v=774"></script>
+    <script src="/admin/js/admin-ma-info.js?v=774"></script>
+    <script src="/admin/js/admin-moveathens-ui.js?v=774"></script>
+    <script src="/admin/js/admin-ma-drivers.js?v=774"></script>
+    <script src="/admin/js/admin-ma-hotel-revenue.js?v=774"></script>
+    <script src="/admin/js/admin-ma-timeline.js?v=774"></script>
     <script src="/js/admin-theme-toggle.js"></script>
     <script src="/pwa-install.js" defer></script>
     <script src="/js/main.js"></script>

@@ -286,7 +286,7 @@
           </div>
           ${dest.description ? `<span class="ma-destination-desc">${dest.description}</span>` : ''}
         </button>
-        ${extras ? `<div class="ma-destination-extras" hidden>${extras}</div>` : ''}
+        ${extras ? `<div class="ma-destination-extras">${extras}</div>` : ''}
       </div>`;
     }).join('');
 
@@ -300,10 +300,9 @@
       if (chevron && extrasDiv) {
         chevron.addEventListener('click', (e) => {
           e.stopPropagation();
-          const isHidden = extrasDiv.hidden;
-          extrasDiv.hidden = !isHidden;
-          chevron.textContent = isHidden ? '▲' : '▼';
-          card.classList.toggle('ma-destination-card--expanded', isHidden);
+          const wasCollapsed = !card.classList.contains('ma-destination-card--expanded');
+          card.classList.toggle('ma-destination-card--expanded', wasCollapsed);
+          chevron.textContent = wasCollapsed ? '▲' : '▼';
         });
       }
 
@@ -317,30 +316,140 @@
           name: card.dataset.name,
           ...(dest || {})
         };
-        // Operating hours soft warning
-        if (dest && dest.opening_time && dest.closing_time) {
-          const now = new Date();
-          const nowMins = now.getHours() * 60 + now.getMinutes();
-          const [oH, oM] = dest.opening_time.split(':').map(Number);
-          const [cH, cM] = dest.closing_time.split(':').map(Number);
-          const openMins = oH * 60 + (oM || 0);
-          const closeMins = cH * 60 + (cM || 0);
-          let outsideHours = false;
-          if (closeMins > openMins) {
-            outsideHours = nowMins < openMins || nowMins >= closeMins;
-          } else {
-            // Overnight range (e.g. 22:00 - 04:00)
-            outsideHours = nowMins < openMins && nowMins >= closeMins;
-          }
-          if (outsideHours) {
-            const daysLabel = dest.operating_days || '';
-            const warnMsg = `⚠️ Ο προορισμός "${dest.name}" λειτουργεί ${dest.opening_time} – ${dest.closing_time}${daysLabel ? ' (' + daysLabel + ')' : ''}. Αυτή τη στιγμή μπορεί να είναι κλειστός.`;
-            if (!confirm(warnMsg + '\n\nΘέλετε να συνεχίσετε;')) return;
-          }
+        // Operating hours / days soft warning
+        const scheduleWarning = checkDestinationSchedule(dest);
+        if (scheduleWarning) {
+          showScheduleWarning(scheduleWarning, () => showBookingTypeStep());
+          return;
         }
         showBookingTypeStep();
       });
     });
+  };
+
+  // ── Day name helpers ──
+  const DAY_KEYS = ['sun','mon','tue','wed','thu','fri','sat'];
+  const DAY_NAMES_EL = { mon:'Δευτέρα', tue:'Τρίτη', wed:'Τετάρτη', thu:'Πέμπτη', fri:'Παρασκευή', sat:'Σάββατο', sun:'Κυριακή' };
+  const DAY_NAMES_SHORT_EL = { mon:'Δευ', tue:'Τρί', wed:'Τετ', thu:'Πέμ', fri:'Παρ', sat:'Σάβ', sun:'Κυρ' };
+
+  const parseOperatingDays = (val) => {
+    if (!val) return null;
+    try {
+      const arr = JSON.parse(val);
+      if (Array.isArray(arr) && arr.length > 0 && arr.length < 7) return arr;
+    } catch (_) { /* legacy text */ }
+    return null;
+  };
+
+  const formatDaysList = (days) => {
+    if (!days || days.length === 0) return '';
+    return days.map(d => DAY_NAMES_EL[d] || d).join(', ');
+  };
+
+  const checkDestinationSchedule = (dest) => {
+    if (!dest) return null;
+    const now = new Date();
+    const todayKey = DAY_KEYS[now.getDay()]; // 0=sun..6=sat
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+
+    const operDays = parseOperatingDays(dest.operating_days);
+    const hasHours = dest.opening_time && dest.closing_time;
+
+    // Check day first
+    if (operDays && !operDays.includes(todayKey)) {
+      // Find next open day
+      const todayIdx = DAY_KEYS.indexOf(todayKey);
+      let nextDay = null;
+      for (let i = 1; i <= 7; i++) {
+        const checkKey = DAY_KEYS[(todayIdx + i) % 7];
+        if (operDays.includes(checkKey)) { nextDay = checkKey; break; }
+      }
+      const daysStr = formatDaysList(operDays);
+      let msg = `Το "${dest.name}" λειτουργεί μόνο ${daysStr}.`;
+      if (nextDay) {
+        msg += `\nΗ επόμενη μέρα λειτουργίας είναι ${DAY_NAMES_EL[nextDay]}.`;
+      }
+      if (hasHours) {
+        msg += `\nΩράριο: ${dest.opening_time} – ${dest.closing_time}`;
+      }
+      return msg;
+    }
+
+    // Check hours
+    if (hasHours) {
+      const [oH, oM] = dest.opening_time.split(':').map(Number);
+      const [cH, cM] = dest.closing_time.split(':').map(Number);
+      const openMins = oH * 60 + (oM || 0);
+      const closeMins = cH * 60 + (cM || 0);
+      let outsideHours = false;
+      if (closeMins > openMins) {
+        outsideHours = nowMins < openMins || nowMins >= closeMins;
+      } else {
+        // Overnight range (e.g. 22:00 - 04:00)
+        outsideHours = nowMins < openMins && nowMins >= closeMins;
+      }
+      if (outsideHours) {
+        // Calculate time until opening
+        let minsUntilOpen;
+        if (nowMins < openMins) {
+          minsUntilOpen = openMins - nowMins;
+        } else {
+          minsUntilOpen = (24 * 60 - nowMins) + openMins;
+        }
+        const hoursUntil = Math.floor(minsUntilOpen / 60);
+        const minsUntil = minsUntilOpen % 60;
+        let timeStr = '';
+        if (hoursUntil > 0) timeStr += `${hoursUntil} ώρ${hoursUntil === 1 ? 'α' : 'ες'}`;
+        if (minsUntil > 0) timeStr += `${timeStr ? ' και ' : ''}${minsUntil} λεπτά`;
+
+        let msg = `Το "${dest.name}" αυτή τη στιγμή είναι κλειστό.`;
+        msg += `\nΑνοίγει στις ${dest.opening_time} (σε ${timeStr}).`;
+        msg += `\nΏρες λειτουργίας: ${dest.opening_time} – ${dest.closing_time}`;
+        if (operDays) {
+          msg += `\nΗμέρες: ${formatDaysList(operDays)}`;
+        }
+        return msg;
+      }
+    }
+
+    return null; // open now
+  };
+
+  const showScheduleWarning = (message, onContinue) => {
+    let overlay = document.getElementById('ma-schedule-warn-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'ma-schedule-warn-overlay';
+      overlay.className = 'ma-schedule-overlay';
+      overlay.innerHTML = `
+        <div class="ma-schedule-overlay__card ma-datetime-picker">
+          <div class="ma-schedule-overlay__icon">⏰</div>
+          <h3 class="ma-datetime-title">Προσοχή</h3>
+          <p id="ma-schedule-warn-msg" class="ma-schedule-overlay__msg"></p>
+          <div class="ma-schedule-overlay__actions">
+            <button id="ma-schedule-warn-continue" class="ma-btn-confirm-datetime" type="button">Συνέχεια</button>
+            <button id="ma-schedule-warn-cancel" class="ma-btn-confirm-datetime ma-btn-cancel" type="button">Πίσω</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
+
+    overlay.hidden = false;
+    document.getElementById('ma-schedule-warn-msg').textContent = message;
+
+    const btnContinue = document.getElementById('ma-schedule-warn-continue');
+    const btnCancel = document.getElementById('ma-schedule-warn-cancel');
+
+    const cleanup = () => {
+      overlay.hidden = true;
+      btnContinue.removeEventListener('click', handleContinue);
+      btnCancel.removeEventListener('click', handleCancel);
+    };
+    const handleContinue = () => { cleanup(); onContinue(); };
+    const handleCancel = () => { cleanup(); };
+
+    btnContinue.addEventListener('click', handleContinue);
+    btnCancel.addEventListener('click', handleCancel);
   };
 
   // Build extra details HTML for a destination card
@@ -357,8 +466,20 @@
     if (dest.program_info) rows.push(`<span class="ma-dest-extra"><strong>Πρόγραμμα:</strong> ${dest.program_info}</span>`);
     if (dest.opening_time && dest.closing_time) {
       let hoursText = `${dest.opening_time} — ${dest.closing_time}`;
-      if (dest.operating_days) hoursText += ` (${dest.operating_days})`;
+      const operDays = parseOperatingDays(dest.operating_days);
+      if (operDays) {
+        hoursText += ` (${operDays.map(d => DAY_NAMES_SHORT_EL[d] || d).join(', ')})`;
+      } else if (dest.operating_days) {
+        hoursText += ` (${dest.operating_days})`;
+      }
       rows.push(`<span class="ma-dest-extra"><strong>Ωράριο:</strong> ${hoursText}</span>`);
+    } else if (dest.operating_days) {
+      const operDays = parseOperatingDays(dest.operating_days);
+      if (operDays) {
+        rows.push(`<span class="ma-dest-extra"><strong>Ημέρες:</strong> ${operDays.map(d => DAY_NAMES_SHORT_EL[d] || d).join(', ')}</span>`);
+      } else {
+        rows.push(`<span class="ma-dest-extra"><strong>Ημέρες:</strong> ${dest.operating_days}</span>`);
+      }
     }
     if (dest.details) rows.push(`<span class="ma-dest-extra ma-dest-extra--details">${dest.details}</span>`);
     return rows.length ? rows.join('') : '';
