@@ -54,8 +54,14 @@
       const subs = (state.CONFIG.destinationSubcategories || []).filter(s => s.category_id === catId && s.is_active !== false);
       if (subs.length > 0) {
         if (fSubcatLabel) fSubcatLabel.hidden = false;
-        if (fSubcategory) fSubcategory.innerHTML = '<option value="">-- Χωρίς Υποκατηγορία --</option>' +
-          subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        if (fSubcategory) {
+          const prevVal = fSubcategory.value;
+          fSubcategory.innerHTML = '<option value="">-- Χωρίς Υποκατηγορία --</option>' +
+            subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+          // Keep previous value only if it belongs to the new filtered list
+          const validIds = new Set(subs.map(s => s.id));
+          fSubcategory.value = validIds.has(prevVal) ? prevVal : '';
+        }
       } else {
         if (fSubcatLabel) fSubcatLabel.hidden = true;
         if (fSubcategory) {

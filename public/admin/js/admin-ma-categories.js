@@ -181,6 +181,25 @@
         warnMsg += `\n\n⚠️ Περιέχει ${destCount} προορισμ${destCount === 1 ? 'ό' : 'ούς'} και ${subCount} υποκατηγορ${subCount === 1 ? 'ία' : 'ίες'}.`;
       }
       if (await openConfirm(warnMsg, { title: 'Διαγραφή Κατηγορίας', okLabel: 'Διαγραφή' })) {
+        // Cascade: remove orphaned subcategories
+        const orphanSubIds = (state.CONFIG.destinationSubcategories || []).filter(s => s.category_id === id).map(s => s.id);
+        if (orphanSubIds.length > 0) {
+          const cleanedSubs = (state.CONFIG.destinationSubcategories || []).filter(s => s.category_id !== id);
+          await saveSubcategories(cleanedSubs);
+        }
+        // Cascade: clear category_id & subcategory_id on affected destinations
+        const affectedDests = (state.CONFIG.destinations || []).filter(d => d.category_id === id);
+        if (affectedDests.length > 0) {
+          const allDests = (state.CONFIG.destinations || []).map(d => {
+            if (d.category_id === id) return { ...d, category_id: null, subcategory_id: null };
+            return d;
+          });
+          const destApi = await api('/api/admin/moveathens/destinations', 'PUT', { destinations: allDests });
+          if (destApi && destApi.ok) {
+            const destData = await destApi.json();
+            state.CONFIG.destinations = destData.destinations || [];
+          }
+        }
         const cats = (state.CONFIG.destinationCategories || []).filter(c => c.id !== id);
         if (await saveCategories(cats)) {
           showToast('Η κατηγορία διαγράφηκε');
@@ -430,14 +449,17 @@
         is_active: fActive.checked,
         is_arrival: fArrival ? fArrival.checked : false,
         color: fColor ? fColor.value : '#1a73e8',
-        icon_color: fIconColor ? fIconColor.value : 'white',
-        created_at: new Date().toISOString()
+        icon_color: fIconColor ? fIconColor.value : 'white'
       };
 
       if (state.editingCategoryId) {
         const idx = cats.findIndex(c => c.id === state.editingCategoryId);
-        if (idx >= 0) cats[idx] = { ...cats[idx], ...entry };
+        if (idx >= 0) {
+          entry.created_at = cats[idx].created_at || new Date().toISOString();
+          cats[idx] = { ...cats[idx], ...entry };
+        }
       } else {
+        entry.created_at = new Date().toISOString();
         cats.push(entry);
       }
 
@@ -474,14 +496,17 @@
         name,
         description: fSubDesc.value.trim(),
         display_order: parseInt(fSubOrder.value, 10) || 0,
-        is_active: fSubActive.checked,
-        created_at: new Date().toISOString()
+        is_active: fSubActive.checked
       };
 
       if (state.editingSubcategoryId) {
         const idx = subs.findIndex(s => s.id === state.editingSubcategoryId);
-        if (idx >= 0) subs[idx] = { ...subs[idx], ...entry };
+        if (idx >= 0) {
+          entry.created_at = subs[idx].created_at || new Date().toISOString();
+          subs[idx] = { ...subs[idx], ...entry };
+        }
       } else {
+        entry.created_at = new Date().toISOString();
         subs.push(entry);
       }
 

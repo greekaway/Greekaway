@@ -327,7 +327,7 @@ const normalizeDestinationSubcategory = (entry) => {
   const name = normalizeString(entry.name);
   if (!name) return null;
   const id = normalizeString(entry.id) || makeId('dsc');
-  const categoryId = normalizeString(entry.category_id || '');
+  const categoryId = normalizeString(entry.category_id || '') || null;
   const description = normalizeString(entry.description || '');
   const displayOrder = toInt(entry.display_order, 0);
   const isActive = typeof entry.is_active === 'boolean' ? entry.is_active : true;
@@ -366,10 +366,10 @@ const normalizeDestination = (entry) => {
   if (!name) return null;
   const id = normalizeString(entry.id) || makeId('dest');
   const description = normalizeString(entry.description || '');
-  const categoryId = normalizeString(entry.category_id || '');
-  const subcategoryId = normalizeString(entry.subcategory_id || '');
-  const zoneId = normalizeString(entry.zone_id || '');
-  const routeType = normalizeString(entry.route_type || '');
+  const categoryId = normalizeString(entry.category_id || '') || null;
+  const subcategoryId = normalizeString(entry.subcategory_id || '') || null;
+  const zoneId = normalizeString(entry.zone_id || '') || null;
+  const routeType = normalizeString(entry.route_type || '') || null;
   const lat = entry.lat != null ? parseFloat(entry.lat) : null;
   const lng = entry.lng != null ? parseFloat(entry.lng) : null;
   const displayOrder = toInt(entry.display_order, 0);
@@ -380,9 +380,9 @@ const normalizeDestination = (entry) => {
     name,
     description,
     category_id: categoryId,
-    subcategory_id: subcategoryId || null,
+    subcategory_id: subcategoryId,
     zone_id: zoneId,
-    route_type: routeType || null,
+    route_type: routeType,
     lat: Number.isFinite(lat) ? lat : null,
     lng: Number.isFinite(lng) ? lng : null,
     display_order: displayOrder,

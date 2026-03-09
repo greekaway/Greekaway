@@ -34,7 +34,7 @@ module.exports = function registerSubcategoryRoutes(app, opts = {}) {
 
       // WIPE PROTECTION — only block if dropping many items at once (likely a client bug)
       // Deleting the last 1-2 items intentionally is allowed
-      if (subcategories.length === 0 && currentSubs.length > 2) {
+      if (subcategories.length === 0 && currentSubs.length > 0) {
         console.warn('[moveathens] WIPE BLOCKED: PUT subcategories with 0 items, but', currentSubs.length, 'exist');
         return res.status(409).json({ error: 'WIPE_BLOCKED', message: 'Cannot replace all subcategories with empty list.' });
       }

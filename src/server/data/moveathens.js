@@ -842,8 +842,15 @@ async function deleteDestinationCategory(id) {
   const before = (config.destinationCategories || []).length;
   config.destinationCategories = (config.destinationCategories || []).filter(c => c.id !== id);
   if (config.destinationCategories.length === before) return false;
+  // Cascade: remove orphaned subcategories
+  config.destinationSubcategories = (config.destinationSubcategories || []).filter(s => s.category_id !== id);
+  // Cascade: clear category_id on orphaned destinations
+  config.destinations = (config.destinations || []).map(d => {
+    if (d.category_id === id) return { ...d, category_id: null, subcategory_id: null };
+    return d;
+  });
   if (!writeConfigToFile(config)) throw new Error('write_failed');
-  console.log('[moveathens] Dest category deleted from JSON:', id);
+  console.log('[moveathens] Dest category deleted from JSON (with cascade):', id);
   return true;
 }
 
@@ -969,8 +976,13 @@ async function deleteDestinationSubcategory(id) {
   const before = (config.destinationSubcategories || []).length;
   config.destinationSubcategories = (config.destinationSubcategories || []).filter(s => s.id !== id);
   if (config.destinationSubcategories.length === before) return false;
+  // Cascade: clear subcategory_id on affected destinations
+  config.destinations = (config.destinations || []).map(d => {
+    if (d.subcategory_id === id) return { ...d, subcategory_id: null };
+    return d;
+  });
   if (!writeConfigToFile(config)) throw new Error('write_failed');
-  console.log('[moveathens] Subcategory deleted from JSON:', id);
+  console.log('[moveathens] Subcategory deleted from JSON (with cascade):', id);
   return true;
 }
 
