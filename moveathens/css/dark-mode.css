@@ -435,7 +435,9 @@
 
   .ma-transfer-page .ma-step-tariff-indicator {
     background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
     color: #c0c8d0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
   }
 
   /* Vehicles */

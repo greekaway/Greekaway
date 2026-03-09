@@ -768,12 +768,17 @@
 
 .ma-step-tariff-indicator {
   font-size: 13px;
-  color: #666;
+  color: #444;
   margin: -12px 0 16px;
-  padding: 6px 12px;
-  background: #f0f4f8;
-  border-radius: 8px;
-  display: inline-block;
+  padding: 8px 14px;
+  background: linear-gradient(145deg, #f0f4f8 0%, #e8ecf2 100%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  font-weight: 500;
 }
 
 /* Vehicles Grid */
