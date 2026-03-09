@@ -2,7 +2,7 @@
 self.skipWaiting();
 
 // Explicit cache version to force fresh caches on deploys
-const CACHE_VERSION = 'v20260213';
+const CACHE_VERSION = 'v20260309';
 
 // Bump cache to invalidate old SW and ensure fresh checkout/network
 const CACHE_NAME = `greekaway-pwa-${CACHE_VERSION}`;
@@ -166,6 +166,8 @@ self.addEventListener('fetch', (event) => {
       path.startsWith('/api/') ||
       // Never cache DriversSystem pages (always serve fresh from server)
       path.startsWith('/driverssystem/') ||
+      // Never cache admin panel pages (always serve latest HTML/JS/CSS)
+      path.startsWith('/admin/') ||
       // Explicit example file mentioned (if it ever exists)
       path === '/js/checkout.js' ||
       // Never touch Stripe domains or related assets

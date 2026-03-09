@@ -1596,7 +1596,10 @@ app.get('/admin/moveathens-ui', (req, res) => {
     const nextUrl = encodeURIComponent(req.originalUrl || '/admin/moveathens-ui');
     return res.redirect(`/admin-home.html?next=${nextUrl}`);
   }
-  try { return res.sendFile(ADMIN_MOVEATHENS_UI_FILE); }
+  try {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return res.sendFile(ADMIN_MOVEATHENS_UI_FILE);
+  }
   catch (_) { return res.status(404).send('Not found'); }
 });
 
