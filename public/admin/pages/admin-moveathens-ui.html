@@ -204,13 +204,17 @@
           <div class="ma-section-header">
             <div>
               <h3 class="ma-subtitle">Κατηγορίες Προορισμών</h3>
-              <p class="ma-helper">Αεροδρόμια, Λιμάνια, Παραλίες, Μουσεία κ.λπ.</p>
+              <p class="ma-helper">Επιλέξτε κατηγορία για επεξεργασία ή πατήστε «+ Νέα Κατηγορία»</p>
             </div>
             <div class="ma-actions">
               <button id="maCategoryAddBtn" class="btn secondary" type="button">➕ Νέα Κατηγορία</button>
             </div>
           </div>
 
+          <!-- Horizontal category tabs -->
+          <div id="maCategoryTabs" class="ma-cat-tabs" aria-label="Κατηγορίες"></div>
+
+          <!-- Category edit form (hidden until add/edit) -->
           <form id="ma-category-form" class="ma-zone-form" hidden>
             <div class="ma-zone-grid">
               <label>Όνομα Κατηγορίας
@@ -257,62 +261,53 @@
             <div class="ma-actions">
               <button id="maCategorySaveBtn" class="btn" type="submit">Αποθήκευση</button>
               <button id="maCategoryCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+              <button id="maCategoryDeleteBtn" class="btn secondary" type="button" style="color:#dc2626" hidden>🗑️ Διαγραφή Κατηγορίας</button>
               <span id="maCategoryStatus" class="ma-status" aria-live="polite"></span>
             </div>
           </form>
 
-          <div id="ma-categories-list" class="ma-zones-list" aria-live="polite"></div>
-        </section>
+          <!-- Selected category content area (details + subcategories) -->
+          <div id="maCategoryContent" class="ma-cat-content" hidden>
+            <div id="maCategoryInfo" class="ma-cat-info"></div>
 
-        <!-- Subcategories Section -->
-        <section class="panel">
-          <div class="ma-section-header">
-            <div>
-              <h3 class="ma-subtitle">Υποκατηγορίες</h3>
-              <p class="ma-helper">Ενδιάμεσο επίπεδο οργάνωσης μέσα σε κάθε κατηγορία (προαιρετικό)</p>
-            </div>
-            <div class="ma-actions">
-              <button id="maSubcategoryAddBtn" class="btn secondary" type="button">➕ Νέα Υποκατηγορία</button>
+            <!-- Subcategories within selected category -->
+            <div class="ma-cat-subcats">
+              <div class="ma-section-header" style="margin-top:16px">
+                <div>
+                  <h4 class="ma-subtitle" style="font-size:15px">Υποκατηγορίες</h4>
+                </div>
+                <div class="ma-actions">
+                  <button id="maSubcategoryAddBtn" class="btn secondary" type="button" style="font-size:13px">➕ Υποκατηγορία</button>
+                </div>
+              </div>
+
+              <form id="ma-subcategory-form" class="ma-zone-form" hidden>
+                <div class="ma-zone-grid">
+                  <input id="maSubcategoryParent" type="hidden">
+                  <label>Ονομασία Υποκατηγορίας
+                    <input id="maSubcategoryName" class="input" type="text" maxlength="80" required>
+                  </label>
+                  <label>Σύντομη περιγραφή (προαιρετικό)
+                    <textarea id="maSubcategoryDescription" class="input" rows="2" maxlength="200"></textarea>
+                  </label>
+                  <label>Σειρά Εμφάνισης
+                    <input id="maSubcategoryOrder" class="input" type="number" min="0" value="0">
+                  </label>
+                  <label class="ma-zone-toggle">
+                    <input id="maSubcategoryActive" type="checkbox" checked>
+                    Ενεργή Υποκατηγορία
+                  </label>
+                </div>
+                <div class="ma-actions">
+                  <button id="maSubcategorySaveBtn" class="btn" type="submit">Αποθήκευση</button>
+                  <button id="maSubcategoryCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+                  <span id="maSubcategoryStatus" class="ma-status" aria-live="polite"></span>
+                </div>
+              </form>
+
+              <div id="ma-subcategories-list" class="ma-zones-list" aria-live="polite"></div>
             </div>
           </div>
-
-          <form id="ma-subcategory-form" class="ma-zone-form" hidden>
-            <div class="ma-zone-grid">
-              <label>Κατηγορία (γονική)
-                <select id="maSubcategoryParent" class="input" required>
-                  <option value="">-- Επιλογή Κατηγορίας --</option>
-                </select>
-              </label>
-              <label>Ονομασία Υποκατηγορίας
-                <input id="maSubcategoryName" class="input" type="text" maxlength="80" required>
-              </label>
-              <label>Σύντομη περιγραφή (προαιρετικό)
-                <textarea id="maSubcategoryDescription" class="input" rows="2" maxlength="200"></textarea>
-              </label>
-              <label>Σειρά Εμφάνισης
-                <input id="maSubcategoryOrder" class="input" type="number" min="0" value="0">
-              </label>
-              <label class="ma-zone-toggle">
-                <input id="maSubcategoryActive" type="checkbox" checked>
-                Ενεργή Υποκατηγορία
-              </label>
-            </div>
-            <div class="ma-actions">
-              <button id="maSubcategorySaveBtn" class="btn" type="submit">Αποθήκευση</button>
-              <button id="maSubcategoryCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
-              <span id="maSubcategoryStatus" class="ma-status" aria-live="polite"></span>
-            </div>
-          </form>
-
-          <div class="ma-price-controls ma-dest-filter">
-            <label>Φίλτρο ανά Κατηγορία
-              <select id="maSubcategoryFilterCat" class="input">
-                <option value="">Όλες</option>
-              </select>
-            </label>
-          </div>
-
-          <div id="ma-subcategories-list" class="ma-zones-list" aria-live="polite"></div>
         </section>
       </div>
 
@@ -433,6 +428,16 @@
           <div class="ma-price-controls ma-dest-filter">
             <label>Αναζήτηση Προορισμού
               <input id="maDestinationSearch" class="input" type="text" placeholder="Πληκτρολογήστε 2+ γράμματα…" autocomplete="off">
+            </label>
+            <label>Κατηγορία
+              <select id="maDestFilterCategory" class="input">
+                <option value="">Όλες</option>
+              </select>
+            </label>
+            <label id="maDestFilterSubcatWrap" hidden>Υποκατηγορία
+              <select id="maDestFilterSubcategory" class="input">
+                <option value="">Όλες</option>
+              </select>
             </label>
           </div>
 
@@ -1140,8 +1145,7 @@
 
     <script src="/admin/js/admin-ma-helpers.js?v=764"></script>
     <script src="/admin/js/admin-ma-general.js?v=764"></script>
-    <script src="/admin/js/admin-ma-categories.js?v=765"></script>
-    <script src="/admin/js/admin-ma-subcategories.js?v=765"></script>
+    <script src="/admin/js/admin-ma-categories.js?v=766"></script>
     <script src="/admin/js/admin-ma-destinations.js?v=765"></script>
     <script src="/admin/js/admin-ma-vehicles.js?v=764"></script>
     <script src="/admin/js/admin-ma-hotels.js?v=764"></script>

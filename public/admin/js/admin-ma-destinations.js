@@ -23,6 +23,9 @@
     const fRouteType = $('#maDestinationRouteType');
     const fLatLng = $('#maDestinationLatLng');
     const fSearch = $('#maDestinationSearch');
+    const fFilterCategory = $('#maDestFilterCategory');
+    const fFilterSubcategory = $('#maDestFilterSubcategory');
+    const fFilterSubcatWrap = $('#maDestFilterSubcatWrap');
     // Extended fields
     const fVenueType = $('#maDestVenueType');
     const fVibe = $('#maDestVibe');
@@ -65,24 +68,73 @@
     const getCategoryName = (id) => (state.CONFIG.destinationCategories || []).find(c => c.id === id)?.name || '—';
     const getSubcategoryName = (id) => (state.CONFIG.destinationSubcategories || []).find(s => s.id === id)?.name || '';
 
+    /* ── Filter dropdown population ── */
+    const populateFilterDropdowns = () => {
+      const activeCats = (state.CONFIG.destinationCategories || []).filter(c => c.is_active !== false);
+      if (fFilterCategory) {
+        fFilterCategory.innerHTML = '<option value="">Όλες</option>' +
+          activeCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      }
+      updateFilterSubcategory();
+    };
+
+    const updateFilterSubcategory = () => {
+      const catId = fFilterCategory?.value || '';
+      const subs = (state.CONFIG.destinationSubcategories || []).filter(s => s.category_id === catId && s.is_active !== false);
+      if (subs.length > 0 && fFilterSubcatWrap) {
+        fFilterSubcatWrap.hidden = false;
+        fFilterSubcategory.innerHTML = '<option value="">Όλες</option>' +
+          subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      } else if (fFilterSubcatWrap) {
+        fFilterSubcatWrap.hidden = true;
+        if (fFilterSubcategory) fFilterSubcategory.value = '';
+      }
+    };
+
+    fFilterCategory?.addEventListener('change', () => {
+      updateFilterSubcategory();
+      applySearchFilter();
+    });
+    fFilterSubcategory?.addEventListener('change', applySearchFilter);
+
     const applySearchFilter = () => {
       const q = (fSearch?.value || '').trim().toLowerCase();
+      const filterCat = fFilterCategory?.value || '';
+      const filterSub = fFilterSubcategory?.value || '';
+
       list.querySelectorAll('.ma-zone-card').forEach(card => {
-        if (!q) { card.style.display = ''; return; }
-        const name = (card.querySelector('h4')?.textContent || '').toLowerCase();
-        const meta = (card.querySelector('.ma-zone-meta')?.textContent || '').toLowerCase();
-        const desc = (card.querySelector('.ma-zone-desc')?.textContent || '').toLowerCase();
-        card.style.display = (name.includes(q) || meta.includes(q) || desc.includes(q)) ? '' : 'none';
+        let show = true;
+
+        // Text search
+        if (q) {
+          const name = (card.querySelector('h4')?.textContent || '').toLowerCase();
+          const meta = (card.querySelector('.ma-acc-cat')?.textContent || '').toLowerCase();
+          const body = (card.querySelector('.ma-accordion-body')?.textContent || '').toLowerCase();
+          if (!name.includes(q) && !meta.includes(q) && !body.includes(q)) show = false;
+        }
+
+        // Category filter
+        if (show && filterCat) {
+          if (card.dataset.category !== filterCat) show = false;
+        }
+
+        // Subcategory filter
+        if (show && filterSub) {
+          if (card.dataset.subcategory !== filterSub) show = false;
+        }
+
+        card.style.display = show ? '' : 'none';
       });
+
       const visible = list.querySelectorAll('.ma-zone-card:not([style*="display: none"])');
       let hint = list.querySelector('.ma-search-empty');
-      if (q && visible.length === 0) {
+      if ((q || filterCat || filterSub) && visible.length === 0) {
         if (!hint) {
           hint = document.createElement('p');
           hint.className = 'ma-empty ma-search-empty';
           list.appendChild(hint);
         }
-        hint.textContent = `Δεν βρέθηκε προορισμός για «${fSearch.value.trim()}»`;
+        hint.textContent = 'Δεν βρέθηκαν προορισμοί με αυτά τα φίλτρα.';
         hint.style.display = '';
       } else if (hint) {
         hint.style.display = 'none';
@@ -93,6 +145,7 @@
 
     const render = () => {
       populateDropdowns();
+      populateFilterDropdowns();
       const dests = state.CONFIG.destinations || [];
       if (!dests.length) {
         list.innerHTML = '<p class="ma-empty">Δεν υπάρχουν προορισμοί.</p>';
@@ -100,36 +153,53 @@
       }
       list.innerHTML = dests.map(d => {
         const subcatName = getSubcategoryName(d.subcategory_id);
+        const catName = getCategoryName(d.category_id);
         return `
-        <div class="ma-zone-card" data-id="${d.id}">
-          <div class="ma-zone-card__header">
-            <div class="ma-zone-card__title">
+        <div class="ma-zone-card ma-accordion-item" data-id="${d.id}" data-category="${d.category_id || ''}" data-subcategory="${d.subcategory_id || ''}">
+          <div class="ma-accordion-header">
+            <span class="ma-accordion-arrow">▶</span>
+            <div class="ma-accordion-summary">
               <h4>${d.main_artist ? d.name + ' — ' + d.main_artist : d.name}</h4>
+              <span class="ma-acc-cat">${catName}${subcatName ? ' / ' + subcatName : ''}</span>
               <span class="ma-zone-status" data-active="${d.is_active}">${d.is_active ? 'Ενεργός' : 'Ανενεργός'}</span>
             </div>
           </div>
-          <div class="ma-zone-meta">
-            <span>Κατηγορία: ${getCategoryName(d.category_id)}</span>
-            ${subcatName ? `<span>Υποκατηγορία: ${subcatName}</span>` : ''}
-            <span>Σειρά: ${d.display_order}</span>
-            <span>Τύπος: ${{airport:'✈️ Αεροδρόμιο',port:'⚓ Λιμάνι',city:'🏙️ Πόλη',travel:'🚗 Ταξίδια'}[d.route_type] || '— Δεν έχει οριστεί'}</span>
-          </div>
-          ${d.description ? `<p class="ma-zone-desc">${d.description}</p>` : ''}
-          <div class="ma-zone-actions">
-            <button class="btn secondary btn-edit" type="button">Επεξεργασία</button>
-            <button class="btn secondary btn-delete" type="button">Διαγραφή</button>
+          <div class="ma-accordion-body">
+            <div class="ma-zone-meta" style="margin-top:10px">
+              <span>Σειρά: ${d.display_order}</span>
+              <span>Τύπος: ${{airport:'✈️ Αεροδρόμιο',port:'⚓ Λιμάνι',city:'🏙️ Πόλη',travel:'🚗 Ταξίδια'}[d.route_type] || '— Δεν έχει οριστεί'}</span>
+            </div>
+            ${d.description ? `<p class="ma-zone-desc">${d.description}</p>` : ''}
+            <div class="ma-zone-actions" style="margin-top:10px">
+              <button class="btn secondary btn-edit" type="button">Επεξεργασία</button>
+              <button class="btn secondary btn-delete" type="button">Διαγραφή</button>
+            </div>
           </div>
         </div>
       `}).join('');
 
+      /* Accordion toggle – only one open at a time */
+      list.querySelectorAll('.ma-accordion-header').forEach(header => {
+        header.addEventListener('click', () => {
+          const card = header.closest('.ma-zone-card');
+          const wasOpen = card.classList.contains('open');
+          // close all
+          list.querySelectorAll('.ma-zone-card.open').forEach(c => c.classList.remove('open'));
+          // toggle this one
+          if (!wasOpen) card.classList.add('open');
+        });
+      });
+
       list.querySelectorAll('.btn-edit').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
           const id = btn.closest('.ma-zone-card').dataset.id;
           editDestination(id);
         });
       });
       list.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
           const id = btn.closest('.ma-zone-card').dataset.id;
           const dest = dests.find(d => d.id === id);
           if (await openConfirm(`Διαγραφή "${dest?.name}"?`, { title: 'Διαγραφή Προορισμού', okLabel: 'Διαγραφή' })) {

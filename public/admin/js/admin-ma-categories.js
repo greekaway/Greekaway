@@ -1,5 +1,6 @@
 /**
- * MoveAthens Admin — Categories Tab
+ * MoveAthens Admin — Categories Tab (Tab-based layout)
+ * Shows horizontal category tabs + selected category details + inline subcategories.
  * Depends on: admin-ma-helpers.js (window.MaAdmin)
  */
 (() => {
@@ -79,26 +80,48 @@
     return { loadSaved, renderPreview };
   };
 
+  /* ══════════════════════════════════════
+     MAIN: initCategoriesTab
+     ══════════════════════════════════════ */
   const initCategoriesTab = () => {
     const styleCtrl = initCategoryStyleControls();
-    const form = $('#ma-category-form');
-    const list = $('#ma-categories-list');
-    const addBtn = $('#maCategoryAddBtn');
-    const saveBtn = $('#maCategorySaveBtn');
-    const cancelBtn = $('#maCategoryCancelBtn');
-    const status = $('#maCategoryStatus');
-    const fName = $('#maCategoryName');
-    const fIcon = $('#maCategoryIcon');
-    const fIconFile = $('#maCategoryIconFile');
+
+    // Category form elements
+    const catForm    = $('#ma-category-form');
+    const catTabs    = $('#maCategoryTabs');
+    const catContent = $('#maCategoryContent');
+    const catInfo    = $('#maCategoryInfo');
+    const addBtn     = $('#maCategoryAddBtn');
+    const cancelBtn  = $('#maCategoryCancelBtn');
+    const deleteBtn  = $('#maCategoryDeleteBtn');
+    const status     = $('#maCategoryStatus');
+    const fName      = $('#maCategoryName');
+    const fIcon      = $('#maCategoryIcon');
+    const fIconFile  = $('#maCategoryIconFile');
     const fIconUpload = $('#maCategoryIconUpload');
     const fIconPreview = $('#maCategoryIconPreview');
-    const fOrder = $('#maCategoryOrder');
-    const fActive = $('#maCategoryActive');
-    const fArrival = $('#maCategoryArrival');
-    const fColor = $('#maCategoryColor');
-    const fColorHex = $('#maCategoryColorHex');
+    const fOrder     = $('#maCategoryOrder');
+    const fActive    = $('#maCategoryActive');
+    const fArrival   = $('#maCategoryArrival');
+    const fColor     = $('#maCategoryColor');
+    const fColorHex  = $('#maCategoryColorHex');
     const fIconColor = $('#maCategoryIconColor');
 
+    // Subcategory form elements
+    const subForm    = $('#ma-subcategory-form');
+    const subList    = $('#ma-subcategories-list');
+    const subAddBtn  = $('#maSubcategoryAddBtn');
+    const subCancelBtn = $('#maSubcategoryCancelBtn');
+    const subStatus  = $('#maSubcategoryStatus');
+    const fSubParent = $('#maSubcategoryParent');
+    const fSubName   = $('#maSubcategoryName');
+    const fSubDesc   = $('#maSubcategoryDescription');
+    const fSubOrder  = $('#maSubcategoryOrder');
+    const fSubActive = $('#maSubcategoryActive');
+
+    let selectedCatId = null;
+
+    // ── Icon preview ──
     const updateIconPreview = () => {
       const url = fIcon?.value;
       if (fIconPreview) {
@@ -110,98 +133,6 @@
           fIconPreview.setAttribute('data-visible', 'true');
         }
       }
-    };
-
-    const render = () => {
-      // Load saved style settings (config is ready at this point)
-      if (styleCtrl) styleCtrl.loadSaved();
-
-      const cats = state.CONFIG.destinationCategories || [];
-      if (!cats.length) {
-        list.innerHTML = '<p class="ma-empty">Δεν υπάρχουν κατηγορίες.</p>';
-        if (styleCtrl) styleCtrl.renderPreview();
-        return;
-      }
-      list.innerHTML = cats.map(c => {
-        const isIconUrl = c.icon && c.icon.length > 4 && (c.icon.startsWith('/') || c.icon.startsWith('http'));
-        const iconDisplay = isIconUrl 
-          ? `<img src="${c.icon}" alt="" class="ma-cat-icon-img">`
-          : `<span class="ma-cat-icon">${c.icon || '📁'}</span>`;
-        const arrivalBadge = c.is_arrival ? '<span class="ma-badge ma-badge-arrival">↩ Άφιξη</span>' : '';
-        const colorSwatch = `<span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${c.color || '#1a73e8'};vertical-align:middle;margin-left:6px;border:1px solid rgba(0,0,0,0.15)"></span>`;
-        const iconColorLabel = c.icon_color === 'black' ? '⬛' : '⬜';
-        return `
-          <div class="ma-zone-card" data-id="${c.id}">
-            <div class="ma-zone-card__header">
-              <div class="ma-zone-card__title">
-                ${iconDisplay}
-                <h4>${c.name}</h4>
-                ${colorSwatch} ${iconColorLabel}
-                ${arrivalBadge}
-                <span class="ma-zone-status" data-active="${c.is_active}">${c.is_active ? 'Ενεργή' : 'Ανενεργή'}</span>
-              </div>
-            </div>
-            <div class="ma-zone-meta">
-              <span>Order: ${c.display_order}</span>
-            </div>
-            <div class="ma-zone-actions">
-              <button class="btn secondary btn-edit" type="button">Επεξεργασία</button>
-              <button class="btn secondary btn-delete" type="button">Διαγραφή</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      list.querySelectorAll('.btn-edit').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = btn.closest('.ma-zone-card').dataset.id;
-          editCategory(id);
-        });
-      });
-      list.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = btn.closest('.ma-zone-card').dataset.id;
-          const cat = cats.find(c => c.id === id);
-          if (await openConfirm(`Διαγραφή "${cat?.name}"?`, { title: 'Διαγραφή Κατηγορίας', okLabel: 'Διαγραφή' })) {
-            deleteCategory(id);
-          }
-        });
-      });
-
-      // Refresh style preview with current categories
-      if (styleCtrl) styleCtrl.renderPreview();
-    };
-
-    const resetForm = () => {
-      form.hidden = true;
-      state.editingCategoryId = null;
-      fName.value = '';
-      fIcon.value = '';
-      if (fIconFile) fIconFile.value = '';
-      fOrder.value = '0';
-      fActive.checked = true;
-      if (fArrival) fArrival.checked = false;
-      if (fColor) fColor.value = '#1a73e8';
-      if (fColorHex) fColorHex.textContent = '#1a73e8';
-      if (fIconColor) fIconColor.value = 'white';
-      updateIconPreview();
-      setStatus(status, '', '');
-    };
-
-    const editCategory = (id) => {
-      const cat = (state.CONFIG.destinationCategories || []).find(c => c.id === id);
-      if (!cat) return;
-      state.editingCategoryId = id;
-      fName.value = cat.name || '';
-      fIcon.value = cat.icon || '';
-      fOrder.value = cat.display_order || 0;
-      fActive.checked = cat.is_active !== false;
-      if (fArrival) fArrival.checked = cat.is_arrival === true;
-      if (fColor) fColor.value = cat.color || '#1a73e8';
-      if (fColorHex) fColorHex.textContent = cat.color || '#1a73e8';
-      if (fIconColor) fIconColor.value = cat.icon_color || 'white';
-      updateIconPreview();
-      form.hidden = false;
     };
 
     fIconUpload?.addEventListener('click', async () => {
@@ -222,11 +153,9 @@
     });
 
     fIcon?.addEventListener('input', updateIconPreview);
+    fColor?.addEventListener('input', () => { if (fColorHex) fColorHex.textContent = fColor.value; });
 
-    fColor?.addEventListener('input', () => {
-      if (fColorHex) fColorHex.textContent = fColor.value;
-    });
-
+    // ── Save/delete categories ──
     const saveCategories = async (categories) => {
       if (!ensureConfigLoaded()) return false;
       const res = await api('/api/admin/moveathens/destination-categories', 'PUT', { categories });
@@ -242,21 +171,249 @@
     };
 
     const deleteCategory = async (id) => {
-      const cats = (state.CONFIG.destinationCategories || []).filter(c => c.id !== id);
-      if (await saveCategories(cats)) {
-        showToast('Διαγράφηκε');
-        render();
+      const cat = (state.CONFIG.destinationCategories || []).find(c => c.id === id);
+      if (!cat) return;
+      // Check if category has destinations assigned
+      const destCount = (state.CONFIG.destinations || []).filter(d => d.category_id === id).length;
+      const subCount = (state.CONFIG.destinationSubcategories || []).filter(s => s.category_id === id).length;
+      let warnMsg = `Διαγραφή κατηγορίας "${cat.name}"?`;
+      if (destCount > 0 || subCount > 0) {
+        warnMsg += `\n\n⚠️ Περιέχει ${destCount} προορισμ${destCount === 1 ? 'ό' : 'ούς'} και ${subCount} υποκατηγορ${subCount === 1 ? 'ία' : 'ίες'}.`;
+      }
+      if (await openConfirm(warnMsg, { title: 'Διαγραφή Κατηγορίας', okLabel: 'Διαγραφή' })) {
+        const cats = (state.CONFIG.destinationCategories || []).filter(c => c.id !== id);
+        if (await saveCategories(cats)) {
+          showToast('Η κατηγορία διαγράφηκε');
+          selectedCatId = null;
+          render();
+        }
       }
     };
 
+    // ── Save/delete subcategories ──
+    const saveSubcategories = async (subcategories) => {
+      if (!ensureConfigLoaded()) return false;
+      const res = await api('/api/admin/moveathens/destination-subcategories', 'PUT', { subcategories });
+      if (!res) return false;
+      if (res.ok) {
+        const data = await res.json();
+        state.CONFIG.destinationSubcategories = data.subcategories || [];
+        return true;
+      }
+      const err = await res.json().catch(() => ({}));
+      setStatus(subStatus, err.error || 'Σφάλμα', 'error');
+      return false;
+    };
+
+    const deleteSubcategory = async (id) => {
+      const subs = (state.CONFIG.destinationSubcategories || []).filter(s => s.id !== id);
+      if (await saveSubcategories(subs)) {
+        showToast('Η υποκατηγορία διαγράφηκε');
+        renderCategoryContent(selectedCatId);
+      }
+    };
+
+    // ══════════════════════════════════════
+    // RENDER: Horizontal category tabs
+    // ══════════════════════════════════════
+    const renderTabs = () => {
+      const cats = state.CONFIG.destinationCategories || [];
+      if (!cats.length) {
+        catTabs.innerHTML = '<span style="font-size:13px;color:#999;padding:8px">Δεν υπάρχουν κατηγορίες ακόμα</span>';
+        return;
+      }
+      catTabs.innerHTML = cats.map(c => {
+        const isUrl = c.icon && c.icon.length > 4 && (c.icon.startsWith('/') || c.icon.startsWith('http'));
+        const iconHtml = isUrl
+          ? `<img src="${c.icon}" alt="" class="ma-cat-tab-icon" style="filter:${c.icon_color === 'black' ? 'brightness(0)' : 'none'}">`
+          : `<span class="ma-cat-tab-emoji">${c.icon || '📁'}</span>`;
+        const activeClass = c.id === selectedCatId ? ' ma-cat-tab--active' : '';
+        const inactiveLabel = c.is_active === false ? ' <small style="opacity:.5">(off)</small>' : '';
+        return `<button class="ma-cat-tab${activeClass}" data-id="${c.id}" type="button">
+          ${iconHtml}<span class="ma-cat-tab-label">${c.name}${inactiveLabel}</span>
+        </button>`;
+      }).join('');
+
+      catTabs.querySelectorAll('.ma-cat-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const id = tab.dataset.id;
+          if (id === selectedCatId) return;
+          selectedCatId = id;
+          resetCatForm();
+          resetSubForm();
+          renderTabs();
+          renderCategoryContent(id);
+        });
+      });
+    };
+
+    // ══════════════════════════════════════
+    // RENDER: Selected category content
+    // ══════════════════════════════════════
+    const renderCategoryContent = (catId) => {
+      const cat = (state.CONFIG.destinationCategories || []).find(c => c.id === catId);
+      if (!cat) {
+        catContent.hidden = true;
+        return;
+      }
+      catContent.hidden = false;
+
+      // Category info summary
+      const isUrl = cat.icon && cat.icon.length > 4 && (cat.icon.startsWith('/') || cat.icon.startsWith('http'));
+      const iconHtml = isUrl
+        ? `<img src="${cat.icon}" alt="" style="width:32px;height:32px;object-fit:contain;filter:${cat.icon_color === 'black' ? 'brightness(0)' : 'brightness(0) invert(1)'}">`
+        : `<span style="font-size:28px">${cat.icon || '📁'}</span>`;
+      const arrBadge = cat.is_arrival ? '<span class="ma-badge ma-badge-arrival">↩ Άφιξη</span>' : '';
+      const statusLabel = cat.is_active !== false
+        ? '<span class="ma-zone-status" data-active="true">Ενεργή</span>'
+        : '<span class="ma-zone-status" data-active="false">Ανενεργή</span>';
+      const colorSwatch = `<span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${cat.color || '#1a73e8'};vertical-align:middle;border:1px solid rgba(0,0,0,.15)"></span>`;
+
+      catInfo.innerHTML = `
+        <div class="ma-cat-info-row">
+          <div class="ma-cat-info-icon" style="background:${cat.color || '#1a73e8'}">${iconHtml}</div>
+          <div class="ma-cat-info-details">
+            <strong>${cat.name}</strong> ${colorSwatch} ${arrBadge} ${statusLabel}
+            <span style="font-size:12px;color:#888;margin-left:8px">Σειρά: ${cat.display_order || 0}</span>
+          </div>
+          <div class="ma-cat-info-actions">
+            <button class="btn secondary" id="maCatEditInline" type="button">✏️ Επεξεργασία</button>
+            <button class="btn secondary" id="maCatDeleteInline" type="button" style="color:#dc2626">🗑️</button>
+          </div>
+        </div>`;
+
+      // Wire edit/delete buttons
+      $('#maCatEditInline')?.addEventListener('click', () => editCategory(catId));
+      $('#maCatDeleteInline')?.addEventListener('click', () => deleteCategory(catId));
+
+      // Render subcategories for this category
+      renderSubcategories(catId);
+    };
+
+    // ══════════════════════════════════════
+    // RENDER: Subcategories within category
+    // ══════════════════════════════════════
+    const renderSubcategories = (catId) => {
+      const subs = (state.CONFIG.destinationSubcategories || []).filter(s => s.category_id === catId);
+      if (!subs.length) {
+        subList.innerHTML = '<p class="ma-empty" style="font-size:13px">Δεν υπάρχουν υποκατηγορίες σε αυτή την κατηγορία.</p>';
+        return;
+      }
+      subList.innerHTML = subs.map(s => `
+        <div class="ma-zone-card ma-subcat-card" data-id="${s.id}">
+          <div class="ma-zone-card__header">
+            <div class="ma-zone-card__title">
+              <h4>${s.name}</h4>
+              <span class="ma-zone-status" data-active="${s.is_active}">${s.is_active ? 'Ενεργή' : 'Ανενεργή'}</span>
+            </div>
+          </div>
+          ${s.description ? `<p class="ma-zone-desc" style="font-size:12px">${s.description}</p>` : ''}
+          <div class="ma-zone-meta"><span>Σειρά: ${s.display_order}</span></div>
+          <div class="ma-zone-actions">
+            <button class="btn secondary btn-edit-sub" type="button" style="font-size:12px">Επεξεργασία</button>
+            <button class="btn secondary btn-delete-sub" type="button" style="font-size:12px">Διαγραφή</button>
+          </div>
+        </div>
+      `).join('');
+
+      subList.querySelectorAll('.btn-edit-sub').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.closest('.ma-subcat-card').dataset.id;
+          editSubcategory(id);
+        });
+      });
+      subList.querySelectorAll('.btn-delete-sub').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.closest('.ma-subcat-card').dataset.id;
+          const sub = subs.find(s => s.id === id);
+          if (await openConfirm(`Διαγραφή υποκατηγορίας "${sub?.name}"?`, { title: 'Διαγραφή', okLabel: 'Διαγραφή' })) {
+            deleteSubcategory(id);
+          }
+        });
+      });
+    };
+
+    // ── Category form reset/edit ──
+    const resetCatForm = () => {
+      catForm.hidden = true;
+      state.editingCategoryId = null;
+      fName.value = '';
+      fIcon.value = '';
+      if (fIconFile) fIconFile.value = '';
+      fOrder.value = '0';
+      fActive.checked = true;
+      if (fArrival) fArrival.checked = false;
+      if (fColor) fColor.value = '#1a73e8';
+      if (fColorHex) fColorHex.textContent = '#1a73e8';
+      if (fIconColor) fIconColor.value = 'white';
+      if (deleteBtn) deleteBtn.hidden = true;
+      updateIconPreview();
+      setStatus(status, '', '');
+    };
+
+    const editCategory = (id) => {
+      const cat = (state.CONFIG.destinationCategories || []).find(c => c.id === id);
+      if (!cat) return;
+      state.editingCategoryId = id;
+      fName.value = cat.name || '';
+      fIcon.value = cat.icon || '';
+      fOrder.value = cat.display_order || 0;
+      fActive.checked = cat.is_active !== false;
+      if (fArrival) fArrival.checked = cat.is_arrival === true;
+      if (fColor) fColor.value = cat.color || '#1a73e8';
+      if (fColorHex) fColorHex.textContent = cat.color || '#1a73e8';
+      if (fIconColor) fIconColor.value = cat.icon_color || 'white';
+      if (deleteBtn) deleteBtn.hidden = false;
+      updateIconPreview();
+      catForm.hidden = false;
+    };
+
+    // ── Subcategory form reset/edit ──
+    const resetSubForm = () => {
+      subForm.hidden = true;
+      state.editingSubcategoryId = null;
+      fSubName.value = '';
+      fSubDesc.value = '';
+      fSubOrder.value = '0';
+      fSubActive.checked = true;
+      setStatus(subStatus, '', '');
+    };
+
+    const editSubcategory = (id) => {
+      const sub = (state.CONFIG.destinationSubcategories || []).find(s => s.id === id);
+      if (!sub) return;
+      state.editingSubcategoryId = id;
+      fSubParent.value = sub.category_id || selectedCatId;
+      fSubName.value = sub.name || '';
+      fSubDesc.value = sub.description || '';
+      fSubOrder.value = sub.display_order || 0;
+      fSubActive.checked = sub.is_active !== false;
+      subForm.hidden = false;
+    };
+
+    // ── Event listeners ──
     addBtn?.addEventListener('click', () => {
-      resetForm();
-      form.hidden = false;
+      selectedCatId = null;
+      catContent.hidden = true;
+      resetCatForm();
+      resetSubForm();
+      if (deleteBtn) deleteBtn.hidden = true;
+      catForm.hidden = false;
+      renderTabs();
     });
 
-    cancelBtn?.addEventListener('click', resetForm);
+    cancelBtn?.addEventListener('click', () => {
+      resetCatForm();
+      if (selectedCatId) {
+        renderCategoryContent(selectedCatId);
+      }
+    });
 
-    form?.addEventListener('submit', async (e) => {
+    deleteBtn?.addEventListener('click', () => {
+      if (state.editingCategoryId) deleteCategory(state.editingCategoryId);
+    });
+
+    catForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       setStatus(status, '', '');
       const name = fName.value.trim();
@@ -284,10 +441,68 @@
 
       if (await saveCategories(cats)) {
         showToast('Αποθηκεύτηκε');
-        resetForm();
+        selectedCatId = entry.id;
+        resetCatForm();
         render();
       }
     });
+
+    // Subcategory add
+    subAddBtn?.addEventListener('click', () => {
+      if (!selectedCatId) { showToast('Επιλέξτε πρώτα κατηγορία'); return; }
+      resetSubForm();
+      fSubParent.value = selectedCatId;
+      subForm.hidden = false;
+    });
+
+    subCancelBtn?.addEventListener('click', resetSubForm);
+
+    subForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setStatus(subStatus, '', '');
+      const name = fSubName.value.trim();
+      if (!name) { setStatus(subStatus, 'Το όνομα είναι υποχρεωτικό', 'error'); return; }
+      const parentId = fSubParent.value || selectedCatId;
+      if (!parentId) { setStatus(subStatus, 'Δεν βρέθηκε κατηγορία', 'error'); return; }
+
+      let subs = [...(state.CONFIG.destinationSubcategories || [])];
+      const entry = {
+        id: state.editingSubcategoryId || `dsc_${Date.now()}`,
+        category_id: parentId,
+        name,
+        description: fSubDesc.value.trim(),
+        display_order: parseInt(fSubOrder.value, 10) || 0,
+        is_active: fSubActive.checked,
+        created_at: new Date().toISOString()
+      };
+
+      if (state.editingSubcategoryId) {
+        const idx = subs.findIndex(s => s.id === state.editingSubcategoryId);
+        if (idx >= 0) subs[idx] = { ...subs[idx], ...entry };
+      } else {
+        subs.push(entry);
+      }
+
+      if (await saveSubcategories(subs)) {
+        showToast('Αποθηκεύτηκε');
+        resetSubForm();
+        renderCategoryContent(selectedCatId);
+      }
+    });
+
+    // ══════════════════════════════════════
+    // MAIN RENDER
+    // ══════════════════════════════════════
+    const render = () => {
+      if (styleCtrl) styleCtrl.loadSaved();
+      renderTabs();
+      if (selectedCatId) {
+        renderCategoryContent(selectedCatId);
+      } else {
+        catContent.hidden = true;
+      }
+      if (styleCtrl) styleCtrl.renderPreview();
+    };
 
     return { render, styleCtrl };
   };
