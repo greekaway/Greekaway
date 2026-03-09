@@ -1187,6 +1187,9 @@ html[data-theme='light'] .ma-infopage-form label {
 .ma-dest-filter label[hidden] {
   display: none !important;
 }
+.ma-price-controls label[hidden] {
+  display: none !important;
+}
 .ma-search-empty {
   color: #6b7280;
   font-style: italic;
