@@ -93,17 +93,12 @@
       }
     };
 
-    fFilterCategory?.addEventListener('change', () => {
-      updateFilterSubcategory();
-      applySearchFilter();
-    });
-    fFilterSubcategory?.addEventListener('change', applySearchFilter);
-
     const applySearchFilter = () => {
       const q = (fSearch?.value || '').trim().toLowerCase();
       const filterCat = fFilterCategory?.value || '';
       const filterSub = fFilterSubcategory?.value || '';
 
+      if (!list) return;
       list.querySelectorAll('.ma-zone-card').forEach(card => {
         let show = true;
 
@@ -143,12 +138,18 @@
       }
     };
 
+    fFilterCategory?.addEventListener('change', () => {
+      updateFilterSubcategory();
+      applySearchFilter();
+    });
+    fFilterSubcategory?.addEventListener('change', applySearchFilter);
     fSearch?.addEventListener('input', applySearchFilter);
 
     const render = () => {
       populateDropdowns();
       populateFilterDropdowns();
       const dests = state.CONFIG.destinations || [];
+      if (!list) return;
       if (!dests.length) {
         list.innerHTML = '<p class="ma-empty">Δεν υπάρχουν προορισμοί.</p>';
         return;
@@ -248,13 +249,13 @@
       const dest = (state.CONFIG.destinations || []).find(d => d.id === id);
       if (!dest) return;
       state.editingDestinationId = id;
-      fName.value = dest.name || '';
-      fDesc.value = dest.description || '';
-      fCategory.value = dest.category_id || '';
+      if (fName) fName.value = dest.name || '';
+      if (fDesc) fDesc.value = dest.description || '';
+      if (fCategory) fCategory.value = dest.category_id || '';
       updateSubcategoryDropdown();
-      fSubcategory.value = dest.subcategory_id || '';
-      fOrder.value = dest.display_order || 0;
-      fActive.checked = dest.is_active !== false;
+      if (fSubcategory) fSubcategory.value = dest.subcategory_id || '';
+      if (fOrder) fOrder.value = dest.display_order || 0;
+      if (fActive) fActive.checked = dest.is_active !== false;
       if (fRouteType) fRouteType.value = dest.route_type || '';
       if (fLatLng) {
         if (dest.lat != null && dest.lng != null) {
@@ -278,7 +279,7 @@
       if (fOperatingDays) fOperatingDays.value = dest.operating_days || '';
       if (fOpeningTime) fOpeningTime.value = dest.opening_time || '';
       if (fClosingTime) fClosingTime.value = dest.closing_time || '';
-      form.hidden = false;
+      if (form) form.hidden = false;
     };
 
     const saveDestinations = async (destinations) => {
@@ -306,7 +307,7 @@
     addBtn?.addEventListener('click', () => {
       resetForm();
       populateDropdowns();
-      form.hidden = false;
+      if (form) form.hidden = false;
     });
 
     cancelBtn?.addEventListener('click', resetForm);
@@ -314,9 +315,9 @@
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       setStatus(status, '', '');
-      const name = fName.value.trim();
+      const name = (fName?.value || '').trim();
       if (!name) { setStatus(status, 'Το όνομα είναι υποχρεωτικό', 'error'); return; }
-      if (!fCategory.value) { setStatus(status, 'Επιλέξτε κατηγορία', 'error'); return; }
+      if (!fCategory?.value) { setStatus(status, 'Επιλέξτε κατηγορία', 'error'); return; }
 
       let dests = [...(state.CONFIG.destinations || [])];
 
@@ -339,14 +340,14 @@
       const entry = {
         id: state.editingDestinationId || `dest_${Date.now()}`,
         name,
-        description: fDesc.value.trim(),
-        category_id: fCategory.value,
+        description: fDesc?.value?.trim() || '',
+        category_id: fCategory?.value || '',
         subcategory_id: fSubcategory?.value || null,
         route_type: fRouteType ? fRouteType.value || null : null,
         lat,
         lng,
-        display_order: parseInt(fOrder.value, 10) || 0,
-        is_active: fActive.checked,
+        display_order: parseInt(fOrder?.value, 10) || 0,
+        is_active: fActive?.checked !== false,
         // Extended fields
         venue_type: fVenueType?.value?.trim() || '',
         vibe: fVibe?.value?.trim() || '',

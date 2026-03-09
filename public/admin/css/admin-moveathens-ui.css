@@ -493,21 +493,44 @@ html[data-theme='light'] .bar-tab.active {
 }
 
 /* ── Category Horizontal Tabs ── */
+/* Desktop: wrap to multiple rows */
 .ma-cat-tabs {
   display: flex;
   gap: 8px;
   padding: 10px 0 14px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0,0,0,.15) transparent;
+  flex-wrap: wrap;
 }
-.ma-cat-tabs::-webkit-scrollbar {
-  height: 4px;
+
+/* Mobile / Tablet: single-row horizontal scroll (carousel) */
+@media (max-width: 1024px) {
+  .ma-cat-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;            /* Firefox: hide scrollbar */
+    scroll-snap-type: x proximity;
+    padding-bottom: 6px;
+  }
+  .ma-cat-tabs::-webkit-scrollbar {
+    display: none;                     /* Webkit: hide scrollbar */
+  }
+  .ma-cat-tab {
+    scroll-snap-align: start;
+  }
 }
-.ma-cat-tabs::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,.15);
-  border-radius: 4px;
+/* Desktop: subtle scrollbar (fallback if content overflows) */
+@media (min-width: 1025px) {
+  .ma-cat-tabs {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,.15) transparent;
+  }
+  .ma-cat-tabs::-webkit-scrollbar {
+    height: 4px;
+  }
+  .ma-cat-tabs::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,.15);
+    border-radius: 4px;
+  }
 }
 .ma-cat-tab {
   display: flex;
