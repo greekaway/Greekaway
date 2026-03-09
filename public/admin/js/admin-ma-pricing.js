@@ -229,10 +229,10 @@
               <strong>${v.name}</strong>
               <span class="ma-muted">(👤${v.max_passengers})</span>
             </div>
-            <input type="number" class="input price-input" data-vehicle="${v.id}" min="0" step="0.01" value="${price}" placeholder="€" title="Συνολικό κόστος">
-            <input type="number" class="input comm-driver" min="0" step="0.01" value="${commDriver}" placeholder="€" title="Προμήθεια οδηγού">
-            <input type="number" class="input comm-hotel" min="0" step="0.01" value="${commHotel}" placeholder="€" title="Προμήθεια ξενοδοχείου">
-            <input type="number" class="input comm-service" min="0" step="0.01" value="${commService}" placeholder="€" title="Προμήθεια υπηρεσίας">
+            <input type="number" class="input price-input" data-vehicle="${v.id}" min="0" step="1" value="${price}" placeholder="€" title="Συνολικό κόστος">
+            <input type="number" class="input comm-driver" min="0" step="1" value="${commDriver}" placeholder="€" title="Προμήθεια οδηγού">
+            <input type="number" class="input comm-hotel" min="0" step="1" value="${commHotel}" placeholder="€" title="Προμήθεια ξενοδοχείου">
+            <input type="number" class="input comm-service" min="0" step="1" value="${commService}" placeholder="€" title="Προμήθεια υπηρεσίας">
             <div class="ma-comm-error" hidden></div>
           </div>
         `;
@@ -253,7 +253,7 @@
       setStatus(status, '', '');
 
       if (!validateCommissions()) {
-        setStatus(status, 'Οι προμήθειες δεν μπορούν να υπερβαίνουν το συνολικό κόστος', 'error');
+        setStatus(status, 'Το σύνολο προμηθειών πρέπει να ισούται με το συνολικό κόστος', 'error');
         return;
       }
 

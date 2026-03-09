@@ -173,12 +173,17 @@
         return `<tr data-dest="${d.id}">
           <td class="ma-matrix-dest-name">${d.name}</td>
           <td class="ma-matrix-cat-name">${getCategoryName(d.category_id)}</td>
-          <td><input type="number" class="input mx-price" min="0" step="0.01" value="${price}" placeholder="—"></td>
-          <td><input type="number" class="input mx-driver" min="0" step="0.01" value="${commDriver}" placeholder="—"></td>
-          <td><input type="number" class="input mx-hotel" min="0" step="0.01" value="${commHotel}" placeholder="—"></td>
-          <td><input type="number" class="input mx-service" min="0" step="0.01" value="${commService}" placeholder="—"></td>
+          <td><input type="number" class="input mx-price" min="0" step="1" value="${price}" placeholder="—"></td>
+          <td><input type="number" class="input mx-driver" min="0" step="1" value="${commDriver}" placeholder="—"></td>
+          <td><input type="number" class="input mx-hotel" min="0" step="1" value="${commHotel}" placeholder="—"></td>
+          <td><input type="number" class="input mx-service" min="0" step="1" value="${commService}" placeholder="—"></td>
         </tr>`;
       }).join('');
+
+      // Wire commission validation on every input
+      tbody.querySelectorAll('input[type="number"]').forEach(inp => {
+        inp.addEventListener('input', validateMatrixCommissions);
+      });
 
       form.hidden = false;
       setStatus(status, '', '');
@@ -186,11 +191,59 @@
 
     loadBtn?.addEventListener('click', loadMatrix);
 
+    /* ── Commission validation ── */
+    const validateMatrixCommissions = () => {
+      const rows = tbody.querySelectorAll('tr[data-dest]');
+      let allOk = true;
+      rows.forEach(row => {
+        const priceInput = row.querySelector('.mx-price');
+        const driverInput = row.querySelector('.mx-driver');
+        const hotelInput = row.querySelector('.mx-hotel');
+        const serviceInput = row.querySelector('.mx-service');
+        if (!priceInput) return;
+
+        const total = parseFloat(priceInput.value) || 0;
+        const driver = parseFloat(driverInput?.value) || 0;
+        const hotel = parseFloat(hotelInput?.value) || 0;
+        const service = parseFloat(serviceInput?.value) || 0;
+        const sumComm = driver + hotel + service;
+
+        // Remove previous error
+        const existingErr = row.querySelector('.ma-mx-error');
+        if (existingErr) existingErr.remove();
+
+        if (total > 0 && Math.abs(sumComm - total) > 0.009) {
+          const errTd = document.createElement('td');
+          errTd.colSpan = 6;
+          errTd.className = 'ma-mx-error';
+          errTd.style.cssText = 'color:#d32f2f;font-size:12px;font-weight:600;padding:2px 10px';
+          if (sumComm > total) {
+            errTd.textContent = `⚠️ Προμήθειες (${sumComm}€) > κόστος (${total}€)`;
+          } else {
+            errTd.textContent = `⚠️ Προμήθειες (${sumComm}€) < κόστος (${total}€)`;
+          }
+          const errRow = document.createElement('tr');
+          errRow.className = 'ma-mx-error';
+          errRow.appendChild(errTd);
+          row.after(errRow);
+          allOk = false;
+        }
+      });
+      return allOk;
+    };
+
     /* ── Save all ── */
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!ensureConfigLoaded()) return;
       setStatus(status, '', '');
+
+      // Clean old error rows before validating
+      tbody.querySelectorAll('tr.ma-mx-error').forEach(r => r.remove());
+      if (!validateMatrixCommissions()) {
+        setStatus(status, 'Το σύνολο προμηθειών πρέπει να ισούται με το συνολικό κόστος', 'error');
+        return;
+      }
 
       const originZoneId = originHidden.value;
       const vehicleId = vehicleSelect?.value;
