@@ -279,37 +279,37 @@
       const extras = buildDestinationExtras(dest);
       return `
       <div class="ma-destination-card" data-id="${dest.id}" data-name="${dest.name}">
-        <button class="ma-destination-item" type="button">
-          <div class="ma-destination-row">
+        <div class="ma-destination-item">
+          <button class="ma-destination-select" type="button">
             <span class="ma-destination-name">${dest.main_artist ? dest.name + ' — ' + dest.main_artist : dest.name}</span>
-            ${extras ? '<span class="ma-destination-chevron">▼</span>' : ''}
-          </div>
-          ${dest.description ? `<span class="ma-destination-desc">${dest.description}</span>` : ''}
-        </button>
-        ${extras ? `<div class="ma-destination-extras">${extras}</div>` : ''}
+            ${dest.description ? `<span class="ma-destination-desc">${dest.description}</span>` : ''}
+          </button>
+          ${extras ? '<button class="ma-destination-chevron" type="button" aria-label="Πληροφορίες"><span class="ma-chevron-icon">▼</span></button>' : ''}
+          ${extras ? `<div class="ma-destination-extras">${extras}</div>` : ''}
+        </div>
       </div>`;
     }).join('');
 
     // Expand/collapse toggle and destination click → booking type
     destinationsList.querySelectorAll('.ma-destination-card').forEach(card => {
-      const mainBtn = card.querySelector('.ma-destination-item');
-      const chevron = card.querySelector('.ma-destination-chevron');
-      const extrasDiv = card.querySelector('.ma-destination-extras');
+      const selectBtn = card.querySelector('.ma-destination-select');
+      const chevronBtn = card.querySelector('.ma-destination-chevron');
 
-      // Clicking chevron toggles extras
-      if (chevron && extrasDiv) {
-        chevron.addEventListener('click', (e) => {
+      // Clicking chevron toggles extras (completely isolated)
+      if (chevronBtn) {
+        chevronBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          e.preventDefault();
           const wasCollapsed = !card.classList.contains('ma-destination-card--expanded');
           card.classList.toggle('ma-destination-card--expanded', wasCollapsed);
-          chevron.textContent = wasCollapsed ? '▲' : '▼';
+          const icon = chevronBtn.querySelector('.ma-chevron-icon');
+          if (icon) icon.textContent = wasCollapsed ? '▲' : '▼';
         });
       }
 
-      // Clicking the destination itself → go to booking type
-      mainBtn.addEventListener('click', (e) => {
-        // Ignore if user clicked the expand hint
-        if (e.target.closest('.ma-destination-chevron')) return;
+      // Clicking the destination name/desc → go to booking type
+      selectBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const dest = data.destinations.find(d => d.id === card.dataset.id);
         selectedDestination = {
           id: card.dataset.id,

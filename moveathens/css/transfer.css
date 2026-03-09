@@ -516,43 +516,58 @@
   gap: 12px;
 }
 
+/* ── Destination Card (unified) ── */
 .ma-destination-item {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
   background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
   border: none;
   border-radius: 14px;
-  cursor: pointer;
   text-align: left;
-  transition: all 0.2s ease;
-  box-shadow: 
+  transition: box-shadow 0.2s ease;
+  box-shadow:
     0 3px 6px rgba(0, 0, 0, 0.06),
     0 1px 3px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  overflow: hidden;
 }
 
 .ma-destination-item:hover {
-  transform: translateX(4px);
-  box-shadow: 
+  box-shadow:
     0 6px 16px rgba(0, 0, 0, 0.1),
     0 2px 6px rgba(0, 0, 0, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  background: linear-gradient(145deg, #ffffff 0%, #f0f4f8 100%);
 }
 
-.ma-destination-item:active {
-  transform: scale(0.99);
+/* Clickable name/desc area */
+.ma-destination-select {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px 16px 16px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+  transition: background 0.15s ease;
+}
+.ma-destination-select:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+.ma-destination-select:active {
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .ma-destination-name {
   font-size: 16px;
   font-weight: 600;
   color: #1a1a2e;
-  flex: 1;
-  min-width: 0;
+  line-height: 1.3;
 }
 
 .ma-destination-desc {
@@ -561,23 +576,42 @@
   margin-top: 4px;
 }
 
-/* Row: name + chevron side-by-side */
-.ma-destination-row {
+/* Chevron toggle button (isolated click target) */
+.ma-destination-chevron {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   align-items: center;
-  width: 100%;
-  gap: 10px;
-}
-
-/* Chevron arrow (only present when extras exist) */
-.ma-destination-chevron {
+  justify-content: center;
+  align-self: center;
+  width: 36px;
+  height: 36px;
+  margin: 0 14px 0 0;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
   flex-shrink: 0;
-  font-size: 14px;
-  color: #9ca3af;
-  transition: transform 0.25s ease, color 0.2s;
+}
+.ma-destination-chevron:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+.ma-destination-chevron:active {
+  transform: scale(0.92);
+}
+.ma-chevron-icon {
+  font-size: 13px;
+  color: #6b7280;
   line-height: 1;
+  transition: color 0.2s ease;
 }
 .ma-destination-card--expanded .ma-destination-chevron {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+.ma-destination-card--expanded .ma-chevron-icon {
   color: #3b82f6;
 }
 
@@ -628,14 +662,13 @@
   display: none;
 }
 
-/* ── Destination Card Expand/Collapse ── */
+/* ── Destination Card Expand/Collapse (inside card) ── */
 .ma-destination-card {
   margin-bottom: 2px;
 }
 .ma-destination-extras {
-  background: #f8fafc;
-  border-radius: 0 0 14px 14px;
-  margin-top: -6px;
+  grid-column: 1 / -1;
+  grid-row: 2;
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
@@ -643,15 +676,14 @@
   overflow: hidden;
   opacity: 0;
   padding: 0 20px;
-  transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+  border-top: 0 solid transparent;
+  transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease, border-top 0.2s ease;
 }
 .ma-destination-card--expanded .ma-destination-extras {
   max-height: 400px;
   opacity: 1;
-  padding: 12px 20px 16px;
-}
-.ma-destination-card--expanded .ma-destination-item {
-  border-radius: 14px 14px 0 0;
+  padding: 10px 20px 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 .ma-dest-extra {
   font-size: 13px;
@@ -1385,8 +1417,8 @@
     font-size: calc(12px * var(--ma-tile-scale, 1));
   }
   
-  .ma-destination-item {
-    padding: 14px 16px;
+  .ma-destination-select {
+    padding: 12px 12px 12px 16px;
   }
   
   .ma-destination-name {
@@ -1499,8 +1531,8 @@
     font-size: calc(15px * var(--ma-tile-scale, 1));
   }
   
-  .ma-destination-item {
-    padding: 20px 24px;
+  .ma-destination-select {
+    padding: 18px 18px 18px 24px;
   }
   
   .ma-vehicle-card {

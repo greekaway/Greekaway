@@ -705,12 +705,21 @@ app.use((req, res, next) => {
 
   // C) MoveAthens pages
   if (MOVEATHENS_PAGE_MAP[url]) {
-    return res.sendFile(path.join(MOVEATHENS_PAGES_DIR, MOVEATHENS_PAGE_MAP[url]));
+    const pagePath = path.join(MOVEATHENS_PAGES_DIR, MOVEATHENS_PAGE_MAP[url]);
+    return fs.readFile(pagePath, 'utf8', (err, html) => {
+      if (err) return res.status(404).send('Not found');
+      res.set('Content-Type', 'text/html; charset=utf-8');
+      res.send(injectUpdateBanner(html));
+    });
   }
 
   // D) FALLBACK: Any unknown route on MoveAthens domain → welcome.html (SPA-style)
   // This ensures moveathens.com/anything returns MoveAthens, NOT Greekaway
-  return res.sendFile(MOVEATHENS_ENTRY);
+  return fs.readFile(MOVEATHENS_ENTRY, 'utf8', (err, html) => {
+    if (err) return res.status(404).send('Not found');
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    res.send(injectUpdateBanner(html));
+  });
 });
 
 // DriversSystem page map

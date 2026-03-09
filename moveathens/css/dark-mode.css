@@ -333,6 +333,13 @@
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
   }
 
+  .ma-transfer-page .ma-destination-select:hover {
+    background: rgba(255, 255, 255, 0.03) !important;
+  }
+  .ma-transfer-page .ma-destination-select:active {
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+
   .ma-transfer-page .ma-destination-name {
     color: #e8edf3 !important;
   }
@@ -342,15 +349,26 @@
   }
 
   .ma-transfer-page .ma-destination-chevron {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+  .ma-transfer-page .ma-destination-chevron:hover {
+    background: rgba(70, 211, 255, 0.1) !important;
+    border-color: rgba(70, 211, 255, 0.25) !important;
+  }
+  .ma-transfer-page .ma-chevron-icon {
     color: #8896a6 !important;
   }
-
   .ma-transfer-page .ma-destination-card--expanded .ma-destination-chevron {
+    background: rgba(70, 211, 255, 0.12) !important;
+    border-color: rgba(70, 211, 255, 0.3) !important;
+  }
+  .ma-transfer-page .ma-destination-card--expanded .ma-chevron-icon {
     color: #46d3ff !important;
   }
 
   .ma-transfer-page .ma-destination-extras {
-    background: linear-gradient(145deg, #0f1f35 0%, #0b1828 100%) !important;
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
   }
 
   .ma-transfer-page .ma-dest-extra {
@@ -363,10 +381,6 @@
 
   .ma-transfer-page .ma-dest-extra--details {
     color: #8896a6 !important;
-  }
-
-  .ma-transfer-page .ma-destination-arrow {
-    color: #46d3ff !important;
   }
 
   /* Subcategories */
