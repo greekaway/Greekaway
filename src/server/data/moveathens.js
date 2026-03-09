@@ -848,8 +848,166 @@ async function deleteDestinationCategory(id) {
 }
 
 // =========================================================
+// DESTINATION SUBCATEGORIES
+// =========================================================
+
+function mapSubcategoryRow(row) {
+  return {
+    id: row.id,
+    category_id: row.category_id,
+    name: row.name,
+    description: row.description || '',
+    display_order: row.display_order,
+    is_active: row.is_active,
+    created_at: row.created_at
+  };
+}
+
+async function getDestinationSubcategories(filters = {}) {
+  await initDb();
+
+  if (dbAvailable) {
+    try {
+      const rows = await db.ma.getDestinationSubcategories(filters);
+      if (rows && rows.length > 0) {
+        return rows.map(mapSubcategoryRow);
+      }
+      // DB empty — try JSON migration
+      const config = readConfigFromFile();
+      const jsonSubs = config.destinationSubcategories || [];
+      if (jsonSubs.length > 0) {
+        console.log('[moveathens] DB empty, auto-migrating', jsonSubs.length, 'subcategories from JSON');
+        for (const s of jsonSubs) {
+          try {
+            await db.ma.upsertDestinationSubcategory({
+              id: s.id,
+              category_id: s.category_id || null,
+              name: s.name,
+              description: s.description || '',
+              display_order: s.display_order || 0,
+              is_active: s.is_active !== false
+            });
+          } catch (e) {
+            console.error('[moveathens] Failed to migrate subcategory:', s.id, e.message);
+          }
+        }
+        const migrated = await db.ma.getDestinationSubcategories(filters);
+        return migrated.map(mapSubcategoryRow);
+      }
+      return [];
+    } catch (err) {
+      console.error('[moveathens] DB subcategories read failed:', err.message);
+    }
+  }
+
+  const config = readConfigFromFile();
+  let subs = config.destinationSubcategories || [];
+  if (filters.category_id) subs = subs.filter(s => s.category_id === filters.category_id);
+  if (filters.activeOnly) subs = subs.filter(s => s.is_active !== false);
+  return subs;
+}
+
+async function upsertDestinationSubcategory(data) {
+  await initDb();
+
+  const id = data.id || makeId('dsc');
+
+  if (dbAvailable) {
+    try {
+      const row = await db.ma.upsertDestinationSubcategory({
+        id,
+        category_id: data.category_id || null,
+        name: data.name,
+        description: data.description || '',
+        display_order: data.display_order || 0,
+        is_active: data.is_active !== false
+      });
+      console.log('[moveathens] Subcategory saved to DB:', row.id);
+      return mapSubcategoryRow(row);
+    } catch (err) {
+      console.error('[moveathens] DB subcategory write failed:', err.message);
+    }
+  }
+
+  const config = readConfigFromFile();
+  const subs = config.destinationSubcategories || [];
+  const idx = subs.findIndex(s => s.id === id);
+
+  const sub = {
+    id,
+    category_id: data.category_id || null,
+    name: data.name,
+    description: data.description || '',
+    display_order: data.display_order || 0,
+    is_active: data.is_active !== false,
+    created_at: idx >= 0 ? subs[idx].created_at : new Date().toISOString()
+  };
+
+  if (idx >= 0) { subs[idx] = sub; } else { subs.push(sub); }
+  config.destinationSubcategories = subs;
+  if (!writeConfigToFile(config)) throw new Error('write_failed');
+  console.log('[moveathens] Subcategory saved to JSON:', id);
+  return sub;
+}
+
+async function deleteDestinationSubcategory(id) {
+  await initDb();
+
+  if (dbAvailable) {
+    try {
+      const deleted = await db.ma.deleteDestinationSubcategory(id);
+      if (deleted) {
+        console.log('[moveathens] Subcategory deleted from DB:', id);
+        return true;
+      }
+    } catch (err) {
+      console.error('[moveathens] DB subcategory delete failed:', err.message);
+    }
+  }
+
+  const config = readConfigFromFile();
+  const before = (config.destinationSubcategories || []).length;
+  config.destinationSubcategories = (config.destinationSubcategories || []).filter(s => s.id !== id);
+  if (config.destinationSubcategories.length === before) return false;
+  if (!writeConfigToFile(config)) throw new Error('write_failed');
+  console.log('[moveathens] Subcategory deleted from JSON:', id);
+  return true;
+}
+
+// =========================================================
 // DESTINATIONS
 // =========================================================
+
+function mapDestinationRow(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description || '',
+    category_id: row.category_id,
+    subcategory_id: row.subcategory_id || null,
+    zone_id: row.zone_id,
+    route_type: row.route_type || null,
+    lat: row.lat != null ? parseFloat(row.lat) : null,
+    lng: row.lng != null ? parseFloat(row.lng) : null,
+    display_order: row.display_order,
+    is_active: row.is_active,
+    venue_type: row.venue_type || '',
+    vibe: row.vibe || '',
+    area: row.area || '',
+    indicative_price: row.indicative_price || '',
+    suitable_for: row.suitable_for || '',
+    rating: row.rating || '',
+    michelin: row.michelin || '',
+    details: row.details || '',
+    main_artist: row.main_artist || '',
+    participating_artists: row.participating_artists || '',
+    program_info: row.program_info || '',
+    operating_days: row.operating_days || '',
+    opening_time: row.opening_time || '',
+    closing_time: row.closing_time || '',
+    created_at: row.created_at
+  };
+}
 
 async function getDestinations(filters = {}) {
   await initDb();
@@ -858,19 +1016,7 @@ async function getDestinations(filters = {}) {
     try {
       const rows = await db.ma.getDestinations(filters);
       if (rows && rows.length > 0) {
-        return rows.map(row => ({
-          id: row.id,
-          name: row.name,
-          description: row.description || '',
-          category_id: row.category_id,
-          zone_id: row.zone_id,
-          route_type: row.route_type || null,
-          lat: row.lat != null ? parseFloat(row.lat) : null,
-          lng: row.lng != null ? parseFloat(row.lng) : null,
-          display_order: row.display_order,
-          is_active: row.is_active,
-          created_at: row.created_at
-        }));
+        return rows.map(mapDestinationRow);
       }
       // DB empty - auto-migrate from JSON
       const config = readConfigFromFile();
@@ -884,6 +1030,7 @@ async function getDestinations(filters = {}) {
               name: d.name,
               description: d.description || '',
               category_id: d.category_id || null,
+              subcategory_id: d.subcategory_id || null,
               zone_id: d.zone_id || null,
               route_type: d.route_type || null,
               lat: d.lat != null ? parseFloat(d.lat) : null,
@@ -896,19 +1043,7 @@ async function getDestinations(filters = {}) {
           }
         }
         const migrated = await db.ma.getDestinations(filters);
-        return migrated.map(row => ({
-          id: row.id,
-          name: row.name,
-          description: row.description || '',
-          category_id: row.category_id,
-          zone_id: row.zone_id,
-          route_type: row.route_type || null,
-          lat: row.lat != null ? parseFloat(row.lat) : null,
-          lng: row.lng != null ? parseFloat(row.lng) : null,
-          display_order: row.display_order,
-          is_active: row.is_active,
-          created_at: row.created_at
-        }));
+        return migrated.map(mapDestinationRow);
       }
       return [];
     } catch (err) {
@@ -932,6 +1067,35 @@ async function getDestinations(filters = {}) {
   return dests;
 }
 
+function buildDestinationPayload(data) {
+  return {
+    name: data.name,
+    description: data.description || '',
+    category_id: data.category_id || null,
+    subcategory_id: data.subcategory_id || null,
+    zone_id: data.zone_id || null,
+    route_type: data.route_type || null,
+    lat: data.lat != null ? parseFloat(data.lat) : null,
+    lng: data.lng != null ? parseFloat(data.lng) : null,
+    display_order: data.display_order || 0,
+    is_active: data.is_active !== false,
+    venue_type: data.venue_type || '',
+    vibe: data.vibe || '',
+    area: data.area || '',
+    indicative_price: data.indicative_price || '',
+    suitable_for: data.suitable_for || '',
+    rating: data.rating || '',
+    michelin: data.michelin || '',
+    details: data.details || '',
+    main_artist: data.main_artist || '',
+    participating_artists: data.participating_artists || '',
+    program_info: data.program_info || '',
+    operating_days: data.operating_days || '',
+    opening_time: data.opening_time || '',
+    closing_time: data.closing_time || ''
+  };
+}
+
 async function upsertDestination(data) {
   await initDb();
   
@@ -939,32 +1103,10 @@ async function upsertDestination(data) {
   
   if (dbAvailable) {
     try {
-      const row = await db.ma.upsertDestination({
-        id,
-        name: data.name,
-        description: data.description || '',
-        category_id: data.category_id || null,
-        zone_id: data.zone_id || null,
-        route_type: data.route_type || null,
-        lat: data.lat != null ? parseFloat(data.lat) : null,
-        lng: data.lng != null ? parseFloat(data.lng) : null,
-        display_order: data.display_order || 0,
-        is_active: data.is_active !== false
-      });
+      const payload = { id, ...buildDestinationPayload(data) };
+      const row = await db.ma.upsertDestination(payload);
       console.log('[moveathens] Destination saved to DB:', row.id);
-      return {
-        id: row.id,
-        name: row.name,
-        description: row.description || '',
-        category_id: row.category_id,
-        zone_id: row.zone_id,
-        route_type: row.route_type || null,
-        lat: row.lat != null ? parseFloat(row.lat) : null,
-        lng: row.lng != null ? parseFloat(row.lng) : null,
-        display_order: row.display_order,
-        is_active: row.is_active,
-        created_at: row.created_at
-      };
+      return mapDestinationRow(row);
     } catch (err) {
       console.error('[moveathens] DB destination write failed:', err.message);
     }
@@ -976,15 +1118,7 @@ async function upsertDestination(data) {
   
   const dest = {
     id,
-    name: data.name,
-    description: data.description || '',
-    category_id: data.category_id || null,
-    zone_id: data.zone_id || null,
-    route_type: data.route_type || null,
-    lat: data.lat != null ? parseFloat(data.lat) : null,
-    lng: data.lng != null ? parseFloat(data.lng) : null,
-    display_order: data.display_order || 0,
-    is_active: data.is_active !== false,
+    ...buildDestinationPayload(data),
     created_at: idx >= 0 ? dests[idx].created_at : new Date().toISOString()
   };
   
@@ -1182,6 +1316,7 @@ async function getFullConfig() {
   const zones = await getZones();
   const vehicles = await getVehicleTypes();
   const categories = await getDestinationCategories();
+  const subcategories = await getDestinationSubcategories();
   const destinations = await getDestinations();
   const prices = await getPrices();
   
@@ -1190,6 +1325,7 @@ async function getFullConfig() {
     transferZones: zones,
     vehicleTypes: vehicles,
     destinationCategories: categories,
+    destinationSubcategories: subcategories,
     destinations,
     transferPrices: prices
   };
@@ -1285,6 +1421,10 @@ module.exports = {
   getDestinationCategories,
   upsertDestinationCategory,
   deleteDestinationCategory,
+  // Destination Subcategories
+  getDestinationSubcategories,
+  upsertDestinationSubcategory,
+  deleteDestinationSubcategory,
   // Destinations
   getDestinations,
   upsertDestination,

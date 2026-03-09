@@ -12,6 +12,7 @@
   let CONFIG = null;
   let hotelContext = null;  // { origin_zone_id, ... }
   let selectedCategory = null;
+  let selectedSubcategory = null; // null = no subcategory navigation
   let selectedDestination = null;
   let selectedTariff = null; // 'day' or 'night' — auto-calculated, never user-chosen
   let selectedVehicle = null;
@@ -61,6 +62,7 @@
 
   const steps = {
     categories: $('#step-categories'),
+    subcategories: $('#step-subcategories'),
     destinations: $('#step-destinations'),
     bookingType: $('#step-booking-type'),
     vehicles: $('#step-vehicles'),
@@ -69,6 +71,7 @@
   };
 
   const categoriesGrid = $('#categories-grid');
+  const subcategoriesList = $('#subcategories-list');
   const destinationsList = $('#destinations-list');
   const vehiclesGrid = $('#vehicles-grid');
   const selectedCategoryName = $('#selected-category-name');
@@ -95,6 +98,7 @@
   // Full state reset — returns everything to initial values
   const resetAllState = () => {
     selectedCategory = null;
+    selectedSubcategory = null;
     selectedDestination = null;
     selectedTariff = null;
     selectedVehicle = null;
@@ -216,9 +220,42 @@
           name: card.dataset.name,
           is_arrival: card.dataset.arrival === '1'
         };
+        selectedSubcategory = null;
+        checkForSubcategories();
+      });
+    });
+  };
+
+  // Check if the selected category has active subcategories
+  const checkForSubcategories = async () => {
+    if (!selectedCategory) return;
+    const data = await api(`/api/moveathens/subcategories?category_id=${encodeURIComponent(selectedCategory.id)}`);
+    if (data && data.subcategories && data.subcategories.length > 0) {
+      renderSubcategories(data.subcategories);
+    } else {
+      // No subcategories — go directly to destinations
+      loadDestinations();
+    }
+  };
+
+  // Render subcategory cards
+  const renderSubcategories = (subcategories) => {
+    subcategoriesList.innerHTML = subcategories.map(sub => `
+      <button class="ma-subcategory-item" data-id="${sub.id}" data-name="${sub.name}">
+        <span class="ma-subcategory-name">${sub.name}</span>
+        ${sub.description ? `<span class="ma-subcategory-desc">${sub.description}</span>` : ''}
+        <span class="ma-subcategory-arrow">→</span>
+      </button>
+    `).join('');
+
+    subcategoriesList.querySelectorAll('.ma-subcategory-item').forEach(item => {
+      item.addEventListener('click', () => {
+        selectedSubcategory = { id: item.dataset.id, name: item.dataset.name };
         loadDestinations();
       });
     });
+
+    showStep('subcategories');
   };
 
   const loadDestinations = async () => {
@@ -227,30 +264,103 @@
     destinationsList.innerHTML = '<div class="ma-loading">Φόρτωση...</div>';
     showStep('destinations');
 
-    const data = await api(`/api/moveathens/destinations?category_id=${encodeURIComponent(selectedCategory.id)}`);
+    let url = `/api/moveathens/destinations?category_id=${encodeURIComponent(selectedCategory.id)}`;
+    if (selectedSubcategory) {
+      url += `&subcategory_id=${encodeURIComponent(selectedSubcategory.id)}`;
+    }
+    const data = await api(url);
     if (!data || !data.destinations || !data.destinations.length) {
       destinationsList.innerHTML = '<p class="ma-empty">Δεν υπάρχουν διαθέσιμοι προορισμοί.</p>';
       return;
     }
 
-    destinationsList.innerHTML = data.destinations.map(dest => `
-      <button class="ma-destination-item" data-id="${dest.id}" data-name="${dest.name}">
-        <span class="ma-destination-name">${dest.name}</span>
-        ${dest.description ? `<span class="ma-destination-desc">${dest.description}</span>` : ''}
-        <span class="ma-destination-arrow">→</span>
-      </button>
-    `).join('');
+    destinationsList.innerHTML = data.destinations.map(dest => {
+      // Build expand/collapse details
+      const extras = buildDestinationExtras(dest);
+      return `
+      <div class="ma-destination-card" data-id="${dest.id}" data-name="${dest.name}">
+        <button class="ma-destination-item" type="button">
+          <span class="ma-destination-name">${dest.main_artist ? dest.name + ' — ' + dest.main_artist : dest.name}</span>
+          ${dest.description ? `<span class="ma-destination-desc">${dest.description}</span>` : ''}
+          ${extras ? '<span class="ma-destination-expand-hint">ℹ️ Περισσότερα</span>' : ''}
+          <span class="ma-destination-arrow">→</span>
+        </button>
+        ${extras ? `<div class="ma-destination-extras" hidden>${extras}</div>` : ''}
+      </div>`;
+    }).join('');
 
-    // Event listeners - goes to booking type selection
-    destinationsList.querySelectorAll('.ma-destination-item').forEach(item => {
-      item.addEventListener('click', () => {
+    // Expand/collapse toggle and destination click → booking type
+    destinationsList.querySelectorAll('.ma-destination-card').forEach(card => {
+      const mainBtn = card.querySelector('.ma-destination-item');
+      const expandHint = card.querySelector('.ma-destination-expand-hint');
+      const extrasDiv = card.querySelector('.ma-destination-extras');
+
+      // Clicking expand hint toggles extras
+      if (expandHint && extrasDiv) {
+        expandHint.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isHidden = extrasDiv.hidden;
+          extrasDiv.hidden = !isHidden;
+          expandHint.textContent = isHidden ? '▲ Λιγότερα' : 'ℹ️ Περισσότερα';
+          card.classList.toggle('ma-destination-card--expanded', isHidden);
+        });
+      }
+
+      // Clicking the destination itself → go to booking type
+      mainBtn.addEventListener('click', (e) => {
+        // Ignore if user clicked the expand hint
+        if (e.target.closest('.ma-destination-expand-hint')) return;
+        const dest = data.destinations.find(d => d.id === card.dataset.id);
         selectedDestination = {
-          id: item.dataset.id,
-          name: item.dataset.name
+          id: card.dataset.id,
+          name: card.dataset.name,
+          ...(dest || {})
         };
+        // Operating hours soft warning
+        if (dest && dest.opening_time && dest.closing_time) {
+          const now = new Date();
+          const nowMins = now.getHours() * 60 + now.getMinutes();
+          const [oH, oM] = dest.opening_time.split(':').map(Number);
+          const [cH, cM] = dest.closing_time.split(':').map(Number);
+          const openMins = oH * 60 + (oM || 0);
+          const closeMins = cH * 60 + (cM || 0);
+          let outsideHours = false;
+          if (closeMins > openMins) {
+            outsideHours = nowMins < openMins || nowMins >= closeMins;
+          } else {
+            // Overnight range (e.g. 22:00 - 04:00)
+            outsideHours = nowMins < openMins && nowMins >= closeMins;
+          }
+          if (outsideHours) {
+            const daysLabel = dest.operating_days || '';
+            const warnMsg = `⚠️ Ο προορισμός "${dest.name}" λειτουργεί ${dest.opening_time} – ${dest.closing_time}${daysLabel ? ' (' + daysLabel + ')' : ''}. Αυτή τη στιγμή μπορεί να είναι κλειστός.`;
+            if (!confirm(warnMsg + '\n\nΘέλετε να συνεχίσετε;')) return;
+          }
+        }
         showBookingTypeStep();
       });
     });
+  };
+
+  // Build extra details HTML for a destination card
+  const buildDestinationExtras = (dest) => {
+    const rows = [];
+    if (dest.area) rows.push(`<span class="ma-dest-extra"><strong>Περιοχή:</strong> ${dest.area}</span>`);
+    if (dest.vibe) rows.push(`<span class="ma-dest-extra"><strong>Vibe:</strong> ${dest.vibe}</span>`);
+    if (dest.venue_type) rows.push(`<span class="ma-dest-extra"><strong>Τύπος:</strong> ${dest.venue_type}</span>`);
+    if (dest.indicative_price) rows.push(`<span class="ma-dest-extra"><strong>Ενδεικτική τιμή:</strong> ${dest.indicative_price}</span>`);
+    if (dest.suitable_for) rows.push(`<span class="ma-dest-extra"><strong>Κατάλληλο για:</strong> ${dest.suitable_for}</span>`);
+    if (dest.rating) rows.push(`<span class="ma-dest-extra"><strong>Βαθμολογία:</strong> ⭐ ${dest.rating}</span>`);
+    if (dest.michelin) rows.push(`<span class="ma-dest-extra"><strong>Michelin:</strong> ${dest.michelin}</span>`);
+    if (dest.participating_artists) rows.push(`<span class="ma-dest-extra"><strong>Καλλιτέχνες:</strong> ${dest.participating_artists}</span>`);
+    if (dest.program_info) rows.push(`<span class="ma-dest-extra"><strong>Πρόγραμμα:</strong> ${dest.program_info}</span>`);
+    if (dest.opening_time && dest.closing_time) {
+      let hoursText = `${dest.opening_time} — ${dest.closing_time}`;
+      if (dest.operating_days) hoursText += ` (${dest.operating_days})`;
+      rows.push(`<span class="ma-dest-extra"><strong>Ωράριο:</strong> ${hoursText}</span>`);
+    }
+    if (dest.details) rows.push(`<span class="ma-dest-extra ma-dest-extra--details">${dest.details}</span>`);
+    return rows.length ? rows.join('') : '';
   };
 
   // ========================================
@@ -286,7 +396,7 @@
     const errorEl = $('#booking-datetime-error');
     const backBtn = $('#back-to-destinations-from-booking');
 
-    // Back button → go to destinations (or categories if came from search)
+    // Back button → go to destinations (or subcategories/categories if came from search)
     backBtn?.addEventListener('click', () => {
       selectedDestination = null;
       selectedBookingType = null;
@@ -1459,7 +1569,21 @@
 
     // Back buttons
     $('#back-to-categories')?.addEventListener('click', () => {
+      // If we came via subcategories, go back there instead of categories
+      if (selectedSubcategory) {
+        selectedSubcategory = null;
+        showStep('subcategories');
+      } else {
+        selectedCategory = null;
+        sessionTariffTime = null;
+        showStep('categories');
+      }
+    });
+
+    // Back from subcategories → categories
+    $('#back-to-categories-from-subs')?.addEventListener('click', () => {
       selectedCategory = null;
+      selectedSubcategory = null;
       sessionTariffTime = null;
       showStep('categories');
     });

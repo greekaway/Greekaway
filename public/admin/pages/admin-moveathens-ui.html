@@ -263,6 +263,57 @@
 
           <div id="ma-categories-list" class="ma-zones-list" aria-live="polite"></div>
         </section>
+
+        <!-- Subcategories Section -->
+        <section class="panel">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">Υποκατηγορίες</h3>
+              <p class="ma-helper">Ενδιάμεσο επίπεδο οργάνωσης μέσα σε κάθε κατηγορία (προαιρετικό)</p>
+            </div>
+            <div class="ma-actions">
+              <button id="maSubcategoryAddBtn" class="btn secondary" type="button">➕ Νέα Υποκατηγορία</button>
+            </div>
+          </div>
+
+          <form id="ma-subcategory-form" class="ma-zone-form" hidden>
+            <div class="ma-zone-grid">
+              <label>Κατηγορία (γονική)
+                <select id="maSubcategoryParent" class="input" required>
+                  <option value="">-- Επιλογή Κατηγορίας --</option>
+                </select>
+              </label>
+              <label>Ονομασία Υποκατηγορίας
+                <input id="maSubcategoryName" class="input" type="text" maxlength="80" required>
+              </label>
+              <label>Σύντομη περιγραφή (προαιρετικό)
+                <textarea id="maSubcategoryDescription" class="input" rows="2" maxlength="200"></textarea>
+              </label>
+              <label>Σειρά Εμφάνισης
+                <input id="maSubcategoryOrder" class="input" type="number" min="0" value="0">
+              </label>
+              <label class="ma-zone-toggle">
+                <input id="maSubcategoryActive" type="checkbox" checked>
+                Ενεργή Υποκατηγορία
+              </label>
+            </div>
+            <div class="ma-actions">
+              <button id="maSubcategorySaveBtn" class="btn" type="submit">Αποθήκευση</button>
+              <button id="maSubcategoryCancelBtn" class="btn secondary" type="button">Ακύρωση</button>
+              <span id="maSubcategoryStatus" class="ma-status" aria-live="polite"></span>
+            </div>
+          </form>
+
+          <div class="ma-price-controls ma-dest-filter">
+            <label>Φίλτρο ανά Κατηγορία
+              <select id="maSubcategoryFilterCat" class="input">
+                <option value="">Όλες</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="ma-subcategories-list" class="ma-zones-list" aria-live="polite"></div>
+        </section>
       </div>
 
       <!-- ===== DESTINATIONS TAB ===== -->
@@ -291,6 +342,11 @@
                   <option value="">-- Επιλογή --</option>
                 </select>
               </label>
+              <label id="maDestSubcatLabel" hidden>Υποκατηγορία
+                <select id="maDestinationSubcategory" class="input">
+                  <option value="">-- Χωρίς Υποκατηγορία --</option>
+                </select>
+              </label>
               <label>Σειρά Εμφάνισης
                 <input id="maDestinationOrder" class="input" type="number" min="0" value="0">
               </label>
@@ -307,6 +363,60 @@
                 <input id="maDestinationLatLng" class="input" type="text" placeholder="π.χ. 37.9715,23.7267" maxlength="50">
                 <small style="color:#6b7280">Χρησιμοποιείται για πλοήγηση οδηγού. Δεν εμφανίζεται στον χρήστη.</small>
               </label>
+
+              <!-- Extended fields -->
+              <details class="ma-extra-fields">
+                <summary>Επιπλέον πεδία (προαιρετικά)</summary>
+                <div class="ma-zone-grid" style="margin-top:12px">
+                  <label>Τύπος Χώρου
+                    <input id="maDestVenueType" class="input" type="text" maxlength="100" placeholder="π.χ. Εστιατόριο, Beach Bar">
+                  </label>
+                  <label>Vibe / Στυλ
+                    <input id="maDestVibe" class="input" type="text" maxlength="100" placeholder="π.χ. Ρομαντικό, Casual">
+                  </label>
+                  <label>Περιοχή
+                    <input id="maDestArea" class="input" type="text" maxlength="100" placeholder="π.χ. Γλυφάδα, Κολωνάκι">
+                  </label>
+                  <label>Ενδεικτική Τιμή
+                    <input id="maDestIndicativePrice" class="input" type="text" maxlength="100" placeholder="π.χ. €€€">
+                  </label>
+                  <label>Κατάλληλο για
+                    <input id="maDestSuitableFor" class="input" type="text" maxlength="200" placeholder="π.χ. Ζευγάρια, Οικογένειες">
+                  </label>
+                  <label>Rating
+                    <input id="maDestRating" class="input" type="text" maxlength="20" placeholder="π.χ. 4.8">
+                  </label>
+                  <label>Michelin (προαιρετικό)
+                    <input id="maDestMichelin" class="input" type="text" maxlength="50" placeholder="π.χ. 1 Star">
+                  </label>
+                  <label>Λεπτομέρειες
+                    <textarea id="maDestDetails" class="input" rows="3" maxlength="500"></textarea>
+                  </label>
+
+                  <h4 style="grid-column:1/-1;margin:8px 0 0;font-size:14px;color:#888">🎤 Live Σκηνές</h4>
+                  <label>Βασικός Τραγουδιστής
+                    <input id="maDestMainArtist" class="input" type="text" maxlength="150" placeholder="π.χ. Nikos Vertis">
+                  </label>
+                  <label>Συμμετέχουν Τραγουδιστές
+                    <textarea id="maDestParticipatingArtists" class="input" rows="2" maxlength="500"></textarea>
+                  </label>
+                  <label>Πληροφορίες Προγράμματος
+                    <textarea id="maDestProgramInfo" class="input" rows="2" maxlength="500"></textarea>
+                  </label>
+
+                  <h4 style="grid-column:1/-1;margin:8px 0 0;font-size:14px;color:#888">🕐 Ωράριο Λειτουργίας</h4>
+                  <label>Ημέρες Λειτουργίας
+                    <input id="maDestOperatingDays" class="input" type="text" maxlength="100" placeholder="π.χ. Δευ-Σαβ ή Καθημερινά">
+                  </label>
+                  <label>Ώρα Ανοίγματος
+                    <input id="maDestOpeningTime" class="input" type="time">
+                  </label>
+                  <label>Ώρα Κλεισίματος
+                    <input id="maDestClosingTime" class="input" type="time">
+                  </label>
+                </div>
+              </details>
+
               <label class="ma-zone-toggle">
                 <input id="maDestinationActive" type="checkbox" checked>
                 Ενεργός Προορισμός
@@ -1030,8 +1140,9 @@
 
     <script src="/admin/js/admin-ma-helpers.js?v=764"></script>
     <script src="/admin/js/admin-ma-general.js?v=764"></script>
-    <script src="/admin/js/admin-ma-categories.js?v=764"></script>
-    <script src="/admin/js/admin-ma-destinations.js?v=764"></script>
+    <script src="/admin/js/admin-ma-categories.js?v=765"></script>
+    <script src="/admin/js/admin-ma-subcategories.js?v=765"></script>
+    <script src="/admin/js/admin-ma-destinations.js?v=765"></script>
     <script src="/admin/js/admin-ma-vehicles.js?v=764"></script>
     <script src="/admin/js/admin-ma-hotels.js?v=764"></script>
     <script src="/admin/js/admin-ma-pricing.js?v=764"></script>

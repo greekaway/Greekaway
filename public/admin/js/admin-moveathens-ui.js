@@ -33,6 +33,7 @@
       const M = window.MaAdmin;
       const generalTab      = M.initGeneralTab();
       const categoriesTab   = M.initCategoriesTab();
+      const subcategoriesTab = M.initSubcategoriesTab();
       const destinationsTab = M.initDestinationsTab();
       const vehiclesTab     = M.initVehiclesTab();
       const zonesTab        = M.initZonesTab();
@@ -49,6 +50,7 @@
 
       generalTab.populate();
       categoriesTab.render();
+      subcategoriesTab.render();
       destinationsTab.render();
       vehiclesTab.render();
       zonesTab.render();

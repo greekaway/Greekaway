@@ -529,6 +529,47 @@ const ma = {
     return result.rowCount > 0;
   },
 
+  // Destination Subcategories
+  async getDestinationSubcategories(filters = {}) {
+    let sql = 'SELECT * FROM ma_destination_subcategories WHERE 1=1';
+    const params = [];
+    let paramCount = 0;
+    if (filters.category_id) {
+      paramCount++;
+      sql += ` AND category_id = $${paramCount}`;
+      params.push(filters.category_id);
+    }
+    if (filters.activeOnly) {
+      sql += ' AND is_active = true';
+    }
+    sql += ' ORDER BY display_order, name';
+    return query(sql, params);
+  },
+
+  async upsertDestinationSubcategory(data) {
+    const { id, category_id, name, description, display_order, is_active } = data;
+    const subId = id || `dsc_${Date.now()}`;
+    const sql = `
+      INSERT INTO ma_destination_subcategories (id, category_id, name, description, display_order, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (id) DO UPDATE SET
+        category_id = EXCLUDED.category_id,
+        name = EXCLUDED.name,
+        description = EXCLUDED.description,
+        display_order = EXCLUDED.display_order,
+        is_active = EXCLUDED.is_active,
+        updated_at = NOW()
+      RETURNING *
+    `;
+    const rows = await query(sql, [subId, category_id || null, name, description || '', display_order || 0, is_active ?? true]);
+    return rows[0];
+  },
+
+  async deleteDestinationSubcategory(id) {
+    const result = await execute('DELETE FROM ma_destination_subcategories WHERE id = $1', [id]);
+    return result.rowCount > 0;
+  },
+
   // Destinations
   async getDestinations(filters = {}) {
     let sql = 'SELECT * FROM ma_destinations WHERE 1=1';
@@ -558,27 +599,54 @@ const ma = {
   },
 
   async upsertDestination(data) {
-    const { id, name, description, category_id, zone_id, route_type, lat, lng, display_order, is_active } = data;
+    const {
+      id, name, description, category_id, subcategory_id, zone_id, route_type, lat, lng, display_order, is_active,
+      venue_type, vibe, area, indicative_price, suitable_for, rating, michelin, details,
+      main_artist, participating_artists, program_info, operating_days, opening_time, closing_time
+    } = data;
     const destId = id || `dest_${Date.now()}`;
     const sql = `
-      INSERT INTO ma_destinations (id, name, description, category_id, zone_id, route_type, lat, lng, display_order, is_active)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      INSERT INTO ma_destinations (
+        id, name, description, category_id, subcategory_id, zone_id, route_type, lat, lng, display_order, is_active,
+        venue_type, vibe, area, indicative_price, suitable_for, rating, michelin, details,
+        main_artist, participating_artists, program_info, operating_days, opening_time, closing_time
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,
         category_id = EXCLUDED.category_id,
+        subcategory_id = EXCLUDED.subcategory_id,
         zone_id = EXCLUDED.zone_id,
         route_type = EXCLUDED.route_type,
         lat = EXCLUDED.lat,
         lng = EXCLUDED.lng,
         display_order = EXCLUDED.display_order,
         is_active = EXCLUDED.is_active,
+        venue_type = EXCLUDED.venue_type,
+        vibe = EXCLUDED.vibe,
+        area = EXCLUDED.area,
+        indicative_price = EXCLUDED.indicative_price,
+        suitable_for = EXCLUDED.suitable_for,
+        rating = EXCLUDED.rating,
+        michelin = EXCLUDED.michelin,
+        details = EXCLUDED.details,
+        main_artist = EXCLUDED.main_artist,
+        participating_artists = EXCLUDED.participating_artists,
+        program_info = EXCLUDED.program_info,
+        operating_days = EXCLUDED.operating_days,
+        opening_time = EXCLUDED.opening_time,
+        closing_time = EXCLUDED.closing_time,
         updated_at = NOW()
       RETURNING *
     `;
     const rows = await query(sql, [
-      destId, name, description || '', category_id || null,
-      zone_id || null, route_type || null, lat || null, lng || null, display_order || 0, is_active ?? true
+      destId, name, description || '', category_id || null, subcategory_id || null,
+      zone_id || null, route_type || null, lat || null, lng || null, display_order || 0, is_active ?? true,
+      venue_type || '', vibe || '', area || '', indicative_price || '', suitable_for || '',
+      rating || '', michelin || '', details || '',
+      main_artist || '', participating_artists || '', program_info || '',
+      operating_days || '', opening_time || '', closing_time || ''
     ]);
     return rows[0];
   },

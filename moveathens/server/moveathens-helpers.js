@@ -320,6 +320,44 @@ const normalizeVehicleTypes = (list) => {
 };
 
 // ========================================
+// DESTINATION SUBCATEGORY NORMALIZATION
+// ========================================
+const normalizeDestinationSubcategory = (entry) => {
+  if (!entry || typeof entry !== 'object') return null;
+  const name = normalizeString(entry.name);
+  if (!name) return null;
+  const id = normalizeString(entry.id) || makeId('dsc');
+  const categoryId = normalizeString(entry.category_id || '');
+  const description = normalizeString(entry.description || '');
+  const displayOrder = toInt(entry.display_order, 0);
+  const isActive = typeof entry.is_active === 'boolean' ? entry.is_active : true;
+  const createdAt = normalizeString(entry.created_at) || new Date().toISOString();
+  return {
+    id,
+    name,
+    category_id: categoryId,
+    description,
+    display_order: displayOrder,
+    is_active: isActive,
+    created_at: createdAt
+  };
+};
+
+const normalizeDestinationSubcategories = (list) => {
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  const seen = new Set();
+  list.forEach((entry) => {
+    const normalized = normalizeDestinationSubcategory(entry);
+    if (!normalized) return;
+    if (seen.has(normalized.id)) return;
+    seen.add(normalized.id);
+    out.push(normalized);
+  });
+  return out.sort((a, b) => a.display_order - b.display_order);
+};
+
+// ========================================
 // DESTINATION NORMALIZATION (EXTENDED)
 // ========================================
 const normalizeDestination = (entry) => {
@@ -329,6 +367,7 @@ const normalizeDestination = (entry) => {
   const id = normalizeString(entry.id) || makeId('dest');
   const description = normalizeString(entry.description || '');
   const categoryId = normalizeString(entry.category_id || '');
+  const subcategoryId = normalizeString(entry.subcategory_id || '');
   const zoneId = normalizeString(entry.zone_id || '');
   const routeType = normalizeString(entry.route_type || '');
   const lat = entry.lat != null ? parseFloat(entry.lat) : null;
@@ -341,12 +380,28 @@ const normalizeDestination = (entry) => {
     name,
     description,
     category_id: categoryId,
+    subcategory_id: subcategoryId || null,
     zone_id: zoneId,
     route_type: routeType || null,
     lat: Number.isFinite(lat) ? lat : null,
     lng: Number.isFinite(lng) ? lng : null,
     display_order: displayOrder,
     is_active: isActive,
+    // Extended fields (all optional)
+    venue_type: normalizeString(entry.venue_type || ''),
+    vibe: normalizeString(entry.vibe || ''),
+    area: normalizeString(entry.area || ''),
+    indicative_price: normalizeString(entry.indicative_price || ''),
+    suitable_for: normalizeString(entry.suitable_for || ''),
+    rating: normalizeString(entry.rating || ''),
+    michelin: normalizeString(entry.michelin || ''),
+    details: normalizeString(entry.details || ''),
+    main_artist: normalizeString(entry.main_artist || ''),
+    participating_artists: normalizeString(entry.participating_artists || ''),
+    program_info: normalizeString(entry.program_info || ''),
+    operating_days: normalizeString(entry.operating_days || ''),
+    opening_time: normalizeString(entry.opening_time || ''),
+    closing_time: normalizeString(entry.closing_time || ''),
     created_at: createdAt
   };
 };
@@ -614,6 +669,9 @@ module.exports = {
   // Category normalization
   normalizeDestinationCategory,
   normalizeDestinationCategories,
+  // Subcategory normalization
+  normalizeDestinationSubcategory,
+  normalizeDestinationSubcategories,
   // Vehicle normalization
   normalizeVehicleType,
   normalizeVehicleTypes,

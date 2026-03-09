@@ -296,15 +296,41 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     }
   });
 
+  // Public: Active subcategories (optionally filtered by category)
+  app.get('/api/moveathens/subcategories', async (req, res) => {
+    if (isDev) res.set('Cache-Control', 'no-store');
+    try {
+      const categoryId = normalizeString(req.query.category_id);
+      const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
+      let subs = (data.destinationSubcategories || []).filter(s => s.is_active);
+      if (categoryId) subs = subs.filter(s => s.category_id === categoryId);
+      // Only return subcategories that have at least 1 active destination
+      const activeDests = (data.destinations || []).filter(d => d.is_active);
+      subs = subs.filter(sub => activeDests.some(d => d.subcategory_id === sub.id));
+      return res.json({
+        subcategories: subs.map(s => ({
+          id: s.id, category_id: s.category_id, name: s.name,
+          description: s.description || '', display_order: s.display_order
+        }))
+      });
+    } catch (err) {
+      return res.status(500).json({ error: 'Subcategories unavailable' });
+    }
+  });
+
   // Public: Destinations (optionally filtered by category)
   app.get('/api/moveathens/destinations', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
       const categoryId = normalizeString(req.query.category_id);
+      const subcategoryId = normalizeString(req.query.subcategory_id);
       const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
       let destinations = data.destinations.filter(d => d.is_active);
       if (categoryId) {
         destinations = destinations.filter(d => d.category_id === categoryId);
+      }
+      if (subcategoryId) {
+        destinations = destinations.filter(d => d.subcategory_id === subcategoryId);
       }
       return res.json({
         destinations: destinations.map(d => ({
@@ -312,9 +338,24 @@ module.exports = function registerMoveAthens(app, opts = {}) {
           name: d.name,
           description: d.description,
           category_id: d.category_id,
+          subcategory_id: d.subcategory_id || null,
           display_order: d.display_order,
           lat: d.lat || null,
-          lng: d.lng || null
+          lng: d.lng || null,
+          venue_type: d.venue_type || '',
+          vibe: d.vibe || '',
+          area: d.area || '',
+          indicative_price: d.indicative_price || '',
+          suitable_for: d.suitable_for || '',
+          rating: d.rating || '',
+          michelin: d.michelin || '',
+          details: d.details || '',
+          main_artist: d.main_artist || '',
+          participating_artists: d.participating_artists || '',
+          program_info: d.program_info || '',
+          operating_days: d.operating_days || '',
+          opening_time: d.opening_time || '',
+          closing_time: d.closing_time || ''
         }))
       });
     } catch (err) {
@@ -427,6 +468,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
   require('./moveathens-general')(app, { checkAdminAuth });
   require('./moveathens-hotels')(app, { checkAdminAuth });
   require('./moveathens-categories')(app, { checkAdminAuth });
+  require('./moveathens-subcategories')(app, { checkAdminAuth });
   require('./moveathens-destinations')(app, { checkAdminAuth });
   require('./moveathens-vehicles')(app, { checkAdminAuth });
   require('./moveathens-pricing')(app, { checkAdminAuth });
