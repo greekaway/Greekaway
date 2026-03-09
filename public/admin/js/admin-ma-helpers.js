@@ -84,15 +84,20 @@
   };
 
   const loadConfig = async () => {
-    const res = await api('/api/admin/moveathens/ui-config');
-    if (!res) { console.error('[admin-ma] loadConfig: no response (auth redirect?)'); return; }
-    if (!res.ok) { console.error('[admin-ma] loadConfig: status', res.status); showToast('Σφάλμα φόρτωσης'); return; }
-    state.CONFIG = await res.json();
-    state.configLoaded = true;
-    console.log('[admin-ma] Config loaded OK — zones:', (state.CONFIG.transferZones||[]).length,
-      'vehicles:', (state.CONFIG.vehicleTypes||[]).length,
-      'prices:', (state.CONFIG.transferPrices||[]).length);
-    return state.CONFIG;
+    try {
+      const res = await api('/api/admin/moveathens/ui-config');
+      if (!res) { console.error('[admin-ma] loadConfig: no response (auth redirect?)'); return; }
+      if (!res.ok) { console.error('[admin-ma] loadConfig: status', res.status); showToast('Σφάλμα φόρτωσης config (HTTP ' + res.status + ')'); return; }
+      state.CONFIG = await res.json();
+      state.configLoaded = true;
+      console.log('[admin-ma] Config loaded OK — zones:', (state.CONFIG.transferZones||[]).length,
+        'vehicles:', (state.CONFIG.vehicleTypes||[]).length,
+        'prices:', (state.CONFIG.transferPrices||[]).length);
+      return state.CONFIG;
+    } catch (err) {
+      console.error('[admin-ma] loadConfig CRASHED:', err);
+      showToast('⚠️ Σφάλμα φόρτωσης config: ' + (err.message || err));
+    }
   };
 
   const ensureConfigLoaded = () => {

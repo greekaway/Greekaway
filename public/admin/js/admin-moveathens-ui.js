@@ -26,18 +26,23 @@
   // ========================================
   // INIT — wire up all tab modules
   // ========================================
+  const safe = (label, fn) => {
+    try { return fn(); }
+    catch (err) { console.error(`[admin-ma] ${label}:`, err); return null; }
+  };
+
   const init = async () => {
     try {
       console.log('[admin-ma] Initializing tabs…');
       initTabs();
       const M = window.MaAdmin;
-      const generalTab      = M.initGeneralTab();
-      const categoriesTab   = M.initCategoriesTab();
-      const destinationsTab = M.initDestinationsTab();
-      const vehiclesTab     = M.initVehiclesTab();
-      const zonesTab        = M.initZonesTab();
-      const pricingTab      = M.initPricingTab();
-      const infoPageTab     = M.initInfoPageTab();
+      const generalTab      = safe('initGeneralTab',      () => M.initGeneralTab());
+      const categoriesTab   = safe('initCategoriesTab',   () => M.initCategoriesTab());
+      const destinationsTab = safe('initDestinationsTab', () => M.initDestinationsTab());
+      const vehiclesTab     = safe('initVehiclesTab',     () => M.initVehiclesTab());
+      const zonesTab        = safe('initZonesTab',        () => M.initZonesTab());
+      const pricingTab      = safe('initPricingTab',      () => M.initPricingTab());
+      const infoPageTab     = safe('initInfoPageTab',     () => M.initInfoPageTab());
 
       console.log('[admin-ma] Loading config from server…');
       await loadConfig();
@@ -47,13 +52,13 @@
         return;
       }
 
-      generalTab.populate();
-      categoriesTab.render();
-      destinationsTab.render();
-      vehiclesTab.render();
-      zonesTab.render();
-      pricingTab.render();
-      infoPageTab.populate();
+      safe('generalTab.populate',      () => generalTab?.populate());
+      safe('categoriesTab.render',     () => categoriesTab?.render());
+      safe('destinationsTab.render',   () => destinationsTab?.render());
+      safe('vehiclesTab.render',       () => vehiclesTab?.render());
+      safe('zonesTab.render',          () => zonesTab?.render());
+      safe('pricingTab.render',        () => pricingTab?.render());
+      safe('infoPageTab.populate',     () => infoPageTab?.populate());
       console.log('[admin-ma] Init complete ✔');
 
       // Price toggle — auto-save on change

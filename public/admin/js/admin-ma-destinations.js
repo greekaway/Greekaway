@@ -44,22 +44,24 @@
 
     const populateDropdowns = () => {
       const activeCats = (state.CONFIG.destinationCategories || []).filter(c => c.is_active !== false);
-      fCategory.innerHTML = '<option value="">-- Επιλογή Κατηγορίας --</option>' +
+      if (fCategory) fCategory.innerHTML = '<option value="">-- Επιλογή Κατηγορίας --</option>' +
         activeCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
     };
 
     // Show/hide subcategory dropdown based on selected category
     const updateSubcategoryDropdown = () => {
-      const catId = fCategory.value;
+      const catId = fCategory?.value || '';
       const subs = (state.CONFIG.destinationSubcategories || []).filter(s => s.category_id === catId && s.is_active !== false);
       if (subs.length > 0) {
-        fSubcatLabel.hidden = false;
-        fSubcategory.innerHTML = '<option value="">-- Χωρίς Υποκατηγορία --</option>' +
+        if (fSubcatLabel) fSubcatLabel.hidden = false;
+        if (fSubcategory) fSubcategory.innerHTML = '<option value="">-- Χωρίς Υποκατηγορία --</option>' +
           subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
       } else {
-        fSubcatLabel.hidden = true;
-        fSubcategory.innerHTML = '<option value="">-- Χωρίς Υποκατηγορία --</option>';
-        fSubcategory.value = '';
+        if (fSubcatLabel) fSubcatLabel.hidden = true;
+        if (fSubcategory) {
+          fSubcategory.innerHTML = '<option value="">-- Χωρίς Υποκατηγορία --</option>';
+          fSubcategory.value = '';
+        }
       }
     };
 
@@ -83,7 +85,7 @@
       const subs = (state.CONFIG.destinationSubcategories || []).filter(s => s.category_id === catId && s.is_active !== false);
       if (subs.length > 0 && fFilterSubcatWrap) {
         fFilterSubcatWrap.hidden = false;
-        fFilterSubcategory.innerHTML = '<option value="">Όλες</option>' +
+        if (fFilterSubcategory) fFilterSubcategory.innerHTML = '<option value="">Όλες</option>' +
           subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
       } else if (fFilterSubcatWrap) {
         fFilterSubcatWrap.hidden = true;
@@ -212,15 +214,15 @@
     };
 
     const resetForm = () => {
-      form.hidden = true;
+      if (form) form.hidden = true;
       state.editingDestinationId = null;
-      fName.value = '';
-      fDesc.value = '';
-      fCategory.value = '';
-      fSubcategory.value = '';
-      fSubcatLabel.hidden = true;
-      fOrder.value = '0';
-      fActive.checked = true;
+      if (fName) fName.value = '';
+      if (fDesc) fDesc.value = '';
+      if (fCategory) fCategory.value = '';
+      if (fSubcategory) fSubcategory.value = '';
+      if (fSubcatLabel) fSubcatLabel.hidden = true;
+      if (fOrder) fOrder.value = '0';
+      if (fActive) fActive.checked = true;
       if (fRouteType) fRouteType.value = '';
       if (fLatLng) fLatLng.value = '';
       // Reset extended fields

@@ -217,6 +217,7 @@
     // RENDER: Horizontal category tabs
     // ══════════════════════════════════════
     const renderTabs = () => {
+      if (!catTabs) return;
       const cats = state.CONFIG.destinationCategories || [];
       if (!cats.length) {
         catTabs.innerHTML = '<span style="font-size:13px;color:#999;padding:8px">Δεν υπάρχουν κατηγορίες ακόμα</span>';
@@ -253,10 +254,10 @@
     const renderCategoryContent = (catId) => {
       const cat = (state.CONFIG.destinationCategories || []).find(c => c.id === catId);
       if (!cat) {
-        catContent.hidden = true;
+        if (catContent) catContent.hidden = true;
         return;
       }
-      catContent.hidden = false;
+      if (catContent) catContent.hidden = false;
 
       // Category info summary
       const isUrl = cat.icon && cat.icon.length > 4 && (cat.icon.startsWith('/') || cat.icon.startsWith('http'));
@@ -269,7 +270,7 @@
         : '<span class="ma-zone-status" data-active="false">Ανενεργή</span>';
       const colorSwatch = `<span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${cat.color || '#1a73e8'};vertical-align:middle;border:1px solid rgba(0,0,0,.15)"></span>`;
 
-      catInfo.innerHTML = `
+      if (catInfo) catInfo.innerHTML = `
         <div class="ma-cat-info-row">
           <div class="ma-cat-info-icon" style="background:${cat.color || '#1a73e8'}">${iconHtml}</div>
           <div class="ma-cat-info-details">
@@ -294,6 +295,7 @@
     // RENDER: Subcategories within category
     // ══════════════════════════════════════
     const renderSubcategories = (catId) => {
+      if (!subList) return;
       const subs = (state.CONFIG.destinationSubcategories || []).filter(s => s.category_id === catId);
       if (!subs.length) {
         subList.innerHTML = '<p class="ma-empty" style="font-size:13px">Δεν υπάρχουν υποκατηγορίες σε αυτή την κατηγορία.</p>';
@@ -335,13 +337,13 @@
 
     // ── Category form reset/edit ──
     const resetCatForm = () => {
-      catForm.hidden = true;
+      if (catForm) catForm.hidden = true;
       state.editingCategoryId = null;
-      fName.value = '';
-      fIcon.value = '';
+      if (fName) fName.value = '';
+      if (fIcon) fIcon.value = '';
       if (fIconFile) fIconFile.value = '';
-      fOrder.value = '0';
-      fActive.checked = true;
+      if (fOrder) fOrder.value = '0';
+      if (fActive) fActive.checked = true;
       if (fArrival) fArrival.checked = false;
       if (fColor) fColor.value = '#1a73e8';
       if (fColorHex) fColorHex.textContent = '#1a73e8';
@@ -355,27 +357,27 @@
       const cat = (state.CONFIG.destinationCategories || []).find(c => c.id === id);
       if (!cat) return;
       state.editingCategoryId = id;
-      fName.value = cat.name || '';
-      fIcon.value = cat.icon || '';
-      fOrder.value = cat.display_order || 0;
-      fActive.checked = cat.is_active !== false;
+      if (fName) fName.value = cat.name || '';
+      if (fIcon) fIcon.value = cat.icon || '';
+      if (fOrder) fOrder.value = cat.display_order || 0;
+      if (fActive) fActive.checked = cat.is_active !== false;
       if (fArrival) fArrival.checked = cat.is_arrival === true;
       if (fColor) fColor.value = cat.color || '#1a73e8';
       if (fColorHex) fColorHex.textContent = cat.color || '#1a73e8';
       if (fIconColor) fIconColor.value = cat.icon_color || 'white';
       if (deleteBtn) deleteBtn.hidden = false;
       updateIconPreview();
-      catForm.hidden = false;
+      if (catForm) catForm.hidden = false;
     };
 
     // ── Subcategory form reset/edit ──
     const resetSubForm = () => {
-      subForm.hidden = true;
+      if (subForm) subForm.hidden = true;
       state.editingSubcategoryId = null;
-      fSubName.value = '';
-      fSubDesc.value = '';
-      fSubOrder.value = '0';
-      fSubActive.checked = true;
+      if (fSubName) fSubName.value = '';
+      if (fSubDesc) fSubDesc.value = '';
+      if (fSubOrder) fSubOrder.value = '0';
+      if (fSubActive) fSubActive.checked = true;
       setStatus(subStatus, '', '');
     };
 
@@ -383,22 +385,22 @@
       const sub = (state.CONFIG.destinationSubcategories || []).find(s => s.id === id);
       if (!sub) return;
       state.editingSubcategoryId = id;
-      fSubParent.value = sub.category_id || selectedCatId;
-      fSubName.value = sub.name || '';
-      fSubDesc.value = sub.description || '';
-      fSubOrder.value = sub.display_order || 0;
-      fSubActive.checked = sub.is_active !== false;
-      subForm.hidden = false;
+      if (fSubParent) fSubParent.value = sub.category_id || selectedCatId;
+      if (fSubName) fSubName.value = sub.name || '';
+      if (fSubDesc) fSubDesc.value = sub.description || '';
+      if (fSubOrder) fSubOrder.value = sub.display_order || 0;
+      if (fSubActive) fSubActive.checked = sub.is_active !== false;
+      if (subForm) subForm.hidden = false;
     };
 
     // ── Event listeners ──
     addBtn?.addEventListener('click', () => {
       selectedCatId = null;
-      catContent.hidden = true;
+      if (catContent) catContent.hidden = true;
       resetCatForm();
       resetSubForm();
       if (deleteBtn) deleteBtn.hidden = true;
-      catForm.hidden = false;
+      if (catForm) catForm.hidden = false;
       renderTabs();
     });
 
@@ -499,7 +501,7 @@
       if (selectedCatId) {
         renderCategoryContent(selectedCatId);
       } else {
-        catContent.hidden = true;
+        if (catContent) catContent.hidden = true;
       }
       if (styleCtrl) styleCtrl.renderPreview();
     };
