@@ -284,16 +284,22 @@
 
     const saveDestinations = async (destinations) => {
       if (!ensureConfigLoaded()) return false;
-      const res = await api('/api/admin/moveathens/destinations', 'PUT', { destinations });
-      if (!res) return false;
-      if (res.ok) {
-        const data = await res.json();
-        state.CONFIG.destinations = data.destinations || [];
-        return true;
+      try {
+        const res = await api('/api/admin/moveathens/destinations', 'PUT', { destinations });
+        if (!res) return false;
+        if (res.ok) {
+          const data = await res.json();
+          state.CONFIG.destinations = data.destinations || [];
+          return true;
+        }
+        const err = await res.json().catch(() => ({}));
+        setStatus(status, err.error || 'Σφάλμα αποθήκευσης', 'error');
+        return false;
+      } catch (err) {
+        console.error('[admin-ma] saveDestinations network/parse error:', err);
+        setStatus(status, 'Σφάλμα δικτύου: ' + (err.message || err), 'error');
+        return false;
       }
-      const err = await res.json().catch(() => ({}));
-      setStatus(status, err.error || 'Σφάλμα', 'error');
-      return false;
     };
 
     const deleteDestination = async (id) => {
@@ -315,68 +321,78 @@
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       setStatus(status, '', '');
-      const name = (fName?.value || '').trim();
-      if (!name) { setStatus(status, 'Το όνομα είναι υποχρεωτικό', 'error'); return; }
-      if (!fCategory?.value) { setStatus(status, 'Επιλέξτε κατηγορία', 'error'); return; }
+      try {
+        const name = (fName?.value || '').trim();
+        if (!name) { setStatus(status, 'Το όνομα είναι υποχρεωτικό', 'error'); return; }
+        if (!fCategory?.value) { setStatus(status, 'Επιλέξτε κατηγορία', 'error'); return; }
 
-      let dests = [...(state.CONFIG.destinations || [])];
+        let dests = [...(state.CONFIG.destinations || [])];
 
-      let lat = null, lng = null;
-      if (fLatLng && fLatLng.value.trim()) {
-        const parts = fLatLng.value.trim().split(',');
-        if (parts.length === 2) {
-          lat = parseFloat(parts[0].trim());
-          lng = parseFloat(parts[1].trim());
-          if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-            setStatus(status, 'Μη έγκυρες συντεταγμένες (lat,lng)', 'error');
+        let lat = null, lng = null;
+        if (fLatLng && fLatLng.value.trim()) {
+          const parts = fLatLng.value.trim().split(',');
+          if (parts.length === 2) {
+            lat = parseFloat(parts[0].trim());
+            lng = parseFloat(parts[1].trim());
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+              setStatus(status, 'Μη έγκυρες συντεταγμένες (lat,lng)', 'error');
+              return;
+            }
+          } else {
+            setStatus(status, 'Οι συντεταγμένες πρέπει να είναι lat,lng', 'error');
             return;
           }
-        } else {
-          setStatus(status, 'Οι συντεταγμένες πρέπει να είναι lat,lng', 'error');
-          return;
         }
-      }
 
-      const entry = {
-        id: state.editingDestinationId || `dest_${Date.now()}`,
-        name,
-        description: fDesc?.value?.trim() || '',
-        category_id: fCategory?.value || '',
-        subcategory_id: fSubcategory?.value || null,
-        route_type: fRouteType ? fRouteType.value || null : null,
-        lat,
-        lng,
-        display_order: parseInt(fOrder?.value, 10) || 0,
-        is_active: fActive?.checked !== false,
-        // Extended fields
-        venue_type: fVenueType?.value?.trim() || '',
-        vibe: fVibe?.value?.trim() || '',
-        area: fArea?.value?.trim() || '',
-        indicative_price: fIndicativePrice?.value?.trim() || '',
-        suitable_for: fSuitableFor?.value?.trim() || '',
-        rating: fRating?.value?.trim() || '',
-        michelin: fMichelin?.value?.trim() || '',
-        details: fDetails?.value?.trim() || '',
-        main_artist: fMainArtist?.value?.trim() || '',
-        participating_artists: fParticipatingArtists?.value?.trim() || '',
-        program_info: fProgramInfo?.value?.trim() || '',
-        operating_days: fOperatingDays?.value?.trim() || '',
-        opening_time: fOpeningTime?.value || '',
-        closing_time: fClosingTime?.value || '',
-        created_at: new Date().toISOString()
-      };
+        const subcatVal = fSubcategory ? fSubcategory.value : '';
+        const entry = {
+          id: state.editingDestinationId || `dest_${Date.now()}`,
+          name,
+          description: fDesc?.value?.trim() || '',
+          category_id: fCategory.value,
+          subcategory_id: subcatVal || null,
+          route_type: fRouteType ? fRouteType.value || null : null,
+          lat,
+          lng,
+          display_order: parseInt(fOrder?.value, 10) || 0,
+          is_active: fActive?.checked !== false,
+          // Extended fields
+          venue_type: fVenueType?.value?.trim() || '',
+          vibe: fVibe?.value?.trim() || '',
+          area: fArea?.value?.trim() || '',
+          indicative_price: fIndicativePrice?.value?.trim() || '',
+          suitable_for: fSuitableFor?.value?.trim() || '',
+          rating: fRating?.value?.trim() || '',
+          michelin: fMichelin?.value?.trim() || '',
+          details: fDetails?.value?.trim() || '',
+          main_artist: fMainArtist?.value?.trim() || '',
+          participating_artists: fParticipatingArtists?.value?.trim() || '',
+          program_info: fProgramInfo?.value?.trim() || '',
+          operating_days: fOperatingDays?.value?.trim() || '',
+          opening_time: fOpeningTime?.value || '',
+          closing_time: fClosingTime?.value || ''
+        };
 
-      if (state.editingDestinationId) {
-        const idx = dests.findIndex(d => d.id === state.editingDestinationId);
-        if (idx >= 0) dests[idx] = { ...dests[idx], ...entry };
-      } else {
-        dests.push(entry);
-      }
+        if (state.editingDestinationId) {
+          const idx = dests.findIndex(d => d.id === state.editingDestinationId);
+          if (idx >= 0) {
+            entry.created_at = dests[idx].created_at || new Date().toISOString();
+            dests[idx] = { ...dests[idx], ...entry };
+          }
+        } else {
+          entry.created_at = new Date().toISOString();
+          dests.push(entry);
+        }
 
-      if (await saveDestinations(dests)) {
-        showToast('Αποθηκεύτηκε');
-        resetForm();
-        render();
+        if (await saveDestinations(dests)) {
+          showToast('Αποθηκεύτηκε');
+          resetForm();
+          render();
+        }
+      } catch (err) {
+        console.error('[admin-ma] Destination save error:', err);
+        setStatus(status, 'Σφάλμα αποθήκευσης: ' + (err.message || err), 'error');
+        showToast('⚠️ Σφάλμα κατά την αποθήκευση');
       }
     });
 
