@@ -280,10 +280,11 @@
       return `
       <div class="ma-destination-card" data-id="${dest.id}" data-name="${dest.name}">
         <button class="ma-destination-item" type="button">
-          <span class="ma-destination-name">${dest.main_artist ? dest.name + ' — ' + dest.main_artist : dest.name}</span>
+          <div class="ma-destination-row">
+            <span class="ma-destination-name">${dest.main_artist ? dest.name + ' — ' + dest.main_artist : dest.name}</span>
+            ${extras ? '<span class="ma-destination-chevron">▼</span>' : ''}
+          </div>
           ${dest.description ? `<span class="ma-destination-desc">${dest.description}</span>` : ''}
-          ${extras ? '<span class="ma-destination-expand-hint">ℹ️ Περισσότερα</span>' : ''}
-          <span class="ma-destination-arrow">→</span>
         </button>
         ${extras ? `<div class="ma-destination-extras" hidden>${extras}</div>` : ''}
       </div>`;
@@ -292,16 +293,16 @@
     // Expand/collapse toggle and destination click → booking type
     destinationsList.querySelectorAll('.ma-destination-card').forEach(card => {
       const mainBtn = card.querySelector('.ma-destination-item');
-      const expandHint = card.querySelector('.ma-destination-expand-hint');
+      const chevron = card.querySelector('.ma-destination-chevron');
       const extrasDiv = card.querySelector('.ma-destination-extras');
 
-      // Clicking expand hint toggles extras
-      if (expandHint && extrasDiv) {
-        expandHint.addEventListener('click', (e) => {
+      // Clicking chevron toggles extras
+      if (chevron && extrasDiv) {
+        chevron.addEventListener('click', (e) => {
           e.stopPropagation();
           const isHidden = extrasDiv.hidden;
           extrasDiv.hidden = !isHidden;
-          expandHint.textContent = isHidden ? '▲ Λιγότερα' : 'ℹ️ Περισσότερα';
+          chevron.textContent = isHidden ? '▲' : '▼';
           card.classList.toggle('ma-destination-card--expanded', isHidden);
         });
       }
@@ -309,7 +310,7 @@
       // Clicking the destination itself → go to booking type
       mainBtn.addEventListener('click', (e) => {
         // Ignore if user clicked the expand hint
-        if (e.target.closest('.ma-destination-expand-hint')) return;
+        if (e.target.closest('.ma-destination-chevron')) return;
         const dest = data.destinations.find(d => d.id === card.dataset.id);
         selectedDestination = {
           id: card.dataset.id,

@@ -552,6 +552,7 @@
   font-weight: 600;
   color: #1a1a2e;
   flex: 1;
+  min-width: 0;
 }
 
 .ma-destination-desc {
@@ -560,8 +561,24 @@
   margin-top: 4px;
 }
 
-.ma-destination-arrow {
-  display: none;
+/* Row: name + chevron side-by-side */
+.ma-destination-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+}
+
+/* Chevron arrow (only present when extras exist) */
+.ma-destination-chevron {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: #9ca3af;
+  transition: transform 0.25s ease, color 0.2s;
+  line-height: 1;
+}
+.ma-destination-card--expanded .ma-destination-chevron {
+  color: #3b82f6;
 }
 
 /* ── Subcategory Items ── */
@@ -573,6 +590,7 @@
 }
 
 .ma-subcategory-item {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -615,17 +633,6 @@
 /* ── Destination Card Expand/Collapse ── */
 .ma-destination-card {
   margin-bottom: 2px;
-}
-.ma-destination-expand-hint {
-  font-size: 12px;
-  color: #3b82f6;
-  margin-top: 6px;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s;
-}
-.ma-destination-expand-hint:hover {
-  color: #1d4ed8;
 }
 .ma-destination-extras {
   padding: 12px 20px 16px;
