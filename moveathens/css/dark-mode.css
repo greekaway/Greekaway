@@ -744,6 +744,63 @@
     color: #64b5f6 !important;
   }
 
+  /* ========================================
+     CONFIRMATION & SELECTION ROWS — borders
+     ======================================== */
+  .ma-transfer-page .ma-confirm-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-transfer-page .ma-selection-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-transfer-page .ma-input-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-transfer-page .ma-selection-title {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-transfer-page .ma-selection-hint {
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* Contact title */
+  .ma-transfer-page .ma-contact-title {
+    color: #c0c8d0 !important;
+  }
+
+  /* Vehicle placeholder / image loading bg */
+  .ma-transfer-page .ma-vehicle-placeholder {
+    background: linear-gradient(135deg, #1a2d45 0%, #132240 100%) !important;
+  }
+
+  .ma-transfer-page .ma-vehicle-img {
+    background: #132240 !important;
+  }
+
+  /* Vehicle section labels */
+  .ma-transfer-page .ma-vehicles-section-label {
+    color: #34d399 !important;
+  }
+
+  .ma-transfer-page .ma-vehicles-section-label--alt {
+    color: #8896a6 !important;
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* Vehicle price */
+  .ma-transfer-page .ma-vehicle-price {
+    color: #46d3ff !important;
+  }
+
+  /* Confirm price */
+  .ma-transfer-page .ma-confirm-price .ma-confirm-value {
+    color: #46d3ff !important;
+  }
+
   /* Version badge dark mode */
   .ma-version-badge { color: #6b7a8d !important; }
   .ma-version-badge__value { color: #8896a6 !important; }

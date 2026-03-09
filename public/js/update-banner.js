@@ -9,7 +9,7 @@
 (function () {
   'use strict';
 
-  var CHECK_INTERVAL = 3 * 60 * 1000;   // poll every 3 minutes
+  var CHECK_INTERVAL = 1 * 60 * 1000;   // poll every 1 minute
   var SNOOZE_MS      = 30 * 60 * 1000;  // "Later" hides for 30 min
   var SNOOZE_KEY     = 'ga_update_snooze';
   var bannerId       = 'ga-update-banner';
@@ -36,6 +36,7 @@
     style.textContent =
       '#ga-update-banner{position:fixed;bottom:0;left:0;right:0;z-index:99999;padding:0 12px 12px;pointer-events:none;animation:ga-upd .35s ease-out}' +
       '@keyframes ga-upd{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}' +
+      '@media (max-width:768px){#ga-update-banner{bottom:64px;padding-bottom:env(safe-area-inset-bottom,8px)}}' +
       '.ga-update-banner__card{pointer-events:auto;display:flex;align-items:center;gap:10px;max-width:480px;margin:0 auto;padding:12px 16px;background:#1a1a2e;color:#f0f0f0;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.35);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.4}' +
       '.ga-update-banner__icon{font-size:24px;flex-shrink:0}' +
       '.ga-update-banner__text{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}' +

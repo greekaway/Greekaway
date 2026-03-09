@@ -30,16 +30,21 @@ body {
   overflow-x: hidden;
 }
 
+/* Global image overflow safety */
+img { max-width: 100%; height: auto; }
+
 /* Lock scroll for pages that don't need it —
    page-header.css overrides this for scrollable pages */
 .ma-ai-page {
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
 /* Welcome/home page - no scroll */
 .ma-hero-page {
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -260,10 +265,22 @@ body {
   }
 }
 
+/* Large phones: taller footer needs more padding */
+@media (min-width: 430px) {
+  body {
+    padding-bottom: 94px;
+  }
+}
+
 /* Body safe-area bottom padding for notched phones */
 @supports (padding: env(safe-area-inset-bottom)) {
   body {
     padding-bottom: calc(86px + env(safe-area-inset-bottom));
+  }
+  @media (min-width: 430px) {
+    body {
+      padding-bottom: calc(94px + env(safe-area-inset-bottom));
+    }
   }
 }
 

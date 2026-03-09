@@ -134,6 +134,7 @@ body.ma-gate-locked > *:not(.ma-gate):not(script) {
 
 .ma-gate__btn {
   padding: 14px 32px;
+  min-height: 44px;
   font-size: 16px;
   font-weight: 700;
   font-family: inherit;
@@ -192,4 +193,18 @@ body.ma-gate-locked > *:not(.ma-gate):not(script) {
   .ma-gate__error {
     color: #dc2626;
   }
+}
+
+/* ══ Safe area & small screen adjustments ══ */
+@supports (padding: env(safe-area-inset-top)) {
+  .ma-gate {
+    padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 359px) {
+  .ma-gate__title { font-size: 18px; }
+  .ma-gate__desc { font-size: 13px; }
+  .ma-gate__input { padding: 12px 14px; font-size: 15px; }
+  .ma-gate__btn { padding: 12px 24px; font-size: 15px; }
 }

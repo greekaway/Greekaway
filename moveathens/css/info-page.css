@@ -13,7 +13,7 @@
   padding: 12px 16px;
   background: transparent;
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 10;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;

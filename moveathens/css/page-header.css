@@ -10,6 +10,12 @@
   padding-bottom: 90px;
 }
 
+@supports (padding: env(safe-area-inset-bottom)) {
+  .ma-page {
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+}
+
 .ma-page-header {
   display: flex;
   align-items: center;

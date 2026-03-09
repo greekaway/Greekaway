@@ -667,6 +667,11 @@ app.use((req, res, next) => {
     return next();
   }
 
+  // B.4) Shared public JS (update-banner, pwa-install, etc.)
+  if (url.startsWith('/js/')) {
+    return next();
+  }
+
   // B.5) Favicon for MoveAthens domain
   if (url === '/favicon.ico') {
     return res.sendFile(path.join(MOVEATHENS_BASE_DIR, 'icons', 'favicon-32x32.png'));
