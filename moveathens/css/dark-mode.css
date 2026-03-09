@@ -345,6 +345,25 @@
     color: #46d3ff !important;
   }
 
+  /* Subcategories */
+  .ma-transfer-page .ma-subcategory-item {
+    background: linear-gradient(145deg, #132742 0%, #132742 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-transfer-page .ma-subcategory-item:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ma-transfer-page .ma-subcategory-name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-transfer-page .ma-subcategory-desc {
+    color: #8896a6 !important;
+  }
+
   /* Tariff selection */
   .ma-transfer-page .ma-tariff-card {
     background: linear-gradient(145deg, #132742 0%, #0f1f33 100%) !important;
