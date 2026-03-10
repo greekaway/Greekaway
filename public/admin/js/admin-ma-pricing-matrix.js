@@ -67,6 +67,7 @@
             selectedHotelName = hotel.name;
           }
           hotelDropdown.hidden = true;
+          loadMatrix();
         });
       });
     };
@@ -120,7 +121,13 @@
       }
     };
 
-    filterCategory?.addEventListener('change', updateSubcategoryFilter);
+    filterCategory?.addEventListener('change', () => {
+      updateSubcategoryFilter();
+      loadMatrix();
+    });
+    filterSubcategory?.addEventListener('change', loadMatrix);
+    vehicleSelect?.addEventListener('change', loadMatrix);
+    tariffSelect?.addEventListener('change', loadMatrix);
 
     /* ── Load matrix ── */
     const getFilteredDestinations = () => {
@@ -141,11 +148,20 @@
       const vehicleId = vehicleSelect?.value;
       const tariff = tariffSelect?.value || 'day';
 
-      if (!originZoneId) { showToast('Επιλέξτε ξενοδοχείο'); return; }
-      if (!vehicleId) { showToast('Επιλέξτε όχημα'); return; }
+      if (!originZoneId || !vehicleId) {
+        form.hidden = true;
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+        return;
+      }
 
       const destinations = getFilteredDestinations();
-      if (!destinations.length) { showToast('Δεν βρέθηκαν προορισμοί'); return; }
+      if (!destinations.length) {
+        form.hidden = true;
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+        return;
+      }
 
       const prices = state.CONFIG.transferPrices || [];
 
