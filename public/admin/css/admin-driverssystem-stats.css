@@ -25,6 +25,13 @@ html[data-theme='light'] .bar-tab-divider {
   background: rgba(0, 0, 0, 0.15);
 }
 
+/* Hide concept title on mobile/tablet — frees space for tabs */
+@media (max-width: 1024px) {
+  .sticky-bar .title {
+    display: none;
+  }
+}
+
 /* Tab navigation (reuse from admin-driverssystem-ui) */
 .bar-tabs {
   display: flex;
@@ -479,6 +486,12 @@ html[data-theme='light'] .bar-tab-divider {
 
 .ds-admin-form-msg.error {
   color: #ef4444;
+}
+
+@media (max-width: 768px) {
+  .ds-admin-form-row {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 600px) {

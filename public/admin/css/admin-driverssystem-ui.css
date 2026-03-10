@@ -21,6 +21,13 @@ html[data-theme='light'] .bar-tab-divider {
   background: rgba(0, 0, 0, 0.15);
 }
 
+/* Hide concept title on mobile/tablet — frees space for tabs */
+@media (max-width: 1024px) {
+  .sticky-bar .title {
+    display: none;
+  }
+}
+
 /* Tab navigation */
 .bar-tabs {
   display: flex;
@@ -100,6 +107,12 @@ html[data-theme='light'] .bar-tab-divider {
 @media (min-width: 720px) {
   .ds-footer-row {
     grid-template-columns: 120px 1fr 420px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .ds-footer-row {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
