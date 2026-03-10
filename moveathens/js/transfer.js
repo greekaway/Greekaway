@@ -331,6 +331,8 @@
   const DAY_KEYS = ['sun','mon','tue','wed','thu','fri','sat'];
   const DAY_NAMES_EL = { mon:'Δευτέρα', tue:'Τρίτη', wed:'Τετάρτη', thu:'Πέμπτη', fri:'Παρασκευή', sat:'Σάββατο', sun:'Κυριακή' };
   const DAY_NAMES_SHORT_EL = { mon:'Δευ', tue:'Τρί', wed:'Τετ', thu:'Πέμ', fri:'Παρ', sat:'Σάβ', sun:'Κυρ' };
+  // Ordered week for display (Mon–Sun)
+  const WEEK_ORDER = ['mon','tue','wed','thu','fri','sat','sun'];
 
   const parseOperatingDays = (val) => {
     if (!val) return null;
@@ -341,44 +343,91 @@
     return null;
   };
 
+  // Parse new per-day schedule or build from legacy fields
+  const parseSchedule = (dest) => {
+    // New format: operating_schedule JSON
+    if (dest.operating_schedule) {
+      try {
+        const sched = JSON.parse(dest.operating_schedule);
+        if (sched && typeof sched === 'object' && !Array.isArray(sched)) return sched;
+      } catch (_) {}
+    }
+    // Fallback: legacy fields
+    const operDays = parseOperatingDays(dest.operating_days);
+    const hasHours = dest.opening_time && dest.closing_time;
+    if (!operDays && !hasHours) return null;
+    const sched = {};
+    WEEK_ORDER.forEach(day => {
+      const active = !operDays || operDays.includes(day);
+      sched[day] = active && hasHours ? { open: dest.opening_time, close: dest.closing_time } : (active ? { open: '', close: '' } : null);
+    });
+    return sched;
+  };
+
   const formatDaysList = (days) => {
     if (!days || days.length === 0) return '';
     return days.map(d => DAY_NAMES_EL[d] || d).join(', ');
   };
 
+  // Build compact schedule text: group consecutive days with same hours
+  const buildScheduleText = (schedule) => {
+    if (!schedule) return '';
+    const groups = [];
+    let currentGroup = null;
+    WEEK_ORDER.forEach(day => {
+      const entry = schedule[day];
+      const key = entry ? `${entry.open || ''}-${entry.close || ''}` : 'closed';
+      if (currentGroup && currentGroup.key === key) {
+        currentGroup.days.push(day);
+      } else {
+        currentGroup = { key, days: [day], entry };
+        groups.push(currentGroup);
+      }
+    });
+    return groups.map(g => {
+      const dayRange = g.days.length === 1
+        ? DAY_NAMES_SHORT_EL[g.days[0]]
+        : `${DAY_NAMES_SHORT_EL[g.days[0]]}–${DAY_NAMES_SHORT_EL[g.days[g.days.length - 1]]}`;
+      if (!g.entry) return `${dayRange}: Κλειστά`;
+      if (g.entry.open && g.entry.close) return `${dayRange}: ${g.entry.open}–${g.entry.close}`;
+      return `${dayRange}: Ανοιχτά`;
+    }).join(' | ');
+  };
+
   const checkDestinationSchedule = (dest) => {
     if (!dest) return null;
+    const schedule = parseSchedule(dest);
+    if (!schedule) return null;
+
     const now = new Date();
     const todayKey = DAY_KEYS[now.getDay()]; // 0=sun..6=sat
     const nowMins = now.getHours() * 60 + now.getMinutes();
+    const todayEntry = schedule[todayKey];
 
-    const operDays = parseOperatingDays(dest.operating_days);
-    const hasHours = dest.opening_time && dest.closing_time;
-
-    // Check day first
-    if (operDays && !operDays.includes(todayKey)) {
+    // Day is closed
+    if (!todayEntry) {
       // Find next open day
-      const todayIdx = DAY_KEYS.indexOf(todayKey);
+      const todayIdx = WEEK_ORDER.indexOf(todayKey);
       let nextDay = null;
       for (let i = 1; i <= 7; i++) {
-        const checkKey = DAY_KEYS[(todayIdx + i) % 7];
-        if (operDays.includes(checkKey)) { nextDay = checkKey; break; }
+        const checkKey = WEEK_ORDER[(todayIdx + i) % 7];
+        if (schedule[checkKey]) { nextDay = checkKey; break; }
       }
-      const daysStr = formatDaysList(operDays);
-      let msg = `Το "${dest.name}" λειτουργεί μόνο ${daysStr}.`;
+      let msg = `Το "${dest.name}" σήμερα (${DAY_NAMES_EL[todayKey]}) είναι κλειστό.`;
       if (nextDay) {
-        msg += `\nΗ επόμενη μέρα λειτουργίας είναι ${DAY_NAMES_EL[nextDay]}.`;
-      }
-      if (hasHours) {
-        msg += `\nΩράριο: ${dest.opening_time} – ${dest.closing_time}`;
+        const nextEntry = schedule[nextDay];
+        msg += `\nΕπόμενη ημέρα λειτουργίας: ${DAY_NAMES_EL[nextDay]}`;
+        if (nextEntry.open && nextEntry.close) {
+          msg += ` (${nextEntry.open} – ${nextEntry.close})`;
+        }
       }
       return msg;
     }
 
-    // Check hours
-    if (hasHours) {
-      const [oH, oM] = dest.opening_time.split(':').map(Number);
-      const [cH, cM] = dest.closing_time.split(':').map(Number);
+    // Day is open — check hours
+    if (todayEntry.open && todayEntry.close) {
+      const [oH, oM] = todayEntry.open.split(':').map(Number);
+      const [cH, cM] = todayEntry.close.split(':').map(Number);
       const openMins = oH * 60 + (oM || 0);
       const closeMins = cH * 60 + (cM || 0);
       let outsideHours = false;
@@ -389,7 +438,6 @@
         outsideHours = nowMins < openMins && nowMins >= closeMins;
       }
       if (outsideHours) {
-        // Calculate time until opening
         let minsUntilOpen;
         if (nowMins < openMins) {
           minsUntilOpen = openMins - nowMins;
@@ -403,11 +451,8 @@
         if (minsUntil > 0) timeStr += `${timeStr ? ' και ' : ''}${minsUntil} λεπτά`;
 
         let msg = `Το "${dest.name}" αυτή τη στιγμή είναι κλειστό.`;
-        msg += `\nΑνοίγει στις ${dest.opening_time} (σε ${timeStr}).`;
-        msg += `\nΏρες λειτουργίας: ${dest.opening_time} – ${dest.closing_time}`;
-        if (operDays) {
-          msg += `\nΗμέρες: ${formatDaysList(operDays)}`;
-        }
+        msg += `\nΣήμερα (${DAY_NAMES_EL[todayKey]}): ${todayEntry.open} – ${todayEntry.close}`;
+        msg += `\nΑνοίγει σε ${timeStr}.`;
         return msg;
       }
     }
@@ -468,22 +513,20 @@
     if (dest.michelin) rows.push(`<span class="ma-dest-extra"><strong>Michelin:</strong> ${dest.michelin}</span>`);
     if (dest.participating_artists) rows.push(`<span class="ma-dest-extra"><strong>Καλλιτέχνες:</strong> ${dest.participating_artists}</span>`);
     if (dest.program_info) rows.push(`<span class="ma-dest-extra"><strong>Πρόγραμμα:</strong> ${dest.program_info}</span>`);
-    if (dest.opening_time && dest.closing_time) {
+    // Per-day schedule display
+    const schedule = parseSchedule(dest);
+    if (schedule) {
+      const schedText = buildScheduleText(schedule);
+      if (schedText) {
+        rows.push(`<span class="ma-dest-extra ma-dest-schedule"><strong>Ωράριο:</strong> ${schedText}</span>`);
+      }
+    } else if (dest.opening_time && dest.closing_time) {
       let hoursText = `${dest.opening_time} — ${dest.closing_time}`;
       const operDays = parseOperatingDays(dest.operating_days);
       if (operDays) {
         hoursText += ` (${operDays.map(d => DAY_NAMES_SHORT_EL[d] || d).join(', ')})`;
-      } else if (dest.operating_days) {
-        hoursText += ` (${dest.operating_days})`;
       }
       rows.push(`<span class="ma-dest-extra"><strong>Ωράριο:</strong> ${hoursText}</span>`);
-    } else if (dest.operating_days) {
-      const operDays = parseOperatingDays(dest.operating_days);
-      if (operDays) {
-        rows.push(`<span class="ma-dest-extra"><strong>Ημέρες:</strong> ${operDays.map(d => DAY_NAMES_SHORT_EL[d] || d).join(', ')}</span>`);
-      } else {
-        rows.push(`<span class="ma-dest-extra"><strong>Ημέρες:</strong> ${dest.operating_days}</span>`);
-      }
     }
     if (dest.details) rows.push(`<span class="ma-dest-extra ma-dest-extra--details">${dest.details}</span>`);
     return rows.length ? rows.join('') : '';

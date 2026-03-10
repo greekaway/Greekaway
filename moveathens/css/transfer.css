@@ -690,6 +690,10 @@
   font-style: italic;
   color: #6b7280;
 }
+.ma-dest-schedule {
+  display: block;
+  line-height: 1.5;
+}
 
 /* Tariff Selection Grid */
 .ma-tariff-grid {

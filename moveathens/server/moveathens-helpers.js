@@ -402,6 +402,8 @@ const normalizeDestination = (entry) => {
     operating_days: normalizeString(entry.operating_days || ''),
     opening_time: normalizeString(entry.opening_time || ''),
     closing_time: normalizeString(entry.closing_time || ''),
+    operating_schedule: normalizeString(entry.operating_schedule || ''),
+    _edited: entry._edited === true,
     created_at: createdAt
   };
 };

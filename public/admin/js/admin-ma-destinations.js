@@ -38,30 +38,83 @@
     const fMainArtist = $('#maDestMainArtist');
     const fParticipatingArtists = $('#maDestParticipatingArtists');
     const fProgramInfo = $('#maDestProgramInfo');
-    const fOperatingDaysWrap = $('#maDestOperatingDays');
-    const fOpeningTime = $('#maDestOpeningTime');
-    const fClosingTime = $('#maDestClosingTime');
+    const fScheduleWrap = $('#maDestScheduleWrap');
 
-    // Helper: get operating_days from checkboxes as JSON string
-    const getOperatingDays = () => {
-      if (!fOperatingDaysWrap) return '';
-      const checked = [...fOperatingDaysWrap.querySelectorAll('input[type=checkbox]:checked')].map(cb => cb.value);
-      return checked.length > 0 && checked.length < 7 ? JSON.stringify(checked) : '';
+    // Helper: get operating_schedule from per-day rows as JSON string
+    // Format: {"mon":{"open":"09:00","close":"23:00"},"tue":null,...}
+    const getOperatingSchedule = () => {
+      if (!fScheduleWrap) return '';
+      const schedule = {};
+      let hasAny = false;
+      fScheduleWrap.querySelectorAll('.ma-schedule-row').forEach(row => {
+        const day = row.dataset.day;
+        const cb = row.querySelector('input[type=checkbox]');
+        if (cb && cb.checked) {
+          const open = row.querySelector('.ma-sched-open')?.value || '';
+          const close = row.querySelector('.ma-sched-close')?.value || '';
+          schedule[day] = { open, close };
+          hasAny = true;
+        } else {
+          schedule[day] = null;
+        }
+      });
+      return hasAny ? JSON.stringify(schedule) : '';
     };
-    // Helper: set operating_days checkboxes from JSON string
-    const setOperatingDays = (val) => {
-      if (!fOperatingDaysWrap) return;
-      const cbs = fOperatingDaysWrap.querySelectorAll('input[type=checkbox]');
-      cbs.forEach(cb => { cb.checked = false; });
-      if (!val) return;
-      let days = [];
-      try { days = JSON.parse(val); } catch (_) { /* legacy text — ignore */ }
-      if (!Array.isArray(days)) return;
-      days.forEach(d => {
-        const cb = fOperatingDaysWrap.querySelector(`input[value="${d}"]`);
-        if (cb) cb.checked = true;
+
+    // Helper: set schedule rows from JSON string (new format) or legacy fields
+    const setOperatingSchedule = (scheduleStr, legacyDays, legacyOpen, legacyClose) => {
+      if (!fScheduleWrap) return;
+      const rows = fScheduleWrap.querySelectorAll('.ma-schedule-row');
+      // Try new format first
+      let schedule = null;
+      if (scheduleStr) {
+        try { schedule = JSON.parse(scheduleStr); } catch (_) {}
+      }
+      if (schedule && typeof schedule === 'object' && !Array.isArray(schedule)) {
+        rows.forEach(row => {
+          const day = row.dataset.day;
+          const cb = row.querySelector('input[type=checkbox]');
+          const openInp = row.querySelector('.ma-sched-open');
+          const closeInp = row.querySelector('.ma-sched-close');
+          const entry = schedule[day];
+          if (entry && typeof entry === 'object') {
+            if (cb) cb.checked = true;
+            if (openInp) openInp.value = entry.open || '';
+            if (closeInp) closeInp.value = entry.close || '';
+          } else {
+            if (cb) cb.checked = false;
+            if (openInp) openInp.value = '';
+            if (closeInp) closeInp.value = '';
+          }
+          row.classList.toggle('ma-schedule-row--disabled', !(cb && cb.checked));
+        });
+        return;
+      }
+      // Fallback: legacy format (operating_days + single opening/closing time)
+      let legacyArr = null;
+      if (legacyDays) {
+        try { legacyArr = JSON.parse(legacyDays); } catch (_) {}
+      }
+      rows.forEach(row => {
+        const day = row.dataset.day;
+        const cb = row.querySelector('input[type=checkbox]');
+        const openInp = row.querySelector('.ma-sched-open');
+        const closeInp = row.querySelector('.ma-sched-close');
+        const isActive = !legacyArr || legacyArr.includes(day);
+        if (cb) cb.checked = isActive;
+        if (openInp) openInp.value = isActive ? (legacyOpen || '') : '';
+        if (closeInp) closeInp.value = isActive ? (legacyClose || '') : '';
+        row.classList.toggle('ma-schedule-row--disabled', !isActive);
       });
     };
+
+    // Toggle visual state when day checkbox changes
+    fScheduleWrap?.addEventListener('change', (e) => {
+      if (e.target.type === 'checkbox') {
+        const row = e.target.closest('.ma-schedule-row');
+        if (row) row.classList.toggle('ma-schedule-row--disabled', !e.target.checked);
+      }
+    });
 
     const populateDropdowns = () => {
       const activeCats = (state.CONFIG.destinationCategories || []).filter(c => c.is_active !== false);
@@ -265,9 +318,7 @@
       if (fMainArtist) fMainArtist.value = '';
       if (fParticipatingArtists) fParticipatingArtists.value = '';
       if (fProgramInfo) fProgramInfo.value = '';
-      setOperatingDays('');
-      if (fOpeningTime) fOpeningTime.value = '';
-      if (fClosingTime) fClosingTime.value = '';
+      setOperatingSchedule('', null, '', '');
       setStatus(status, '', '');
     };
 
@@ -303,9 +354,7 @@
       if (fMainArtist) fMainArtist.value = dest.main_artist || '';
       if (fParticipatingArtists) fParticipatingArtists.value = dest.participating_artists || '';
       if (fProgramInfo) fProgramInfo.value = dest.program_info || '';
-      setOperatingDays(dest.operating_days || '');
-      if (fOpeningTime) fOpeningTime.value = dest.opening_time || '';
-      if (fClosingTime) fClosingTime.value = dest.closing_time || '';
+      setOperatingSchedule(dest.operating_schedule || '', dest.operating_days || '', dest.opening_time || '', dest.closing_time || '');
       if (form) form.hidden = false;
     };
 
@@ -374,6 +423,7 @@
         const subcatVal = fSubcategory ? fSubcategory.value : '';
         const entry = {
           id: state.editingDestinationId || `dest_${Date.now()}`,
+          _edited: true,
           name,
           description: fDesc?.value?.trim() || '',
           category_id: fCategory.value,
@@ -395,9 +445,10 @@
           main_artist: fMainArtist?.value?.trim() || '',
           participating_artists: fParticipatingArtists?.value?.trim() || '',
           program_info: fProgramInfo?.value?.trim() || '',
-          operating_days: getOperatingDays(),
-          opening_time: fOpeningTime?.value || '',
-          closing_time: fClosingTime?.value || ''
+          operating_schedule: getOperatingSchedule(),
+          operating_days: '',
+          opening_time: '',
+          closing_time: ''
         };
 
         if (state.editingDestinationId) {

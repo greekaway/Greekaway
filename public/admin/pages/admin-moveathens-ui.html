@@ -400,25 +400,53 @@
                   </label>
 
                   <h4 style="grid-column:1/-1;margin:8px 0 0;font-size:14px;color:#888">🕐 Ωράριο Λειτουργίας</h4>
-                  <div style="grid-column:1/-1">
-                    <span style="font-size:14px;font-weight:600;color:#555">Ημέρες Λειτουργίας</span>
-                    <div id="maDestOperatingDays" class="ma-days-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
-                      <label class="ma-day-chip"><input type="checkbox" value="mon"> Δευ</label>
-                      <label class="ma-day-chip"><input type="checkbox" value="tue"> Τρί</label>
-                      <label class="ma-day-chip"><input type="checkbox" value="wed"> Τετ</label>
-                      <label class="ma-day-chip"><input type="checkbox" value="thu"> Πέμ</label>
-                      <label class="ma-day-chip"><input type="checkbox" value="fri"> Παρ</label>
-                      <label class="ma-day-chip"><input type="checkbox" value="sat"> Σάβ</label>
-                      <label class="ma-day-chip"><input type="checkbox" value="sun"> Κυρ</label>
+                  <div id="maDestScheduleWrap" style="grid-column:1/-1">
+                    <small style="color:#6b7280;display:block;margin-bottom:6px">Ρυθμίστε ωράριο ανά ημέρα. Αν μια μέρα δεν είναι ενεργή, θεωρείται κλειστή.</small>
+                    <div class="ma-schedule-table">
+                      <div class="ma-schedule-row" data-day="mon">
+                        <label class="ma-day-chip"><input type="checkbox" value="mon" checked> Δευ</label>
+                        <input class="input ma-sched-open" type="time" title="Ώρα ανοίγματος">
+                        <span class="ma-sched-sep">—</span>
+                        <input class="input ma-sched-close" type="time" title="Ώρα κλεισίματος">
+                      </div>
+                      <div class="ma-schedule-row" data-day="tue">
+                        <label class="ma-day-chip"><input type="checkbox" value="tue" checked> Τρί</label>
+                        <input class="input ma-sched-open" type="time" title="Ώρα ανοίγματος">
+                        <span class="ma-sched-sep">—</span>
+                        <input class="input ma-sched-close" type="time" title="Ώρα κλεισίματος">
+                      </div>
+                      <div class="ma-schedule-row" data-day="wed">
+                        <label class="ma-day-chip"><input type="checkbox" value="wed" checked> Τετ</label>
+                        <input class="input ma-sched-open" type="time" title="Ώρα ανοίγματος">
+                        <span class="ma-sched-sep">—</span>
+                        <input class="input ma-sched-close" type="time" title="Ώρα κλεισίματος">
+                      </div>
+                      <div class="ma-schedule-row" data-day="thu">
+                        <label class="ma-day-chip"><input type="checkbox" value="thu" checked> Πέμ</label>
+                        <input class="input ma-sched-open" type="time" title="Ώρα ανοίγματος">
+                        <span class="ma-sched-sep">—</span>
+                        <input class="input ma-sched-close" type="time" title="Ώρα κλεισίματος">
+                      </div>
+                      <div class="ma-schedule-row" data-day="fri">
+                        <label class="ma-day-chip"><input type="checkbox" value="fri" checked> Παρ</label>
+                        <input class="input ma-sched-open" type="time" title="Ώρα ανοίγματος">
+                        <span class="ma-sched-sep">—</span>
+                        <input class="input ma-sched-close" type="time" title="Ώρα κλεισίματος">
+                      </div>
+                      <div class="ma-schedule-row" data-day="sat">
+                        <label class="ma-day-chip"><input type="checkbox" value="sat" checked> Σάβ</label>
+                        <input class="input ma-sched-open" type="time" title="Ώρα ανοίγματος">
+                        <span class="ma-sched-sep">—</span>
+                        <input class="input ma-sched-close" type="time" title="Ώρα κλεισίματος">
+                      </div>
+                      <div class="ma-schedule-row" data-day="sun">
+                        <label class="ma-day-chip"><input type="checkbox" value="sun" checked> Κυρ</label>
+                        <input class="input ma-sched-open" type="time" title="Ώρα ανοίγματος">
+                        <span class="ma-sched-sep">—</span>
+                        <input class="input ma-sched-close" type="time" title="Ώρα κλεισίματος">
+                      </div>
                     </div>
-                    <small style="color:#6b7280">Αν δεν επιλέξετε κάτι, θεωρείται ότι λειτουργεί καθημερινά.</small>
                   </div>
-                  <label>Ώρα Ανοίγματος
-                    <input id="maDestOpeningTime" class="input" type="time">
-                  </label>
-                  <label>Ώρα Κλεισίματος
-                    <input id="maDestClosingTime" class="input" type="time">
-                  </label>
                 </div>
               </details>
 

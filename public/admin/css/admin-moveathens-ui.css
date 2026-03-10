@@ -178,6 +178,43 @@
   display: none;
 }
 
+/* ── Per-day schedule table ── */
+.ma-schedule-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+.ma-schedule-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  transition: opacity 0.15s ease;
+}
+.ma-schedule-row--disabled {
+  opacity: 0.4;
+}
+.ma-schedule-row--disabled .ma-sched-open,
+.ma-schedule-row--disabled .ma-sched-close {
+  pointer-events: none;
+}
+.ma-schedule-row .ma-day-chip {
+  min-width: 64px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ma-sched-open,
+.ma-sched-close {
+  width: 110px;
+  flex-shrink: 0;
+}
+.ma-sched-sep {
+  color: #9ca3af;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
 .ma-zones-list {
   display: grid;
   gap: 16px;

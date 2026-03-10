@@ -355,7 +355,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
           program_info: d.program_info || '',
           operating_days: d.operating_days || '',
           opening_time: d.opening_time || '',
-          closing_time: d.closing_time || ''
+          closing_time: d.closing_time || '',
+          operating_schedule: d.operating_schedule || ''
         }))
       });
     } catch (err) {

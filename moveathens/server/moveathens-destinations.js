@@ -35,8 +35,11 @@ module.exports = function registerDestinationRoutes(app, opts = {}) {
         return res.status(409).json({ error: 'WIPE_BLOCKED', message: 'Cannot replace all destinations with empty list.' });
       }
 
+      // Build lookup of current server data by id
+      const currentMap = new Map(currentDestinations.map(d => [d.id, d]));
       const newIds = new Set(destinations.map(d => d.id));
 
+      // Delete destinations that were explicitly removed
       for (const existing of currentDestinations) {
         if (!newIds.has(existing.id)) {
           console.log('[moveathens] Deleting destination:', existing.id, existing.name);
@@ -44,9 +47,34 @@ module.exports = function registerDestinationRoutes(app, opts = {}) {
         }
       }
 
+      // Merge: for each incoming destination, merge with server version
+      // to avoid losing fields that the client didn't modify
       const savedDestinations = [];
       for (const dest of destinations) {
-        const saved = await dataLayer.upsertDestination(dest);
+        const current = currentMap.get(dest.id);
+        let merged = dest;
+        if (current) {
+          // Start with server data, overlay incoming
+          merged = { ...current, ...dest };
+          // If this destination was NOT actively edited by the admin,
+          // protect extended fields — keep server values when incoming is empty
+          if (!dest._edited) {
+            const protectedFields = [
+              'venue_type', 'vibe', 'area', 'indicative_price', 'suitable_for',
+              'rating', 'michelin', 'details', 'main_artist', 'participating_artists',
+              'program_info', 'operating_days', 'opening_time', 'closing_time',
+              'operating_schedule', 'description', 'lat', 'lng', 'route_type'
+            ];
+            for (const field of protectedFields) {
+              const inVal = (dest[field] != null && dest[field] !== '') ? dest[field] : '';
+              const curVal = (current[field] != null && current[field] !== '') ? current[field] : '';
+              merged[field] = inVal || curVal;
+            }
+          }
+        }
+        // Remove internal flag before saving
+        delete merged._edited;
+        const saved = await dataLayer.upsertDestination(merged);
         savedDestinations.push(saved);
       }
 

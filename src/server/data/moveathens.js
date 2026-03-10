@@ -1017,6 +1017,7 @@ function mapDestinationRow(row) {
     operating_days: row.operating_days || '',
     opening_time: row.opening_time || '',
     closing_time: row.closing_time || '',
+    operating_schedule: row.operating_schedule || '',
     created_at: row.created_at
   };
 }
@@ -1028,7 +1029,18 @@ async function getDestinations(filters = {}) {
     try {
       const rows = await db.ma.getDestinations(filters);
       if (rows && rows.length > 0) {
-        return rows.map(mapDestinationRow);
+        const mapped = rows.map(mapDestinationRow);
+        // Sync JSON fallback with latest DB data so if DB fails later, JSON has fresh data
+        if (!getDestinations._jsonSynced) {
+          try {
+            const config = readConfigFromFile();
+            config.destinations = mapped;
+            writeConfigToFile(config);
+            getDestinations._jsonSynced = true;
+            console.log('[moveathens] JSON fallback synced from DB:', mapped.length, 'destinations');
+          } catch (_) { /* non-critical */ }
+        }
+        return mapped;
       }
       // DB empty - auto-migrate from JSON
       const config = readConfigFromFile();
@@ -1037,19 +1049,7 @@ async function getDestinations(filters = {}) {
         console.log('[moveathens] DB empty, auto-migrating', jsonDests.length, 'destinations from JSON');
         for (const d of jsonDests) {
           try {
-            await db.ma.upsertDestination({
-              id: d.id,
-              name: d.name,
-              description: d.description || '',
-              category_id: d.category_id || null,
-              subcategory_id: d.subcategory_id || null,
-              zone_id: d.zone_id || null,
-              route_type: d.route_type || null,
-              lat: d.lat != null ? parseFloat(d.lat) : null,
-              lng: d.lng != null ? parseFloat(d.lng) : null,
-              display_order: d.display_order || 0,
-              is_active: d.is_active !== false
-            });
+            await db.ma.upsertDestination({ id: d.id, ...buildDestinationPayload(d) });
           } catch (e) {
             console.error('[moveathens] Failed to migrate destination:', d.id, e.message);
           }
@@ -1104,7 +1104,8 @@ function buildDestinationPayload(data) {
     program_info: data.program_info || '',
     operating_days: data.operating_days || '',
     opening_time: data.opening_time || '',
-    closing_time: data.closing_time || ''
+    closing_time: data.closing_time || '',
+    operating_schedule: data.operating_schedule || ''
   };
 }
 
@@ -1118,7 +1119,21 @@ async function upsertDestination(data) {
       const payload = { id, ...buildDestinationPayload(data) };
       const row = await db.ma.upsertDestination(payload);
       console.log('[moveathens] Destination saved to DB:', row.id);
-      return mapDestinationRow(row);
+      const mapped = mapDestinationRow(row);
+      // Also sync to JSON fallback so data is consistent if DB becomes unavailable
+      try {
+        const config = readConfigFromFile();
+        const dests = config.destinations || [];
+        const idx = dests.findIndex(d => d.id === id);
+        if (idx >= 0) {
+          dests[idx] = { ...dests[idx], ...mapped };
+        } else {
+          dests.push(mapped);
+        }
+        config.destinations = dests;
+        writeConfigToFile(config);
+      } catch (_) { /* non-critical */ }
+      return mapped;
     } catch (err) {
       console.error('[moveathens] DB destination write failed:', err.message);
     }
@@ -1154,6 +1169,12 @@ async function deleteDestination(id) {
       const deleted = await db.ma.deleteDestination(id);
       if (deleted) {
         console.log('[moveathens] Destination deleted from DB:', id);
+        // Also sync JSON fallback
+        try {
+          const config = readConfigFromFile();
+          config.destinations = (config.destinations || []).filter(d => d.id !== id);
+          writeConfigToFile(config);
+        } catch (_) { /* non-critical */ }
         return true;
       }
     } catch (err) {
