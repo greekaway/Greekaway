@@ -63,21 +63,26 @@ module.exports = function registerVehicleRoutes(app, opts = {}) {
         return res.status(409).json({ error: 'WIPE_BLOCKED', message: 'Cannot replace all vehicles with empty list.' });
       }
 
-      const newIds = new Set(vehicleTypes.map(v => v.id));
-
-      for (const existing of currentVehicles) {
-        if (!newIds.has(existing.id)) {
-          console.log('[moveathens] Deleting vehicle:', existing.id, existing.name);
-          await dataLayer.deleteVehicleType(existing.id);
-        }
-      }
+      // Merge protection: build map of existing vehicles to preserve fields from stale clients
+      const currentMap = new Map(currentVehicles.map(v => [v.id, v]));
 
       const savedVehicles = [];
       for (const vt of vehicleTypes) {
-        console.log('[moveathens] PUT vehicle-types: saving', vt.id, vt.name);
-        const saved = await dataLayer.upsertVehicleType(vt);
+        const existing = currentMap.get(vt.id);
+        let merged = vt;
+        if (existing) {
+          merged = { ...vt };
+          for (const key of ['description', 'image', 'max_passengers', 'max_luggage']) {
+            if ((!merged[key] || merged[key] === '') && existing[key]) {
+              merged[key] = existing[key];
+            }
+          }
+        }
+        console.log('[moveathens] PUT vehicle-types: saving', merged.id, merged.name);
+        const saved = await dataLayer.upsertVehicleType(merged);
         savedVehicles.push(saved);
       }
+      // NOTE: vehicles missing from the incoming list are NOT deleted — use DELETE endpoint instead
 
       console.log('[moveathens] PUT vehicle-types: saved', savedVehicles.length, 'vehicles successfully');
       return res.json({ vehicleTypes: savedVehicles });

@@ -42,20 +42,26 @@ module.exports = function registerHotelRoutes(app, opts = {}) {
         return res.status(409).json({ error: 'WIPE_BLOCKED', message: 'Cannot replace all zones with empty list. Delete individually instead.' });
       }
 
-      const newIds = new Set(zones.map(z => z.id));
-
-      for (const existing of currentZones) {
-        if (!newIds.has(existing.id)) {
-          console.log('[moveathens] Deleting zone:', existing.id, existing.name);
-          await dataLayer.deleteZone(existing.id);
-        }
-      }
+      // Merge protection: build map of existing zones to preserve fields from stale clients
+      const currentMap = new Map(currentZones.map(z => [z.id, z]));
 
       const savedZones = [];
       for (const zone of zones) {
-        const saved = await dataLayer.upsertZone(zone);
+        const existing = currentMap.get(zone.id);
+        let merged = zone;
+        if (existing) {
+          // Keep server values for any fields that arrive empty from the client
+          merged = { ...zone };
+          for (const key of ['description', 'municipality', 'address', 'phone', 'email', 'lat', 'lng']) {
+            if ((!merged[key] || merged[key] === '') && existing[key]) {
+              merged[key] = existing[key];
+            }
+          }
+        }
+        const saved = await dataLayer.upsertZone(merged);
         savedZones.push(saved);
       }
+      // NOTE: zones missing from the incoming list are NOT deleted — use DELETE endpoint instead
 
       return res.json({ zones: savedZones });
     } catch (err) {

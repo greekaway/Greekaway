@@ -278,6 +278,7 @@
           e.stopPropagation();
           const id = btn.closest('.ma-zone-card').dataset.id;
           editDestination(id);
+          if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
       });
       list.querySelectorAll('.btn-delete').forEach(btn => {
