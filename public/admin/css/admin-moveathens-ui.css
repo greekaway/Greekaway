@@ -304,6 +304,14 @@ html[data-theme='light'] .ma-badge-arrival {
   flex-direction: column;
   gap: 6px;
   font-size: 14px;
+  min-width: 0;
+}
+
+.ma-price-controls label .input,
+.ma-price-controls label select,
+.ma-price-controls label input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .ma-prices-table {

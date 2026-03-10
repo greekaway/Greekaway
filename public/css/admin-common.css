@@ -83,11 +83,10 @@ html[data-theme='light'] .bottom-nav{
   background:#ffffff !important;
   border-top:1px solid rgba(6,24,53,.12) !important;
 }
-html[data-theme='light'] .bottom-nav a{ color:#8B5E00 !important; }
+html[data-theme='light'] .bottom-nav a{ color:#111 !important; }
 html[data-theme='light'] .bottom-nav a.active,
 html[data-theme='light'] .bottom-nav a:hover{
-  background:rgba(139,94,0,.12);
-  box-shadow:0 -2px 0 #8B5E00 inset;
+  background:rgba(0,0,0,.08);
 }
 html[data-theme='light'] footer.version{
   background:rgba(255,255,255,.9);

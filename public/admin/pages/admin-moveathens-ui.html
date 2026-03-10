@@ -711,7 +711,7 @@
             </div>
           </div>
 
-          <nav class="ma-info-jumpnav">
+          <nav class="ma-info-jumpnav" id="maInfoPageSubnav">
             <button type="button" class="ma-info-jumpnav__btn active" data-info-target="info-sec-transfers">📍 Μεταφορές</button>
             <button type="button" class="ma-info-jumpnav__btn" data-info-target="info-sec-cancellation">🚫 Ακυρώσεις</button>
             <button type="button" class="ma-info-jumpnav__btn" data-info-target="info-sec-compliance">📋 Συμμόρφωση</button>
@@ -838,7 +838,7 @@
 
           <script>
           (function(){
-            var nav = document.querySelector('.ma-info-jumpnav');
+            var nav = document.getElementById('maInfoPageSubnav');
             if (!nav) return;
             var sections = document.querySelectorAll('#ma-infopage-form .ma-info-section');
             // Hide all except first on load

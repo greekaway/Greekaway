@@ -73,6 +73,7 @@
     };
 
     hotelSearch?.addEventListener('input', () => {
+      if (!allHotels.length) populateHotelList();
       const q = hotelSearch.value.trim().toLowerCase();
       if (q.length < 2) { hotelDropdown.hidden = true; return; }
       showDropdown(allHotels.filter(h =>
@@ -80,6 +81,7 @@
       ));
     });
     hotelSearch?.addEventListener('focus', () => {
+      if (!allHotels.length) populateHotelList();
       const q = hotelSearch.value.trim().toLowerCase();
       if (q.length >= 2) showDropdown(allHotels.filter(h =>
         h.name.toLowerCase().includes(q) || (h.municipality || '').toLowerCase().includes(q)
@@ -125,9 +127,9 @@
       updateSubcategoryFilter();
       loadMatrix();
     });
-    filterSubcategory?.addEventListener('change', loadMatrix);
-    vehicleSelect?.addEventListener('change', loadMatrix);
-    tariffSelect?.addEventListener('change', loadMatrix);
+    filterSubcategory?.addEventListener('change', () => loadMatrix());
+    vehicleSelect?.addEventListener('change', () => loadMatrix());
+    tariffSelect?.addEventListener('change', () => loadMatrix());
 
     /* ── Load matrix ── */
     const getFilteredDestinations = () => {
