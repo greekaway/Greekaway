@@ -28,6 +28,19 @@ body {
   min-height: 100vh;
   padding-bottom: 86px;
   overflow-x: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection on inputs, textareas, and copyable content */
+input, textarea, select,
+.ma-confirm-value,
+.ma-info-content,
+.ma-chat-bubble,
+[data-ma-contact-value],
+.iris-phone {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Global image overflow safety */

@@ -86,6 +86,8 @@
   font-size: 15px;
   line-height: 1.7;
   color: #1a2232;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .ma-info-content p {
