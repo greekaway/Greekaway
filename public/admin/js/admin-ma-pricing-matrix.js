@@ -205,6 +205,9 @@
 
       form.hidden = false;
       setStatus(status, '', '');
+
+      // Always populate copy-from vehicle dropdown when matrix loads
+      populateCopyVehicles();
     };
 
     loadBtn?.addEventListener('click', loadMatrix);
@@ -220,19 +223,26 @@
     const copyApplyBtn = $('#maCopyApplyBtn');
     const copyCancelBtn = $('#maCopyCancelBtn');
 
+    const populateCopyVehicles = () => {
+      const vehicles = (state.CONFIG.vehicleTypes || []).filter(v => v.is_active !== false);
+      if (copyVehicle) {
+        const prevVal = copyVehicle.value;
+        copyVehicle.innerHTML = '<option value="">-- Επιλογή Οχήματος --</option>' +
+          vehicles.map(v => `<option value="${v.id}">${v.name} (👤${v.max_passengers})</option>`).join('');
+        // Keep previous selection if still valid, otherwise don't pre-select
+        if (prevVal && vehicles.some(v => v.id === prevVal)) {
+          copyVehicle.value = prevVal;
+        }
+      }
+    };
+
     copyToggle?.addEventListener('click', () => {
       const opening = copyPanel.hidden;
       copyPanel.hidden = !opening;
       if (opening) {
-        // populate vehicle dropdown in copy panel (mirror main vehicles)
-        const vehicles = (state.CONFIG.vehicleTypes || []).filter(v => v.is_active !== false);
-        if (copyVehicle) {
-          copyVehicle.innerHTML = '<option value="">-- Επιλογή --</option>' +
-            vehicles.map(v => `<option value="${v.id}">${v.name} (👤${v.max_passengers})</option>`).join('');
-        }
-        // pre-select same vehicle & tariff as current filters
-        if (vehicleSelect?.value) copyVehicle.value = vehicleSelect.value;
-        if (tariffSelect?.value) copyTariff.value = tariffSelect.value;
+        populateCopyVehicles();
+        // pre-select same tariff as current filter
+        if (tariffSelect?.value && copyTariff) copyTariff.value = tariffSelect.value;
       }
     });
 
