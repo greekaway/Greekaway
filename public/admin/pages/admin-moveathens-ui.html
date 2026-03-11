@@ -713,6 +713,32 @@
             </div>
 
             <form id="ma-matrix-form" class="ma-pricing-form" hidden>
+              <!-- Copy prices from another combo -->
+              <div class="ma-copy-from-bar">
+                <button id="maMatrixCopyToggle" class="btn secondary small" type="button">📋 Αντιγραφή τιμών από…</button>
+                <div id="maMatrixCopyPanel" class="ma-copy-from-panel" hidden>
+                  <label>Από Ξενοδοχείο
+                    <div class="ma-autocomplete-wrap">
+                      <input id="maCopyHotelSearch" class="input" type="text" placeholder="Πληκτρολογήστε 2+ γράμματα…" autocomplete="off">
+                      <input id="maCopyOriginZone" type="hidden">
+                      <div id="maCopyHotelDropdown" class="ma-autocomplete-dropdown" hidden></div>
+                    </div>
+                  </label>
+                  <label>Από Όχημα
+                    <select id="maCopyVehicle" class="input"></select>
+                  </label>
+                  <label>Από Ταρίφα
+                    <select id="maCopyTariff" class="input">
+                      <option value="day">☀️ Ημερήσια</option>
+                      <option value="night">🌙 Νυχτερινή</option>
+                    </select>
+                  </label>
+                  <div class="ma-copy-from-actions">
+                    <button id="maCopyApplyBtn" class="btn small" type="button">Εφαρμογή</button>
+                    <button id="maCopyCancelBtn" class="btn secondary small" type="button">Ακύρωση</button>
+                  </div>
+                </div>
+              </div>
               <div class="ma-matrix-scroll">
                 <table id="ma-matrix-table" class="ma-matrix-table">
                   <thead id="ma-matrix-thead"></thead>

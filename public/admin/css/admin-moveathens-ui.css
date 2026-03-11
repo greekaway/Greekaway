@@ -1318,6 +1318,51 @@ html[data-theme='light'] .ma-infopage-form label {
   display: block;
 }
 
+/* ===== Copy-from panel (pricing matrix) ===== */
+.ma-copy-from-bar {
+  margin-bottom: 12px;
+}
+.ma-copy-from-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-top: 10px;
+  padding: 14px 16px;
+  border: 1px dashed var(--ga-accent, #4e6bff);
+  border-radius: 10px;
+  background: rgba(78, 107, 255, 0.06);
+}
+.ma-copy-from-panel label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ga-muted, #7b8794);
+  gap: 4px;
+  min-width: 160px;
+}
+.ma-copy-from-panel .input {
+  font-size: 13px;
+}
+.ma-copy-from-actions {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding-bottom: 2px;
+}
+html[data-theme='light'] .ma-copy-from-panel {
+  background: rgba(78, 107, 255, 0.05);
+  border-color: rgba(78, 107, 255, 0.35);
+}
+@media (max-width: 720px) {
+  .ma-copy-from-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ma-copy-from-panel label { min-width: auto; }
+}
+
 /* ===== Bulk Pricing Matrix ===== */
 .ma-matrix-scroll {
   overflow-x: auto;

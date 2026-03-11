@@ -209,6 +209,135 @@
 
     loadBtn?.addEventListener('click', loadMatrix);
 
+    /* ── Copy-from panel ── */
+    const copyToggle = $('#maMatrixCopyToggle');
+    const copyPanel = $('#maMatrixCopyPanel');
+    const copyHotelSearch = $('#maCopyHotelSearch');
+    const copyHotelDropdown = $('#maCopyHotelDropdown');
+    const copyOriginHidden = $('#maCopyOriginZone');
+    const copyVehicle = $('#maCopyVehicle');
+    const copyTariff = $('#maCopyTariff');
+    const copyApplyBtn = $('#maCopyApplyBtn');
+    const copyCancelBtn = $('#maCopyCancelBtn');
+
+    copyToggle?.addEventListener('click', () => {
+      const opening = copyPanel.hidden;
+      copyPanel.hidden = !opening;
+      if (opening) {
+        // populate vehicle dropdown in copy panel (mirror main vehicles)
+        const vehicles = (state.CONFIG.vehicleTypes || []).filter(v => v.is_active !== false);
+        if (copyVehicle) {
+          copyVehicle.innerHTML = '<option value="">-- Επιλογή --</option>' +
+            vehicles.map(v => `<option value="${v.id}">${v.name} (👤${v.max_passengers})</option>`).join('');
+        }
+        // pre-select same vehicle & tariff as current filters
+        if (vehicleSelect?.value) copyVehicle.value = vehicleSelect.value;
+        if (tariffSelect?.value) copyTariff.value = tariffSelect.value;
+      }
+    });
+
+    copyCancelBtn?.addEventListener('click', () => {
+      copyPanel.hidden = true;
+      copyHotelSearch.value = '';
+      copyOriginHidden.value = '';
+    });
+
+    // Hotel autocomplete for copy panel
+    const showCopyDropdown = (matches) => {
+      if (!matches.length) { copyHotelDropdown.hidden = true; return; }
+      copyHotelDropdown.innerHTML = matches.map(h =>
+        `<div class="ma-ac-item" data-id="${h.id}">${h.name}${h.municipality ? ' <span class="ma-muted">(' + h.municipality + ')</span>' : ''}</div>`
+      ).join('');
+      copyHotelDropdown.hidden = false;
+      copyHotelDropdown.querySelectorAll('.ma-ac-item').forEach(item => {
+        item.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          const hotel = allHotels.find(h => h.id === item.dataset.id);
+          if (hotel) {
+            copyOriginHidden.value = hotel.id;
+            copyHotelSearch.value = hotel.name;
+          }
+          copyHotelDropdown.hidden = true;
+        });
+      });
+    };
+
+    copyHotelSearch?.addEventListener('input', () => {
+      if (!allHotels.length) populateHotelList();
+      const q = copyHotelSearch.value.trim().toLowerCase();
+      if (q.length < 2) { copyHotelDropdown.hidden = true; return; }
+      showCopyDropdown(allHotels.filter(h =>
+        h.name.toLowerCase().includes(q) || (h.municipality || '').toLowerCase().includes(q)
+      ));
+    });
+    copyHotelSearch?.addEventListener('focus', () => {
+      if (!allHotels.length) populateHotelList();
+      const q = copyHotelSearch.value.trim().toLowerCase();
+      if (q.length >= 2) showCopyDropdown(allHotels.filter(h =>
+        h.name.toLowerCase().includes(q) || (h.municipality || '').toLowerCase().includes(q)
+      ));
+    });
+    copyHotelSearch?.addEventListener('blur', () => {
+      setTimeout(() => { copyHotelDropdown.hidden = true; }, 200);
+    });
+
+    // Apply: fill current table rows from source combo
+    copyApplyBtn?.addEventListener('click', () => {
+      const srcHotel = copyOriginHidden.value;
+      const srcVehicle = copyVehicle?.value;
+      const srcTariff = copyTariff?.value || 'day';
+
+      if (!srcHotel || !srcVehicle) {
+        showToast('⚠️ Επιλέξτε ξενοδοχείο και όχημα πηγής');
+        return;
+      }
+
+      const prices = state.CONFIG.transferPrices || [];
+      const rows = tbody.querySelectorAll('tr[data-dest]');
+
+      // Check if any current row already has data
+      let hasExistingData = false;
+      rows.forEach(row => {
+        const v = parseFloat(row.querySelector('.mx-price')?.value);
+        if (Number.isFinite(v) && v > 0) hasExistingData = true;
+      });
+
+      if (hasExistingData) {
+        if (!confirm('Υπάρχουν ήδη τιμές στον πίνακα.\nΘέλετε να αντικατασταθούν με τις τιμές από την πηγή;')) return;
+      }
+
+      let filled = 0;
+      rows.forEach(row => {
+        const destId = row.dataset.dest;
+        const match = prices.find(p =>
+          p.origin_zone_id === srcHotel &&
+          p.destination_id === destId &&
+          p.vehicle_type_id === srcVehicle &&
+          (p.tariff || 'day') === srcTariff
+        );
+        if (match) {
+          const priceInp   = row.querySelector('.mx-price');
+          const driverInp  = row.querySelector('.mx-driver');
+          const hotelInp   = row.querySelector('.mx-hotel');
+          const serviceInp = row.querySelector('.mx-service');
+          if (priceInp)   priceInp.value   = match.price ?? '';
+          if (driverInp)  driverInp.value  = match.commission_driver ?? '';
+          if (hotelInp)   hotelInp.value   = match.commission_hotel ?? '';
+          if (serviceInp) serviceInp.value  = match.commission_service ?? '';
+          filled++;
+        }
+      });
+
+      // Close panel & show feedback
+      copyPanel.hidden = true;
+      if (filled > 0) {
+        showToast(`✅ Αντιγράφηκαν τιμές σε ${filled} προορισμούς — ελέγξτε και πατήστε Αποθήκευση`);
+        validateMatrixCommissions();
+      } else {
+        showToast('⚠️ Δεν βρέθηκαν τιμές στο επιλεγμένο combo πηγής');
+      }
+    });
+
     /* ── Commission validation ── */
     const validateMatrixCommissions = () => {
       // Clean ALL previous error rows first
