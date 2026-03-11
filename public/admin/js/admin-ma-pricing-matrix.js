@@ -5,7 +5,7 @@
  */
 (() => {
   'use strict';
-  const { $, showToast, setStatus, state, api, ensureConfigLoaded } = window.MaAdmin;
+  const { $, showToast, setStatus, state, api, ensureConfigLoaded, openConfirm } = window.MaAdmin;
 
   const initPricingMatrixTab = () => {
     /* ── Sub-navigation (Τιμολόγηση / Πίνακας) ── */
@@ -292,7 +292,7 @@
     });
 
     // Apply: fill current table rows from source combo
-    copyApplyBtn?.addEventListener('click', () => {
+    copyApplyBtn?.addEventListener('click', async () => {
       const srcHotel = copyOriginHidden.value;
       const srcVehicle = copyVehicle?.value;
       const srcTariff = copyTariff?.value || 'day';
@@ -313,7 +313,11 @@
       });
 
       if (hasExistingData) {
-        if (!confirm('Υπάρχουν ήδη τιμές στον πίνακα.\nΘέλετε να αντικατασταθούν με τις τιμές από την πηγή;')) return;
+        const ok = await openConfirm('Υπάρχουν ήδη τιμές στον πίνακα. Θέλετε να αντικατασταθούν με τις τιμές από την πηγή;', {
+          title: 'Αντικατάσταση τιμών',
+          okLabel: 'Αντικατάσταση'
+        });
+        if (!ok) return;
       }
 
       let filled = 0;
@@ -457,6 +461,7 @@
     const render = () => {
       populateHotelList();
       populateVehicles();
+      populateCopyVehicles();
       populateCategoryFilter();
       form.hidden = true;
       if (originHidden.value && selectedHotelName) {
