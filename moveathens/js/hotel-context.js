@@ -41,7 +41,7 @@
     // Show all phones (read-only)
     if (phonesList) {
       phonesList.innerHTML = (phones || []).map(p =>
-        `<span style="background:rgba(13,110,253,0.12);border:1px solid rgba(13,110,253,0.3);color:#1a1a2e;padding:0.4rem 0.75rem;border-radius:20px;font-size:0.9rem;font-weight:600;">📱 ${p.phone}${p.label ? ' <small style="opacity:0.7;font-weight:400;">('+p.label+')</small>' : ''}</span>`
+        `<span style="background:rgba(13,110,253,0.15);border:1px solid rgba(13,110,253,0.35);color:var(--ma-text,#1a1a2e);padding:0.4rem 0.75rem;border-radius:20px;font-size:0.9rem;font-weight:600;">📱 ${p.phone}${p.label ? ' <small style="opacity:0.75;font-weight:400;">('+p.label+')</small>' : ''}</span>`
       ).join('');
     }
   };
