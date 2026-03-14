@@ -30,6 +30,7 @@
           <button class="bar-tab" data-tab="timeline">📊 Χρονολόγιο</button>
           <button class="bar-tab" data-tab="driversmgmt">Οδηγοί</button>
           <button class="bar-tab" data-tab="hotelrevenue">Έσοδα Ξενοδοχείων</button>
+          <button class="bar-tab" data-tab="filters">🏷️ Φίλτρα</button>
 
           <!-- Price visibility toggle -->
           <label class="ma-price-toggle" title="Εμφάνιση τιμής στο WhatsApp μήνυμα">
@@ -367,14 +368,40 @@
                     <input id="maDestVenueType" class="input" type="text" maxlength="100" placeholder="π.χ. Εστιατόριο, Beach Bar">
                   </label>
                   <label>Vibe / Στυλ
-                    <input id="maDestVibe" class="input" type="text" maxlength="100" placeholder="π.χ. Ρομαντικό, Casual">
+                    <select id="maDestVibe" class="input">
+                      <option value="">-- Χωρίς --</option>
+                    </select>
                   </label>
                   <label>Περιοχή
-                    <input id="maDestArea" class="input" type="text" maxlength="100" placeholder="π.χ. Γλυφάδα, Κολωνάκι">
+                    <select id="maDestArea" class="input">
+                      <option value="">-- Χωρίς --</option>
+                    </select>
                   </label>
                   <label>Ενδεικτική Τιμή
-                    <input id="maDestIndicativePrice" class="input" type="text" maxlength="100" placeholder="π.χ. €€€">
+                    <select id="maDestIndicativePrice" class="input">
+                      <option value="">-- Χωρίς --</option>
+                    </select>
                   </label>
+                  <label>📞 Τηλέφωνο Μαγαζιού
+                    <input id="maDestPhone" class="input" type="tel" maxlength="30" placeholder="π.χ. +30 210 1234567">
+                  </label>
+
+                  <h4 style="grid-column:1/-1;margin:8px 0 0;font-size:14px;color:#888">📅 Εποχιακότητα</h4>
+                  <label class="ma-zone-toggle" style="grid-column:1/-1">
+                    <input id="maDestSeasonal" type="checkbox">
+                    Εποχιακό μαγαζί
+                  </label>
+                  <div id="maDestSeasonalWrap" style="grid-column:1/-1;display:none">
+                    <div class="ma-zone-grid" style="margin-top:6px">
+                      <label>Ημερομηνία Ανοίγματος
+                        <input id="maDestSeasonOpen" class="input" type="date">
+                      </label>
+                      <label>Ημερομηνία Κλεισίματος
+                        <input id="maDestSeasonClose" class="input" type="date">
+                      </label>
+                    </div>
+                    <small style="color:#6b7280;display:block;margin-top:4px">Ορίστε πότε ανοίγει και κλείνει εποχιακά.</small>
+                  </div>
                   <label>Κατάλληλο για
                     <input id="maDestSuitableFor" class="input" type="text" maxlength="200" placeholder="π.χ. Ζευγάρια, Οικογένειες">
                   </label>
@@ -1215,6 +1242,48 @@
         </section>
       </div>
 
+      <!-- ===== FILTERS TAB ===== -->
+      <div class="tab-content" data-tab="filters">
+        <section class="panel">
+          <div class="ma-section-header">
+            <div>
+              <h3 class="ma-subtitle">🏷️ Φίλτρα Προορισμών</h3>
+              <p class="ma-helper">Διαχειριστείτε τις λίστες που εμφανίζονται στα φίλτρα του πελάτη.</p>
+            </div>
+          </div>
+
+          <!-- ── Areas ── -->
+          <h4 class="ma-subtitle" style="margin-top:20px">📍 Περιοχές</h4>
+          <div class="ma-filter-add-row">
+            <input id="maFilterAreaInput" class="input" type="text" maxlength="80" placeholder="Νέα περιοχή (π.χ. Γλυφάδα)">
+            <button id="maFilterAreaAddBtn" class="btn secondary" type="button">➕ Προσθήκη</button>
+          </div>
+          <div id="maFilterAreasList" class="ma-filter-tags" aria-live="polite"></div>
+
+          <!-- ── Price Ranges ── -->
+          <h4 class="ma-subtitle" style="margin-top:24px">💰 Εύρος Τιμής</h4>
+          <div class="ma-filter-add-row ma-filter-price-row">
+            <input id="maFilterPriceLabel" class="input" type="text" maxlength="40" placeholder="Label (π.χ. € Οικονομικό)">
+            <input id="maFilterPriceMin" class="input" type="number" min="0" step="1" placeholder="Από (€)">
+            <input id="maFilterPriceMax" class="input" type="number" min="0" step="1" placeholder="Έως (€)">
+            <button id="maFilterPriceAddBtn" class="btn secondary" type="button">➕ Προσθήκη</button>
+          </div>
+          <div id="maFilterPricesList" class="ma-filter-tags" aria-live="polite"></div>
+
+          <!-- ── Vibe / Style ── -->
+          <h4 class="ma-subtitle" style="margin-top:24px">🎨 Τύπος / Ύφος</h4>
+          <div class="ma-filter-add-row">
+            <input id="maFilterVibeInput" class="input" type="text" maxlength="80" placeholder="Νέο ύφος (π.χ. Casual)">
+            <button id="maFilterVibeAddBtn" class="btn secondary" type="button">➕ Προσθήκη</button>
+          </div>
+          <div id="maFilterVibesList" class="ma-filter-tags" aria-live="polite"></div>
+
+          <div class="ma-actions" style="margin-top:24px">
+            <span id="maFilterStatus" class="ma-status" aria-live="polite"></span>
+          </div>
+        </section>
+      </div>
+
       <!-- Shared: Driver Detail Modal -->
       <div class="dr-overlay hidden" id="driver-modal">
         <div class="dr-modal">
@@ -1285,6 +1354,7 @@
     <script src="/admin/js/admin-moveathens-ui.js?v=774"></script>
     <script src="/admin/js/admin-ma-drivers.js?v=774"></script>
     <script src="/admin/js/admin-ma-hotel-revenue.js?v=774"></script>
+    <script src="/admin/js/admin-ma-filters.js?v=774"></script>
     <script src="/admin/js/admin-ma-timeline.js?v=774"></script>
     <script src="/js/admin-theme-toggle.js"></script>
     <script src="/pwa-install.js" defer></script>

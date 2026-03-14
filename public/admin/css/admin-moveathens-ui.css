@@ -1456,3 +1456,51 @@ html[data-theme='light'] .ma-matrix-scroll {
   .ma-matrix-cat-name { display: none; }
 }
 
+/* ── Filters Tab ── */
+.ma-filter-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.ma-filter-add-row .input {
+  flex: 1;
+  min-width: 120px;
+}
+.ma-filter-price-row .input {
+  flex: 0 0 auto;
+  width: 110px;
+  min-width: 80px;
+}
+.ma-filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.ma-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ga-accent, #4E6BFF);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.ma-filter-tag__remove {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+.ma-filter-tag__remove:hover {
+  color: #fff;
+}
+

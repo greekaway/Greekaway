@@ -132,6 +132,28 @@ module.exports = function registerGeneralRoutes(app, opts = {}) {
         };
       }
 
+      // Filter lists for destination filtering
+      if (Array.isArray(body.filterAreas)) {
+        updates.filterAreas = body.filterAreas.slice(0, 200).map(a => ({
+          id: normalizeString(String(a.id || '')).slice(0, 50) || `area_${Date.now()}`,
+          name: normalizeString(String(a.name || '')).slice(0, 80)
+        })).filter(a => a.name);
+      }
+      if (Array.isArray(body.filterPriceRanges)) {
+        updates.filterPriceRanges = body.filterPriceRanges.slice(0, 50).map(p => ({
+          id: normalizeString(String(p.id || '')).slice(0, 50) || `pr_${Date.now()}`,
+          label: normalizeString(String(p.label || '')).slice(0, 40),
+          min: Math.max(0, parseFloat(p.min) || 0),
+          max: p.max != null ? Math.max(0, parseFloat(p.max) || 0) : null
+        })).filter(p => p.label);
+      }
+      if (Array.isArray(body.filterVibes)) {
+        updates.filterVibes = body.filterVibes.slice(0, 200).map(v => ({
+          id: normalizeString(String(v.id || '')).slice(0, 50) || `vibe_${Date.now()}`,
+          name: normalizeString(String(v.name || '')).slice(0, 80)
+        })).filter(v => v.name);
+      }
+
       await dataLayer.updateConfig({ ...current, ...updates });
 
       return res.json({ ...current, ...updates });

@@ -356,7 +356,10 @@ module.exports = function registerMoveAthens(app, opts = {}) {
           operating_days: d.operating_days || '',
           opening_time: d.opening_time || '',
           closing_time: d.closing_time || '',
-          operating_schedule: d.operating_schedule || ''
+          operating_schedule: d.operating_schedule || '',
+          phone: d.phone || '',
+          seasonal_open: d.seasonal_open || '',
+          seasonal_close: d.seasonal_close || ''
         }))
       });
     } catch (err) {

@@ -39,6 +39,11 @@
     const fParticipatingArtists = $('#maDestParticipatingArtists');
     const fProgramInfo = $('#maDestProgramInfo');
     const fScheduleWrap = $('#maDestScheduleWrap');
+    const fPhone = $('#maDestPhone');
+    const fSeasonal = $('#maDestSeasonal');
+    const fSeasonalWrap = $('#maDestSeasonalWrap');
+    const fSeasonOpen = $('#maDestSeasonOpen');
+    const fSeasonClose = $('#maDestSeasonClose');
 
     // Helper: get operating_schedule from per-day rows as JSON string
     // Format: {"mon":{"open":"09:00","close":"23:00"},"tue":null,...}
@@ -116,10 +121,28 @@
       }
     });
 
+    // Toggle seasonality section visibility
+    fSeasonal?.addEventListener('change', () => {
+      if (fSeasonalWrap) fSeasonalWrap.style.display = fSeasonal.checked ? '' : 'none';
+    });
+
     const populateDropdowns = () => {
       const activeCats = (state.CONFIG.destinationCategories || []).filter(c => c.is_active !== false);
       if (fCategory) fCategory.innerHTML = '<option value="">-- Επιλογή Κατηγορίας --</option>' +
         activeCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      // Populate filter-based dropdowns
+      const areas = state.CONFIG.filterAreas || [];
+      if (fArea) fArea.innerHTML = '<option value="">-- Χωρίς --</option>' +
+        areas.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+      const vibes = state.CONFIG.filterVibes || [];
+      if (fVibe) fVibe.innerHTML = '<option value="">-- Χωρίς --</option>' +
+        vibes.map(v => `<option value="${v.name}">${v.name}</option>`).join('');
+      const prices = state.CONFIG.filterPriceRanges || [];
+      if (fIndicativePrice) fIndicativePrice.innerHTML = '<option value="">-- Χωρίς --</option>' +
+        prices.map(p => {
+          const maxLabel = p.max != null ? `${p.max}€` : '∞';
+          return `<option value="${p.label}">${p.label} (${p.min}€–${maxLabel})</option>`;
+        }).join('');
     };
 
     // Show/hide subcategory dropdown based on selected category
@@ -319,6 +342,11 @@
       if (fMainArtist) fMainArtist.value = '';
       if (fParticipatingArtists) fParticipatingArtists.value = '';
       if (fProgramInfo) fProgramInfo.value = '';
+      if (fPhone) fPhone.value = '';
+      if (fSeasonal) fSeasonal.checked = false;
+      if (fSeasonalWrap) fSeasonalWrap.style.display = 'none';
+      if (fSeasonOpen) fSeasonOpen.value = '';
+      if (fSeasonClose) fSeasonClose.value = '';
       setOperatingSchedule('', null, '', '');
       setStatus(status, '', '');
     };
@@ -355,6 +383,13 @@
       if (fMainArtist) fMainArtist.value = dest.main_artist || '';
       if (fParticipatingArtists) fParticipatingArtists.value = dest.participating_artists || '';
       if (fProgramInfo) fProgramInfo.value = dest.program_info || '';
+      if (fPhone) fPhone.value = dest.phone || '';
+      // Seasonality
+      const isSeasonal = !!(dest.seasonal_open || dest.seasonal_close);
+      if (fSeasonal) fSeasonal.checked = isSeasonal;
+      if (fSeasonalWrap) fSeasonalWrap.style.display = isSeasonal ? '' : 'none';
+      if (fSeasonOpen) fSeasonOpen.value = dest.seasonal_open || '';
+      if (fSeasonClose) fSeasonClose.value = dest.seasonal_close || '';
       setOperatingSchedule(dest.operating_schedule || '', dest.operating_days || '', dest.opening_time || '', dest.closing_time || '');
       if (form) form.hidden = false;
     };
@@ -446,6 +481,9 @@
           main_artist: fMainArtist?.value?.trim() || '',
           participating_artists: fParticipatingArtists?.value?.trim() || '',
           program_info: fProgramInfo?.value?.trim() || '',
+          phone: fPhone?.value?.trim() || '',
+          seasonal_open: (fSeasonal?.checked && fSeasonOpen?.value) ? fSeasonOpen.value : '',
+          seasonal_close: (fSeasonal?.checked && fSeasonClose?.value) ? fSeasonClose.value : '',
           operating_schedule: getOperatingSchedule(),
           operating_days: '',
           opening_time: '',

@@ -243,5 +243,8 @@
   "aboutUsWebsite": "https://www.moveathens.com",
   "categoryStyle": {
     "tileScale": 1
-  }
+  },
+  "filterAreas": [],
+  "filterPriceRanges": [],
+  "filterVibes": []
 }

@@ -508,6 +508,76 @@
   gap: 12px;
 }
 
+/* ── Destination Filter Bar ── */
+.ma-dest-filter-bar {
+  display: flex;
+  gap: 6px;
+  padding: 8px 0 4px;
+}
+.ma-dest-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border: 1.5px solid #c5cdd8;
+  border-radius: 12px;
+  background: #fff;
+  color: #5a6573;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+.ma-dest-filter-chip:hover {
+  background: #edf0f4;
+  border-color: #a8b3c2;
+}
+.ma-dest-filter-chip.active {
+  background: linear-gradient(135deg, #4E6BFF 0%, #3a54cc 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(78, 107, 255, 0.35);
+}
+.ma-dest-filter-chip.active:hover {
+  background: linear-gradient(135deg, #3a54cc 0%, #2e44a8 100%);
+}
+
+/* Filter dropdown panel */
+.ma-dest-filter-dropdown {
+  background: #fff;
+  border: 1.5px solid #c5cdd8;
+  border-radius: 14px;
+  padding: 6px;
+  margin-bottom: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  max-height: 220px;
+  overflow-y: auto;
+}
+.ma-dest-filter-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #374151;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ma-dest-filter-dropdown button:hover {
+  background: #f3f4f6;
+}
+.ma-dest-filter-dropdown button.selected {
+  background: rgba(78, 107, 255, 0.1);
+  color: #4E6BFF;
+  font-weight: 600;
+}
+
 /* ── Destination Card (unified) ── */
 .ma-destination-item {
   width: 100%;
@@ -693,6 +763,14 @@
 .ma-dest-schedule {
   display: block;
   line-height: 1.5;
+}
+.ma-dest-phone-link {
+  color: #4E6BFF;
+  text-decoration: none;
+  font-weight: 600;
+}
+.ma-dest-phone-link:hover {
+  text-decoration: underline;
 }
 
 /* Tariff Selection Grid */

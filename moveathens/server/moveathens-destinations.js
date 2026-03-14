@@ -63,7 +63,8 @@ module.exports = function registerDestinationRoutes(app, opts = {}) {
               'venue_type', 'vibe', 'area', 'indicative_price', 'suitable_for',
               'rating', 'michelin', 'details', 'main_artist', 'participating_artists',
               'program_info', 'operating_days', 'opening_time', 'closing_time',
-              'operating_schedule', 'description', 'lat', 'lng', 'route_type'
+              'operating_schedule', 'description', 'lat', 'lng', 'route_type',
+              'phone', 'seasonal_open', 'seasonal_close'
             ];
             for (const field of protectedFields) {
               const inVal = (dest[field] != null && dest[field] !== '') ? dest[field] : '';

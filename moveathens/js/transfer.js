@@ -264,6 +264,10 @@
     destinationsList.innerHTML = '<div class="ma-loading">Φόρτωση...</div>';
     showStep('destinations');
 
+    // Reset filters
+    activeFilters = { area: null, price: null, vibe: null };
+    resetFilterChips();
+
     let url = `/api/moveathens/destinations?category_id=${encodeURIComponent(selectedCategory.id)}`;
     if (selectedSubcategory) {
       url += `&subcategory_id=${encodeURIComponent(selectedSubcategory.id)}`;
@@ -271,10 +275,147 @@
     const data = await api(url);
     if (!data || !data.destinations || !data.destinations.length) {
       destinationsList.innerHTML = '<p class="ma-empty">Δεν υπάρχουν διαθέσιμοι προορισμοί.</p>';
+      hideFilterBar();
       return;
     }
 
-    destinationsList.innerHTML = data.destinations.map(dest => {
+    // Store for filtering
+    allLoadedDestinations = data.destinations;
+    setupFilterBar(data.destinations);
+    renderDestinationCards(data.destinations);
+  };
+
+  // ── Filter state & DOM ──
+  let activeFilters = { area: null, price: null, vibe: null };
+  let allLoadedDestinations = [];
+  const filterBar = $('#dest-filter-bar');
+  const filterDropdown = $('#dest-filter-dropdown');
+  const filterChips = {
+    area: $('#filter-area'),
+    price: $('#filter-price'),
+    vibe: $('#filter-vibe')
+  };
+  let openFilterType = null;
+
+  const hideFilterBar = () => { if (filterBar) filterBar.hidden = true; };
+
+  const resetFilterChips = () => {
+    Object.values(filterChips).forEach(c => {
+      if (!c) return;
+      c.classList.remove('active');
+    });
+    if (filterChips.area) filterChips.area.textContent = 'Περιοχή ▾';
+    if (filterChips.price) filterChips.price.textContent = 'Τιμή ▾';
+    if (filterChips.vibe) filterChips.vibe.textContent = 'Ύφος ▾';
+    if (filterDropdown) filterDropdown.hidden = true;
+    openFilterType = null;
+  };
+
+  const setupFilterBar = (destinations) => {
+    const areas = CONFIG?.filterAreas || [];
+    const prices = CONFIG?.filterPriceRanges || [];
+    const vibes = CONFIG?.filterVibes || [];
+
+    // Only show filter bar if there are filter options
+    const hasFilters = areas.length > 0 || prices.length > 0 || vibes.length > 0;
+    if (filterBar) filterBar.hidden = !hasFilters;
+    // Hide individual chips if their list is empty
+    if (filterChips.area) filterChips.area.hidden = areas.length === 0;
+    if (filterChips.price) filterChips.price.hidden = prices.length === 0;
+    if (filterChips.vibe) filterChips.vibe.hidden = vibes.length === 0;
+  };
+
+  const applyDestFilters = () => {
+    let filtered = allLoadedDestinations;
+    if (activeFilters.area) {
+      filtered = filtered.filter(d => d.area === activeFilters.area);
+    }
+    if (activeFilters.price) {
+      const pr = (CONFIG?.filterPriceRanges || []).find(p => p.label === activeFilters.price);
+      if (pr) {
+        filtered = filtered.filter(d => d.indicative_price === pr.label);
+      }
+    }
+    if (activeFilters.vibe) {
+      filtered = filtered.filter(d => d.vibe === activeFilters.vibe);
+    }
+    renderDestinationCards(filtered);
+  };
+
+  const showFilterDropdown = (type) => {
+    if (!filterDropdown) return;
+    let items = [];
+    if (type === 'area') items = (CONFIG?.filterAreas || []).map(a => a.name);
+    else if (type === 'price') items = (CONFIG?.filterPriceRanges || []).map(p => p.label);
+    else if (type === 'vibe') items = (CONFIG?.filterVibes || []).map(v => v.name);
+
+    if (!items.length) { filterDropdown.hidden = true; return; }
+
+    const current = activeFilters[type];
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    filterDropdown.innerHTML = items.map(item =>
+      `<button type="button" data-val="${esc(item)}" class="${item === current ? 'selected' : ''}">${esc(item)}</button>`
+    ).join('');
+    filterDropdown.hidden = false;
+    openFilterType = type;
+
+    // Click handler for options
+    filterDropdown.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.val;
+        const chip = filterChips[type];
+        if (activeFilters[type] === val) {
+          // Deselect
+          activeFilters[type] = null;
+          if (chip) { chip.classList.remove('active'); chip.textContent = defaultChipLabel(type); }
+        } else {
+          activeFilters[type] = val;
+          if (chip) { chip.classList.add('active'); chip.textContent = val + ' ✕'; }
+        }
+        filterDropdown.hidden = true;
+        openFilterType = null;
+        applyDestFilters();
+      });
+    });
+  };
+
+  const defaultChipLabel = (type) => {
+    if (type === 'area') return 'Περιοχή ▾';
+    if (type === 'price') return 'Τιμή ▾';
+    if (type === 'vibe') return 'Ύφος ▾';
+    return '';
+  };
+
+  // Wire chip clicks
+  Object.entries(filterChips).forEach(([type, chip]) => {
+    if (!chip) return;
+    chip.addEventListener('click', () => {
+      if (openFilterType === type) {
+        // Close if same type clicked again
+        if (filterDropdown) filterDropdown.hidden = true;
+        openFilterType = null;
+        return;
+      }
+      showFilterDropdown(type);
+    });
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!filterDropdown || filterDropdown.hidden) return;
+    if (!e.target.closest('.ma-dest-filter-bar') && !e.target.closest('.ma-dest-filter-dropdown')) {
+      filterDropdown.hidden = true;
+      openFilterType = null;
+    }
+  });
+
+  const renderDestinationCards = (destinations) => {
+    if (!destinations.length) {
+      destinationsList.innerHTML = '<p class="ma-empty">Δεν βρέθηκαν προορισμοί με αυτά τα φίλτρα.</p>';
+      return;
+    }
+
+    destinationsList.innerHTML = destinations.map(dest => {
       // Build expand/collapse details
       const extras = buildDestinationExtras(dest);
       return `
@@ -310,12 +451,26 @@
       // Clicking the destination name/desc → go to booking type
       selectBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const dest = data.destinations.find(d => d.id === card.dataset.id);
+        const dest = destinations.find(d => d.id === card.dataset.id);
         selectedDestination = {
           id: card.dataset.id,
           name: card.dataset.name,
           ...(dest || {})
         };
+        // Seasonality soft warning
+        const seasonWarning = checkSeasonality(dest);
+        if (seasonWarning) {
+          showScheduleWarning(seasonWarning, () => {
+            // Continue to schedule check
+            const scheduleWarning = checkDestinationSchedule(dest);
+            if (scheduleWarning) {
+              showScheduleWarning(scheduleWarning, () => showBookingTypeStep());
+              return;
+            }
+            showBookingTypeStep();
+          });
+          return;
+        }
         // Operating hours / days soft warning
         const scheduleWarning = checkDestinationSchedule(dest);
         if (scheduleWarning) {
@@ -392,6 +547,50 @@
       if (g.entry.open && g.entry.close) return `${dayRange}: ${g.entry.open}–${g.entry.close}`;
       return `${dayRange}: Ανοιχτά`;
     }).join(' | ');
+  };
+
+  // ── Seasonality check ──
+  const MONTH_NAMES_EL = ['Ιανουαρίου','Φεβρουαρίου','Μαρτίου','Απριλίου','Μαΐου','Ιουνίου','Ιουλίου','Αυγούστου','Σεπτεμβρίου','Οκτωβρίου','Νοεμβρίου','Δεκεμβρίου'];
+
+  const checkSeasonality = (dest) => {
+    if (!dest || !dest.seasonal_open || !dest.seasonal_close) return null;
+    const now = new Date();
+    const year = now.getFullYear();
+
+    // Parse seasonal dates — stored as MM-DD or YYYY-MM-DD
+    const parseSeasonDate = (val, yr) => {
+      if (!val) return null;
+      // Support YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return new Date(val + 'T00:00:00');
+      // Support MM-DD
+      if (/^\d{2}-\d{2}$/.test(val)) return new Date(`${yr}-${val}T00:00:00`);
+      return null;
+    };
+
+    let openDate = parseSeasonDate(dest.seasonal_open, year);
+    let closeDate = parseSeasonDate(dest.seasonal_close, year);
+    if (!openDate || !closeDate) return null;
+
+    // Normalize to current year for comparison
+    const todayStr = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const openStr = `${String(openDate.getMonth() + 1).padStart(2, '0')}-${String(openDate.getDate()).padStart(2, '0')}`;
+    const closeStr = `${String(closeDate.getMonth() + 1).padStart(2, '0')}-${String(closeDate.getDate()).padStart(2, '0')}`;
+
+    let isOpen;
+    if (openStr <= closeStr) {
+      // Normal range: opens March, closes October
+      isOpen = todayStr >= openStr && todayStr <= closeStr;
+    } else {
+      // Wraps around year: opens October, closes March (winter season)
+      isOpen = todayStr >= openStr || todayStr <= closeStr;
+    }
+
+    if (!isOpen) {
+      const openDay = openDate.getDate();
+      const openMonth = MONTH_NAMES_EL[openDate.getMonth()];
+      return `Το "${dest.name}" είναι κλειστό αυτή την περίοδο.\nΑνοίγει στις ${openDay} ${openMonth}.`;
+    }
+    return null;
   };
 
   const checkDestinationSchedule = (dest) => {
@@ -501,7 +700,7 @@
   const buildDestinationExtras = (dest) => {
     const rows = [];
     if (dest.area) rows.push(`<span class="ma-dest-extra"><strong>Περιοχή:</strong> ${dest.area}</span>`);
-    if (dest.vibe) rows.push(`<span class="ma-dest-extra"><strong>Vibe:</strong> ${dest.vibe}</span>`);
+    if (dest.vibe) rows.push(`<span class="ma-dest-extra"><strong>Ύφος:</strong> ${dest.vibe}</span>`);
     if (dest.venue_type) rows.push(`<span class="ma-dest-extra"><strong>Τύπος:</strong> ${dest.venue_type}</span>`);
     if (dest.indicative_price) {
       const rawPrice = String(dest.indicative_price).trim();
@@ -511,8 +710,21 @@
     if (dest.suitable_for) rows.push(`<span class="ma-dest-extra"><strong>Κατάλληλο για:</strong> ${dest.suitable_for}</span>`);
     if (dest.rating) rows.push(`<span class="ma-dest-extra"><strong>Βαθμολογία:</strong> ⭐ ${dest.rating}</span>`);
     if (dest.michelin) rows.push(`<span class="ma-dest-extra"><strong>Michelin:</strong> ${dest.michelin}</span>`);
+    if (dest.phone) {
+      const cleanPhone = String(dest.phone).replace(/[^0-9+]/g, '');
+      rows.push(`<span class="ma-dest-extra"><strong>📞 Τηλέφωνο:</strong> <a href="tel:${cleanPhone}" class="ma-dest-phone-link">${dest.phone}</a></span>`);
+    }
     if (dest.participating_artists) rows.push(`<span class="ma-dest-extra"><strong>Καλλιτέχνες:</strong> ${dest.participating_artists}</span>`);
     if (dest.program_info) rows.push(`<span class="ma-dest-extra"><strong>Πρόγραμμα:</strong> ${dest.program_info}</span>`);
+    // Seasonality display
+    if (dest.seasonal_open && dest.seasonal_close) {
+      const fmtSeason = (val) => {
+        const d = new Date(val.length === 5 ? `2026-${val}` : val);
+        if (isNaN(d.getTime())) return val;
+        return `${d.getDate()} ${MONTH_NAMES_EL[d.getMonth()]}`;
+      };
+      rows.push(`<span class="ma-dest-extra"><strong>📅 Περίοδος:</strong> ${fmtSeason(dest.seasonal_open)} — ${fmtSeason(dest.seasonal_close)}</span>`);
+    }
     // Per-day schedule display
     const schedule = parseSchedule(dest);
     if (schedule) {

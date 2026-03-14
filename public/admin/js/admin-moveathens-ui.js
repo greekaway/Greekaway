@@ -44,6 +44,7 @@
       const pricingTab      = safe('initPricingTab',      () => M.initPricingTab());
       const pricingMatrix   = safe('initPricingMatrixTab', () => M.initPricingMatrixTab());
       const infoPageTab     = safe('initInfoPageTab',     () => M.initInfoPageTab());
+      const filtersTab      = safe('initFiltersTab',      () => M.initFiltersTab());
 
       console.log('[admin-ma] Loading config from server…');
       await loadConfig();
@@ -61,6 +62,7 @@
       safe('pricingTab.render',        () => pricingTab?.render());
       safe('pricingMatrix.render',     () => pricingMatrix?.render());
       safe('infoPageTab.populate',     () => infoPageTab?.populate());
+      safe('filtersTab.render',          () => filtersTab?.render());
       console.log('[admin-ma] Init complete ✔');
 
       // Price toggle — auto-save on change
