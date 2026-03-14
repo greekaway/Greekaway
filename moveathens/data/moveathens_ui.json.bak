@@ -145,10 +145,31 @@
       "name": "Test Dest",
       "description": "test",
       "category_id": null,
+      "subcategory_id": null,
       "zone_id": null,
       "route_type": "airport",
+      "lat": null,
+      "lng": null,
       "display_order": 0,
       "is_active": true,
+      "venue_type": "",
+      "vibe": "",
+      "area": "",
+      "indicative_price": "",
+      "suitable_for": "",
+      "rating": "",
+      "michelin": "",
+      "details": "",
+      "main_artist": "",
+      "participating_artists": "",
+      "program_info": "",
+      "operating_days": "",
+      "opening_time": "",
+      "closing_time": "",
+      "operating_schedule": "",
+      "phone": "+30 210 9999999",
+      "seasonal_open": "2026-04-01",
+      "seasonal_close": "2026-10-31",
       "created_at": "2026-01-28T13:15:27.353Z"
     }
   ],
@@ -243,5 +264,8 @@
   "aboutUsWebsite": "https://www.moveathens.com",
   "categoryStyle": {
     "tileScale": 1
-  }
+  },
+  "filterAreas": [],
+  "filterPriceRanges": [],
+  "filterVibes": []
 }

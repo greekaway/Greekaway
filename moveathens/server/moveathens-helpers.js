@@ -403,6 +403,9 @@ const normalizeDestination = (entry) => {
     opening_time: normalizeString(entry.opening_time || ''),
     closing_time: normalizeString(entry.closing_time || ''),
     operating_schedule: normalizeString(entry.operating_schedule || ''),
+    phone: normalizeString(entry.phone || ''),
+    seasonal_open: normalizeString(entry.seasonal_open || ''),
+    seasonal_close: normalizeString(entry.seasonal_close || ''),
     _edited: entry._edited === true,
     created_at: createdAt
   };

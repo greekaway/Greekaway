@@ -720,7 +720,15 @@
     if (dest.venue_type) rows.push(`<span class="ma-dest-extra"><strong>Τύπος:</strong> ${dest.venue_type}</span>`);
     if (dest.indicative_price) {
       const rawPrice = String(dest.indicative_price).trim();
-      const priceDisplay = /^\d/.test(rawPrice) && !rawPrice.includes('€') ? rawPrice + ' €' : rawPrice;
+      // Look up the price range from CONFIG to show actual €-range instead of label
+      const priceRange = (CONFIG?.filterPriceRanges || []).find(p => p.label === rawPrice);
+      let priceDisplay;
+      if (priceRange) {
+        const maxLabel = priceRange.max != null ? priceRange.max + '€' : '∞';
+        priceDisplay = priceRange.min + '€ – ' + maxLabel;
+      } else {
+        priceDisplay = /^\d/.test(rawPrice) && !rawPrice.includes('€') ? rawPrice + ' €' : rawPrice;
+      }
       rows.push(`<span class="ma-dest-extra"><strong>Ενδεικτική τιμή:</strong> ${priceDisplay}</span>`);
     }
     if (dest.suitable_for) rows.push(`<span class="ma-dest-extra"><strong>Κατάλληλο για:</strong> ${dest.suitable_for}</span>`);
