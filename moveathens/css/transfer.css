@@ -512,18 +512,24 @@
 .ma-dest-filter-bar {
   display: flex;
   gap: 6px;
-  padding: 8px 0 4px;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.ma-dest-filter-bar::-webkit-scrollbar { display: none; }
 .ma-dest-filter-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border: 1.5px solid #c5cdd8;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #fff;
   color: #5a6573;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;

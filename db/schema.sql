@@ -91,6 +91,9 @@ CREATE TABLE IF NOT EXISTS ma_config (
     about_us_email VARCHAR(255) DEFAULT '',
     about_us_website VARCHAR(512) DEFAULT '',
     category_style JSONB DEFAULT NULL,
+    filter_areas JSONB DEFAULT '[]'::jsonb,
+    filter_price_ranges JSONB DEFAULT '[]'::jsonb,
+    filter_vibes JSONB DEFAULT '[]'::jsonb,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

@@ -358,7 +358,9 @@ const ma = {
       'about_us_activity', 'about_us_address', 'about_us_manager',
       'about_us_phone', 'about_us_email', 'about_us_website',
       // Category style (2026-03-07)
-      'category_style'
+      'category_style',
+      // Filter lists (2026-03-14)
+      'filter_areas', 'filter_price_ranges', 'filter_vibes'
     ];
     
     const updates = [];

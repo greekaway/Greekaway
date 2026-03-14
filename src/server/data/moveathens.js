@@ -214,7 +214,10 @@ async function getConfig() {
             aboutUsPhone: migrated.about_us_phone || '',
             aboutUsEmail: migrated.about_us_email || '',
             aboutUsWebsite: migrated.about_us_website || '',
-            categoryStyle: migrated.category_style || null
+            categoryStyle: migrated.category_style || null,
+            filterAreas: migrated.filter_areas || [],
+            filterPriceRanges: migrated.filter_price_ranges || [],
+            filterVibes: migrated.filter_vibes || []
           };
         }
       }
@@ -257,7 +260,10 @@ async function getConfig() {
         aboutUsPhone: row.about_us_phone || '',
         aboutUsEmail: row.about_us_email || '',
         aboutUsWebsite: row.about_us_website || '',
-        categoryStyle: row.category_style || null
+        categoryStyle: row.category_style || null,
+        filterAreas: row.filter_areas || [],
+        filterPriceRanges: row.filter_price_ranges || [],
+        filterVibes: row.filter_vibes || []
       };
     } catch (err) {
       console.error('[moveathens] DB config read failed:', err.message);
@@ -302,7 +308,10 @@ async function getConfig() {
     aboutUsPhone: full.aboutUsPhone || '',
     aboutUsEmail: full.aboutUsEmail || '',
     aboutUsWebsite: full.aboutUsWebsite || '',
-    categoryStyle: full.categoryStyle || null
+    categoryStyle: full.categoryStyle || null,
+    filterAreas: full.filterAreas || [],
+    filterPriceRanges: full.filterPriceRanges || [],
+    filterVibes: full.filterVibes || []
   };
 }
 
