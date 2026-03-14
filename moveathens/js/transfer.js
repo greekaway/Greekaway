@@ -295,9 +295,16 @@
     price: $('#filter-price'),
     vibe: $('#filter-vibe')
   };
+  const filterClearBtn = $('#filter-clear');
   let openFilterType = null;
 
   const hideFilterBar = () => { if (filterBar) filterBar.hidden = true; };
+
+  const updateClearBtn = () => {
+    if (!filterClearBtn) return;
+    const hasActive = !!(activeFilters.area || activeFilters.price || activeFilters.vibe);
+    filterClearBtn.hidden = !hasActive;
+  };
 
   const resetFilterChips = () => {
     Object.values(filterChips).forEach(c => {
@@ -309,7 +316,15 @@
     if (filterChips.vibe) filterChips.vibe.textContent = 'Ύφος ▾';
     if (filterDropdown) filterDropdown.hidden = true;
     openFilterType = null;
+    updateClearBtn();
   };
+
+  // Clear all filters button
+  filterClearBtn?.addEventListener('click', () => {
+    activeFilters = { area: null, price: null, vibe: null };
+    resetFilterChips();
+    applyDestFilters();
+  });
 
   const setupFilterBar = (destinations) => {
     const areas = CONFIG?.filterAreas || [];
@@ -370,10 +385,11 @@
           if (chip) { chip.classList.remove('active'); chip.textContent = defaultChipLabel(type); }
         } else {
           activeFilters[type] = val;
-          if (chip) { chip.classList.add('active'); chip.textContent = val + ' ✕'; }
+          if (chip) { chip.classList.add('active'); chip.textContent = val; }
         }
         filterDropdown.hidden = true;
         openFilterType = null;
+        updateClearBtn();
         applyDestFilters();
       });
     });

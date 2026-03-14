@@ -345,6 +345,15 @@
     color: #fff !important;
     border-color: transparent !important;
   }
+  .ma-transfer-page .ma-dest-filter-clear {
+    border-color: #ef6b6b !important;
+    background: rgba(239, 107, 107, 0.1) !important;
+    color: #ef6b6b !important;
+  }
+  .ma-transfer-page .ma-dest-filter-clear:hover {
+    background: #ef6b6b !important;
+    color: #fff !important;
+  }
   .ma-transfer-page .ma-dest-filter-dropdown {
     background: #1c2438 !important;
     border-color: rgba(255, 255, 255, 0.12) !important;

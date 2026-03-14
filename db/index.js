@@ -604,16 +604,18 @@ const ma = {
     const {
       id, name, description, category_id, subcategory_id, zone_id, route_type, lat, lng, display_order, is_active,
       venue_type, vibe, area, indicative_price, suitable_for, rating, michelin, details,
-      main_artist, participating_artists, program_info, operating_days, opening_time, closing_time, operating_schedule
+      main_artist, participating_artists, program_info, operating_days, opening_time, closing_time, operating_schedule,
+      phone, seasonal_open, seasonal_close
     } = data;
     const destId = id || `dest_${Date.now()}`;
     const sql = `
       INSERT INTO ma_destinations (
         id, name, description, category_id, subcategory_id, zone_id, route_type, lat, lng, display_order, is_active,
         venue_type, vibe, area, indicative_price, suitable_for, rating, michelin, details,
-        main_artist, participating_artists, program_info, operating_days, opening_time, closing_time, operating_schedule
+        main_artist, participating_artists, program_info, operating_days, opening_time, closing_time, operating_schedule,
+        phone, seasonal_open, seasonal_close
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,
@@ -640,6 +642,9 @@ const ma = {
         opening_time = EXCLUDED.opening_time,
         closing_time = EXCLUDED.closing_time,
         operating_schedule = EXCLUDED.operating_schedule,
+        phone = EXCLUDED.phone,
+        seasonal_open = EXCLUDED.seasonal_open,
+        seasonal_close = EXCLUDED.seasonal_close,
         updated_at = NOW()
       RETURNING *
     `;
@@ -649,7 +654,8 @@ const ma = {
       venue_type || '', vibe || '', area || '', indicative_price || '', suitable_for || '',
       rating || '', michelin || '', details || '',
       main_artist || '', participating_artists || '', program_info || '',
-      operating_days || '', opening_time || '', closing_time || '', operating_schedule || ''
+      operating_days || '', opening_time || '', closing_time || '', operating_schedule || '',
+      phone || '', seasonal_open || '', seasonal_close || ''
     ]);
     return rows[0];
   },

@@ -1027,6 +1027,9 @@ function mapDestinationRow(row) {
     opening_time: row.opening_time || '',
     closing_time: row.closing_time || '',
     operating_schedule: row.operating_schedule || '',
+    phone: row.phone || '',
+    seasonal_open: row.seasonal_open || '',
+    seasonal_close: row.seasonal_close || '',
     created_at: row.created_at
   };
 }
@@ -1114,7 +1117,10 @@ function buildDestinationPayload(data) {
     operating_days: data.operating_days || '',
     opening_time: data.opening_time || '',
     closing_time: data.closing_time || '',
-    operating_schedule: data.operating_schedule || ''
+    operating_schedule: data.operating_schedule || '',
+    phone: data.phone || '',
+    seasonal_open: data.seasonal_open || '',
+    seasonal_close: data.seasonal_close || ''
   };
 }
 

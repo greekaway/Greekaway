@@ -177,6 +177,9 @@ CREATE TABLE IF NOT EXISTS ma_destinations (
     lng DOUBLE PRECISION DEFAULT NULL,
     display_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
+    phone VARCHAR(50) DEFAULT '',
+    seasonal_open VARCHAR(10) DEFAULT '',
+    seasonal_close VARCHAR(10) DEFAULT '',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

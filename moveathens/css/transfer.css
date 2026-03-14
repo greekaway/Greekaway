@@ -550,6 +550,27 @@
 .ma-dest-filter-chip.active:hover {
   background: linear-gradient(135deg, #3a54cc 0%, #2e44a8 100%);
 }
+.ma-dest-filter-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid #e05252;
+  border-radius: 50%;
+  background: rgba(224, 82, 82, 0.08);
+  color: #e05252;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+.ma-dest-filter-clear:hover {
+  background: #e05252;
+  color: #fff;
+}
 
 /* Filter dropdown panel */
 .ma-dest-filter-dropdown {
