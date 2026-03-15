@@ -462,7 +462,7 @@
             <span class="ma-destination-name">${dest.main_artist ? dest.name + ' — ' + dest.main_artist : dest.name}</span>
             ${dest.description ? `<span class="ma-destination-desc">${dest.description}</span>` : ''}
           </button>
-          ${mediaObj ? `<a href="${mediaUrl}" class="ma-destination-media-btn" aria-label="Videos"><span class="ma-media-btn-icon">▶</span></a>` : ''}
+          ${mediaObj ? `<a href="${mediaUrl}" class="ma-destination-media-btn" aria-label="Videos"><span class="ma-media-btn-icon">▶</span><span class="ma-media-btn-label">Video</span></a>` : ''}
           ${extras ? '<button class="ma-destination-chevron" type="button" aria-label="Πληροφορίες"><span class="ma-chevron-icon">▼</span></button>' : ''}
           ${extras ? `<div class="ma-destination-extras">${extras}</div>` : ''}
         </div>

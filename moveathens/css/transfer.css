@@ -674,12 +674,13 @@
 .ma-destination-media-btn {
   grid-row: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   align-self: center;
   width: 44px;
   height: 44px;
-  margin: 0;
+  margin: 0 6px 0 0;
   background: rgba(59, 130, 246, 0.08);
   border: 1.5px solid rgba(59, 130, 246, 0.25);
   border-radius: 12px;
@@ -687,6 +688,7 @@
   transition: all 0.2s ease;
   flex-shrink: 0;
   text-decoration: none;
+  gap: 1px;
 }
 .ma-destination-media-btn:hover {
   background: rgba(59, 130, 246, 0.15);
@@ -696,9 +698,16 @@
   transform: scale(0.92);
 }
 .ma-media-btn-icon {
-  font-size: 16px;
+  font-size: 14px;
   color: #3b82f6;
   line-height: 1;
+}
+.ma-media-btn-label {
+  font-size: 8px;
+  font-weight: 600;
+  color: #3b82f6;
+  line-height: 1;
+  letter-spacing: 0.3px;
 }
 
 /* Chevron toggle button (isolated click target) */
