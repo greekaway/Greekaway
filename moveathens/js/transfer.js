@@ -338,18 +338,28 @@
     applyDestFilters();
   });
 
-  const setupFilterBar = (destinations) => {
-    const areas = CONFIG?.filterAreas || [];
-    const prices = CONFIG?.filterPriceRanges || [];
-    const vibes = CONFIG?.filterVibes || [];
+  // Derived filter options from current destinations (populated by setupFilterBar)
+  let availableFilterOptions = { areas: [], prices: [], vibes: [] };
 
-    // Only show filter bar if there are filter options
-    const hasFilters = areas.length > 0 || prices.length > 0 || vibes.length > 0;
+  const setupFilterBar = (destinations) => {
+    // Extract unique non-empty values from actual destinations
+    const uniqueAreas = [...new Set(destinations.map(d => d.area).filter(Boolean))];
+    const uniquePrices = [...new Set(destinations.map(d => d.indicative_price).filter(Boolean))];
+    const uniqueVibes = [...new Set(destinations.map(d => d.vibe).filter(Boolean))];
+
+    // Store for dropdown use
+    availableFilterOptions = { areas: uniqueAreas, prices: uniquePrices, vibes: uniqueVibes };
+
+    // Show filter only when ≥2 distinct values (otherwise no real choice)
+    const showArea = uniqueAreas.length >= 2;
+    const showPrice = uniquePrices.length >= 2;
+    const showVibe = uniqueVibes.length >= 2;
+    const hasFilters = showArea || showPrice || showVibe;
+
     if (filterBar) filterBar.hidden = !hasFilters;
-    // Hide individual chips if their list is empty
-    if (filterChips.area) filterChips.area.hidden = areas.length === 0;
-    if (filterChips.price) filterChips.price.hidden = prices.length === 0;
-    if (filterChips.vibe) filterChips.vibe.hidden = vibes.length === 0;
+    if (filterChips.area) filterChips.area.hidden = !showArea;
+    if (filterChips.price) filterChips.price.hidden = !showPrice;
+    if (filterChips.vibe) filterChips.vibe.hidden = !showVibe;
   };
 
   const applyDestFilters = () => {
@@ -358,10 +368,7 @@
       filtered = filtered.filter(d => d.area === activeFilters.area);
     }
     if (activeFilters.price) {
-      const pr = (CONFIG?.filterPriceRanges || []).find(p => p.label === activeFilters.price);
-      if (pr) {
-        filtered = filtered.filter(d => d.indicative_price === pr.label);
-      }
+      filtered = filtered.filter(d => d.indicative_price === activeFilters.price);
     }
     if (activeFilters.vibe) {
       filtered = filtered.filter(d => d.vibe === activeFilters.vibe);
@@ -372,9 +379,9 @@
   const showFilterDropdown = (type) => {
     if (!filterDropdown) return;
     let items = [];
-    if (type === 'area') items = (CONFIG?.filterAreas || []).map(a => a.name);
-    else if (type === 'price') items = (CONFIG?.filterPriceRanges || []).map(p => p.label);
-    else if (type === 'vibe') items = (CONFIG?.filterVibes || []).map(v => v.name);
+    if (type === 'area') items = availableFilterOptions.areas;
+    else if (type === 'price') items = availableFilterOptions.prices;
+    else if (type === 'vibe') items = availableFilterOptions.vibes;
 
     if (!items.length) { filterDropdown.hidden = true; return; }
 
@@ -1409,7 +1416,7 @@
     if (!feedbackEl) {
       feedbackEl = document.createElement('p');
       feedbackEl.id = 'flight-lookup-feedback';
-      feedbackEl.style.cssText = 'margin-top:4px;font-size:0.82rem;transition:opacity .2s';
+      feedbackEl.style.cssText = 'margin-top:4px;font-size:0.82rem;transition:opacity .2s;white-space:pre-line';
       feedbackEl.hidden = true;
       const errEl = document.getElementById('flight-number-error');
       if (errEl && errEl.parentNode) {
@@ -1472,7 +1479,7 @@
         if (f.origin) text += ` | Από: ${f.origin}`;
         if (f.eta) {
           const etaTime = new Date(f.eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-          text += ` | ETA: ${etaTime}`;
+          text += `\n🟢 Ώρα άφιξης (live): ${etaTime}`;
         }
         if (f.status === 'en_route') text += ' ✈️';
         else if (f.status === 'landed') text += ' (Προσγειώθηκε ✅)';
@@ -1631,13 +1638,11 @@
       if (lastFlightData) {
         if (lastFlightData.airline) flightLine += ` (${lastFlightData.airline})`;
         if (lastFlightData.origin) flightLine += `\n📍 Από: ${lastFlightData.origin}`;
-        // Only show ETA here if bookingTimeText didn't already include it
-        if (lastFlightData.eta && !bookingTimeText.includes('ETA')) {
+        if (lastFlightData.eta) {
           const etaT = new Date(lastFlightData.eta).toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
-          flightLine += `\n⏱️ ETA: ${etaT}`;
+          flightLine += `\n🟢 Ώρα άφιξης (live): ${etaT}`;
           if (lastFlightData.status === 'en_route') flightLine += ' ✈️ (σε πτήση)';
           else if (lastFlightData.status === 'landed') flightLine += ' ✅ (προσγειώθηκε)';
-          else if (lastFlightData.status === 'scheduled') flightLine += ' (προγρ/μένη)';
         }
       }
       travelDetails += flightLine + '\n';
