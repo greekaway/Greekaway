@@ -65,8 +65,8 @@
     return null;
   };
 
-  /** Lazy-load TikTok thumbnails via server oEmbed proxy */
-  const loadTikTokThumb = async (url, imgEl) => {
+  /** Lazy-load TikTok/Instagram thumbnails via server oEmbed proxy */
+  const loadOembedThumb = async (url, imgEl) => {
     try {
       const resp = await fetch(`/api/moveathens/oembed-thumb?url=${encodeURIComponent(url)}`);
       const data = await resp.json();
@@ -98,14 +98,14 @@
       </div>
     `;
 
-    // Lazy-load TikTok thumbnails
-    if (platform === 'tiktok') {
+    // Lazy-load TikTok & Instagram thumbnails via oEmbed proxy
+    if (platform === 'tiktok' || platform === 'instagram') {
       const img = document.createElement('img');
       img.className = 'ma-media-card-img';
       img.alt = title;
       img.style.display = 'none';
       a.querySelector('.ma-media-card-thumb').prepend(img);
-      loadTikTokThumb(item.url, img);
+      loadOembedThumb(item.url, img);
     }
 
     return a;

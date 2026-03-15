@@ -427,16 +427,14 @@
     color: #6b8aff !important;
   }
 
-  /* Media pill button (destination extras) */
-  .ma-transfer-page .ma-dest-media-pill {
-    background: #1c2438 !important;
-    border-color: rgba(255,255,255,0.12) !important;
-    color: #a0b0c4 !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+  /* Video button (destination card row) */
+  .ma-transfer-page .ma-destination-media-btn {
+    background: rgba(59, 130, 246, 0.15) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
   }
-  .ma-transfer-page .ma-dest-media-pill:hover {
-    background: #243050 !important;
-    border-color: rgba(255,255,255,0.2) !important;
+  .ma-transfer-page .ma-destination-media-btn:hover {
+    background: rgba(59, 130, 246, 0.25) !important;
+    border-color: rgba(59, 130, 246, 0.45) !important;
   }
 
   /* ── Media Gallery Page ── */

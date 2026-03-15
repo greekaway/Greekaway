@@ -453,13 +453,16 @@
     destinationsList.innerHTML = destinations.map(dest => {
       // Build expand/collapse details
       const extras = buildDestinationExtras(dest);
+      const mediaObj = parseMediaLinksForCard(dest.media_links);
+      const mediaUrl = mediaObj ? (window.MoveAthensConfig?.buildRoute || (p => p))(`/media?dest=${encodeURIComponent(dest.id)}`) : '';
       return `
       <div class="ma-destination-card" data-id="${dest.id}" data-name="${dest.name}">
-        <div class="ma-destination-item">
+        <div class="ma-destination-item${mediaObj ? ' ma-destination-item--has-media' : ''}">
           <button class="ma-destination-select" type="button">
             <span class="ma-destination-name">${dest.main_artist ? dest.name + ' — ' + dest.main_artist : dest.name}</span>
             ${dest.description ? `<span class="ma-destination-desc">${dest.description}</span>` : ''}
           </button>
+          ${mediaObj ? `<a href="${mediaUrl}" class="ma-destination-media-btn" aria-label="Videos"><span class="ma-media-btn-icon">▶</span></a>` : ''}
           ${extras ? '<button class="ma-destination-chevron" type="button" aria-label="Πληροφορίες"><span class="ma-chevron-icon">▼</span></button>' : ''}
           ${extras ? `<div class="ma-destination-extras">${extras}</div>` : ''}
         </div>
@@ -470,6 +473,14 @@
     destinationsList.querySelectorAll('.ma-destination-card').forEach(card => {
       const selectBtn = card.querySelector('.ma-destination-select');
       const chevronBtn = card.querySelector('.ma-destination-chevron');
+
+      // Clicking media button → go to media page (isolated)
+      const mediaBtn = card.querySelector('.ma-destination-media-btn');
+      if (mediaBtn) {
+        mediaBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      }
 
       // Clicking chevron toggles extras (completely isolated)
       if (chevronBtn) {
@@ -794,12 +805,6 @@
       rows.push(`<span class="ma-dest-extra"><strong>Ωράριο:</strong> ${hoursText}</span>`);
     }
     if (dest.details) rows.push(`<span class="ma-dest-extra ma-dest-extra--details">${dest.details}</span>`);
-    // Media pill button — only if destination has at least one media link
-    const mediaObj = parseMediaLinksForCard(dest.media_links);
-    if (mediaObj) {
-      const mediaUrl = (window.MoveAthensConfig?.buildRoute || (p => p))(`/media?dest=${encodeURIComponent(dest.id)}`);
-      rows.push(`<a href="${mediaUrl}" class="ma-dest-media-pill" target="_self">▶ Videos</a>`);
-    }
     return rows.length ? rows.join('') : '';
   };
 

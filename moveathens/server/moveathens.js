@@ -374,9 +374,16 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     const url = (req.query.url || '').trim();
     if (!url) return res.status(400).json({ error: 'url required' });
     try {
-      // Only TikTok oEmbed is public and free
       if (/tiktok\.com/i.test(url)) {
         const oeUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
+        const resp = await fetch(oeUrl, { signal: AbortSignal.timeout(5000) });
+        if (resp.ok) {
+          const data = await resp.json();
+          return res.json({ thumb: data.thumbnail_url || '', title: data.title || '' });
+        }
+      }
+      if (/instagram\.com/i.test(url)) {
+        const oeUrl = `https://api.instagram.com/oembed/?url=${encodeURIComponent(url)}`;
         const resp = await fetch(oeUrl, { signal: AbortSignal.timeout(5000) });
         if (resp.ok) {
           const data = await resp.json();
