@@ -369,6 +369,26 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     }
   });
 
+  // Public: oEmbed thumbnail proxy (TikTok)
+  app.get('/api/moveathens/oembed-thumb', async (req, res) => {
+    const url = (req.query.url || '').trim();
+    if (!url) return res.status(400).json({ error: 'url required' });
+    try {
+      // Only TikTok oEmbed is public and free
+      if (/tiktok\.com/i.test(url)) {
+        const oeUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
+        const resp = await fetch(oeUrl, { signal: AbortSignal.timeout(5000) });
+        if (resp.ok) {
+          const data = await resp.json();
+          return res.json({ thumb: data.thumbnail_url || '', title: data.title || '' });
+        }
+      }
+      return res.json({ thumb: '', title: '' });
+    } catch {
+      return res.json({ thumb: '', title: '' });
+    }
+  });
+
   // Public: Vehicles with prices for specific route
   app.get('/api/moveathens/vehicles', async (req, res) => {
     if (isDev) res.set('Cache-Control', 'no-store');
