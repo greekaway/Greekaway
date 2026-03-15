@@ -118,6 +118,7 @@
     const fSubDesc   = $('#maSubcategoryDescription');
     const fSubOrder  = $('#maSubcategoryOrder');
     const fSubActive = $('#maSubcategoryActive');
+    const fSubArrival = $('#maSubcategoryArrival');
 
     let selectedCatId = null;
 
@@ -329,7 +330,7 @@
             </div>
           </div>
           ${s.description ? `<p class="ma-zone-desc" style="font-size:12px">${s.description}</p>` : ''}
-          <div class="ma-zone-meta"><span>Σειρά: ${s.display_order}</span></div>
+          <div class="ma-zone-meta"><span>Σειρά: ${s.display_order}</span>${s.is_arrival ? ' <span style="color:#f59e0b">✈️ Άφιξη</span>' : ''}</div>
           <div class="ma-zone-actions">
             <button class="btn secondary btn-edit-sub" type="button" style="font-size:12px">Επεξεργασία</button>
             <button class="btn secondary btn-delete-sub" type="button" style="font-size:12px">Διαγραφή</button>
@@ -397,6 +398,7 @@
       if (fSubDesc) fSubDesc.value = '';
       if (fSubOrder) fSubOrder.value = '0';
       if (fSubActive) fSubActive.checked = true;
+      if (fSubArrival) fSubArrival.checked = false;
       setStatus(subStatus, '', '');
     };
 
@@ -409,6 +411,7 @@
       if (fSubDesc) fSubDesc.value = sub.description || '';
       if (fSubOrder) fSubOrder.value = sub.display_order || 0;
       if (fSubActive) fSubActive.checked = sub.is_active !== false;
+      if (fSubArrival) fSubArrival.checked = sub.is_arrival === true;
       if (subForm) subForm.hidden = false;
     };
 
@@ -496,7 +499,8 @@
         name,
         description: fSubDesc.value.trim(),
         display_order: parseInt(fSubOrder.value, 10) || 0,
-        is_active: fSubActive.checked
+        is_active: fSubActive.checked,
+        is_arrival: fSubArrival ? fSubArrival.checked : false
       };
 
       if (state.editingSubcategoryId) {
