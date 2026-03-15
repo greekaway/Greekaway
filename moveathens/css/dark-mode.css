@@ -427,6 +427,56 @@
     color: #6b8aff !important;
   }
 
+  /* Media pill button (destination extras) */
+  .ma-transfer-page .ma-dest-media-pill {
+    background: #1c2438 !important;
+    border-color: rgba(255,255,255,0.12) !important;
+    color: #a0b0c4 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+  }
+  .ma-transfer-page .ma-dest-media-pill:hover {
+    background: #243050 !important;
+    border-color: rgba(255,255,255,0.2) !important;
+  }
+
+  /* ── Media Gallery Page ── */
+  .ma-media-page {
+    background: var(--ma-bg, #0b0f1a) !important;
+    color: var(--ma-text, #f7f7fb) !important;
+  }
+  .ma-media-back {
+    background: #1c2438 !important;
+    border-color: rgba(255,255,255,0.12) !important;
+    color: #a0b0c4 !important;
+  }
+  .ma-media-back:hover {
+    background: #243050 !important;
+    border-color: rgba(255,255,255,0.2) !important;
+  }
+  .ma-media-dest-name {
+    color: #e8edf3 !important;
+  }
+  .ma-media-platform-title {
+    color: #e8edf3 !important;
+  }
+  .ma-media-card {
+    background: #1c2438 !important;
+    border-color: rgba(255,255,255,0.08) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+  }
+  .ma-media-card:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5) !important;
+  }
+  .ma-media-card-title {
+    color: #e8edf3 !important;
+  }
+  .ma-media-card-platform {
+    color: #8896a6 !important;
+  }
+  .ma-media-empty {
+    color: #8896a6 !important;
+  }
+
   /* Subcategories */
   .ma-transfer-page .ma-subcategory-item {
     background: linear-gradient(145deg, #132742 0%, #132742 100%) !important;

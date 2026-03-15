@@ -606,7 +606,7 @@ const ma = {
       id, name, description, category_id, subcategory_id, zone_id, route_type, lat, lng, display_order, is_active,
       venue_type, vibe, area, indicative_price, suitable_for, rating, michelin, details,
       main_artist, participating_artists, program_info, operating_days, opening_time, closing_time, operating_schedule,
-      phone, seasonal_open, seasonal_close
+      phone, seasonal_open, seasonal_close, media_links
     } = data;
     const destId = id || `dest_${Date.now()}`;
     const sql = `
@@ -614,9 +614,9 @@ const ma = {
         id, name, description, category_id, subcategory_id, zone_id, route_type, lat, lng, display_order, is_active,
         venue_type, vibe, area, indicative_price, suitable_for, rating, michelin, details,
         main_artist, participating_artists, program_info, operating_days, opening_time, closing_time, operating_schedule,
-        phone, seasonal_open, seasonal_close
+        phone, seasonal_open, seasonal_close, media_links
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         description = EXCLUDED.description,
@@ -646,6 +646,7 @@ const ma = {
         phone = EXCLUDED.phone,
         seasonal_open = EXCLUDED.seasonal_open,
         seasonal_close = EXCLUDED.seasonal_close,
+        media_links = EXCLUDED.media_links,
         updated_at = NOW()
       RETURNING *
     `;
@@ -656,7 +657,7 @@ const ma = {
       rating || '', michelin || '', details || '',
       main_artist || '', participating_artists || '', program_info || '',
       operating_days || '', opening_time || '', closing_time || '', operating_schedule || '',
-      phone || '', seasonal_open || '', seasonal_close || ''
+      phone || '', seasonal_open || '', seasonal_close || '', media_links || ''
     ]);
     return rows[0];
   },

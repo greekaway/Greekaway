@@ -1504,3 +1504,24 @@ html[data-theme='light'] .ma-matrix-scroll {
   color: #fff;
 }
 
+/* ── Media Links (per destination) ── */
+.ma-media-sections { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.ma-media-section { background: var(--ga-card, #1c2438); border: 1px solid var(--ga-border, rgba(255,255,255,0.08)); border-radius: 10px; padding: 10px 12px; }
+.ma-media-section-header { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--ga-text, #e0e6f0); margin-bottom: 6px; }
+.ma-media-add-btn.btn-xs { padding: 3px 10px; font-size: 11px; border-radius: 8px; }
+.ma-media-list { display: flex; flex-direction: column; gap: 4px; }
+.ma-media-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: rgba(255,255,255,0.04); border-radius: 8px; font-size: 12px; color: var(--ga-text, #c8d4e0); }
+.ma-media-item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ma-media-item-remove { background: none; border: none; color: #e05252; font-size: 14px; cursor: pointer; padding: 0 4px; line-height: 1; }
+.ma-media-item-remove:hover { color: #ff6b6b; }
+
+/* Media prompt overlay */
+.ma-media-prompt-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+.ma-media-prompt { background: var(--ga-card, #1c2438); border: 1px solid var(--ga-border, rgba(255,255,255,0.12)); border-radius: 14px; padding: 20px; width: 90%; max-width: 380px; display: flex; flex-direction: column; gap: 10px; color: var(--ga-text, #e0e6f0); }
+.ma-media-prompt--bulk { max-width: 480px; }
+.ma-media-prompt h4 { margin: 0; font-size: 15px; }
+.ma-media-prompt label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--ga-muted, #9ca3af); }
+.ma-media-prompt-actions { display: flex; gap: 8px; margin-top: 4px; }
+.ma-mp-bulk { font-family: monospace; font-size: 12px; resize: vertical; min-height: 100px; }
+.ma-mp-preview { font-size: 12px; color: var(--ga-accent, #46d3ff); padding: 6px 8px; background: rgba(70,211,255,0.08); border-radius: 8px; }
+

@@ -1034,6 +1034,7 @@ function mapDestinationRow(row) {
     phone: row.phone || '',
     seasonal_open: row.seasonal_open || '',
     seasonal_close: row.seasonal_close || '',
+    media_links: row.media_links || '',
     created_at: row.created_at
   };
 }
@@ -1124,7 +1125,8 @@ function buildDestinationPayload(data) {
     operating_schedule: data.operating_schedule || '',
     phone: data.phone || '',
     seasonal_open: data.seasonal_open || '',
-    seasonal_close: data.seasonal_close || ''
+    seasonal_close: data.seasonal_close || '',
+    media_links: data.media_links || ''
   };
 }
 

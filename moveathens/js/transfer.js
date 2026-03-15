@@ -731,6 +731,16 @@
     btnCancel.addEventListener('click', handleCancel);
   };
 
+  /** Parse media_links JSON → object with at least one link, or null */
+  const parseMediaLinksForCard = (raw) => {
+    if (!raw) return null;
+    try {
+      const obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      const hasAny = ['instagram', 'tiktok', 'youtube'].some(p => Array.isArray(obj[p]) && obj[p].length > 0);
+      return hasAny ? obj : null;
+    } catch { return null; }
+  };
+
   // Build extra details HTML for a destination card
   const buildDestinationExtras = (dest) => {
     const rows = [];
@@ -784,6 +794,12 @@
       rows.push(`<span class="ma-dest-extra"><strong>Ωράριο:</strong> ${hoursText}</span>`);
     }
     if (dest.details) rows.push(`<span class="ma-dest-extra ma-dest-extra--details">${dest.details}</span>`);
+    // Media pill button — only if destination has at least one media link
+    const mediaObj = parseMediaLinksForCard(dest.media_links);
+    if (mediaObj) {
+      const mediaUrl = (window.MoveAthensConfig?.buildRoute || (p => p))(`/media?dest=${encodeURIComponent(dest.id)}`);
+      rows.push(`<a href="${mediaUrl}" class="ma-dest-media-pill" target="_self">▶ Videos</a>`);
+    }
     return rows.length ? rows.join('') : '';
   };
 

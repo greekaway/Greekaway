@@ -180,6 +180,7 @@ CREATE TABLE IF NOT EXISTS ma_destinations (
     phone VARCHAR(50) DEFAULT '',
     seasonal_open VARCHAR(10) DEFAULT '',
     seasonal_close VARCHAR(10) DEFAULT '',
+    media_links TEXT DEFAULT '',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

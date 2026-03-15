@@ -45,6 +45,9 @@
     const fSeasonOpen = $('#maDestSeasonOpen');
     const fSeasonClose = $('#maDestSeasonClose');
 
+    // Media links UI (from admin-ma-media.js)
+    const mediaUI = window.MaAdmin.mediaLinks ? window.MaAdmin.mediaLinks.initMediaLinksUI() : null;
+
     // Helper: get operating_schedule from per-day rows as JSON string
     // Format: {"mon":{"open":"09:00","close":"23:00"},"tue":null,...}
     const getOperatingSchedule = () => {
@@ -348,6 +351,7 @@
       if (fSeasonOpen) fSeasonOpen.value = '';
       if (fSeasonClose) fSeasonClose.value = '';
       setOperatingSchedule('', null, '', '');
+      if (mediaUI) mediaUI.reset();
       setStatus(status, '', '');
     };
 
@@ -391,6 +395,7 @@
       if (fSeasonOpen) fSeasonOpen.value = dest.seasonal_open || '';
       if (fSeasonClose) fSeasonClose.value = dest.seasonal_close || '';
       setOperatingSchedule(dest.operating_schedule || '', dest.operating_days || '', dest.opening_time || '', dest.closing_time || '');
+      if (mediaUI) mediaUI.set(dest.media_links || '');
       if (form) form.hidden = false;
     };
 
@@ -487,7 +492,8 @@
           operating_schedule: getOperatingSchedule(),
           operating_days: '',
           opening_time: '',
-          closing_time: ''
+          closing_time: '',
+          media_links: mediaUI ? mediaUI.get() : ''
         };
 
         if (state.editingDestinationId) {

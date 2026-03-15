@@ -408,6 +408,7 @@ const normalizeDestination = (entry) => {
     phone: normalizeString(entry.phone || ''),
     seasonal_open: normalizeString(entry.seasonal_open || ''),
     seasonal_close: normalizeString(entry.seasonal_close || ''),
+    media_links: normalizeString(entry.media_links || ''),
     _edited: entry._edited === true,
     created_at: createdAt
   };

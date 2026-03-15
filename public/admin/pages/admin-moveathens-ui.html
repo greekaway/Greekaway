@@ -431,6 +431,26 @@
                     <textarea id="maDestProgramInfo" class="input" rows="2" maxlength="500"></textarea>
                   </label>
 
+                  <h4 style="grid-column:1/-1;margin:8px 0 0;font-size:14px;color:#888">🎬 Media Links</h4>
+                  <div id="maDestMediaWrap" style="grid-column:1/-1">
+                    <small style="color:#6b7280;display:block;margin-bottom:6px">Προσθέστε links από Instagram, TikTok, YouTube. Κενή πλατφόρμα = δεν εμφανίζεται.</small>
+                    <button type="button" class="btn btn-xs ma-media-bulk-btn" style="margin-bottom:8px">📋 Μαζική Προσθήκη (paste πολλά links)</button>
+                    <div class="ma-media-sections">
+                      <div class="ma-media-section" data-platform="instagram">
+                        <div class="ma-media-section-header"><span>📸 Instagram</span> <button type="button" class="btn btn-xs ma-media-add-btn">+ Add</button></div>
+                        <div class="ma-media-list"></div>
+                      </div>
+                      <div class="ma-media-section" data-platform="tiktok">
+                        <div class="ma-media-section-header"><span>🎵 TikTok</span> <button type="button" class="btn btn-xs ma-media-add-btn">+ Add</button></div>
+                        <div class="ma-media-list"></div>
+                      </div>
+                      <div class="ma-media-section" data-platform="youtube">
+                        <div class="ma-media-section-header"><span>▶️ YouTube</span> <button type="button" class="btn btn-xs ma-media-add-btn">+ Add</button></div>
+                        <div class="ma-media-list"></div>
+                      </div>
+                    </div>
+                  </div>
+
                   <h4 style="grid-column:1/-1;margin:8px 0 0;font-size:14px;color:#888">🕐 Ωράριο Λειτουργίας</h4>
                   <div id="maDestScheduleWrap" style="grid-column:1/-1">
                     <small style="color:#6b7280;display:block;margin-bottom:6px">Ρυθμίστε ωράριο ανά ημέρα. Αν μια μέρα δεν είναι ενεργή, θεωρείται κλειστή.</small>
@@ -1351,6 +1371,7 @@
     <script src="/admin/js/admin-ma-general.js?v=774"></script>
     <script src="/admin/js/admin-ma-categories.js?v=774"></script>
     <script src="/admin/js/admin-ma-destinations.js?v=774"></script>
+    <script src="/admin/js/admin-ma-media.js?v=774"></script>
     <script src="/admin/js/admin-ma-vehicles.js?v=774"></script>
     <script src="/admin/js/admin-ma-hotels.js?v=774"></script>
     <script src="/admin/js/admin-ma-pricing.js?v=774"></script>

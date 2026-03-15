@@ -802,6 +802,31 @@
   text-decoration: underline;
 }
 
+/* Media pill button (inside destination extras) */
+.ma-dest-media-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1.5px solid #c5cdd8;
+  border-radius: 10px;
+  background: #fff;
+  color: #5a6573;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ma-dest-media-pill:hover {
+  background: #edf0f4;
+  border-color: #a8b3c2;
+}
+
 /* Tariff Selection Grid */
 .ma-tariff-grid {
   display: grid;
