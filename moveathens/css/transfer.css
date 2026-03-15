@@ -519,6 +519,7 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
+.ma-dest-filter-bar[hidden] { display: none; }
 .ma-dest-filter-bar::-webkit-scrollbar { display: none; }
 .ma-dest-filter-chip {
   display: inline-flex;
@@ -537,6 +538,7 @@
   white-space: nowrap;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
+.ma-dest-filter-chip[hidden] { display: none; }
 .ma-dest-filter-chip:hover {
   background: #edf0f4;
   border-color: #a8b3c2;
