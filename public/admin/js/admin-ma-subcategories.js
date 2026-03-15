@@ -18,6 +18,7 @@
     const fDesc = $('#maSubcategoryDescription');
     const fOrder = $('#maSubcategoryOrder');
     const fActive = $('#maSubcategoryActive');
+    const fArrival = $('#maSubcategoryArrival');
     const filterCat = $('#maSubcategoryFilterCat');
 
     const getCategoryName = (id) => (state.CONFIG.destinationCategories || []).find(c => c.id === id)?.name || '—';
@@ -56,6 +57,7 @@
           <div class="ma-zone-meta">
             <span>Κατηγορία: ${getCategoryName(s.category_id)}</span>
             <span>Σειρά: ${s.display_order}</span>
+            ${s.is_arrival ? '<span style="color:#f59e0b">✈️ Άφιξη</span>' : ''}
           </div>
           ${s.description ? `<p class="ma-zone-desc">${s.description}</p>` : ''}
           <div class="ma-zone-actions">
@@ -92,6 +94,7 @@
       fDesc.value = '';
       fOrder.value = '0';
       fActive.checked = true;
+      if (fArrival) fArrival.checked = false;
       setStatus(status, '', '');
     };
 
@@ -105,6 +108,7 @@
       fDesc.value = sub.description || '';
       fOrder.value = sub.display_order || 0;
       fActive.checked = sub.is_active !== false;
+      if (fArrival) fArrival.checked = sub.is_arrival === true;
       form.hidden = false;
     };
 
@@ -153,6 +157,7 @@
         description: fDesc.value.trim(),
         display_order: parseInt(fOrder.value, 10) || 0,
         is_active: fActive.checked,
+        is_arrival: fArrival ? fArrival.checked : false,
         created_at: new Date().toISOString()
       };
 

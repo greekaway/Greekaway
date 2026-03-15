@@ -310,7 +310,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       return res.json({
         subcategories: subs.map(s => ({
           id: s.id, category_id: s.category_id, name: s.name,
-          description: s.description || '', display_order: s.display_order
+          description: s.description || '', display_order: s.display_order,
+          is_arrival: s.is_arrival ?? false
         }))
       });
     } catch (err) {

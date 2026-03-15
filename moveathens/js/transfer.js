@@ -13,6 +13,14 @@
   let hotelContext = null;  // { origin_zone_id, ... }
   let selectedCategory = null;
   let selectedSubcategory = null; // null = no subcategory navigation
+
+  // Helper: determine if current flow is arrival (subcategory overrides category)
+  const isArrivalFlow = () => {
+    if (selectedSubcategory && typeof selectedSubcategory.is_arrival === 'boolean') {
+      return selectedSubcategory.is_arrival;
+    }
+    return selectedCategory && selectedCategory.is_arrival;
+  };
   let selectedDestination = null;
   let selectedTariff = null; // 'day' or 'night' — auto-calculated, never user-chosen
   let selectedVehicle = null;
@@ -241,7 +249,7 @@
   // Render subcategory cards
   const renderSubcategories = (subcategories) => {
     subcategoriesList.innerHTML = subcategories.map(sub => `
-      <button class="ma-subcategory-item" data-id="${sub.id}" data-name="${sub.name}">
+      <button class="ma-subcategory-item" data-id="${sub.id}" data-name="${sub.name}" data-arrival="${sub.is_arrival ? '1' : '0'}">
         <span class="ma-subcategory-name">${sub.name}</span>
         ${sub.description ? `<span class="ma-subcategory-desc">${sub.description}</span>` : ''}
         <span class="ma-subcategory-arrow">→</span>
@@ -250,7 +258,11 @@
 
     subcategoriesList.querySelectorAll('.ma-subcategory-item').forEach(item => {
       item.addEventListener('click', () => {
-        selectedSubcategory = { id: item.dataset.id, name: item.dataset.name };
+        selectedSubcategory = {
+          id: item.dataset.id,
+          name: item.dataset.name,
+          is_arrival: item.dataset.arrival === '1'
+        };
         loadDestinations();
       });
     });
@@ -1192,7 +1204,7 @@
     }
 
     // Flight number field — show only for arrivals
-    const isArrivalCategory = selectedCategory && selectedCategory.is_arrival;
+    const isArrivalCategory = isArrivalFlow();
     const flightRow = $('#flight-number-row');
     const flightInput = $('#flight-number');
     const flightError = $('#flight-number-error');
@@ -1431,7 +1443,7 @@
     });
 
     newInput.addEventListener('blur', () => {
-      const isArrival = selectedCategory && selectedCategory.is_arrival;
+      const isArrival = isArrivalFlow();
       if (isArrival && !flightNumber) {
         newInput.classList.add('ma-input-error-state');
         if (errorEl) errorEl.hidden = false;
@@ -1484,7 +1496,7 @@
   // Validate passenger name before allowing CTA actions
   const validatePassengerName = () => {
     const isNonTaxi = selectedVehicle && !selectedVehicle.allow_instant;
-    const isArrival = selectedCategory && selectedCategory.is_arrival;
+    const isArrival = isArrivalFlow();
     // Required for non-taxi vehicles OR for arrivals
     if (!isNonTaxi && !isArrival) return true;
     
@@ -1504,7 +1516,7 @@
 
   // Validate flight number (required for arrivals)
   const validateFlightNumber = () => {
-    const isArrival = selectedCategory && selectedCategory.is_arrival;
+    const isArrival = isArrivalFlow();
     if (!isArrival) return true;
 
     const input = $('#flight-number');
@@ -1636,7 +1648,7 @@
 
     // Build message content — ordered: destination, time, vehicle, hotel, passenger details, price
     const parts = [];
-    const isArrival = selectedCategory && selectedCategory.is_arrival;
+    const isArrival = isArrivalFlow();
 
     // Build Google Maps pickup link
     let pickupMapsUrl = '';
@@ -1729,7 +1741,7 @@
         price:             selectedVehicle.price || 0,
         payment_method:    selectedPaymentMethod || 'cash',
         orderer_phone:     hotelContext.orderer_phone || hotelContext.phone || '',
-        is_arrival:        selectedCategory?.is_arrival || false
+        is_arrival:        isArrivalFlow()
       };
       await fetch('/api/moveathens/transfer-request', {
         method: 'POST',

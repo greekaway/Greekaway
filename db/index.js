@@ -549,21 +549,22 @@ const ma = {
   },
 
   async upsertDestinationSubcategory(data) {
-    const { id, category_id, name, description, display_order, is_active } = data;
+    const { id, category_id, name, description, display_order, is_active, is_arrival } = data;
     const subId = id || `dsc_${Date.now()}`;
     const sql = `
-      INSERT INTO ma_destination_subcategories (id, category_id, name, description, display_order, is_active)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO ma_destination_subcategories (id, category_id, name, description, display_order, is_active, is_arrival)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       ON CONFLICT (id) DO UPDATE SET
         category_id = EXCLUDED.category_id,
         name = EXCLUDED.name,
         description = EXCLUDED.description,
         display_order = EXCLUDED.display_order,
         is_active = EXCLUDED.is_active,
+        is_arrival = EXCLUDED.is_arrival,
         updated_at = NOW()
       RETURNING *
     `;
-    const rows = await query(sql, [subId, category_id || null, name, description || '', display_order || 0, is_active ?? true]);
+    const rows = await query(sql, [subId, category_id || null, name, description || '', display_order || 0, is_active ?? true, is_arrival ?? false]);
     return rows[0];
   },
 

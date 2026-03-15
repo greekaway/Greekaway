@@ -331,6 +331,7 @@ const normalizeDestinationSubcategory = (entry) => {
   const description = normalizeString(entry.description || '');
   const displayOrder = toInt(entry.display_order, 0);
   const isActive = typeof entry.is_active === 'boolean' ? entry.is_active : true;
+  const isArrival = typeof entry.is_arrival === 'boolean' ? entry.is_arrival : false;
   const createdAt = normalizeString(entry.created_at) || new Date().toISOString();
   return {
     id,
@@ -339,6 +340,7 @@ const normalizeDestinationSubcategory = (entry) => {
     description,
     display_order: displayOrder,
     is_active: isActive,
+    is_arrival: isArrival,
     created_at: createdAt
   };
 };

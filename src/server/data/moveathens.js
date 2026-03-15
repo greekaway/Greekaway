@@ -875,6 +875,7 @@ function mapSubcategoryRow(row) {
     description: row.description || '',
     display_order: row.display_order,
     is_active: row.is_active,
+    is_arrival: row.is_arrival ?? false,
     created_at: row.created_at
   };
 }
@@ -901,7 +902,8 @@ async function getDestinationSubcategories(filters = {}) {
               name: s.name,
               description: s.description || '',
               display_order: s.display_order || 0,
-              is_active: s.is_active !== false
+              is_active: s.is_active !== false,
+              is_arrival: s.is_arrival === true
             });
           } catch (e) {
             console.error('[moveathens] Failed to migrate subcategory:', s.id, e.message);
@@ -936,7 +938,8 @@ async function upsertDestinationSubcategory(data) {
         name: data.name,
         description: data.description || '',
         display_order: data.display_order || 0,
-        is_active: data.is_active !== false
+        is_active: data.is_active !== false,
+        is_arrival: data.is_arrival === true
       });
       console.log('[moveathens] Subcategory saved to DB:', row.id);
       return mapSubcategoryRow(row);
@@ -956,6 +959,7 @@ async function upsertDestinationSubcategory(data) {
     description: data.description || '',
     display_order: data.display_order || 0,
     is_active: data.is_active !== false,
+    is_arrival: data.is_arrival === true,
     created_at: idx >= 0 ? subs[idx].created_at : new Date().toISOString()
   };
 
