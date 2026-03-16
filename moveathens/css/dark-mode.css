@@ -30,7 +30,8 @@
   .ma-page .ma-page-logo,
   .ma-transfer-page .ma-logo-img,
   .ma-ai-page .ma-page-logo,
-  .ma-info-page .ma-page-logo {
+  .ma-info-page .ma-page-logo,
+  .ma-hero-page .ma-hero__logo {
     filter: brightness(0) invert(1) !important;
   }
 
