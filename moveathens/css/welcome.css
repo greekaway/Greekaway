@@ -184,13 +184,15 @@
 }
 
 .ma-hero__subtext {
-  font-size: 15px;
+  font-size: 13.5px;
   margin: 0;
   color: rgba(255, 255, 255, 0.95);
   text-shadow: 0 0 22px rgba(255,255,255,0.8), 0 0 40px rgba(255,255,255,0.55), 0 2px 6px rgba(0,0,0,0.85);
   font-weight: 600;
-  word-break: break-word;
-  overflow-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* ========================================
@@ -443,7 +445,7 @@
 @media (max-width: 359px) {
   .ma-hero__logo { width: 135px; }
   .ma-hero__headline { font-size: 17px; }
-  .ma-hero__subtext { font-size: 12px; }
+  .ma-hero__subtext { font-size: 10.5px; white-space: nowrap; }
   .ma-hero__overlay { padding: 12px; }
   .ma-metrics__value,
   .ma-status__value,
@@ -457,7 +459,7 @@
 @media (min-width: 360px) and (max-width: 480px) {
   .ma-hero__logo { width: 170px; }
   .ma-hero__headline { font-size: 20px; }
-  .ma-hero__subtext { font-size: 13px; }
+  .ma-hero__subtext { font-size: 12px; }
 }
 
 /* ── Responsive: Landscape & Small Tablets (481-768) ── */
@@ -465,7 +467,7 @@
   .ma-hero__overlay { padding: 16px 20px; }
   .ma-hero__logo { width: 205px; }
   .ma-hero__headline { font-size: 24px; }
-  .ma-hero__subtext { font-size: 15px; }
+  .ma-hero__subtext { font-size: 16px; }
   .ma-metrics__value,
   .ma-status__value,
   .ma-mystats__value { font-size: 22px; }

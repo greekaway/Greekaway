@@ -36,7 +36,14 @@
   margin: 0;
   text-align: center;
   color: #1a1a2e;
-  padding: 0 max(60px, 15vw);
+  padding: 0 max(50px, 12vw);
+}
+
+@media (max-width: 359px) {
+  .ma-page-title {
+    padding: 0 32px;
+    font-size: 15px;
+  }
 }
 
 .ma-main {
