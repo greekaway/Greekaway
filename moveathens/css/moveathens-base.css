@@ -349,3 +349,21 @@ img { max-width: 100%; height: auto; }
   color: rgba(255,255,255,0.4);
   text-align: center;
 }
+
+/* ── Phone chips (profile page) ── */
+.ma-phone-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(13, 110, 253, 0.15);
+  border: 1px solid rgba(13, 110, 253, 0.35);
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a2b42;
+}
+.ma-phone-chip-label {
+  opacity: 0.75;
+  font-weight: 400;
+}

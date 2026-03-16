@@ -899,4 +899,11 @@
   .ma-version-badge { color: #6b7a8d !important; }
   .ma-version-badge__value { color: #8896a6 !important; }
   .ma-version-badge__build { color: #4a5568 !important; }
+
+  /* Phone chips — white text on dark backgrounds */
+  .ma-phone-chip {
+    color: #e8edf3 !important;
+    background: rgba(70, 130, 255, 0.2) !important;
+    border-color: rgba(70, 130, 255, 0.35) !important;
+  }
 }

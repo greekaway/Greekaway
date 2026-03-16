@@ -5,7 +5,7 @@
 (() => {
   'use strict';
 
-  const PLATFORMS = ['instagram', 'tiktok', 'youtube'];
+  const PLATFORMS = ['tiktok', 'youtube', 'instagram'];
   const PLATFORM_LABELS = { instagram: 'Instagram', tiktok: 'TikTok', youtube: 'YouTube' };
   const PLATFORM_ICONS = { instagram: '📸', tiktok: '🎵', youtube: '▶️' };
 
