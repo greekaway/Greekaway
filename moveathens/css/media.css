@@ -2,8 +2,8 @@
 
 .ma-media-page {
   min-height: 100dvh;
-  background: var(--ma-bg, #f5f7fa);
-  color: var(--ma-text, #1f2937);
+  background: #f5f7fa;
+  color: #1f2937;
   padding: 0 0 120px;
 }
 
