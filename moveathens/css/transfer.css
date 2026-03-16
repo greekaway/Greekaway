@@ -613,9 +613,6 @@
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-rows: auto auto;
-}
-.ma-destination-item--has-media {
-  grid-template-columns: 1fr auto auto;
   background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
   border: none;
   border-radius: 14px;
@@ -626,6 +623,9 @@
     0 1px 3px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   overflow: hidden;
+}
+.ma-destination-item--has-media {
+  grid-template-columns: 1fr auto auto;
 }
 
 .ma-destination-item:hover {
