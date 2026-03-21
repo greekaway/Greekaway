@@ -73,17 +73,24 @@ module.exports = function registerHotelRevenueRoutes(app, opts = {}) {
       const allReqs = await requestsData.getRequests({});
       const destMap = await getDestRouteTypeMap();
 
-      // Only count accepted / completed requests (actual revenue)
+      // Revenue requests: accepted / completed
       let relevant = allReqs.filter(r => r.status === 'accepted' || r.status === 'completed');
+      // Nodriver requests (soft-deleted)
+      let nodriverReqs = allReqs.filter(r => r.status === 'nodriver');
 
       // Optional date range
       const from = req.query.from ? new Date(req.query.from + 'T00:00:00') : null;
       const to   = req.query.to   ? new Date(req.query.to   + 'T23:59:59') : null;
-      if (from || to) relevant = filterByDateRange(relevant, from, to);
+      if (from || to) {
+        relevant = filterByDateRange(relevant, from, to);
+        nodriverReqs = filterByDateRange(nodriverReqs, from, to);
+      }
 
       // Aggregate by hotel name
       const hotelMap = {};
-      relevant.forEach(r => {
+
+      // Helper to ensure hotel entry exists
+      function ensureHotel(r) {
         const name = (r.hotel_name || 'Άγνωστο').trim();
         if (!hotelMap[name]) {
           hotelMap[name] = {
@@ -93,16 +100,26 @@ module.exports = function registerHotelRevenueRoutes(app, opts = {}) {
             total_revenue: 0,
             total_commission: 0,
             total_service_commission: 0,
+            nodriver_count: 0,
             route_types: { airport: 0, port: 0, city: 0, travel: 0, unknown: 0 }
           };
         }
-        const h = hotelMap[name];
+        return hotelMap[name];
+      }
+
+      relevant.forEach(r => {
+        const h = ensureHotel(r);
         h.total_routes += 1;
         h.total_revenue += parseFloat(r.price) || 0;
         h.total_commission += parseFloat(r.commission_hotel) || 0;
         h.total_service_commission += parseFloat(r.commission_service) || 0;
         const rt = resolveRouteType(r, destMap);
         h.route_types[rt] = (h.route_types[rt] || 0) + 1;
+      });
+
+      nodriverReqs.forEach(r => {
+        const h = ensureHotel(r);
+        h.nodriver_count += 1;
       });
 
       const hotels = Object.values(hotelMap).sort((a, b) => b.total_revenue - a.total_revenue);

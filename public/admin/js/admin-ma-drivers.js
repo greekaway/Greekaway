@@ -601,15 +601,20 @@
             if (rData.flight_number) msg += '🛫 Πτήση: ' + rData.flight_number + '\n';
             msg += '\nΠαρακαλούμε επικοινωνήστε μαζί μας αν χρειάζεστε εναλλακτική λύση.\n\nΕυχαριστούμε για την κατανόηση! 🙏';
             openWhatsApp(msg);
-            // Auto-delete the request
+            // Mark request as nodriver (soft-delete)
             try {
               var rid = tr.dataset.id;
-              var resp = await fetch('/api/admin/moveathens/requests/' + rid, { method: 'DELETE', credentials: 'same-origin' });
+              var resp = await fetch('/api/admin/moveathens/requests/' + rid, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ status: 'nodriver' })
+              });
               if (resp.ok) {
-                toast('Αίτημα διαγράφηκε (δε βρέθηκε οδηγός)');
+                toast('Αίτημα: δε βρέθηκε οδηγός');
                 loadRoutesData();
               }
-            } catch (delErr) { console.warn('Auto-delete failed:', delErr); }
+            } catch (delErr) { console.warn('Nodriver update failed:', delErr); }
           }
         });
 

@@ -734,9 +734,9 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         result = await maEmail.sendDriverFoundEmail(hotelEmail, request, eta);
       } else if (type === 'nodriver') {
         result = await maEmail.sendNoDriverEmail(hotelEmail, request);
-        // Auto-delete the request (same behavior as WhatsApp "no driver")
+        // Soft-delete: mark as nodriver (preserves data for statistics)
         try {
-          await requestsData.deleteRequest(request.id);
+          await requestsData.updateRequest(request.id, { status: 'nodriver' });
         } catch (e) { /* ignore */ }
       } else {
         return res.status(400).json({ error: 'Invalid type. Use: ack, found, nodriver' });

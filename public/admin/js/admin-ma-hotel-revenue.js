@@ -261,12 +261,16 @@
         if (info) info.textContent = from || to ? '📅 Χωρίς δεδομένα στο εύρος' : '';
         // Clear summary cards
         var elH = _$('#hotel-rev-total-hotels');
+        var elRq = _$('#hotel-rev-total-requests');
         var elR = _$('#hotel-rev-total-routes');
+        var elND = _$('#hotel-rev-total-nodriver');
         var elV = _$('#hotel-rev-total-revenue');
         var elC = _$('#hotel-rev-total-commission');
         var elS = _$('#hotel-rev-total-service-commission');
         if (elH) elH.textContent = '0';
+        if (elRq) elRq.textContent = '0';
         if (elR) elR.textContent = '0';
+        if (elND) elND.textContent = '0';
         if (elV) elV.textContent = '€0';
         if (elC) elC.textContent = '€0';
         if (elS) elS.textContent = '€0';
@@ -276,20 +280,27 @@
 
       // Update summary cards
       var totalHotels = hotels.length;
-      var totalRoutes = 0, totalRevenue = 0, totalCommission = 0, totalServiceComm = 0;
+      var totalRoutes = 0, totalNodriver = 0, totalRevenue = 0, totalCommission = 0, totalServiceComm = 0;
       hotels.forEach(function (h) {
         totalRoutes += h.total_routes || 0;
+        totalNodriver += h.nodriver_count || 0;
         totalRevenue += h.total_revenue || 0;
         totalCommission += h.total_commission || 0;
         totalServiceComm += h.total_service_commission || 0;
       });
+      var totalRequests = totalRoutes + totalNodriver;
+      var ndPct = totalRequests > 0 ? ((totalNodriver / totalRequests) * 100).toFixed(1) : '0';
       var elH = _$('#hotel-rev-total-hotels');
+      var elRq = _$('#hotel-rev-total-requests');
       var elR = _$('#hotel-rev-total-routes');
+      var elND = _$('#hotel-rev-total-nodriver');
       var elV = _$('#hotel-rev-total-revenue');
       var elC = _$('#hotel-rev-total-commission');
       var elS = _$('#hotel-rev-total-service-commission');
       if (elH) elH.textContent = totalHotels;
+      if (elRq) elRq.textContent = totalRequests.toLocaleString('el-GR');
       if (elR) elR.textContent = totalRoutes.toLocaleString('el-GR');
+      if (elND) elND.innerHTML = totalNodriver.toLocaleString('el-GR') + '<span style="font-size:12px;font-weight:400;margin-left:4px">(' + ndPct + '%)</span>';
       if (elV) elV.textContent = '€' + totalRevenue.toLocaleString('el-GR', { maximumFractionDigits: 0 });
       if (elC) elC.textContent = '€' + totalCommission.toLocaleString('el-GR', { maximumFractionDigits: 0 });
       if (elS) elS.textContent = '€' + totalServiceComm.toLocaleString('el-GR', { maximumFractionDigits: 0 });
@@ -312,7 +323,9 @@
 
         return '<tr data-zone-id="' + (h.origin_zone_id || '') + '">' +
           '<td><strong>' + h.hotel_name + '</strong></td>' +
-          '<td>' + h.total_routes + '</td>' +
+          '<td>' + ((h.total_routes || 0) + (h.nodriver_count || 0)) + '</td>' +
+          '<td style="color:#22c55e">' + (h.total_routes || 0) + '</td>' +
+          '<td style="color:#ef4444;font-weight:600">' + (h.nodriver_count || 0) + '</td>' +
           '<td>€' + h.total_revenue.toFixed(0) + '</td>' +
           '<td>€' + h.total_commission.toFixed(0) + '</td>' +
           '<td style="color:#22c55e;font-weight:600">€' + (h.total_service_commission || 0).toFixed(0) + '</td>' +
