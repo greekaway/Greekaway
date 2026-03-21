@@ -229,7 +229,7 @@
       routeList.innerHTML = routes.map(renderRouteCard).join('');
     } catch (err) {
       console.error('[hotel-revenue] Routes load error:', err);
-      routeList.innerHTML = '<p class="ma-rev-empty">Σφάλμα φόρτωσης διαδρομών</p>';
+      routeList.innerHTML = '<p class="ma-rev-empty">Δεν υπάρχουν διαδρομές ακόμα</p>';
     }
   }
 

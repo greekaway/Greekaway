@@ -937,8 +937,18 @@
   }
 
   /* Back navigation */
-  .ma-sub-back {
-    color: #46d3ff !important;
+  .ma-sub-back-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+  .ma-sub-back-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+  }
+  .ma-sub-back-btn:active {
+    background: rgba(255, 255, 255, 0.2) !important;
+  }
+  .ma-sub-back-chevron {
+    border-left-color: #e0e0e0 !important;
+    border-bottom-color: #e0e0e0 !important;
   }
 
   /* Revenue cards */
@@ -976,23 +986,16 @@
   }
 
   /* Settings buttons */
-  .ma-theme-btn,
-  .ma-scale-btn {
+  .ma-theme-btn {
     background: rgba(255, 255, 255, 0.06) !important;
     border-color: rgba(255, 255, 255, 0.12) !important;
     color: #8896a6 !important;
   }
 
-  .ma-theme-btn.active,
-  .ma-scale-btn.active {
+  .ma-theme-btn.active {
     border-color: #46d3ff !important;
     background: rgba(70, 211, 255, 0.12) !important;
     color: #e8edf3 !important;
-  }
-
-  .ma-scale-preview__card {
-    background: rgba(70, 211, 255, 0.15) !important;
-    border-color: rgba(70, 211, 255, 0.3) !important;
   }
 
   .ma-settings-hint {
@@ -1073,27 +1076,23 @@
     color: #6b7a8d !important;
   }
 
-  .ma-sub-back {
-    color: #0066cc !important;
+  .ma-sub-back-btn {
+    background: rgba(0, 0, 0, 0.06) !important;
+  }
+  .ma-sub-back-chevron {
+    border-left-color: #1a1a2e !important;
+    border-bottom-color: #1a1a2e !important;
   }
 
-  .ma-theme-btn,
-  .ma-scale-btn {
+  .ma-theme-btn {
     background: #f0f2f5 !important;
     border-color: #d0d5dd !important;
     color: #6b7a8d !important;
   }
 
-  .ma-theme-btn.active,
-  .ma-scale-btn.active {
+  .ma-theme-btn.active {
     border-color: #0066cc !important;
     background: rgba(0, 102, 204, 0.08) !important;
-    color: #1a2232 !important;
-  }
-
-  .ma-scale-preview__card {
-    background: rgba(0, 102, 204, 0.08) !important;
-    border-color: rgba(0, 102, 204, 0.2) !important;
     color: #1a2232 !important;
   }
 
@@ -1220,27 +1219,23 @@
   color: #6b7a8d !important;
 }
 
-.ma-force-light .ma-sub-back {
-  color: #0066cc !important;
+.ma-force-light .ma-sub-back-btn {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+.ma-force-light .ma-sub-back-chevron {
+  border-left-color: #1a1a2e !important;
+  border-bottom-color: #1a1a2e !important;
 }
 
-.ma-force-light .ma-theme-btn,
-.ma-force-light .ma-scale-btn {
+.ma-force-light .ma-theme-btn {
   background: #f0f2f5 !important;
   border-color: #d0d5dd !important;
   color: #6b7a8d !important;
 }
 
-.ma-force-light .ma-theme-btn.active,
-.ma-force-light .ma-scale-btn.active {
+.ma-force-light .ma-theme-btn.active {
   border-color: #0066cc !important;
   background: rgba(0, 102, 204, 0.08) !important;
-  color: #1a2232 !important;
-}
-
-.ma-force-light .ma-scale-preview__card {
-  background: rgba(0, 102, 204, 0.08) !important;
-  border-color: rgba(0, 102, 204, 0.2) !important;
   color: #1a2232 !important;
 }
 
@@ -1360,27 +1355,30 @@
   color: #8896a6 !important;
 }
 
-.ma-force-dark .ma-sub-back {
-  color: #46d3ff !important;
+.ma-force-dark .ma-sub-back-btn {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+.ma-force-dark .ma-sub-back-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+.ma-force-dark .ma-sub-back-btn:active {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+.ma-force-dark .ma-sub-back-chevron {
+  border-left-color: #e0e0e0 !important;
+  border-bottom-color: #e0e0e0 !important;
 }
 
-.ma-force-dark .ma-theme-btn,
-.ma-force-dark .ma-scale-btn {
+.ma-force-dark .ma-theme-btn {
   background: rgba(255, 255, 255, 0.06) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
   color: #8896a6 !important;
 }
 
-.ma-force-dark .ma-theme-btn.active,
-.ma-force-dark .ma-scale-btn.active {
+.ma-force-dark .ma-theme-btn.active {
   border-color: #46d3ff !important;
   background: rgba(70, 211, 255, 0.12) !important;
   color: #e8edf3 !important;
-}
-
-.ma-force-dark .ma-scale-preview__card {
-  background: rgba(70, 211, 255, 0.15) !important;
-  border-color: rgba(70, 211, 255, 0.3) !important;
 }
 
 .ma-force-dark .ma-rev-route-row {

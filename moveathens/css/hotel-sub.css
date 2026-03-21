@@ -3,37 +3,48 @@
    Back button + common layout for profile/revenue/settings
    ============================================ */
 
-/* ── Back navigation link ── */
-.ma-sub-back {
+/* ── Back button (square icon, same as transfer page) ── */
+.ma-sub-back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  cursor: pointer;
   text-decoration: none;
-  color: var(--ma-accent);
-  font-size: 15px;
-  font-weight: 500;
-  padding: 4px 0;
-  margin-bottom: 4px;
-  transition: opacity 0.15s ease;
+  transition: background 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  margin-bottom: 8px;
 }
 
-.ma-sub-back:active {
-  opacity: 0.7;
+.ma-sub-back-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
 }
 
-.ma-sub-back__chevron {
-  font-size: 22px;
-  font-weight: 300;
-  line-height: 1;
+.ma-sub-back-btn:active {
+  background: rgba(0, 0, 0, 0.15);
+  transform: scale(0.95);
+}
+
+.ma-sub-back-chevron {
+  width: 10px;
+  height: 10px;
+  border-left: 2.5px solid #1a1a2e;
+  border-bottom: 2.5px solid #1a1a2e;
+  transform: rotate(45deg);
+  margin-left: 3px;
 }
 
 /* ── Responsive ── */
 @media (max-width: 359px) {
-  .ma-sub-back { font-size: 14px; }
-  .ma-sub-back__chevron { font-size: 20px; }
+  .ma-sub-back-btn { width: 36px; height: 36px; border-radius: 10px; }
+  .ma-sub-back-chevron { width: 9px; height: 9px; border-width: 2px; }
 }
 
 @media (min-width: 430px) {
-  .ma-sub-back { font-size: 16px; }
-  .ma-sub-back__chevron { font-size: 24px; }
+  .ma-sub-back-btn { width: 44px; height: 44px; border-radius: 14px; }
+  .ma-sub-back-chevron { width: 11px; height: 11px; border-width: 3px; }
 }
