@@ -250,8 +250,14 @@
           var c = (a.hotel_name || '').localeCompare(b.hotel_name || '', 'el');
           return sortDir === 'asc' ? c : -c;
         }
-        var av = parseFloat(a[sortField]) || 0;
-        var bv = parseFloat(b[sortField]) || 0;
+        var av, bv;
+        if (sortField === 'total_requests') {
+          av = (a.total_routes || 0) + (a.nodriver_count || 0);
+          bv = (b.total_routes || 0) + (b.nodriver_count || 0);
+        } else {
+          av = parseFloat(a[sortField]) || 0;
+          bv = parseFloat(b[sortField]) || 0;
+        }
         return sortDir === 'asc' ? av - bv : bv - av;
       });
 
