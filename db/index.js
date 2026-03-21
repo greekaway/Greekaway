@@ -794,9 +794,9 @@ const ma = {
         tariff, booking_type, scheduled_date, scheduled_time,
         passenger_name, room_number, notes, flight_number, passengers, luggage_large, luggage_medium, luggage_cabin,
         payment_method, price, commission_driver, commission_hotel, commission_service,
-        status, accept_token, orderer_phone, is_arrival
+        status, accept_token, orderer_phone, is_arrival, channel
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32
       ) RETURNING *
     `;
     const rows = await query(sql, [
@@ -805,7 +805,7 @@ const ma = {
       data.tariff || 'day', data.booking_type || 'instant', data.scheduled_date || '', data.scheduled_time || '',
       data.passenger_name || '', data.room_number || '', data.notes || '', data.flight_number || '', data.passengers || 0, data.luggage_large || 0, data.luggage_medium || 0, data.luggage_cabin || 0,
       data.payment_method || 'cash', data.price || 0, data.commission_driver || 0, data.commission_hotel || 0, data.commission_service || 0,
-      data.status || 'pending', data.accept_token || null, data.orderer_phone || '', data.is_arrival ?? false
+      data.status || 'pending', data.accept_token || null, data.orderer_phone || '', data.is_arrival ?? false, data.channel || 'whatsapp'
     ]);
     return rows[0];
   },

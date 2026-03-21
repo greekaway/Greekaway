@@ -294,6 +294,7 @@ CREATE TABLE IF NOT EXISTS ma_transfer_requests (
     driver_name VARCHAR(200) DEFAULT '',
     driver_phone VARCHAR(50) DEFAULT '',
     orderer_phone VARCHAR(50) DEFAULT '',
+    channel VARCHAR(20) DEFAULT 'whatsapp',
     is_arrival BOOLEAN DEFAULT false,
     accept_token VARCHAR(100) UNIQUE,
     status VARCHAR(30) DEFAULT 'pending',
