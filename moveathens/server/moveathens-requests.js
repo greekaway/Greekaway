@@ -121,7 +121,8 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         commission_hotel: commissions ? commissions.commission_hotel : 0,
         commission_service: commissions ? commissions.commission_service : 0,
         orderer_phone: body.orderer_phone || '',
-        is_arrival: body.is_arrival === true || body.is_arrival === 'true'
+        is_arrival: body.is_arrival === true || body.is_arrival === 'true',
+        channel: 'whatsapp'
       });
 
       console.log('[ma-requests] Request created:', record.id, 'status:', record.status);
@@ -219,7 +220,8 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         commission_hotel: commissions ? commissions.commission_hotel : 0,
         commission_service: commissions ? commissions.commission_service : 0,
         orderer_phone: body.orderer_phone || '',
-        is_arrival: body.is_arrival === true || body.is_arrival === 'true'
+        is_arrival: body.is_arrival === true || body.is_arrival === 'true',
+        channel: 'email'
       });
 
       console.log('[ma-requests] Email request created:', record.id);
@@ -364,6 +366,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         hotel_address: request.hotel_address || '',
         hotel_municipality: request.hotel_municipality || '',
         hotel_phone: hotel_phone,
+        channel: request.channel || 'whatsapp',
         driver_name: request.driver_name || known_driver_name || '',
         destination_name: request.destination_name,
         destination_lat,

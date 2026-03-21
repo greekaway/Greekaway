@@ -48,6 +48,22 @@ module.exports = function registerTimelineRoutes(app, opts = {}) {
       const arrivedAt = new Date().toISOString();
       await requestsData.updateRequest(request.id, { arrived_at: arrivedAt });
 
+      // If request came via email, send "arrived" email to hotel (fire & forget)
+      if (request.channel === 'email' && request.origin_zone_id) {
+        try {
+          const moveathensData = require('../../src/server/data/moveathens');
+          const zones = await moveathensData.getZones({ activeOnly: false });
+          const zone = zones.find(z => z.id === request.origin_zone_id);
+          if (zone && zone.email) {
+            const maEmail = require('./moveathens-email');
+            maEmail.sendDriverArrivedEmail(zone.email, request).catch(e =>
+              console.warn('[ma-email] driver-arrived email failed:', e.message));
+          }
+        } catch (e) {
+          console.warn('[ma-timeline] email lookup error:', e.message);
+        }
+      }
+
       console.log('[ma-timeline] Request', request.id, 'ARRIVED at hotel');
       return res.json({ ok: true, arrived_at: arrivedAt });
     } catch (err) {

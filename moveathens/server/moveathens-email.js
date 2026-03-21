@@ -279,10 +279,69 @@ async function sendNoDriverEmail(hotelEmail, request) {
   }
 }
 
+/**
+ * Driver notification to hotel: "I arrived — passenger is ready for pickup"
+ */
+async function sendDriverArrivedEmail(hotelEmail, request) {
+  const transporter = buildTransport();
+  if (!transporter || !hotelEmail) return 'skipped';
+
+  const greeting = grGreeting();
+  const isArrival = request.is_arrival;
+
+  const details = [];
+  if (request.passenger_name) details.push(`👤 Επιβάτης: ${request.passenger_name}`);
+  if (isArrival) {
+    details.push(`✈️ Αφετηρία: ${request.destination_name || '—'}`);
+    details.push(`🏨 Προορισμός: ${request.hotel_name || '—'}`);
+  } else {
+    details.push(`🏨 Ξενοδοχείο: ${request.hotel_name || '—'}`);
+    details.push(`🎯 Προορισμός: ${request.destination_name || '—'}`);
+  }
+  if (request.room_number) details.push(`🚪 Δωμάτιο: ${request.room_number}`);
+
+  let arrivalMsg;
+  if (isArrival) {
+    arrivalMsg = `Έχω φτάσει στο σημείο παραλαβής (${request.destination_name || '—'}). Βρίσκομαι εδώ κι έτοιμος να παραλάβω τον επιβάτη.`;
+  } else {
+    arrivalMsg = 'Έχω φτάσει στο σημείο παραλαβής. Βρίσκομαι έξω και είμαι έτοιμος για αναχώρηση. Παρακαλώ ενημερώστε τον επιβάτη ότι τον περιμένω.';
+  }
+
+  const bodyHtml = `
+    <h2 style="margin:0 0 16px;font-size:18px;color:#1a1a2e">${greeting}! Ο οδηγός έφτασε 📍</h2>
+    <p style="color:#4b5563;font-size:15px;line-height:1.6;margin:0 0 20px">
+      ${escapeHtml(arrivalMsg)}
+    </p>
+    <div style="background:#eff6ff;border-left:4px solid #3b82f6;border-radius:8px;padding:16px 20px;margin:0 0 20px">
+      ${details.map(l => `<p style="margin:4px 0;font-size:14px;color:#1f2937">${escapeHtml(l)}</p>`).join('')}
+    </div>
+    <p style="color:#6b7280;font-size:13px;margin:0">Ευχαριστώ πολύ! 🙏</p>
+  `;
+
+  const html = wrapHtml('Ο οδηγός έφτασε — MoveAthens', bodyHtml);
+  const text = `${greeting}!\n\n${arrivalMsg}\n\n${details.join('\n')}\n\nΕυχαριστώ πολύ! 🙏`;
+
+  try {
+    await transporter.sendMail({
+      from: `MoveAthens <${getFrom()}>`,
+      to: hotelEmail,
+      subject: `📍 Ο οδηγός έφτασε — MoveAthens`,
+      text,
+      html
+    });
+    console.log('[ma-email] Driver-arrived email sent to', hotelEmail);
+    return 'sent';
+  } catch (e) {
+    console.error('[ma-email] Driver-arrived email failed:', e.message);
+    return 'error';
+  }
+}
+
 module.exports = {
   sendHotelAckEmail,
   sendAdminNotificationEmail,
   sendDriverFoundEmail,
   sendNoDriverEmail,
+  sendDriverArrivedEmail,
   buildTransport
 };

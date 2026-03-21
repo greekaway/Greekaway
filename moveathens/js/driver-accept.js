@@ -563,16 +563,23 @@
   // ── SECONDARY BUTTON handler ──
   secondaryBtn.addEventListener('click', async function() {
     if (uiState === 'accepted') {
-      // ── ARRIVED at hotel → send WhatsApp to hotel ──
-      var waUrl = buildArrivedWhatsAppUrl();
-      if (waUrl) {
-        window.open(waUrl, '_blank');
-      } else {
+      // ── ARRIVED at hotel → notify hotel ──
+      if (tripData && tripData.channel === 'email') {
+        // Email channel: server sends email automatically via driver-arrived endpoint
         statusMsg.className = 'status info';
-        statusMsg.textContent = 'Δεν βρέθηκε τηλέφωνο ξενοδοχείου για WhatsApp.';
+        statusMsg.textContent = 'Αποστολή ενημέρωσης στο ξενοδοχείο…';
+      } else {
+        // WhatsApp channel: open WhatsApp with pre-filled message
+        var waUrl = buildArrivedWhatsAppUrl();
+        if (waUrl) {
+          window.open(waUrl, '_blank');
+        } else {
+          statusMsg.className = 'status info';
+          statusMsg.textContent = 'Δεν βρέθηκε τηλέφωνο ξενοδοχείου για WhatsApp.';
+        }
       }
 
-      // Record arrived_at on server (fire-and-forget)
+      // Record arrived_at on server (also sends email if channel=email)
       fetch('/api/moveathens/driver-arrived/' + token, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }

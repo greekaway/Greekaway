@@ -115,6 +115,7 @@ async function createRequest(data) {
     driver_phone: '',
     accept_token: token,
     orderer_phone: data.orderer_phone || '',
+    channel: data.channel || 'whatsapp',
     status: 'pending',
     created_at: now,
     sent_at: null,
