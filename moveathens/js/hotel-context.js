@@ -98,10 +98,10 @@
         persistHotel(data.zone, stored.orderer_phone);
         showInfo(data.zone, data.phones, stored.orderer_phone);
       } else {
-        // Phone no longer valid — clear and reload (gate handles re-login)
+        // Phone no longer valid — clear and redirect to hub (gate handles re-login)
         localStorage.removeItem('moveathens_hotel');
         clearCookie(CK_NAME);
-        window.location.reload();
+        window.location.href = '/moveathens/hotel';
       }
     } catch {
       // Offline — show stored data

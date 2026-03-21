@@ -30,7 +30,10 @@
     }
 
     if (nameEl) nameEl.textContent = hotelName;
-    if (phoneEl) phoneEl.textContent = stored.orderer_phone || stored.phone || '';
+    if (phoneEl) {
+      const phone = stored.orderer_phone || stored.phone || '';
+      phoneEl.textContent = phone ? `📱 Συνδεδεμένος: ${phone}` : '';
+    }
     if (emailEl) emailEl.textContent = stored.email || '';
 
     // Hide email line if empty
