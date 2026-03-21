@@ -161,6 +161,113 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
   });
 
   // ========================================
+  // PUBLIC: Hotel creates transfer request via EMAIL
+  // ========================================
+  app.post('/api/moveathens/transfer-request-email', async (req, res) => {
+    try {
+      const body = req.body || {};
+      const hotelEmail = (body.hotel_email || '').trim();
+      if (!hotelEmail) return res.status(400).json({ error: 'hotel_email required' });
+
+      console.log('[ma-requests] New EMAIL transfer request from hotel:', body.hotel_name || '(unknown)', hotelEmail);
+
+      // Server-side tariff calculation — never trust client
+      let tariff = body.tariff || 'day';
+      try {
+        const moveathensData = require('../../src/server/data/moveathens');
+        const config = await moveathensData.getConfig();
+        if (body.booking_type === 'scheduled' && body.scheduled_date && body.scheduled_time) {
+          tariff = calculateTariff(new Date(`${body.scheduled_date}T${body.scheduled_time}`), config);
+        } else {
+          tariff = calculateTariff(new Date(), config);
+        }
+      } catch (e) {
+        console.error('[ma-requests] tariff calc fallback:', e.message);
+      }
+
+      // Look up commissions from pricing table
+      const commissions = await getCommissions(
+        body.origin_zone_id, body.destination_id,
+        body.vehicle_type_id, tariff
+      );
+
+      const record = await requestsData.createRequest({
+        origin_zone_id: body.origin_zone_id || '',
+        origin_zone_name: body.origin_zone_name || '',
+        hotel_name: body.hotel_name || '',
+        hotel_address: body.hotel_address || '',
+        hotel_municipality: body.hotel_municipality || '',
+        destination_id: body.destination_id || '',
+        destination_name: body.destination_name || '',
+        vehicle_type_id: body.vehicle_type_id || '',
+        vehicle_name: body.vehicle_name || '',
+        tariff: tariff,
+        booking_type: body.booking_type || 'instant',
+        scheduled_date: body.scheduled_date || '',
+        scheduled_time: body.scheduled_time || '',
+        passenger_name: body.passenger_name || '',
+        room_number: body.room_number || '',
+        notes: body.notes || '',
+        flight_number: body.flight_number || '',
+        passengers: body.passengers || 0,
+        luggage_large: body.luggage_large || 0,
+        luggage_medium: body.luggage_medium || 0,
+        luggage_cabin: body.luggage_cabin || 0,
+        payment_method: body.payment_method || 'cash',
+        price: commissions ? commissions.price : (parseFloat(body.price) || 0),
+        commission_driver: commissions ? commissions.commission_driver : 0,
+        commission_hotel: commissions ? commissions.commission_hotel : 0,
+        commission_service: commissions ? commissions.commission_service : 0,
+        orderer_phone: body.orderer_phone || '',
+        is_arrival: body.is_arrival === true || body.is_arrival === 'true'
+      });
+
+      console.log('[ma-requests] Email request created:', record.id);
+
+      // Flight tracking (same as WhatsApp flow)
+      if (record.is_arrival && record.flight_number) {
+        try {
+          const flightResult = await flightTracker.lookupFlight(record.flight_number, record.scheduled_date);
+          if (flightResult.ok && flightResult.flight) {
+            const f = flightResult.flight;
+            await requestsData.updateRequest(record.id, {
+              flight_status:         f.flight_status,
+              flight_airline:        f.flight_airline,
+              flight_origin:         f.flight_origin,
+              flight_eta:            f.flight_eta || null,
+              flight_departure:      f.flight_departure || null,
+              flight_gate:           f.flight_gate || '',
+              flight_terminal:       f.flight_terminal || '',
+              flight_tracking_active: true,
+              flight_last_checked:   new Date().toISOString(),
+              flight_raw_json:       JSON.stringify(f.raw)
+            });
+          }
+        } catch (flightErr) {
+          console.warn('[ma-requests] Flight lookup error (email, non-blocking):', flightErr.message);
+        }
+      }
+
+      // Send emails (fire & forget — don't block response)
+      const maEmail = require('./moveathens-email');
+      const enrichedRecord = { ...record, hotel_email: hotelEmail };
+
+      // 1) Auto-reply to hotel: "Λάβαμε το αίτημά σας"
+      maEmail.sendHotelAckEmail(hotelEmail, enrichedRecord).catch(e =>
+        console.warn('[ma-email] ack failed:', e.message));
+
+      // 2) Notify admin (ourselves): "Νέο αίτημα μέσω Email"
+      maEmail.sendAdminNotificationEmail(enrichedRecord).catch(e =>
+        console.warn('[ma-email] admin notify failed:', e.message));
+
+      return res.json({ ok: true, requestId: record.id, method: 'email' });
+    } catch (err) {
+      console.error('[ma-requests] POST /transfer-request-email failed:', err.message);
+      return res.status(500).json({ error: 'Failed to create request' });
+    }
+  });
+
+  // ========================================
   // PUBLIC: Driver views trip details via token
   // ========================================
   app.get('/api/moveathens/driver-accept/:token', driverRateLimit, async (req, res) => {
@@ -584,6 +691,58 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
     } catch (err) {
       console.error('[ma-requests] send-driver failed:', err.message);
       return res.status(500).json({ error: 'Send failed' });
+    }
+  });
+
+  // ========================================
+  // ADMIN: Reply to hotel via EMAIL (ack / driver found / no driver)
+  // ========================================
+  app.post('/api/admin/moveathens/requests/:id/email-reply', async (req, res) => {
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const { type, eta_minutes } = req.body || {};
+      if (!type) return res.status(400).json({ error: 'type required (ack|found|nodriver)' });
+
+      const request = await requestsData.getRequestById(req.params.id);
+      if (!request) return res.status(404).json({ error: 'Request not found' });
+
+      // Look up hotel email from zone data
+      let hotelEmail = '';
+      if (request.origin_zone_id) {
+        try {
+          const moveathensData = require('../../src/server/data/moveathens');
+          const zones = await moveathensData.getZones({ activeOnly: false });
+          const zone = zones.find(z => z.id === request.origin_zone_id);
+          if (zone && zone.email) hotelEmail = zone.email;
+        } catch (e) { /* ignore */ }
+      }
+
+      if (!hotelEmail) {
+        return res.status(400).json({ error: 'Δεν βρέθηκε email ξενοδοχείου' });
+      }
+
+      const maEmail = require('./moveathens-email');
+      let result = 'skipped';
+
+      if (type === 'ack') {
+        result = await maEmail.sendHotelAckEmail(hotelEmail, request);
+      } else if (type === 'found') {
+        const eta = parseInt(eta_minutes, 10) || 10;
+        result = await maEmail.sendDriverFoundEmail(hotelEmail, request, eta);
+      } else if (type === 'nodriver') {
+        result = await maEmail.sendNoDriverEmail(hotelEmail, request);
+        // Auto-delete the request (same behavior as WhatsApp "no driver")
+        try {
+          await requestsData.deleteRequest(request.id);
+        } catch (e) { /* ignore */ }
+      } else {
+        return res.status(400).json({ error: 'Invalid type. Use: ack, found, nodriver' });
+      }
+
+      return res.json({ ok: true, result, email: hotelEmail });
+    } catch (err) {
+      console.error('[ma-requests] email-reply failed:', err.message);
+      return res.status(500).json({ error: 'Email reply failed' });
     }
   });
 

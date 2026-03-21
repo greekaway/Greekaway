@@ -92,6 +92,7 @@
   const confirmVehicle = $('#confirm-vehicle');
   const confirmPrice = $('#confirm-price');
   const ctaWhatsapp = $('#cta-whatsapp');
+  const ctaEmail = $('#cta-email');
   const ctaPhone = $('#cta-phone');
 
   // ========================================
@@ -1781,9 +1782,63 @@
     }
   };
 
+  // Send transfer request via email
+  const sendTransferEmail = async () => {
+    if (!selectedDestination || !selectedVehicle || !hotelContext) return;
+    const hotelEmail = hotelContext.email || '';
+    if (!hotelEmail) {
+      alert('Δεν έχει καταχωρηθεί email στο προφίλ σας. Παρακαλούμε επικοινωνήστε με τον διαχειριστή.');
+      return;
+    }
+    try {
+      const body = {
+        origin_zone_id:    hotelContext.origin_zone_id || '',
+        origin_zone_name:  hotelContext.origin_zone_name || '',
+        hotel_name:        hotelContext.hotelName || hotelContext.origin_zone_name || '',
+        hotel_address:     hotelContext.address || '',
+        hotel_municipality: hotelContext.municipality || '',
+        hotel_email:       hotelEmail,
+        destination_id:    selectedDestination.id || '',
+        destination_name:  selectedDestination.name || '',
+        vehicle_id:        selectedVehicle.id || '',
+        vehicle_name:      selectedVehicle.name || '',
+        tariff:            selectedTariff || 'day',
+        booking_type:      selectedBookingType || 'instant',
+        scheduled_date:    selectedDateTime?.date || '',
+        scheduled_time:    selectedDateTime?.time || '',
+        passengers:        selectedPassengers || 1,
+        luggage_large:     selectedLuggageLarge || 0,
+        luggage_medium:    selectedLuggageMedium || 0,
+        luggage_cabin:     selectedLuggageCabin || 0,
+        passenger_name:    passengerName || '',
+        room_number:       roomNumber || '',
+        notes:             bookingNotes || '',
+        flight_number:     flightNumber || '',
+        price:             selectedVehicle.price || 0,
+        payment_method:    selectedPaymentMethod || 'cash',
+        orderer_phone:     hotelContext.orderer_phone || hotelContext.phone || '',
+        is_arrival:        isArrivalFlow()
+      };
+      const resp = await fetch('/api/moveathens/transfer-request-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Email failed');
+      console.log('[MoveAthens] email transfer request sent');
+      const subtitle = $('#success-subtitle');
+      if (subtitle) subtitle.textContent = 'Θα λάβετε απάντηση σύντομα στο email σας.';
+      showStep('sentSuccess');
+    } catch (err) {
+      console.error('[MoveAthens] email send failed:', err);
+      alert('Σφάλμα κατά την αποστολή email. Δοκιμάστε WhatsApp ή τηλέφωνο.');
+    }
+  };
+
   // Setup CTA click validation (block if passenger name is required but missing)
   const setupCtaValidation = () => {
-    const ctaIds = ['#cta-whatsapp', '#cta-phone'];
+    const ctaIds = ['#cta-whatsapp', '#cta-phone', '#cta-email'];
     
     ctaIds.forEach(id => {
       const link = $(id);
@@ -1804,8 +1859,15 @@
         // Auto-create transfer request for WhatsApp clicks
         if (id === '#cta-whatsapp') {
           createTransferRequest();
+          const subtitle = $('#success-subtitle');
+          if (subtitle) subtitle.textContent = 'Θα λάβετε απάντηση σύντομα μέσω WhatsApp.';
           // Show success screen after short delay so WhatsApp opens first
           setTimeout(() => showStep('sentSuccess'), 1500);
+        }
+        // Send via email
+        if (id === '#cta-email') {
+          e.preventDefault();
+          sendTransferEmail();
         }
       };
     });

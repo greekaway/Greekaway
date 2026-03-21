@@ -1392,9 +1392,40 @@
   color: #fff;
 }
 
+.ma-cta-email {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .ma-cta-phone {
   background: linear-gradient(135deg, #0066cc 0%, #004499 100%);
   color: #fff;
+}
+
+/* 3-column CTA grid */
+.ma-cta-grid-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 389px) {
+  .ma-cta-grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ma-cta-grid-3 .ma-cta-phone {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 359px) {
+  .ma-cta-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .ma-cta-grid-3 .ma-cta-phone {
+    grid-column: auto;
+  }
 }
 
 /* ── Success Card (sent confirmation) ── */

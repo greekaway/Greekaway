@@ -360,7 +360,8 @@
       // Hotel reply button (for pending/sent requests that have orderer_phone)
       var replyBtns = '';
       if (canSend && r.orderer_phone) {
-        replyBtns = '<button class="dr-btn req-reply-btn" style="background:#3b82f6;color:#fff;margin-right:2px">Μήνυμα</button>';
+        replyBtns = '<button class="dr-btn req-reply-btn" style="background:#3b82f6;color:#fff;margin-right:2px" title="WhatsApp">💬</button>' +
+          '<button class="dr-btn req-email-reply-btn" style="background:#f59e0b;color:#fff;margin-right:2px" title="Email">📧</button>';
       }
 
       return '<tr data-id="' + r.id + '" data-json=\'' + JSON.stringify({
@@ -547,6 +548,96 @@
         });
 
         box.querySelector('#reply-cancel').addEventListener('click', function () { overlay.remove(); });
+        overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+      });
+    });
+
+    // ── "Email Απάντηση" — Email reply popup (same options as WhatsApp) ──
+    _$$('.req-email-reply-btn', tbody).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var tr = btn.closest('tr');
+        var id = tr.dataset.id;
+        var rData = {};
+        try { rData = JSON.parse(tr.dataset.json || '{}'); } catch (_) {}
+
+        var route = rData.is_arrival
+          ? (rData.destination_name + ' → ' + rData.hotel_name)
+          : (rData.hotel_name + ' → ' + rData.destination_name);
+
+        // Create modal overlay
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+        var box = document.createElement('div');
+        box.style.cssText = 'background:#1e293b;border-radius:12px;padding:24px;max-width:360px;width:92%;text-align:center;color:#f1f5f9';
+        box.innerHTML = '<h3 style="margin:0 0 16px;font-size:16px">📧 Email απάντηση στο ξενοδοχείο</h3>' +
+          '<div style="display:flex;gap:10px;margin-bottom:10px">' +
+            '<button id="email-ack" style="flex:1;padding:14px 8px;border:none;background:#3b82f6;color:#fff;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">📩 Έλαβα το αίτημα</button>' +
+            '<button id="email-found" style="flex:1;padding:14px 8px;border:none;background:#10b981;color:#fff;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">🚗 Βρήκα οδηγό</button>' +
+          '</div>' +
+          '<div style="margin-bottom:16px">' +
+            '<button id="email-nodriver" style="width:100%;padding:14px 8px;border:none;background:#dc2626;color:#fff;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600">🚫 Δε βρήκαμε οδηγό</button>' +
+          '</div>' +
+          '<div id="email-eta-section" style="display:none">' +
+            '<p style="margin:0 0 8px;font-size:13px;color:#94a3b8">Σε πόσα λεπτά θα φτάσει;</p>' +
+            '<div id="email-eta-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:0 0 12px"></div>' +
+          '</div>' +
+          '<div id="email-sending" style="display:none;padding:12px;color:#94a3b8;font-size:14px">⏳ Αποστολή email…</div>' +
+          '<button id="email-cancel" style="padding:8px 20px;border:1px solid #475569;background:transparent;color:#94a3b8;border-radius:8px;cursor:pointer;font-size:14px">Ακύρωση</button>';
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        async function sendEmailReply(type, etaMin) {
+          box.querySelector('#email-sending').style.display = 'block';
+          try {
+            var body = { type: type };
+            if (etaMin) body.eta_minutes = etaMin;
+            var resp = await fetch('/api/admin/moveathens/requests/' + id + '/email-reply', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify(body)
+            });
+            var data = await resp.json();
+            if (!resp.ok) throw new Error(data.error || 'Send failed');
+            toast('✅ Email στάλθηκε στο ' + (data.email || 'ξενοδοχείο'));
+            overlay.remove();
+            if (type === 'nodriver') loadRoutesData();
+          } catch (e) {
+            box.querySelector('#email-sending').style.display = 'none';
+            toast('❌ Σφάλμα: ' + e.message);
+          }
+        }
+
+        // "Έλαβα" — send ack email
+        box.querySelector('#email-ack').addEventListener('click', function () {
+          sendEmailReply('ack');
+        });
+
+        // "Βρήκα Οδηγό" — show ETA grid
+        box.querySelector('#email-found').addEventListener('click', function () {
+          box.querySelector('#email-eta-section').style.display = 'block';
+          box.querySelector('#email-ack').parentElement.style.display = 'none';
+          box.querySelector('#email-nodriver').parentElement.style.display = 'none';
+        });
+
+        // Build ETA grid
+        var grid = box.querySelector('#email-eta-grid');
+        [1,2,3,4,5,6,7,8,9,10,12,15,20,25,30].forEach(function (n) {
+          var b = document.createElement('button');
+          b.textContent = n + '\'';
+          b.style.cssText = 'padding:10px;border:none;background:#f59e0b;color:#fff;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600';
+          b.addEventListener('click', function () {
+            sendEmailReply('found', n);
+          });
+          grid.appendChild(b);
+        });
+
+        // "Δε βρήκαμε οδηγό"
+        box.querySelector('#email-nodriver').addEventListener('click', function () {
+          sendEmailReply('nodriver');
+        });
+
+        box.querySelector('#email-cancel').addEventListener('click', function () { overlay.remove(); });
         overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
       });
     });
