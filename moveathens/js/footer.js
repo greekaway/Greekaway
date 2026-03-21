@@ -21,6 +21,10 @@
       const cleanPath = route.replace('/moveathens', '') || '/';
       const newRoute = isMoveAthensDomain ? cleanPath : route;
       el.setAttribute('data-route', newRoute);
+      // Also fix href for <a> tags so browser navigation works
+      if (el.tagName === 'A' && el.getAttribute('href') === route) {
+        el.setAttribute('href', newRoute);
+      }
     }
   });
 

@@ -1005,6 +1005,163 @@
    (Used by hotel-settings.js theme toggle)
    ======================================== */
 
+/* ========================================
+   SYSTEM LIGHT MODE (auto)
+   Mirrors .ma-force-light rules for users
+   whose device is in light mode without
+   explicitly choosing a forced theme.
+   ======================================== */
+@media (prefers-color-scheme: light) {
+  .ma-page,
+  .ma-transfer-page,
+  .ma-ai-page,
+  .ma-info-page {
+    background: #f5f7fa !important;
+  }
+
+  .ma-card,
+  .ma-hub-card,
+  .ma-rev-card {
+    background: #fff !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .ma-title,
+  .ma-hub-name,
+  .ma-hub-card__title,
+  .ma-rev-card__value,
+  .ma-rev-section-title,
+  .ma-rev-month-name,
+  .ma-rev-route-row,
+  .ma-settings-label {
+    color: #1a2232 !important;
+  }
+
+  .ma-muted,
+  .ma-hub-detail,
+  .ma-hub-card__desc,
+  .ma-rev-card__label,
+  .ma-settings-hint,
+  .ma-rev-month-details {
+    color: #6b7a8d !important;
+  }
+
+  .ma-hub-card__arrow {
+    color: #6b7a8d !important;
+  }
+
+  .ma-hub-card__icon {
+    background: rgba(0, 102, 204, 0.08) !important;
+    border-color: rgba(0, 102, 204, 0.15) !important;
+    color: #0077cc !important;
+  }
+
+  .ma-hub-avatar {
+    box-shadow: 0 4px 18px rgba(0, 102, 204, 0.25) !important;
+  }
+
+  .ma-input {
+    background: #f0f2f5 !important;
+    border-color: #d0d5dd !important;
+    color: #1a2232 !important;
+  }
+
+  .ma-hub-logout-btn {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    color: #6b7a8d !important;
+  }
+
+  .ma-sub-back {
+    color: #0066cc !important;
+  }
+
+  .ma-theme-btn,
+  .ma-scale-btn {
+    background: #f0f2f5 !important;
+    border-color: #d0d5dd !important;
+    color: #6b7a8d !important;
+  }
+
+  .ma-theme-btn.active,
+  .ma-scale-btn.active {
+    border-color: #0066cc !important;
+    background: rgba(0, 102, 204, 0.08) !important;
+    color: #1a2232 !important;
+  }
+
+  .ma-scale-preview__card {
+    background: rgba(0, 102, 204, 0.08) !important;
+    border-color: rgba(0, 102, 204, 0.2) !important;
+    color: #1a2232 !important;
+  }
+
+  .ma-rev-route-row {
+    border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .ma-rev-month-row {
+    border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .ma-date-nav__btn,
+  .ma-date-nav__label {
+    border-color: rgba(0, 0, 0, 0.12) !important;
+    background: rgba(0, 0, 0, 0.04) !important;
+    color: #1a2232 !important;
+  }
+
+  .ma-route-entry {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .ma-route-dest__name,
+  .ma-route-price,
+  .ma-route-tl-total {
+    color: #1a2232 !important;
+  }
+
+  .ma-route-time,
+  .ma-route-meta__item,
+  .ma-route-tl-label {
+    color: #7a8599 !important;
+  }
+
+  .ma-route-timeline {
+    border-top-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .ma-route-tl-total {
+    border-top-color: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .ma-route-badge--muted {
+    background: rgba(0, 0, 0, 0.06) !important;
+    color: #7a8599 !important;
+  }
+
+  .ma-footer {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+  }
+
+  .ma-footer__item {
+    color: #1a1a2e !important;
+  }
+
+  .ma-footer__item.active {
+    color: #0066cc !important;
+  }
+
+  .ma-phone-chip {
+    color: #1a2b42 !important;
+    background: rgba(13, 110, 253, 0.1) !important;
+    border-color: rgba(13, 110, 253, 0.25) !important;
+  }
+}
+
 /* Force light mode */
 .ma-force-light .ma-page,
 .ma-force-light .ma-transfer-page,
@@ -1041,13 +1198,14 @@
   color: #6b7a8d !important;
 }
 
-.ma-force-light .ma-hub-card__arrow,
-.ma-force-light .ma-hub-card__icon {
+.ma-force-light .ma-hub-card__arrow {
   color: #6b7a8d !important;
 }
 
 .ma-force-light .ma-hub-card__icon {
   background: rgba(0, 102, 204, 0.08) !important;
+  border-color: rgba(0, 102, 204, 0.15) !important;
+  color: #0077cc !important;
 }
 
 .ma-force-light .ma-input {

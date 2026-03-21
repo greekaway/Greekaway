@@ -635,6 +635,9 @@ const MOVEATHENS_PAGE_MAP = {
   '/info': 'info.html',
   '/contact': 'contact.html',
   '/hotel': 'hotel-context.html',
+  '/hotel/profile': 'hotel-profile.html',
+  '/hotel/revenue': 'hotel-revenue.html',
+  '/hotel/settings': 'hotel-settings.html',
   '/assistant': 'ai-assistant.html',
   '/driver-accept': 'driver-accept.html',
   '/media': 'media.html'
