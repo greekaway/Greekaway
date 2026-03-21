@@ -1,0 +1,39 @@
+/* ============================================
+   MoveAthens Hotel Sub-pages — Shared styles
+   Back button + common layout for profile/revenue/settings
+   ============================================ */
+
+/* ── Back navigation link ── */
+.ma-sub-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--ma-accent);
+  font-size: 15px;
+  font-weight: 500;
+  padding: 4px 0;
+  margin-bottom: 4px;
+  transition: opacity 0.15s ease;
+}
+
+.ma-sub-back:active {
+  opacity: 0.7;
+}
+
+.ma-sub-back__chevron {
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 359px) {
+  .ma-sub-back { font-size: 14px; }
+  .ma-sub-back__chevron { font-size: 20px; }
+}
+
+@media (min-width: 430px) {
+  .ma-sub-back { font-size: 16px; }
+  .ma-sub-back__chevron { font-size: 24px; }
+}

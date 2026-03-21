@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>MoveAthens - Ανάλυση Εσόδων</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/moveathens/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/moveathens/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/moveathens/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="/moveathens/css/auth-gate.css" />
+    <script>if(!localStorage.getItem('moveathens_hotel')){document.documentElement.className+=' ma-gate-pending'};(function(){var t=localStorage.getItem('ma_theme_preference');if(t==='light')document.documentElement.classList.add('ma-force-light');else if(t==='dark')document.documentElement.classList.add('ma-force-dark')})()</script>
+    <link rel="stylesheet" href="/moveathens/css/page-loader.css" />
+    <link rel="stylesheet" href="/moveathens/css/moveathens-base.css" />
+    <link rel="stylesheet" href="/moveathens/css/footer.css" />
+    <link rel="stylesheet" href="/moveathens/css/hotel-sub.css" />
+    <link rel="stylesheet" href="/moveathens/css/hotel-revenue.css" />
+    <link rel="stylesheet" href="/moveathens/css/dark-mode.css" />
+    <meta name="theme-color" content="#001f3f">
+  </head>
+  <body class="ma-page">
+
+    <main class="ma-main">
+
+      <!-- ── Back navigation ── -->
+      <a href="/moveathens/hotel" class="ma-sub-back" data-route="/moveathens/hotel">
+        <span class="ma-sub-back__chevron">‹</span>
+        <span>Μενού</span>
+      </a>
+
+      <h2 class="ma-title">📊 Ανάλυση Εσόδων</h2>
+
+      <!-- ── Summary Cards Grid ── -->
+      <div class="ma-rev-grid" id="rev-summary">
+        <div class="ma-rev-card">
+          <span class="ma-rev-card__label">Σύνολο Αιτημάτων</span>
+          <span class="ma-rev-card__value" id="rev-total-requests">—</span>
+        </div>
+        <div class="ma-rev-card">
+          <span class="ma-rev-card__label">Ολοκληρωμένα</span>
+          <span class="ma-rev-card__value ma-rev-card__value--accent" id="rev-completed">—</span>
+        </div>
+        <div class="ma-rev-card">
+          <span class="ma-rev-card__label">Χωρίς Οδηγό</span>
+          <span class="ma-rev-card__value ma-rev-card__value--warn" id="rev-nodriver">—</span>
+        </div>
+        <div class="ma-rev-card">
+          <span class="ma-rev-card__label">Σύνολο Εσόδων</span>
+          <span class="ma-rev-card__value ma-rev-card__value--accent" id="rev-total-revenue">—</span>
+        </div>
+        <div class="ma-rev-card">
+          <span class="ma-rev-card__label">Προμήθειά μου</span>
+          <span class="ma-rev-card__value ma-rev-card__value--accent" id="rev-my-commission">—</span>
+        </div>
+        <div class="ma-rev-card">
+          <span class="ma-rev-card__label">Προμήθεια Πλατφόρμας</span>
+          <span class="ma-rev-card__value" id="rev-service-commission">—</span>
+        </div>
+      </div>
+
+      <!-- ── Route Types Breakdown ── -->
+      <section class="ma-card ma-section" id="rev-route-types-section">
+        <h3 class="ma-rev-section-title">Τύποι Διαδρομών</h3>
+        <div class="ma-rev-route-list" id="rev-route-types">
+          <div class="ma-rev-route-row">
+            <span>✈️ Αεροδρόμιο</span>
+            <span class="ma-rev-route-count" id="rev-rt-airport">0</span>
+          </div>
+          <div class="ma-rev-route-row">
+            <span>⚓ Λιμάνι</span>
+            <span class="ma-rev-route-count" id="rev-rt-port">0</span>
+          </div>
+          <div class="ma-rev-route-row">
+            <span>🏙️ Πόλη</span>
+            <span class="ma-rev-route-count" id="rev-rt-city">0</span>
+          </div>
+          <div class="ma-rev-route-row">
+            <span>🧳 Ταξίδι</span>
+            <span class="ma-rev-route-count" id="rev-rt-travel">0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Route History with Date Navigator ── -->
+      <section class="ma-card ma-section" id="rev-history-section">
+        <h3 class="ma-rev-section-title">📋 Ιστορικό Διαδρομών</h3>
+
+        <!-- Date Navigator -->
+        <div class="ma-date-nav" id="rev-date-nav">
+          <button class="ma-date-nav__btn" id="rev-date-prev" aria-label="Προηγούμενη μέρα">‹</button>
+          <button class="ma-date-nav__label" id="rev-date-label" aria-label="Επιλογή ημερομηνίας">
+            <span id="rev-date-text">Σήμερα</span>
+            <span class="ma-date-nav__badge" id="rev-date-badge"></span>
+          </button>
+          <input type="date" class="ma-date-nav__picker" id="rev-date-picker" />
+          <button class="ma-date-nav__btn" id="rev-date-next" aria-label="Επόμενη μέρα">›</button>
+        </div>
+
+        <!-- Route List -->
+        <div class="ma-route-list" id="rev-route-list">
+          <p class="ma-rev-empty">Φόρτωση...</p>
+        </div>
+      </section>
+
+      <!-- ── Monthly Breakdown ── -->
+      <section class="ma-card ma-section" id="rev-monthly-section">
+        <h3 class="ma-rev-section-title">Μηνιαία Ανάλυση</h3>
+        <div class="ma-rev-monthly-list" id="rev-monthly">
+          <p class="ma-muted" style="text-align:center;padding:12px 0;">Φόρτωση...</p>
+        </div>
+      </section>
+
+    </main>
+
+    <div data-ma-modal-slot></div>
+    <div data-ma-footer-slot></div>
+
+    <script src="/moveathens/js/auth-gate.js"></script>
+    <script src="/moveathens/js/page-loader.js" defer></script>
+    <script src="/moveathens/js/network-status.js" defer></script>
+    <script src="/moveathens/js/moveathens-config.js"></script>
+    <script src="/moveathens/js/contact-modal.js"></script>
+    <script src="/moveathens/js/footer.js"></script>
+    <script src="/moveathens/js/hotel-revenue.js"></script>
+  </body>
+</html>

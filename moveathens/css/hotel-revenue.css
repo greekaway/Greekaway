@@ -1,0 +1,405 @@
+/* ============================================
+   MoveAthens Hotel Revenue Dashboard — Styles
+   ============================================ */
+
+/* ── Summary cards grid — 2 columns ── */
+.ma-rev-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ma-rev-card {
+  background: var(--ma-card);
+  border-radius: 14px;
+  padding: 14px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 72px;
+}
+
+.ma-rev-card__label {
+  font-size: 11px;
+  color: var(--ma-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+}
+
+.ma-rev-card__value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ma-text);
+}
+
+.ma-rev-card__value--accent {
+  color: #10b981;
+}
+
+.ma-rev-card__value--warn {
+  color: #f59e0b;
+}
+
+/* ── Route types list ── */
+.ma-rev-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ma-text);
+  margin: 0 0 12px;
+}
+
+.ma-rev-route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ma-rev-route-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 14px;
+  color: var(--ma-text);
+}
+
+.ma-rev-route-row:last-child {
+  border-bottom: none;
+}
+
+.ma-rev-route-count {
+  font-weight: 700;
+  color: var(--ma-accent);
+  font-size: 15px;
+}
+
+/* ── Monthly Breakdown ── */
+.ma-rev-monthly-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ma-rev-month-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ma-rev-month-row:last-child {
+  border-bottom: none;
+}
+
+.ma-rev-month-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ma-text);
+}
+
+.ma-rev-month-details {
+  font-size: 11px;
+  color: var(--ma-muted);
+  margin-top: 2px;
+}
+
+.ma-rev-month-amount {
+  font-size: 16px;
+  font-weight: 700;
+  color: #10b981;
+  text-align: right;
+}
+
+.ma-rev-empty {
+  text-align: center;
+  padding: 20px 0;
+  color: var(--ma-muted);
+  font-size: 14px;
+}
+
+/* ================================================
+   DATE NAVIGATOR
+   ================================================ */
+.ma-date-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.ma-date-nav__btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ma-accent);
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.ma-date-nav__btn:active {
+  transform: scale(0.95);
+}
+
+.ma-date-nav__btn--disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.ma-date-nav__label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ma-text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ma-date-nav__badge {
+  display: none;
+  background: var(--ma-accent);
+  color: #001f3f;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.ma-date-nav__picker {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ================================================
+   ROUTE ENTRIES (cards)
+   ================================================ */
+.ma-route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ma-route-entry {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ma-route-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ma-route-dest {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ma-route-dest__icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ma-route-dest__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ma-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ma-route-time {
+  font-size: 13px;
+  color: var(--ma-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.ma-route-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ma-route-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 8px;
+  width: fit-content;
+}
+
+.ma-route-badge--ok {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.ma-route-badge--progress {
+  background: rgba(70, 211, 255, 0.15);
+  color: var(--ma-accent);
+}
+
+.ma-route-badge--warn {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.ma-route-badge--muted {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ma-muted);
+}
+
+.ma-route-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ma-route-meta__item {
+  font-size: 13px;
+  color: var(--ma-muted);
+}
+
+.ma-route-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ma-text);
+  padding-top: 4px;
+}
+
+.ma-route-commission {
+  font-size: 12px;
+  font-weight: 500;
+  color: #10b981;
+}
+
+/* ================================================
+   ROUTE TIMELINE (phases)
+   ================================================ */
+.ma-route-timeline {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ma-route-tl-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.ma-route-tl-icon {
+  font-size: 16px;
+}
+
+.ma-route-tl-label {
+  font-size: 10px;
+  color: var(--ma-muted);
+  letter-spacing: 0.2px;
+}
+
+.ma-route-tl-dur {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ma-accent);
+}
+
+.ma-route-tl-total {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ma-text);
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  margin-top: 4px;
+}
+
+/* ================================================
+   RESPONSIVE
+   ================================================ */
+@media (max-width: 359px) {
+  .ma-rev-grid { gap: 8px; }
+  .ma-rev-card { padding: 12px 10px; min-height: 64px; }
+  .ma-rev-card__label { font-size: 10px; }
+  .ma-rev-card__value { font-size: 17px; }
+  .ma-rev-route-row { font-size: 13px; }
+  .ma-rev-month-name { font-size: 13px; }
+  .ma-rev-month-amount { font-size: 14px; }
+
+  .ma-date-nav__btn { width: 36px; height: 36px; font-size: 18px; }
+  .ma-date-nav__label { font-size: 13px; height: 36px; }
+  .ma-route-entry { padding: 12px; }
+  .ma-route-dest__name { font-size: 14px; }
+  .ma-route-tl-label { font-size: 9px; }
+  .ma-route-tl-dur { font-size: 12px; }
+}
+
+@media (min-width: 430px) {
+  .ma-rev-grid { gap: 12px; }
+  .ma-rev-card { padding: 16px 14px; min-height: 78px; border-radius: 16px; }
+  .ma-rev-card__label { font-size: 12px; }
+  .ma-rev-card__value { font-size: 22px; }
+  .ma-rev-section-title { font-size: 16px; }
+
+  .ma-date-nav__btn { width: 44px; height: 44px; border-radius: 14px; }
+  .ma-date-nav__label { height: 44px; font-size: 15px; border-radius: 14px; }
+  .ma-route-entry { padding: 16px; border-radius: 16px; }
+}
+
+@media (min-width: 768px) {
+  .ma-rev-grid { grid-template-columns: 1fr 1fr 1fr; }
+  .ma-rev-card { padding: 18px 16px; }
+  .ma-rev-card__value { font-size: 24px; }
+
+  .ma-route-entry { padding: 18px; }
+  .ma-route-dest__name { font-size: 16px; }
+  .ma-route-timeline { gap: 12px; }
+  .ma-route-tl-dur { font-size: 14px; }
+}

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>MoveAthens - Ρυθμίσεις</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/moveathens/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/moveathens/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/moveathens/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="/moveathens/css/auth-gate.css" />
+    <script>if(!localStorage.getItem('moveathens_hotel')){document.documentElement.className+=' ma-gate-pending'};(function(){var t=localStorage.getItem('ma_theme_preference');if(t==='light')document.documentElement.classList.add('ma-force-light');else if(t==='dark')document.documentElement.classList.add('ma-force-dark')})()</script>
+    <link rel="stylesheet" href="/moveathens/css/page-loader.css" />
+    <link rel="stylesheet" href="/moveathens/css/moveathens-base.css" />
+    <link rel="stylesheet" href="/moveathens/css/footer.css" />
+    <link rel="stylesheet" href="/moveathens/css/hotel-sub.css" />
+    <link rel="stylesheet" href="/moveathens/css/hotel-settings.css" />
+    <link rel="stylesheet" href="/moveathens/css/dark-mode.css" />
+    <meta name="theme-color" content="#001f3f">
+  </head>
+  <body class="ma-page">
+
+    <main class="ma-main">
+
+      <!-- ── Back navigation ── -->
+      <a href="/moveathens/hotel" class="ma-sub-back" data-route="/moveathens/hotel">
+        <span class="ma-sub-back__chevron">‹</span>
+        <span>Μενού</span>
+      </a>
+
+      <h2 class="ma-title">⚙️ Ρυθμίσεις Εφαρμογής</h2>
+
+      <!-- ── Theme Setting ── -->
+      <section class="ma-card ma-section">
+        <h3 class="ma-settings-label">Εμφάνιση</h3>
+        <p class="ma-settings-hint">Επιλέξτε τη λειτουργία εμφάνισης της εφαρμογής</p>
+        <div class="ma-theme-selector" id="theme-selector">
+          <button class="ma-theme-btn" data-theme="auto">
+            <span class="ma-theme-btn__icon">🔄</span>
+            <span class="ma-theme-btn__label">Αυτόματο</span>
+          </button>
+          <button class="ma-theme-btn" data-theme="light">
+            <span class="ma-theme-btn__icon">☀️</span>
+            <span class="ma-theme-btn__label">Φωτεινό</span>
+          </button>
+          <button class="ma-theme-btn" data-theme="dark">
+            <span class="ma-theme-btn__icon">🌙</span>
+            <span class="ma-theme-btn__label">Σκοτεινό</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ── Tile Scale Setting ── -->
+      <section class="ma-card ma-section">
+        <h3 class="ma-settings-label">Μέγεθος Κατηγοριών</h3>
+        <p class="ma-settings-hint">Προσαρμόστε το μέγεθος των καρτών κατηγοριών στη σελίδα κρατήσεων</p>
+        <div class="ma-scale-selector" id="scale-selector">
+          <button class="ma-scale-btn" data-scale="0.85">
+            <span class="ma-scale-btn__label">Μικρό</span>
+          </button>
+          <button class="ma-scale-btn" data-scale="1">
+            <span class="ma-scale-btn__label">Κανονικό</span>
+          </button>
+          <button class="ma-scale-btn" data-scale="1.15">
+            <span class="ma-scale-btn__label">Μεγάλο</span>
+          </button>
+        </div>
+        <div class="ma-scale-preview" id="scale-preview">
+          <div class="ma-scale-preview__card" id="scale-preview-card">
+            <span>✈️ Αεροδρόμια</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <div data-ma-modal-slot></div>
+    <div data-ma-footer-slot></div>
+
+    <script src="/moveathens/js/auth-gate.js"></script>
+    <script src="/moveathens/js/page-loader.js" defer></script>
+    <script src="/moveathens/js/network-status.js" defer></script>
+    <script src="/moveathens/js/moveathens-config.js"></script>
+    <script src="/moveathens/js/contact-modal.js"></script>
+    <script src="/moveathens/js/footer.js"></script>
+    <script src="/moveathens/js/hotel-settings.js"></script>
+  </body>
+</html>

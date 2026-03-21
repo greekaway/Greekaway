@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>MoveAthens - Προφίλ</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/moveathens/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/moveathens/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/moveathens/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="/moveathens/css/auth-gate.css" />
+    <script>if(!localStorage.getItem('moveathens_hotel')){document.documentElement.className+=' ma-gate-pending'};(function(){var t=localStorage.getItem('ma_theme_preference');if(t==='light')document.documentElement.classList.add('ma-force-light');else if(t==='dark')document.documentElement.classList.add('ma-force-dark')})()</script>
+    <link rel="stylesheet" href="/moveathens/css/page-loader.css" />
+    <link rel="stylesheet" href="/moveathens/css/moveathens-base.css" />
+    <link rel="stylesheet" href="/moveathens/css/footer.css" />
+    <link rel="stylesheet" href="/moveathens/css/hotel-sub.css" />
+    <link rel="stylesheet" href="/moveathens/css/dark-mode.css" />
+    <meta name="theme-color" content="#001f3f">
+  </head>
+  <body class="ma-page">
+
+    <main class="ma-main">
+
+      <!-- ── Back navigation ── -->
+      <a href="/moveathens/hotel" class="ma-sub-back" data-route="/moveathens/hotel">
+        <span class="ma-sub-back__chevron">‹</span>
+        <span>Μενού</span>
+      </a>
+
+      <!-- ── Hotel Profile Card ── -->
+      <section class="ma-card ma-section" id="hotel-info-section">
+        <h2 class="ma-title" id="hotel-display-name"></h2>
+
+        <div class="ma-field">
+          <label class="ma-muted">Τύπος Καταλύματος</label>
+          <input class="ma-input" type="text" data-ma-hotel-input="accommodation_type" readonly />
+        </div>
+        <div class="ma-field">
+          <label class="ma-muted">Δήμος</label>
+          <input class="ma-input" type="text" data-ma-hotel-input="municipality" readonly />
+        </div>
+        <div class="ma-field">
+          <label class="ma-muted">Διεύθυνση</label>
+          <input class="ma-input" type="text" data-ma-hotel-input="address" readonly />
+        </div>
+        <div class="ma-field">
+          <label class="ma-muted">Email Ξενοδοχείου</label>
+          <input class="ma-input" type="email" data-ma-hotel-input="email" readonly />
+        </div>
+
+        <div class="ma-field">
+          <label class="ma-muted">Τηλέφωνα Ξενοδοχείου</label>
+          <div id="hotel-phones-list" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.25rem;"></div>
+        </div>
+
+        <div class="ma-field" style="background:rgba(46,204,113,0.1); padding:0.75rem; border-radius:8px;">
+          <label class="ma-muted" style="color:#27ae60;">✅ Συνδεδεμένος με</label>
+          <input class="ma-input" type="text" id="hotel-connected-phone" readonly style="font-weight:600;" />
+        </div>
+      </section>
+    </main>
+
+    <div data-ma-modal-slot></div>
+    <div data-ma-footer-slot></div>
+
+    <script src="/moveathens/js/auth-gate.js"></script>
+    <script src="/moveathens/js/page-loader.js" defer></script>
+    <script src="/moveathens/js/network-status.js" defer></script>
+    <script src="/moveathens/js/moveathens-config.js"></script>
+    <script src="/moveathens/js/contact-modal.js"></script>
+    <script src="/moveathens/js/footer.js"></script>
+    <script src="/moveathens/js/hotel-context.js"></script>
+  </body>
+</html>

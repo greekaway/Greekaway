@@ -58,6 +58,9 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     '/info': 'info.html',
     '/contact': 'contact.html',
     '/hotel': 'hotel-context.html',
+    '/hotel/profile': 'hotel-profile.html',
+    '/hotel/revenue': 'hotel-revenue.html',
+    '/hotel/settings': 'hotel-settings.html',
     '/assistant': 'ai-assistant.html'
   };
 
@@ -492,6 +495,145 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     } catch (err) {
       console.error('[moveathens] my-stats error:', err);
       return res.status(500).json({ error: 'Stats unavailable' });
+    }
+  });
+
+  // ========================================
+  // PUBLIC: Detailed hotel stats (revenue dashboard)
+  // ========================================
+  app.get('/api/moveathens/my-detailed-stats', async (req, res) => {
+    if (isDev) res.set('Cache-Control', 'no-store');
+    try {
+      const zoneId = String(req.query.zone_id || '').trim();
+      if (!zoneId) return res.json({ totalRequests: 0, completed: 0, nodriver: 0, totalRevenue: 0, myCommission: 0, serviceCommission: 0, routeTypes: {}, months: [] });
+
+      const allRequests = await requestsLayer.getRequests({});
+      const mine = allRequests.filter(r => String(r.origin_zone_id) === zoneId);
+
+      const active = mine.filter(r => r.status === 'accepted' || r.status === 'completed');
+      const nodriverReqs = mine.filter(r => r.status === 'nodriver');
+
+      // Summary stats
+      const totalRequests = active.length;
+      const completed = mine.filter(r => r.status === 'completed').length;
+      const nodriver = nodriverReqs.length;
+      const totalRevenue = active.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
+      const myCommission = active.reduce((sum, r) => sum + (Number(r.commission_hotel) || 0), 0);
+      const serviceCommission = active.reduce((sum, r) => sum + (Number(r.commission_service) || 0), 0);
+
+      // Route types (from destination data)
+      const data = ensureTransferConfig(migrateHotelZones(await dataLayer.getFullConfig()));
+      const destMap = {};
+      (data.destinations || []).forEach(d => {
+        if (d.route_type) {
+          destMap[d.id] = d.route_type;
+          if (d.name) destMap[d.name.toLowerCase().trim()] = d.route_type;
+        }
+      });
+
+      const routeTypes = { airport: 0, port: 0, city: 0, travel: 0, unknown: 0 };
+      active.forEach(r => {
+        let rt = 'unknown';
+        if (r.destination_id && destMap[r.destination_id]) rt = destMap[r.destination_id];
+        else if (r.destination_name) {
+          const key = r.destination_name.toLowerCase().trim();
+          if (destMap[key]) rt = destMap[key];
+        }
+        routeTypes[rt] = (routeTypes[rt] || 0) + 1;
+      });
+
+      // Monthly breakdown
+      const monthMap = {};
+      active.forEach(r => {
+        const d = new Date(r.created_at);
+        if (isNaN(d.getTime())) return;
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const key = y + '-' + m;
+        if (!monthMap[key]) {
+          monthMap[key] = { month: key, year: y, month_number: d.getMonth() + 1, total_routes: 0, total_revenue: 0, commission_hotel: 0 };
+        }
+        monthMap[key].total_routes += 1;
+        monthMap[key].total_revenue += Number(r.price) || 0;
+        monthMap[key].commission_hotel += Number(r.commission_hotel) || 0;
+      });
+
+      const months = Object.values(monthMap).sort((a, b) => b.month.localeCompare(a.month));
+
+      return res.json({ totalRequests, completed, nodriver, totalRevenue, myCommission, serviceCommission, routeTypes, months });
+    } catch (err) {
+      console.error('[moveathens] my-detailed-stats error:', err);
+      return res.status(500).json({ error: 'Stats unavailable' });
+    }
+  });
+
+  // ========================================
+  // PUBLIC: Hotel routes list (per-day, for revenue history)
+  // ========================================
+  app.get('/api/moveathens/my-routes', async (req, res) => {
+    if (isDev) res.set('Cache-Control', 'no-store');
+    try {
+      const zoneId = String(req.query.zone_id || '').trim();
+      if (!zoneId) return res.json({ routes: [], date: '' });
+
+      const dateParam = String(req.query.date || '').trim(); // YYYY-MM-DD
+      const allRequests = await requestsLayer.getRequests({});
+      let mine = allRequests.filter(r => String(r.origin_zone_id) === zoneId);
+
+      // Filter by date if provided
+      if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+        mine = mine.filter(r => {
+          // Use scheduled_date for scheduled bookings, created_at for instant
+          const d = r.scheduled_date || (r.created_at ? r.created_at.slice(0, 10) : '');
+          return d === dateParam;
+        });
+      }
+
+      // Sort by most recent first (use accepted_at or created_at)
+      mine.sort((a, b) => {
+        const ta = new Date(a.accepted_at || a.created_at || 0).getTime();
+        const tb = new Date(b.accepted_at || b.created_at || 0).getTime();
+        return tb - ta;
+      });
+
+      const routes = mine.map(r => {
+        const accepted = r.accepted_at ? new Date(r.accepted_at).getTime() : null;
+        const arrived = r.arrived_at ? new Date(r.arrived_at).getTime() : null;
+        const navigating = r.navigating_dest_at ? new Date(r.navigating_dest_at).getTime() : null;
+        const completed = r.completed_at ? new Date(r.completed_at).getTime() : null;
+
+        return {
+          id: r.id,
+          destination_name: r.destination_name || '—',
+          destination_id: r.destination_id || '',
+          driver_name: r.driver_name || '',
+          vehicle_name: r.vehicle_name || '',
+          passenger_name: r.passenger_name || '',
+          passengers: r.passengers || 0,
+          price: r.price || 0,
+          commission_hotel: r.commission_hotel || 0,
+          payment_method: r.payment_method || '',
+          status: r.status || 'pending',
+          booking_type: r.booking_type || 'instant',
+          scheduled_date: r.scheduled_date || '',
+          scheduled_time: r.scheduled_time || '',
+          created_at: r.created_at || null,
+          accepted_at: r.accepted_at || null,
+          arrived_at: r.arrived_at || null,
+          navigating_dest_at: r.navigating_dest_at || null,
+          completed_at: r.completed_at || null,
+          // Timeline durations (ms)
+          dur_to_hotel: (accepted && arrived) ? (arrived - accepted) : null,
+          dur_waiting: (arrived && navigating) ? (navigating - arrived) : null,
+          dur_to_dest: (navigating && completed) ? (completed - navigating) : null,
+          dur_total: (accepted && completed) ? (completed - accepted) : null
+        };
+      });
+
+      return res.json({ routes, date: dateParam || '' });
+    } catch (err) {
+      console.error('[moveathens] my-routes error:', err);
+      return res.status(500).json({ error: 'Routes unavailable' });
     }
   });
 

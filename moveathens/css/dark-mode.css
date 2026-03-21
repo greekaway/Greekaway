@@ -909,4 +909,365 @@
     background: rgba(70, 130, 255, 0.2) !important;
     border-color: rgba(70, 130, 255, 0.35) !important;
   }
+
+  /* ========================================
+     HOTEL HUB & SUB-PAGES
+     ======================================== */
+
+  /* Hub avatar glow */
+  .ma-hub-avatar {
+    box-shadow: 0 4px 18px rgba(70, 211, 255, 0.4) !important;
+  }
+
+  /* Hub cards */
+  .ma-hub-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ma-hub-card__icon {
+    background: rgba(70, 211, 255, 0.12) !important;
+  }
+
+  /* Hub logout */
+  .ma-hub-logout-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #8896a6 !important;
+  }
+
+  /* Back navigation */
+  .ma-sub-back {
+    color: #46d3ff !important;
+  }
+
+  /* Revenue cards */
+  .ma-rev-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ma-rev-route-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-rev-month-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* Date navigator & route entries */
+  .ma-date-nav__btn,
+  .ma-date-nav__label {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ma-route-entry {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-route-timeline {
+    border-top-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ma-route-tl-total {
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* Settings buttons */
+  .ma-theme-btn,
+  .ma-scale-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #8896a6 !important;
+  }
+
+  .ma-theme-btn.active,
+  .ma-scale-btn.active {
+    border-color: #46d3ff !important;
+    background: rgba(70, 211, 255, 0.12) !important;
+    color: #e8edf3 !important;
+  }
+
+  .ma-scale-preview__card {
+    background: rgba(70, 211, 255, 0.15) !important;
+    border-color: rgba(70, 211, 255, 0.3) !important;
+  }
+
+  .ma-settings-hint {
+    color: #8896a6 !important;
+  }
+}
+
+/* ========================================
+   FORCED THEME OVERRIDES
+   (Used by hotel-settings.js theme toggle)
+   ======================================== */
+
+/* Force light mode */
+.ma-force-light .ma-page,
+.ma-force-light .ma-transfer-page,
+.ma-force-light .ma-ai-page,
+.ma-force-light .ma-info-page {
+  background: #f5f7fa !important;
+}
+
+.ma-force-light .ma-card,
+.ma-force-light .ma-hub-card,
+.ma-force-light .ma-rev-card {
+  background: #fff !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.ma-force-light .ma-title,
+.ma-force-light .ma-hub-name,
+.ma-force-light .ma-hub-card__title,
+.ma-force-light .ma-rev-card__value,
+.ma-force-light .ma-rev-section-title,
+.ma-force-light .ma-rev-month-name,
+.ma-force-light .ma-rev-route-row,
+.ma-force-light .ma-settings-label {
+  color: #1a2232 !important;
+}
+
+.ma-force-light .ma-muted,
+.ma-force-light .ma-hub-detail,
+.ma-force-light .ma-hub-card__desc,
+.ma-force-light .ma-rev-card__label,
+.ma-force-light .ma-settings-hint,
+.ma-force-light .ma-rev-month-details {
+  color: #6b7a8d !important;
+}
+
+.ma-force-light .ma-hub-card__arrow,
+.ma-force-light .ma-hub-card__icon {
+  color: #6b7a8d !important;
+}
+
+.ma-force-light .ma-hub-card__icon {
+  background: rgba(0, 102, 204, 0.08) !important;
+}
+
+.ma-force-light .ma-input {
+  background: #f0f2f5 !important;
+  border-color: #d0d5dd !important;
+  color: #1a2232 !important;
+}
+
+.ma-force-light .ma-hub-logout-btn {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #6b7a8d !important;
+}
+
+.ma-force-light .ma-sub-back {
+  color: #0066cc !important;
+}
+
+.ma-force-light .ma-theme-btn,
+.ma-force-light .ma-scale-btn {
+  background: #f0f2f5 !important;
+  border-color: #d0d5dd !important;
+  color: #6b7a8d !important;
+}
+
+.ma-force-light .ma-theme-btn.active,
+.ma-force-light .ma-scale-btn.active {
+  border-color: #0066cc !important;
+  background: rgba(0, 102, 204, 0.08) !important;
+  color: #1a2232 !important;
+}
+
+.ma-force-light .ma-scale-preview__card {
+  background: rgba(0, 102, 204, 0.08) !important;
+  border-color: rgba(0, 102, 204, 0.2) !important;
+  color: #1a2232 !important;
+}
+
+.ma-force-light .ma-rev-route-row {
+  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.ma-force-light .ma-rev-month-row {
+  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.ma-force-light .ma-date-nav__btn,
+.ma-force-light .ma-date-nav__label {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+  color: #1a2232 !important;
+}
+
+.ma-force-light .ma-route-entry {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.ma-force-light .ma-route-dest__name,
+.ma-force-light .ma-route-price,
+.ma-force-light .ma-route-tl-total {
+  color: #1a2232 !important;
+}
+
+.ma-force-light .ma-route-time,
+.ma-force-light .ma-route-meta__item,
+.ma-force-light .ma-route-tl-label {
+  color: #7a8599 !important;
+}
+
+.ma-force-light .ma-route-timeline {
+  border-top-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.ma-force-light .ma-route-tl-total {
+  border-top-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.ma-force-light .ma-route-badge--muted {
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #7a8599 !important;
+}
+
+.ma-force-light .ma-footer {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.ma-force-light .ma-footer__item {
+  color: #1a1a2e !important;
+}
+
+.ma-force-light .ma-footer__item.active {
+  color: #0066cc !important;
+}
+
+.ma-force-light .ma-phone-chip {
+  color: #1a2b42 !important;
+  background: rgba(13, 110, 253, 0.1) !important;
+  border-color: rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Force dark mode */
+.ma-force-dark .ma-page,
+.ma-force-dark .ma-transfer-page,
+.ma-force-dark .ma-ai-page,
+.ma-force-dark .ma-info-page {
+  background: linear-gradient(135deg, #0d1a2d 0%, #0a1525 100%) !important;
+}
+
+.ma-force-dark .ma-card,
+.ma-force-dark .ma-hub-card,
+.ma-force-dark .ma-rev-card {
+  background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+.ma-force-dark .ma-title,
+.ma-force-dark .ma-hub-name,
+.ma-force-dark .ma-hub-card__title,
+.ma-force-dark .ma-rev-card__value,
+.ma-force-dark .ma-rev-section-title,
+.ma-force-dark .ma-rev-month-name,
+.ma-force-dark .ma-rev-route-row,
+.ma-force-dark .ma-settings-label {
+  color: #e8edf3 !important;
+}
+
+.ma-force-dark .ma-muted,
+.ma-force-dark .ma-hub-detail,
+.ma-force-dark .ma-hub-card__desc,
+.ma-force-dark .ma-rev-card__label,
+.ma-force-dark .ma-settings-hint,
+.ma-force-dark .ma-rev-month-details {
+  color: #8896a6 !important;
+}
+
+.ma-force-dark .ma-hub-card__icon {
+  background: rgba(70, 211, 255, 0.12) !important;
+}
+
+.ma-force-dark .ma-input {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #f0f4f8 !important;
+}
+
+.ma-force-dark .ma-hub-logout-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #8896a6 !important;
+}
+
+.ma-force-dark .ma-sub-back {
+  color: #46d3ff !important;
+}
+
+.ma-force-dark .ma-theme-btn,
+.ma-force-dark .ma-scale-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #8896a6 !important;
+}
+
+.ma-force-dark .ma-theme-btn.active,
+.ma-force-dark .ma-scale-btn.active {
+  border-color: #46d3ff !important;
+  background: rgba(70, 211, 255, 0.12) !important;
+  color: #e8edf3 !important;
+}
+
+.ma-force-dark .ma-scale-preview__card {
+  background: rgba(70, 211, 255, 0.15) !important;
+  border-color: rgba(70, 211, 255, 0.3) !important;
+}
+
+.ma-force-dark .ma-rev-route-row {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ma-force-dark .ma-rev-month-row {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ma-force-dark .ma-date-nav__btn,
+.ma-force-dark .ma-date-nav__label {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.ma-force-dark .ma-route-entry {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ma-force-dark .ma-route-timeline {
+  border-top-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.ma-force-dark .ma-route-tl-total {
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ma-force-dark .ma-footer {
+  background: rgba(10, 16, 28, 0.35) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.ma-force-dark .ma-footer__item {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.ma-force-dark .ma-footer__item.active {
+  color: #46d3ff !important;
+}
+
+.ma-force-dark .ma-phone-chip {
+  color: #e8edf3 !important;
+  background: rgba(70, 130, 255, 0.2) !important;
+  border-color: rgba(70, 130, 255, 0.35) !important;
+}
 }

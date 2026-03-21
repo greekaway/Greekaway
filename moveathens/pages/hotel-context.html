@@ -3,61 +3,68 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <title>MoveAthens - Ξενοδοχείο</title>
+    <title>MoveAthens - Μενού</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/moveathens/icons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/moveathens/icons/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/moveathens/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="/moveathens/css/auth-gate.css" />
-    <script>if(!localStorage.getItem('moveathens_hotel')){document.documentElement.className+=' ma-gate-pending'}</script>
+    <script>if(!localStorage.getItem('moveathens_hotel')){document.documentElement.className+=' ma-gate-pending'};(function(){var t=localStorage.getItem('ma_theme_preference');if(t==='light')document.documentElement.classList.add('ma-force-light');else if(t==='dark')document.documentElement.classList.add('ma-force-dark')})()</script>
     <link rel="stylesheet" href="/moveathens/css/page-loader.css" />
     <link rel="preload" href="/moveathens/videos/hero-logo.webp" as="image" type="image/webp" />
     <link rel="stylesheet" href="/moveathens/css/moveathens-base.css" />
     <link rel="stylesheet" href="/moveathens/css/footer.css" />
-    <link rel="stylesheet" href="/moveathens/css/welcome.css" />
-    <link rel="stylesheet" href="/moveathens/css/page-header.css" />
+    <link rel="stylesheet" href="/moveathens/css/hotel-hub.css" />
     <link rel="stylesheet" href="/moveathens/css/dark-mode.css" />
     <meta name="theme-color" content="#001f3f">
   </head>
-  <body class="ma-page">
-    
+  <body class="ma-page ma-hub-page">
+
     <main class="ma-main">
-      <!-- Hotel info (read-only) — auth gate ensures user is logged in -->
-      <section class="ma-card ma-section" id="hotel-info-section">
-        <h2 class="ma-title" id="hotel-display-name"></h2>
 
-        <div class="ma-field">
-          <label class="ma-muted">Τύπος Καταλύματος</label>
-          <input class="ma-input" type="text" data-ma-hotel-input="accommodation_type" readonly />
-        </div>
-        <div class="ma-field">
-          <label class="ma-muted">Δήμος</label>
-          <input class="ma-input" type="text" data-ma-hotel-input="municipality" readonly />
-        </div>
-        <div class="ma-field">
-          <label class="ma-muted">Διεύθυνση</label>
-          <input class="ma-input" type="text" data-ma-hotel-input="address" readonly />
-        </div>
-        <div class="ma-field">
-          <label class="ma-muted">Email Ξενοδοχείου</label>
-          <input class="ma-input" type="email" data-ma-hotel-input="email" readonly />
-        </div>
-
-        <div class="ma-field">
-          <label class="ma-muted">Τηλέφωνα Ξενοδοχείου</label>
-          <div id="hotel-phones-list" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.25rem;"></div>
-        </div>
-
-        <div class="ma-field" style="background:rgba(46,204,113,0.1); padding:0.75rem; border-radius:8px;">
-          <label class="ma-muted" style="color:#27ae60;">✅ Συνδεδεμένος με</label>
-          <input class="ma-input" type="text" id="hotel-connected-phone" readonly style="font-weight:600;" />
-        </div>
-
-        <div style="display:flex; gap:0.5rem; margin-top:1rem;">
-          <button class="ma-button ma-button--secondary" id="hotel-logout-btn">
-            🚪 Αποσύνδεση
-          </button>
-        </div>
+      <!-- ── Hotel Identity Header ── -->
+      <section class="ma-hub-header">
+        <div class="ma-hub-avatar" id="hub-avatar"></div>
+        <h2 class="ma-hub-name" id="hub-hotel-name"></h2>
+        <p class="ma-hub-detail" id="hub-hotel-phone"></p>
+        <p class="ma-hub-detail" id="hub-hotel-email"></p>
       </section>
+
+      <!-- ── Menu Cards ── -->
+      <nav class="ma-hub-menu">
+        <a href="/moveathens/hotel/profile" class="ma-hub-card" data-route="/moveathens/hotel/profile">
+          <span class="ma-hub-card__icon">📋</span>
+          <div class="ma-hub-card__text">
+            <span class="ma-hub-card__title">Προφίλ Ξενοδοχείου</span>
+            <span class="ma-hub-card__desc">Στοιχεία, τηλέφωνα & πληροφορίες</span>
+          </div>
+          <span class="ma-hub-card__arrow">›</span>
+        </a>
+
+        <a href="/moveathens/hotel/revenue" class="ma-hub-card" data-route="/moveathens/hotel/revenue">
+          <span class="ma-hub-card__icon">📊</span>
+          <div class="ma-hub-card__text">
+            <span class="ma-hub-card__title">Ανάλυση Εσόδων</span>
+            <span class="ma-hub-card__desc">Στατιστικά, διαδρομές & μηνιαία ανάλυση</span>
+          </div>
+          <span class="ma-hub-card__arrow">›</span>
+        </a>
+
+        <a href="/moveathens/hotel/settings" class="ma-hub-card" data-route="/moveathens/hotel/settings">
+          <span class="ma-hub-card__icon">⚙️</span>
+          <div class="ma-hub-card__text">
+            <span class="ma-hub-card__title">Ρυθμίσεις Εφαρμογής</span>
+            <span class="ma-hub-card__desc">Εμφάνιση & προσαρμογή κατηγοριών</span>
+          </div>
+          <span class="ma-hub-card__arrow">›</span>
+        </a>
+      </nav>
+
+      <!-- ── Logout ── -->
+      <div class="ma-hub-logout">
+        <button class="ma-hub-logout-btn" id="hotel-logout-btn">
+          🚪 Αποσύνδεση
+        </button>
+      </div>
 
       <!-- Version Badge -->
       <div class="ma-version-badge" id="ma-version-badge">
@@ -76,7 +83,6 @@
     <script src="/moveathens/js/moveathens-config.js"></script>
     <script src="/moveathens/js/contact-modal.js"></script>
     <script src="/moveathens/js/footer.js"></script>
-    <script src="/moveathens/js/welcome.js"></script>
-    <script src="/moveathens/js/hotel-context.js"></script>
+    <script src="/moveathens/js/hotel-hub.js"></script>
   </body>
 </html>
