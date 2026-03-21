@@ -64,6 +64,7 @@
      TEXT COLORS - White on dark
      ======================================== */
   .ma-page .ma-title,
+  .ma-page .ma-sub-header__title,
   .ma-page .ma-muted,
   .ma-page label,
   .ma-transfer-page .ma-step-title,
@@ -1031,6 +1032,7 @@
   }
 
   .ma-title,
+  .ma-sub-header__title,
   .ma-hub-name,
   .ma-hub-card__title,
   .ma-rev-card__value,
@@ -1178,6 +1180,7 @@
 }
 
 .ma-force-light .ma-title,
+.ma-force-light .ma-sub-header__title,
 .ma-force-light .ma-hub-name,
 .ma-force-light .ma-hub-card__title,
 .ma-force-light .ma-rev-card__value,
@@ -1320,6 +1323,7 @@
 }
 
 .ma-force-dark .ma-title,
+.ma-force-dark .ma-sub-header__title,
 .ma-force-dark .ma-hub-name,
 .ma-force-dark .ma-hub-card__title,
 .ma-force-dark .ma-rev-card__value,

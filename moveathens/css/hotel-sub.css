@@ -38,13 +38,37 @@
   margin-left: 3px;
 }
 
+/* ── Sub-page header (back btn + title on same line) ── */
+.ma-sub-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ma-sub-header .ma-sub-back-btn {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.ma-sub-header__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ma-text, #e8edf3);
+  margin: 0;
+  line-height: 1.2;
+}
+
 /* ── Responsive ── */
 @media (max-width: 359px) {
   .ma-sub-back-btn { width: 36px; height: 36px; border-radius: 10px; }
   .ma-sub-back-chevron { width: 9px; height: 9px; border-width: 2px; }
+  .ma-sub-header__title { font-size: 16px; }
+  .ma-sub-header { gap: 10px; }
 }
 
 @media (min-width: 430px) {
   .ma-sub-back-btn { width: 44px; height: 44px; border-radius: 14px; }
   .ma-sub-back-chevron { width: 11px; height: 11px; border-width: 3px; }
+  .ma-sub-header__title { font-size: 20px; }
 }
