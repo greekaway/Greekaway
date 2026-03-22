@@ -51,9 +51,14 @@
 
   // Case 1: localStorage has valid session → already logged in
   if (stored && stored.orderer_phone && stored.origin_zone_id) {
-    // Ensure cookie is in sync
-    if (!cookiePhone) setCookie(CK_NAME, stored.orderer_phone, CK_DAYS);
-    return; // page loads normally
+    // If display_name is missing, force re-login so they enter their name
+    if (!stored.display_name) {
+      // Don't clear session — just fall through to the gate
+    } else {
+      // Ensure cookie is in sync
+      if (!cookiePhone) setCookie(CK_NAME, stored.orderer_phone, CK_DAYS);
+      return; // page loads normally
+    }
   }
 
   // Case 2: localStorage lost but cookie has phone → restore silently
@@ -76,6 +81,10 @@
           if (data.has_pin) {
             clearCookie(CK_NAME);
             return;
+          }
+          // If no display_name yet, can't auto-restore — must go through gate
+          if (!data.display_name) {
+            return; // fall through to gate, keep cookie for phone pre-fill
           }
           const zone = data.zone;
           const obj = {
@@ -120,7 +129,7 @@
       <img class="ma-gate__logo" src="/moveathens/videos/hero-logo.webp" alt="MoveAthens" />
       <div class="ma-gate__icon">🔒</div>
       <h1 class="ma-gate__title">Σύνδεση</h1>
-      <p class="ma-gate__desc">Εισάγετε τον αριθμό τηλεφώνου<br>του ξενοδοχείου σας για πρόσβαση.</p>
+      <p class="ma-gate__desc" data-ma-gate-desc>Εισάγετε τον αριθμό τηλεφώνου<br>του ξενοδοχείου σας για πρόσβαση.</p>
       <form class="ma-gate__form" data-ma-gate-form>
         <div>
           <label class="ma-gate__label" for="ma-gate-phone">Τηλέφωνο</label>
@@ -162,6 +171,28 @@
   let nameRequired = false;
   let pinChecked = false;
 
+  // If user has session but no display_name, pre-fill phone and auto-trigger check
+  const existingPhone = (stored && stored.orderer_phone && !stored.display_name) ? stored.orderer_phone : (cookiePhone || '');
+  if (existingPhone) {
+    phoneInput.value = existingPhone;
+    // Auto-trigger phone check after gate is ready to show name field immediately
+    setTimeout(async () => {
+      try {
+        const checkRes = await fetch(`/api/moveathens/hotel-by-phone?phone=${encodeURIComponent(existingPhone)}`);
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          pinChecked = true;
+          if (!checkData.display_name) showNameField();
+          if (checkData.has_pin) showPinField();
+          if (checkData.display_name && !checkData.has_pin) {
+            // Has name and no PIN — complete login directly
+            completeLogin(checkData.zone, existingPhone, checkData.display_name);
+          }
+        }
+      } catch (_) { /* ignore — user can still submit manually */ }
+    }, 100);
+  }
+
   const showError = (msg) => {
     if (errorEl) errorEl.textContent = msg;
   };
@@ -169,6 +200,9 @@
   const showNameField = () => {
     nameRequired = true;
     nameWrap.style.display = '';
+    // Update description to explain why name is needed
+    const descEl = gate.querySelector('[data-ma-gate-desc]');
+    if (descEl) descEl.innerHTML = 'Εισάγετε το όνομά σας για να σας<br>αναγνωρίζει ο ιδιοκτήτης.';
     nameInput.focus();
   };
 
