@@ -1242,6 +1242,83 @@ html[data-theme='light'] .ma-infopage-form label {
   font-size: 13px;
 }
 
+/* ── Hotel users carousel on small mobile ── */
+@media (max-width: 480px) {
+  /* Hide table header — info is inside each card */
+  .ma-phone-row--header {
+    display: none;
+  }
+
+  /* Carousel container */
+  .ma-hotel-phones__list {
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 10px;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ma-hotel-phones__list::-webkit-scrollbar {
+    height: 4px;
+  }
+  .ma-hotel-phones__list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  /* Each user row → card */
+  .ma-phone-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    min-width: 200px;
+    max-width: 240px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    padding: 12px 14px;
+    border-bottom: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .ma-phone-row__phone {
+    font-size: 13px;
+    word-break: break-all;
+  }
+  .ma-phone-row__name {
+    font-size: 12px;
+  }
+  .ma-phone-row__pin {
+    font-size: 11px;
+  }
+  .ma-phone-row__actions {
+    min-width: 0;
+    text-align: left;
+  }
+
+  /* Main phone row — same card style */
+  .ma-phone-row--main {
+    min-width: 180px;
+    max-width: 220px;
+  }
+
+  /* Actions side-by-side inside card */
+  .ma-phone-row .ma-phone-remove {
+    margin-top: 4px;
+    align-self: flex-start;
+  }
+
+  /* Add-user form stacks vertically */
+  .ma-hotel-phones__add {
+    flex-direction: column;
+  }
+  .ma-phone-input,
+  .ma-phone-name-input {
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 720px) {
   .ma-price-row {
     grid-template-columns: 1fr 1fr;
