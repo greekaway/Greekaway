@@ -403,3 +403,79 @@
   .ma-route-timeline { gap: 12px; }
   .ma-route-tl-dur { font-size: 14px; }
 }
+
+/* ================================================
+   Per-Phone Breakdown Section
+   ================================================ */
+.ma-rev-perphone-list {
+  margin-top: 8px;
+}
+
+.ma-rev-perphone-header {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ma-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ma-rev-perphone-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s;
+}
+
+.ma-rev-perphone-row:last-child {
+  border-bottom: none;
+}
+
+.ma-rev-perphone-row--me {
+  background: rgba(70, 211, 255, 0.06);
+  border-radius: 10px;
+}
+
+.ma-rev-perphone-phone {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ma-text);
+}
+
+.ma-rev-perphone-phone em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--ma-accent, #46d3ff);
+  font-weight: 400;
+}
+
+.ma-rev-perphone-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ma-muted);
+  text-align: center;
+  min-width: 40px;
+}
+
+.ma-rev-perphone-amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ma-text);
+  text-align: right;
+  min-width: 70px;
+}
+
+@media (max-width: 359px) {
+  .ma-rev-perphone-phone { font-size: 12px; }
+  .ma-rev-perphone-count { font-size: 12px; min-width: 32px; }
+  .ma-rev-perphone-amount { font-size: 12px; min-width: 56px; }
+  .ma-rev-perphone-header { font-size: 10px; gap: 8px; }
+  .ma-rev-perphone-row { gap: 8px; padding: 10px; }
+}

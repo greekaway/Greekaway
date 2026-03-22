@@ -20,6 +20,7 @@
  */
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 
 // Shared helpers & data layer
 const {
@@ -260,6 +261,79 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       if (!result) {
         return res.status(404).json({ error: 'Phone not found' });
       }
+      // Check if this phone has a PIN set
+      const pinHash = await dataLayer.getPhonePinHash(phone);
+      const hasPin = !!pinHash;
+
+      const zone = result.zone;
+      return res.json({
+        zone: {
+          id: zone.id,
+          name: zone.name,
+          type: zone.type,
+          municipality: zone.municipality || '',
+          address: zone.address || '',
+          email: zone.email || '',
+          accommodation_type: zone.accommodation_type || 'hotel',
+          lat: zone.lat != null ? zone.lat : null,
+          lng: zone.lng != null ? zone.lng : null
+        },
+        phones: (result.phones || []).map(p => ({
+          id: p.id,
+          phone: p.phone,
+          label: p.label || ''
+        })),
+        has_pin: hasPin
+      });
+    } catch (err) {
+      console.error('[moveathens] hotel-by-phone error:', err.message);
+      return res.status(500).json({ error: 'Lookup failed' });
+    }
+  });
+
+  // Public: Check if phone has PIN (for auth-gate to show PIN field)
+  app.get('/api/moveathens/check-pin', async (req, res) => {
+    if (isDev) res.set('Cache-Control', 'no-store');
+    try {
+      const phone = normalizeString(req.query.phone).replace(/[\s\-()]/g, '');
+      if (!phone || phone.length < 5) {
+        return res.status(400).json({ error: 'Invalid phone' });
+      }
+      const result = await dataLayer.getHotelByPhone(phone);
+      if (!result) {
+        return res.status(404).json({ error: 'Phone not found' });
+      }
+      const pinHash = await dataLayer.getPhonePinHash(phone);
+      return res.json({ has_pin: !!pinHash });
+    } catch (err) {
+      console.error('[moveathens] check-pin error:', err.message);
+      return res.status(500).json({ error: 'Check failed' });
+    }
+  });
+
+  // Public: Verify phone + PIN login
+  app.post('/api/moveathens/verify-phone', async (req, res) => {
+    try {
+      const phone = normalizeString(req.body.phone || '').replace(/[\s\-()]/g, '');
+      const pin = (req.body.pin || '').trim();
+      if (!phone || phone.length < 5) {
+        return res.status(400).json({ error: 'Invalid phone' });
+      }
+      const result = await dataLayer.getHotelByPhone(phone);
+      if (!result) {
+        return res.status(404).json({ error: 'Phone not found' });
+      }
+      // Check PIN if one is set
+      const pinHash = await dataLayer.getPhonePinHash(phone);
+      if (pinHash) {
+        if (!pin) {
+          return res.status(401).json({ error: 'PIN required', has_pin: true });
+        }
+        const inputHash = crypto.createHash('sha256').update(pin).digest('hex');
+        if (inputHash !== pinHash) {
+          return res.status(401).json({ error: 'Wrong PIN' });
+        }
+      }
       const zone = result.zone;
       return res.json({
         zone: {
@@ -280,8 +354,51 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         }))
       });
     } catch (err) {
-      console.error('[moveathens] hotel-by-phone error:', err.message);
-      return res.status(500).json({ error: 'Lookup failed' });
+      console.error('[moveathens] verify-phone error:', err.message);
+      return res.status(500).json({ error: 'Verification failed' });
+    }
+  });
+
+  // Public: Set/change PIN (authenticated user — requires current session phone)
+  app.post('/api/moveathens/set-pin', async (req, res) => {
+    try {
+      const phone = normalizeString(req.body.phone || '').replace(/[\s\-()]/g, '');
+      const newPin = (req.body.pin || '').trim();
+      if (!phone || phone.length < 5) {
+        return res.status(400).json({ error: 'Invalid phone' });
+      }
+      if (!newPin || newPin.length < 4) {
+        return res.status(400).json({ error: 'PIN must be at least 4 characters' });
+      }
+      const result = await dataLayer.getHotelByPhone(phone);
+      if (!result) {
+        return res.status(404).json({ error: 'Phone not found' });
+      }
+      const pinHash = crypto.createHash('sha256').update(newPin).digest('hex');
+      await dataLayer.setPhonePin(phone, pinHash);
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error('[moveathens] set-pin error:', err.message);
+      return res.status(500).json({ error: 'Failed to set PIN' });
+    }
+  });
+
+  // Public: Remove own PIN (requires phone)
+  app.post('/api/moveathens/remove-pin', async (req, res) => {
+    try {
+      const phone = normalizeString(req.body.phone || '').replace(/[\s\-()]/g, '');
+      if (!phone || phone.length < 5) {
+        return res.status(400).json({ error: 'Invalid phone' });
+      }
+      const result = await dataLayer.getHotelByPhone(phone);
+      if (!result) {
+        return res.status(404).json({ error: 'Phone not found' });
+      }
+      await dataLayer.clearPhonePin(phone);
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error('[moveathens] remove-pin error:', err.message);
+      return res.status(500).json({ error: 'Failed to remove PIN' });
     }
   });
 
@@ -560,7 +677,19 @@ module.exports = function registerMoveAthens(app, opts = {}) {
 
       const months = Object.values(monthMap).sort((a, b) => b.month.localeCompare(a.month));
 
-      return res.json({ totalRequests, completed, nodriver, totalRevenue, myCommission, serviceCommission, routeTypes, months });
+      // Per-phone breakdown
+      const phoneMap = {};
+      active.forEach(r => {
+        const ph = (r.orderer_phone || '').trim() || 'unknown';
+        if (!phoneMap[ph]) {
+          phoneMap[ph] = { phone: ph, routes: 0, revenue: 0 };
+        }
+        phoneMap[ph].routes += 1;
+        phoneMap[ph].revenue += Number(r.price) || 0;
+      });
+      const perPhone = Object.values(phoneMap).sort((a, b) => b.revenue - a.revenue);
+
+      return res.json({ totalRequests, completed, nodriver, totalRevenue, myCommission, serviceCommission, routeTypes, months, perPhone });
     } catch (err) {
       console.error('[moveathens] my-detailed-stats error:', err);
       return res.status(500).json({ error: 'Stats unavailable' });

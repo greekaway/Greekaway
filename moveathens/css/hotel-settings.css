@@ -61,6 +61,137 @@
 }
 
 /* ================================================
+   PIN SECURITY SECTION
+   ================================================ */
+
+/* PIN status indicator */
+.ma-pin-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 4px;
+}
+
+.ma-pin-status__icon {
+  font-size: 20px;
+}
+
+.ma-pin-status__text {
+  font-size: 14px;
+  color: var(--ma-text);
+  font-weight: 500;
+}
+
+/* PIN input fields */
+.ma-pin-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-family: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: var(--ma-card, #1c2438);
+  color: var(--ma-text, #f7f7fb);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  margin-top: 8px;
+}
+
+.ma-pin-input::placeholder {
+  color: rgba(178, 184, 199, 0.5);
+}
+
+.ma-pin-input:focus {
+  border-color: var(--ma-accent, #46d3ff);
+}
+
+/* PIN form layout */
+.ma-pin-form {
+  margin-top: 12px;
+  animation: maPinReveal 0.25s ease forwards;
+}
+
+@keyframes maPinReveal {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* PIN action buttons */
+.ma-pin-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ma-pin-main-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.ma-pin-btn {
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.2s;
+  min-height: 44px;
+}
+
+.ma-pin-btn:active {
+  transform: scale(0.97);
+}
+
+.ma-pin-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.ma-pin-btn--save,
+.ma-pin-btn--set {
+  background: linear-gradient(135deg, #46d3ff 0%, #1da1f2 100%);
+  color: #fff;
+  flex: 1;
+}
+
+.ma-pin-btn--change {
+  background: rgba(70, 211, 255, 0.12);
+  color: var(--ma-accent, #46d3ff);
+  border: 1px solid rgba(70, 211, 255, 0.25);
+  flex: 1;
+}
+
+.ma-pin-btn--cancel {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ma-muted, #b2b8c7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ma-pin-btn--remove {
+  background: rgba(255, 82, 82, 0.1);
+  color: #ff5252;
+  border: 1px solid rgba(255, 82, 82, 0.2);
+}
+
+/* PIN error */
+.ma-pin-error {
+  font-size: 13px;
+  color: #ff8a8a;
+  margin: 8px 0 0;
+  min-height: 1.2em;
+}
+
+/* ================================================
    RESPONSIVE
    ================================================ */
 @media (max-width: 359px) {
@@ -69,6 +200,10 @@
   .ma-theme-btn { padding: 12px 6px; border-radius: 12px; }
   .ma-theme-btn__icon { font-size: 20px; }
   .ma-theme-btn__label { font-size: 11px; }
+  .ma-pin-input { padding: 12px 14px; font-size: 15px; }
+  .ma-pin-btn { padding: 10px 16px; font-size: 13px; }
+  .ma-pin-status { padding: 12px 14px; }
+  .ma-pin-status__text { font-size: 13px; }
 }
 
 @media (min-width: 430px) {
@@ -76,4 +211,6 @@
   .ma-theme-btn { padding: 16px 10px; }
   .ma-theme-btn__icon { font-size: 28px; }
   .ma-theme-btn__label { font-size: 13px; }
+  .ma-pin-input { padding: 16px 18px; }
+  .ma-pin-btn { padding: 14px 24px; font-size: 15px; }
 }

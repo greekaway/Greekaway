@@ -49,6 +49,38 @@
         </div>
       </section>
 
+      <!-- ── Security PIN Setting ── -->
+      <section class="ma-card ma-section" id="pin-section">
+        <h3 class="ma-settings-label">🔐 Κωδικός Ασφαλείας (PIN)</h3>
+        <p class="ma-settings-hint">Ορίστε ένα PIN για επιπλέον ασφάλεια κατά τη σύνδεση</p>
+
+        <div id="pin-status" class="ma-pin-status">
+          <span class="ma-pin-status__icon" id="pin-status-icon">—</span>
+          <span class="ma-pin-status__text" id="pin-status-text">Φόρτωση...</span>
+        </div>
+
+        <div id="pin-form-wrap" class="ma-pin-form" style="display:none">
+          <label class="ma-settings-hint" for="pin-input" id="pin-form-label">Νέος κωδικός (τουλάχιστον 4 χαρακτήρες)</label>
+          <input class="ma-pin-input" type="password" id="pin-input"
+                 placeholder="Εισάγετε κωδικό" inputmode="numeric"
+                 minlength="4" maxlength="20" autocomplete="new-password" />
+          <input class="ma-pin-input" type="password" id="pin-input-confirm"
+                 placeholder="Επιβεβαίωση κωδικού" inputmode="numeric"
+                 minlength="4" maxlength="20" autocomplete="new-password" />
+          <div class="ma-pin-actions">
+            <button class="ma-pin-btn ma-pin-btn--save" id="pin-save-btn" type="button">Αποθήκευση</button>
+            <button class="ma-pin-btn ma-pin-btn--cancel" id="pin-cancel-btn" type="button">Ακύρωση</button>
+          </div>
+          <p class="ma-pin-error" id="pin-error"></p>
+        </div>
+
+        <div id="pin-actions-wrap" class="ma-pin-main-actions" style="display:none">
+          <button class="ma-pin-btn ma-pin-btn--set" id="pin-set-btn" type="button">Ορισμός PIN</button>
+          <button class="ma-pin-btn ma-pin-btn--change" id="pin-change-btn" type="button" style="display:none">Αλλαγή PIN</button>
+          <button class="ma-pin-btn ma-pin-btn--remove" id="pin-remove-btn" type="button" style="display:none">Αφαίρεση PIN</button>
+        </div>
+      </section>
+
 
 
     </main>

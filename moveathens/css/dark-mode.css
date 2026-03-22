@@ -1161,6 +1161,60 @@
     background: rgba(13, 110, 253, 0.1) !important;
     border-color: rgba(13, 110, 253, 0.25) !important;
   }
+
+  /* PIN Settings — Auto Light */
+  .ma-pin-status {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+  .ma-pin-status__text {
+    color: #1a2232 !important;
+  }
+  .ma-pin-input {
+    background: #fff !important;
+    border-color: #d0d5dd !important;
+    color: #1a2232 !important;
+  }
+  .ma-pin-input:focus {
+    border-color: #0066cc !important;
+  }
+  .ma-pin-btn--cancel {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    color: #6b7a8d !important;
+  }
+  .ma-pin-btn--change {
+    background: rgba(0, 102, 204, 0.08) !important;
+    color: #0066cc !important;
+    border-color: rgba(0, 102, 204, 0.2) !important;
+  }
+  .ma-pin-error {
+    color: #dc2626 !important;
+  }
+
+  /* Per-Phone Revenue — Auto Light */
+  .ma-rev-perphone-header {
+    color: #6b7a8d !important;
+    border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+  }
+  .ma-rev-perphone-row {
+    border-bottom-color: rgba(0, 0, 0, 0.04) !important;
+  }
+  .ma-rev-perphone-row--me {
+    background: rgba(0, 102, 204, 0.06) !important;
+  }
+  .ma-rev-perphone-phone {
+    color: #1a2232 !important;
+  }
+  .ma-rev-perphone-phone em {
+    color: #0066cc !important;
+  }
+  .ma-rev-perphone-count {
+    color: #6b7a8d !important;
+  }
+  .ma-rev-perphone-amount {
+    color: #1a2232 !important;
+  }
 }
 
 /* Force light mode */
@@ -1306,6 +1360,60 @@
   border-color: rgba(13, 110, 253, 0.25) !important;
 }
 
+/* ── PIN Settings — Force Light ── */
+.ma-force-light .ma-pin-status {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+.ma-force-light .ma-pin-status__text {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-pin-input {
+  background: #fff !important;
+  border-color: #d0d5dd !important;
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-pin-input:focus {
+  border-color: #0066cc !important;
+}
+.ma-force-light .ma-pin-btn--cancel {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #6b7a8d !important;
+}
+.ma-force-light .ma-pin-btn--change {
+  background: rgba(0, 102, 204, 0.08) !important;
+  color: #0066cc !important;
+  border-color: rgba(0, 102, 204, 0.2) !important;
+}
+.ma-force-light .ma-pin-error {
+  color: #dc2626 !important;
+}
+
+/* ── Per-Phone Revenue — Force Light ── */
+.ma-force-light .ma-rev-perphone-header {
+  color: #6b7a8d !important;
+  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+}
+.ma-force-light .ma-rev-perphone-row {
+  border-bottom-color: rgba(0, 0, 0, 0.04) !important;
+}
+.ma-force-light .ma-rev-perphone-row--me {
+  background: rgba(0, 102, 204, 0.06) !important;
+}
+.ma-force-light .ma-rev-perphone-phone {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-rev-perphone-phone em {
+  color: #0066cc !important;
+}
+.ma-force-light .ma-rev-perphone-count {
+  color: #6b7a8d !important;
+}
+.ma-force-light .ma-rev-perphone-amount {
+  color: #1a2232 !important;
+}
+
 /* Force dark mode */
 .ma-force-dark .ma-page,
 .ma-force-dark .ma-transfer-page,
@@ -1429,5 +1537,59 @@
   color: #e8edf3 !important;
   background: rgba(70, 130, 255, 0.2) !important;
   border-color: rgba(70, 130, 255, 0.35) !important;
+}
+
+/* ── PIN Settings — Force Dark ── */
+.ma-force-dark .ma-pin-status {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.ma-force-dark .ma-pin-status__text {
+  color: #e8edf3 !important;
+}
+.ma-force-dark .ma-pin-input {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #f0f4f8 !important;
+}
+.ma-force-dark .ma-pin-input:focus {
+  border-color: #46d3ff !important;
+}
+.ma-force-dark .ma-pin-btn--cancel {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #8896a6 !important;
+}
+.ma-force-dark .ma-pin-btn--change {
+  background: rgba(70, 211, 255, 0.12) !important;
+  color: #46d3ff !important;
+  border-color: rgba(70, 211, 255, 0.25) !important;
+}
+.ma-force-dark .ma-pin-error {
+  color: #ff8a8a !important;
+}
+
+/* ── Per-Phone Revenue — Force Dark ── */
+.ma-force-dark .ma-rev-perphone-header {
+  color: #8896a6 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+.ma-force-dark .ma-rev-perphone-row {
+  border-bottom-color: rgba(255, 255, 255, 0.04) !important;
+}
+.ma-force-dark .ma-rev-perphone-row--me {
+  background: rgba(70, 211, 255, 0.06) !important;
+}
+.ma-force-dark .ma-rev-perphone-phone {
+  color: #e8edf3 !important;
+}
+.ma-force-dark .ma-rev-perphone-phone em {
+  color: #46d3ff !important;
+}
+.ma-force-dark .ma-rev-perphone-count {
+  color: #8896a6 !important;
+}
+.ma-force-dark .ma-rev-perphone-amount {
+  color: #e8edf3 !important;
 }
 }

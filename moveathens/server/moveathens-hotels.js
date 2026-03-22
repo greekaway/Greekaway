@@ -131,5 +131,39 @@ module.exports = function registerHotelRoutes(app, opts = {}) {
     }
   });
 
+  // ========================================
+  // Phone PIN Management (Admin)
+  // ========================================
+  app.get('/api/admin/moveathens/hotel-phones-with-pin', async (req, res) => {
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const zoneId = normalizeString(req.query.zone_id) || null;
+      const phones = await dataLayer.getHotelPhones(zoneId);
+      // Add has_pin flag for each phone
+      const result = [];
+      for (const p of phones) {
+        const pinHash = await dataLayer.getPhonePinHash(p.phone);
+        result.push({ ...p, has_pin: !!pinHash });
+      }
+      return res.json({ phones: result });
+    } catch (err) {
+      console.error('[moveathens] hotel-phones-with-pin failed:', err.message);
+      return res.status(500).json({ error: 'Failed to load phones' });
+    }
+  });
+
+  app.delete('/api/admin/moveathens/phone-pin', async (req, res) => {
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const phone = normalizeString(req.body.phone || '').replace(/[\s\-()]/g, '');
+      if (!phone) return res.status(400).json({ error: 'Phone required' });
+      const cleared = await dataLayer.clearPhonePin(phone);
+      return res.json({ ok: cleared });
+    } catch (err) {
+      console.error('[moveathens] phone-pin delete failed:', err.message);
+      return res.status(500).json({ error: 'Failed to clear PIN' });
+    }
+  });
+
   console.log('[MoveAthens] Hotels routes registered');
 };

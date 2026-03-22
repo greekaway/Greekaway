@@ -1444,6 +1444,42 @@ async function deleteHotelPhone(id) {
   return false;
 }
 
+async function setPhonePin(phone, pinHash) {
+  await initDb();
+  if (dbAvailable) {
+    try {
+      return await db.ma.setPhonePin(phone, pinHash);
+    } catch (err) {
+      console.error('[moveathens] DB setPhonePin failed:', err.message);
+    }
+  }
+  return false;
+}
+
+async function clearPhonePin(phone) {
+  await initDb();
+  if (dbAvailable) {
+    try {
+      return await db.ma.clearPhonePin(phone);
+    } catch (err) {
+      console.error('[moveathens] DB clearPhonePin failed:', err.message);
+    }
+  }
+  return false;
+}
+
+async function getPhonePinHash(phone) {
+  await initDb();
+  if (dbAvailable) {
+    try {
+      return await db.ma.getPhonePinHash(phone);
+    } catch (err) {
+      console.error('[moveathens] DB getPhonePinHash failed:', err.message);
+    }
+  }
+  return null;
+}
+
 /**
  * Check if using database
  */
@@ -1467,6 +1503,10 @@ module.exports = {
   getHotelByPhone,
   addHotelPhone,
   deleteHotelPhone,
+  // Phone PIN
+  setPhonePin,
+  clearPhonePin,
+  getPhonePinHash,
   // Vehicles
   getVehicleTypes,
   upsertVehicleType,

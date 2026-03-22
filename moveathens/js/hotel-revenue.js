@@ -108,6 +108,34 @@
         </div>
       `).join('');
     }
+
+    // Per-phone breakdown
+    const perPhoneList = document.getElementById('rev-perphone');
+    const perPhone = data.perPhone || [];
+    if (perPhoneList) {
+      if (perPhone.length === 0) {
+        perPhoneList.innerHTML = '<p class="ma-rev-empty">Δεν υπάρχουν δεδομένα χρηστών</p>';
+      } else if (perPhone.length === 1 && perPhone[0].phone === (stored.orderer_phone || '')) {
+        // Only one phone and it's the current user — hide section
+        const section = document.getElementById('rev-perphone-section');
+        if (section) section.style.display = 'none';
+      } else {
+        perPhoneList.innerHTML = `
+          <div class="ma-rev-perphone-header">
+            <span>Τηλέφωνο</span>
+            <span>Διαδρομές</span>
+            <span>Τζίρος</span>
+          </div>
+          ${perPhone.map(p => `
+            <div class="ma-rev-perphone-row${p.phone === (stored.orderer_phone || '') ? ' ma-rev-perphone-row--me' : ''}">
+              <span class="ma-rev-perphone-phone">${p.phone === 'unknown' ? '—' : p.phone}${p.phone === (stored.orderer_phone || '') ? ' <em>(εσείς)</em>' : ''}</span>
+              <span class="ma-rev-perphone-count">${p.routes}</span>
+              <span class="ma-rev-perphone-amount">${fmt(p.revenue)}</span>
+            </div>
+          `).join('')}
+        `;
+      }
+    }
   } catch (err) {
     console.error('[hotel-revenue] Stats load error:', err);
     const el = (id) => document.getElementById(id);

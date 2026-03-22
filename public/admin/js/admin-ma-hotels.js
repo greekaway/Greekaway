@@ -38,16 +38,26 @@
 
     const loadAllPhones = async () => {
       try {
-        const res = await api('/api/admin/moveathens/hotel-phones');
+        const res = await api('/api/admin/moveathens/hotel-phones-with-pin');
         if (res && res.ok) {
           const data = await res.json();
+          // Reset cache to get fresh pin status
+          const freshCache = {};
           (data.phones || []).forEach(p => {
-            if (!phonesCache[p.zone_id]) phonesCache[p.zone_id] = [];
-            const existing = phonesCache[p.zone_id].find(x => x.id === p.id);
-            if (!existing) phonesCache[p.zone_id].push(p);
+            if (!freshCache[p.zone_id]) freshCache[p.zone_id] = [];
+            freshCache[p.zone_id].push(p);
           });
+          Object.assign(phonesCache, freshCache);
         }
       } catch (e) { console.warn('loadAllPhones error', e); }
+    };
+
+    const clearPhonePin = async (phone) => {
+      try {
+        const res = await api('/api/admin/moveathens/phone-pin', 'DELETE', { phone });
+        if (res && res.ok) return true;
+      } catch (e) { /* ignore */ }
+      return false;
     };
 
     const addPhone = async (zoneId, phone, label) => {
@@ -119,7 +129,11 @@
         if (mainPhone && !mainAlreadyInList) {
           allBadges += `<span class="ma-phone-badge ma-phone-badge--main" title="Κύριο τηλέφωνο">📞 ${mainPhone}</span>`;
         }
-        allBadges += phones.map(p => `<span class="ma-phone-badge" title="${p.label || 'Τηλέφωνο'}">${p.phone}${p.label ? ' <em>(' + p.label + ')</em>' : ''}<button class="ma-phone-remove" data-phone-id="${p.id}" data-zone-id="${z.id}" title="Αφαίρεση">✕</button></span>`).join('');
+        allBadges += phones.map(p => {
+          const pinIcon = p.has_pin ? '<span class="ma-phone-pin-badge" title="PIN ενεργό">🔒</span>' : '';
+          const pinResetBtn = p.has_pin ? `<button class="ma-phone-pin-reset" data-phone="${p.phone}" data-zone-id="${z.id}" title="Διαγραφή PIN">🗑️</button>` : '';
+          return `<span class="ma-phone-badge" title="${p.label || 'Τηλέφωνο'}">${p.phone}${p.label ? ' <em>(' + p.label + ')</em>' : ''} ${pinIcon}${pinResetBtn}<button class="ma-phone-remove" data-phone-id="${p.id}" data-zone-id="${z.id}" title="Αφαίρεση">✕</button></span>`;
+        }).join('');
         if (!allBadges) allBadges = '<span class="ma-muted-text">Δεν έχουν οριστεί τηλέφωνα</span>';
         return `
         <div class="ma-zone-card" data-id="${z.id}">
@@ -223,6 +237,29 @@
             const ok = await removePhone(zoneId, phoneId);
             if (ok) { showToast('Αφαιρέθηκε'); render(); }
             else { showToast('Σφάλμα', 'error'); }
+          }
+        });
+      });
+
+      // PIN reset buttons
+      list.querySelectorAll('.ma-phone-pin-reset').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const phone = btn.dataset.phone;
+          const zoneId = btn.dataset.zoneId;
+          if (await openConfirm(`Διαγραφή PIN για ${phone};`, { title: 'Διαγραφή PIN', okLabel: 'Διαγραφή' })) {
+            const ok = await clearPhonePin(phone);
+            if (ok) {
+              // Update cache
+              const cached = phonesCache[zoneId] || [];
+              const p = cached.find(x => x.phone === phone);
+              if (p) p.has_pin = false;
+              showToast('Το PIN διαγράφηκε');
+              render();
+            } else {
+              showToast('Σφάλμα', 'error');
+            }
           }
         });
       });

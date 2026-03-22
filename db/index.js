@@ -958,6 +958,21 @@ const ma = {
   async deleteHotelPhone(id) {
     const r = await execute('DELETE FROM ma_hotel_phones WHERE id = $1', [id]);
     return r.rowCount > 0;
+  },
+
+  async setPhonePin(phone, pinHash) {
+    const r = await execute('UPDATE ma_hotel_phones SET pin_hash = $2 WHERE phone = $1', [phone, pinHash]);
+    return r.rowCount > 0;
+  },
+
+  async clearPhonePin(phone) {
+    const r = await execute('UPDATE ma_hotel_phones SET pin_hash = NULL WHERE phone = $1', [phone]);
+    return r.rowCount > 0;
+  },
+
+  async getPhonePinHash(phone) {
+    const row = await queryOne('SELECT pin_hash FROM ma_hotel_phones WHERE phone = $1', [phone]);
+    return row ? row.pin_hash : null;
   }
 };
 
