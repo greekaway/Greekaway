@@ -196,6 +196,7 @@
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
+ html:not(.ma-force-light) {
   .ma-chat-message.assistant .ma-chat-bubble {
     background: #2d2d3d;
     color: #e0e0e0;
@@ -237,6 +238,7 @@
   .ma-chat-quick-btn:active {
     background: #333350;
   }
+ } /* end force-light guard */
 }
 
 /* Responsive */

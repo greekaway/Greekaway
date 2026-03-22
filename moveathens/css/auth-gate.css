@@ -185,6 +185,7 @@ body.ma-gate-locked > *:not(.ma-gate):not(script) {
 
 /* ══ Light mode overrides ══ */
 @media (prefers-color-scheme: light) {
+ html:not(.ma-force-dark) {
   .ma-gate {
     background: #f5f7fa;
   }
@@ -208,6 +209,7 @@ body.ma-gate-locked > *:not(.ma-gate):not(script) {
   .ma-gate__error {
     color: #dc2626;
   }
+ } /* end force-dark guard */
 }
 
 /* ══ Safe area & small screen adjustments ══ */

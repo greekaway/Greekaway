@@ -2,6 +2,7 @@
 /* Does NOT affect .ma-hero-page (home page) */
 
 @media (prefers-color-scheme: dark) {
+ html:not(.ma-force-light) {
   /* ========================================
      PAGE BACKGROUNDS
      ======================================== */
@@ -1002,6 +1003,7 @@
   .ma-settings-hint {
     color: #8896a6 !important;
   }
+ } /* end force-light guard */
 }
 
 /* ========================================
@@ -1016,6 +1018,7 @@
    explicitly choosing a forced theme.
    ======================================== */
 @media (prefers-color-scheme: light) {
+ html:not(.ma-force-dark) {
   .ma-page,
   .ma-transfer-page,
   .ma-ai-page,
@@ -1259,6 +1262,7 @@
     color: #0066cc !important;
     border-color: rgba(0, 102, 204, 0.25) !important;
   }
+ } /* end force-dark guard */
 }
 
 /* =========================================================
@@ -2572,239 +2576,5 @@
   filter: none !important;
 }
 
-/* ── Transfer Page Categories — Force Light ── */
-.ma-force-light .ma-category-name {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-destination-item {
-  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
-  border: none !important;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06) !important;
-}
-.ma-force-light .ma-destination-name {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-destination-desc {
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-destination-chevron {
-  background: rgba(0, 0, 0, 0.04) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-}
-.ma-force-light .ma-chevron-icon {
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-destination-extras {
-  border-top-color: rgba(0, 0, 0, 0.06) !important;
-}
-.ma-force-light .ma-dest-extra {
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-dest-extra strong {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-subcategory-item {
-  background: linear-gradient(145deg, #ffffff 0%, #f0f4ff 100%) !important;
-  border: none !important;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06) !important;
-}
-.ma-force-light .ma-subcategory-name {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-subcategory-desc {
-  color: #6b7a8d !important;
-}
 
-/* ── Transfer Page Vehicles/Tariffs — Force Light ── */
-.ma-force-light .ma-tariff-card {
-  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
-  border: 2px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
-}
-.ma-force-light .ma-tariff-name {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-tariff-hours {
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-vehicle-card {
-  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
-}
-.ma-force-light .ma-vehicle-name {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-spec {
-  background: rgba(0, 0, 0, 0.04) !important;
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-vehicle-price {
-  color: #0066cc !important;
-}
-.ma-force-light .ma-counter {
-  background: rgba(0, 0, 0, 0.04) !important;
-}
-.ma-force-light .ma-counter-minus {
-  background: rgba(0, 0, 0, 0.06) !important;
-  color: #6b7a8d !important;
-}
-
-/* ── Search Overlay — Force Light ── */
-.ma-force-light .ma-search-overlay {
-  background: #f5f7fa !important;
-}
-.ma-force-light .ma-search-overlay__header {
-  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
-}
-.ma-force-light .ma-search-overlay__input {
-  background: #fff !important;
-  border-color: #d0d5dd !important;
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-search-overlay__input::placeholder {
-  color: rgba(0, 0, 0, 0.4) !important;
-}
-.ma-force-light .ma-search-overlay__input:focus {
-  border-color: #0066cc !important;
-}
-.ma-force-light .ma-search-overlay__cancel {
-  color: #0066cc !important;
-}
-.ma-force-light .ma-search-overlay__section-title {
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-search-overlay__list li {
-  color: #1a2232 !important;
-  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
-}
-.ma-force-light .ma-search-overlay__list li:hover {
-  background: rgba(0, 102, 204, 0.06) !important;
-}
-.ma-force-light .ma-search-overlay__list .ma-search-empty {
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-search-overlay__cat {
-  color: #6b7a8d !important;
-}
-
-/* ── Dest Search — Force Light ── */
-.ma-force-light .ma-dest-search-label {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-dest-search-input {
-  background: #fff !important;
-  border: 2px solid #d0d5dd !important;
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-dest-search-input::placeholder {
-  color: rgba(0, 0, 0, 0.4) !important;
-}
-.ma-force-light .ma-dest-search-input:focus {
-  border-color: #0066cc !important;
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15) !important;
-}
-.ma-force-light .ma-dest-search-results {
-  background: #fff !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12) !important;
-}
-.ma-force-light .ma-dest-search-results li {
-  color: #1a2232 !important;
-  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
-}
-.ma-force-light .ma-dest-search-result-name {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-dest-search-result-cat {
-  color: #6b7a8d !important;
-}
-
-/* ── Filter Chips — Force Light ── */
-.ma-force-light .ma-dest-filter-chip {
-  background: #f0f2f5 !important;
-  border-color: #d0d5dd !important;
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-dest-filter-chip:hover {
-  background: #e4e7ec !important;
-  border-color: #bcc3cf !important;
-}
-.ma-force-light .ma-dest-filter-chip.active {
-  background: linear-gradient(135deg, #4E6BFF 0%, #3a54cc 100%) !important;
-  color: #fff !important;
-  border-color: transparent !important;
-}
-.ma-force-light .ma-dest-filter-dropdown {
-  background: #fff !important;
-  border-color: rgba(0, 0, 0, 0.12) !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
-}
-.ma-force-light .ma-dest-filter-dropdown button {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-dest-filter-dropdown button:hover {
-  background: rgba(0, 0, 0, 0.04) !important;
-}
-
-/* ── AI Assistant Page — Force Light ── */
-.ma-force-light .ma-ai-page {
-  background: #f5f7fa !important;
-}
-.ma-force-light .ma-ai-header {
-  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-}
-.ma-force-light .ma-ai-logo {
-  filter: none !important;
-}
-.ma-force-light .ma-ai-title {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-ai-welcome {
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-ai-card {
-  background: #fff !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
-}
-.ma-force-light .ma-ai-card-title {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-ai-card-desc {
-  color: #6b7a8d !important;
-}
-
-/* ── Media Page — Force Light ── */
-.ma-force-light .ma-media-page {
-  background: #f5f7fa !important;
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-media-back {
-  background: #f0f2f5 !important;
-  border-color: #d0d5dd !important;
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-media-dest-name {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-media-platform-title {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-media-card {
-  background: #fff !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-}
-.ma-force-light .ma-media-card-title {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-media-card-platform {
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-media-empty {
-  color: #6b7a8d !important;
-}
 

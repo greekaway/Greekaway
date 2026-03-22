@@ -133,6 +133,7 @@
 
 /* ===== Dark Mode ===== */
 @media (prefers-color-scheme: dark) {
+ html:not(.ma-force-light) {
   .ma-info-tabs {
     background: transparent;
   }
@@ -174,6 +175,7 @@
   .ma-muted {
     color: #7b8794;
   }
+ } /* end force-light guard */
 }
 
 /* Body dark mode class override */
@@ -287,6 +289,7 @@ body.dark .ma-aboutus-list dd a {
 }
 
 @media (prefers-color-scheme: dark) {
+ html:not(.ma-force-light) {
   .ma-aboutus-row {
     border-bottom-color: rgba(255, 255, 255, 0.08);
   }
@@ -299,6 +302,7 @@ body.dark .ma-aboutus-list dd a {
   .ma-aboutus-list dd a {
     color: #6b9fff;
   }
+ } /* end force-light guard */
 }
 
 /* ========================================

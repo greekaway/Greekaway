@@ -260,6 +260,7 @@
    LIGHT MODE — Hero page footer
    ======================================== */
 @media (prefers-color-scheme: light) {
+ html:not(.ma-force-dark) {
   .ma-hero-page .ma-footer {
     background: rgba(255, 255, 255, 0.85);
     border: 1px solid rgba(0, 0, 0, 0.15);
@@ -283,4 +284,5 @@
   .ma-hero-page .ma-footer__item.active .ma-footer__icon svg {
     stroke: #0066cc;
   }
+ } /* end force-dark guard */
 }

@@ -45,6 +45,7 @@
 
 /* Light mode variant (when system prefers light) */
 @media (prefers-color-scheme: light) {
+ html:not(.ma-force-dark) {
   .ma-hero--no-video {
     background: linear-gradient(160deg, #e8ecf1 0%, #dce3ea 35%, #cedae4 65%, #e0e6ec 100%);
   }
@@ -128,6 +129,7 @@
   .ma-hero--no-video .ma-welcome-textblock__text {
     color: #1a2232;
   }
+ } /* end force-dark guard */
 }
 
 .ma-hero__scrim {

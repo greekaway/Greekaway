@@ -1486,8 +1486,10 @@
 
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
+ html:not(.ma-force-light) {
   .ma-success-title { color: #f1f1f1; }
   .ma-success-subtitle { color: #9ca3af; }
+ } /* end force-light guard */
 }
 
 /* Footer Nav */
