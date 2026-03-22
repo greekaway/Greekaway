@@ -1262,6 +1262,18 @@
     color: #0066cc !important;
     border-color: rgba(0, 102, 204, 0.25) !important;
   }
+
+  /* Connected User (Hotel Profile) — Auto Light */
+  .ma-connected-user {
+    background: rgba(39, 174, 96, 0.08) !important;
+    border-color: rgba(39, 174, 96, 0.25) !important;
+  }
+  #hotel-connected-name {
+    color: #1a2232 !important;
+  }
+  #hotel-connected-phone {
+    color: #1a2232 !important;
+  }
  } /* end force-dark guard */
 }
 
@@ -2437,6 +2449,17 @@
     border-color: rgba(0, 102, 204, 0.25) !important;
   }
 
+  /* Connected User (Hotel Profile) — Force Light */
+  .ma-force-light .ma-connected-user {
+    background: rgba(39, 174, 96, 0.08) !important;
+    border-color: rgba(39, 174, 96, 0.25) !important;
+  }
+  .ma-force-light #hotel-connected-name {
+    color: #1a2232 !important;
+  }
+  .ma-force-light #hotel-connected-phone {
+    color: #1a2232 !important;
+  }
 
 
 /* ── Hero Page (Welcome) — Force Light ── */
