@@ -132,13 +132,13 @@
         allBadges += phones.map(p => {
           const nameDisplay = p.display_name ? `<span class="ma-phone-row__name">${p.display_name}</span>` : '<span class="ma-phone-row__name ma-muted-text">—</span>';
           const pinStatus = p.has_pin
-            ? `<span class="ma-phone-row__pin ma-phone-row__pin--active" title="PIN ενεργό">🔒<button class="ma-phone-pin-reset" data-phone="${p.phone}" data-zone-id="${z.id}" title="Διαγραφή PIN">Διαγρ.</button></span>`
+            ? `<span class="ma-phone-row__pin ma-phone-row__pin--active">🔒 <button class="ma-phone-pin-reset" data-phone="${p.phone}" data-zone-id="${z.id}">Διαγραφή PIN</button></span>`
             : '<span class="ma-phone-row__pin ma-phone-row__pin--off">—</span>';
           return `<div class="ma-phone-row">
             <span class="ma-phone-row__phone">${p.phone}</span>
             ${nameDisplay}
             ${pinStatus}
-            <button class="ma-phone-remove" data-phone-id="${p.id}" data-zone-id="${z.id}" title="Αφαίρεση">✕</button>
+            <button class="ma-phone-remove" data-phone-id="${p.id}" data-zone-id="${z.id}">Διαγραφή</button>
           </div>`;
         }).join('');
         if (!allBadges) allBadges = '<span class="ma-muted-text">Δεν έχουν οριστεί τηλέφωνα</span>';
@@ -161,7 +161,7 @@
               <span class="ma-hotel-phones__label">📱 Χρήστες</span>
               <button class="btn secondary ma-phone-toggle-add" type="button" data-zone-id="${z.id}" title="Προσθήκη χρήστη">＋</button>
             </div>
-            ${phones.length > 0 ? `<div class="ma-phone-row ma-phone-row--header"><span class="ma-phone-row__phone">Τηλέφωνο</span><span class="ma-phone-row__name">Όνομα</span><span class="ma-phone-row__pin">PIN</span><span class="ma-phone-row__action"></span></div>` : ''}
+            ${phones.length > 0 ? `<div class="ma-phone-row ma-phone-row--header"><span class="ma-phone-row__phone">Τηλέφωνο</span><span class="ma-phone-row__name">Όνομα</span><span class="ma-phone-row__pin">PIN</span><span class="ma-phone-row__actions"></span></div>` : ''}
             <div class="ma-hotel-phones__list">${allBadges}</div>
             <div class="ma-hotel-phones__add" data-zone-id="${z.id}" hidden>
               <input class="input ma-phone-input" type="text" placeholder="6912345678" maxlength="30" data-zone-id="${z.id}">

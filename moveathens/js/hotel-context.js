@@ -17,7 +17,7 @@
   const logoutBtn    = document.getElementById('hotel-logout-btn');
   const displayName  = document.getElementById('hotel-display-name');
   const connectedPhone = document.getElementById('hotel-connected-phone');
-  const phonesList   = document.getElementById('hotel-phones-list');
+  const connectedName  = document.getElementById('hotel-connected-name');
   const municipalityInput = document.querySelector('[data-ma-hotel-input="municipality"]');
   const addressInput      = document.querySelector('[data-ma-hotel-input="address"]');
   const emailInput        = document.querySelector('[data-ma-hotel-input="email"]');
@@ -29,25 +29,19 @@
   };
 
   // ── Show hotel info (auth gate guarantees user is logged in) ──
-  const showInfo = (zone, phones, myPhone) => {
+  const showInfo = (zone, phones, myPhone, myDisplayName) => {
     if (infoSection) infoSection.style.display = '';
     if (displayName) displayName.textContent = zone.name || '';
     if (municipalityInput) municipalityInput.value = zone.municipality || '';
     if (addressInput) addressInput.value = zone.address || '';
     if (emailInput) emailInput.value = zone.email || '';
     if (accTypeInput) accTypeInput.value = accommodationLabels[zone.accommodation_type] || 'Ξενοδοχείο';
-    if (connectedPhone) connectedPhone.value = myPhone || '';
-
-    // Show all phones (read-only)
-    if (phonesList) {
-      phonesList.innerHTML = (phones || []).map(p =>
-        `<span class="ma-phone-chip">📱 ${p.phone}${p.label ? ' <small class="ma-phone-chip-label">('+p.label+')</small>' : ''}</span>`
-      ).join('');
-    }
+    if (connectedName) connectedName.textContent = myDisplayName || '';
+    if (connectedPhone) connectedPhone.textContent = myPhone || '';
   };
 
   // ── Persist hotel to localStorage (for transfer flow + auth gate cookie) ──
-  const persistHotel = (zone, myPhone) => {
+  const persistHotel = (zone, myPhone, myDisplayName) => {
     const obj = {
       origin_zone_id:     zone.id || '',
       origin_zone_name:   zone.name || '',
@@ -59,7 +53,8 @@
       accommodation_type: zone.accommodation_type || '',
       lat:                zone.lat != null ? zone.lat : null,
       lng:                zone.lng != null ? zone.lng : null,
-      orderer_phone:      myPhone || ''
+      orderer_phone:      myPhone || '',
+      display_name:       myDisplayName || ''
     };
     localStorage.setItem('moveathens_hotel', JSON.stringify(obj));
     // Legacy keys for compatibility
@@ -95,8 +90,8 @@
       const res = await fetch(`/api/moveathens/hotel-by-phone?phone=${encodeURIComponent(stored.orderer_phone)}`);
       if (res.ok) {
         const data = await res.json();
-        persistHotel(data.zone, stored.orderer_phone);
-        showInfo(data.zone, data.phones, stored.orderer_phone);
+        persistHotel(data.zone, stored.orderer_phone, data.display_name);
+        showInfo(data.zone, data.phones, stored.orderer_phone, data.display_name);
       } else {
         // Phone no longer valid — clear and redirect to hub (gate handles re-login)
         localStorage.removeItem('moveathens_hotel');
@@ -111,7 +106,7 @@
         address: stored.address,
         email: stored.email,
         accommodation_type: stored.accommodation_type
-      }, [], stored.orderer_phone);
+      }, [], stored.orderer_phone, stored.display_name || '');
     }
   }
 

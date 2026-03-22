@@ -115,10 +115,6 @@
     if (perPhoneList) {
       if (perPhone.length === 0) {
         perPhoneList.innerHTML = '<p class="ma-rev-empty">Δεν υπάρχουν δεδομένα χρηστών</p>';
-      } else if (perPhone.length === 1 && perPhone[0].phone === (stored.orderer_phone || '')) {
-        // Only one phone and it's the current user — hide section
-        const section = document.getElementById('rev-perphone-section');
-        if (section) section.style.display = 'none';
       } else {
         const MAX_VISIBLE = 5;
         const hasMore = perPhone.length > MAX_VISIBLE;
