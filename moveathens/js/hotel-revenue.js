@@ -70,35 +70,95 @@
   if (!stored || !stored.origin_zone_id) return;
 
   const zoneId = stored.origin_zone_id;
+  const el = (id) => document.getElementById(id);
 
   // ════════════════════════════════════════
-  // PART 1: Summary Stats (existing)
+  // PERIOD FILTER LOGIC
   // ════════════════════════════════════════
-  try {
-    const res = await fetch(`/api/moveathens/my-detailed-stats?zone_id=${encodeURIComponent(zoneId)}`);
-    if (!res.ok) throw new Error('API error');
-    const data = await res.json();
+  let activePeriod = 'all';
+  let selectedYear = null; // for monthly analysis year filter
 
-    const el = (id) => document.getElementById(id);
-    el('rev-total-requests').textContent = data.totalRequests || 0;
-    el('rev-completed').textContent = data.completed || 0;
-    el('rev-nodriver').textContent = data.nodriver || 0;
-    el('rev-total-revenue').textContent = fmt(data.totalRevenue);
-    el('rev-my-commission').textContent = fmt(data.myCommission);
-    el('rev-service-commission').textContent = fmt(data.serviceCommission);
+  function getDateRange(period) {
+    const now = new Date();
+    const today = toDateStr(now);
+    switch (period) {
+      case 'today':
+        return { from: today, to: today };
+      case 'week': {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 6);
+        return { from: toDateStr(d), to: today };
+      }
+      case 'month': {
+        const d = new Date(now.getFullYear(), now.getMonth(), 1);
+        return { from: toDateStr(d), to: today };
+      }
+      case 'custom':
+        return null; // handled separately
+      default:
+        return { from: '', to: '' }; // all
+    }
+  }
 
-    const rt = data.routeTypes || {};
-    el('rev-rt-airport').textContent = rt.airport || 0;
-    el('rev-rt-port').textContent = rt.port || 0;
-    el('rev-rt-city').textContent = rt.city || 0;
-    el('rev-rt-travel').textContent = rt.travel || 0;
+  // ════════════════════════════════════════
+  // PART 1: Summary Stats (with filter support)
+  // ════════════════════════════════════════
+  let allYears = [];
 
-    const monthList = document.getElementById('rev-monthly');
-    const months = data.months || [];
-    if (months.length === 0) {
+  async function loadStats(fromDate, toDate) {
+    try {
+      let url = `/api/moveathens/my-detailed-stats?zone_id=${encodeURIComponent(zoneId)}`;
+      if (fromDate) url += `&from=${encodeURIComponent(fromDate)}`;
+      if (toDate) url += `&to=${encodeURIComponent(toDate)}`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('API error');
+      const data = await res.json();
+
+      el('rev-total-requests').textContent = data.totalRequests || 0;
+      el('rev-completed').textContent = data.completed || 0;
+      el('rev-nodriver').textContent = data.nodriver || 0;
+      el('rev-total-revenue').textContent = fmt(data.totalRevenue);
+      el('rev-my-commission').textContent = fmt(data.myCommission);
+      el('rev-service-commission').textContent = fmt(data.serviceCommission);
+
+      const rt = data.routeTypes || {};
+      el('rev-rt-airport').textContent = rt.airport || 0;
+      el('rev-rt-port').textContent = rt.port || 0;
+      el('rev-rt-city').textContent = rt.city || 0;
+      el('rev-rt-travel').textContent = rt.travel || 0;
+
+      // Store years for year filter (from unfiltered data)
+      if (data.years && data.years.length > 0) allYears = data.years;
+      renderYearFilter(data.months || []);
+      renderMonthly(data.months || []);
+      renderPerPhone(data.perPhone || []);
+    } catch (err) {
+      console.error('[hotel-revenue] Stats load error:', err);
+      ['rev-total-requests', 'rev-completed', 'rev-nodriver',
+       'rev-total-revenue', 'rev-my-commission', 'rev-service-commission'].forEach(id => {
+        const e = el(id);
+        if (e) e.textContent = '—';
+      });
+      const monthList = el('rev-monthly');
+      if (monthList) monthList.innerHTML = '<p class="ma-rev-empty">Σφάλμα φόρτωσης δεδομένων</p>';
+    }
+  }
+
+  function renderMonthly(months) {
+    const monthList = el('rev-monthly');
+    if (!monthList) return;
+
+    // Filter by selected year if any
+    let filtered = months;
+    if (selectedYear) {
+      filtered = months.filter(m => m.year === selectedYear);
+    }
+
+    if (filtered.length === 0) {
       monthList.innerHTML = '<p class="ma-rev-empty">Δεν υπάρχουν δεδομένα μηνιαίας ανάλυσης</p>';
     } else {
-      monthList.innerHTML = months.map(m => `
+      monthList.innerHTML = filtered.map(m => `
         <div class="ma-rev-month-row">
           <div>
             <div class="ma-rev-month-name">${MONTH_NAMES[m.month_number] || m.month} ${m.year}</div>
@@ -108,72 +168,143 @@
         </div>
       `).join('');
     }
+  }
 
-    // Per-phone breakdown
-    const perPhoneList = document.getElementById('rev-perphone');
-    const perPhone = data.perPhone || [];
-    if (perPhoneList) {
-      if (perPhone.length === 0) {
-        perPhoneList.innerHTML = '<p class="ma-rev-empty">Δεν υπάρχουν δεδομένα χρηστών</p>';
-      } else {
-        const MAX_VISIBLE = 5;
-        const hasMore = perPhone.length > MAX_VISIBLE;
-        const visiblePhones = hasMore ? perPhone.slice(0, MAX_VISIBLE) : perPhone;
+  function renderYearFilter(months) {
+    const yearFilterEl = el('rev-year-filter');
+    if (!yearFilterEl) return;
 
-        const renderRow = (p) => {
-          const isMe = p.phone === (stored.orderer_phone || '');
-          const nameLabel = p.display_name || (p.phone === 'unknown' ? '—' : p.phone);
-          return `
-            <div class="ma-rev-perphone-row${isMe ? ' ma-rev-perphone-row--me' : ''}">
-              <span class="ma-rev-perphone-phone">${nameLabel}${isMe ? ' <em>(εσείς)</em>' : ''}</span>
-              <span class="ma-rev-perphone-count">${p.routes}</span>
-              <span class="ma-rev-perphone-amount">${fmt(p.revenue)}</span>
-            </div>`;
-        };
+    // Collect years from months + allYears
+    const yearSet = new Set(allYears);
+    months.forEach(m => { if (m.year) yearSet.add(m.year); });
+    const years = Array.from(yearSet).sort((a, b) => b - a);
 
-        perPhoneList.innerHTML = `
-          <div class="ma-rev-perphone-header">
-            <span>Χρήστης</span>
-            <span>Διαδρομές</span>
-            <span>Τζίρος</span>
-          </div>
-          ${visiblePhones.map(renderRow).join('')}
-          ${hasMore ? `
-            <div class="ma-rev-perphone-extra" id="rev-perphone-extra" style="display:none">
-              ${perPhone.slice(MAX_VISIBLE).map(renderRow).join('')}
-            </div>
-            <button class="ma-rev-perphone-toggle" id="rev-perphone-toggle" type="button">
-              Εμφάνιση όλων (${perPhone.length})
-            </button>
-          ` : ''}
-        `;
+    if (years.length <= 1) {
+      yearFilterEl.innerHTML = '';
+      return;
+    }
 
-        if (hasMore) {
-          const toggleBtn = document.getElementById('rev-perphone-toggle');
-          const extraWrap = document.getElementById('rev-perphone-extra');
-          if (toggleBtn && extraWrap) {
-            toggleBtn.addEventListener('click', () => {
-              const expanded = extraWrap.style.display !== 'none';
-              extraWrap.style.display = expanded ? 'none' : '';
-              toggleBtn.textContent = expanded
-                ? `Εμφάνιση όλων (${perPhone.length})`
-                : 'Εμφάνιση λιγότερων';
-            });
-          }
-        }
+    // Default to current year if none selected
+    if (!selectedYear) selectedYear = years[0];
+
+    yearFilterEl.innerHTML = years.map(y =>
+      `<button class="ma-rev-year-btn${y === selectedYear ? ' ma-rev-year-btn--active' : ''}" data-year="${y}" type="button">${y}</button>`
+    ).join('');
+
+    yearFilterEl.querySelectorAll('.ma-rev-year-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedYear = Number(btn.dataset.year);
+        yearFilterEl.querySelectorAll('.ma-rev-year-btn').forEach(b => b.classList.remove('ma-rev-year-btn--active'));
+        btn.classList.add('ma-rev-year-btn--active');
+        renderMonthly(months);
+      });
+    });
+  }
+
+  function renderPerPhone(perPhone) {
+    const perPhoneList = el('rev-perphone');
+    if (!perPhoneList) return;
+
+    if (perPhone.length === 0) {
+      perPhoneList.innerHTML = '<p class="ma-rev-empty">Δεν υπάρχουν δεδομένα χρηστών</p>';
+      return;
+    }
+
+    const MAX_VISIBLE = 5;
+    const hasMore = perPhone.length > MAX_VISIBLE;
+    const visiblePhones = hasMore ? perPhone.slice(0, MAX_VISIBLE) : perPhone;
+
+    const renderRow = (p) => {
+      const isMe = p.phone === (stored.orderer_phone || '');
+      const nameLabel = p.display_name || (p.phone === 'unknown' ? '—' : p.phone);
+      return `
+        <div class="ma-rev-perphone-row${isMe ? ' ma-rev-perphone-row--me' : ''}">
+          <span class="ma-rev-perphone-phone">${nameLabel}${isMe ? ' <em>(εσείς)</em>' : ''}</span>
+          <span class="ma-rev-perphone-count">${p.routes}</span>
+          <span class="ma-rev-perphone-amount">${fmt(p.revenue)}</span>
+        </div>`;
+    };
+
+    perPhoneList.innerHTML = `
+      <div class="ma-rev-perphone-header">
+        <span>Χρήστης</span>
+        <span>Διαδρομές</span>
+        <span>Τζίρος</span>
+      </div>
+      ${visiblePhones.map(renderRow).join('')}
+      ${hasMore ? `
+        <div class="ma-rev-perphone-extra" id="rev-perphone-extra" style="display:none">
+          ${perPhone.slice(MAX_VISIBLE).map(renderRow).join('')}
+        </div>
+        <button class="ma-rev-perphone-toggle" id="rev-perphone-toggle" type="button">
+          Εμφάνιση όλων (${perPhone.length})
+        </button>
+      ` : ''}
+    `;
+
+    if (hasMore) {
+      const toggleBtn = el('rev-perphone-toggle');
+      const extraWrap = el('rev-perphone-extra');
+      if (toggleBtn && extraWrap) {
+        toggleBtn.addEventListener('click', () => {
+          const expanded = extraWrap.style.display !== 'none';
+          extraWrap.style.display = expanded ? 'none' : '';
+          toggleBtn.textContent = expanded
+            ? `Εμφάνιση όλων (${perPhone.length})`
+            : 'Εμφάνιση λιγότερων';
+        });
       }
     }
-  } catch (err) {
-    console.error('[hotel-revenue] Stats load error:', err);
-    const el = (id) => document.getElementById(id);
-    ['rev-total-requests', 'rev-completed', 'rev-nodriver',
-     'rev-total-revenue', 'rev-my-commission', 'rev-service-commission'].forEach(id => {
-      const e = el(id);
-      if (e) e.textContent = '—';
-    });
-    const monthList = document.getElementById('rev-monthly');
-    if (monthList) monthList.innerHTML = '<p class="ma-rev-empty">Σφάλμα φόρτωσης δεδομένων</p>';
   }
+
+  // ════════════════════════════════════════
+  // PERIOD FILTER UI
+  // ════════════════════════════════════════
+  const periodFilter = el('rev-period-filter');
+  const customDatesWrap = el('rev-custom-dates');
+  const filterFrom = el('rev-filter-from');
+  const filterTo = el('rev-filter-to');
+  const filterApply = el('rev-filter-apply');
+
+  if (periodFilter) {
+    // Set max date on custom inputs
+    const today = todayStr();
+    if (filterFrom) filterFrom.max = today;
+    if (filterTo) filterTo.max = today;
+
+    periodFilter.querySelectorAll('.ma-rev-filter__btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const period = btn.dataset.period;
+        activePeriod = period;
+
+        // Update active state
+        periodFilter.querySelectorAll('.ma-rev-filter__btn').forEach(b => b.classList.remove('ma-rev-filter__btn--active'));
+        btn.classList.add('ma-rev-filter__btn--active');
+
+        // Show/hide custom date inputs
+        if (customDatesWrap) {
+          customDatesWrap.style.display = period === 'custom' ? '' : 'none';
+        }
+
+        // For non-custom periods, load immediately
+        if (period !== 'custom') {
+          const range = getDateRange(period);
+          loadStats(range.from, range.to);
+        }
+      });
+    });
+  }
+
+  if (filterApply) {
+    filterApply.addEventListener('click', () => {
+      const from = filterFrom ? filterFrom.value : '';
+      const to = filterTo ? filterTo.value : '';
+      loadStats(from, to);
+    });
+  }
+
+  // Initial load (all data)
+  await loadStats('', '');
 
   // ════════════════════════════════════════
   // PART 2: Route History with Date Navigator

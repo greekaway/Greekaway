@@ -660,10 +660,36 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     if (isDev) res.set('Cache-Control', 'no-store');
     try {
       const zoneId = String(req.query.zone_id || '').trim();
-      if (!zoneId) return res.json({ totalRequests: 0, completed: 0, nodriver: 0, totalRevenue: 0, myCommission: 0, serviceCommission: 0, routeTypes: {}, months: [] });
+      if (!zoneId) return res.json({ totalRequests: 0, completed: 0, nodriver: 0, totalRevenue: 0, myCommission: 0, serviceCommission: 0, routeTypes: {}, months: [], years: [] });
+
+      const fromDate = String(req.query.from || '').trim();
+      const toDate = String(req.query.to || '').trim();
+      const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
       const allRequests = await requestsLayer.getRequests({});
-      const mine = allRequests.filter(r => String(r.origin_zone_id) === zoneId);
+      let mine = allRequests.filter(r => String(r.origin_zone_id) === zoneId);
+
+      // Collect available years from ALL data (before date filtering)
+      const yearSet = new Set();
+      mine.forEach(r => {
+        const d = new Date(r.created_at);
+        if (!isNaN(d.getTime())) yearSet.add(d.getFullYear());
+      });
+      const years = Array.from(yearSet).sort((a, b) => b - a);
+
+      // Apply date range filter if provided
+      if (fromDate && datePattern.test(fromDate)) {
+        mine = mine.filter(r => {
+          const d = r.scheduled_date || (r.created_at ? (r.created_at instanceof Date ? r.created_at : new Date(r.created_at)).toISOString().slice(0, 10) : '');
+          return d >= fromDate;
+        });
+      }
+      if (toDate && datePattern.test(toDate)) {
+        mine = mine.filter(r => {
+          const d = r.scheduled_date || (r.created_at ? (r.created_at instanceof Date ? r.created_at : new Date(r.created_at)).toISOString().slice(0, 10) : '');
+          return d <= toDate;
+        });
+      }
 
       const active = mine.filter(r => r.status === 'accepted' || r.status === 'completed');
       const nodriverReqs = mine.filter(r => r.status === 'nodriver');
@@ -732,7 +758,7 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       });
       const perPhone = Object.values(phoneMap).sort((a, b) => b.revenue - a.revenue);
 
-      return res.json({ totalRequests, completed, nodriver, totalRevenue, myCommission, serviceCommission, routeTypes, months, perPhone });
+      return res.json({ totalRequests, completed, nodriver, totalRevenue, myCommission, serviceCommission, routeTypes, months, perPhone, years });
     } catch (err) {
       console.error('[moveathens] my-detailed-stats error:', err);
       return res.status(500).json({ error: 'Stats unavailable' });

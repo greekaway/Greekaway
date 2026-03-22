@@ -1224,594 +1224,1587 @@
     background: rgba(0, 102, 204, 0.06) !important;
     border-color: rgba(0, 102, 204, 0.15) !important;
   }
+
+  /* Period & Year Filters — Auto Light */
+  .ma-rev-filter__btn {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+    color: #6b7a8d !important;
+  }
+  .ma-rev-filter__btn--active {
+    background: rgba(0, 102, 204, 0.1) !important;
+    color: #0066cc !important;
+    border-color: rgba(0, 102, 204, 0.25) !important;
+  }
+  .ma-rev-filter-date-input {
+    background: #fff !important;
+    border-color: #d0d5dd !important;
+    color: #1a2232 !important;
+    color-scheme: light !important;
+  }
+  .ma-rev-filter-date-label {
+    color: #6b7a8d !important;
+  }
+  .ma-rev-filter-apply {
+    background: #0066cc !important;
+    color: #fff !important;
+  }
+  .ma-rev-year-btn {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+    color: #6b7a8d !important;
+  }
+  .ma-rev-year-btn--active {
+    background: rgba(0, 102, 204, 0.1) !important;
+    color: #0066cc !important;
+    border-color: rgba(0, 102, 204, 0.25) !important;
+  }
 }
 
-/* Force light mode */
-.ma-force-light .ma-page,
-.ma-force-light .ma-transfer-page,
-.ma-force-light .ma-ai-page,
-.ma-force-light .ma-info-page {
-  background: #f5f7fa !important;
-}
+/* =========================================================
+   AUTO-GENERATED: .ma-force-dark overrides
+   Mirrors @media (prefers-color-scheme: dark) rules exactly
+   ========================================================= */
 
-.ma-force-light .ma-card,
-.ma-force-light .ma-hub-card,
-.ma-force-light .ma-rev-card {
-  background: #fff !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
-}
 
-.ma-force-light .ma-title,
-.ma-force-light .ma-sub-header__title,
-.ma-force-light .ma-hub-name,
-.ma-force-light .ma-hub-card__title,
-.ma-force-light .ma-rev-card__value,
-.ma-force-light .ma-rev-section-title,
-.ma-force-light .ma-rev-month-name,
-.ma-force-light .ma-rev-route-row,
-.ma-force-light .ma-settings-label {
+  /* ========================================
+     PAGE BACKGROUNDS
+     ======================================== */
+  
+  /* Light gray background pages -> dark blue */
+  .ma-force-dark .ma-page, .ma-force-dark .ma-transfer-page, .ma-force-dark .ma-ai-page, .ma-force-dark .ma-info-page {
+    background: linear-gradient(135deg, #0d1a2d 0%, #0a1525 100%) !important;
+  }
+
+  /* Header - dark blue gradient */
+  .ma-force-dark .ma-page .ma-page-header, .ma-force-dark .ma-transfer-page .ma-header, .ma-force-dark .ma-ai-page .ma-page-header, .ma-force-dark .ma-info-page .ma-page-header {
+    background: linear-gradient(145deg, #0f2035 0%, #0a1828 100%) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* ========================================
+     LOGO - WHITE IN DARK MODE
+     ======================================== */
+  .ma-force-dark .ma-page .ma-page-logo, .ma-force-dark .ma-transfer-page .ma-logo-img, .ma-force-dark .ma-ai-page .ma-page-logo, .ma-force-dark .ma-info-page .ma-page-logo {
+    filter: brightness(0) invert(1) !important;
+  }
+  .ma-force-dark .ma-hero-page .ma-hero__logo {
+    filter: brightness(2.5) contrast(0.9) drop-shadow(0 2px 10px rgba(0,0,0,0.4)) !important;
+  }
+
+  /* ========================================
+     PAGE TITLES
+     ======================================== */
+  .ma-force-dark .ma-page .ma-page-title, .ma-force-dark .ma-transfer-page .ma-page-title, .ma-force-dark .ma-ai-page .ma-page-title, .ma-force-dark .ma-info-page .ma-page-title {
+    color: #f0f4f8 !important;
+  }
+
+  /* ========================================
+     CARDS - Light blue instead of white
+     ======================================== */
+  .ma-force-dark .ma-page .ma-card, .ma-force-dark .ma-transfer-page .ma-confirm-card, .ma-force-dark .ma-transfer-page .ma-selection-card, .ma-force-dark .ma-ai-page .ma-card, .ma-force-dark .ma-info-page .ma-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* ========================================
+     TEXT COLORS - White on dark
+     ======================================== */
+  .ma-force-dark .ma-page .ma-title, .ma-force-dark .ma-page .ma-sub-header__title, .ma-force-dark .ma-page .ma-muted, .ma-force-dark .ma-page label, .ma-force-dark .ma-transfer-page .ma-step-title, .ma-force-dark .ma-transfer-page .ma-step-subtitle, .ma-force-dark .ma-transfer-page .ma-confirm-label, .ma-force-dark .ma-transfer-page .ma-confirm-value, .ma-force-dark .ma-transfer-page .ma-selection-title, .ma-force-dark .ma-transfer-page .ma-selection-label, .ma-force-dark .ma-transfer-page .ma-counter-value, .ma-force-dark .ma-ai-page .ma-title, .ma-force-dark .ma-info-page .ma-title {
+    color: #e8edf3 !important;
+  }
+
+  /* Info page content */
+  .ma-force-dark .ma-info-page .ma-info-content, .ma-force-dark .ma-info-page .ma-info-content p, .ma-force-dark .ma-info-page .ma-info-content li {
+    color: #d0d8e0 !important;
+  }
+
+  .ma-force-dark .ma-info-page .ma-info-content strong {
+    color: #46d3ff !important;
+  }
+
+  /* Muted/secondary text */
+  .ma-force-dark .ma-page .ma-selection-max, .ma-force-dark .ma-page .ma-selection-hint, .ma-force-dark .ma-transfer-page .ma-selection-max, .ma-force-dark .ma-transfer-page .ma-selection-hint {
+    color: #8896a6 !important;
+  }
+
+  /* ========================================
+     FORM INPUTS
+     ======================================== */
+  .ma-force-dark .ma-page .ma-input, .ma-force-dark .ma-page .ma-select, .ma-force-dark .ma-transfer-page .ma-input, .ma-force-dark .ma-transfer-page .ma-select, .ma-force-dark .ma-transfer-page .ma-text-input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #f0f4f8 !important;
+  }
+
+  .ma-force-dark .ma-page .ma-input::placeholder, .ma-force-dark .ma-transfer-page .ma-input::placeholder, .ma-force-dark .ma-transfer-page .ma-text-input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .ma-force-dark .ma-page .ma-input:focus, .ma-force-dark .ma-page .ma-select:focus, .ma-force-dark .ma-transfer-page .ma-text-input:focus {
+    border-color: #46d3ff !important;
+    box-shadow: 0 0 0 3px rgba(70, 211, 255, 0.2) !important;
+  }
+
+  /* Passenger name input label */
+  .ma-force-dark .ma-transfer-page .ma-input-label {
+    color: #e8edf3 !important;
+  }
+
+  /* Error state for text input */
+  .ma-force-dark .ma-transfer-page .ma-text-input.ma-input-error-state {
+    border-color: #e74c3c !important;
+    background: rgba(231, 76, 60, 0.15) !important;
+  }
+
+  /* Input error message */
+  .ma-force-dark .ma-transfer-page .ma-input-error {
+    background: rgba(231, 76, 60, 0.15) !important;
+    border-color: rgba(231, 76, 60, 0.3) !important;
+    color: #ff8a80 !important;
+  }
+
+  /* Booking warning */
+  .ma-force-dark .ma-transfer-page .ma-booking-warning {
+    background: rgba(255, 193, 7, 0.15) !important;
+    border-color: rgba(255, 193, 7, 0.3) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-warning-text {
+    color: #ffc107 !important;
+  }
+
+  /* ========================================
+     TRANSFER PAGE SPECIFICS
+     ======================================== */
+  
+  /* Back button */
+  .ma-force-dark .ma-transfer-page .ma-back-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-back-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+  }
+  
+  .ma-force-dark .ma-transfer-page .ma-back-btn:active {
+    background: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  .ma-force-dark .ma-transfer-page .ma-back-chevron {
+    border-left-color: #e0e0e0 !important;
+    border-bottom-color: #e0e0e0 !important;
+  }
+
+  /* Search trigger button */
+  .ma-force-dark .ma-transfer-page .ma-search-trigger {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #e0e0e0 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-search-trigger:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-search-trigger:active {
+    background: rgba(255, 255, 255, 0.2) !important;
+  }
+
+  /* Search overlay fullscreen */
+  .ma-force-dark .ma-search-overlay {
+    background: #0d1a2d !important;
+  }
+
+  .ma-force-dark .ma-search-overlay__header {
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ma-force-dark .ma-search-overlay__input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: #f0f4f8 !important;
+  }
+
+  .ma-force-dark .ma-search-overlay__input:focus {
+    border-color: #46d3ff !important;
+  }
+
+  .ma-force-dark .ma-search-overlay__input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .ma-force-dark .ma-search-overlay__cancel {
+    color: #46d3ff !important;
+  }
+
+  .ma-force-dark .ma-search-overlay .ma-back-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ma-force-dark .ma-search-overlay .ma-back-chevron {
+    border-left-color: #e0e0e0 !important;
+    border-bottom-color: #e0e0e0 !important;
+  }
+
+  .ma-force-dark .ma-search-overlay__section-title {
+    color: #8896a6 !important;
+  }
+
+  .ma-force-dark .ma-search-overlay__list li {
+    color: #e8edf3 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ma-force-dark .ma-search-overlay__list li:hover {
+    background: rgba(70, 211, 255, 0.1) !important;
+  }
+
+  .ma-force-dark .ma-search-overlay__list li:active {
+    background: rgba(70, 211, 255, 0.18) !important;
+  }
+
+  .ma-force-dark .ma-search-overlay__list .ma-search-empty {
+    color: #8896a6 !important;
+  }
+
+  .ma-force-dark .ma-search-overlay__cat {
+    color: #8896a6 !important;
+  }
+
+  /* ========================================
+     DESTINATION QUICK-SEARCH
+     ======================================== */
+  .ma-force-dark .ma-transfer-page .ma-dest-search-label {
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    color: #f0f4f8 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-input:focus {
+    border-color: #46d3ff !important;
+    box-shadow: 0 0 0 3px rgba(70, 211, 255, 0.2) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-clear {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-clear:hover {
+    color: #e8edf3 !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-results {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-results li {
+    color: #e8edf3 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-results li:hover, .ma-force-dark .ma-transfer-page .ma-dest-search-results li:focus {
+    background: rgba(70, 211, 255, 0.1) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-results li:active {
+    background: rgba(70, 211, 255, 0.18) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-result-name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-result-cat {
+    color: #8896a6 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-search-results .ma-dest-search-empty {
+    color: #8896a6 !important;
+  }
+
+  /* Categories grid — app-icon style: only label color changes, icon bg stays */
+  .ma-force-dark .ma-transfer-page .ma-category-name {
+    color: #e8edf3 !important;
+  }
+
+  /* Category icons — per-category color, default white in dark mode */
+  .ma-force-dark .ma-transfer-page .ma-category-icon img, .ma-force-dark .ma-transfer-page .ma-category-icon-img {
+    filter: brightness(0) invert(1);
+  }
+  .ma-force-dark .ma-transfer-page .ma-category-icon-img[data-icon-color="black"] {
+    filter: brightness(0);
+  }
+
+  /* Destinations */
+  .ma-force-dark .ma-transfer-page .ma-destination-item {
+    background: linear-gradient(145deg, #132742 0%, #132742 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  /* Filter chips dark mode */
+  .ma-force-dark .ma-transfer-page .ma-dest-filter-chip {
+    background: #1c2438 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #a0b0c4 !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-dest-filter-chip:hover {
+    background: #243050 !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-dest-filter-chip.active {
+    background: linear-gradient(135deg, #4E6BFF 0%, #3a54cc 100%) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-dest-filter-clear {
+    border-color: #ef6b6b !important;
+    background: rgba(239, 107, 107, 0.1) !important;
+    color: #ef6b6b !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-dest-filter-clear:hover {
+    background: #ef6b6b !important;
+    color: #fff !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-dest-filter-dropdown {
+    background: #1c2438 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-dest-filter-dropdown button {
+    color: #c8d4e0 !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-dest-filter-dropdown button:hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-dest-filter-dropdown button.selected {
+    background: rgba(78, 107, 255, 0.15) !important;
+    color: #7c9aff !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-destination-item:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-destination-select:hover {
+    background: rgba(255, 255, 255, 0.03) !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-destination-select:active {
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-destination-name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-destination-desc {
+    color: #8896a6 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-destination-chevron {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-destination-chevron:hover {
+    background: rgba(70, 211, 255, 0.1) !important;
+    border-color: rgba(70, 211, 255, 0.25) !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-chevron-icon {
+    color: #8896a6 !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-destination-card--expanded .ma-destination-chevron {
+    background: rgba(70, 211, 255, 0.12) !important;
+    border-color: rgba(70, 211, 255, 0.3) !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-destination-card--expanded .ma-chevron-icon {
+    color: #46d3ff !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-destination-extras {
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-extra {
+    color: #a0b0c4 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-extra strong {
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-dest-extra--details {
+    color: #8896a6 !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-dest-phone-link {
+    color: #6b8aff !important;
+  }
+
+  /* Video button (destination card row) */
+  .ma-force-dark .ma-transfer-page .ma-destination-media-btn {
+    background: rgba(59, 130, 246, 0.15) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-destination-media-btn:hover {
+    background: rgba(59, 130, 246, 0.25) !important;
+    border-color: rgba(59, 130, 246, 0.45) !important;
+  }
+
+  /* ── Media Gallery Page ── */
+  .ma-force-dark .ma-media-page {
+    background: var(--ma-bg, #0b0f1a) !important;
+    color: var(--ma-text, #f7f7fb) !important;
+  }
+  .ma-force-dark .ma-media-back {
+    background: #1c2438 !important;
+    border-color: rgba(255,255,255,0.12) !important;
+    color: #a0b0c4 !important;
+  }
+  .ma-force-dark .ma-media-back:hover {
+    background: #243050 !important;
+    border-color: rgba(255,255,255,0.2) !important;
+  }
+  .ma-force-dark .ma-media-dest-name {
+    color: #e8edf3 !important;
+  }
+  .ma-force-dark .ma-media-platform-title {
+    color: #e8edf3 !important;
+  }
+  .ma-force-dark .ma-media-card {
+    background: #1c2438 !important;
+    border-color: rgba(255,255,255,0.08) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+  }
+  .ma-force-dark .ma-media-card:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5) !important;
+  }
+  .ma-force-dark .ma-media-card-title {
+    color: #e8edf3 !important;
+  }
+  .ma-force-dark .ma-media-card-platform {
+    color: #8896a6 !important;
+  }
+  .ma-force-dark .ma-media-empty {
+    color: #8896a6 !important;
+  }
+
+  /* Subcategories */
+  .ma-force-dark .ma-transfer-page .ma-subcategory-item {
+    background: linear-gradient(145deg, #132742 0%, #132742 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-subcategory-item:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-subcategory-name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-subcategory-desc {
+    color: #8896a6 !important;
+  }
+
+  /* Tariff selection */
+  .ma-force-dark .ma-transfer-page .ma-tariff-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f33 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-tariff-card:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-tariff-card[data-tariff="day"]:hover, .ma-force-dark .ma-transfer-page .ma-tariff-card[data-tariff="day"]:focus {
+    border-color: #f39c12 !important;
+    background: linear-gradient(145deg, #2d2510 0%, #1a1508 100%) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-tariff-card[data-tariff="night"]:hover, .ma-force-dark .ma-transfer-page .ma-tariff-card[data-tariff="night"]:focus {
+    border-color: #3498db !important;
+    background: linear-gradient(145deg, #0a1f30 0%, #061520 100%) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-tariff-name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-tariff-hours {
+    color: #a0a8b0 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-step-tariff-indicator {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #c0c8d0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* Vehicles */
+  .ma-force-dark .ma-transfer-page .ma-vehicle-card {
+    background: linear-gradient(145deg, #132742 0%, #132742 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-vehicle-card:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-vehicle-name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-spec {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #c0c8d0 !important;
+  }
+
+  /* Counter buttons */
+  .ma-force-dark .ma-transfer-page .ma-counter {
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-counter-minus {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #c0c8d0 !important;
+  }
+
+  /* Selection row icons */
+  .ma-force-dark .ma-transfer-page .ma-selection-icon {
+    filter: none;
+  }
+
+  /* ========================================
+     FOOTER - Clone from home page style
+     ======================================== */
+  .ma-force-dark .ma-page .ma-footer, .ma-force-dark .ma-transfer-page .ma-footer, .ma-force-dark .ma-ai-page .ma-footer, .ma-force-dark .ma-info-page .ma-footer {
+    background: rgba(10, 16, 28, 0.45) !important;
+    backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32), 0 0 18px rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-force-dark .ma-page .ma-footer__item, .ma-force-dark .ma-transfer-page .ma-footer__item, .ma-force-dark .ma-ai-page .ma-footer__item, .ma-force-dark .ma-info-page .ma-footer__item {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  .ma-force-dark .ma-page .ma-footer__item.active, .ma-force-dark .ma-transfer-page .ma-footer__item.active, .ma-force-dark .ma-ai-page .ma-footer__item.active, .ma-force-dark .ma-info-page .ma-footer__item.active {
+    color: rgba(82, 183, 255, 0.98) !important;
+    background: rgba(82, 183, 255, 0.12) !important;
+    box-shadow: 0 0 24px rgba(82, 183, 255, 0.45), 0 10px 24px rgba(0, 0, 0, 0.35) !important;
+  }
+
+  /* Footer icons in dark mode */
+  .ma-force-dark .ma-page .ma-footer__icon svg, .ma-force-dark .ma-transfer-page .ma-footer__icon svg, .ma-force-dark .ma-ai-page .ma-footer__icon svg, .ma-force-dark .ma-info-page .ma-footer__icon svg {
+    color: rgba(255, 255, 255, 0.85) !important;
+    stroke: currentColor !important;
+    filter: none !important;
+    opacity: 1;
+  }
+
+  .ma-force-dark .ma-page .ma-footer__item.active .ma-footer__icon svg, .ma-force-dark .ma-transfer-page .ma-footer__item.active .ma-footer__icon svg, .ma-force-dark .ma-ai-page .ma-footer__item.active .ma-footer__icon svg, .ma-force-dark .ma-info-page .ma-footer__item.active .ma-footer__icon svg {
+    color: rgba(82, 183, 255, 0.98) !important;
+    stroke: currentColor !important;
+    filter: none !important;
+    opacity: 1;
+  }
+
+  /* ========================================
+     LOADING & EMPTY STATES
+     ======================================== */
+  .ma-force-dark .ma-transfer-page .ma-loading, .ma-force-dark .ma-transfer-page .ma-empty {
+    color: #8896a6 !important;
+  }
+
+  /* ========================================
+     AI ASSISTANT PAGE
+     ======================================== */
+  .ma-force-dark .ma-ai-page {
+    background: linear-gradient(135deg, #0d1a2d 0%, #0a1525 100%) !important;
+  }
+
+  .ma-force-dark .ma-ai-page .ma-ai-header {
+    background: linear-gradient(145deg, #0f2035 0%, #0a1828 100%) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .ma-force-dark .ma-ai-page .ma-ai-logo {
+    filter: brightness(0) invert(1) !important;
+  }
+
+  .ma-force-dark .ma-ai-page .ma-ai-title {
+    color: #f0f4f8 !important;
+  }
+
+  .ma-force-dark .ma-ai-page .ma-ai-welcome {
+    color: #c0c8d0 !important;
+  }
+
+  .ma-force-dark .ma-ai-page .ma-ai-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .ma-force-dark .ma-ai-page .ma-ai-card-title {
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-ai-page .ma-ai-card-desc {
+    color: #a0a8b0 !important;
+  }
+
+  /* AI Heading title (Βοηθός Τεχνητής Νοημοσύνης) */
+  .ma-force-dark .ma-ai-page .ma-ai-heading {
+    color: #f0f4f8 !important;
+  }
+
+  .ma-force-dark .ma-ai-page .ma-ai-subtitle {
+    color: #a0a8b0 !important;
+  }
+
+  /* AI Features buttons (Άμεση απάντηση, Αυτόματη κράτηση, Πολλές γλώσσες) */
+  .ma-force-dark .ma-ai-page .ma-ai-feature {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-force-dark .ma-ai-page .ma-ai-feature-text {
+    color: #e8edf3 !important;
+  }
+
+  /* ========================================
+     CONTACT PAGE
+     ======================================== */
+  .ma-force-dark .ma-page .ma-button--contact {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-page .ma-button--contact:hover {
+    background: linear-gradient(145deg, #1a2d4d 0%, #132540 100%) !important;
+  }
+
+  /* ========================================
+     PRICES PAGE
+     ======================================== */
+  .ma-force-dark .ma-page .ma-vehicle-card {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ma-force-dark .ma-page .ma-vehicle-card__name {
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-page .ma-vehicle-card__desc {
+    color: #8896a6 !important;
+  }
+
+  .ma-force-dark .ma-page .ma-vehicle-types__title {
+    color: #e8edf3 !important;
+  }
+
+  /* ========================================
+     PAYMENT METHOD BUTTONS
+     ======================================== */
+  .ma-force-dark .ma-transfer-page .ma-payment-btn {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    color: #e8edf3 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-payment-btn:hover {
+    border-color: rgba(70, 211, 255, 0.5) !important;
+    background: linear-gradient(145deg, #1a2d4d 0%, #132540 100%) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-payment-btn.active {
+    border-color: #46d3ff !important;
+    background: linear-gradient(145deg, #0f3a5a 0%, #0a2840 100%) !important;
+    color: #46d3ff !important;
+    box-shadow: 0 4px 20px rgba(70, 211, 255, 0.3) !important;
+  }
+
+  /* ========================================
+     BOOKING TYPE BUTTONS (Instant / Scheduled)
+     ======================================== */
+  .ma-force-dark .ma-transfer-page .ma-booking-btn {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  /* Both buttons neutral by default in dark mode */
+  .ma-force-dark .ma-transfer-page .ma-booking-btn.ma-booking-instant {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-booking-btn.ma-booking-instant:hover {
+    border-color: #4CAF50 !important;
+    background: linear-gradient(145deg, #143520 0%, #0f2816 100%) !important;
+    box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-booking-btn.ma-booking-scheduled {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-booking-btn.ma-booking-scheduled:hover {
+    border-color: #2196F3 !important;
+    background: linear-gradient(145deg, #0f2840 0%, #0a1f30 100%) !important;
+    box-shadow: 0 4px 20px rgba(33, 150, 243, 0.3) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-booking-title {
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-booking-desc {
+    color: #8896a6 !important;
+  }
+
+  /* Datetime picker */
+  .ma-force-dark .ma-transfer-page .ma-datetime-picker {
+    background: linear-gradient(145deg, #152540 0%, #0f1d32 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-datetime-title {
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-datetime-label span {
+    color: #a0aab5 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-datetime-input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-datetime-input:focus {
+    border-color: #46d3ff !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-datetime-error {
+    background: rgba(211, 47, 47, 0.2) !important;
+    color: #ff8a80 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-btn-confirm-datetime {
+    background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-btn-confirm-datetime:hover {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
+  }
+
+  /* Schedule overlay (instant → scheduled prompt) */
+  .ma-force-dark .ma-transfer-page .ma-schedule-overlay {
+    background: rgba(0, 0, 0, 0.7) !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-schedule-overlay__msg {
+    color: #a0aab5 !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-schedule-overlay__actions .ma-btn-cancel {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
+  }
+  .ma-force-dark .ma-transfer-page .ma-schedule-overlay__actions .ma-btn-cancel:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
+  }
+
+  /* Vehicle scheduled-only badge */
+  .ma-force-dark .ma-transfer-page .ma-vehicle-scheduled-only {
+    background: rgba(33, 150, 243, 0.2) !important;
+    color: #64b5f6 !important;
+  }
+
+  /* ========================================
+     CONFIRMATION & SELECTION ROWS — borders
+     ======================================== */
+  .ma-force-dark .ma-transfer-page .ma-confirm-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-selection-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-input-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-selection-title {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-selection-hint {
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* Contact title */
+  .ma-force-dark .ma-transfer-page .ma-contact-title {
+    color: #c0c8d0 !important;
+  }
+
+  /* Vehicle placeholder / image loading bg */
+  .ma-force-dark .ma-transfer-page .ma-vehicle-placeholder {
+    background: linear-gradient(135deg, #1a2d45 0%, #132240 100%) !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-vehicle-img {
+    background: #132240 !important;
+  }
+
+  /* Vehicle section labels */
+  .ma-force-dark .ma-transfer-page .ma-vehicles-section-label {
+    color: #34d399 !important;
+  }
+
+  .ma-force-dark .ma-transfer-page .ma-vehicles-section-label--alt {
+    color: #8896a6 !important;
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* Vehicle price */
+  .ma-force-dark .ma-transfer-page .ma-vehicle-price {
+    color: #46d3ff !important;
+  }
+
+  /* Confirm price */
+  .ma-force-dark .ma-transfer-page .ma-confirm-price .ma-confirm-value {
+    color: #46d3ff !important;
+  }
+
+  /* Version badge dark mode */
+  .ma-version-badge { color: #6b7a8d !important; }
+  .ma-version-badge__value { color: #8896a6 !important; }
+  .ma-version-badge__build { color: #4a5568 !important; }
+
+  /* Phone chips — white text on dark backgrounds */
+  .ma-force-dark .ma-phone-chip {
+    color: #e8edf3 !important;
+    background: rgba(70, 130, 255, 0.2) !important;
+    border-color: rgba(70, 130, 255, 0.35) !important;
+  }
+
+  /* ========================================
+     HOTEL HUB & SUB-PAGES
+     ======================================== */
+
+  /* Hub avatar glow */
+  .ma-force-dark .ma-hub-avatar {
+    box-shadow: 0 4px 18px rgba(70, 211, 255, 0.4) !important;
+  }
+
+  /* Hub cards */
+  .ma-force-dark .ma-hub-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ma-force-dark .ma-hub-card__icon {
+    background: rgba(70, 211, 255, 0.12) !important;
+  }
+
+  /* Hub logout */
+  .ma-force-dark .ma-hub-logout-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #8896a6 !important;
+  }
+
+  /* Back navigation */
+  .ma-force-dark .ma-sub-back-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+  .ma-force-dark .ma-sub-back-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+  }
+  .ma-force-dark .ma-sub-back-btn:active {
+    background: rgba(255, 255, 255, 0.2) !important;
+  }
+  .ma-force-dark .ma-sub-back-chevron {
+    border-left-color: #e0e0e0 !important;
+    border-bottom-color: #e0e0e0 !important;
+  }
+
+  /* Revenue cards */
+  .ma-force-dark .ma-rev-card {
+    background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .ma-force-dark .ma-rev-route-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-force-dark .ma-rev-month-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* Date navigator & route entries */
+  .ma-force-dark .ma-date-nav__btn, .ma-force-dark .ma-date-nav__label {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ma-force-dark .ma-route-entry {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .ma-force-dark .ma-route-timeline {
+    border-top-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .ma-force-dark .ma-route-tl-total {
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* Settings buttons */
+  .ma-force-dark .ma-theme-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #8896a6 !important;
+  }
+
+  .ma-force-dark .ma-theme-btn.active {
+    border-color: #46d3ff !important;
+    background: rgba(70, 211, 255, 0.12) !important;
+    color: #e8edf3 !important;
+  }
+
+  .ma-force-dark .ma-settings-hint {
+    color: #8896a6 !important;
+  }
+
+
+/* =========================================================
+   AUTO-GENERATED: .ma-force-light overrides
+   Mirrors @media (prefers-color-scheme: light) rules exactly
+   ========================================================= */
+
+
+  .ma-force-light .ma-page, .ma-force-light .ma-transfer-page, .ma-force-light .ma-ai-page, .ma-force-light .ma-info-page {
+    background: #f5f7fa !important;
+  }
+
+  .ma-force-light .ma-card, .ma-force-light .ma-hub-card, .ma-force-light .ma-rev-card {
+    background: #fff !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .ma-force-light .ma-title, .ma-force-light .ma-sub-header__title, .ma-force-light .ma-hub-name, .ma-force-light .ma-hub-card__title, .ma-force-light .ma-rev-card__value, .ma-force-light .ma-rev-section-title, .ma-force-light .ma-rev-month-name, .ma-force-light .ma-rev-route-row, .ma-force-light .ma-settings-label {
+    color: #1a2232 !important;
+  }
+
+  .ma-force-light .ma-muted, .ma-force-light .ma-hub-detail, .ma-force-light .ma-hub-card__desc, .ma-force-light .ma-rev-card__label, .ma-force-light .ma-settings-hint, .ma-force-light .ma-rev-month-details {
+    color: #6b7a8d !important;
+  }
+
+  .ma-force-light .ma-hub-card__arrow {
+    color: #6b7a8d !important;
+  }
+
+  .ma-force-light .ma-hub-card__icon {
+    background: rgba(0, 102, 204, 0.08) !important;
+    border-color: rgba(0, 102, 204, 0.15) !important;
+    color: #0077cc !important;
+  }
+
+  .ma-force-light .ma-hub-avatar {
+    box-shadow: 0 4px 18px rgba(0, 102, 204, 0.25) !important;
+  }
+
+  .ma-force-light .ma-input {
+    background: #f0f2f5 !important;
+    border-color: #d0d5dd !important;
+    color: #1a2232 !important;
+  }
+
+  .ma-force-light .ma-hub-logout-btn {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    color: #6b7a8d !important;
+  }
+
+  .ma-force-light .ma-sub-back-btn {
+    background: rgba(0, 0, 0, 0.06) !important;
+  }
+  .ma-force-light .ma-sub-back-chevron {
+    border-left-color: #1a1a2e !important;
+    border-bottom-color: #1a1a2e !important;
+  }
+
+  .ma-force-light .ma-theme-btn {
+    background: #f0f2f5 !important;
+    border-color: #d0d5dd !important;
+    color: #6b7a8d !important;
+  }
+
+  .ma-force-light .ma-theme-btn.active {
+    border-color: #0066cc !important;
+    background: rgba(0, 102, 204, 0.08) !important;
+    color: #1a2232 !important;
+  }
+
+  .ma-force-light .ma-rev-route-row {
+    border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .ma-force-light .ma-rev-month-row {
+    border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .ma-force-light .ma-date-nav__btn, .ma-force-light .ma-date-nav__label {
+    border-color: rgba(0, 0, 0, 0.12) !important;
+    background: rgba(0, 0, 0, 0.04) !important;
+    color: #1a2232 !important;
+  }
+
+  .ma-force-light .ma-route-entry {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .ma-force-light .ma-route-dest__name, .ma-force-light .ma-route-price, .ma-force-light .ma-route-tl-total {
+    color: #1a2232 !important;
+  }
+
+  .ma-force-light .ma-route-time, .ma-force-light .ma-route-meta__item, .ma-force-light .ma-route-tl-label {
+    color: #7a8599 !important;
+  }
+
+  .ma-force-light .ma-route-timeline {
+    border-top-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .ma-force-light .ma-route-tl-total {
+    border-top-color: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .ma-force-light .ma-route-badge--muted {
+    background: rgba(0, 0, 0, 0.06) !important;
+    color: #7a8599 !important;
+  }
+
+  .ma-force-light .ma-footer {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+  }
+
+  .ma-force-light .ma-footer__item {
+    color: #1a1a2e !important;
+  }
+
+  .ma-force-light .ma-footer__item.active {
+    color: #0066cc !important;
+  }
+
+  .ma-force-light .ma-phone-chip {
+    color: #1a2b42 !important;
+    background: rgba(13, 110, 253, 0.1) !important;
+    border-color: rgba(13, 110, 253, 0.25) !important;
+  }
+
+  /* PIN Settings — Auto Light */
+  .ma-force-light .ma-pin-status, .ma-force-light .ma-name-display {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+  .ma-force-light .ma-pin-status__text {
+    color: #1a2232 !important;
+  }
+  .ma-force-light .ma-name-display__value {
+    color: #1a2232 !important;
+  }
+  .ma-force-light .ma-pin-input {
+    background: #fff !important;
+    border-color: #d0d5dd !important;
+    color: #1a2232 !important;
+  }
+  .ma-force-light .ma-pin-input:focus {
+    border-color: #0066cc !important;
+  }
+  .ma-force-light .ma-pin-btn--cancel {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    color: #6b7a8d !important;
+  }
+  .ma-force-light .ma-pin-btn--change {
+    background: rgba(0, 102, 204, 0.08) !important;
+    color: #0066cc !important;
+    border-color: rgba(0, 102, 204, 0.2) !important;
+  }
+  .ma-force-light .ma-pin-error {
+    color: #dc2626 !important;
+  }
+
+  /* Per-Phone Revenue — Auto Light */
+  .ma-force-light .ma-rev-perphone-header {
+    color: #6b7a8d !important;
+    border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+  }
+  .ma-force-light .ma-rev-perphone-row {
+    border-bottom-color: rgba(0, 0, 0, 0.04) !important;
+  }
+  .ma-force-light .ma-rev-perphone-row--me {
+    background: rgba(0, 102, 204, 0.06) !important;
+  }
+  .ma-force-light .ma-rev-perphone-phone {
+    color: #1a2232 !important;
+  }
+  .ma-force-light .ma-rev-perphone-phone em {
+    color: #0066cc !important;
+  }
+  .ma-force-light .ma-rev-perphone-count {
+    color: #6b7a8d !important;
+  }
+  .ma-force-light .ma-rev-perphone-amount {
+    color: #1a2232 !important;
+  }
+  .ma-force-light .ma-rev-perphone-toggle {
+    color: #0066cc !important;
+    background: rgba(0, 102, 204, 0.06) !important;
+    border-color: rgba(0, 102, 204, 0.15) !important;
+  }
+
+  /* Period & Year Filters — Auto Light */
+  .ma-force-light .ma-rev-filter__btn {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+    color: #6b7a8d !important;
+  }
+  .ma-force-light .ma-rev-filter__btn--active {
+    background: rgba(0, 102, 204, 0.1) !important;
+    color: #0066cc !important;
+    border-color: rgba(0, 102, 204, 0.25) !important;
+  }
+  .ma-force-light .ma-rev-filter-date-input {
+    background: #fff !important;
+    border-color: #d0d5dd !important;
+    color: #1a2232 !important;
+    color-scheme: light !important;
+  }
+  .ma-force-light .ma-rev-filter-date-label {
+    color: #6b7a8d !important;
+  }
+  .ma-force-light .ma-rev-filter-apply {
+    background: #0066cc !important;
+    color: #fff !important;
+  }
+  .ma-force-light .ma-rev-year-btn {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+    color: #6b7a8d !important;
+  }
+  .ma-force-light .ma-rev-year-btn--active {
+    background: rgba(0, 102, 204, 0.1) !important;
+    color: #0066cc !important;
+    border-color: rgba(0, 102, 204, 0.25) !important;
+  }
+
+
+
+/* ── Hero Page (Welcome) — Force Light ── */
+.ma-force-light .ma-hero--no-video {
+  background: linear-gradient(160deg, #e8ecf1 0%, #dce3ea 35%, #cedae4 65%, #e0e6ec 100%) !important;
+}
+.ma-force-light .ma-hero--no-video .ma-hero__scrim {
+  background: linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.05) 55%, rgba(0,0,0,0.1) 100%) !important;
+}
+.ma-force-light .ma-hero--no-video .ma-hero__headline {
   color: #1a2232 !important;
+  text-shadow: none !important;
 }
-
-.ma-force-light .ma-muted,
-.ma-force-light .ma-hub-detail,
-.ma-force-light .ma-hub-card__desc,
-.ma-force-light .ma-rev-card__label,
-.ma-force-light .ma-settings-hint,
-.ma-force-light .ma-rev-month-details {
-  color: #6b7a8d !important;
+.ma-force-light .ma-hero--no-video .ma-hero__subtext {
+  color: rgba(26, 34, 50, 0.75) !important;
+  text-shadow: none !important;
 }
-
-.ma-force-light .ma-hub-card__arrow {
-  color: #6b7a8d !important;
-}
-
-.ma-force-light .ma-hub-card__icon {
-  background: rgba(0, 102, 204, 0.08) !important;
-  border-color: rgba(0, 102, 204, 0.15) !important;
-  color: #0077cc !important;
-}
-
-.ma-force-light .ma-input {
-  background: #f0f2f5 !important;
-  border-color: #d0d5dd !important;
+.ma-force-light .ma-hero--no-video .ma-metrics__value {
   color: #1a2232 !important;
+  text-shadow: none !important;
 }
-
-.ma-force-light .ma-hub-logout-btn {
-  background: rgba(0, 0, 0, 0.04) !important;
+.ma-force-light .ma-hero--no-video .ma-metrics__label {
+  color: rgba(26, 34, 50, 0.7) !important;
+  text-shadow: none !important;
+}
+.ma-force-light .ma-hero--no-video .ma-metrics__card {
+  background: rgba(255, 255, 255, 0.7) !important;
   border-color: rgba(0, 0, 0, 0.1) !important;
-  color: #6b7a8d !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
 }
-
-.ma-force-light .ma-sub-back-btn {
-  background: rgba(0, 0, 0, 0.06) !important;
-}
-.ma-force-light .ma-sub-back-chevron {
-  border-left-color: #1a1a2e !important;
-  border-bottom-color: #1a1a2e !important;
-}
-
-.ma-force-light .ma-theme-btn {
-  background: #f0f2f5 !important;
-  border-color: #d0d5dd !important;
-  color: #6b7a8d !important;
-}
-
-.ma-force-light .ma-theme-btn.active {
-  border-color: #0066cc !important;
-  background: rgba(0, 102, 204, 0.08) !important;
-  color: #1a2232 !important;
-}
-
-.ma-force-light .ma-rev-route-row {
-  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
-}
-
-.ma-force-light .ma-rev-month-row {
-  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
-}
-
-.ma-force-light .ma-date-nav__btn,
-.ma-force-light .ma-date-nav__label {
-  border-color: rgba(0, 0, 0, 0.12) !important;
-  background: rgba(0, 0, 0, 0.04) !important;
-  color: #1a2232 !important;
-}
-
-.ma-force-light .ma-route-entry {
-  background: rgba(0, 0, 0, 0.03) !important;
+.ma-force-light .ma-hero--no-video .ma-metrics-panel {
+  background: rgba(255, 255, 255, 0.6) !important;
   border-color: rgba(0, 0, 0, 0.08) !important;
 }
-
-.ma-force-light .ma-route-dest__name,
-.ma-force-light .ma-route-price,
-.ma-force-light .ma-route-tl-total {
+.ma-force-light .ma-hero--no-video .ma-status-panel {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+.ma-force-light .ma-hero--no-video .ma-status__title {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-hero--no-video .ma-panel__title {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-hero--no-video .ma-status__card {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+.ma-force-light .ma-hero--no-video .ma-status__value {
+  color: #1a2232 !important;
+  text-shadow: none !important;
+}
+.ma-force-light .ma-hero--no-video .ma-status__value--active {
+  color: #059669 !important;
+}
+.ma-force-light .ma-hero--no-video .ma-status__value--inactive {
+  color: #dc2626 !important;
+}
+.ma-force-light .ma-hero--no-video .ma-status__label {
+  color: rgba(26, 34, 50, 0.7) !important;
+}
+.ma-force-light .ma-hero--no-video .ma-mystats-panel {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+.ma-force-light .ma-hero--no-video .ma-mystats__card {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+.ma-force-light .ma-hero--no-video .ma-mystats__value {
+  color: #1a2232 !important;
+  text-shadow: none !important;
+}
+.ma-force-light .ma-hero--no-video .ma-mystats__label {
+  color: rgba(26, 34, 50, 0.7) !important;
+}
+.ma-force-light .ma-hero--no-video .ma-welcome-textblock {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+.ma-force-light .ma-hero--no-video .ma-welcome-textblock__text {
   color: #1a2232 !important;
 }
 
-.ma-force-light .ma-route-time,
-.ma-force-light .ma-route-meta__item,
-.ma-force-light .ma-route-tl-label {
-  color: #7a8599 !important;
-}
-
-.ma-force-light .ma-route-timeline {
-  border-top-color: rgba(0, 0, 0, 0.06) !important;
-}
-
-.ma-force-light .ma-route-tl-total {
-  border-top-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-.ma-force-light .ma-route-badge--muted {
-  background: rgba(0, 0, 0, 0.06) !important;
-  color: #7a8599 !important;
-}
-
-.ma-force-light .ma-page-header,
-.ma-force-light .ma-header {
-  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-}
-
-.ma-force-light .ma-page-logo,
-.ma-force-light .ma-logo-img {
-  filter: none !important;
-}
-
-.ma-force-light .ma-page-title {
-  color: #1a2232 !important;
-}
-
+/* ── Hero Page Footer — Force Light ── */
 .ma-force-light .ma-footer {
   background: rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(14px) !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
 }
-
 .ma-force-light .ma-footer__item {
   color: #1a1a2e !important;
 }
-
 .ma-force-light .ma-footer__item.active {
   color: #0066cc !important;
   background: rgba(0, 102, 204, 0.10) !important;
   box-shadow: none !important;
 }
-
 .ma-force-light .ma-footer__icon svg {
   color: inherit !important;
   stroke: currentColor !important;
   filter: none !important;
 }
-
 .ma-force-light .ma-footer__item.active .ma-footer__icon svg {
   color: inherit !important;
   stroke: currentColor !important;
   filter: none !important;
 }
 
-.ma-force-light .ma-phone-chip {
-  color: #1a2b42 !important;
-  background: rgba(13, 110, 253, 0.1) !important;
-  border-color: rgba(13, 110, 253, 0.25) !important;
-}
-
-/* ── PIN Settings — Force Light ── */
-.ma-force-light .ma-pin-status,
-.ma-force-light .ma-name-display {
-  background: rgba(0, 0, 0, 0.04) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-}
-.ma-force-light .ma-pin-status__text {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-name-display__value {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-pin-input {
-  background: #fff !important;
-  border-color: #d0d5dd !important;
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-pin-input:focus {
-  border-color: #0066cc !important;
-}
-.ma-force-light .ma-pin-btn--cancel {
-  background: rgba(0, 0, 0, 0.04) !important;
-  border-color: rgba(0, 0, 0, 0.1) !important;
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-pin-btn--change {
-  background: rgba(0, 102, 204, 0.08) !important;
-  color: #0066cc !important;
-  border-color: rgba(0, 102, 204, 0.2) !important;
-}
-.ma-force-light .ma-pin-error {
-  color: #dc2626 !important;
-}
-
-/* ── Per-Phone Revenue — Force Light ── */
-.ma-force-light .ma-rev-perphone-header {
-  color: #6b7a8d !important;
-  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
-}
-.ma-force-light .ma-rev-perphone-row {
-  border-bottom-color: rgba(0, 0, 0, 0.04) !important;
-}
-.ma-force-light .ma-rev-perphone-row--me {
-  background: rgba(0, 102, 204, 0.06) !important;
-}
-.ma-force-light .ma-rev-perphone-phone {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-rev-perphone-phone em {
-  color: #0066cc !important;
-}
-.ma-force-light .ma-rev-perphone-count {
-  color: #6b7a8d !important;
-}
-.ma-force-light .ma-rev-perphone-amount {
-  color: #1a2232 !important;
-}
-.ma-force-light .ma-rev-perphone-toggle {
-  color: #0066cc !important;
-  background: rgba(0, 102, 204, 0.06) !important;
-  border-color: rgba(0, 102, 204, 0.15) !important;
-}
-
-/* ── Form Inputs — Force Light ── */
-.ma-force-light .ma-input,
-.ma-force-light .ma-select,
-.ma-force-light .ma-text-input {
-  background: #f0f2f5 !important;
-  border: 1px solid #d0d5dd !important;
-  color: #1a2232 !important;
-}
-
-.ma-force-light .ma-input::placeholder,
-.ma-force-light .ma-text-input::placeholder {
-  color: rgba(0, 0, 0, 0.4) !important;
-}
-
-.ma-force-light .ma-input:focus,
-.ma-force-light .ma-select:focus,
-.ma-force-light .ma-text-input:focus {
-  border-color: #0066cc !important;
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15) !important;
-}
-
-.ma-force-light .ma-input-label {
-  color: #1a2232 !important;
-}
-
-/* ── Info Page Content — Force Light ── */
-.ma-force-light .ma-info-content,
-.ma-force-light .ma-info-content p,
-.ma-force-light .ma-info-content li {
-  color: #333 !important;
-}
-
-.ma-force-light .ma-info-content strong {
-  color: #0066cc !important;
-}
-
-/* ── Transfer Page Key Elements — Force Light ── */
-.ma-force-light .ma-step-title,
-.ma-force-light .ma-step-subtitle,
-.ma-force-light .ma-confirm-label,
-.ma-force-light .ma-confirm-value,
-.ma-force-light .ma-selection-title,
-.ma-force-light .ma-selection-label,
-.ma-force-light .ma-counter-value {
-  color: #1a2232 !important;
-}
-
-.ma-force-light .ma-selection-max,
-.ma-force-light .ma-selection-hint {
-  color: #6b7a8d !important;
-}
-
-.ma-force-light .ma-back-btn {
-  background: rgba(0, 0, 0, 0.06) !important;
-}
-
-.ma-force-light .ma-back-chevron {
-  border-left-color: #1a1a2e !important;
-  border-bottom-color: #1a1a2e !important;
-}
-
-.ma-force-light .ma-confirm-card,
-.ma-force-light .ma-selection-card {
-  background: #fff !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
-}
-
-.ma-force-dark .ma-page-header,
-.ma-force-dark .ma-header {
-  background: linear-gradient(145deg, #0f2035 0%, #0a1828 100%) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
-.ma-force-dark .ma-page-logo,
-.ma-force-dark .ma-logo-img {
-  filter: brightness(0) invert(1) !important;
-}
-
-.ma-force-dark .ma-page-title {
-  color: #f0f4f8 !important;
-}
-
-/* Force dark mode */
-.ma-force-dark .ma-page,
-.ma-force-dark .ma-transfer-page,
-.ma-force-dark .ma-ai-page,
-.ma-force-dark .ma-info-page {
-  background: linear-gradient(135deg, #0d1a2d 0%, #0a1525 100%) !important;
-}
-
-.ma-force-dark .ma-card,
-.ma-force-dark .ma-hub-card,
-.ma-force-dark .ma-rev-card {
-  background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
-}
-
-.ma-force-dark .ma-title,
-.ma-force-dark .ma-sub-header__title,
-.ma-force-dark .ma-hub-name,
-.ma-force-dark .ma-hub-card__title,
-.ma-force-dark .ma-rev-card__value,
-.ma-force-dark .ma-rev-section-title,
-.ma-force-dark .ma-rev-month-name,
-.ma-force-dark .ma-rev-route-row,
-.ma-force-dark .ma-settings-label {
-  color: #e8edf3 !important;
-}
-
-.ma-force-dark .ma-muted,
-.ma-force-dark .ma-hub-detail,
-.ma-force-dark .ma-hub-card__desc,
-.ma-force-dark .ma-rev-card__label,
-.ma-force-dark .ma-settings-hint,
-.ma-force-dark .ma-rev-month-details {
-  color: #8896a6 !important;
-}
-
-.ma-force-dark .ma-hub-card__icon {
-  background: rgba(70, 211, 255, 0.12) !important;
-}
-
-.ma-force-dark .ma-input {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  color: #f0f4f8 !important;
-}
-
-.ma-force-dark .ma-hub-logout-btn {
-  background: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: #8896a6 !important;
-}
-
-.ma-force-dark .ma-sub-back-btn {
-  background: rgba(255, 255, 255, 0.1) !important;
-}
-.ma-force-dark .ma-sub-back-btn:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
-}
-.ma-force-dark .ma-sub-back-btn:active {
-  background: rgba(255, 255, 255, 0.2) !important;
-}
-.ma-force-dark .ma-sub-back-chevron {
-  border-left-color: #e0e0e0 !important;
-  border-bottom-color: #e0e0e0 !important;
-}
-
-.ma-force-dark .ma-theme-btn {
-  background: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: #8896a6 !important;
-}
-
-.ma-force-dark .ma-theme-btn.active {
-  border-color: #46d3ff !important;
-  background: rgba(70, 211, 255, 0.12) !important;
-  color: #e8edf3 !important;
-}
-
-.ma-force-dark .ma-rev-route-row {
-  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.ma-force-dark .ma-rev-month-row {
-  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.ma-force-dark .ma-date-nav__btn,
-.ma-force-dark .ma-date-nav__label {
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-}
-
-.ma-force-dark .ma-route-entry {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.ma-force-dark .ma-route-timeline {
-  border-top-color: rgba(255, 255, 255, 0.06) !important;
-}
-
-.ma-force-dark .ma-route-tl-total {
-  border-top-color: rgba(255, 255, 255, 0.08) !important;
-}
-
+/* ── Hero Page Footer — Force Dark ── */
 .ma-force-dark .ma-footer {
   background: rgba(10, 16, 28, 0.45) !important;
   backdrop-filter: blur(14px) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32), 0 0 18px rgba(255, 255, 255, 0.08) !important;
 }
-
 .ma-force-dark .ma-footer__item {
   color: rgba(255, 255, 255, 0.85) !important;
 }
-
 .ma-force-dark .ma-footer__item.active {
   color: rgba(82, 183, 255, 0.98) !important;
   background: rgba(82, 183, 255, 0.12) !important;
   box-shadow: 0 0 24px rgba(82, 183, 255, 0.45), 0 10px 24px rgba(0, 0, 0, 0.35) !important;
 }
-
 .ma-force-dark .ma-footer__icon svg {
   color: inherit !important;
   stroke: currentColor !important;
   filter: none !important;
 }
-
 .ma-force-dark .ma-footer__item.active .ma-footer__icon svg {
   color: inherit !important;
   stroke: currentColor !important;
   filter: none !important;
 }
 
-.ma-force-dark .ma-phone-chip {
-  color: #e8edf3 !important;
-  background: rgba(70, 130, 255, 0.2) !important;
-  border-color: rgba(70, 130, 255, 0.35) !important;
+/* ── Transfer Page Categories — Force Light ── */
+.ma-force-light .ma-category-name {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-destination-item {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border: none !important;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06) !important;
+}
+.ma-force-light .ma-destination-name {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-destination-desc {
+  color: #6b7a8d !important;
+}
+.ma-force-light .ma-destination-chevron {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+.ma-force-light .ma-chevron-icon {
+  color: #6b7a8d !important;
+}
+.ma-force-light .ma-destination-extras {
+  border-top-color: rgba(0, 0, 0, 0.06) !important;
+}
+.ma-force-light .ma-dest-extra {
+  color: #6b7a8d !important;
+}
+.ma-force-light .ma-dest-extra strong {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-subcategory-item {
+  background: linear-gradient(145deg, #ffffff 0%, #f0f4ff 100%) !important;
+  border: none !important;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06) !important;
+}
+.ma-force-light .ma-subcategory-name {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-subcategory-desc {
+  color: #6b7a8d !important;
 }
 
-/* ── PIN Settings — Force Dark ── */
-.ma-force-dark .ma-pin-status,
-.ma-force-dark .ma-name-display {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+/* ── Transfer Page Vehicles/Tariffs — Force Light ── */
+.ma-force-light .ma-tariff-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border: 2px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
 }
-.ma-force-dark .ma-pin-status__text {
-  color: #e8edf3 !important;
+.ma-force-light .ma-tariff-name {
+  color: #1a2232 !important;
 }
-.ma-force-dark .ma-name-display__value {
-  color: #e8edf3 !important;
+.ma-force-light .ma-tariff-hours {
+  color: #6b7a8d !important;
 }
-.ma-force-dark .ma-pin-input {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  color: #f0f4f8 !important;
+.ma-force-light .ma-vehicle-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
 }
-.ma-force-dark .ma-pin-input:focus {
-  border-color: #46d3ff !important;
+.ma-force-light .ma-vehicle-name {
+  color: #1a2232 !important;
 }
-.ma-force-dark .ma-pin-btn--cancel {
-  background: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: #8896a6 !important;
+.ma-force-light .ma-spec {
+  background: rgba(0, 0, 0, 0.04) !important;
+  color: #6b7a8d !important;
 }
-.ma-force-dark .ma-pin-btn--change {
-  background: rgba(70, 211, 255, 0.12) !important;
-  color: #46d3ff !important;
-  border-color: rgba(70, 211, 255, 0.25) !important;
+.ma-force-light .ma-vehicle-price {
+  color: #0066cc !important;
 }
-.ma-force-dark .ma-pin-error {
-  color: #ff8a8a !important;
+.ma-force-light .ma-counter {
+  background: rgba(0, 0, 0, 0.04) !important;
 }
-
-/* ── Per-Phone Revenue — Force Dark ── */
-.ma-force-dark .ma-rev-perphone-header {
-  color: #8896a6 !important;
-  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
-}
-.ma-force-dark .ma-rev-perphone-row {
-  border-bottom-color: rgba(255, 255, 255, 0.04) !important;
-}
-.ma-force-dark .ma-rev-perphone-row--me {
-  background: rgba(70, 211, 255, 0.06) !important;
-}
-.ma-force-dark .ma-rev-perphone-phone {
-  color: #e8edf3 !important;
-}
-.ma-force-dark .ma-rev-perphone-phone em {
-  color: #46d3ff !important;
-}
-.ma-force-dark .ma-rev-perphone-count {
-  color: #8896a6 !important;
-}
-.ma-force-dark .ma-rev-perphone-amount {
-  color: #e8edf3 !important;
+.ma-force-light .ma-counter-minus {
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #6b7a8d !important;
 }
 
-/* ── Form Inputs — Force Dark ── */
-.ma-force-dark .ma-input,
-.ma-force-dark .ma-select,
-.ma-force-dark .ma-text-input {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  color: #f0f4f8 !important;
+/* ── Search Overlay — Force Light ── */
+.ma-force-light .ma-search-overlay {
+  background: #f5f7fa !important;
+}
+.ma-force-light .ma-search-overlay__header {
+  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+}
+.ma-force-light .ma-search-overlay__input {
+  background: #fff !important;
+  border-color: #d0d5dd !important;
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-search-overlay__input::placeholder {
+  color: rgba(0, 0, 0, 0.4) !important;
+}
+.ma-force-light .ma-search-overlay__input:focus {
+  border-color: #0066cc !important;
+}
+.ma-force-light .ma-search-overlay__cancel {
+  color: #0066cc !important;
+}
+.ma-force-light .ma-search-overlay__section-title {
+  color: #6b7a8d !important;
+}
+.ma-force-light .ma-search-overlay__list li {
+  color: #1a2232 !important;
+  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+}
+.ma-force-light .ma-search-overlay__list li:hover {
+  background: rgba(0, 102, 204, 0.06) !important;
+}
+.ma-force-light .ma-search-overlay__list .ma-search-empty {
+  color: #6b7a8d !important;
+}
+.ma-force-light .ma-search-overlay__cat {
+  color: #6b7a8d !important;
 }
 
-.ma-force-dark .ma-input::placeholder,
-.ma-force-dark .ma-text-input::placeholder {
-  color: rgba(255, 255, 255, 0.4) !important;
+/* ── Dest Search — Force Light ── */
+.ma-force-light .ma-dest-search-label {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-dest-search-input {
+  background: #fff !important;
+  border: 2px solid #d0d5dd !important;
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-dest-search-input::placeholder {
+  color: rgba(0, 0, 0, 0.4) !important;
+}
+.ma-force-light .ma-dest-search-input:focus {
+  border-color: #0066cc !important;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15) !important;
+}
+.ma-force-light .ma-dest-search-results {
+  background: #fff !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12) !important;
+}
+.ma-force-light .ma-dest-search-results li {
+  color: #1a2232 !important;
+  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+}
+.ma-force-light .ma-dest-search-result-name {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-dest-search-result-cat {
+  color: #6b7a8d !important;
 }
 
-.ma-force-dark .ma-input:focus,
-.ma-force-dark .ma-select:focus,
-.ma-force-dark .ma-text-input:focus {
-  border-color: #46d3ff !important;
-  box-shadow: 0 0 0 3px rgba(70, 211, 255, 0.2) !important;
+/* ── Filter Chips — Force Light ── */
+.ma-force-light .ma-dest-filter-chip {
+  background: #f0f2f5 !important;
+  border-color: #d0d5dd !important;
+  color: #6b7a8d !important;
+}
+.ma-force-light .ma-dest-filter-chip:hover {
+  background: #e4e7ec !important;
+  border-color: #bcc3cf !important;
+}
+.ma-force-light .ma-dest-filter-chip.active {
+  background: linear-gradient(135deg, #4E6BFF 0%, #3a54cc 100%) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+.ma-force-light .ma-dest-filter-dropdown {
+  background: #fff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+}
+.ma-force-light .ma-dest-filter-dropdown button {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-dest-filter-dropdown button:hover {
+  background: rgba(0, 0, 0, 0.04) !important;
 }
 
-.ma-force-dark .ma-input-label {
-  color: #e8edf3 !important;
+/* ── AI Assistant Page — Force Light ── */
+.ma-force-light .ma-ai-page {
+  background: #f5f7fa !important;
+}
+.ma-force-light .ma-ai-header {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+.ma-force-light .ma-ai-logo {
+  filter: none !important;
+}
+.ma-force-light .ma-ai-title {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-ai-welcome {
+  color: #6b7a8d !important;
+}
+.ma-force-light .ma-ai-card {
+  background: #fff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+}
+.ma-force-light .ma-ai-card-title {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-ai-card-desc {
+  color: #6b7a8d !important;
 }
 
-/* ── Info Page Content — Force Dark ── */
-.ma-force-dark .ma-info-content,
-.ma-force-dark .ma-info-content p,
-.ma-force-dark .ma-info-content li {
-  color: #d0d8e0 !important;
+/* ── Media Page — Force Light ── */
+.ma-force-light .ma-media-page {
+  background: #f5f7fa !important;
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-media-back {
+  background: #f0f2f5 !important;
+  border-color: #d0d5dd !important;
+  color: #6b7a8d !important;
+}
+.ma-force-light .ma-media-dest-name {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-media-platform-title {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-media-card {
+  background: #fff !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+.ma-force-light .ma-media-card-title {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-media-card-platform {
+  color: #6b7a8d !important;
+}
+.ma-force-light .ma-media-empty {
+  color: #6b7a8d !important;
 }
 
-.ma-force-dark .ma-info-content strong {
-  color: #46d3ff !important;
-}
-
-/* ── Transfer Page Key Elements — Force Dark ── */
-.ma-force-dark .ma-step-title,
-.ma-force-dark .ma-step-subtitle,
-.ma-force-dark .ma-confirm-label,
-.ma-force-dark .ma-confirm-value,
-.ma-force-dark .ma-selection-title,
-.ma-force-dark .ma-selection-label,
-.ma-force-dark .ma-counter-value {
-  color: #e8edf3 !important;
-}
-
-.ma-force-dark .ma-selection-max,
-.ma-force-dark .ma-selection-hint {
-  color: #8896a6 !important;
-}
-
-.ma-force-dark .ma-back-btn {
-  background: rgba(255, 255, 255, 0.1) !important;
-}
-
-.ma-force-dark .ma-back-chevron {
-  border-left-color: #e0e0e0 !important;
-  border-bottom-color: #e0e0e0 !important;
-}
-
-.ma-force-dark .ma-confirm-card,
-.ma-force-dark .ma-selection-card {
-  background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
-}
-}

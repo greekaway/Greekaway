@@ -29,6 +29,26 @@
         <h2 class="ma-sub-header__title">Ανάλυση Εσόδων</h2>
       </div>
 
+      <!-- ── Period Filter ── -->
+      <div class="ma-rev-filter" id="rev-period-filter">
+        <button class="ma-rev-filter__btn ma-rev-filter__btn--active" data-period="all" type="button">Όλα</button>
+        <button class="ma-rev-filter__btn" data-period="today" type="button">Σήμερα</button>
+        <button class="ma-rev-filter__btn" data-period="week" type="button">Εβδομάδα</button>
+        <button class="ma-rev-filter__btn" data-period="month" type="button">Μήνας</button>
+        <button class="ma-rev-filter__btn" data-period="custom" type="button">Χειροκίνητη</button>
+      </div>
+      <div class="ma-rev-filter-dates" id="rev-custom-dates" style="display:none">
+        <div class="ma-rev-filter-date-group">
+          <label class="ma-rev-filter-date-label" for="rev-filter-from">Από</label>
+          <input type="date" class="ma-rev-filter-date-input" id="rev-filter-from" />
+        </div>
+        <div class="ma-rev-filter-date-group">
+          <label class="ma-rev-filter-date-label" for="rev-filter-to">Έως</label>
+          <input type="date" class="ma-rev-filter-date-input" id="rev-filter-to" />
+        </div>
+        <button class="ma-rev-filter-apply" id="rev-filter-apply" type="button">Εφαρμογή</button>
+      </div>
+
       <!-- ── Summary Cards Grid ── -->
       <div class="ma-rev-grid" id="rev-summary">
         <div class="ma-rev-card">
@@ -112,6 +132,7 @@
       <!-- ── Monthly Breakdown ── -->
       <section class="ma-card ma-section" id="rev-monthly-section">
         <h3 class="ma-rev-section-title">Μηνιαία Ανάλυση</h3>
+        <div class="ma-rev-year-filter" id="rev-year-filter"></div>
         <div class="ma-rev-monthly-list" id="rev-monthly">
           <p class="ma-muted" style="text-align:center;padding:12px 0;">Φόρτωση...</p>
         </div>
