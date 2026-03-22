@@ -876,6 +876,26 @@ app.use((req, res, next) => {
   return sendDsPageWithFooter(res, DRIVERSSYSTEM_ENTRY);
 });
 
+// Dynamic service-worker.js — inject buildNumber as cache version so caches
+// are automatically invalidated on every deploy without manual bumps.
+app.get('/service-worker.js', (req, res) => {
+  const swPath = path.join(__dirname, 'public', 'service-worker.js');
+  try {
+    const vInfo = readVersionFile(VERSION_FILE_PATH);
+    const build = (vInfo && vInfo.buildNumber) || Date.now();
+    let swCode = fs.readFileSync(swPath, 'utf8');
+    swCode = swCode.replace(
+      /const CACHE_VERSION = '[^']*';/,
+      `const CACHE_VERSION = 'v${build}';`
+    );
+    res.set('Content-Type', 'application/javascript; charset=utf-8');
+    res.set('Cache-Control', 'no-store');
+    res.send(swCode);
+  } catch (err) {
+    res.sendFile(swPath);
+  }
+});
+
 // Serve Apple Pay domain association and other well-known files (explicitly allow dotfiles)
 app.use('/.well-known', express.static(path.join(__dirname, 'public', '.well-known'), {
   dotfiles: 'allow',
