@@ -1163,11 +1163,15 @@
   }
 
   /* PIN Settings — Auto Light */
-  .ma-pin-status {
+  .ma-pin-status,
+  .ma-name-display {
     background: rgba(0, 0, 0, 0.04) !important;
     border-color: rgba(0, 0, 0, 0.08) !important;
   }
   .ma-pin-status__text {
+    color: #1a2232 !important;
+  }
+  .ma-name-display__value {
     color: #1a2232 !important;
   }
   .ma-pin-input {
@@ -1214,6 +1218,11 @@
   }
   .ma-rev-perphone-amount {
     color: #1a2232 !important;
+  }
+  .ma-rev-perphone-toggle {
+    color: #0066cc !important;
+    background: rgba(0, 102, 204, 0.06) !important;
+    border-color: rgba(0, 102, 204, 0.15) !important;
   }
 }
 
@@ -1361,11 +1370,15 @@
 }
 
 /* ── PIN Settings — Force Light ── */
-.ma-force-light .ma-pin-status {
+.ma-force-light .ma-pin-status,
+.ma-force-light .ma-name-display {
   background: rgba(0, 0, 0, 0.04) !important;
   border-color: rgba(0, 0, 0, 0.08) !important;
 }
 .ma-force-light .ma-pin-status__text {
+  color: #1a2232 !important;
+}
+.ma-force-light .ma-name-display__value {
   color: #1a2232 !important;
 }
 .ma-force-light .ma-pin-input {
@@ -1412,6 +1425,11 @@
 }
 .ma-force-light .ma-rev-perphone-amount {
   color: #1a2232 !important;
+}
+.ma-force-light .ma-rev-perphone-toggle {
+  color: #0066cc !important;
+  background: rgba(0, 102, 204, 0.06) !important;
+  border-color: rgba(0, 102, 204, 0.15) !important;
 }
 
 /* Force dark mode */
@@ -1540,11 +1558,15 @@
 }
 
 /* ── PIN Settings — Force Dark ── */
-.ma-force-dark .ma-pin-status {
+.ma-force-dark .ma-pin-status,
+.ma-force-dark .ma-name-display {
   background: rgba(255, 255, 255, 0.04) !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 .ma-force-dark .ma-pin-status__text {
+  color: #e8edf3 !important;
+}
+.ma-force-dark .ma-name-display__value {
   color: #e8edf3 !important;
 }
 .ma-force-dark .ma-pin-input {

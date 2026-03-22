@@ -120,20 +120,51 @@
         const section = document.getElementById('rev-perphone-section');
         if (section) section.style.display = 'none';
       } else {
+        const MAX_VISIBLE = 5;
+        const hasMore = perPhone.length > MAX_VISIBLE;
+        const visiblePhones = hasMore ? perPhone.slice(0, MAX_VISIBLE) : perPhone;
+
+        const renderRow = (p) => {
+          const isMe = p.phone === (stored.orderer_phone || '');
+          const nameLabel = p.display_name || (p.phone === 'unknown' ? '—' : p.phone);
+          return `
+            <div class="ma-rev-perphone-row${isMe ? ' ma-rev-perphone-row--me' : ''}">
+              <span class="ma-rev-perphone-phone">${nameLabel}${isMe ? ' <em>(εσείς)</em>' : ''}</span>
+              <span class="ma-rev-perphone-count">${p.routes}</span>
+              <span class="ma-rev-perphone-amount">${fmt(p.revenue)}</span>
+            </div>`;
+        };
+
         perPhoneList.innerHTML = `
           <div class="ma-rev-perphone-header">
-            <span>Τηλέφωνο</span>
+            <span>Χρήστης</span>
             <span>Διαδρομές</span>
             <span>Τζίρος</span>
           </div>
-          ${perPhone.map(p => `
-            <div class="ma-rev-perphone-row${p.phone === (stored.orderer_phone || '') ? ' ma-rev-perphone-row--me' : ''}">
-              <span class="ma-rev-perphone-phone">${p.phone === 'unknown' ? '—' : p.phone}${p.phone === (stored.orderer_phone || '') ? ' <em>(εσείς)</em>' : ''}</span>
-              <span class="ma-rev-perphone-count">${p.routes}</span>
-              <span class="ma-rev-perphone-amount">${fmt(p.revenue)}</span>
+          ${visiblePhones.map(renderRow).join('')}
+          ${hasMore ? `
+            <div class="ma-rev-perphone-extra" id="rev-perphone-extra" style="display:none">
+              ${perPhone.slice(MAX_VISIBLE).map(renderRow).join('')}
             </div>
-          `).join('')}
+            <button class="ma-rev-perphone-toggle" id="rev-perphone-toggle" type="button">
+              Εμφάνιση όλων (${perPhone.length})
+            </button>
+          ` : ''}
         `;
+
+        if (hasMore) {
+          const toggleBtn = document.getElementById('rev-perphone-toggle');
+          const extraWrap = document.getElementById('rev-perphone-extra');
+          if (toggleBtn && extraWrap) {
+            toggleBtn.addEventListener('click', () => {
+              const expanded = extraWrap.style.display !== 'none';
+              extraWrap.style.display = expanded ? 'none' : '';
+              toggleBtn.textContent = expanded
+                ? `Εμφάνιση όλων (${perPhone.length})`
+                : 'Εμφάνιση λιγότερων';
+            });
+          }
+        }
       }
     }
   } catch (err) {

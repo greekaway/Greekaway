@@ -123,6 +123,7 @@ CREATE TABLE IF NOT EXISTS ma_hotel_phones (
     zone_id VARCHAR(50) NOT NULL REFERENCES ma_transfer_zones(id) ON DELETE CASCADE,
     phone VARCHAR(50) NOT NULL,
     label VARCHAR(100) DEFAULT '',
+    display_name VARCHAR(255) DEFAULT NULL,
     pin_hash VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );

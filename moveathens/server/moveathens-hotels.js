@@ -100,7 +100,7 @@ module.exports = function registerHotelRoutes(app, opts = {}) {
   app.post('/api/admin/moveathens/hotel-phones', async (req, res) => {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
-      const { zone_id, phone, label } = req.body || {};
+      const { zone_id, phone, label, display_name } = req.body || {};
       if (!zone_id || !phone) {
         return res.status(400).json({ error: 'zone_id and phone are required' });
       }
@@ -112,7 +112,7 @@ module.exports = function registerHotelRoutes(app, opts = {}) {
       if (existing) {
         return res.status(409).json({ error: 'Phone already registered', hotel_name: existing.zone.name });
       }
-      const saved = await dataLayer.addHotelPhone({ zone_id, phone: cleanPhone, label: normalizeString(label) });
+      const saved = await dataLayer.addHotelPhone({ zone_id, phone: cleanPhone, label: normalizeString(label), display_name: normalizeString(display_name) });
       return res.json({ ok: true, phone: saved });
     } catch (err) {
       console.error('[moveathens] hotel-phone add failed:', err.message);
@@ -143,7 +143,7 @@ module.exports = function registerHotelRoutes(app, opts = {}) {
       const result = [];
       for (const p of phones) {
         const pinHash = await dataLayer.getPhonePinHash(p.phone);
-        result.push({ ...p, has_pin: !!pinHash });
+        result.push({ ...p, has_pin: !!pinHash, display_name: p.display_name || '' });
       }
       return res.json({ phones: result });
     } catch (err) {

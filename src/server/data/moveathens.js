@@ -1444,6 +1444,18 @@ async function deleteHotelPhone(id) {
   return false;
 }
 
+async function setPhoneDisplayName(phone, displayName) {
+  await initDb();
+  if (dbAvailable) {
+    try {
+      return await db.ma.setPhoneDisplayName(phone, displayName);
+    } catch (err) {
+      console.error('[moveathens] DB setPhoneDisplayName failed:', err.message);
+    }
+  }
+  return false;
+}
+
 async function setPhonePin(phone, pinHash) {
   await initDb();
   if (dbAvailable) {
@@ -1504,6 +1516,7 @@ module.exports = {
   addHotelPhone,
   deleteHotelPhone,
   // Phone PIN
+  setPhoneDisplayName,
   setPhonePin,
   clearPhonePin,
   getPhonePinHash,

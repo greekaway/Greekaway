@@ -173,6 +173,11 @@ body.ma-gate-locked > *:not(.ma-gate):not(script) {
   animation: maGatePinReveal 0.3s ease forwards;
 }
 
+/* Name field wrapper — smooth reveal */
+.ma-gate__name-wrap {
+  animation: maGatePinReveal 0.3s ease forwards;
+}
+
 @keyframes maGatePinReveal {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }

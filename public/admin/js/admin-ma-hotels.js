@@ -60,9 +60,9 @@
       return false;
     };
 
-    const addPhone = async (zoneId, phone, label) => {
+    const addPhone = async (zoneId, phone, label, displayName) => {
       try {
-        const res = await api('/api/admin/moveathens/hotel-phones', 'POST', { zone_id: zoneId, phone, label });
+        const res = await api('/api/admin/moveathens/hotel-phones', 'POST', { zone_id: zoneId, phone, label, display_name: displayName });
         if (res && res.ok) {
           const data = await res.json();
           if (!phonesCache[zoneId]) phonesCache[zoneId] = [];
@@ -127,12 +127,19 @@
         const mainAlreadyInList = mainPhone && phones.some(p => p.phone.replace(/\s+/g,'') === mainPhone.replace(/\s+/g,''));
         let allBadges = '';
         if (mainPhone && !mainAlreadyInList) {
-          allBadges += `<span class="ma-phone-badge ma-phone-badge--main" title="Κύριο τηλέφωνο">📞 ${mainPhone}</span>`;
+          allBadges += `<div class="ma-phone-row ma-phone-row--main"><span class="ma-phone-row__phone">📞 ${mainPhone}</span><span class="ma-phone-row__name ma-muted-text">Κύριο τηλέφωνο</span></div>`;
         }
         allBadges += phones.map(p => {
-          const pinIcon = p.has_pin ? '<span class="ma-phone-pin-badge" title="PIN ενεργό">🔒</span>' : '';
-          const pinResetBtn = p.has_pin ? `<button class="ma-phone-pin-reset" data-phone="${p.phone}" data-zone-id="${z.id}" title="Διαγραφή PIN">🗑️</button>` : '';
-          return `<span class="ma-phone-badge" title="${p.label || 'Τηλέφωνο'}">${p.phone}${p.label ? ' <em>(' + p.label + ')</em>' : ''} ${pinIcon}${pinResetBtn}<button class="ma-phone-remove" data-phone-id="${p.id}" data-zone-id="${z.id}" title="Αφαίρεση">✕</button></span>`;
+          const nameDisplay = p.display_name ? `<span class="ma-phone-row__name">${p.display_name}</span>` : '<span class="ma-phone-row__name ma-muted-text">—</span>';
+          const pinStatus = p.has_pin
+            ? `<span class="ma-phone-row__pin ma-phone-row__pin--active" title="PIN ενεργό">🔒<button class="ma-phone-pin-reset" data-phone="${p.phone}" data-zone-id="${z.id}" title="Διαγραφή PIN">Διαγρ.</button></span>`
+            : '<span class="ma-phone-row__pin ma-phone-row__pin--off">—</span>';
+          return `<div class="ma-phone-row">
+            <span class="ma-phone-row__phone">${p.phone}</span>
+            ${nameDisplay}
+            ${pinStatus}
+            <button class="ma-phone-remove" data-phone-id="${p.id}" data-zone-id="${z.id}" title="Αφαίρεση">✕</button>
+          </div>`;
         }).join('');
         if (!allBadges) allBadges = '<span class="ma-muted-text">Δεν έχουν οριστεί τηλέφωνα</span>';
         return `
@@ -151,13 +158,14 @@
           </div>
           <div class="ma-hotel-phones">
             <div class="ma-hotel-phones__header">
-              <span class="ma-hotel-phones__label">📱 Τηλέφωνα</span>
-              <button class="btn secondary ma-phone-toggle-add" type="button" data-zone-id="${z.id}" title="Προσθήκη τηλεφώνου">＋</button>
+              <span class="ma-hotel-phones__label">📱 Χρήστες</span>
+              <button class="btn secondary ma-phone-toggle-add" type="button" data-zone-id="${z.id}" title="Προσθήκη χρήστη">＋</button>
             </div>
+            ${phones.length > 0 ? `<div class="ma-phone-row ma-phone-row--header"><span class="ma-phone-row__phone">Τηλέφωνο</span><span class="ma-phone-row__name">Όνομα</span><span class="ma-phone-row__pin">PIN</span><span class="ma-phone-row__action"></span></div>` : ''}
             <div class="ma-hotel-phones__list">${allBadges}</div>
             <div class="ma-hotel-phones__add" data-zone-id="${z.id}" hidden>
               <input class="input ma-phone-input" type="text" placeholder="6912345678" maxlength="30" data-zone-id="${z.id}">
-              <input class="input ma-phone-label-input" type="text" placeholder="Ετικέτα (προαιρ.)" maxlength="50" data-zone-id="${z.id}">
+              <input class="input ma-phone-name-input" type="text" placeholder="Όνομα" maxlength="100" data-zone-id="${z.id}">
               <button class="btn secondary ma-phone-add-btn" type="button" data-zone-id="${z.id}">Προσθήκη</button>
             </div>
           </div>
@@ -205,17 +213,17 @@
           const zoneId = btn.dataset.zoneId;
           const card = btn.closest('.ma-zone-card');
           const phoneInput = card.querySelector(`.ma-phone-input[data-zone-id="${zoneId}"]`);
-          const labelInput = card.querySelector(`.ma-phone-label-input[data-zone-id="${zoneId}"]`);
+          const nameInput = card.querySelector(`.ma-phone-name-input[data-zone-id="${zoneId}"]`);
           const phone = (phoneInput?.value || '').trim();
-          const label = (labelInput?.value || '').trim();
+          const displayName = (nameInput?.value || '').trim();
           if (!phone || phone.length < 5) { showToast('Εισάγετε έγκυρο τηλέφωνο', 'error'); return; }
           btn.disabled = true;
-          const result = await addPhone(zoneId, phone, label);
+          const result = await addPhone(zoneId, phone, '', displayName);
           btn.disabled = false;
           if (result.ok) {
-            showToast('Τηλέφωνο προστέθηκε');
+            showToast('Χρήστης προστέθηκε');
             if (phoneInput) phoneInput.value = '';
-            if (labelInput) labelInput.value = '';
+            if (nameInput) nameInput.value = '';
             render();
           } else {
             const msg = result.hotel_name

@@ -946,17 +946,22 @@ const ma = {
 
   async addHotelPhone(data) {
     const sql = `
-      INSERT INTO ma_hotel_phones (id, zone_id, phone, label)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO ma_hotel_phones (id, zone_id, phone, label, display_name)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *
     `;
     const id = data.id || `hp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-    const rows = await query(sql, [id, data.zone_id, data.phone, data.label || '']);
+    const rows = await query(sql, [id, data.zone_id, data.phone, data.label || '', data.display_name || null]);
     return rows[0];
   },
 
   async deleteHotelPhone(id) {
     const r = await execute('DELETE FROM ma_hotel_phones WHERE id = $1', [id]);
+    return r.rowCount > 0;
+  },
+
+  async setPhoneDisplayName(phone, displayName) {
+    const r = await execute('UPDATE ma_hotel_phones SET display_name = $2 WHERE phone = $1', [phone, displayName]);
     return r.rowCount > 0;
   },
 

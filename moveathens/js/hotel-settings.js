@@ -60,6 +60,85 @@
   const pinSection = document.getElementById('pin-section');
   if (!pinSection || !myPhone) return;
 
+  // ═══════════════════════════════════════
+  // Name Management
+  // ═══════════════════════════════════════
+  const nameDisplayEl  = document.getElementById('name-display');
+  const nameDisplayVal = document.getElementById('name-display-value');
+  const nameEditBtn    = document.getElementById('name-edit-btn');
+  const nameEditWrap   = document.getElementById('name-edit');
+  const nameInput      = document.getElementById('name-input');
+  const nameSaveBtn    = document.getElementById('name-save-btn');
+  const nameCancelBtn  = document.getElementById('name-cancel-btn');
+  const nameError      = document.getElementById('name-error');
+
+  let currentName = stored.display_name || '';
+
+  function updateNameUI() {
+    nameDisplayVal.textContent = currentName || '—';
+    nameEditWrap.style.display = 'none';
+    nameDisplayEl.style.display = '';
+    nameInput.value = '';
+    if (nameError) nameError.textContent = '';
+  }
+
+  nameEditBtn?.addEventListener('click', () => {
+    nameDisplayEl.style.display = 'none';
+    nameEditWrap.style.display = '';
+    nameInput.value = currentName;
+    nameInput.focus();
+  });
+
+  nameCancelBtn?.addEventListener('click', updateNameUI);
+
+  nameSaveBtn?.addEventListener('click', async () => {
+    const name = (nameInput.value || '').trim();
+    if (!name) {
+      if (nameError) nameError.textContent = 'Το όνομα είναι υποχρεωτικό';
+      return;
+    }
+    nameSaveBtn.disabled = true;
+    if (nameError) nameError.textContent = '';
+    try {
+      const res = await fetch('/api/moveathens/set-display-name', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: myPhone, display_name: name })
+      });
+      if (res.ok) {
+        currentName = name;
+        // Update localStorage
+        stored.display_name = name;
+        localStorage.setItem('moveathens_hotel', JSON.stringify(stored));
+        updateNameUI();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        if (nameError) nameError.textContent = err.error || 'Σφάλμα αποθήκευσης';
+      }
+    } catch (_) {
+      if (nameError) nameError.textContent = 'Σφάλμα δικτύου';
+    }
+    nameSaveBtn.disabled = false;
+  });
+
+  // Load current name from server
+  async function loadDisplayName() {
+    try {
+      const res = await fetch(`/api/moveathens/hotel-by-phone?phone=${encodeURIComponent(myPhone)}`);
+      if (res.ok) {
+        const data = await res.json();
+        currentName = data.display_name || '';
+        if (currentName) {
+          stored.display_name = currentName;
+          localStorage.setItem('moveathens_hotel', JSON.stringify(stored));
+        }
+      }
+    } catch (_) { /* ignore */ }
+    updateNameUI();
+  }
+
+  loadDisplayName();
+
   const pinStatusIcon = document.getElementById('pin-status-icon');
   const pinStatusText = document.getElementById('pin-status-text');
   const pinFormWrap   = document.getElementById('pin-form-wrap');

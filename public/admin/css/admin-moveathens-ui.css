@@ -1128,32 +1128,79 @@ html[data-theme='light'] .ma-infopage-form label {
 }
 .ma-hotel-phones__list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  gap: 0;
   margin-bottom: 8px;
 }
-.ma-phone-badge {
+
+/* Phone rows — table-like layout */
+.ma-phone-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+}
+.ma-phone-row:last-child {
+  border-bottom: none;
+}
+.ma-phone-row--header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ga-muted, #7b8794);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px 8px 0 0;
+}
+.ma-phone-row--main {
+  opacity: 0.6;
+}
+.ma-phone-row__phone {
+  font-weight: 500;
+  color: var(--ga-text, #e4e8ef);
+}
+.ma-phone-row__name {
+  font-weight: 400;
+  color: var(--ga-text, #e4e8ef);
+}
+.ma-phone-row__name.ma-muted-text {
+  color: var(--ga-muted, #7b8794);
+  opacity: 0.5;
+}
+.ma-phone-row__pin {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(46,204,113,0.15);
-  color: #2ecc71;
-  border: 1px solid rgba(46,204,113,0.3);
-  padding: 4px 10px;
-  border-radius: 16px;
-  font-size: 13px;
-  font-weight: 500;
-}
-.ma-phone-badge em {
-  font-weight: 400;
-  font-style: normal;
-  opacity: 0.7;
+  gap: 4px;
   font-size: 12px;
 }
-.ma-phone-badge--main {
-  background: rgba(78,107,255,0.12);
-  color: #6b8aff;
-  border-color: rgba(78,107,255,0.25);
+.ma-phone-row__pin--active {
+  color: #2ecc71;
+}
+.ma-phone-row__pin--off {
+  color: var(--ga-muted, #7b8794);
+  opacity: 0.4;
+}
+.ma-phone-row__action {
+  width: 24px;
+}
+.ma-phone-pin-reset {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: #e74c3c;
+  opacity: 0.7;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.ma-phone-pin-reset:hover {
+  opacity: 1;
+  background: rgba(231, 76, 60, 0.1);
 }
 .ma-phone-remove {
   background: none;
@@ -1162,24 +1209,14 @@ html[data-theme='light'] .ma-infopage-form label {
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
-  padding: 0 2px;
-  opacity: 0.7;
-}
-.ma-phone-remove:hover { opacity: 1; }
-.ma-phone-pin-badge {
-  font-size: 12px;
-  margin-left: 2px;
-}
-.ma-phone-pin-reset {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 13px;
-  line-height: 1;
-  padding: 0 2px;
+  padding: 2px 4px;
   opacity: 0.6;
+  border-radius: 4px;
 }
-.ma-phone-pin-reset:hover { opacity: 1; }
+.ma-phone-remove:hover {
+  opacity: 1;
+  background: rgba(231, 76, 60, 0.1);
+}
 .ma-muted-text {
   font-size: 12px;
   color: var(--ga-muted, #7b8794);
@@ -1195,9 +1232,9 @@ html[data-theme='light'] .ma-infopage-form label {
   max-width: 180px;
   font-size: 13px;
 }
-.ma-phone-label-input {
+.ma-phone-name-input {
   flex: 1;
-  max-width: 140px;
+  max-width: 160px;
   font-size: 13px;
 }
 

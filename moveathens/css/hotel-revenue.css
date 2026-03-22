@@ -472,6 +472,31 @@
   min-width: 70px;
 }
 
+/* Toggle "show all" button */
+.ma-rev-perphone-toggle {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--ma-accent, #46d3ff);
+  background: rgba(70, 211, 255, 0.06);
+  border: 1px solid rgba(70, 211, 255, 0.15);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.ma-rev-perphone-toggle:active {
+  transform: scale(0.98);
+}
+
+.ma-rev-perphone-toggle:hover {
+  background: rgba(70, 211, 255, 0.12);
+}
+
 @media (max-width: 359px) {
   .ma-rev-perphone-phone { font-size: 12px; }
   .ma-rev-perphone-count { font-size: 12px; min-width: 32px; }

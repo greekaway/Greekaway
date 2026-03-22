@@ -265,6 +265,10 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const pinHash = await dataLayer.getPhonePinHash(phone);
       const hasPin = !!pinHash;
 
+      // Find the matching phone record for display_name
+      const matchedPhone = (result.phones || []).find(p => p.phone.replace(/[\s\-().]/g, '') === phone.replace(/[\s\-().]/g, ''));
+      const displayName = matchedPhone ? (matchedPhone.display_name || '') : '';
+
       const zone = result.zone;
       return res.json({
         zone: {
@@ -281,9 +285,11 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         phones: (result.phones || []).map(p => ({
           id: p.id,
           phone: p.phone,
-          label: p.label || ''
+          label: p.label || '',
+          display_name: p.display_name || ''
         })),
-        has_pin: hasPin
+        has_pin: hasPin,
+        display_name: displayName
       });
     } catch (err) {
       console.error('[moveathens] hotel-by-phone error:', err.message);
@@ -311,11 +317,12 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     }
   });
 
-  // Public: Verify phone + PIN login
+  // Public: Verify phone + PIN login (also accepts display_name for first-time setup)
   app.post('/api/moveathens/verify-phone', async (req, res) => {
     try {
       const phone = normalizeString(req.body.phone || '').replace(/[\s\-()]/g, '');
       const pin = (req.body.pin || '').trim();
+      const displayName = (req.body.display_name || '').trim();
       if (!phone || phone.length < 5) {
         return res.status(400).json({ error: 'Invalid phone' });
       }
@@ -334,6 +341,12 @@ module.exports = function registerMoveAthens(app, opts = {}) {
           return res.status(401).json({ error: 'Wrong PIN' });
         }
       }
+      // Save display_name if provided (first-time setup)
+      if (displayName) {
+        await dataLayer.setPhoneDisplayName(phone, displayName);
+      }
+      const matchedPhone = (result.phones || []).find(p => p.phone.replace(/[\s\-().]/g, '') === phone.replace(/[\s\-().]/g, ''));
+      const savedName = displayName || (matchedPhone ? (matchedPhone.display_name || '') : '');
       const zone = result.zone;
       return res.json({
         zone: {
@@ -350,8 +363,10 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         phones: (result.phones || []).map(p => ({
           id: p.id,
           phone: p.phone,
-          label: p.label || ''
-        }))
+          label: p.label || '',
+          display_name: p.display_name || ''
+        })),
+        display_name: savedName
       });
     } catch (err) {
       console.error('[moveathens] verify-phone error:', err.message);
@@ -380,6 +395,29 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     } catch (err) {
       console.error('[moveathens] set-pin error:', err.message);
       return res.status(500).json({ error: 'Failed to set PIN' });
+    }
+  });
+
+  // Public: Update display name
+  app.post('/api/moveathens/set-display-name', async (req, res) => {
+    try {
+      const phone = normalizeString(req.body.phone || '').replace(/[\s\-()]/g, '');
+      const displayName = (req.body.display_name || '').trim();
+      if (!phone || phone.length < 5) {
+        return res.status(400).json({ error: 'Invalid phone' });
+      }
+      if (!displayName) {
+        return res.status(400).json({ error: 'Name is required' });
+      }
+      const result = await dataLayer.getHotelByPhone(phone);
+      if (!result) {
+        return res.status(404).json({ error: 'Phone not found' });
+      }
+      await dataLayer.setPhoneDisplayName(phone, displayName);
+      return res.json({ ok: true, display_name: displayName });
+    } catch (err) {
+      console.error('[moveathens] set-display-name error:', err.message);
+      return res.status(500).json({ error: 'Failed to set name' });
     }
   });
 
@@ -677,12 +715,17 @@ module.exports = function registerMoveAthens(app, opts = {}) {
 
       const months = Object.values(monthMap).sort((a, b) => b.month.localeCompare(a.month));
 
-      // Per-phone breakdown
+      // Per-phone breakdown — include display_name from phone records
+      const allPhones = await dataLayer.getHotelPhones(zoneId);
+      const phoneNameMap = {};
+      (allPhones || []).forEach(p => {
+        phoneNameMap[p.phone] = p.display_name || '';
+      });
       const phoneMap = {};
       active.forEach(r => {
         const ph = (r.orderer_phone || '').trim() || 'unknown';
         if (!phoneMap[ph]) {
-          phoneMap[ph] = { phone: ph, routes: 0, revenue: 0 };
+          phoneMap[ph] = { phone: ph, display_name: phoneNameMap[ph] || '', routes: 0, revenue: 0 };
         }
         phoneMap[ph].routes += 1;
         phoneMap[ph].revenue += Number(r.price) || 0;

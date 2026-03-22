@@ -61,6 +61,51 @@
 }
 
 /* ================================================
+   NAME FIELD
+   ================================================ */
+
+.ma-name-field {
+  margin-top: 4px;
+}
+
+.ma-name-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ma-name-display__value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ma-text);
+  flex: 1;
+}
+
+.ma-name-edit-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.ma-name-edit-btn:hover {
+  opacity: 1;
+}
+
+.ma-name-edit {
+  margin-top: 8px;
+  animation: maPinReveal 0.25s ease forwards;
+}
+
+/* ================================================
    PIN SECURITY SECTION
    ================================================ */
 
@@ -204,6 +249,8 @@
   .ma-pin-btn { padding: 10px 16px; font-size: 13px; }
   .ma-pin-status { padding: 12px 14px; }
   .ma-pin-status__text { font-size: 13px; }
+  .ma-name-display { padding: 12px 14px; }
+  .ma-name-display__value { font-size: 15px; }
 }
 
 @media (min-width: 430px) {
@@ -213,4 +260,6 @@
   .ma-theme-btn__label { font-size: 13px; }
   .ma-pin-input { padding: 16px 18px; }
   .ma-pin-btn { padding: 14px 24px; font-size: 15px; }
+  .ma-name-display { padding: 16px 18px; }
+  .ma-name-display__value { font-size: 17px; }
 }

@@ -89,7 +89,8 @@
             accommodation_type: zone.accommodation_type || '',
             lat:              zone.lat != null ? zone.lat : null,
             lng:              zone.lng != null ? zone.lng : null,
-            orderer_phone:    cookiePhone
+            orderer_phone:    cookiePhone,
+            display_name:     data.display_name || ''
           };
           localStorage.setItem(LS_KEY, JSON.stringify(obj));
           localStorage.setItem('moveathens_hotel_zone_id', obj.origin_zone_id);
@@ -127,6 +128,12 @@
                  placeholder="π.χ. 6912345678" autocomplete="tel"
                  inputmode="tel" data-ma-gate-phone />
         </div>
+        <div class="ma-gate__name-wrap" data-ma-gate-name-wrap style="display:none">
+          <label class="ma-gate__label" for="ma-gate-name">Όνομα</label>
+          <input class="ma-gate__input" type="text" id="ma-gate-name"
+                 placeholder="π.χ. Μαρία" autocomplete="name"
+                 data-ma-gate-name />
+        </div>
         <div class="ma-gate__pin-wrap" data-ma-gate-pin-wrap style="display:none">
           <label class="ma-gate__label" for="ma-gate-pin">Κωδικός (PIN)</label>
           <input class="ma-gate__input" type="password" id="ma-gate-pin"
@@ -144,16 +151,25 @@
   /* ── Handle login submit ── */
   const form      = gate.querySelector('[data-ma-gate-form]');
   const phoneInput = gate.querySelector('[data-ma-gate-phone]');
+  const nameWrap  = gate.querySelector('[data-ma-gate-name-wrap]');
+  const nameInput = gate.querySelector('[data-ma-gate-name]');
   const pinWrap   = gate.querySelector('[data-ma-gate-pin-wrap]');
   const pinInput  = gate.querySelector('[data-ma-gate-pin]');
   const errorEl   = gate.querySelector('[data-ma-gate-error]');
   const btn       = gate.querySelector('.ma-gate__btn');
 
   let pinRequired = false;
+  let nameRequired = false;
   let pinChecked = false;
 
   const showError = (msg) => {
     if (errorEl) errorEl.textContent = msg;
+  };
+
+  const showNameField = () => {
+    nameRequired = true;
+    nameWrap.style.display = '';
+    nameInput.focus();
   };
 
   const showPinField = () => {
@@ -162,7 +178,7 @@
     pinInput.focus();
   };
 
-  const completeLogin = (zone, phone) => {
+  const completeLogin = (zone, phone, displayName) => {
     const obj = {
       origin_zone_id:   zone.origin_zone_id || zone.id,
       origin_zone_name: zone.origin_zone_name || zone.name,
@@ -174,7 +190,8 @@
       accommodation_type: zone.accommodation_type || '',
       lat:              zone.lat != null ? zone.lat : null,
       lng:              zone.lng != null ? zone.lng : null,
-      orderer_phone:    phone
+      orderer_phone:    phone,
+      display_name:     displayName || ''
     };
     localStorage.setItem(LS_KEY, JSON.stringify(obj));
     localStorage.setItem('moveathens_hotel_zone_id', obj.origin_zone_id);
@@ -202,7 +219,7 @@
     showError('');
 
     try {
-      // Step 1: Check if phone exists and if PIN is required
+      // Step 1: Check if phone exists and if PIN/name is required
       if (!pinChecked) {
         const checkRes = await fetch(`/api/moveathens/hotel-by-phone?phone=${encodeURIComponent(phone)}`);
         if (!checkRes.ok) {
@@ -217,21 +234,32 @@
         const checkData = await checkRes.json();
         pinChecked = true;
 
-        if (checkData.has_pin) {
-          // PIN required — show PIN field, don't log in yet
+        const needsName = !checkData.display_name;
+        const needsPin = !!checkData.has_pin;
+
+        if (needsName || needsPin) {
           btn.disabled = false;
-          showPinField();
+          if (needsName) showNameField();
+          if (needsPin) showPinField();
           return;
         }
 
-        // No PIN → login directly with the data we already have
-        completeLogin(checkData.zone, phone);
+        // Has name, no PIN → login directly
+        completeLogin(checkData.zone, phone, checkData.display_name);
         return;
       }
 
-      // Step 2: PIN was required — verify phone + PIN
+      // Step 2: Name/PIN fields were shown — collect and verify
+      const name = (nameInput.value || '').trim();
       const pin = (pinInput.value || '').trim();
-      if (!pin) {
+
+      if (nameRequired && !name) {
+        btn.disabled = false;
+        showError('Εισάγετε το όνομά σας.');
+        return;
+      }
+
+      if (pinRequired && !pin) {
         btn.disabled = false;
         showError('Εισάγετε τον κωδικό σας.');
         return;
@@ -240,7 +268,7 @@
       const res = await fetch('/api/moveathens/verify-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, pin })
+        body: JSON.stringify({ phone, pin: pin || undefined, display_name: name || undefined })
       });
 
       if (!res.ok) {
@@ -257,7 +285,7 @@
       }
 
       const data = await res.json();
-      completeLogin(data.zone, phone);
+      completeLogin(data.zone, phone, data.display_name || name);
 
     } catch (err) {
       btn.disabled = false;
@@ -265,13 +293,16 @@
     }
   });
 
-  // Reset PIN state when phone changes
+  // Reset state when phone changes
   phoneInput.addEventListener('input', () => {
     if (pinChecked) {
       pinChecked = false;
       pinRequired = false;
+      nameRequired = false;
       pinWrap.style.display = 'none';
+      nameWrap.style.display = 'none';
       pinInput.value = '';
+      nameInput.value = '';
     }
   });
 })();
