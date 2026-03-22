@@ -584,7 +584,12 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
         mine = mine.filter(r => {
           // Use scheduled_date for scheduled bookings, created_at for instant
-          const d = r.scheduled_date || (r.created_at ? r.created_at.slice(0, 10) : '');
+          // Handle created_at as both Date object (PostgreSQL) and string (JSON fallback)
+          let d = r.scheduled_date || '';
+          if (!d && r.created_at) {
+            const ca = r.created_at instanceof Date ? r.created_at : new Date(r.created_at);
+            d = isNaN(ca.getTime()) ? '' : ca.toISOString().slice(0, 10);
+          }
           return d === dateParam;
         });
       }
