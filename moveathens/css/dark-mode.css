@@ -1350,9 +1350,27 @@
   color: #7a8599 !important;
 }
 
+.ma-force-light .ma-page-header,
+.ma-force-light .ma-header {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.ma-force-light .ma-page-logo,
+.ma-force-light .ma-logo-img {
+  filter: none !important;
+}
+
+.ma-force-light .ma-page-title {
+  color: #1a2232 !important;
+}
+
 .ma-force-light .ma-footer {
   background: rgba(255, 255, 255, 0.9) !important;
-  border-color: rgba(0, 0, 0, 0.12) !important;
+  backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
 }
 
 .ma-force-light .ma-footer__item {
@@ -1361,6 +1379,20 @@
 
 .ma-force-light .ma-footer__item.active {
   color: #0066cc !important;
+  background: rgba(0, 102, 204, 0.10) !important;
+  box-shadow: none !important;
+}
+
+.ma-force-light .ma-footer__icon svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+  filter: none !important;
+}
+
+.ma-force-light .ma-footer__item.active .ma-footer__icon svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+  filter: none !important;
 }
 
 .ma-force-light .ma-phone-chip {
@@ -1430,6 +1462,90 @@
   color: #0066cc !important;
   background: rgba(0, 102, 204, 0.06) !important;
   border-color: rgba(0, 102, 204, 0.15) !important;
+}
+
+/* ── Form Inputs — Force Light ── */
+.ma-force-light .ma-input,
+.ma-force-light .ma-select,
+.ma-force-light .ma-text-input {
+  background: #f0f2f5 !important;
+  border: 1px solid #d0d5dd !important;
+  color: #1a2232 !important;
+}
+
+.ma-force-light .ma-input::placeholder,
+.ma-force-light .ma-text-input::placeholder {
+  color: rgba(0, 0, 0, 0.4) !important;
+}
+
+.ma-force-light .ma-input:focus,
+.ma-force-light .ma-select:focus,
+.ma-force-light .ma-text-input:focus {
+  border-color: #0066cc !important;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15) !important;
+}
+
+.ma-force-light .ma-input-label {
+  color: #1a2232 !important;
+}
+
+/* ── Info Page Content — Force Light ── */
+.ma-force-light .ma-info-content,
+.ma-force-light .ma-info-content p,
+.ma-force-light .ma-info-content li {
+  color: #333 !important;
+}
+
+.ma-force-light .ma-info-content strong {
+  color: #0066cc !important;
+}
+
+/* ── Transfer Page Key Elements — Force Light ── */
+.ma-force-light .ma-step-title,
+.ma-force-light .ma-step-subtitle,
+.ma-force-light .ma-confirm-label,
+.ma-force-light .ma-confirm-value,
+.ma-force-light .ma-selection-title,
+.ma-force-light .ma-selection-label,
+.ma-force-light .ma-counter-value {
+  color: #1a2232 !important;
+}
+
+.ma-force-light .ma-selection-max,
+.ma-force-light .ma-selection-hint {
+  color: #6b7a8d !important;
+}
+
+.ma-force-light .ma-back-btn {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+.ma-force-light .ma-back-chevron {
+  border-left-color: #1a1a2e !important;
+  border-bottom-color: #1a1a2e !important;
+}
+
+.ma-force-light .ma-confirm-card,
+.ma-force-light .ma-selection-card {
+  background: #fff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.ma-force-dark .ma-page-header,
+.ma-force-dark .ma-header {
+  background: linear-gradient(145deg, #0f2035 0%, #0a1828 100%) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.ma-force-dark .ma-page-logo,
+.ma-force-dark .ma-logo-img {
+  filter: brightness(0) invert(1) !important;
+}
+
+.ma-force-dark .ma-page-title {
+  color: #f0f4f8 !important;
 }
 
 /* Force dark mode */
@@ -1539,8 +1655,10 @@
 }
 
 .ma-force-dark .ma-footer {
-  background: rgba(10, 16, 28, 0.35) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(10, 16, 28, 0.45) !important;
+  backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32), 0 0 18px rgba(255, 255, 255, 0.08) !important;
 }
 
 .ma-force-dark .ma-footer__item {
@@ -1548,7 +1666,21 @@
 }
 
 .ma-force-dark .ma-footer__item.active {
-  color: #46d3ff !important;
+  color: rgba(82, 183, 255, 0.98) !important;
+  background: rgba(82, 183, 255, 0.12) !important;
+  box-shadow: 0 0 24px rgba(82, 183, 255, 0.45), 0 10px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+.ma-force-dark .ma-footer__icon svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+  filter: none !important;
+}
+
+.ma-force-dark .ma-footer__item.active .ma-footer__icon svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+  filter: none !important;
 }
 
 .ma-force-dark .ma-phone-chip {
@@ -1613,5 +1745,73 @@
 }
 .ma-force-dark .ma-rev-perphone-amount {
   color: #e8edf3 !important;
+}
+
+/* ── Form Inputs — Force Dark ── */
+.ma-force-dark .ma-input,
+.ma-force-dark .ma-select,
+.ma-force-dark .ma-text-input {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #f0f4f8 !important;
+}
+
+.ma-force-dark .ma-input::placeholder,
+.ma-force-dark .ma-text-input::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.ma-force-dark .ma-input:focus,
+.ma-force-dark .ma-select:focus,
+.ma-force-dark .ma-text-input:focus {
+  border-color: #46d3ff !important;
+  box-shadow: 0 0 0 3px rgba(70, 211, 255, 0.2) !important;
+}
+
+.ma-force-dark .ma-input-label {
+  color: #e8edf3 !important;
+}
+
+/* ── Info Page Content — Force Dark ── */
+.ma-force-dark .ma-info-content,
+.ma-force-dark .ma-info-content p,
+.ma-force-dark .ma-info-content li {
+  color: #d0d8e0 !important;
+}
+
+.ma-force-dark .ma-info-content strong {
+  color: #46d3ff !important;
+}
+
+/* ── Transfer Page Key Elements — Force Dark ── */
+.ma-force-dark .ma-step-title,
+.ma-force-dark .ma-step-subtitle,
+.ma-force-dark .ma-confirm-label,
+.ma-force-dark .ma-confirm-value,
+.ma-force-dark .ma-selection-title,
+.ma-force-dark .ma-selection-label,
+.ma-force-dark .ma-counter-value {
+  color: #e8edf3 !important;
+}
+
+.ma-force-dark .ma-selection-max,
+.ma-force-dark .ma-selection-hint {
+  color: #8896a6 !important;
+}
+
+.ma-force-dark .ma-back-btn {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.ma-force-dark .ma-back-chevron {
+  border-left-color: #e0e0e0 !important;
+  border-bottom-color: #e0e0e0 !important;
+}
+
+.ma-force-dark .ma-confirm-card,
+.ma-force-dark .ma-selection-card {
+  background: linear-gradient(145deg, #132742 0%, #0f1f35 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
 }
 }
