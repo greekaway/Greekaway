@@ -12,6 +12,8 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+let multer = null;
+try { multer = require('multer'); } catch (_) { multer = null; }
 const driversData = require('../../src/server/data/moveathens-drivers');
 
 const CONFIG_FILE = path.join(__dirname, '..', 'data', 'driver_panel_ui.json');
@@ -74,7 +76,11 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
     if (!guard(req, res)) return;
     try {
       const drivers = await driversData.getDrivers(false);
-      return res.json({ drivers });
+      const safe = drivers.map(d => {
+        const { pin_hash, ...rest } = d;
+        return { ...rest, has_pin: !!pin_hash };
+      });
+      return res.json({ drivers: safe });
     } catch (err) {
       console.error('[driver-panel] GET drivers failed:', err.message);
       return res.status(500).json({ error: 'Failed to load drivers' });
@@ -169,6 +175,86 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
       return res.status(500).json({ error: 'Delete failed' });
     }
   });
+
+  // ========================================
+  // Admin PIN reset for driver
+  // ========================================
+  app.delete('/api/admin/driver-panel/driver-pin', async (req, res) => {
+    if (!guard(req, res)) return;
+    const driverId = req.body?.driverId;
+    if (!driverId) return res.status(400).json({ error: 'driverId required' });
+    try {
+      const driver = await driversData.getDriverById(driverId);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+      await driversData.upsertDriver({ ...driver, pin_hash: null });
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error('[driver-panel] PIN reset failed:', err.message);
+      return res.status(500).json({ error: 'Failed to reset PIN' });
+    }
+  });
+
+  // ========================================
+  // UPLOADS (logo + footer icons)
+  // ========================================
+  if (multer) {
+    const upload = multer({
+      storage: multer.memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024 } // 5 MB
+    });
+
+    const ALLOWED_IMG = new Set(['image/png', 'image/webp', 'image/svg+xml', 'image/jpeg']);
+    const uploadsDir = path.join(__dirname, '..', '..', 'uploads', 'driver-panel');
+
+    // ── Upload Logo ──
+    app.post('/api/admin/driver-panel/upload-logo', upload.single('logo'), (req, res) => {
+      if (!guard(req, res)) return;
+      if (!req.file) return res.status(400).json({ error: 'Missing file' });
+      if (!ALLOWED_IMG.has(req.file.mimetype)) return res.status(400).json({ error: 'Invalid file type (PNG, WebP, SVG, JPEG)' });
+
+      const ext = req.file.originalname.split('.').pop().toLowerCase() || 'png';
+      const dir = path.join(uploadsDir, 'logo');
+      fs.mkdirSync(dir, { recursive: true });
+      const outPath = path.join(dir, `logo.${ext}`);
+      fs.writeFileSync(outPath, req.file.buffer);
+
+      const url = `/uploads/driver-panel/logo/logo.${ext}`;
+      // Auto-save to config
+      const cfg = readConfig();
+      if (!cfg.general) cfg.general = {};
+      cfg.general.logoUrl = url;
+      writeConfig(cfg);
+      return res.json({ url });
+    });
+
+    // ── Upload Footer Icon ──
+    app.post('/api/admin/driver-panel/upload-footer-icon', upload.single('icon'), (req, res) => {
+      if (!guard(req, res)) return;
+      if (!req.file) return res.status(400).json({ error: 'Missing file' });
+      if (!ALLOWED_IMG.has(req.file.mimetype)) return res.status(400).json({ error: 'Invalid file type (PNG, WebP, SVG, JPEG)' });
+
+      const tabKey = req.body?.tabKey;
+      if (!tabKey) return res.status(400).json({ error: 'Missing tabKey' });
+
+      const ext = req.file.originalname.split('.').pop().toLowerCase() || 'svg';
+      const dir = path.join(uploadsDir, 'icons');
+      fs.mkdirSync(dir, { recursive: true });
+      const filename = `footer-${tabKey}.${ext}`;
+      fs.writeFileSync(path.join(dir, filename), req.file.buffer);
+
+      const url = `/uploads/driver-panel/icons/${filename}`;
+      // Auto-save iconUrl to config
+      const cfg = readConfig();
+      const tabs = cfg.footer?.tabs || [];
+      const tab = tabs.find(t => t.key === tabKey);
+      if (tab) {
+        tab.iconUrl = url;
+        cfg.footer = { tabs };
+        writeConfig(cfg);
+      }
+      return res.json({ url });
+    });
+  }
 
   console.log('[driver-panel] Admin routes mounted');
 };

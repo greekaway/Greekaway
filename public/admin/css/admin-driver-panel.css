@@ -146,6 +146,49 @@ html[data-theme='light'] .bar-tab.active {
   flex: 1;
 }
 
+/* ── Upload row ── */
+.dp-upload-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.dp-upload-url {
+  flex: 1;
+  background: rgba(255,255,255,.03) !important;
+}
+.dp-upload-btn {
+  flex-shrink: 0;
+  font-size: 13px !important;
+  padding: 8px 14px !important;
+}
+
+/* ── Icon picker ── */
+.dp-icon-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dp-icon-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dp-icon-upload-row.hidden {
+  display: none;
+}
+.dp-icon-preview {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: rgba(255,255,255,.06);
+  padding: 2px;
+}
+.dp-icon-upload-btn {
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+}
+
 /* ── Buttons ── */
 .dp-save-btn {
   background: var(--ga-gold) !important;
@@ -554,6 +597,47 @@ html[data-theme='light'] .dp-edit-btn {
   box-shadow: 0 0 0 2px var(--ga-accent, #46d3ff);
 }
 .dp-card-field-row.dp-drag-over {
+  border-color: var(--ga-accent, #46d3ff);
+  background: rgba(70, 211, 255, 0.08);
+}
+.dp-card-remove-btn {
+  background: none; border: none; color: #ff5a5a;
+  font-size: 16px; cursor: pointer; padding: 4px 6px;
+  opacity: 0.4; transition: opacity 0.15s;
+  flex-shrink: 0; line-height: 1; margin-left: auto;
+}
+.dp-card-remove-btn:hover { opacity: 1; }
+
+/* ── Sound Picker ── */
+.dp-sound-picker {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.dp-sound-option {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.dp-sound-option:hover { background: rgba(255,255,255,0.07); }
+.dp-sound-active {
+  border-color: var(--ga-accent, #46d3ff);
+  background: rgba(70, 211, 255, 0.08);
+}
+.dp-sound-name { font-size: 14px; }
+.dp-sound-preview {
+  background: none; border: none;
+  font-size: 18px; cursor: pointer;
+  padding: 4px 8px; line-height: 1;
+  opacity: 0.6; transition: opacity 0.15s;
+}
+.dp-sound-preview:hover { opacity: 1; }
+html[data-theme='light'] .dp-sound-option {
+  background: #f9fafb; border-color: #e5e7eb;
+}
+html[data-theme='light'] .dp-sound-active {
   border-color: var(--ga-accent, #46d3ff);
   background: rgba(70, 211, 255, 0.08);
 }

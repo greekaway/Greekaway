@@ -24,6 +24,27 @@
       if (/^#[0-9a-f]{6}$/i.test(v)) $('#dpAccentColor').value = v;
     });
 
+    // Logo upload
+    const logoFile = $('#dpLogoFile');
+    $('#dpLogoUploadBtn')?.addEventListener('click', () => logoFile?.click());
+    logoFile?.addEventListener('change', async () => {
+      const file = logoFile.files?.[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append('logo', file);
+      try {
+        const res = await fetch('/api/admin/driver-panel/upload-logo', { method: 'POST', credentials: 'include', body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.url) {
+          $('#dpLogoUrl').value = data.url;
+          state.config.general = { ...state.config.general, logoUrl: data.url };
+          showToast('Logo uploaded');
+        } else {
+          showToast(data.error || 'Upload failed');
+        }
+      } catch (_) { showToast('Upload failed'); }
+    });
+
     $('#dp-general-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const status = $('#dpGeneralStatus');

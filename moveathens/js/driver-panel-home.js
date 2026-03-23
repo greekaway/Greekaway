@@ -71,10 +71,9 @@
 
   function playAlert() {
     if (config.notifications?.soundEnabled !== false) {
-      try { new Audio('/moveathens/images/alert.mp3').play().catch(() => {}); }
-      catch { /* no audio */ }
-    }
-    if (config.notifications?.vibrationEnabled !== false && navigator.vibrate) {
+    const driverSound = localStorage.getItem('ma_dp_alert_sound');
+    const soundId = driverSound || config.notifications?.alertSound || 'chime';
+    if (window.DpSounds) { window.DpSounds.play(soundId); }
       navigator.vibrate([200, 100, 200]);
     }
   }

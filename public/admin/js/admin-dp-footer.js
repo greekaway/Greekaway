@@ -36,9 +36,17 @@
           </label>
           <label class="dp-field">
             <span class="dp-label">Icon</span>
-            <select class="input dp-footer-icon" data-idx="${i}">
-              ${ICON_OPTIONS.map(o => `<option value="${o.value}"${o.value === tab.icon ? ' selected' : ''}>${o.label}</option>`).join('')}
-            </select>
+            <div class="dp-icon-picker">
+              <select class="input dp-footer-icon" data-idx="${i}">
+                ${ICON_OPTIONS.map(o => `<option value="${o.value}"${o.value === tab.icon ? ' selected' : ''}>${o.label}</option>`).join('')}
+                <option value="custom"${tab.iconUrl ? ' selected' : ''}>📁 Δικό μου…</option>
+              </select>
+              <div class="dp-icon-upload-row${tab.iconUrl ? '' : ' hidden'}" data-idx="${i}">
+                <input type="file" class="dp-footer-icon-file" data-idx="${i}" accept="image/svg+xml,image/png,image/webp" hidden>
+                <button type="button" class="button dp-icon-upload-btn" data-idx="${i}">📁 Επιλογή αρχείου</button>
+                ${tab.iconUrl ? `<img src="${tab.iconUrl}" class="dp-icon-preview" alt="">` : ''}
+              </div>
+            </div>
           </label>
           <label class="dp-field dp-inline-field">
             <input type="checkbox" class="dp-footer-enabled" data-idx="${i}" ${tab.enabled !== false ? 'checked' : ''}>
@@ -47,6 +55,48 @@
         </div>
       </div>
     `).join('');
+
+    // Wire up icon select → show/hide upload row
+    $$('.dp-footer-icon').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const idx = sel.dataset.idx;
+        const row = wrap.querySelector(`.dp-icon-upload-row[data-idx="${idx}"]`);
+        if (row) row.classList.toggle('hidden', sel.value !== 'custom');
+      });
+    });
+
+    // Wire up icon upload buttons
+    $$('.dp-icon-upload-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = btn.dataset.idx;
+        wrap.querySelector(`.dp-footer-icon-file[data-idx="${idx}"]`)?.click();
+      });
+    });
+
+    // Wire up file change → upload
+    $$('.dp-footer-icon-file').forEach(input => {
+      input.addEventListener('change', async () => {
+        const idx = parseInt(input.dataset.idx, 10);
+        const file = input.files?.[0];
+        if (!file) return;
+        const tab = tabs[idx];
+        if (!tab) return;
+        const fd = new FormData();
+        fd.append('icon', file);
+        fd.append('tabKey', tab.key);
+        try {
+          const res = await fetch('/api/admin/driver-panel/upload-footer-icon', { method: 'POST', credentials: 'include', body: fd });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.url) {
+            tab.iconUrl = data.url;
+            showToast('Icon uploaded');
+            render(); // re-render to show preview
+          } else {
+            showToast(data.error || 'Upload failed');
+          }
+        } catch (_) { showToast('Upload failed'); }
+      });
+    });
   };
 
   const init = () => {

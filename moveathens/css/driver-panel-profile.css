@@ -300,6 +300,64 @@ html[data-theme='light'] .ma-dp-profile-section {
   background: #fff; border-color: #e5e7eb;
 }
 
+/* ── Vehicle Types Checklist ── */
+.ma-dp-vt-checklist {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.ma-dp-vt-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  cursor: pointer; font-size: 15px;
+  transition: background .15s, border-color .15s;
+}
+.ma-dp-vt-item:active { background: rgba(255,255,255,.08); }
+.ma-dp-vt-item input[type="checkbox"] {
+  width: 20px; height: 20px;
+  accent-color: var(--ma-dp-accent);
+  cursor: pointer; flex-shrink: 0;
+}
+html[data-theme='light'] .ma-dp-vt-item {
+  background: #f9fafb; border-color: #e5e7eb;
+}
+html[data-theme='light'] .ma-dp-vt-item:active { background: #f3f4f6; }
+
+/* ── Sound Picker (driver settings) ── */
+.ma-dp-sound-picker {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.ma-dp-sound-option {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255,255,255,.04);
+  border: 2px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.ma-dp-sound-option:active { background: rgba(255,255,255,.08); }
+.ma-dp-sound-active {
+  border-color: var(--ma-dp-accent);
+  background: rgba(70, 211, 255, 0.08);
+}
+.ma-dp-sound-name { font-size: 15px; }
+.ma-dp-sound-preview {
+  background: none; border: none;
+  font-size: 18px; cursor: pointer;
+  padding: 4px 8px; line-height: 1;
+  opacity: 0.6; transition: opacity .15s;
+}
+.ma-dp-sound-preview:active { opacity: 1; }
+html[data-theme='light'] .ma-dp-sound-option {
+  background: #f9fafb; border-color: #e5e7eb;
+}
+html[data-theme='light'] .ma-dp-sound-active {
+  border-color: var(--ma-dp-accent);
+  background: rgba(70, 211, 255, 0.08);
+}
+
 /* ── Responsive ── */
 @media (max-width: 430px) {
   .ma-dp-hub-card { padding: 14px 14px; }

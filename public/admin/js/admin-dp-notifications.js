@@ -1,6 +1,6 @@
 /**
  * Driver Panel Admin — Tab 5: Ειδοποιήσεις
- * Push on/off, sound, vibration, reminder, push template.
+ * Push on/off, sound, vibration, reminder, push template, sound picker.
  * Reads/writes: state.config.notifications
  */
 (() => {
@@ -12,7 +12,34 @@
     soundEnabled: true,
     vibrationEnabled: true,
     reminderMinutes: 15,
-    pushTemplate: 'Νέα διαδρομή: {origin} → {destination} στις {datetime}'
+    pushTemplate: 'Νέα διαδρομή: {origin} → {destination} στις {datetime}',
+    alertSound: 'chime'
+  };
+
+  const buildSoundPicker = (selected) => {
+    const wrap = $('#dpSoundPicker');
+    if (!wrap || !window.DpSounds) return;
+    const sounds = window.DpSounds.SOUNDS;
+    wrap.innerHTML = Object.entries(sounds).map(([id, s]) => `
+      <div class="dp-sound-option ${id === selected ? 'dp-sound-active' : ''}" data-sound="${id}">
+        <span class="dp-sound-name">${s.name}</span>
+        <button type="button" class="dp-sound-preview" data-sound="${id}" title="Ακρόαση">▶️</button>
+      </div>
+    `).join('');
+    wrap.addEventListener('click', (e) => {
+      const preview = e.target.closest('.dp-sound-preview');
+      if (preview) { window.DpSounds.play(preview.dataset.sound); return; }
+      const opt = e.target.closest('.dp-sound-option');
+      if (!opt) return;
+      wrap.querySelectorAll('.dp-sound-option').forEach(o => o.classList.remove('dp-sound-active'));
+      opt.classList.add('dp-sound-active');
+      window.DpSounds.play(opt.dataset.sound);
+    });
+  };
+
+  const getSelectedSound = () => {
+    const active = $('#dpSoundPicker .dp-sound-active');
+    return active?.dataset?.sound || DEFAULTS.alertSound;
   };
 
   const populate = () => {
@@ -26,6 +53,7 @@
     cb('#dpNotifVibration', cfg.vibrationEnabled);
     sv('#dpNotifReminder', cfg.reminderMinutes);
     sv('#dpNotifTemplate', cfg.pushTemplate);
+    buildSoundPicker(cfg.alertSound || 'chime');
   };
 
   const collect = () => ({
@@ -33,7 +61,8 @@
     soundEnabled: $('#dpNotifSound')?.checked ?? DEFAULTS.soundEnabled,
     vibrationEnabled: $('#dpNotifVibration')?.checked ?? DEFAULTS.vibrationEnabled,
     reminderMinutes: parseInt($('#dpNotifReminder')?.value, 10) || DEFAULTS.reminderMinutes,
-    pushTemplate: $('#dpNotifTemplate')?.value?.trim() || DEFAULTS.pushTemplate
+    pushTemplate: $('#dpNotifTemplate')?.value?.trim() || DEFAULTS.pushTemplate,
+    alertSound: getSelectedSound()
   });
 
   const init = () => {

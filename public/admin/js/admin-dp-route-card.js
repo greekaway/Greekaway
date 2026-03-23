@@ -56,6 +56,7 @@
                 <input type="checkbox" ${f.visible ? 'checked' : ''} data-field-id="${f.id}" data-card-type="${type}">
                 <span>Ορατό</span>
               </label>
+              <button type="button" class="dp-card-remove-btn" data-field-id="${f.id}" data-card-type="${type}" title="Αφαίρεση">✕</button>
             </div>
           `).join('')}
         </div>
@@ -70,6 +71,7 @@
     wrap.innerHTML = CARD_TYPES.map(ct => renderCardSection(ct.key, ct.title, ct.icon)).join('');
     attachDragListeners();
     attachAddFieldListeners();
+    attachRemoveListeners();
   };
 
   // Drag & drop
@@ -134,11 +136,26 @@
             <input type="checkbox" checked data-field-id="${f.id}" data-card-type="${type}">
             <span>Ορατό</span>
           </label>
+          <button type="button" class="dp-card-remove-btn" data-field-id="${f.id}" data-card-type="${type}" title="Αφαίρεση">✕</button>
         `;
         container.appendChild(newRow);
         attachDragListeners();
+        attachRemoveListeners();
         showToast(`Προστέθηκε: ${f.label}`);
       });
+    });
+  };
+
+  // Remove field
+  const attachRemoveListeners = () => {
+    $$('.dp-card-remove-btn').forEach(btn => {
+      btn.onclick = () => {
+        const row = btn.closest('.dp-card-field-row');
+        if (!row) return;
+        const label = row.querySelector('.dp-card-field-label')?.textContent || '';
+        row.remove();
+        showToast(`Αφαιρέθηκε: ${label}`);
+      };
     });
   };
 

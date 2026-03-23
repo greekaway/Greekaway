@@ -33,6 +33,39 @@
     }
   };
 
+  // ── Header builder ──
+  const buildHeader = () => {
+    const logo = document.getElementById('dpHeaderLogo');
+    const title = document.getElementById('dpHeaderTitle');
+    if (logo && config.general?.logoUrl) logo.src = config.general.logoUrl;
+    if (title && config.general?.appTitle) title.textContent = config.general.appTitle;
+  };
+
+  // ── Network status banner (offline/online) ──
+  const initNetworkBanner = () => {
+    const banner = document.createElement('div');
+    banner.className = 'ma-dp-network-banner';
+    banner.setAttribute('role', 'status');
+    banner.setAttribute('aria-live', 'polite');
+    document.body.prepend(banner);
+
+    let hideTimer = null;
+
+    const show = (text, type) => {
+      clearTimeout(hideTimer);
+      banner.textContent = text;
+      banner.classList.remove('ma-dp-network-banner--offline', 'ma-dp-network-banner--online', 'ma-dp-network-banner--hidden');
+      banner.classList.add(`ma-dp-network-banner--${type}`);
+      if (type === 'online') {
+        hideTimer = setTimeout(() => banner.classList.add('ma-dp-network-banner--hidden'), 3000);
+      }
+    };
+
+    window.addEventListener('offline', () => show('Δεν υπάρχει σύνδεση στο διαδίκτυο', 'offline'));
+    window.addEventListener('online', () => show('Η σύνδεση αποκαταστάθηκε', 'online'));
+    if (!navigator.onLine) show('Δεν υπάρχει σύνδεση στο διαδίκτυο', 'offline');
+  };
+
   const buildFooter = () => {
     const footer = document.getElementById('dpFooter');
     if (!footer) return;
@@ -47,12 +80,19 @@
 
     const sorted = [...tabs].filter(t => t.enabled).sort((a, b) => a.order - b.order);
 
-    footer.innerHTML = sorted.map(t => `
+    footer.innerHTML = sorted.map(t => {
+      // Support custom icon URLs (uploaded SVGs) alongside built-in icons
+      let iconHtml = FOOTER_ICONS[t.icon] || '';
+      if (t.iconUrl) {
+        iconHtml = `<img src="${t.iconUrl}" alt="" style="width:22px;height:22px">`;
+      }
+      return `
       <button class="ma-dp-footer-btn${t.key === activeTab ? ' active' : ''}" data-tab="${t.key}" aria-label="${t.label}">
-        <span class="ma-dp-footer-icon">${FOOTER_ICONS[t.icon] || ''}</span>
+        <span class="ma-dp-footer-icon">${iconHtml}</span>
         <span class="ma-dp-footer-label">${t.label}</span>
       </button>
-    `).join('');
+    `;
+    }).join('');
 
     footer.addEventListener('click', (e) => {
       const btn = e.target.closest('.ma-dp-footer-btn');
@@ -105,6 +145,23 @@
         if (current === 'auto') window.DpApp._applyTheme('auto');
       });
     }
+
+    // Apply accent color from config
+    if (config.general?.accentColor) {
+      const ac = config.general.accentColor;
+      document.documentElement.style.setProperty('--ma-dp-accent', ac);
+      // Parse hex to generate glow rgba
+      const r = parseInt(ac.slice(1, 3), 16);
+      const g = parseInt(ac.slice(3, 5), 16);
+      const b = parseInt(ac.slice(5, 7), 16);
+      if (!isNaN(r)) document.documentElement.style.setProperty('--ma-dp-accent-glow', `rgba(${r},${g},${b},0.2)`);
+    }
+
+    // Build header from config
+    buildHeader();
+
+    // Network status banner (offline/online)
+    initNetworkBanner();
 
     buildFooter();
 

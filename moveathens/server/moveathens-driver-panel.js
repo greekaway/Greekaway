@@ -160,13 +160,13 @@ module.exports = function registerDriverPanelRoutes(app) {
       const driver = await driversData.getDriverByPhone(phone);
       if (!driver) return res.status(404).json({ error: 'Driver not found' });
 
-      // If driver has existing PIN, verify current
-      if (driver.pin_hash) {
-        if (!currentPin) return res.status(401).json({ error: 'Current PIN required' });
+      // If driver has existing PIN and is setting a new one (not removing), verify current
+      if (driver.pin_hash && !remove && currentPin) {
         if (hashPin(currentPin) !== driver.pin_hash) return res.status(401).json({ error: 'Wrong PIN' });
       }
 
       if (remove) {
+        // Driver confirms removal — bypass current PIN check when driver is already authenticated
         await driversData.upsertDriver({ ...driver, pin_hash: null });
         return res.json({ ok: true, has_pin: false });
       }
@@ -183,14 +183,42 @@ module.exports = function registerDriverPanelRoutes(app) {
     }
   });
 
+  // ── Update driver vehicle_types from driver profile ──
+  app.post('/api/driver-panel/vehicle-types', async (req, res) => {
+    const phone = (req.body.phone || '').replace(/\s/g, '').trim();
+    const vehicleTypes = req.body.vehicle_types;
+    if (!phone) return res.status(400).json({ error: 'Phone required' });
+    if (!Array.isArray(vehicleTypes)) return res.status(400).json({ error: 'vehicle_types must be array' });
+
+    try {
+      const driver = await driversData.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      await driversData.upsertDriver({ ...driver, vehicle_types: JSON.stringify(vehicleTypes) });
+      res.json({ ok: true, vehicle_types: vehicleTypes });
+    } catch (err) {
+      console.error('[driver-panel] vehicle-types:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
   // ── Get panel config (public, non-admin) ──
-  app.get('/api/driver-panel/config', (req, res) => {
+  app.get('/api/driver-panel/config', async (req, res) => {
     const config = loadConfig();
+    // Include available vehicle types so drivers can pick
+    let availableVehicleTypes = [];
+    try {
+      const maData = require('../../src/server/data/moveathens');
+      const allVTs = await maData.getVehicleTypes(true); // active only
+      availableVehicleTypes = allVTs.map(vt => ({ id: vt.id, name: vt.name }));
+    } catch (_) {}
     res.json({
       general: config.general || {},
       footer: config.footer || {},
       labels: config.labels || {},
-      finance: config.finance || {}
+      finance: config.finance || {},
+      notifications: config.notifications || {},
+      availableVehicleTypes
     });
   });
 

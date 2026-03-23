@@ -27,6 +27,12 @@
     <!-- ════════════ MAIN CONTENT (hidden until auth) ════════════ -->
     <div id="dpApp" class="ma-dp-app">
 
+      <!-- ──── HEADER BAR ──── -->
+      <header class="ma-dp-header" id="dpHeader">
+        <img class="ma-dp-header__logo" id="dpHeaderLogo" alt="Logo" src="/moveathens/videos/hero-logo.png">
+        <span class="ma-dp-header__title" id="dpHeaderTitle">MoveAthens Driver</span>
+      </header>
+
       <!-- ──── TAB: Αρχική ──── -->
       <section class="ma-dp-tab active" data-tab="home">
         <!-- Populated by driver-panel-home.js -->
@@ -62,6 +68,7 @@
     </div>
 
     <script src="/moveathens/js/driver-panel-auth.js"></script>
+    <script src="/moveathens/js/dp-sounds.js"></script>
     <script src="/moveathens/js/driver-panel-home.js"></script>
     <script src="/moveathens/js/driver-panel-appointments.js"></script>
     <script src="/moveathens/js/driver-panel-history.js"></script>

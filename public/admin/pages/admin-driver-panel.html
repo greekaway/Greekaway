@@ -38,8 +38,12 @@
                 <input type="text" id="dpAppTitle" class="input" placeholder="MoveAthens Driver">
               </label>
               <label class="dp-field">
-                <span class="dp-label">Logo URL</span>
-                <input type="text" id="dpLogoUrl" class="input" placeholder="/moveathens/videos/hero-logo.png">
+                <span class="dp-label">Logo</span>
+                <div class="dp-upload-row">
+                  <input type="text" id="dpLogoUrl" class="input dp-upload-url" placeholder="/moveathens/videos/hero-logo.png" readonly>
+                  <input type="file" id="dpLogoFile" accept="image/png,image/webp,image/svg+xml,image/jpeg" hidden>
+                  <button type="button" id="dpLogoUploadBtn" class="button dp-upload-btn">📁 Επιλογή</button>
+                </div>
               </label>
               <label class="dp-field">
                 <span class="dp-label">Accent Color</span>
@@ -160,6 +164,10 @@
               <label class="dp-field dp-inline-field">
                 <input type="checkbox" id="dpNotifSound">
                 <span>Ήχος</span>
+              </label>
+              <label class="dp-field">
+                <span class="dp-label">Ήχος Ειδοποίησης</span>
+                <div class="dp-sound-picker" id="dpSoundPicker"></div>
               </label>
               <label class="dp-field dp-inline-field">
                 <input type="checkbox" id="dpNotifVibration">
@@ -283,6 +291,7 @@
     <script src="/admin/js/admin-dp-footer.js"></script>
     <script src="/admin/js/admin-dp-drivers.js"></script>
     <script src="/admin/js/admin-dp-route-card.js"></script>
+    <script src="/moveathens/js/dp-sounds.js"></script>
     <script src="/admin/js/admin-dp-notifications.js"></script>
     <script src="/admin/js/admin-dp-acceptance.js"></script>
     <script src="/admin/js/admin-dp-labels.js"></script>

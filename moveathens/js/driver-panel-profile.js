@@ -122,6 +122,20 @@
       </div>` : ''}
 
       <div class="ma-dp-profile-section">
+        <h3 class="ma-dp-profile-section-title">🚘 Τύποι Οχημάτων</h3>
+        <p class="ma-dp-profile-hint">Επιλέξτε τα οχήματα που διαθέτετε</p>
+        <div id="dpVehicleTypesChecklist" class="ma-dp-vt-checklist">
+          ${(cachedConfig.availableVehicleTypes || []).map(vt => {
+            const checked = vehicleTypes.some(v => (typeof v === 'string' ? v : v.id) === vt.id);
+            return `<label class="ma-dp-vt-item">
+              <input type="checkbox" value="${esc(vt.id)}" ${checked ? 'checked' : ''}>
+              <span>${esc(vt.name)}</span>
+            </label>`;
+          }).join('') || '<em class="ma-dp-profile-hint">Δεν υπάρχουν διαθέσιμοι τύποι</em>'}
+        </div>
+      </div>
+
+      <div class="ma-dp-profile-section">
         <h3 class="ma-dp-profile-section-title">📡 Διαθεσιμότητα</h3>
         <label class="ma-dp-profile-toggle">
           <input type="checkbox" id="dpProfileAvail" ${driver.is_active ? 'checked' : ''}>
@@ -155,6 +169,30 @@
         driver.current_vehicle_type = e.target.value;
         localStorage.setItem(LS_KEY, JSON.stringify(driver));
         showToast('Όχημα ενημερώθηκε');
+      }
+    });
+
+    // Vehicle types checklist
+    document.getElementById('dpVehicleTypesChecklist')?.addEventListener('change', async (e) => {
+      if (e.target.type !== 'checkbox') return;
+      const boxes = document.querySelectorAll('#dpVehicleTypesChecklist input[type="checkbox"]');
+      const selected = [...boxes].filter(b => b.checked).map(b => b.value);
+      const res = await api('/api/driver-panel/vehicle-types', {
+        method: 'POST',
+        body: JSON.stringify({ phone: driver.phone, vehicle_types: selected })
+      });
+      if (res.ok) {
+        driver.vehicle_types = selected;
+        localStorage.setItem(LS_KEY, JSON.stringify(driver));
+        // Update the current vehicle dropdown options
+        const sel = document.getElementById('dpProfileVehicle');
+        if (sel) {
+          const cur = sel.value;
+          const avail = (cachedConfig.availableVehicleTypes || []).filter(vt => selected.includes(vt.id));
+          sel.innerHTML = '<option value="">— Επιλέξτε —</option>' +
+            avail.map(vt => `<option value="${vt.id}" ${vt.id === cur ? 'selected' : ''}>${esc(vt.name)}</option>`).join('');
+        }
+        showToast('Τύποι οχημάτων ενημερώθηκαν');
       }
     });
 
@@ -207,7 +245,21 @@
       </div>
 
       <div class="ma-dp-profile-section">
-        <h3 class="ma-dp-profile-section-title">🔐 Κωδικός Ασφαλείας (PIN)</h3>
+        <h3 class="ma-dp-profile-section-title">� Ήχος Ειδοποίησης</h3>
+        <p class="ma-dp-profile-hint">Επιλέξτε τον ήχο για νέες διαδρομές</p>
+        <div class="ma-dp-sound-picker" id="dpDriverSoundPicker">
+          ${window.DpSounds ? Object.entries(window.DpSounds.SOUNDS).map(([id, s]) => {
+            const driverSound = localStorage.getItem('ma_dp_alert_sound') || cachedConfig.notifications?.alertSound || 'chime';
+            return `<div class="ma-dp-sound-option ${id === driverSound ? 'ma-dp-sound-active' : ''}" data-sound="${id}">
+              <span class="ma-dp-sound-name">${s.name}</span>
+              <button type="button" class="ma-dp-sound-preview" data-sound="${id}">▶️</button>
+            </div>`;
+          }).join('') : ''}
+        </div>
+      </div>
+
+      <div class="ma-dp-profile-section">
+        <h3 class="ma-dp-profile-section-title">�🔐 Κωδικός Ασφαλείας (PIN)</h3>
         <p class="ma-dp-profile-hint">Ορίστε ένα PIN για επιπλέον ασφάλεια κατά τη σύνδεση</p>
 
         <div class="ma-dp-pin-status-bar">
@@ -245,6 +297,19 @@
       btn.classList.add('active');
       localStorage.setItem('ma_dp_theme', theme);
       if (typeof window.DpApp?._applyTheme === 'function') window.DpApp._applyTheme(theme);
+    });
+
+    // Sound picker
+    document.getElementById('dpDriverSoundPicker')?.addEventListener('click', (e) => {
+      const preview = e.target.closest('.ma-dp-sound-preview');
+      if (preview && window.DpSounds) { window.DpSounds.play(preview.dataset.sound); return; }
+      const opt = e.target.closest('.ma-dp-sound-option');
+      if (!opt) return;
+      document.querySelectorAll('.ma-dp-sound-option').forEach(o => o.classList.remove('ma-dp-sound-active'));
+      opt.classList.add('ma-dp-sound-active');
+      localStorage.setItem('ma_dp_alert_sound', opt.dataset.sound);
+      if (window.DpSounds) window.DpSounds.play(opt.dataset.sound);
+      showToast('Ήχος ενημερώθηκε');
     });
 
     // Back

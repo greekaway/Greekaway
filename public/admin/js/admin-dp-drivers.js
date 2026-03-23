@@ -94,6 +94,7 @@
           </div>
           <div class="dp-driver-actions">
             <button class="button dp-btn-sm dp-edit-btn" data-id="${d.id}">✏️</button>
+            ${d.has_pin ? `<button class="button dp-btn-sm dp-pin-reset-btn" data-id="${d.id}" title="Διαγραφή PIN">🔓</button>` : ''}
             <button class="button dp-btn-sm dp-delete-btn" data-id="${d.id}">🗑️</button>
           </div>
         </div>`;
@@ -118,6 +119,25 @@
             renderList();
             showToast('Διαγράφηκε');
             if (editingDriverId === d.id) resetForm();
+          } else {
+            const data = await res.json().catch(() => ({}));
+            showToast(data.message || data.error || 'Σφάλμα');
+          }
+        } catch (err) { showToast('Σφάλμα: ' + err.message); }
+      });
+    });
+    wrap.querySelectorAll('.dp-pin-reset-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const d = state.drivers.find(dr => dr.id === btn.dataset.id);
+        if (!d) return;
+        if (!await openConfirm(`Διαγραφή PIN οδηγού "${d.name || d.phone}";`)) return;
+        try {
+          const res = await api('/api/admin/driver-panel/driver-pin', 'DELETE', { driverId: d.id });
+          if (!res) return;
+          if (res.ok) {
+            d.has_pin = false;
+            renderList();
+            showToast('PIN διαγράφηκε');
           } else {
             const data = await res.json().catch(() => ({}));
             showToast(data.message || data.error || 'Σφάλμα');

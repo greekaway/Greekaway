@@ -859,17 +859,23 @@ const ma = {
 
   async upsertDriver(data) {
     const sql = `
-      INSERT INTO ma_drivers (id, name, phone, notes, is_active)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO ma_drivers (id, name, phone, notes, is_active, vehicle_types, current_vehicle_type, display_name, pin_hash)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         phone = EXCLUDED.phone,
         notes = EXCLUDED.notes,
-        is_active = EXCLUDED.is_active
+        is_active = EXCLUDED.is_active,
+        vehicle_types = EXCLUDED.vehicle_types,
+        current_vehicle_type = EXCLUDED.current_vehicle_type,
+        display_name = EXCLUDED.display_name,
+        pin_hash = COALESCE(EXCLUDED.pin_hash, ma_drivers.pin_hash)
       RETURNING *
     `;
     const rows = await query(sql, [
-      data.id, data.name || '', data.phone, data.notes || '', data.is_active !== false
+      data.id, data.name || '', data.phone, data.notes || '', data.is_active !== false,
+      data.vehicle_types || '[]', data.current_vehicle_type || null,
+      data.display_name || null, data.pin_hash !== undefined ? data.pin_hash : null
     ]);
     return rows[0];
   },
