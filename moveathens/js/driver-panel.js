@@ -89,10 +89,22 @@
       document.documentElement.removeAttribute('data-theme');
       if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
       else if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-      else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)
-        document.documentElement.setAttribute('data-theme', 'light');
+      else {
+        // Auto: follow system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)
+          document.documentElement.setAttribute('data-theme', 'light');
+        // else: no attribute = dark (default)
+      }
     };
     window.DpApp._applyTheme(themePref);
+
+    // Listen for system theme changes when in auto mode
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+        const current = localStorage.getItem('ma_dp_theme') || 'auto';
+        if (current === 'auto') window.DpApp._applyTheme('auto');
+      });
+    }
 
     buildFooter();
 

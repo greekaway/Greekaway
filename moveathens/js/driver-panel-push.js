@@ -29,6 +29,9 @@
       swRegistration = await navigator.serviceWorker.register(SW_PATH, { scope: SW_SCOPE });
       console.log('[dp-push] SW registered');
 
+      // Force the browser to check for a new SW version immediately
+      swRegistration.update().catch(() => {});
+
       swRegistration.addEventListener('updatefound', () => {
         const newWorker = swRegistration.installing;
         if (!newWorker) return;
@@ -36,6 +39,11 @@
           if (newWorker.state === 'activated') showUpdateBanner();
         });
       });
+
+      // If there's already a waiting worker, show update banner
+      if (swRegistration.waiting) {
+        showUpdateBanner();
+      }
     } catch (err) {
       console.error('[dp-push] SW registration failed:', err);
     }
@@ -152,6 +160,11 @@
     // Poll for version updates
     checkForUpdate();
     setInterval(checkForUpdate, VERSION_POLL_MS);
+
+    // Also periodically ask the browser to check for a new SW
+    setInterval(() => {
+      if (swRegistration) swRegistration.update().catch(() => {});
+    }, VERSION_POLL_MS);
   }
 
   // Auto-init when DOM ready

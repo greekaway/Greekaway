@@ -182,24 +182,103 @@ html[data-theme='light'] .ma-dp-theme-btn.active {
 }
 
 /* ── PIN ── */
-.ma-dp-pin-status {
-  font-size: 14px; margin-bottom: 10px;
-  color: #34d399;
+.ma-dp-pin-status-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(52,211,153,.08);
+  border: 1px solid rgba(52,211,153,.2);
+  border-radius: 10px; padding: 12px 14px;
+  margin-bottom: 14px;
 }
-.ma-dp-pin-status.inactive { color: var(--ma-dp-muted); }
+.ma-dp-pin-status-icon { font-size: 20px; }
+.ma-dp-pin-status-text {
+  font-size: 14px; color: #34d399; font-weight: 500;
+}
 
-.ma-dp-pin-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+/* When no PIN is set */
+.ma-dp-pin-status-bar:has(.ma-dp-pin-status-text:empty),
+.ma-dp-pin-status-bar:has([data-inactive]) {
+  background: rgba(156,163,175,.08);
+  border-color: rgba(156,163,175,.2);
+}
+.ma-dp-pin-status-bar:has(.ma-dp-pin-status-icon:first-child:last-child) {}
 
-.ma-dp-pin-link {
-  color: var(--ma-dp-accent); cursor: pointer;
-  font-size: 14px; text-decoration: underline;
-  background: none; border: none; font-family: inherit;
+.ma-dp-pin-btn-row {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+
+.ma-dp-pin-btn {
+  padding: 10px 20px; border-radius: 8px; border: 1.5px solid transparent;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: all .2s;
+}
+
+.ma-dp-pin-btn--set {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff; border-color: transparent;
+}
+.ma-dp-pin-btn--set:active { transform: scale(.97); }
+
+.ma-dp-pin-btn--save {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff; border-color: transparent;
+}
+.ma-dp-pin-btn--save:active { transform: scale(.97); }
+
+.ma-dp-pin-btn--change {
+  background: transparent; color: #3b82f6;
+  border-color: #3b82f6;
+}
+.ma-dp-pin-btn--change:active { background: rgba(59,130,246,.08); }
+
+.ma-dp-pin-btn--remove {
+  background: transparent; color: #ef4444;
+  border-color: #ef4444;
+}
+.ma-dp-pin-btn--remove:active { background: rgba(239,68,68,.08); }
+
+.ma-dp-pin-btn--cancel {
+  background: transparent; color: var(--ma-dp-muted);
+  border-color: var(--ma-dp-muted);
 }
 
 .ma-dp-pin-form {
-  display: flex; flex-direction: column; gap: 8px; margin-top: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  margin-bottom: 14px;
+  animation: dpPinReveal .25s ease;
 }
-.ma-dp-pin-form .ma-dp-btn { margin-top: 4px; }
+@keyframes dpPinReveal {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ma-dp-pin-input {
+  width: 100%; box-sizing: border-box;
+  padding: 12px 14px; border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04); color: #fff;
+  font-size: 15px; font-family: inherit;
+  transition: border-color .2s;
+}
+.ma-dp-pin-input::placeholder { color: var(--ma-dp-muted); }
+.ma-dp-pin-input:focus {
+  outline: none; border-color: var(--ma-dp-accent);
+}
+
+.ma-dp-pin-error {
+  color: #ef4444; font-size: 13px; margin: 0;
+  min-height: 0;
+}
+
+/* light mode PIN overrides */
+html[data-theme='light'] .ma-dp-pin-status-bar {
+  background: rgba(52,211,153,.06);
+  border-color: rgba(52,211,153,.18);
+}
+html[data-theme='light'] .ma-dp-pin-input {
+  background: #f9fafb; border-color: #e5e7eb; color: #1f2937;
+}
+html[data-theme='light'] .ma-dp-pin-input:focus { border-color: var(--ma-dp-accent); }
+html[data-theme='light'] .ma-dp-pin-btn--cancel { color: #6b7280; border-color: #d1d5db; }
 
 /* ── Light Mode Hub Overrides ── */
 html[data-theme='light'] .ma-dp-hub-avatar {

@@ -208,27 +208,31 @@
 
       <div class="ma-dp-profile-section">
         <h3 class="ma-dp-profile-section-title">🔐 Κωδικός Ασφαλείας (PIN)</h3>
-        <p class="ma-dp-profile-hint">${driver.has_pin ? 'Ορίστε ένα PIN για επιπλέον ασφάλεια κατά τη σύνδεση' : 'Ορίστε ένα PIN για επιπλέον ασφάλεια κατά τη σύνδεση'}</p>
-        ${driver.has_pin ? `
-        <div class="ma-dp-pin-status">
-          <span>🔒 Ο κωδικός ασφαλείας είναι ενεργός</span>
+        <p class="ma-dp-profile-hint">Ορίστε ένα PIN για επιπλέον ασφάλεια κατά τη σύνδεση</p>
+
+        <div class="ma-dp-pin-status-bar">
+          <span class="ma-dp-pin-status-icon">${driver.has_pin ? '🔒' : '🔓'}</span>
+          <span class="ma-dp-pin-status-text">${driver.has_pin ? 'Ο κωδικός ασφαλείας είναι ενεργός' : 'Δεν έχετε ορίσει κωδικό ασφαλείας'}</span>
         </div>
-        <div class="ma-dp-pin-actions" id="dpPinActions">
-          <button class="ma-dp-btn ma-dp-btn-outline" id="dpPinChange">Αλλαγή PIN</button>
-          <button class="ma-dp-btn ma-dp-btn-danger-outline" id="dpPinRemove">Αφαίρεση PIN</button>
-        </div>` : `
-        <div class="ma-dp-pin-status inactive">
-          <span>Δεν έχετε ορίσει PIN.</span>
-        </div>
-        <div class="ma-dp-pin-actions" id="dpPinActions">
-          <a class="ma-dp-pin-link" id="dpPinSet">Ορισμός PIN</a>
-        </div>`}
+
         <div id="dpPinForm" class="ma-dp-pin-form" style="display:none">
-          ${driver.has_pin ? '<input type="password" id="dpPinCurrent" class="ma-dp-profile-input" placeholder="Τρέχον PIN" inputmode="numeric">' : ''}
-          <input type="password" id="dpPinNew" class="ma-dp-profile-input" placeholder="Νέο PIN (4+ ψηφία)" inputmode="numeric">
-          <input type="password" id="dpPinConfirm" class="ma-dp-profile-input" placeholder="Επιβεβαίωση PIN" inputmode="numeric">
-          <button class="ma-dp-btn" id="dpPinSave">Αποθήκευση</button>
-          <button class="ma-dp-btn ma-dp-btn-outline" id="dpPinCancel">Ακύρωση</button>
+          <label class="ma-dp-profile-hint" id="dpPinFormLabel">Νέος κωδικός (τουλάχιστον 4 χαρακτήρες)</label>
+          <input type="password" id="dpPinNew" class="ma-dp-pin-input" placeholder="Εισάγετε κωδικό" inputmode="numeric" minlength="4" maxlength="20">
+          <input type="password" id="dpPinConfirm" class="ma-dp-pin-input" placeholder="Επιβεβαίωση κωδικού" inputmode="numeric" minlength="4" maxlength="20">
+          <div class="ma-dp-pin-btn-row">
+            <button class="ma-dp-pin-btn ma-dp-pin-btn--save" id="dpPinSave">Αποθήκευση</button>
+            <button class="ma-dp-pin-btn ma-dp-pin-btn--cancel" id="dpPinCancel">Ακύρωση</button>
+          </div>
+          <p class="ma-dp-pin-error" id="dpPinError"></p>
+        </div>
+
+        <div class="ma-dp-pin-btn-row" id="dpPinActions">
+          ${driver.has_pin ? `
+            <button class="ma-dp-pin-btn ma-dp-pin-btn--change" id="dpPinChange">Αλλαγή PIN</button>
+            <button class="ma-dp-pin-btn ma-dp-pin-btn--remove" id="dpPinRemove">Αφαίρεση PIN</button>
+          ` : `
+            <button class="ma-dp-pin-btn ma-dp-pin-btn--set" id="dpPinSet">Ορισμός PIN</button>
+          `}
         </div>
       </div>`;
 
@@ -249,34 +253,48 @@
     // PIN logic
     const pinForm = document.getElementById('dpPinForm');
     const pinActions = document.getElementById('dpPinActions');
-    const showPinForm = () => { if (pinForm) pinForm.style.display = ''; if (pinActions) pinActions.style.display = 'none'; };
-    const hidePinForm = () => { if (pinForm) pinForm.style.display = 'none'; if (pinActions) pinActions.style.display = ''; };
+    const pinError = document.getElementById('dpPinError');
+    const showPinError = (msg) => { if (pinError) pinError.textContent = msg; };
+    const showPinForm = (isChange) => {
+      const label = document.getElementById('dpPinFormLabel');
+      if (label) label.textContent = isChange ? 'Νέος κωδικός (τουλάχιστον 4 χαρακτήρες)' : 'Ορίστε κωδικό (τουλάχιστον 4 χαρακτήρες)';
+      if (pinForm) pinForm.style.display = '';
+      if (pinActions) pinActions.style.display = 'none';
+      showPinError('');
+      document.getElementById('dpPinNew')?.focus();
+    };
+    const hidePinForm = () => {
+      if (pinForm) { pinForm.style.display = 'none'; }
+      if (pinActions) pinActions.style.display = '';
+      showPinError('');
+      const n = document.getElementById('dpPinNew'); if (n) n.value = '';
+      const c = document.getElementById('dpPinConfirm'); if (c) c.value = '';
+    };
 
-    document.getElementById('dpPinSet')?.addEventListener('click', showPinForm);
-    document.getElementById('dpPinChange')?.addEventListener('click', showPinForm);
+    document.getElementById('dpPinSet')?.addEventListener('click', () => showPinForm(false));
+    document.getElementById('dpPinChange')?.addEventListener('click', () => showPinForm(true));
     document.getElementById('dpPinCancel')?.addEventListener('click', hidePinForm);
 
     document.getElementById('dpPinRemove')?.addEventListener('click', async () => {
-      const currentPin = prompt('Εισάγετε το τρέχον PIN:');
-      if (!currentPin) return;
+      if (!confirm('Θέλετε σίγουρα να αφαιρέσετε το PIN;')) return;
       const res = await api('/api/driver-panel/pin', {
-        method: 'POST', body: JSON.stringify({ phone: driver.phone, current_pin: currentPin, remove: true })
+        method: 'POST', body: JSON.stringify({ phone: driver.phone, remove: true })
       });
       if (res.ok) { driver.has_pin = false; localStorage.setItem(LS_KEY, JSON.stringify(driver)); showToast('PIN αφαιρέθηκε'); renderSettingsView(driver); }
       else { const err = await res.json().catch(() => ({})); showToast(err.error || 'Σφάλμα'); }
     });
 
     document.getElementById('dpPinSave')?.addEventListener('click', async () => {
-      const currentPin = document.getElementById('dpPinCurrent')?.value || '';
       const newPin = document.getElementById('dpPinNew')?.value || '';
       const confirmPin = document.getElementById('dpPinConfirm')?.value || '';
-      if (!newPin || newPin.length < 4) { showToast('Ελάχιστο 4 ψηφία'); return; }
-      if (newPin !== confirmPin) { showToast('Τα PIN δεν ταιριάζουν'); return; }
+      if (!newPin || newPin.length < 4) { showPinError('Ο κωδικός πρέπει να έχει τουλάχιστον 4 χαρακτήρες'); return; }
+      if (newPin !== confirmPin) { showPinError('Οι κωδικοί δεν ταιριάζουν'); return; }
+      showPinError('');
       const res = await api('/api/driver-panel/pin', {
-        method: 'POST', body: JSON.stringify({ phone: driver.phone, current_pin: currentPin || undefined, new_pin: newPin })
+        method: 'POST', body: JSON.stringify({ phone: driver.phone, new_pin: newPin })
       });
       if (res.ok) { driver.has_pin = true; localStorage.setItem(LS_KEY, JSON.stringify(driver)); showToast('PIN ορίστηκε'); renderSettingsView(driver); }
-      else { const err = await res.json().catch(() => ({})); showToast(err.error || 'Σφάλμα'); }
+      else { const err = await res.json().catch(() => ({})); showPinError(err.error || 'Σφάλμα αποθήκευσης'); }
     });
   }
 
