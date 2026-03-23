@@ -245,11 +245,26 @@ CREATE TABLE IF NOT EXISTS ma_drivers (
     total_owed DECIMAL(12, 2) DEFAULT 0,
     total_paid DECIMAL(12, 2) DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
+    vehicle_types TEXT DEFAULT '[]',
+    current_vehicle_type VARCHAR(50) DEFAULT NULL,
+    pin_hash VARCHAR(255) DEFAULT NULL,
+    display_name VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_ma_drivers_phone ON ma_drivers(phone);
+
+-- Push notification subscriptions per driver
+CREATE TABLE IF NOT EXISTS ma_driver_push_subscriptions (
+    id SERIAL PRIMARY KEY,
+    driver_id VARCHAR(50) NOT NULL REFERENCES ma_drivers(id) ON DELETE CASCADE,
+    endpoint TEXT NOT NULL,
+    keys TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ma_driver_push_driver ON ma_driver_push_subscriptions(driver_id);
 
 -- Transfer requests table
 CREATE TABLE IF NOT EXISTS ma_transfer_requests (

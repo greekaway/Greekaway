@@ -1,0 +1,72 @@
+{
+  "general": {
+    "appTitle": "MoveAthens Driver",
+    "logoUrl": "/moveathens/videos/hero-logo.png",
+    "accentColor": "#46d3ff",
+    "defaultTheme": "dark"
+  },
+  "footer": {
+    "tabs": [
+      { "key": "home",     "label": "Αρχική",    "icon": "home",     "enabled": true, "order": 1 },
+      { "key": "schedule", "label": "Ραντεβού",  "icon": "calendar", "enabled": true, "order": 2 },
+      { "key": "history",  "label": "Ιστορικό",  "icon": "history",  "enabled": true, "order": 3 },
+      { "key": "finance",  "label": "Οικονομικά","icon": "wallet",   "enabled": true, "order": 4 },
+      { "key": "profile",  "label": "Προφίλ",    "icon": "user",     "enabled": true, "order": 5 }
+    ]
+  },
+  "routeCard": {
+    "urgent": [
+      { "id": "price",        "label": "Ποσό €",            "visible": true, "order": 1 },
+      { "id": "origin",       "label": "Αφετηρία",          "visible": true, "order": 2 },
+      { "id": "destination",  "label": "Προορισμός",        "visible": true, "order": 3 },
+      { "id": "datetime",     "label": "Ημ/νία & Ώρα",      "visible": true, "order": 4 }
+    ],
+    "scheduled": [
+      { "id": "datetime",     "label": "Ημ/νία & Ώρα",      "visible": true, "order": 1 },
+      { "id": "price",        "label": "Ποσό €",            "visible": true, "order": 2 },
+      { "id": "origin",       "label": "Αφετηρία",          "visible": true, "order": 3 },
+      { "id": "destination",  "label": "Προορισμός",        "visible": true, "order": 4 },
+      { "id": "vehicle_type", "label": "Τύπος οχήματος",    "visible": true, "order": 5 },
+      { "id": "passengers",   "label": "Επιβάτες",          "visible": false,"order": 6 }
+    ],
+    "detail": [
+      { "id": "hotel_name",   "label": "Ξενοδοχείο",        "visible": true, "order": 1 },
+      { "id": "room_number",  "label": "Δωμάτιο",           "visible": true, "order": 2 },
+      { "id": "passengers",   "label": "Επιβάτες",          "visible": true, "order": 3 },
+      { "id": "luggage",      "label": "Αποσκευές",         "visible": true, "order": 4 },
+      { "id": "vehicle_type", "label": "Τύπος οχήματος",    "visible": true, "order": 5 },
+      { "id": "flight_info",  "label": "Πτήση",             "visible": true, "order": 6 },
+      { "id": "notes",        "label": "Σημειώσεις",        "visible": true, "order": 7 },
+      { "id": "commission",   "label": "Προμήθεια οδηγού",  "visible": false,"order": 8 }
+    ]
+  },
+  "notifications": {
+    "pushEnabled": true,
+    "soundEnabled": true,
+    "vibrationEnabled": true,
+    "reminderMinutes": 15,
+    "pushTemplate": "Νέα διαδρομή: {origin} → {destination} | {price}€"
+  },
+  "acceptance": {
+    "assignmentMode": "broadcast",
+    "broadcastTimeoutMinutes": 5,
+    "autoBroadcast": true,
+    "autoRejectOnExpiry": true
+  },
+  "labels": {
+    "btnAccept": "Αποδοχή",
+    "btnReject": "Απόρριψη",
+    "btnComplete": "Ολοκλήρωση",
+    "btnDetails": "Λεπτομέρειες",
+    "sectionActive": "Ενεργές Διαδρομές",
+    "sectionScheduled": "Προγραμματισμένες",
+    "sectionHistory": "Ιστορικό",
+    "msgNoRoutes": "Δεν υπάρχουν διαδρομές αυτή τη στιγμή",
+    "msgLoading": "Φόρτωση…"
+  },
+  "finance": {
+    "showBalance": true,
+    "showHistory": true,
+    "showCommissionBreakdown": false
+  }
+}

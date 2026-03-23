@@ -1,0 +1,168 @@
+/* ═══════════════════════════════════════════════════════
+   MoveAthens Driver Panel — Auth Gate CSS
+   Full-screen login wall. Mirrors MoveAthens hotel
+   auth-gate with --ma-dp-* tokens.
+   ═══════════════════════════════════════════════════════ */
+
+/* Gate overlay — covers everything */
+.ma-dp-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--ma-dp-bg, #0b0f1a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+.ma-dp-gate--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Phase 1: inline script adds this before body */
+html.ma-dp-gate-pending body { overflow: hidden !important; }
+html.ma-dp-gate-pending body > *:not(.ma-dp-gate):not(script) { display: none !important; }
+
+/* Phase 2: auth-gate.js adds this */
+body.ma-dp-gate-locked { overflow: hidden !important; }
+body.ma-dp-gate-locked > *:not(.ma-dp-gate):not(script) { display: none !important; }
+
+/* Card */
+.ma-dp-gate__card {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+/* Logo */
+.ma-dp-gate__logo {
+  width: 300px;
+  max-width: 70vw;
+  height: auto;
+  margin: 0 auto 20px;
+  display: block;
+  border-radius: 18px;
+}
+.ma-dp-gate__logo[src=""],
+.ma-dp-gate__logo:not([src]) { display: none; }
+
+/* Icon */
+.ma-dp-gate__icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+/* Title */
+.ma-dp-gate__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ma-dp-text, #f7f7fb);
+  margin: 0 0 8px;
+}
+
+/* Description */
+.ma-dp-gate__desc {
+  font-size: 14px;
+  color: var(--ma-dp-muted, #b2b8c7);
+  margin: 0 0 28px;
+  line-height: 1.55;
+}
+
+/* Form */
+.ma-dp-gate__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ma-dp-gate__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ma-dp-muted, #b2b8c7);
+  text-align: left;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.ma-dp-gate__input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-family: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: var(--ma-dp-card, #1c2438);
+  color: var(--ma-dp-text, #f7f7fb);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.ma-dp-gate__input::placeholder { color: rgba(178, 184, 199, 0.5); }
+.ma-dp-gate__input:focus { border-color: var(--ma-dp-accent, #46d3ff); }
+
+/* Button */
+.ma-dp-gate__btn {
+  padding: 14px 32px;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #46d3ff 0%, #1da1f2 100%);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+  margin-top: 6px;
+}
+.ma-dp-gate__btn:active { transform: scale(0.97); }
+.ma-dp-gate__btn:hover { box-shadow: 0 4px 16px rgba(70, 211, 255, 0.35); }
+.ma-dp-gate__btn:disabled { opacity: 0.6; cursor: wait; }
+
+/* Error */
+.ma-dp-gate__error {
+  min-height: 1.25em;
+  font-size: 14px;
+  color: #ff8a8a;
+  margin: 0;
+}
+
+/* PIN reveal animation */
+.ma-dp-gate__pin-wrap {
+  animation: maDpGateReveal 0.3s ease forwards;
+}
+@keyframes maDpGateReveal {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Light mode ── */
+html[data-theme='light'] .ma-dp-gate { background: #f5f7fa; }
+html[data-theme='light'] .ma-dp-gate__title { color: #1a1a2e; }
+html[data-theme='light'] .ma-dp-gate__desc { color: #6b7280; }
+html[data-theme='light'] .ma-dp-gate__label { color: #6b7280; }
+html[data-theme='light'] .ma-dp-gate__input {
+  background: #fff;
+  border-color: #d1d5db;
+  color: #1a1a2e;
+}
+html[data-theme='light'] .ma-dp-gate__error { color: #dc2626; }
+
+/* ── Small screens ── */
+@media (max-width: 359px) {
+  .ma-dp-gate__title { font-size: 18px; }
+  .ma-dp-gate__desc { font-size: 13px; }
+  .ma-dp-gate__input { padding: 12px 14px; font-size: 15px; }
+  .ma-dp-gate__btn { padding: 12px 24px; font-size: 15px; }
+}
+
+@supports (padding: env(safe-area-inset-top)) {
+  .ma-dp-gate {
+    padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+  }
+}

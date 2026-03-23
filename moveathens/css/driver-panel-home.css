@@ -1,0 +1,202 @@
+/* ═══════════════════════════════════════════════════════
+   MoveAthens Driver Panel — Home Tab
+   Urgent cards, accept/reject, status indicator
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Online Status ── */
+.ma-dp-home-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px 6px;
+}
+
+.ma-dp-status-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #6b7280;
+}
+.ma-dp-status-dot.online {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+  animation: dp-pulse 2s ease-in-out infinite;
+}
+
+@keyframes dp-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.ma-dp-status-text {
+  font-size: 13px;
+  color: var(--ma-dp-muted);
+  font-weight: 500;
+}
+
+/* ── Cards container ── */
+.ma-dp-home-cards {
+  padding: 8px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Empty state ── */
+.ma-dp-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--ma-dp-muted);
+  font-size: 14px;
+}
+
+/* ── Urgent Card ── */
+.ma-dp-urgent-card {
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-accent);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 0 16px var(--ma-dp-accent-glow);
+  animation: dp-cardIn 0.3s ease;
+}
+
+@keyframes dp-cardIn {
+  from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ma-dp-card-exit {
+  animation: dp-cardOut 0.3s ease forwards;
+}
+@keyframes dp-cardOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.95) translateY(8px); }
+}
+
+/* ── Card Header ── */
+.ma-dp-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ma-dp-card-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ma-dp-accent);
+  background: var(--ma-dp-accent-glow);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.ma-dp-card-timer {
+  font-size: 12px;
+  color: var(--ma-dp-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Card Fields ── */
+.ma-dp-card-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ma-dp-card-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 2px;
+}
+
+.ma-dp-card-label {
+  font-size: 12px;
+  color: var(--ma-dp-muted);
+  flex-shrink: 0;
+}
+
+.ma-dp-card-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ma-dp-text);
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Price field emphasis */
+.ma-dp-card-field:first-child .ma-dp-card-value {
+  color: var(--ma-dp-accent);
+  font-size: 18px;
+}
+
+/* ── Card Actions ── */
+.ma-dp-card-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ma-dp-btn {
+  flex: 1;
+  padding: 12px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.ma-dp-btn:active { transform: scale(0.97); }
+.ma-dp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ma-dp-btn-accept {
+  background: var(--ma-dp-accent);
+  color: #0b0f1a;
+}
+
+.ma-dp-btn-reject {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ma-dp-muted);
+  border: 1px solid var(--ma-dp-card-border);
+}
+
+html[data-theme='light'] .ma-dp-btn-reject {
+  background: rgba(0, 0, 0, 0.04);
+  color: #6b7280;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ── Toast (reuse from base, but ensure home-specific) ── */
+.ma-dp-toast {
+  position: fixed;
+  bottom: calc(var(--ma-dp-footer-h) + 16px);
+  left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--ma-dp-card);
+  color: var(--ma-dp-text);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 9999;
+  pointer-events: none;
+}
+.ma-dp-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Responsive ── */
+@media (max-width: 359px) {
+  .ma-dp-urgent-card { padding: 12px; }
+  .ma-dp-card-value { font-size: 13px; }
+  .ma-dp-card-field:first-child .ma-dp-card-value { font-size: 16px; }
+  .ma-dp-btn { font-size: 13px; padding: 10px 0; }
+}
+
+@media (min-width: 430px) {
+  .ma-dp-home-cards { padding: 8px 24px 24px; }
+  .ma-dp-urgent-card { padding: 18px; }
+}

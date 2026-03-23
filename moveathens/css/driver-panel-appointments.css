@@ -1,0 +1,115 @@
+/* ═══════════════════════════════════════════════════════
+   MoveAthens Driver Panel — Appointments Tab
+   Sub-tabs, filters, scheduled cards, detail expand
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Sub-tabs bar ── */
+.ma-dp-sched-tabs {
+  display: flex;
+  gap: 0;
+  padding: 12px 16px 0;
+  border-bottom: 1px solid var(--ma-dp-card-border);
+}
+
+.ma-dp-sched-tab {
+  flex: 1;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--ma-dp-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.ma-dp-sched-tab.active {
+  color: var(--ma-dp-accent);
+  border-bottom-color: var(--ma-dp-accent);
+}
+
+/* ── Filters ── */
+.ma-dp-sched-filters {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  align-items: center;
+}
+
+.ma-dp-sched-select,
+.ma-dp-sched-date {
+  flex: 1;
+  padding: 8px 10px;
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 8px;
+  color: var(--ma-dp-text);
+  font-size: 13px;
+  -webkit-appearance: none;
+}
+
+.ma-dp-sched-select:focus,
+.ma-dp-sched-date:focus {
+  outline: none;
+  border-color: var(--ma-dp-accent);
+}
+
+/* ── Cards list ── */
+.ma-dp-sched-list {
+  padding: 8px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Scheduled Card ── */
+.ma-dp-sched-card {
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 14px;
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+.ma-dp-sched-card:hover { border-color: var(--ma-dp-accent); }
+
+.ma-dp-card-badge.sched {
+  background: rgba(70, 211, 255, 0.08);
+  color: var(--ma-dp-accent);
+}
+
+/* Card fields/actions reuse from home.css (shared classes) */
+
+/* ── Detail button ── */
+.ma-dp-btn-detail {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ma-dp-muted);
+  border: 1px solid var(--ma-dp-card-border);
+}
+html[data-theme='light'] .ma-dp-btn-detail {
+  background: rgba(0, 0, 0, 0.04);
+  color: #6b7280;
+}
+
+/* ── Detail expand ── */
+.ma-dp-detail-expand {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ma-dp-card-border);
+}
+.ma-dp-detail-expand[hidden] { display: none; }
+
+.ma-dp-detail-expand .ma-dp-card-field {
+  padding: 3px 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 359px) {
+  .ma-dp-sched-card { padding: 12px; }
+  .ma-dp-sched-tab { font-size: 13px; }
+  .ma-dp-sched-filters { flex-wrap: wrap; }
+}
+
+@media (min-width: 430px) {
+  .ma-dp-sched-list { padding: 8px 24px 24px; }
+  .ma-dp-sched-card { padding: 18px; }
+}

@@ -1,6 +1,6 @@
 /**
- * Admin Footer - Simple 3-link Navigation
- * Home | Greekaway | MoveAthens
+ * Admin Footer - Navigation
+ * Home | Greekaway | MoveAthens | Πάνελ Οδηγών | DriversSystem
  */
 (function() {
   'use strict';
@@ -8,14 +8,16 @@
   const currentPath = window.location.pathname;
 
   // Detect which section we're in
+  const isDriverPanelPage = currentPath.includes('driver-panel');
   const isDriversSystemPage = currentPath.includes('driverssystem');
-  const isMoveathensPage = currentPath.includes('moveathens') && !isDriversSystemPage;
+  const isMoveathensPage = currentPath.includes('moveathens') && !isDriversSystemPage && !isDriverPanelPage;
   const isHomePage = currentPath.includes('admin-home');
-  const isGreekawayPage = !isHomePage && !isMoveathensPage && !isDriversSystemPage;
+  const isGreekawayPage = !isHomePage && !isMoveathensPage && !isDriversSystemPage && !isDriverPanelPage;
 
   // Default landing pages for each project
   const greekawayDefault = '/admin-bookings.html';
   const moveathensDefault = '/admin/moveathens-ui';
+  const driverPanelDefault = '/admin/driver-panel';
   const driverssystemDefault = '/admin/driverssystem-ui';
 
   function createFooter() {
@@ -26,6 +28,7 @@
       <a href="/admin-home.html"${isHomePage ? ' class="active"' : ''}>Home</a>
       <a href="${greekawayDefault}"${isGreekawayPage ? ' class="active"' : ''}>Greekaway</a>
       <a href="${moveathensDefault}"${isMoveathensPage ? ' class="active"' : ''}>MoveAthens</a>
+      <a href="${driverPanelDefault}"${isDriverPanelPage ? ' class="active"' : ''}>🚗 Οδηγοί</a>
       <a href="${driverssystemDefault}"${isDriversSystemPage ? ' class="active"' : ''}>DriversSystem</a>
     `;
 

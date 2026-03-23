@@ -1,0 +1,156 @@
+/* ═══════════════════════════════════════════════════════
+   MoveAthens Driver Panel — Financials Tab
+   Balance card, summary stats, payment history
+   ═══════════════════════════════════════════════════════ */
+
+.ma-dp-fin-content {
+  padding: 0 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Balance card ── */
+.ma-dp-fin-balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 16px;
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 14px;
+}
+
+.ma-dp-fin-balance.positive {
+  border-color: rgba(34, 197, 94, 0.3);
+}
+.ma-dp-fin-balance.negative {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.ma-dp-fin-balance-label {
+  font-size: 14px;
+  color: var(--ma-dp-muted);
+}
+
+.ma-dp-fin-balance-amount {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ma-dp-accent);
+}
+.ma-dp-fin-balance.positive .ma-dp-fin-balance-amount { color: #22c55e; }
+.ma-dp-fin-balance.negative .ma-dp-fin-balance-amount { color: #ef4444; }
+
+/* ── Summary stats (3 columns) ── */
+.ma-dp-fin-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.ma-dp-fin-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 8px;
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 12px;
+  gap: 4px;
+}
+
+.ma-dp-fin-stat-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ma-dp-text);
+}
+
+.ma-dp-fin-stat-lbl {
+  font-size: 12px;
+  color: var(--ma-dp-muted);
+}
+
+.ma-dp-fin-stat-sub {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ma-dp-accent);
+}
+
+/* ── Detail rows ── */
+.ma-dp-fin-detail {
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.ma-dp-fin-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--ma-dp-text);
+  border-bottom: 1px solid var(--ma-dp-card-border);
+}
+.ma-dp-fin-row:last-child { border-bottom: none; }
+.ma-dp-fin-row span:first-child { color: var(--ma-dp-muted); }
+
+/* ── Payment history ── */
+.ma-dp-fin-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ma-dp-text);
+  padding: 4px 0 0;
+}
+
+.ma-dp-fin-payments {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ma-dp-fin-pay-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.ma-dp-fin-pay-date {
+  color: var(--ma-dp-muted);
+  min-width: 72px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.ma-dp-fin-pay-note {
+  flex: 1;
+  color: var(--ma-dp-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ma-dp-fin-pay-amount {
+  font-weight: 600;
+  color: #22c55e;
+  flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 359px) {
+  .ma-dp-fin-balance { padding: 14px 12px; }
+  .ma-dp-fin-balance-amount { font-size: 18px; }
+  .ma-dp-fin-stat-val { font-size: 18px; }
+  .ma-dp-fin-summary { gap: 6px; }
+  .ma-dp-fin-stat { padding: 10px 6px; }
+}
+
+@media (min-width: 430px) {
+  .ma-dp-fin-content { padding: 0 24px 24px; }
+  .ma-dp-fin-balance { padding: 20px 18px; }
+}

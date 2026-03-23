@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>MoveAthens — Ενεργή Διαδρομή</title>
+  <meta name="theme-color" content="#0b0f1a">
+  <link rel="icon" type="image/png" sizes="32x32" href="/moveathens/icons/favicon-32x32.png">
+  <style>
+    :root {
+      --ar-bg: #0b0f1a; --ar-card: #1c2438; --ar-text: #f7f7fb;
+      --ar-muted: #b2b8c7; --ar-accent: #46d3ff; --ar-border: rgba(255,255,255,0.06);
+      --ar-success: #22c55e; --ar-warn: #f59e0b; --ar-danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--ar-bg); color: var(--ar-text); -webkit-font-smoothing: antialiased; }
+
+    .ar-wrap { min-height: 100vh; display: flex; flex-direction: column;
+      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
+    .ar-header { padding: 16px 0 8px; display: flex; justify-content: space-between; align-items: center; }
+    .ar-back { background: none; border: none; color: var(--ar-muted); font-size: 14px; cursor: pointer; padding: 8px 0; }
+    .ar-status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .ar-status-accepted { background: rgba(70,211,255,0.15); color: var(--ar-accent); }
+    .ar-status-arrived { background: rgba(245,158,11,0.15); color: var(--ar-warn); }
+    .ar-status-completed { background: rgba(34,197,94,0.15); color: var(--ar-success); }
+
+    .ar-route { text-align: center; padding: 16px 0; }
+    .ar-route-dir { font-size: 12px; color: var(--ar-muted); margin-bottom: 4px; }
+    .ar-route-origin, .ar-route-dest { font-size: 18px; font-weight: 600; }
+    .ar-route-arrow { font-size: 20px; color: var(--ar-accent); margin: 4px 0; }
+
+    .ar-info { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
+    .ar-info-card { background: var(--ar-card); border: 1px solid var(--ar-border);
+      border-radius: 12px; padding: 14px; }
+    .ar-info-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; }
+    .ar-info-label { font-size: 12px; color: var(--ar-muted); }
+    .ar-info-value { font-size: 14px; font-weight: 500; text-align: right; max-width: 60%; word-break: break-word; }
+    .ar-price { font-size: 22px; font-weight: 700; color: var(--ar-accent); text-align: center; padding: 8px 0; }
+
+    .ar-actions { display: flex; flex-direction: column; gap: 10px; padding: 12px 0 24px; }
+    .ar-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 15px;
+      font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
+    .ar-btn:active { transform: scale(0.98); }
+    .ar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .ar-btn-primary { background: var(--ar-accent); color: #0b0f1a; }
+    .ar-btn-nav { background: #4285f4; color: #fff; }
+    .ar-btn-whatsapp { background: #25d366; color: #fff; }
+    .ar-btn-complete { background: var(--ar-success); color: #fff; }
+    .ar-btn-secondary { background: rgba(255,255,255,0.06); color: var(--ar-muted); border: 1px solid var(--ar-border); }
+
+    .ar-loading { text-align: center; padding: 80px 16px; color: var(--ar-muted); font-size: 14px; }
+    .ar-row-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    @media (max-width: 359px) { .ar-route-origin, .ar-route-dest { font-size: 16px; }
+      .ar-btn { padding: 12px; font-size: 14px; } }
+  </style>
+</head>
+<body>
+
+<div class="ar-wrap" id="arWrap">
+  <div class="ar-loading" id="arLoading">Φόρτωση διαδρομής…</div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const params = new URLSearchParams(window.location.search);
+  const requestId = params.get('id');
+  const LS_KEY = 'moveathens_driver';
+
+  const getPhone = () => {
+    try { return JSON.parse(localStorage.getItem(LS_KEY))?.phone || ''; } catch { return ''; }
+  };
+
+  let trip = null;
+  let currentStatus = 'accepted';
+
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  async function loadTrip() {
+    if (!requestId) { showError('Δεν βρέθηκε διαδρομή'); return; }
+
+    try {
+      const res = await fetch('/api/driver-panel/active-route/' + encodeURIComponent(requestId));
+      if (!res.ok) throw new Error('Not found');
+      const data = await res.json();
+      trip = data.trip;
+      currentStatus = trip.status || 'accepted';
+      render();
+    } catch {
+      showError('Σφάλμα φόρτωσης');
+    }
+  }
+
+  function showError(msg) {
+    document.getElementById('arLoading').textContent = msg;
+  }
+
+  function render() {
+    const wrap = document.getElementById('arWrap');
+    const dir = trip.is_arrival ? '✈️ Άφιξη' : '🚗 Αναχώρηση';
+    const statusClass = currentStatus === 'completed' ? 'completed' : currentStatus === 'arrived' ? 'arrived' : 'accepted';
+    const statusText = currentStatus === 'completed' ? 'Ολοκληρώθηκε' : currentStatus === 'arrived' ? 'Έφτασα' : 'Ενεργή';
+
+    let infoRows = '';
+    if (trip.hotel_name) infoRows += row('Ξενοδοχείο', trip.hotel_name);
+    if (trip.hotel_address) infoRows += row('Διεύθυνση', trip.hotel_address);
+    if (trip.room_number) infoRows += row('Δωμάτιο', trip.room_number);
+    if (trip.passenger_name) infoRows += row('Επιβάτης', trip.passenger_name);
+    if (trip.passengers) infoRows += row('Επιβάτες', trip.passengers);
+    const totalLuggage = (trip.luggage_large || 0) + (trip.luggage_medium || 0) + (trip.luggage_cabin || 0);
+    if (totalLuggage) infoRows += row('Αποσκευές', totalLuggage);
+    if (trip.flight_number) infoRows += row('Πτήση', trip.flight_number);
+    if (trip.scheduled_date) infoRows += row('Ημ/νία', `${trip.scheduled_date} ${trip.scheduled_time || ''}`);
+    if (trip.notes) infoRows += row('Σημειώσεις', trip.notes);
+
+    let actionsHTML = '';
+    if (currentStatus === 'accepted') {
+      actionsHTML = `
+        <button class="ar-btn ar-btn-nav" onclick="openNav()">🧭 Πλοήγηση</button>
+        <button class="ar-btn ar-btn-primary" onclick="setStatus('arrived')">📍 Έφτασα</button>`;
+    } else if (currentStatus === 'arrived') {
+      actionsHTML = `
+        <div class="ar-row-pair">
+          <button class="ar-btn ar-btn-nav" onclick="openNav()">🧭 Πλοήγηση</button>
+          <button class="ar-btn ar-btn-whatsapp" onclick="openWhatsApp()">💬 WhatsApp</button>
+        </div>
+        <button class="ar-btn ar-btn-complete" onclick="setStatus('completed')">🏁 Ολοκλήρωση</button>`;
+    } else {
+      actionsHTML = `
+        <button class="ar-btn ar-btn-secondary" onclick="goBack()">← Πίσω στο Panel</button>`;
+    }
+
+    wrap.innerHTML = `
+      <div class="ar-header">
+        <button class="ar-back" onclick="goBack()">← Πίσω</button>
+        <span class="ar-status-badge ar-status-${statusClass}">${statusText}</span>
+      </div>
+      <div class="ar-route">
+        <div class="ar-route-dir">${dir}</div>
+        <div class="ar-route-origin">${esc(trip.origin)}</div>
+        <div class="ar-route-arrow">↓</div>
+        <div class="ar-route-dest">${esc(trip.destination)}</div>
+      </div>
+      <div class="ar-price">${(parseFloat(trip.price) || 0).toFixed(0)}€</div>
+      <div class="ar-info">
+        <div class="ar-info-card">${infoRows || '<div style="text-align:center;color:var(--ar-muted)">Χωρίς επιπλέον πληροφορίες</div>'}</div>
+      </div>
+      <div class="ar-actions">${actionsHTML}</div>`;
+  }
+
+  function row(label, value) {
+    return `<div class="ar-info-row"><span class="ar-info-label">${esc(label)}</span><span class="ar-info-value">${esc(String(value))}</span></div>`;
+  }
+
+  window.openNav = () => {
+    const addr = trip.is_arrival
+      ? (trip.hotel_address || trip.hotel_name || trip.destination)
+      : trip.destination;
+    const encoded = encodeURIComponent(addr);
+    // Try Google Maps, fallback to Waze
+    const isIOS = /iPhone|iPad/i.test(navigator.userAgent);
+    if (isIOS) {
+      window.open(`comgooglemaps://?daddr=${encoded}&directionsmode=driving`, '_blank');
+      setTimeout(() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encoded}&travelmode=driving`, '_blank'), 500);
+    } else {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${encoded}&travelmode=driving`, '_blank');
+    }
+  };
+
+  window.openWhatsApp = () => {
+    const phone = trip.orderer_phone;
+    if (!phone) { alert('Δεν υπάρχει τηλέφωνο πελάτη'); return; }
+    const clean = phone.replace(/[^0-9+]/g, '');
+    const msg = encodeURIComponent(`Γεια σας, ο οδηγός σας έφτασε! 🚗`);
+    window.open(`https://wa.me/${clean}?text=${msg}`, '_blank');
+  };
+
+  window.setStatus = async (status) => {
+    const phone = getPhone();
+    if (!phone || !requestId) return;
+
+    try {
+      const res = await fetch(`/api/driver-panel/active-route/${encodeURIComponent(requestId)}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, phone })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        currentStatus = status;
+        render();
+      }
+    } catch {
+      alert('Σφάλμα ενημέρωσης');
+    }
+  };
+
+  window.goBack = () => {
+    if (window.opener || document.referrer.includes('/moveathens/driver')) {
+      window.location.href = '/moveathens/driver';
+    } else {
+      window.history.back();
+    }
+  };
+
+  loadTrip();
+})();
+</script>
+</body>
+</html>

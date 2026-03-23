@@ -1,0 +1,189 @@
+/* ═══════════════════════════════════════════════════════
+   MoveAthens Driver Panel — Profile Tab CSS
+   ═══════════════════════════════════════════════════════ */
+
+.ma-dp-profile {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* ── Profile Card (avatar, name, phone) ── */
+.ma-dp-profile-card {
+  text-align: center;
+  padding: 28px 20px;
+  margin-bottom: 20px;
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 16px;
+}
+.ma-dp-profile-avatar {
+  font-size: 48px;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+.ma-dp-profile-name {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.ma-dp-profile-phone {
+  font-size: 14px;
+  color: var(--ma-dp-muted);
+}
+
+/* ── Profile Sections ── */
+.ma-dp-profile-section {
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.ma-dp-profile-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.ma-dp-profile-hint {
+  font-size: 13px;
+  color: var(--ma-dp-muted);
+  margin-bottom: 12px;
+}
+
+/* ── Select ── */
+.ma-dp-profile-select {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: var(--ma-dp-text);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.ma-dp-profile-select:focus {
+  border-color: var(--ma-dp-accent);
+}
+.ma-dp-profile-select-sm {
+  width: auto;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+html[data-theme='light'] .ma-dp-profile-select {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #1a1a2e;
+}
+
+/* ── Input ── */
+.ma-dp-profile-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: var(--ma-dp-text);
+  outline: none;
+  margin-bottom: 8px;
+  -webkit-appearance: none;
+}
+.ma-dp-profile-input:focus { border-color: var(--ma-dp-accent); }
+html[data-theme='light'] .ma-dp-profile-input {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #1a1a2e;
+}
+
+/* ── Toggle switch ── */
+.ma-dp-profile-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.ma-dp-profile-toggle input[type="checkbox"] {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.ma-dp-profile-toggle input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.ma-dp-profile-toggle input[type="checkbox"]:checked {
+  background: var(--ma-dp-accent);
+}
+.ma-dp-profile-toggle input[type="checkbox"]:checked::after {
+  transform: translateX(20px);
+}
+
+html[data-theme='light'] .ma-dp-profile-toggle input[type="checkbox"] {
+  background: #d1d5db;
+}
+
+/* ── PIN form ── */
+.ma-dp-pin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ma-dp-pin-form .ma-dp-btn { margin-top: 4px; }
+
+/* ── Settings row ── */
+.ma-dp-profile-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Version ── */
+.ma-dp-profile-version {
+  text-align: center;
+  opacity: 0.4;
+  font-size: 12px;
+}
+
+/* ── Logout ── */
+.ma-dp-logout-btn {
+  width: 100%;
+  margin-top: 8px;
+  margin-bottom: 20px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 430px) {
+  .ma-dp-profile-card { padding: 22px 16px; }
+  .ma-dp-profile-section { padding: 14px; }
+}
+@media (max-width: 389px) {
+  .ma-dp-profile-name { font-size: 18px; }
+  .ma-dp-profile-section-title { font-size: 14px; }
+}
+@media (max-width: 359px) {
+  .ma-dp-profile-avatar { font-size: 40px; }
+}

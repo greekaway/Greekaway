@@ -62,7 +62,8 @@ module.exports = function registerMoveAthens(app, opts = {}) {
     '/hotel/profile': 'hotel-profile.html',
     '/hotel/revenue': 'hotel-revenue.html',
     '/hotel/settings': 'hotel-settings.html',
-    '/assistant': 'ai-assistant.html'
+    '/assistant': 'ai-assistant.html',
+    '/driver': 'driver-panel.html'
   };
 
   Object.keys(pageMap).forEach((routePath) => {

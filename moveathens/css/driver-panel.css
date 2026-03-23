@@ -1,0 +1,198 @@
+/* ═══════════════════════════════════════════════════════
+   MoveAthens Driver Panel — Base CSS + Footer
+   CSS variables prefix: --ma-dp-*
+   Dark theme default, light mode support
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+  --ma-dp-bg: #0b0f1a;
+  --ma-dp-card: #1c2438;
+  --ma-dp-card-border: rgba(255, 255, 255, 0.06);
+  --ma-dp-text: #f7f7fb;
+  --ma-dp-muted: #b2b8c7;
+  --ma-dp-accent: #46d3ff;
+  --ma-dp-accent-glow: rgba(70, 211, 255, 0.2);
+  --ma-dp-footer-h: 64px;
+}
+
+html[data-theme='light'] {
+  --ma-dp-bg: #f5f7fa;
+  --ma-dp-card: #ffffff;
+  --ma-dp-card-border: rgba(0, 0, 0, 0.08);
+  --ma-dp-text: #1a1a2e;
+  --ma-dp-muted: #6b7280;
+  --ma-dp-accent: #1da1f2;
+  --ma-dp-accent-glow: rgba(29, 161, 242, 0.15);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--ma-dp-bg);
+  color: var(--ma-dp-text);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── App wrapper ── */
+.ma-dp-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: calc(var(--ma-dp-footer-h) + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Tabs (SPA sections) ── */
+.ma-dp-tab {
+  display: none;
+  flex: 1;
+  padding: 20px 16px;
+  overflow-y: auto;
+}
+.ma-dp-tab.active { display: block; }
+
+/* ── Placeholder (coming soon) ── */
+.ma-dp-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+  opacity: 0.5;
+}
+.ma-dp-placeholder-icon { font-size: 48px; margin-bottom: 12px; }
+.ma-dp-placeholder h2 { font-size: 20px; margin-bottom: 6px; }
+.ma-dp-placeholder p { font-size: 14px; color: var(--ma-dp-muted); }
+
+/* ═══════════════════════════════════════
+   FOOTER NAVIGATION
+   ═══════════════════════════════════════ */
+.ma-dp-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--ma-dp-footer-h);
+  background: var(--ma-dp-card);
+  border-top: 1px solid var(--ma-dp-card-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 100;
+}
+
+.ma-dp-footer-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--ma-dp-muted);
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: color 0.2s, background 0.2s;
+  min-width: 52px;
+}
+.ma-dp-footer-btn.active {
+  color: var(--ma-dp-accent);
+}
+.ma-dp-footer-btn:active {
+  background: var(--ma-dp-accent-glow);
+}
+
+.ma-dp-footer-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ma-dp-footer-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.ma-dp-footer-label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ── Toast ── */
+.ma-dp-toast {
+  position: fixed;
+  bottom: calc(var(--ma-dp-footer-h) + 16px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ma-dp-card);
+  color: var(--ma-dp-text);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  border: 1px solid var(--ma-dp-card-border);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 200;
+}
+.ma-dp-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Shared button ── */
+.ma-dp-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #46d3ff 0%, #1da1f2 100%);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+.ma-dp-btn:active { transform: scale(0.97); }
+.ma-dp-btn-outline {
+  background: transparent;
+  border: 1px solid var(--ma-dp-accent);
+  color: var(--ma-dp-accent);
+}
+.ma-dp-btn-danger {
+  background: #dc2626;
+  border: none;
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════ */
+@media (max-width: 430px) {
+  .ma-dp-tab { padding: 16px 14px; }
+  .ma-dp-footer-btn { font-size: 9px; min-width: 48px; }
+}
+@media (max-width: 389px) {
+  .ma-dp-footer-btn { min-width: 44px; padding: 4px 6px; }
+  .ma-dp-footer-icon svg { width: 20px; height: 20px; }
+}
+@media (max-width: 359px) {
+  .ma-dp-footer-label { font-size: 9px; }
+}
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .ma-dp-footer {
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(var(--ma-dp-footer-h) + env(safe-area-inset-bottom));
+  }
+}

@@ -19,6 +19,7 @@ const requestsData = require('../../src/server/data/moveathens-requests');
 const driversData = require('../../src/server/data/moveathens-drivers');
 const maLogger = require('../../services/maLogger');
 const flightTracker = require('../../services/flightTracker');
+const driverBroadcast = require('../../services/driverBroadcast');
 const { calculateTariff } = require('./moveathens-helpers');
 
 const DRIVER_ACCEPT_FILE = path.join(__dirname, '..', 'pages', 'driver-accept.html');
@@ -154,6 +155,11 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         }
       }
 
+      // Auto-broadcast to driver panels (non-blocking)
+      driverBroadcast.autoBroadcast(record, driversData).catch(e =>
+        console.warn('[ma-requests] auto-broadcast error:', e.message)
+      );
+
       return res.json({ ok: true, requestId: record.id });
     } catch (err) {
       console.error('[ma-requests] POST /transfer-request failed:', err.message);
@@ -261,6 +267,11 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       // 2) Notify admin (ourselves): "Νέο αίτημα μέσω Email"
       maEmail.sendAdminNotificationEmail(enrichedRecord).catch(e =>
         console.warn('[ma-email] admin notify failed:', e.message));
+
+      // Auto-broadcast to driver panels (non-blocking)
+      driverBroadcast.autoBroadcast(record, driversData).catch(e =>
+        console.warn('[ma-requests] auto-broadcast error:', e.message)
+      );
 
       return res.json({ ok: true, requestId: record.id, method: 'email' });
     } catch (err) {

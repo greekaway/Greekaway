@@ -1,0 +1,119 @@
+/* ═══════════════════════════════════════════════════════
+   MoveAthens Driver Panel — History Tab
+   Date filters, trip list rows
+   ═══════════════════════════════════════════════════════ */
+
+.ma-dp-tab-title {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 16px 16px 4px;
+  color: var(--ma-dp-text);
+}
+
+/* ── Filters ── */
+.ma-dp-hist-filters {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px 12px;
+  align-items: flex-end;
+}
+
+.ma-dp-hist-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  font-size: 12px;
+  color: var(--ma-dp-muted);
+}
+
+.ma-dp-hist-date {
+  padding: 8px 10px;
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 8px;
+  color: var(--ma-dp-text);
+  font-size: 13px;
+  -webkit-appearance: none;
+}
+.ma-dp-hist-date:focus {
+  outline: none;
+  border-color: var(--ma-dp-accent);
+}
+
+.ma-dp-btn-filter {
+  padding: 8px 14px;
+  background: var(--ma-dp-accent);
+  color: #0b0f1a;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ── History list ── */
+.ma-dp-hist-list {
+  padding: 0 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── History row ── */
+.ma-dp-hist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 10px;
+}
+
+.ma-dp-hist-date-col {
+  font-size: 12px;
+  color: var(--ma-dp-muted);
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+.ma-dp-hist-route {
+  flex: 1;
+  font-size: 13px;
+  color: var(--ma-dp-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+.ma-dp-hist-route span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ma-dp-hist-arrow {
+  color: var(--ma-dp-muted);
+  flex-shrink: 0;
+}
+
+.ma-dp-hist-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ma-dp-accent);
+  flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 359px) {
+  .ma-dp-hist-row { padding: 10px 10px; gap: 6px; }
+  .ma-dp-hist-date-col { min-width: 58px; font-size: 11px; }
+  .ma-dp-hist-route { font-size: 12px; }
+}
+
+@media (min-width: 430px) {
+  .ma-dp-hist-list { padding: 0 24px 24px; }
+  .ma-dp-hist-row { padding: 14px 16px; }
+}

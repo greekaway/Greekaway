@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Greekaway Admin – Πάνελ Οδηγών</title>
+    <link rel="stylesheet" href="/css/admin-common.css">
+    <link rel="stylesheet" href="/css/admin-theme-toggle.css">
+    <link rel="stylesheet" href="/admin/css/admin-driver-panel.css">
+  </head>
+  <body>
+
+    <header class="sticky-bar" aria-label="Πάνελ Οδηγών">
+      <div class="bar-inner">
+        <div class="title">🚗 Πάνελ Οδηγών</div>
+        <div class="bar-tabs">
+          <button class="bar-tab active" data-tab="general">Γενικά</button>
+          <button class="bar-tab" data-tab="footer">Footer</button>
+          <button class="bar-tab" data-tab="drivers">Οδηγοί</button>
+          <button class="bar-tab" data-tab="routeCard">Κάρτα</button>
+          <button class="bar-tab" data-tab="notifications">Ειδοπ.</button>
+          <button class="bar-tab" data-tab="acceptance">Ροή</button>
+          <button class="bar-tab" data-tab="labels">Κείμενα</button>
+          <button class="bar-tab" data-tab="finance">Οικον.</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content-wrap">
+
+      <!-- ════════════ TAB 1: ΓΕΝΙΚΑ ════════════ -->
+      <div class="tab-content active" data-tab="general">
+        <section class="panel">
+          <h2 class="h1">Γενικές Ρυθμίσεις</h2>
+          <form id="dp-general-form" class="dp-form" novalidate>
+            <div class="dp-grid">
+              <label class="dp-field">
+                <span class="dp-label">Τίτλος εφαρμογής</span>
+                <input type="text" id="dpAppTitle" class="input" placeholder="MoveAthens Driver">
+              </label>
+              <label class="dp-field">
+                <span class="dp-label">Logo URL</span>
+                <input type="text" id="dpLogoUrl" class="input" placeholder="/moveathens/videos/hero-logo.png">
+              </label>
+              <label class="dp-field">
+                <span class="dp-label">Accent Color</span>
+                <div class="dp-color-row">
+                  <input type="color" id="dpAccentColor" class="dp-color-input" value="#46d3ff">
+                  <input type="text" id="dpAccentColorText" class="input dp-color-text" placeholder="#46d3ff">
+                </div>
+              </label>
+              <label class="dp-field">
+                <span class="dp-label">Default Theme</span>
+                <select id="dpDefaultTheme" class="input">
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </label>
+            </div>
+            <button type="submit" class="button dp-save-btn">💾 Αποθήκευση</button>
+          </form>
+          <div id="dpGeneralStatus" class="dp-status"></div>
+        </section>
+      </div>
+
+      <!-- ════════════ TAB 2: FOOTER ════════════ -->
+      <div class="tab-content" data-tab="footer">
+        <section class="panel">
+          <h2 class="h1">Footer Tabs</h2>
+          <p class="dp-hint">5 tabs — ορίστε icon, label, ενεργό/ανενεργό.</p>
+          <div id="dpFooterRows" class="dp-footer-rows"></div>
+          <button type="button" id="dpFooterSave" class="button dp-save-btn">💾 Αποθήκευση Footer</button>
+          <div id="dpFooterStatus" class="dp-status"></div>
+        </section>
+      </div>
+
+      <!-- ════════════ TAB 3: ΟΔΗΓΟΙ ════════════ -->
+      <div class="tab-content" data-tab="drivers">
+        <section class="panel">
+          <h2 class="h1">Διαχείριση Οδηγών</h2>
+
+          <!-- Add/Edit form -->
+          <div class="dp-driver-form-wrap">
+            <h3 id="dpDriverFormTitle" class="dp-subtitle">Νέος Οδηγός</h3>
+            <form id="dp-driver-form" class="dp-form" novalidate>
+              <input type="hidden" id="dpDriverId" value="">
+              <div class="dp-grid dp-grid-2col">
+                <label class="dp-field">
+                  <span class="dp-label">Όνομα</span>
+                  <input type="text" id="dpDriverName" class="input" placeholder="Γιάννης Π." required>
+                </label>
+                <label class="dp-field">
+                  <span class="dp-label">Τηλέφωνο</span>
+                  <input type="tel" id="dpDriverPhone" class="input" placeholder="+30 69xxxxxxxx" required>
+                </label>
+              </div>
+              <label class="dp-field">
+                <span class="dp-label">Εμφανιζόμενο Όνομα (προαιρετικό)</span>
+                <input type="text" id="dpDriverDisplayName" class="input" placeholder="Εμφανίζεται στον οδηγό">
+              </label>
+              <div class="dp-field">
+                <span class="dp-label">Τύποι Οχημάτων</span>
+                <div id="dpVehicleCheckboxes" class="dp-checkbox-group">
+                  <em class="dp-muted">Φόρτωση…</em>
+                </div>
+              </div>
+              <label class="dp-field">
+                <span class="dp-label">Σημειώσεις</span>
+                <textarea id="dpDriverNotes" class="input dp-textarea" rows="2" placeholder="Προσωπικές σημειώσεις…"></textarea>
+              </label>
+              <label class="dp-field dp-inline-field">
+                <input type="checkbox" id="dpDriverActive" checked>
+                <span>Ενεργός</span>
+              </label>
+              <div class="dp-btn-row">
+                <button type="submit" class="button dp-save-btn">💾 Αποθήκευση Οδηγού</button>
+                <button type="button" id="dpDriverCancel" class="button dp-cancel-btn" style="display:none">Ακύρωση</button>
+              </div>
+            </form>
+            <div id="dpDriverFormStatus" class="dp-status"></div>
+          </div>
+
+          <!-- Driver list -->
+          <div class="dp-drivers-list-wrap">
+            <div class="dp-search-row">
+              <input type="text" id="dpDriverSearch" class="input" placeholder="🔍 Αναζήτηση οδηγού…">
+              <select id="dpDriverFilter" class="input dp-filter-select">
+                <option value="all">Όλοι</option>
+                <option value="active">Ενεργοί</option>
+                <option value="inactive">Ανενεργοί</option>
+              </select>
+            </div>
+            <div id="dpDriversList" class="dp-drivers-list">
+              <em class="dp-muted">Φόρτωση…</em>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ════════════ TAB 4: ΚΑΡΤΑ ΔΙΑΔΡΟΜΗΣ ════════════ -->
+      <div class="tab-content" data-tab="routeCard">
+        <section class="panel">
+          <h2 class="h1">Κάρτα Διαδρομής</h2>
+          <p class="dp-hint">Σύρετε τα πεδία για αλλαγή σειράς. Ενεργοποιήστε/απενεργοποιήστε ορατότητα ανά κάρτα.</p>
+          <div id="dpRouteCardSections"></div>
+          <button type="button" id="dpRouteCardSave" class="button dp-save-btn">💾 Αποθήκευση Κάρτας</button>
+          <div id="dpRouteCardStatus" class="dp-status"></div>
+        </section>
+      </div>
+
+      <!-- ════════════ TAB 5: ΕΙΔΟΠΟΙΗΣΕΙΣ ════════════ -->
+      <div class="tab-content" data-tab="notifications">
+        <section class="panel">
+          <h2 class="h1">Ειδοποιήσεις</h2>
+          <div class="dp-form">
+            <div class="dp-grid">
+              <label class="dp-field dp-inline-field">
+                <input type="checkbox" id="dpNotifPush">
+                <span>Push Notifications</span>
+              </label>
+              <label class="dp-field dp-inline-field">
+                <input type="checkbox" id="dpNotifSound">
+                <span>Ήχος</span>
+              </label>
+              <label class="dp-field dp-inline-field">
+                <input type="checkbox" id="dpNotifVibration">
+                <span>Δόνηση</span>
+              </label>
+              <label class="dp-field">
+                <span class="dp-label">Υπενθύμιση (λεπτά πριν)</span>
+                <select id="dpNotifReminder" class="input">
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="15" selected>15</option>
+                  <option value="30">30</option>
+                  <option value="60">60</option>
+                </select>
+              </label>
+              <label class="dp-field">
+                <span class="dp-label">Push Template</span>
+                <textarea id="dpNotifTemplate" class="input dp-textarea" rows="2" placeholder="Νέα διαδρομή: {origin} → {destination}"></textarea>
+              </label>
+            </div>
+            <button type="button" id="dpNotifSave" class="button dp-save-btn">💾 Αποθήκευση Ειδοποιήσεων</button>
+            <div id="dpNotifStatus" class="dp-status"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ════════════ TAB 6: ΑΠΟΔΟΧΗ & ΡΟΗ ════════════ -->
+      <div class="tab-content" data-tab="acceptance">
+        <section class="panel">
+          <h2 class="h1">Αποδοχή & Ροή</h2>
+          <div class="dp-form">
+            <div class="dp-grid">
+              <label class="dp-field">
+                <span class="dp-label">Λειτουργία Ανάθεσης</span>
+                <select id="dpAcceptMode" class="input">
+                  <option value="broadcast">Broadcast (σε όλους)</option>
+                  <option value="targeted">Targeted (σε επιλεγμένο)</option>
+                </select>
+              </label>
+              <label class="dp-field">
+                <span class="dp-label">Broadcast Timeout (λεπτά)</span>
+                <select id="dpAcceptTimeout" class="input">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="5" selected>5</option>
+                  <option value="10">10</option>
+                </select>
+              </label>
+              <label class="dp-field dp-inline-field">
+                <input type="checkbox" id="dpAcceptAutoBroadcast">
+                <span>Auto-broadcast αν δεν αποδεχτεί</span>
+              </label>
+              <label class="dp-field dp-inline-field">
+                <input type="checkbox" id="dpAcceptAutoReject">
+                <span>Auto-reject μετά timeout</span>
+              </label>
+            </div>
+            <button type="button" id="dpAcceptSave" class="button dp-save-btn">💾 Αποθήκευση Ροής</button>
+            <div id="dpAcceptStatus" class="dp-status"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ════════════ TAB 7: ΚΕΙΜΕΝΑ ════════════ -->
+      <div class="tab-content" data-tab="labels">
+        <section class="panel">
+          <h2 class="h1">Κείμενα</h2>
+          <p class="dp-hint">Αλλάξτε labels κουμπιών, τίτλους ενοτήτων και μηνύματα χωρίς deploy.</p>
+          <div id="dpLabelsContent"></div>
+          <button type="button" id="dpLabelsSave" class="button dp-save-btn">💾 Αποθήκευση Κειμένων</button>
+          <div id="dpLabelsStatus" class="dp-status"></div>
+        </section>
+      </div>
+
+      <!-- ════════════ TAB 8: ΟΙΚΟΝΟΜΙΚΑ ════════════ -->
+      <div class="tab-content" data-tab="finance">
+        <section class="panel">
+          <h2 class="h1">Οικονομικά</h2>
+          <p class="dp-hint">Ελέγξτε τι βλέπει ο οδηγός στην ενότητα Οικονομικά.</p>
+          <div class="dp-form">
+            <div class="dp-grid">
+              <label class="dp-field dp-inline-field">
+                <input type="checkbox" id="dpFinBalance">
+                <span>Εμφάνιση Υπολοίπου</span>
+              </label>
+              <label class="dp-field dp-inline-field">
+                <input type="checkbox" id="dpFinHistory">
+                <span>Εμφάνιση Ιστορικού</span>
+              </label>
+              <label class="dp-field dp-inline-field">
+                <input type="checkbox" id="dpFinCommission">
+                <span>Εμφάνιση Ανάλυσης Προμήθειας</span>
+              </label>
+            </div>
+            <button type="button" id="dpFinSave" class="button dp-save-btn">💾 Αποθήκευση Οικονομικών</button>
+            <div id="dpFinStatus" class="dp-status"></div>
+          </div>
+        </section>
+      </div>
+
+    </main>
+
+    <!-- Toast notification -->
+    <div id="dp-toast" class="dp-toast" aria-live="polite"></div>
+
+    <!-- Confirm modal -->
+    <div id="dpConfirmModal" class="dp-modal-overlay" aria-hidden="true" data-action="close">
+      <div class="dp-modal">
+        <h3 id="dpConfirmTitle">Επιβεβαίωση</h3>
+        <p id="dpConfirmMessage"></p>
+        <div class="dp-modal-btns">
+          <button id="dpConfirmOk" class="button dp-save-btn">OK</button>
+          <button id="dpConfirmCancel" class="button dp-cancel-btn">Ακύρωση</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/admin/js/admin-dp-helpers.js"></script>
+    <script src="/admin/js/admin-dp-general.js"></script>
+    <script src="/admin/js/admin-dp-footer.js"></script>
+    <script src="/admin/js/admin-dp-drivers.js"></script>
+    <script src="/admin/js/admin-dp-route-card.js"></script>
+    <script src="/admin/js/admin-dp-notifications.js"></script>
+    <script src="/admin/js/admin-dp-acceptance.js"></script>
+    <script src="/admin/js/admin-dp-labels.js"></script>
+    <script src="/admin/js/admin-dp-finance.js"></script>
+    <script src="/admin/js/admin-driver-panel.js"></script>
+    <script src="/js/admin-theme-toggle.js"></script>
+    <script src="/admin/js/admin-footer.js"></script>
+  </body>
+</html>

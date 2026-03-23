@@ -1,0 +1,14 @@
+/* ── Update banner ── */
+.ma-dp-update-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 10px 16px; background: var(--ma-dp-accent, #46d3ff); color: #0b0f1a;
+  font-size: 13px; font-weight: 600; transform: translateY(-100%);
+  transition: transform 0.3s ease;
+}
+.ma-dp-update-banner.visible { transform: translateY(0); }
+.ma-dp-update-banner button {
+  background: rgba(0,0,0,0.15); border: none; color: #0b0f1a;
+  padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer;
+}

@@ -97,6 +97,10 @@ async function upsertDriver(data) {
     total_revenue: parseFloat(data.total_revenue) || 0,
     total_owed: parseFloat(data.total_owed) || 0,
     total_paid: parseFloat(data.total_paid) || 0,
+    vehicle_types: data.vehicle_types !== undefined ? data.vehicle_types : (data.vehicle_types || '[]'),
+    current_vehicle_type: data.current_vehicle_type || null,
+    pin_hash: data.pin_hash !== undefined ? data.pin_hash : null,
+    display_name: data.display_name !== undefined ? (data.display_name || '').trim() || null : null,
     created_at: data.created_at || new Date().toISOString(),
     updated_at: new Date().toISOString()
   };

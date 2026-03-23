@@ -1,0 +1,293 @@
+/**
+ * MoveAthens Driver Panel — Public API Routes
+ * Auth (phone + optional PIN), profile, vehicle change, PIN management.
+ * NOT admin-protected — these are driver-facing endpoints.
+ */
+'use strict';
+
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+
+const driversData = require('../../src/server/data/moveathens-drivers');
+const requestsData = require('../../src/server/data/moveathens-requests');
+const driverBroadcast = require('../../services/driverBroadcast');
+
+const CONFIG_FILE = path.join(__dirname, '..', 'data', 'driver_panel_ui.json');
+
+function loadConfig() {
+  try { return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')); }
+  catch { return {}; }
+}
+
+function hashPin(pin) {
+  return crypto.createHash('sha256').update(String(pin)).digest('hex');
+}
+
+module.exports = function registerDriverPanelRoutes(app) {
+  // ── Auth: check driver phone ──
+  app.get('/api/driver-panel/check-phone', async (req, res) => {
+    const phone = (req.query.phone || '').replace(/\s/g, '').trim();
+    if (!phone) return res.status(400).json({ error: 'Phone required' });
+
+    try {
+      const driver = await driversData.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+      if (!driver.is_active) return res.status(403).json({ error: 'Driver inactive' });
+
+      res.json({
+        id: driver.id,
+        name: driver.name,
+        display_name: driver.display_name || null,
+        has_pin: !!driver.pin_hash
+      });
+    } catch (err) {
+      console.error('[driver-panel] check-phone:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Auth: verify phone + optional PIN ──
+  app.post('/api/driver-panel/login', async (req, res) => {
+    const phone = (req.body.phone || '').replace(/\s/g, '').trim();
+    const pin = req.body.pin || '';
+    if (!phone) return res.status(400).json({ error: 'Phone required' });
+
+    try {
+      const driver = await driversData.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+      if (!driver.is_active) return res.status(403).json({ error: 'Driver inactive' });
+
+      if (driver.pin_hash) {
+        if (!pin) return res.status(401).json({ error: 'PIN required' });
+        if (hashPin(pin) !== driver.pin_hash) return res.status(401).json({ error: 'Wrong PIN' });
+      }
+
+      // Parse vehicle_types
+      let vehicleTypes = [];
+      try { vehicleTypes = JSON.parse(driver.vehicle_types || '[]'); } catch { vehicleTypes = []; }
+
+      res.json({
+        id: driver.id,
+        name: driver.name,
+        display_name: driver.display_name || null,
+        phone: driver.phone,
+        vehicle_types: vehicleTypes,
+        current_vehicle_type: driver.current_vehicle_type || null,
+        is_active: driver.is_active
+      });
+    } catch (err) {
+      console.error('[driver-panel] login:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Get driver profile (authenticated by phone) ──
+  app.get('/api/driver-panel/profile', async (req, res) => {
+    const phone = (req.query.phone || '').replace(/\s/g, '').trim();
+    if (!phone) return res.status(400).json({ error: 'Phone required' });
+
+    try {
+      const driver = await driversData.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      let vehicleTypes = [];
+      try { vehicleTypes = JSON.parse(driver.vehicle_types || '[]'); } catch { vehicleTypes = []; }
+
+      res.json({
+        id: driver.id,
+        name: driver.name,
+        display_name: driver.display_name || null,
+        phone: driver.phone,
+        vehicle_types: vehicleTypes,
+        current_vehicle_type: driver.current_vehicle_type || null,
+        is_active: driver.is_active,
+        has_pin: !!driver.pin_hash,
+        total_trips: driver.total_trips || 0,
+        total_revenue: driver.total_revenue || 0
+      });
+    } catch (err) {
+      console.error('[driver-panel] profile:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Update current vehicle type ──
+  app.post('/api/driver-panel/vehicle', async (req, res) => {
+    const phone = (req.body.phone || '').replace(/\s/g, '').trim();
+    const vehicleType = req.body.current_vehicle_type || null;
+    if (!phone) return res.status(400).json({ error: 'Phone required' });
+
+    try {
+      const driver = await driversData.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      await driversData.upsertDriver({ ...driver, current_vehicle_type: vehicleType });
+      res.json({ ok: true });
+    } catch (err) {
+      console.error('[driver-panel] vehicle:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Toggle availability ──
+  app.post('/api/driver-panel/availability', async (req, res) => {
+    const phone = (req.body.phone || '').replace(/\s/g, '').trim();
+    const isActive = !!req.body.is_active;
+    if (!phone) return res.status(400).json({ error: 'Phone required' });
+
+    try {
+      const driver = await driversData.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      await driversData.upsertDriver({ ...driver, is_active: isActive });
+      res.json({ ok: true, is_active: isActive });
+    } catch (err) {
+      console.error('[driver-panel] availability:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Set/Change/Remove PIN ──
+  app.post('/api/driver-panel/pin', async (req, res) => {
+    const phone = (req.body.phone || '').replace(/\s/g, '').trim();
+    const currentPin = req.body.current_pin || '';
+    const newPin = req.body.new_pin || '';
+    const remove = !!req.body.remove;
+    if (!phone) return res.status(400).json({ error: 'Phone required' });
+
+    try {
+      const driver = await driversData.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      // If driver has existing PIN, verify current
+      if (driver.pin_hash) {
+        if (!currentPin) return res.status(401).json({ error: 'Current PIN required' });
+        if (hashPin(currentPin) !== driver.pin_hash) return res.status(401).json({ error: 'Wrong PIN' });
+      }
+
+      if (remove) {
+        await driversData.upsertDriver({ ...driver, pin_hash: null });
+        return res.json({ ok: true, has_pin: false });
+      }
+
+      if (!newPin || newPin.length < 4) {
+        return res.status(400).json({ error: 'PIN must be at least 4 digits' });
+      }
+
+      await driversData.upsertDriver({ ...driver, pin_hash: hashPin(newPin) });
+      res.json({ ok: true, has_pin: true });
+    } catch (err) {
+      console.error('[driver-panel] pin:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Get panel config (public, non-admin) ──
+  app.get('/api/driver-panel/config', (req, res) => {
+    const config = loadConfig();
+    res.json({
+      general: config.general || {},
+      footer: config.footer || {},
+      labels: config.labels || {},
+      finance: config.finance || {}
+    });
+  });
+
+  // ── SSE: real-time events for driver ──
+  app.get('/api/driver-panel/sse', (req, res) => {
+    const phone = (req.query.phone || '').trim();
+    if (!phone) return res.status(400).end();
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive'
+    });
+    res.write(':\n\n'); // initial comment to flush
+
+    driverBroadcast.addClient(phone, res);
+    req.on('close', () => driverBroadcast.removeClient(phone, res));
+  });
+
+  // ── Pending requests for this driver ──
+  app.get('/api/driver-panel/pending', async (req, res) => {
+    try {
+      const phone = (req.query.phone || '').trim();
+      if (!phone) return res.status(400).json({ error: 'Missing phone' });
+
+      const driver = await driversData.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      const all = await requestsData.getRequests({ status: 'pending' });
+      const sentReqs = await requestsData.getRequests({ status: 'sent' });
+      const combined = [...all, ...sentReqs];
+
+      const matching = combined.filter(r => {
+        if (!r.vehicle_type_id) return true;
+        return driver.current_vehicle_type === r.vehicle_type_id;
+      });
+
+      const cards = matching.map(r => driverBroadcast.buildCardData(r, 'urgent'));
+      res.json({ ok: true, requests: cards });
+    } catch (err) {
+      console.error('[driver-panel] pending:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Accept a request (first-come-first-served) ──
+  app.post('/api/driver-panel/accept/:requestId', async (req, res) => {
+    try {
+      const { requestId } = req.params;
+      const phone = (req.body.phone || '').trim();
+      if (!phone) return res.status(400).json({ error: 'Missing phone' });
+
+      const request = await requestsData.getRequestById(requestId);
+      if (!request) return res.status(404).json({ error: 'Request not found' });
+
+      if (request.status === 'accepted' || request.status === 'completed') {
+        return res.status(409).json({ error: 'Already taken', status: request.status });
+      }
+
+      const driver = await driversData.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      await requestsData.updateRequest(requestId, {
+        status: 'accepted',
+        driver_id: driver.id,
+        driver_phone: phone,
+        driver_name: driver.display_name || driver.name || ''
+      });
+
+      // Update driver totals
+      const price = parseFloat(request.price) || 0;
+      const commission = parseFloat(request.commission_driver) || 0;
+      await driversData.updateDriverTotals(driver.id, price, commission);
+
+      // Notify other drivers via SSE
+      driverBroadcast.onRequestAccepted(requestId, phone);
+
+      res.json({ ok: true, request: { ...request, status: 'accepted' } });
+    } catch (err) {
+      console.error('[driver-panel] accept:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  // ── Reject a request (driver declines) ──
+  app.post('/api/driver-panel/reject/:requestId', async (req, res) => {
+    try {
+      const { requestId } = req.params;
+      const phone = (req.body.phone || '').trim();
+      if (!phone) return res.status(400).json({ error: 'Missing phone' });
+
+      // Just remove from this driver's view (no status change)
+      driverBroadcast.sendToDriver(phone, 'request-dismissed', { requestId });
+      res.json({ ok: true });
+    } catch (err) {
+      console.error('[driver-panel] reject:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+};

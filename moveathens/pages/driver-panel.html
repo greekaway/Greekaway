@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>MoveAthens Driver</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/moveathens/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/moveathens/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/moveathens/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest-ma-driver.json">
+    <meta name="theme-color" content="#0b0f1a">
+
+    <!-- Auth gate: hide everything before JS runs -->
+    <script>if(!localStorage.getItem('moveathens_driver')){document.documentElement.className+=' ma-dp-gate-pending'};(function(){var t=localStorage.getItem('ma_dp_theme');if(t==='light')document.documentElement.setAttribute('data-theme','light')})()</script>
+
+    <link rel="stylesheet" href="/moveathens/css/driver-panel.css" />
+    <link rel="stylesheet" href="/moveathens/css/driver-panel-auth.css" />
+    <link rel="stylesheet" href="/moveathens/css/driver-panel-home.css" />
+    <link rel="stylesheet" href="/moveathens/css/driver-panel-appointments.css" />
+    <link rel="stylesheet" href="/moveathens/css/driver-panel-history.css" />
+    <link rel="stylesheet" href="/moveathens/css/driver-panel-financials.css" />
+    <link rel="stylesheet" href="/moveathens/css/driver-panel-profile.css" />
+    <link rel="stylesheet" href="/moveathens/css/driver-panel-push.css" />
+  </head>
+  <body>
+
+    <!-- ════════════ MAIN CONTENT (hidden until auth) ════════════ -->
+    <div id="dpApp" class="ma-dp-app">
+
+      <!-- ──── TAB: Αρχική ──── -->
+      <section class="ma-dp-tab active" data-tab="home">
+        <!-- Populated by driver-panel-home.js -->
+      </section>
+
+      <!-- ──── TAB: Ραντεβού ──── -->
+      <section class="ma-dp-tab" data-tab="schedule">
+        <!-- Populated by driver-panel-appointments.js -->
+      </section>
+
+      <!-- ──── TAB: Ιστορικό ──── -->
+      <section class="ma-dp-tab" data-tab="history">
+        <!-- Populated by driver-panel-history.js -->
+      </section>
+
+      <!-- ──── TAB: Οικονομικά ──── -->
+      <section class="ma-dp-tab" data-tab="finance">
+        <!-- Populated by driver-panel-financials.js -->
+      </section>
+
+      <!-- ──── TAB: Προφίλ ──── -->
+      <section class="ma-dp-tab" data-tab="profile">
+        <div class="ma-dp-profile" id="dpProfile">
+          <!-- Populated by driver-panel-profile.js -->
+        </div>
+      </section>
+
+      <!-- ──── FOOTER NAVIGATION ──── -->
+      <nav class="ma-dp-footer" id="dpFooter" aria-label="Driver navigation">
+        <!-- Populated by driver-panel.js from config -->
+      </nav>
+
+    </div>
+
+    <script src="/moveathens/js/driver-panel-auth.js"></script>
+    <script src="/moveathens/js/driver-panel-home.js"></script>
+    <script src="/moveathens/js/driver-panel-appointments.js"></script>
+    <script src="/moveathens/js/driver-panel-history.js"></script>
+    <script src="/moveathens/js/driver-panel-financials.js"></script>
+    <script src="/moveathens/js/driver-panel-profile.js"></script>
+    <script src="/moveathens/js/driver-panel.js"></script>
+    <script src="/moveathens/js/driver-panel-push.js"></script>
+  </body>
+</html>
