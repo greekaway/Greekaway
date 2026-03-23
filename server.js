@@ -658,7 +658,7 @@ app.use((req, res, next) => {
   const url = req.url.split('?')[0]; // strip query string
 
   // A) MoveAthens API routes - let them pass through to registered handlers
-  if (url.startsWith('/api/moveathens/') || url.startsWith('/api/admin/moveathens/')) {
+  if (url.startsWith('/api/moveathens/') || url.startsWith('/api/admin/moveathens/') || url.startsWith('/api/driver-panel/')) {
     return next();
   }
 
@@ -677,13 +677,19 @@ app.use((req, res, next) => {
     return next();
   }
 
+  // B.4b) Driver panel SW — pass through for dynamic build injection
+  if (url === '/moveathens/js/driver-panel-sw.js') {
+    return next();
+  }
+
   // B.5) Favicon for MoveAthens domain
   if (url === '/favicon.ico') {
     return res.sendFile(path.join(MOVEATHENS_BASE_DIR, 'icons', 'favicon-32x32.png'));
   }
 
   // C) MoveAthens static assets (css, js, images, videos)
-  if (url.startsWith('/moveathens/')) {
+  //    Exception: driver-panel-sw.js is handled by a dedicated route for dynamic build injection
+  if (url.startsWith('/moveathens/') && url !== '/moveathens/js/driver-panel-sw.js') {
     // Serve from moveathens folder directly
     const assetPath = url.replace('/moveathens/', '');
     const fullPath = path.join(MOVEATHENS_BASE_DIR, assetPath);
@@ -881,6 +887,25 @@ app.use((req, res, next) => {
 // are automatically invalidated on every deploy without manual bumps.
 app.get('/service-worker.js', (req, res) => {
   const swPath = path.join(__dirname, 'public', 'service-worker.js');
+  try {
+    const vInfo = readVersionFile(VERSION_FILE_PATH);
+    const build = (vInfo && vInfo.buildNumber) || Date.now();
+    let swCode = fs.readFileSync(swPath, 'utf8');
+    swCode = swCode.replace(
+      /const CACHE_VERSION = '[^']*';/,
+      `const CACHE_VERSION = 'v${build}';`
+    );
+    res.set('Content-Type', 'application/javascript; charset=utf-8');
+    res.set('Cache-Control', 'no-store');
+    res.send(swCode);
+  } catch (err) {
+    res.sendFile(swPath);
+  }
+});
+
+// Dynamic driver-panel-sw.js — same build injection for MoveAthens Driver PWA
+app.get('/moveathens/js/driver-panel-sw.js', (req, res) => {
+  const swPath = path.join(__dirname, 'moveathens', 'js', 'driver-panel-sw.js');
   try {
     const vInfo = readVersionFile(VERSION_FILE_PATH);
     const build = (vInfo && vInfo.buildNumber) || Date.now();

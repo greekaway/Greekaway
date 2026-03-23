@@ -50,6 +50,13 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// ── Message: allow SKIP_WAITING from client ──
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // ── Fetch: network-only for API/version, stale-while-revalidate for rest ──
 self.addEventListener('fetch', (event) => {
   const { request } = event;

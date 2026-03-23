@@ -168,8 +168,10 @@
         localStorage.setItem(LS_KEY, JSON.stringify(driver));
         document.getElementById('dpAvailLabel').textContent = isActive ? 'Ενεργός' : 'Ανενεργός';
         // Sync home toggle
-        const goToggle = document.getElementById('dpGoToggle');
-        if (goToggle) { goToggle.classList.toggle('active', isActive); }
+        const goCheck = document.getElementById('dpGoCheck');
+        if (goCheck) goCheck.checked = isActive;
+        const goLabel = document.getElementById('dpGoLabel');
+        if (goLabel) goLabel.textContent = isActive ? 'Ενεργός' : 'Εκτός σύνδεσης';
       }
     });
   }

@@ -924,19 +924,22 @@ const ma = {
     return query('SELECT * FROM ma_hotel_phones ORDER BY zone_id, created_at ASC');
   },
 
-  async getHotelByPhone(phone) {
-    // Normalize: strip +30, spaces, dashes for flexible matching
+  // Shared helper: find the actual DB row for a phone (normalized matching)
+  async _findPhoneRow(phone) {
     const norm = phone.replace(/[\s\-().]/g, '').replace(/^\+30/, '').replace(/^0030/, '');
-    // Try exact match first, then normalized match
     let row = await queryOne('SELECT * FROM ma_hotel_phones WHERE phone = $1', [phone]);
     if (!row) {
-      // Search by normalized form: strip same chars from stored phones
       const all = await query('SELECT * FROM ma_hotel_phones');
       row = all.find(p => {
         const storedNorm = p.phone.replace(/[\s\-().]/g, '').replace(/^\+30/, '').replace(/^0030/, '');
         return storedNorm === norm;
       }) || null;
     }
+    return row;
+  },
+
+  async getHotelByPhone(phone) {
+    const row = await this._findPhoneRow(phone);
     if (!row) return null;
     const zone = await queryOne('SELECT * FROM ma_transfer_zones WHERE id = $1', [row.zone_id]);
     if (!zone) return null;
@@ -961,22 +964,28 @@ const ma = {
   },
 
   async setPhoneDisplayName(phone, displayName) {
-    const r = await execute('UPDATE ma_hotel_phones SET display_name = $2 WHERE phone = $1', [phone, displayName]);
+    const row = await this._findPhoneRow(phone);
+    if (!row) return false;
+    const r = await execute('UPDATE ma_hotel_phones SET display_name = $2 WHERE id = $1', [row.id, displayName]);
     return r.rowCount > 0;
   },
 
   async setPhonePin(phone, pinHash) {
-    const r = await execute('UPDATE ma_hotel_phones SET pin_hash = $2 WHERE phone = $1', [phone, pinHash]);
+    const row = await this._findPhoneRow(phone);
+    if (!row) return false;
+    const r = await execute('UPDATE ma_hotel_phones SET pin_hash = $2 WHERE id = $1', [row.id, pinHash]);
     return r.rowCount > 0;
   },
 
   async clearPhonePin(phone) {
-    const r = await execute('UPDATE ma_hotel_phones SET pin_hash = NULL WHERE phone = $1', [phone]);
+    const row = await this._findPhoneRow(phone);
+    if (!row) return false;
+    const r = await execute('UPDATE ma_hotel_phones SET pin_hash = NULL WHERE id = $1', [row.id]);
     return r.rowCount > 0;
   },
 
   async getPhonePinHash(phone) {
-    const row = await queryOne('SELECT pin_hash FROM ma_hotel_phones WHERE phone = $1', [phone]);
+    const row = await this._findPhoneRow(phone);
     return row ? row.pin_hash : null;
   }
 };

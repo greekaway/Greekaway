@@ -57,7 +57,13 @@
     footer.addEventListener('click', (e) => {
       const btn = e.target.closest('.ma-dp-footer-btn');
       if (!btn) return;
-      switchTab(btn.dataset.tab);
+      const tabKey = btn.dataset.tab;
+      switchTab(tabKey);
+      // Ensure profile tab renders hub on click
+      if (tabKey === 'profile' && typeof window.DpProfile?.init === 'function') {
+        const driver = getDriver();
+        if (driver) window.DpProfile.init(driver, config);
+      }
     });
   };
 

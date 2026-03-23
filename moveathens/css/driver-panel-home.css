@@ -3,51 +3,59 @@
    Urgent cards, accept/reject, status indicator
    ═══════════════════════════════════════════════════════ */
 
-/* ── Go Toggle (FreeNow style) ── */
+/* ── Go Switch (slider toggle) ── */
 .ma-dp-go-bar {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 24px 16px 12px;
+  gap: 8px;
+  padding: 16px 16px;
+  position: fixed;
+  bottom: calc(var(--ma-dp-footer-h) + env(safe-area-inset-bottom, 0px) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
 }
 
-.ma-dp-go-toggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 140px;
-  height: 56px;
-  border-radius: 28px;
-  background: #3a3a4a;
-  padding: 0 18px;
+/* ── Slider switch ── */
+.ma-dp-switch {
+  position: relative;
+  display: inline-block;
+  width: 62px;
+  height: 34px;
   cursor: pointer;
-  transition: background 0.35s, box-shadow 0.35s;
-  user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-.ma-dp-go-toggle.active {
-  background: linear-gradient(135deg, #c5a23e 0%, #dbb84d 100%);
-  box-shadow: 0 4px 18px rgba(197,162,62,0.35);
+.ma-dp-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
 }
-
-.ma-dp-go-icon {
-  font-size: 24px;
-  line-height: 1;
+.ma-dp-switch__track {
+  position: absolute;
+  inset: 0;
+  border-radius: 34px;
+  background: #e74c3c;
+  transition: background 0.3s;
 }
-
-.ma-dp-go-chevrons {
-  font-size: 22px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.7);
-  letter-spacing: -2px;
-  animation: dp-chevron-slide 1.2s ease-in-out infinite;
+.ma-dp-switch__track::after {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  left: 4px;
+  top: 4px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: transform 0.3s;
 }
-.ma-dp-go-toggle:not(.active) .ma-dp-go-chevrons { display: none; }
-
-@keyframes dp-chevron-slide {
-  0%, 100% { opacity: 0.4; transform: translateX(0); }
-  50% { opacity: 1; transform: translateX(4px); }
+.ma-dp-switch input:checked + .ma-dp-switch__track {
+  background: #2ecc71;
+}
+.ma-dp-switch input:checked + .ma-dp-switch__track::after {
+  transform: translateX(28px);
 }
 
 .ma-dp-go-label {
@@ -56,19 +64,20 @@
   color: var(--ma-dp-muted);
   transition: color 0.3s;
 }
-.ma-dp-go-toggle.active ~ .ma-dp-go-label {
-  color: #dbb84d;
+.ma-dp-switch input:checked ~ .ma-dp-go-label,
+.ma-dp-go-bar:has(input:checked) .ma-dp-go-label {
+  color: #2ecc71;
 }
-html[data-theme='light'] .ma-dp-go-toggle:not(.active) {
-  background: #d1d5db;
+html[data-theme='light'] .ma-dp-go-label {
+  color: #6b7280;
 }
-html[data-theme='light'] .ma-dp-go-toggle.active ~ .ma-dp-go-label {
-  color: #92700c;
+html[data-theme='light'] .ma-dp-go-bar:has(input:checked) .ma-dp-go-label {
+  color: #1a9d54;
 }
 
 /* ── Cards container ── */
 .ma-dp-home-cards {
-  padding: 8px 16px 24px;
+  padding: 8px 16px 100px;
   display: flex;
   flex-direction: column;
   gap: 14px;

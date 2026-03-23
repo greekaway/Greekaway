@@ -106,10 +106,23 @@
 
     setTimeout(() => banner.classList.add('show'), 10);
 
-    document.getElementById('dpUpdateBtn').addEventListener('click', () => {
-      if (swRegistration?.waiting) {
-        swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      }
+    document.getElementById('dpUpdateBtn').addEventListener('click', async () => {
+      try {
+        // 1. Clear all caches
+        if ('caches' in window) {
+          const names = await caches.keys();
+          await Promise.all(names.map(n => caches.delete(n)));
+        }
+        // 2. Tell waiting SW to activate
+        if (swRegistration?.waiting) {
+          swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+        // 3. Force SW update check
+        if (swRegistration) {
+          await swRegistration.update().catch(() => {});
+        }
+      } catch { /* continue reload */ }
+      // 4. Hard reload
       window.location.reload();
     });
   }
