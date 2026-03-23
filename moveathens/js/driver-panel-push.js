@@ -13,7 +13,7 @@
   const VERSION_POLL_MS = 60000;
 
   let swRegistration = null;
-  let currentVersion = null;
+  let currentVersion = localStorage.getItem('ma_dp_known_version') || null;
 
   const getPhone = () => {
     try { return JSON.parse(localStorage.getItem(LS_KEY))?.phone || ''; }
@@ -84,10 +84,13 @@
 
       if (!currentVersion) {
         currentVersion = data.version;
+        localStorage.setItem('ma_dp_known_version', currentVersion);
         return;
       }
 
       if (data.version !== currentVersion) {
+        currentVersion = data.version;
+        localStorage.setItem('ma_dp_known_version', currentVersion);
         showUpdateBanner();
       }
     } catch { /* offline */ }

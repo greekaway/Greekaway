@@ -641,6 +641,7 @@ const MOVEATHENS_PAGE_MAP = {
   '/hotel/settings': 'hotel-settings.html',
   '/assistant': 'ai-assistant.html',
   '/driver-accept': 'driver-accept.html',
+  '/driver': 'driver-panel.html',
   '/media': 'media.html'
 };
 

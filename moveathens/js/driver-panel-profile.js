@@ -4,6 +4,7 @@
 
   const LS_KEY = 'moveathens_driver';
   let VERSION = '—';
+  let cachedConfig = {};
 
   fetch('/version.json').then(r => r.json()).then(d => {
     VERSION = d.version || '—';

@@ -269,7 +269,6 @@
             if (profAvail) profAvail.checked = nowActive;
             const profLabel = document.getElementById('dpAvailLabel');
             if (profLabel) profLabel.textContent = nowActive ? 'Ενεργός' : 'Ανενεργός';
-            showToast(nowActive ? '✅ Ενεργός' : '⏸️ Εκτός σύνδεσης');
           } else {
             e.target.checked = !nowActive; // revert
           }
