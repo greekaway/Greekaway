@@ -28,7 +28,7 @@
       <a href="/admin-home.html"${isHomePage ? ' class="active"' : ''}>Home</a>
       <a href="${greekawayDefault}"${isGreekawayPage ? ' class="active"' : ''}>Greekaway</a>
       <a href="${moveathensDefault}"${isMoveathensPage ? ' class="active"' : ''}>MoveAthens</a>
-      <a href="${driverPanelDefault}"${isDriverPanelPage ? ' class="active"' : ''}>🚗 Οδηγοί</a>
+      <a href="${driverPanelDefault}"${isDriverPanelPage ? ' class="active"' : ''}>Οδηγοί</a>
       <a href="${driverssystemDefault}"${isDriversSystemPage ? ' class="active"' : ''}>DriversSystem</a>
     `;
 

@@ -18,6 +18,10 @@
     try { return JSON.parse(localStorage.getItem(LS_KEY))?.phone || ''; }
     catch { return ''; }
   };
+  const getDriver = () => {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)); }
+    catch { return null; }
+  };
 
   // ── SSE Connection ──
 
@@ -234,12 +238,45 @@
 
     const section = document.querySelector('[data-tab="home"]');
     if (section && !section.querySelector('#dpHomeCards')) {
+      const isActive = driver?.is_active !== false;
       section.innerHTML = `
-        <div class="ma-dp-home-status">
-          <span class="ma-dp-status-dot online"></span>
-          <span class="ma-dp-status-text">Online</span>
+        <div class="ma-dp-go-bar">
+          <div class="ma-dp-go-toggle ${isActive ? 'active' : ''}" id="dpGoToggle">
+            <span class="ma-dp-go-icon">${isActive ? '🚗' : '⏸️'}</span>
+            <span class="ma-dp-go-chevrons">${isActive ? '›››' : ''}</span>
+          </div>
+          <span class="ma-dp-go-label" id="dpGoLabel">${isActive ? 'Ενεργός' : 'Εκτός σύνδεσης'}</span>
         </div>
         <div id="dpHomeCards" class="ma-dp-home-cards"></div>`;
+
+      document.getElementById('dpGoToggle')?.addEventListener('click', async () => {
+        const d = getDriver();
+        if (!d?.phone) return;
+        const nowActive = !document.getElementById('dpGoToggle').classList.contains('active');
+        try {
+          const res = await fetch(API + '/availability', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: d.phone, is_active: nowActive })
+          });
+          if (res.ok) {
+            d.is_active = nowActive;
+            localStorage.setItem(LS_KEY, JSON.stringify(d));
+            const toggle = document.getElementById('dpGoToggle');
+            const label = document.getElementById('dpGoLabel');
+            toggle.classList.toggle('active', nowActive);
+            toggle.querySelector('.ma-dp-go-icon').textContent = nowActive ? '🚗' : '⏸️';
+            toggle.querySelector('.ma-dp-go-chevrons').textContent = nowActive ? '›››' : '';
+            label.textContent = nowActive ? 'Ενεργός' : 'Εκτός σύνδεσης';
+            // Sync profile toggle if open
+            const profAvail = document.getElementById('dpProfileAvail');
+            if (profAvail) profAvail.checked = nowActive;
+            const profLabel = document.getElementById('dpAvailLabel');
+            if (profLabel) profLabel.textContent = nowActive ? 'Ενεργός' : 'Ανενεργός';
+            showToast(nowActive ? '✅ Ενεργός' : '⏸️ Εκτός σύνδεσης');
+          }
+        } catch { showToast('❌ Σφάλμα σύνδεσης'); }
+      });
     }
 
     bindEvents();

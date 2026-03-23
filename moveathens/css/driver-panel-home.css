@@ -3,34 +3,67 @@
    Urgent cards, accept/reject, status indicator
    ═══════════════════════════════════════════════════════ */
 
-/* ── Online Status ── */
-.ma-dp-home-status {
+/* ── Go Toggle (FreeNow style) ── */
+.ma-dp-go-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px 12px;
+}
+
+.ma-dp-go-toggle {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 16px 6px;
+  gap: 6px;
+  width: 140px;
+  height: 56px;
+  border-radius: 28px;
+  background: #3a3a4a;
+  padding: 0 18px;
+  cursor: pointer;
+  transition: background 0.35s, box-shadow 0.35s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.ma-dp-go-toggle.active {
+  background: linear-gradient(135deg, #c5a23e 0%, #dbb84d 100%);
+  box-shadow: 0 4px 18px rgba(197,162,62,0.35);
 }
 
-.ma-dp-status-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: #6b7280;
-}
-.ma-dp-status-dot.online {
-  background: #22c55e;
-  box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
-  animation: dp-pulse 2s ease-in-out infinite;
+.ma-dp-go-icon {
+  font-size: 24px;
+  line-height: 1;
 }
 
-@keyframes dp-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.ma-dp-go-chevrons {
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: -2px;
+  animation: dp-chevron-slide 1.2s ease-in-out infinite;
+}
+.ma-dp-go-toggle:not(.active) .ma-dp-go-chevrons { display: none; }
+
+@keyframes dp-chevron-slide {
+  0%, 100% { opacity: 0.4; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(4px); }
 }
 
-.ma-dp-status-text {
+.ma-dp-go-label {
   font-size: 13px;
+  font-weight: 600;
   color: var(--ma-dp-muted);
-  font-weight: 500;
+  transition: color 0.3s;
+}
+.ma-dp-go-toggle.active ~ .ma-dp-go-label {
+  color: #dbb84d;
+}
+html[data-theme='light'] .ma-dp-go-toggle:not(.active) {
+  background: #d1d5db;
+}
+html[data-theme='light'] .ma-dp-go-toggle.active ~ .ma-dp-go-label {
+  color: #92700c;
 }
 
 /* ── Cards container ── */

@@ -13,7 +13,8 @@
     calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
     history:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
     wallet:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="14" r="1.5"/></svg>',
-    user:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0112 0v1"/></svg>'
+    user:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0112 0v1"/></svg>',
+    menu:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>'
   };
 
   const getDriver = () => {
@@ -41,7 +42,7 @@
       { key: 'schedule', label: 'Ραντεβού',   icon: 'calendar', enabled: true, order: 2 },
       { key: 'history',  label: 'Ιστορικό',   icon: 'history',  enabled: true, order: 3 },
       { key: 'finance',  label: 'Οικονομικά', icon: 'wallet',   enabled: true, order: 4 },
-      { key: 'profile',  label: 'Προφίλ',     icon: 'user',     enabled: true, order: 5 }
+      { key: 'profile',  label: 'Μενού',     icon: 'menu',     enabled: true, order: 5 }
     ];
 
     const sorted = [...tabs].filter(t => t.enabled).sort((a, b) => a.order - b.order);
@@ -76,9 +77,16 @@
 
     await loadConfig();
 
-    // Apply theme
-    const theme = config.general?.defaultTheme || localStorage.getItem('ma_dp_theme') || 'dark';
-    if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    // Apply theme with auto support
+    const themePref = localStorage.getItem('ma_dp_theme') || config.general?.defaultTheme || 'auto';
+    window.DpApp._applyTheme = function(t) {
+      document.documentElement.removeAttribute('data-theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+      else if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)
+        document.documentElement.setAttribute('data-theme', 'light');
+    };
+    window.DpApp._applyTheme(themePref);
 
     buildFooter();
 

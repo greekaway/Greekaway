@@ -42,7 +42,7 @@ html, body {
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
-  padding-bottom: calc(var(--ma-dp-footer-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--ma-dp-footer-h) + 24px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ── Tabs (SPA sections) ── */
@@ -73,17 +73,25 @@ html, body {
    ═══════════════════════════════════════ */
 .ma-dp-footer {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 8px;
+  left: 10px;
+  right: 10px;
   height: var(--ma-dp-footer-h);
   background: var(--ma-dp-card);
-  border-top: 1px solid var(--ma-dp-card-border);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0;
   z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+/* PWA standalone: extra bottom spacing for safe area */
+@media (display-mode: standalone) {
+  .ma-dp-footer {
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .ma-dp-footer-btn {
@@ -190,9 +198,4 @@ html, body {
   .ma-dp-footer-label { font-size: 9px; }
 }
 
-@supports (padding: env(safe-area-inset-bottom)) {
-  .ma-dp-footer {
-    padding-bottom: env(safe-area-inset-bottom);
-    height: calc(var(--ma-dp-footer-h) + env(safe-area-inset-bottom));
-  }
-}
+/* safe-area handled by bottom offset in .ma-dp-footer */
