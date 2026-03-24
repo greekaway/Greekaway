@@ -161,6 +161,9 @@
     document.querySelectorAll('.ma-dp-footer-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.tab === tabKey);
     });
+    // Header visible only on home
+    const h = document.getElementById('dpHeader');
+    if (h) h.style.display = tabKey === 'home' ? '' : 'none';
   };
 
   const init = async () => {
