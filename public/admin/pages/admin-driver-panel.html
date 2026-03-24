@@ -167,7 +167,11 @@
               </label>
               <label class="dp-field">
                 <span class="dp-label">Ήχος Ειδοποίησης</span>
-                <div class="dp-sound-picker" id="dpSoundPicker"></div>
+                <button type="button" class="dp-sound-toggle" id="dpSoundToggle">
+                  <span id="dpSoundToggleLabel">🔔 Chime</span>
+                  <span class="dp-sound-toggle__arrow">▼</span>
+                </button>
+                <div class="dp-sound-picker dp-sound-picker--collapsed" id="dpSoundPicker"></div>
               </label>
               <label class="dp-field dp-inline-field">
                 <input type="checkbox" id="dpNotifVibration">

@@ -66,8 +66,9 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(request.url);
     if (url.origin !== self.location.origin) return;
 
-    // Network-only: API, version, SSE
+    // Network-only: API, version, SSE, uploads (avoid stale icons)
     if (url.pathname.startsWith('/api/') ||
+        url.pathname.startsWith('/uploads/') ||
         url.pathname === '/version.json' ||
         url.pathname.includes('/sse')) {
       event.respondWith(

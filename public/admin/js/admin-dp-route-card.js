@@ -6,7 +6,7 @@
  */
 (() => {
   'use strict';
-  const { $, $$, setStatus, showToast, state, saveConfig } = window.DpAdmin;
+  const { $, $$, setStatus, showToast, openConfirm, state, saveConfig } = window.DpAdmin;
 
   // All available fields (pool)
   const ALL_FIELDS = [
@@ -149,10 +149,11 @@
   // Remove field
   const attachRemoveListeners = () => {
     $$('.dp-card-remove-btn').forEach(btn => {
-      btn.onclick = () => {
+      btn.onclick = async () => {
         const row = btn.closest('.dp-card-field-row');
         if (!row) return;
         const label = row.querySelector('.dp-card-field-label')?.textContent || '';
+        if (!await openConfirm(`Αφαίρεση πεδίου "${label}";`, { title: 'Αφαίρεση Πεδίου', okLabel: 'Αφαίρεση' })) return;
         row.remove();
         showToast(`Αφαιρέθηκε: ${label}`);
       };

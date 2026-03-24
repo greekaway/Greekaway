@@ -24,10 +24,18 @@ function hashPin(pin) {
   return crypto.createHash('sha256').update(String(pin)).digest('hex');
 }
 
+/** Strip spaces, dashes, parens; auto-add +30 for Greek mobiles */
+function normalizePhone(raw) {
+  let p = (raw || '').replace(/[\s\-\(\)\.]/g, '').trim();
+  if (/^69\d{8}$/.test(p)) p = '+30' + p;
+  if (/^30\d{10}$/.test(p)) p = '+' + p;
+  return p;
+}
+
 module.exports = function registerDriverPanelRoutes(app) {
   // ── Auth: check driver phone ──
   app.get('/api/driver-panel/check-phone', async (req, res) => {
-    const phone = (req.query.phone || '').replace(/\s/g, '').trim();
+    const phone = normalizePhone(req.query.phone);
     if (!phone) return res.status(400).json({ error: 'Phone required' });
 
     try {
@@ -49,7 +57,7 @@ module.exports = function registerDriverPanelRoutes(app) {
 
   // ── Auth: verify phone + optional PIN ──
   app.post('/api/driver-panel/login', async (req, res) => {
-    const phone = (req.body.phone || '').replace(/\s/g, '').trim();
+    const phone = normalizePhone(req.body.phone);
     const pin = req.body.pin || '';
     if (!phone) return res.status(400).json({ error: 'Phone required' });
 
@@ -84,7 +92,7 @@ module.exports = function registerDriverPanelRoutes(app) {
 
   // ── Get driver profile (authenticated by phone) ──
   app.get('/api/driver-panel/profile', async (req, res) => {
-    const phone = (req.query.phone || '').replace(/\s/g, '').trim();
+    const phone = normalizePhone(req.query.phone);
     if (!phone) return res.status(400).json({ error: 'Phone required' });
 
     try {
@@ -114,7 +122,7 @@ module.exports = function registerDriverPanelRoutes(app) {
 
   // ── Update current vehicle type ──
   app.post('/api/driver-panel/vehicle', async (req, res) => {
-    const phone = (req.body.phone || '').replace(/\s/g, '').trim();
+    const phone = normalizePhone(req.body.phone);
     const vehicleType = req.body.current_vehicle_type || null;
     if (!phone) return res.status(400).json({ error: 'Phone required' });
 
@@ -132,7 +140,7 @@ module.exports = function registerDriverPanelRoutes(app) {
 
   // ── Toggle availability ──
   app.post('/api/driver-panel/availability', async (req, res) => {
-    const phone = (req.body.phone || '').replace(/\s/g, '').trim();
+    const phone = normalizePhone(req.body.phone);
     const isActive = !!req.body.is_active;
     if (!phone) return res.status(400).json({ error: 'Phone required' });
 
@@ -150,7 +158,7 @@ module.exports = function registerDriverPanelRoutes(app) {
 
   // ── Set/Change/Remove PIN ──
   app.post('/api/driver-panel/pin', async (req, res) => {
-    const phone = (req.body.phone || '').replace(/\s/g, '').trim();
+    const phone = normalizePhone(req.body.phone);
     const currentPin = req.body.current_pin || '';
     const newPin = req.body.new_pin || '';
     const remove = !!req.body.remove;
@@ -185,7 +193,7 @@ module.exports = function registerDriverPanelRoutes(app) {
 
   // ── Update driver vehicle_types from driver profile ──
   app.post('/api/driver-panel/vehicle-types', async (req, res) => {
-    const phone = (req.body.phone || '').replace(/\s/g, '').trim();
+    const phone = normalizePhone(req.body.phone);
     const vehicleTypes = req.body.vehicle_types;
     if (!phone) return res.status(400).json({ error: 'Phone required' });
     if (!Array.isArray(vehicleTypes)) return res.status(400).json({ error: 'vehicle_types must be array' });

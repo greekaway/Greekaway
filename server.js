@@ -968,7 +968,7 @@ app.use('/uploads', express.static(uploadsStaticDir, {
     if (IS_DEV) {
       res.setHeader('Cache-Control', 'no-store');
     } else {
-      res.setHeader('Cache-Control', 'public, max-age=604800');
+      res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
     }
   }
 }));

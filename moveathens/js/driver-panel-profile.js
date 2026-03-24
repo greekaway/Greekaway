@@ -247,7 +247,15 @@
       <div class="ma-dp-profile-section">
         <h3 class="ma-dp-profile-section-title">� Ήχος Ειδοποίησης</h3>
         <p class="ma-dp-profile-hint">Επιλέξτε τον ήχο για νέες διαδρομές</p>
-        <div class="ma-dp-sound-picker" id="dpDriverSoundPicker">
+        <button type="button" class="ma-dp-sound-toggle" id="dpSoundToggle">
+          <span>${(() => {
+            const sel = localStorage.getItem('ma_dp_alert_sound') || cachedConfig.notifications?.alertSound || 'chime';
+            const s = window.DpSounds?.SOUNDS?.[sel];
+            return s ? s.name : '🔔 Chime';
+          })()}</span>
+          <span class="ma-dp-sound-toggle__arrow">▼</span>
+        </button>
+        <div class="ma-dp-sound-picker ma-dp-sound-picker--collapsed" id="dpDriverSoundPicker">
           ${window.DpSounds ? Object.entries(window.DpSounds.SOUNDS).map(([id, s]) => {
             const driverSound = localStorage.getItem('ma_dp_alert_sound') || cachedConfig.notifications?.alertSound || 'chime';
             return `<div class="ma-dp-sound-option ${id === driverSound ? 'ma-dp-sound-active' : ''}" data-sound="${id}">
@@ -299,6 +307,14 @@
       if (typeof window.DpApp?._applyTheme === 'function') window.DpApp._applyTheme(theme);
     });
 
+    // Sound picker toggle (accordion)
+    document.getElementById('dpSoundToggle')?.addEventListener('click', () => {
+      const picker = document.getElementById('dpDriverSoundPicker');
+      if (picker) picker.classList.toggle('ma-dp-sound-picker--collapsed');
+      const arrow = document.querySelector('.ma-dp-sound-toggle__arrow');
+      if (arrow) arrow.textContent = picker?.classList.contains('ma-dp-sound-picker--collapsed') ? '▼' : '▲';
+    });
+
     // Sound picker
     document.getElementById('dpDriverSoundPicker')?.addEventListener('click', (e) => {
       const preview = e.target.closest('.ma-dp-sound-preview');
@@ -309,6 +325,10 @@
       opt.classList.add('ma-dp-sound-active');
       localStorage.setItem('ma_dp_alert_sound', opt.dataset.sound);
       if (window.DpSounds) window.DpSounds.play(opt.dataset.sound);
+      // Update toggle label
+      const s = window.DpSounds?.SOUNDS?.[opt.dataset.sound];
+      const toggleLabel = document.querySelector('#dpSoundToggle > span:first-child');
+      if (toggleLabel && s) toggleLabel.textContent = s.name;
       showToast('Ήχος ενημερώθηκε');
     });
 

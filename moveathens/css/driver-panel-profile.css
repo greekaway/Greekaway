@@ -324,9 +324,37 @@ html[data-theme='light'] .ma-dp-vt-item {
 }
 html[data-theme='light'] .ma-dp-vt-item:active { background: #f3f4f6; }
 
+/* ── Sound Toggle Button (accordion) ── */
+.ma-dp-sound-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255,255,255,.04);
+  border: 2px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  color: var(--ma-dp-text);
+  font-size: 15px; font-weight: 600;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  margin-bottom: 6px;
+}
+.ma-dp-sound-toggle:active { background: rgba(255,255,255,.08); }
+.ma-dp-sound-toggle__arrow {
+  font-size: 12px; opacity: 0.5; transition: transform .2s;
+}
+html[data-theme='light'] .ma-dp-sound-toggle {
+  background: #f9fafb; border-color: #e5e7eb; color: var(--ma-dp-text);
+}
+
 /* ── Sound Picker (driver settings) ── */
 .ma-dp-sound-picker {
   display: flex; flex-direction: column; gap: 6px;
+  max-height: 600px; overflow: hidden;
+  transition: max-height .3s ease, opacity .2s ease;
+  opacity: 1;
+}
+.ma-dp-sound-picker--collapsed {
+  max-height: 0; opacity: 0; overflow: hidden;
 }
 .ma-dp-sound-option {
   display: flex; align-items: center; justify-content: space-between;

@@ -151,7 +151,9 @@
     $('#dp-driver-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const status = $('#dpDriverFormStatus');
-      const phone = $('#dpDriverPhone').value.trim();
+      let phone = ($('#dpDriverPhone').value || '').replace(/[\s\-\(\)\.]/g, '').trim();
+      if (/^69\d{8}$/.test(phone)) phone = '+30' + phone;
+      if (/^30\d{10}$/.test(phone)) phone = '+' + phone;
       if (!phone) { setStatus(status, 'Απαιτείται τηλέφωνο', 'err'); return; }
       const payload = {
         name: $('#dpDriverName').value.trim(),

@@ -94,17 +94,21 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
     if (!guard(req, res)) return;
     try {
       const { name, phone, notes, is_active, vehicle_types, display_name } = req.body || {};
-      if (!phone || !phone.trim()) return res.status(400).json({ error: 'Απαιτείται τηλέφωνο' });
+      // Normalize: strip spaces/dashes/parens, auto-add +30 for Greek mobiles
+      let cleanPhone = (phone || '').replace(/[\s\-\(\)\.]/g, '').trim();
+      if (/^69\d{8}$/.test(cleanPhone)) cleanPhone = '+30' + cleanPhone;
+      if (/^30\d{10}$/.test(cleanPhone)) cleanPhone = '+' + cleanPhone;
+      if (!cleanPhone) return res.status(400).json({ error: 'Απαιτείται τηλέφωνο' });
 
       // Check duplicate phone
-      const existing = await driversData.getDriverByPhone(phone.trim());
+      const existing = await driversData.getDriverByPhone(cleanPhone);
       if (existing) return res.status(409).json({ error: 'Υπάρχει ήδη οδηγός με αυτό το τηλέφωνο' });
 
       const vtJSON = Array.isArray(vehicle_types) ? JSON.stringify(vehicle_types) : '[]';
 
       const driver = await driversData.upsertDriver({
         name: name || '',
-        phone: phone.trim(),
+        phone: cleanPhone,
         notes: notes || '',
         is_active: is_active !== false,
         vehicle_types: vtJSON,
@@ -242,7 +246,7 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
       const filename = `footer-${tabKey}.${ext}`;
       fs.writeFileSync(path.join(dir, filename), req.file.buffer);
 
-      const url = `/uploads/driver-panel/icons/${filename}`;
+      const url = `/uploads/driver-panel/icons/${filename}?v=${Date.now()}`;
       // Auto-save iconUrl to config
       const cfg = readConfig();
       const tabs = cfg.footer?.tabs || [];

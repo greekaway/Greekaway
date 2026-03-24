@@ -116,7 +116,9 @@
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const phone = (phoneInput.value || '').replace(/\s/g, '').trim();
+    let phone = (phoneInput.value || '').replace(/[\s\-\(\)\.]/g, '').trim();
+    if (/^69\d{8}$/.test(phone)) phone = '+30' + phone;
+    if (/^30\d{10}$/.test(phone)) phone = '+' + phone;
     if (!phone) { showError('Εισάγετε τον αριθμό τηλεφώνου.'); return; }
 
     btn.disabled = true;

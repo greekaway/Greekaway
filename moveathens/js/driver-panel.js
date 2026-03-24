@@ -51,13 +51,22 @@
 
     let hideTimer = null;
 
+    let clearTimer = null;
+
     const show = (text, type) => {
       clearTimeout(hideTimer);
+      clearTimeout(clearTimer);
       banner.textContent = text;
       banner.classList.remove('ma-dp-network-banner--offline', 'ma-dp-network-banner--online', 'ma-dp-network-banner--hidden');
       banner.classList.add(`ma-dp-network-banner--${type}`);
       if (type === 'online') {
-        hideTimer = setTimeout(() => banner.classList.add('ma-dp-network-banner--hidden'), 3000);
+        hideTimer = setTimeout(() => {
+          banner.classList.add('ma-dp-network-banner--hidden');
+          // After CSS transition ends, strip green bg so PWA safe-area stays clean
+          clearTimer = setTimeout(() => {
+            banner.classList.remove('ma-dp-network-banner--online');
+          }, 400);
+        }, 3000);
       }
     };
 

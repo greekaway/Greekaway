@@ -110,6 +110,85 @@
         osc(ac, 'sine', 1000, t + 0.2, 0.12, 0.4);
         osc(ac, 'sine', 1400, t + 0.4, 0.2, 0.35);
       }
+    },
+
+    /* ── Long tones (6-10 sec, for incoming calls/requests) ── */
+
+    ringtone: {
+      name: '📱 Ringtone',
+      play(ac) {
+        const t = ac.currentTime;
+        for (let i = 0; i < 4; i++) {
+          const off = i * 1.6;
+          osc(ac, 'sine', 880, t + off, 0.3, 0.35);
+          osc(ac, 'sine', 1108, t + off + 0.3, 0.3, 0.35);
+          osc(ac, 'sine', 880, t + off + 0.6, 0.2, 0.3);
+        }
+      }
+    },
+    alarm: {
+      name: '⏰ Alarm',
+      play(ac) {
+        const t = ac.currentTime;
+        for (let i = 0; i < 5; i++) {
+          const off = i * 1.4;
+          osc(ac, 'square', 700, t + off, 0.25, 0.22);
+          osc(ac, 'square', 900, t + off + 0.35, 0.25, 0.22);
+          osc(ac, 'square', 700, t + off + 0.7, 0.25, 0.22);
+        }
+      }
+    },
+    cascade: {
+      name: '🎶 Cascade',
+      play(ac) {
+        const notes = [523, 587, 659, 784, 880, 784, 659, 587, 523, 587, 659, 784];
+        const t = ac.currentTime;
+        notes.forEach((freq, i) => {
+          osc(ac, 'sine', freq, t + i * 0.5, 0.45, 0.32);
+        });
+      }
+    },
+    pulse: {
+      name: '💓 Pulse',
+      play(ac) {
+        const t = ac.currentTime;
+        for (let i = 0; i < 8; i++) {
+          const off = i * 0.9;
+          osc(ac, 'sine', 660, t + off, 0.15, 0.4);
+          osc(ac, 'sine', 880, t + off + 0.2, 0.15, 0.35);
+          osc(ac, 'sine', 660, t + off + 0.4, 0.15, 0.3);
+        }
+      }
+    },
+    urgentCall: {
+      name: '🚨 Urgent Call',
+      play(ac) {
+        const t = ac.currentTime;
+        for (let i = 0; i < 6; i++) {
+          const off = i * 1.2;
+          const o1 = ac.createOscillator();
+          const g1 = ac.createGain();
+          o1.type = 'sine';
+          o1.frequency.setValueAtTime(600, t + off);
+          o1.frequency.linearRampToValueAtTime(1100, t + off + 0.5);
+          o1.frequency.linearRampToValueAtTime(600, t + off + 1.0);
+          g1.gain.setValueAtTime(0.3, t + off);
+          g1.gain.exponentialRampToValueAtTime(0.001, t + off + 1.1);
+          o1.connect(g1).connect(ac.destination);
+          o1.start(t + off);
+          o1.stop(t + off + 1.1);
+        }
+      }
+    },
+    melody: {
+      name: '🎵 Melody',
+      play(ac) {
+        const t = ac.currentTime;
+        const seq = [659,659,0,659,0,523,659,0,784,0,0,0,392];
+        seq.forEach((freq, i) => {
+          if (freq > 0) osc(ac, 'sine', freq, t + i * 0.4, 0.35, 0.3);
+        });
+      }
     }
   };
 

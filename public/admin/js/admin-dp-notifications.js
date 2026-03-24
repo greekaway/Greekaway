@@ -20,12 +20,25 @@
     const wrap = $('#dpSoundPicker');
     if (!wrap || !window.DpSounds) return;
     const sounds = window.DpSounds.SOUNDS;
+
+    // Update toggle label
+    const toggleLabel = $('#dpSoundToggleLabel');
+    if (toggleLabel && sounds[selected]) toggleLabel.textContent = sounds[selected].name;
+
     wrap.innerHTML = Object.entries(sounds).map(([id, s]) => `
       <div class="dp-sound-option ${id === selected ? 'dp-sound-active' : ''}" data-sound="${id}">
         <span class="dp-sound-name">${s.name}</span>
         <button type="button" class="dp-sound-preview" data-sound="${id}" title="Ακρόαση">▶️</button>
       </div>
     `).join('');
+
+    // Toggle accordion
+    $('#dpSoundToggle')?.addEventListener('click', () => {
+      wrap.classList.toggle('dp-sound-picker--collapsed');
+      const arrow = $('.dp-sound-toggle__arrow');
+      if (arrow) arrow.textContent = wrap.classList.contains('dp-sound-picker--collapsed') ? '▼' : '▲';
+    });
+
     wrap.addEventListener('click', (e) => {
       const preview = e.target.closest('.dp-sound-preview');
       if (preview) { window.DpSounds.play(preview.dataset.sound); return; }
@@ -34,6 +47,9 @@
       wrap.querySelectorAll('.dp-sound-option').forEach(o => o.classList.remove('dp-sound-active'));
       opt.classList.add('dp-sound-active');
       window.DpSounds.play(opt.dataset.sound);
+      // Update toggle label
+      const s = sounds[opt.dataset.sound];
+      if (toggleLabel && s) toggleLabel.textContent = s.name;
     });
   };
 

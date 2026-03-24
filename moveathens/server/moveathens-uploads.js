@@ -144,7 +144,7 @@ module.exports = function registerUploadRoutes(app, opts = {}) {
       fs.mkdirSync(iconsDir, { recursive: true });
       const outPath = path.join(iconsDir, `footer-${key}.svg`);
       fs.writeFileSync(outPath, req.file.buffer);
-      const url = `/uploads/moveathens/icons/footer-${key}.svg`;
+      const url = `/uploads/moveathens/icons/footer-${key}.svg?v=${Date.now()}`;
       try {
         const current = await dataLayer.getConfig();
         await dataLayer.updateConfig({

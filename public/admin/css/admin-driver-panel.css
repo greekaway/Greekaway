@@ -608,9 +608,35 @@ html[data-theme='light'] .dp-edit-btn {
 }
 .dp-card-remove-btn:hover { opacity: 1; }
 
+/* ── Sound Toggle Button (accordion) ── */
+.dp-sound-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  color: var(--ga-text, #f7f7fb);
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  margin-bottom: 6px;
+}
+.dp-sound-toggle:hover { background: rgba(255,255,255,0.07); }
+.dp-sound-toggle__arrow { font-size: 12px; opacity: 0.5; }
+html[data-theme='light'] .dp-sound-toggle {
+  background: #f9fafb; border-color: #e5e7eb; color: var(--ga-text, #1a1a2e);
+}
+
 /* ── Sound Picker ── */
 .dp-sound-picker {
   display: flex; flex-direction: column; gap: 6px;
+  max-height: 600px; overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+  opacity: 1;
+}
+.dp-sound-picker--collapsed {
+  max-height: 0; opacity: 0; overflow: hidden;
 }
 .dp-sound-option {
   display: flex; align-items: center; justify-content: space-between;
