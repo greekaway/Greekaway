@@ -25,11 +25,16 @@
     const toggleLabel = $('#dpSoundToggleLabel');
     if (toggleLabel && sounds[selected]) toggleLabel.textContent = sounds[selected].name;
 
-    wrap.innerHTML = Object.entries(sounds).map(([id, s]) => `
-      <div class="dp-sound-option ${id === selected ? 'dp-sound-active' : ''}" data-sound="${id}">
-        <span class="dp-sound-name">${s.name}</span>
-        <button type="button" class="dp-sound-preview" data-sound="${id}" title="Ακρόαση">▶️</button>
-      </div>
+    wrap.innerHTML = (window.DpSounds.GROUPS || []).map(group => `
+      <div class="dp-sound-group-label">${group.label}</div>
+      ${group.ids.map(id => {
+        const s = sounds[id];
+        if (!s) return '';
+        return `<div class="dp-sound-option ${id === selected ? 'dp-sound-active' : ''}" data-sound="${id}">
+          <span class="dp-sound-name">${s.name}</span>
+          <button type="button" class="dp-sound-preview" data-sound="${id}" title="Ακρόαση">▶️</button>
+        </div>`;
+      }).join('')}
     `).join('');
 
     // Toggle accordion

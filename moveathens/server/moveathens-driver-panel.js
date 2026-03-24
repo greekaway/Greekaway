@@ -14,10 +14,16 @@ const requestsData = require('../../src/server/data/moveathens-requests');
 const driverBroadcast = require('../../services/driverBroadcast');
 
 const CONFIG_FILE = path.join(__dirname, '..', 'data', 'driver_panel_ui.json');
+const RENDER_PERSISTENT_CONFIG = '/opt/render/project/src/uploads/driver-panel/driver_panel_ui.json';
 
 function loadConfig() {
-  try { return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')); }
-  catch { return {}; }
+  try {
+    // On Render, read from persistent disk first (admin saves there)
+    if (process.env.RENDER && fs.existsSync(RENDER_PERSISTENT_CONFIG)) {
+      return JSON.parse(fs.readFileSync(RENDER_PERSISTENT_CONFIG, 'utf8'));
+    }
+    return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+  } catch { return {}; }
 }
 
 function hashPin(pin) {

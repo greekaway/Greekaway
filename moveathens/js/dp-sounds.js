@@ -275,6 +275,13 @@
     }
   };
 
+  /* ── Sound groups for UI rendering ── */
+  const GROUPS = [
+    { label: 'Σύντομοι', ids: ['chime','alert','bell','horn','radar','siren','gong','triple'] },
+    { label: 'Μεγάλοι',  ids: ['ringtone','alarm','cascade','pulse','urgentCall','melody'] },
+    { label: 'Dispatch',  ids: ['dispatch','rideAlert','appPing','taxiCall'] }
+  ];
+
   const play = (id) => {
     try {
       stop();                        // kill any playing sound first
@@ -283,5 +290,5 @@
     } catch { /* silent fail */ }
   };
 
-  window.DpSounds = { SOUNDS, play, stop };
+  window.DpSounds = { SOUNDS, GROUPS, play, stop };
 })();

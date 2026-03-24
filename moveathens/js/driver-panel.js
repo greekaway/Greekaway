@@ -102,18 +102,43 @@
     const sorted = [...tabs].filter(t => t.enabled).sort((a, b) => a.order - b.order);
 
     footer.innerHTML = sorted.map(t => {
-      // Support custom icon URLs (uploaded SVGs) alongside built-in icons
+      // Use built-in SVG or placeholder for custom (loaded async below)
       let iconHtml = FOOTER_ICONS[t.icon] || '';
       if (t.iconUrl) {
-        iconHtml = `<img src="${t.iconUrl}" alt="" style="width:22px;height:22px">`;
+        iconHtml = '';  // will be replaced by inline SVG below
       }
       return `
       <button class="ma-dp-footer-btn${t.key === activeTab ? ' active' : ''}" data-tab="${t.key}" aria-label="${t.label}">
-        <span class="ma-dp-footer-icon">${iconHtml}</span>
+        <span class="ma-dp-footer-icon" ${t.iconUrl ? `data-icon-url="${t.iconUrl}"` : ''}>${iconHtml}</span>
         <span class="ma-dp-footer-label">${t.label}</span>
       </button>
     `;
     }).join('');
+
+    // Fetch custom SVGs and inject inline with currentColor (like MoveAthens)
+    footer.querySelectorAll('.ma-dp-footer-icon[data-icon-url]').forEach(async (slot) => {
+      const url = slot.getAttribute('data-icon-url');
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) return;
+        const text = await res.text();
+        const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+        const svg = doc.querySelector('svg');
+        if (!svg) return;
+        svg.setAttribute('aria-hidden', 'true');
+        // Normalize all colors to currentColor so CSS color inheritance works
+        svg.querySelectorAll('path,circle,rect,line,polyline,polygon,ellipse').forEach(el => {
+          const f = el.getAttribute('fill');
+          const s = el.getAttribute('stroke');
+          if (f && f !== 'none') el.setAttribute('fill', 'currentColor');
+          if (s && s !== 'none') el.setAttribute('stroke', 'currentColor');
+        });
+        if (svg.getAttribute('fill') && svg.getAttribute('fill') !== 'none') svg.setAttribute('fill', 'currentColor');
+        if (svg.getAttribute('stroke') && svg.getAttribute('stroke') !== 'none') svg.setAttribute('stroke', 'currentColor');
+        slot.innerHTML = '';
+        slot.appendChild(document.importNode(svg, true));
+      } catch (_) { /* silent */ }
+    });
 
     footer.addEventListener('click', (e) => {
       const btn = e.target.closest('.ma-dp-footer-btn');

@@ -256,12 +256,17 @@
           <span class="ma-dp-sound-toggle__arrow">▼</span>
         </button>
         <div class="ma-dp-sound-picker ma-dp-sound-picker--collapsed" id="dpDriverSoundPicker">
-          ${window.DpSounds ? Object.entries(window.DpSounds.SOUNDS).map(([id, s]) => {
+          ${window.DpSounds?.GROUPS ? window.DpSounds.GROUPS.map(group => {
             const driverSound = localStorage.getItem('ma_dp_alert_sound') || cachedConfig.notifications?.alertSound || 'chime';
-            return `<div class="ma-dp-sound-option ${id === driverSound ? 'ma-dp-sound-active' : ''}" data-sound="${id}">
-              <span class="ma-dp-sound-name">${s.name}</span>
-              <button type="button" class="ma-dp-sound-preview" data-sound="${id}">▶️</button>
-            </div>`;
+            return `<div class="ma-dp-sound-group-label">${group.label}</div>` +
+              group.ids.map(id => {
+                const s = window.DpSounds.SOUNDS[id];
+                if (!s) return '';
+                return `<div class="ma-dp-sound-option ${id === driverSound ? 'ma-dp-sound-active' : ''}" data-sound="${id}">
+                  <span class="ma-dp-sound-name">${s.name}</span>
+                  <button type="button" class="ma-dp-sound-preview" data-sound="${id}">▶️</button>
+                </div>`;
+              }).join('');
           }).join('') : ''}
         </div>
       </div>

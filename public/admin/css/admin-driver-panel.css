@@ -631,13 +631,24 @@ html[data-theme='light'] .dp-sound-toggle {
 /* ── Sound Picker ── */
 .dp-sound-picker {
   display: flex; flex-direction: column; gap: 6px;
-  max-height: 600px; overflow: hidden;
+  max-height: 60vh; overflow-y: auto;
   transition: max-height 0.3s ease, opacity 0.2s ease;
   opacity: 1;
+  padding-right: 2px;
 }
 .dp-sound-picker--collapsed {
   max-height: 0; opacity: 0; overflow: hidden;
 }
+.dp-sound-group-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--ga-accent, #46d3ff);
+  padding: 10px 4px 4px;
+  margin-top: 4px;
+}
+.dp-sound-group-label:first-child { margin-top: 0; padding-top: 4px; }
 .dp-sound-option {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 14px;
@@ -666,6 +677,9 @@ html[data-theme='light'] .dp-sound-option {
 html[data-theme='light'] .dp-sound-active {
   border-color: var(--ga-accent, #46d3ff);
   background: rgba(70, 211, 255, 0.08);
+}
+html[data-theme='light'] .dp-sound-group-label {
+  color: var(--ga-accent, #46d3ff);
 }
 
 .dp-drag-handle {
