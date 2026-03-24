@@ -16,21 +16,41 @@ let multer = null;
 try { multer = require('multer'); } catch (_) { multer = null; }
 const driversData = require('../../src/server/data/moveathens-drivers');
 
-const CONFIG_FILE = path.join(__dirname, '..', 'data', 'driver_panel_ui.json');
+const LOCAL_CONFIG = path.join(__dirname, '..', 'data', 'driver_panel_ui.json');
+const RENDER_PERSISTENT_ROOT = '/opt/render/project/src/uploads';
+
+// On Render, store config on persistent disk so it survives deploys
+function getConfigPath() {
+  if (process.env.RENDER) {
+    const persistDir = path.join(RENDER_PERSISTENT_ROOT, 'driver-panel');
+    try { fs.mkdirSync(persistDir, { recursive: true }); } catch (_) {}
+    return path.join(persistDir, 'driver_panel_ui.json');
+  }
+  return LOCAL_CONFIG;
+}
 
 // ---- JSON helpers ----
 function readConfig() {
   try {
-    if (fs.existsSync(CONFIG_FILE)) return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+    const cfgPath = getConfigPath();
+    if (fs.existsSync(cfgPath)) return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+    // Fallback: read from source tree (first deploy / migration)
+    if (process.env.RENDER && fs.existsSync(LOCAL_CONFIG)) {
+      const data = JSON.parse(fs.readFileSync(LOCAL_CONFIG, 'utf8'));
+      // Migrate to persistent disk
+      writeConfig(data);
+      return data;
+    }
   } catch (e) { console.error('[driver-panel] Config read error:', e.message); }
   return { general: {}, footer: { tabs: [] } };
 }
 
 function writeConfig(data) {
   try {
-    const dir = path.dirname(CONFIG_FILE);
+    const cfgPath = getConfigPath();
+    const dir = path.dirname(cfgPath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync(cfgPath, JSON.stringify(data, null, 2), 'utf8');
     return true;
   } catch (e) {
     console.error('[driver-panel] Config write error:', e.message);

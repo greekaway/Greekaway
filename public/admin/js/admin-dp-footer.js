@@ -6,18 +6,7 @@
   'use strict';
   const { $, $$, setStatus, showToast, state, saveConfig } = window.DpAdmin;
 
-  const ICON_OPTIONS = [
-    { value: 'home', label: '🏠 Home' },
-    { value: 'calendar', label: '📅 Calendar' },
-    { value: 'history', label: '📋 History' },
-    { value: 'wallet', label: '💰 Wallet' },
-    { value: 'user', label: '👤 User' },
-    { value: 'car', label: '🚗 Car' },
-    { value: 'map', label: '🗺️ Map' },
-    { value: 'bell', label: '🔔 Bell' },
-    { value: 'chat', label: '💬 Chat' },
-    { value: 'settings', label: '⚙️ Settings' }
-  ];
+  // No preset icons — always use custom uploaded icons
 
   const render = () => {
     const wrap = $('#dpFooterRows');
@@ -35,16 +24,12 @@
             <input type="text" class="input dp-footer-label" value="${tab.label || ''}" data-idx="${i}">
           </label>
           <label class="dp-field">
-            <span class="dp-label">Icon</span>
+            <span class="dp-label">Εικονίδιο</span>
             <div class="dp-icon-picker">
-              <select class="input dp-footer-icon" data-idx="${i}">
-                ${ICON_OPTIONS.map(o => `<option value="${o.value}"${o.value === tab.icon ? ' selected' : ''}>${o.label}</option>`).join('')}
-                <option value="custom"${tab.iconUrl ? ' selected' : ''}>📁 Δικό μου…</option>
-              </select>
-              <div class="dp-icon-upload-row${tab.iconUrl ? '' : ' hidden'}" data-idx="${i}">
+              <div class="dp-icon-upload-row" data-idx="${i}">
                 <input type="file" class="dp-footer-icon-file" data-idx="${i}" accept="image/svg+xml,image/png,image/webp" hidden>
                 <button type="button" class="button dp-icon-upload-btn" data-idx="${i}">📁 Επιλογή αρχείου</button>
-                ${tab.iconUrl ? `<img src="${tab.iconUrl}" class="dp-icon-preview" alt="">` : ''}
+                ${tab.iconUrl ? `<img src="${tab.iconUrl}" class="dp-icon-preview" alt="">` : '<span class="dp-no-icon">Δεν έχει οριστεί</span>'}
               </div>
             </div>
           </label>
@@ -55,15 +40,6 @@
         </div>
       </div>
     `).join('');
-
-    // Wire up icon select → show/hide upload row
-    $$('.dp-footer-icon').forEach(sel => {
-      sel.addEventListener('change', () => {
-        const idx = sel.dataset.idx;
-        const row = wrap.querySelector(`.dp-icon-upload-row[data-idx="${idx}"]`);
-        if (row) row.classList.toggle('hidden', sel.value !== 'custom');
-      });
-    });
 
     // Wire up icon upload buttons
     $$('.dp-icon-upload-btn').forEach(btn => {
@@ -108,7 +84,7 @@
         const idx = parseInt(row.dataset.idx, 10);
         if (tabs[idx]) {
           tabs[idx].label = row.querySelector('.dp-footer-label')?.value?.trim() || tabs[idx].label;
-          tabs[idx].icon = row.querySelector('.dp-footer-icon')?.value || tabs[idx].icon;
+          tabs[idx].icon = 'custom';  // always custom upload
           tabs[idx].enabled = row.querySelector('.dp-footer-enabled')?.checked !== false;
         }
       });

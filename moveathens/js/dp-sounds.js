@@ -13,6 +13,14 @@
     return ctx;
   };
 
+  /** Stop all currently playing sounds by closing & recreating the context */
+  const stop = () => {
+    try {
+      if (ctx && ctx.state !== 'closed') ctx.close();
+    } catch (_) { /* ignore */ }
+    ctx = null;
+  };
+
   /* ── Tone helpers ── */
   const osc = (ac, type, freq, start, dur, gain) => {
     const o = ac.createOscillator();
@@ -189,15 +197,91 @@
           if (freq > 0) osc(ac, 'sine', freq, t + i * 0.4, 0.35, 0.3);
         });
       }
+    },
+
+    /* ── Ride-hailing dispatch tones ── */
+
+    dispatch: {
+      name: '🚕 Dispatch',
+      play(ac) {
+        const t = ac.currentTime;
+        // Rising ping-pong: two-tone repeating (like Uber new-ride)
+        for (let i = 0; i < 5; i++) {
+          const off = i * 1.0;
+          osc(ac, 'sine', 1047, t + off, 0.08, 0.45);
+          osc(ac, 'sine', 1319, t + off + 0.12, 0.08, 0.45);
+          osc(ac, 'sine', 1568, t + off + 0.24, 0.12, 0.4);
+        }
+      }
+    },
+    rideAlert: {
+      name: '🛻 Ride Alert',
+      play(ac) {
+        const t = ac.currentTime;
+        // Digital chirp with bass undertone (FreeNow style)
+        for (let i = 0; i < 4; i++) {
+          const off = i * 1.4;
+          osc(ac, 'sine', 523, t + off, 0.06, 0.3);
+          osc(ac, 'triangle', 784, t + off + 0.1, 0.06, 0.4);
+          osc(ac, 'sine', 1047, t + off + 0.2, 0.1, 0.45);
+          osc(ac, 'sine', 1319, t + off + 0.35, 0.1, 0.4);
+          osc(ac, 'sine', 1047, t + off + 0.5, 0.06, 0.3);
+          // bass pulse
+          osc(ac, 'sine', 220, t + off + 0.65, 0.2, 0.15);
+        }
+      }
+    },
+    appPing: {
+      name: '📲 App Ping',
+      play(ac) {
+        const t = ac.currentTime;
+        // Clean modern notification (like smartphone ride apps)
+        for (let i = 0; i < 3; i++) {
+          const off = i * 2.0;
+          osc(ac, 'sine', 880, t + off, 0.05, 0.4);
+          osc(ac, 'sine', 1175, t + off + 0.08, 0.05, 0.4);
+          osc(ac, 'sine', 1397, t + off + 0.16, 0.08, 0.45);
+          // pause then repeat softer
+          osc(ac, 'sine', 880, t + off + 0.6, 0.05, 0.3);
+          osc(ac, 'sine', 1175, t + off + 0.68, 0.05, 0.3);
+          osc(ac, 'sine', 1397, t + off + 0.76, 0.08, 0.35);
+        }
+      }
+    },
+    taxiCall: {
+      name: '🚖 Taxi Call',
+      play(ac) {
+        const t = ac.currentTime;
+        // Warm urgency: sweep up then 3-note melody, repeating
+        for (let i = 0; i < 4; i++) {
+          const off = i * 1.5;
+          // sweep
+          const sw = ac.createOscillator();
+          const sg = ac.createGain();
+          sw.type = 'sine';
+          sw.frequency.setValueAtTime(500, t + off);
+          sw.frequency.exponentialRampToValueAtTime(1200, t + off + 0.2);
+          sg.gain.setValueAtTime(0.35, t + off);
+          sg.gain.exponentialRampToValueAtTime(0.001, t + off + 0.3);
+          sw.connect(sg).connect(ac.destination);
+          sw.start(t + off);
+          sw.stop(t + off + 0.3);
+          // melody notes
+          osc(ac, 'sine', 784, t + off + 0.35, 0.12, 0.4);
+          osc(ac, 'sine', 988, t + off + 0.5, 0.12, 0.4);
+          osc(ac, 'sine', 1175, t + off + 0.65, 0.2, 0.35);
+        }
+      }
     }
   };
 
   const play = (id) => {
     try {
+      stop();                        // kill any playing sound first
       const s = SOUNDS[id || 'chime'];
       if (s) s.play(getCtx());
     } catch { /* silent fail */ }
   };
 
-  window.DpSounds = { SOUNDS, play };
+  window.DpSounds = { SOUNDS, play, stop };
 })();

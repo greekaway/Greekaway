@@ -65,18 +65,18 @@
       banner.classList.remove('ma-dp-network-banner--offline', 'ma-dp-network-banner--online', 'ma-dp-network-banner--hidden');
       banner.classList.add(`ma-dp-network-banner--${type}`);
 
-      // Update PWA status bar color to match banner
-      if (themeMeta) {
-        themeMeta.setAttribute('content', type === 'offline' ? '#d32f2f' : '#2e7d32');
+      // Only change PWA status bar color for offline (red) — never green
+      if (themeMeta && type === 'offline') {
+        themeMeta.setAttribute('content', '#d32f2f');
       }
 
       if (type === 'online') {
+        // Restore theme-color immediately when back online (don't wait)
+        if (themeMeta) themeMeta.setAttribute('content', getThemeColor());
         hideTimer = setTimeout(() => {
           banner.classList.add('ma-dp-network-banner--hidden');
-          // After CSS transition, remove green and restore theme-color
           clearTimer = setTimeout(() => {
             banner.classList.remove('ma-dp-network-banner--online');
-            if (themeMeta) themeMeta.setAttribute('content', getThemeColor());
           }, 400);
         }, 3000);
       }
