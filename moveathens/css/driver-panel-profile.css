@@ -61,12 +61,14 @@
 }
 
 /* ── Hub Logout & Version ── */
-.ma-dp-hub-logout { text-align: center; margin: 20px 0 8px; }
+.ma-dp-hub-logout { text-align: center; margin: 20px 0 8px; padding: 0; }
 .ma-dp-hub-logout-btn {
   background: none; border: 1px solid rgba(255,90,90,.25);
-  color: #ff5a5a; padding: 10px 28px; border-radius: 10px;
-  font-size: 14px; font-family: inherit; cursor: pointer;
+  color: #ff5a5a; padding: 14px 28px; border-radius: 14px;
+  font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer;
   transition: background .2s;
+  width: 100%;
+  display: block;
 }
 .ma-dp-hub-logout-btn:hover { background: rgba(255,90,90,.08); }
 

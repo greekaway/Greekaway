@@ -25,6 +25,15 @@
     document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax`;
   };
 
+  /* ── Logout helper (must be available even when already logged in) ── */
+  window.DpAuth = {
+    logout() {
+      localStorage.removeItem(LS_KEY);
+      clearCookie(CK_NAME);
+      window.location.reload();
+    }
+  };
+
   /* ── Check existing session ── */
   const stored = (() => {
     try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch { return null; }
@@ -196,12 +205,5 @@
     }
   });
 
-  /* ── Logout helper ── */
-  window.DpAuth = {
-    logout() {
-      localStorage.removeItem(LS_KEY);
-      clearCookie(CK_NAME);
-      window.location.reload();
-    }
-  };
+  /* ── Logout helper — already registered above ── */
 })();

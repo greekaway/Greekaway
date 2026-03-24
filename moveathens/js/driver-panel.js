@@ -49,8 +49,13 @@
     banner.setAttribute('aria-live', 'polite');
     document.body.prepend(banner);
 
-    let hideTimer = null;
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    const getThemeColor = () => {
+      const t = document.documentElement.getAttribute('data-theme');
+      return t === 'light' ? '#f5f7fa' : '#0b0f1a';
+    };
 
+    let hideTimer = null;
     let clearTimer = null;
 
     const show = (text, type) => {
@@ -59,12 +64,19 @@
       banner.textContent = text;
       banner.classList.remove('ma-dp-network-banner--offline', 'ma-dp-network-banner--online', 'ma-dp-network-banner--hidden');
       banner.classList.add(`ma-dp-network-banner--${type}`);
+
+      // Update PWA status bar color to match banner
+      if (themeMeta) {
+        themeMeta.setAttribute('content', type === 'offline' ? '#d32f2f' : '#2e7d32');
+      }
+
       if (type === 'online') {
         hideTimer = setTimeout(() => {
           banner.classList.add('ma-dp-network-banner--hidden');
-          // After CSS transition ends, strip green bg so PWA safe-area stays clean
+          // After CSS transition, remove green and restore theme-color
           clearTimer = setTimeout(() => {
             banner.classList.remove('ma-dp-network-banner--online');
+            if (themeMeta) themeMeta.setAttribute('content', getThemeColor());
           }, 400);
         }, 3000);
       }
