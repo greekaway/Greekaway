@@ -1094,6 +1094,7 @@
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       localStorage.removeItem(STORAGE_KEY);
+      document.cookie = 'ds_driver_phone_ck=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax';
       // Reload page — auth-gate will handle the login wall
       window.location.reload();
     });

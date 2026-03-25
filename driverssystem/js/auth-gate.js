@@ -17,10 +17,50 @@
   'use strict';
 
   const STORAGE_KEY = 'ds_driver_phone';
-  const savedPhone = localStorage.getItem(STORAGE_KEY);
+  const CK_NAME = 'ds_driver_phone_ck';
+  const CK_DAYS = 365;
 
-  /* ── Already logged in → nothing to do ── */
-  if (savedPhone) return;
+  /* ── Cookie helpers ── */
+  const getCookie = (name) => {
+    const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return m ? decodeURIComponent(m[1]) : '';
+  };
+
+  const setCookie = (name, value, days) => {
+    const d = new Date();
+    d.setTime(d.getTime() + days * 86400000);
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/;SameSite=Lax`;
+  };
+
+  const clearCookie = (name) => {
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Lax`;
+  };
+
+  const savedPhone = localStorage.getItem(STORAGE_KEY);
+  const cookiePhone = getCookie(CK_NAME);
+
+  /* ── Already logged in → ensure cookie is in sync ── */
+  if (savedPhone) {
+    if (!cookiePhone) setCookie(CK_NAME, savedPhone, CK_DAYS);
+    return;
+  }
+
+  /* ── localStorage lost but cookie survives → auto-restore ── */
+  if (cookiePhone && !savedPhone) {
+    const tryAutoRestore = async () => {
+      try {
+        const res = await fetch(`/api/driverssystem/drivers/me?phone=${encodeURIComponent(cookiePhone)}`);
+        if (res.ok) {
+          localStorage.setItem(STORAGE_KEY, cookiePhone);
+          window.location.reload();
+          return;
+        }
+      } catch (_) { /* network error */ }
+      clearCookie(CK_NAME);
+    };
+    tryAutoRestore();
+    return; // don't show gate yet — let auto-restore run
+  }
 
   /* ── Lock the page ── */
   document.documentElement.classList.add('ds-gate-active');
@@ -106,6 +146,7 @@
 
       /* Verified — save and reload */
       localStorage.setItem(STORAGE_KEY, phone);
+      setCookie(CK_NAME, phone, CK_DAYS);
 
       /* Remove gate classes */
       document.documentElement.classList.remove('ds-gate-pending');
