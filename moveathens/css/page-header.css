@@ -16,6 +16,13 @@
   }
 }
 
+/* PWA: extend page min-height to cover safe area (no black band) */
+@media (display-mode: standalone) {
+  .ma-page {
+    min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .ma-page-header {
   display: flex;
   align-items: center;

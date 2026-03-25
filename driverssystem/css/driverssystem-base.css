@@ -39,6 +39,13 @@ body {
   touch-action: manipulation;
 }
 
+/* PWA: extend body min-height to cover safe area (no black band) */
+@media (display-mode: standalone) {
+  body {
+    min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .ds-page,
 .ds-ai-page {
   height: 100vh;

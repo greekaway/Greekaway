@@ -239,18 +239,12 @@
 
 }
 
-/* Safe area for notched phones (iPhone X+) */
-@supports (padding: env(safe-area-inset-bottom)) {
+/* PWA standalone: extra bottom spacing for safe area */
+@media (display-mode: standalone) {
   .ma-footer {
-    bottom: calc(8px + env(safe-area-inset-bottom));
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   }
 }
-
-/* PWA standalone — no special overrides; @supports safe-area rule above
-   handles positioning uniformly for both browser and PWA.
-   In browser: env(safe-area-inset-bottom) = 0 → bottom: 8px (same visual).
-   In PWA:     env(safe-area-inset-bottom) ≈ 34px → bottom: 42px (clears home indicator,
-               visual gap stays ~8px). Footer keeps floating design with full rounded corners. */
 
 /* Tablets — constrain footer width */
 @media (min-width: 768px) {

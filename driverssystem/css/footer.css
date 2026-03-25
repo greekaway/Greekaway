@@ -114,13 +114,9 @@
   }
 }
 
-/* Safe area for notched phones (iPhone X+) */
-@supports (padding: env(safe-area-inset-bottom)) {
+/* PWA standalone: extra bottom spacing for safe area */
+@media (display-mode: standalone) {
   .ds-footer {
-    bottom: calc(8px + env(safe-area-inset-bottom));
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   }
 }
-
-/* PWA standalone — no special overrides; @supports safe-area rule above
-   handles positioning uniformly for both browser and PWA.
-   Footer keeps floating design with full rounded corners. */

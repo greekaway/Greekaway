@@ -34,6 +34,13 @@ body {
   user-select: none;
 }
 
+/* PWA: extend body min-height to cover safe area (no black band) */
+@media (display-mode: standalone) {
+  body {
+    min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* Allow text selection on inputs, textareas, and copyable content */
 input, textarea, select,
 .ma-confirm-value,

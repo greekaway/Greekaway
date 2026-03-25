@@ -4,6 +4,13 @@
   overflow: hidden;
 }
 
+/* PWA: extend background into safe area so no black band shows */
+@media (display-mode: standalone) {
+  .ds-hero-page {
+    height: calc(100dvh + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .ds-hero-stage {
   position: relative;
   height: 100vh;
