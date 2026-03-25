@@ -19,7 +19,7 @@
 /* ── Header ── */
 .ds-partners-header {
   position: sticky;
-  top: env(safe-area-inset-top, 0px);
+  top: 0;
   z-index: 40;
   padding: 14px 16px 12px;
   padding-top: max(14px, env(safe-area-inset-top, 14px));
