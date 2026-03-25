@@ -300,7 +300,7 @@
 
   /** Play a sound in a repeating loop every `intervalMs` (default 4s) */
   const playLoop = (id, intervalMs) => {
-    stopLoop();
+    if (loopTimer) { clearInterval(loopTimer); loopTimer = null; }
     play(id);
     const ms = intervalMs || 4000;
     loopTimer = setInterval(() => play(id), ms);
@@ -309,7 +309,6 @@
   /** Stop the repeating loop */
   const stopLoop = () => {
     if (loopTimer) { clearInterval(loopTimer); loopTimer = null; }
-    stop();
   };
 
   /* Warm-up on first user interaction so sounds work from SSE events */
