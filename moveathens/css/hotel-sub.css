@@ -17,6 +17,7 @@
   text-decoration: none;
   transition: background 0.2s, transform 0.1s;
   -webkit-tap-highlight-color: transparent;
+  margin-top: env(safe-area-inset-top, 0px);
   margin-bottom: 8px;
 }
 
@@ -43,10 +44,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-top: env(safe-area-inset-top, 0px);
   margin-bottom: 16px;
 }
 
 .ma-sub-header .ma-sub-back-btn {
+  margin-top: 0;
   margin-bottom: 0;
   flex-shrink: 0;
 }

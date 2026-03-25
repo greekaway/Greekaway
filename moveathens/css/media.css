@@ -12,7 +12,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 20px 10px;
+  padding: max(16px, env(safe-area-inset-top, 16px)) 20px 10px;
 }
 .ma-media-back {
   display: inline-flex;

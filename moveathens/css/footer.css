@@ -246,6 +246,13 @@
   }
 }
 
+/* PWA standalone mode — footer flush with bottom */
+@media (display-mode: standalone) {
+  .ma-footer {
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* Tablets — constrain footer width */
 @media (min-width: 768px) {
   .ma-footer {

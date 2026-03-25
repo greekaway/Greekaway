@@ -134,6 +134,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 0 12px;
+  padding-top: max(8px, env(safe-area-inset-top, 8px));
 }
 
 .ma-topbar__left {

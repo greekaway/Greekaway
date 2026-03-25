@@ -26,7 +26,8 @@ body {
   background: var(--ma-bg);
   color: var(--ma-text);
   min-height: 100vh;
-  padding-bottom: 86px;
+  min-height: 100dvh;
+  padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px));
   overflow-x: hidden;
   -webkit-user-select: none;
   user-select: none;

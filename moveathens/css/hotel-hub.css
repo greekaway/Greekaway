@@ -10,6 +10,7 @@
   align-items: center;
   gap: 6px;
   padding: 24px 0 8px;
+  padding-top: max(24px, env(safe-area-inset-top, 24px));
 }
 
 .ma-hub-avatar {
