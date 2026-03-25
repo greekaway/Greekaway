@@ -93,12 +93,12 @@ module.exports = function registerDriverPanelTabs(app) {
       const completed = await requestsData.getRequests({ status: 'completed' });
       const mine = completed.filter(r => r.driver_phone === phone);
 
-      // Optional date filter
+      // Optional date filter (compare date portion only: YYYY-MM-DD)
       const from = req.query.from; // YYYY-MM-DD
       const to = req.query.to;     // YYYY-MM-DD
       let filtered = mine;
-      if (from) filtered = filtered.filter(r => (r.accepted_at || r.created_at) >= from);
-      if (to) filtered = filtered.filter(r => (r.accepted_at || r.created_at) <= to + 'T23:59:59');
+      if (from) filtered = filtered.filter(r => (r.accepted_at || r.created_at || '').slice(0, 10) >= from);
+      if (to) filtered = filtered.filter(r => (r.accepted_at || r.created_at || '').slice(0, 10) <= to);
 
       const items = filtered.map(r => ({
         id: r.id,
