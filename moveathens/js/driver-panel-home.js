@@ -13,6 +13,8 @@
   let config = {};
   let labels = {};
   let dismissedIds = new Set();
+  let pollTimer = null;
+  const POLL_INTERVAL = 5000; // 5 seconds, same as admin panel
 
   const getPhone = () => {
     try { return JSON.parse(localStorage.getItem(LS_KEY))?.phone || ''; }
@@ -177,7 +179,7 @@
     }
   }
 
-  // ── Load pending on init ──
+  // ── Load pending on init + polling ──
 
   async function loadPending() {
     const phone = getPhone();
@@ -187,10 +189,37 @@
       const res = await fetch(`${API}/pending?phone=${encodeURIComponent(phone)}`);
       if (!res.ok) return;
       const data = await res.json();
+      const container = getContainer();
+      const currentIds = new Set();
+      if (container) {
+        container.querySelectorAll('.ma-dp-urgent-card').forEach(el => {
+          currentIds.add(el.dataset.requestId);
+        });
+      }
       (data.requests || []).forEach(card => {
-        if (!dismissedIds.has(card.requestId)) addUrgentCard(card);
+        if (!dismissedIds.has(card.requestId) && !currentIds.has(String(card.requestId))) {
+          addUrgentCard(card);
+        }
       });
+      // Remove cards that are no longer pending on server
+      const serverIds = new Set((data.requests || []).map(c => String(c.requestId)));
+      if (container) {
+        container.querySelectorAll('.ma-dp-urgent-card').forEach(el => {
+          if (!serverIds.has(el.dataset.requestId) && !dismissedIds.has(el.dataset.requestId)) {
+            removeCard(el.dataset.requestId, 'taken');
+          }
+        });
+      }
     } catch { /* offline */ }
+  }
+
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(loadPending, POLL_INTERVAL);
+  }
+
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   }
 
   // ── Toast ──
@@ -279,10 +308,12 @@
     bindEvents();
     await loadPending();
     connectSSE();
+    startPolling();
   }
 
   function destroy() {
     if (sse) { sse.close(); sse = null; }
+    stopPolling();
     dismissedIds.clear();
   }
 

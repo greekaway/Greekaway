@@ -252,7 +252,7 @@ module.exports = function registerDriverPanelRoutes(app) {
     req.on('close', () => driverBroadcast.removeClient(phone, res));
   });
 
-  // ── Pending requests for this driver ──
+  // ── Pending requests for this driver (instant/call only — scheduled are in /scheduled) ──
   app.get('/api/driver-panel/pending', async (req, res) => {
     try {
       const phone = (req.query.phone || '').trim();
@@ -266,6 +266,8 @@ module.exports = function registerDriverPanelRoutes(app) {
       const combined = [...all, ...sentReqs];
 
       const matching = combined.filter(r => {
+        // Only instant/call requests — scheduled go to appointments tab
+        if (r.booking_type === 'scheduled') return false;
         if (!r.vehicle_type_id) return true;
         return driver.current_vehicle_type === r.vehicle_type_id;
       });

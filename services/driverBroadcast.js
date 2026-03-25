@@ -114,6 +114,12 @@ async function autoBroadcast(request, driversData) {
     return;
   }
 
+  // Scheduled requests are handled by polling in the appointments tab — no SSE push needed
+  if (request.booking_type === 'scheduled') {
+    console.log('[broadcast] Scheduled request', request.id, '— skipping SSE (polling handles it)');
+    return;
+  }
+
   // Get eligible drivers: active + matching vehicle
   const allDrivers = await driversData.getDrivers(true); // active only
   const eligible = allDrivers.filter(d => matchesVehicle(d, request.vehicle_type_id));

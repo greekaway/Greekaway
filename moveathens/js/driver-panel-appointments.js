@@ -14,6 +14,8 @@
   let activeSubTab = 'all';
   let activeSort = '';       // '' | 'time' | 'price'
   let activePeriod = 'all';  // 'all' | 'today' | 'tomorrow' | 'week' | 'month'
+  let pollTimer = null;
+  const POLL_INTERVAL = 10000; // 10 seconds
 
   const getPhone = () => {
     try { return JSON.parse(localStorage.getItem(LS_KEY))?.phone || ''; }
@@ -315,7 +317,21 @@
 
     bindEvents(section);
     await loadRequests();
+    startPolling();
   }
 
-  window.DpAppointments = { init, reload: loadRequests };
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(loadRequests, POLL_INTERVAL);
+  }
+
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  function destroy() {
+    stopPolling();
+  }
+
+  window.DpAppointments = { init, reload: loadRequests, destroy };
 })();
