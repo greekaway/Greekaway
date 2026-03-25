@@ -90,7 +90,7 @@ input, textarea, [contenteditable="true"] {
   z-index: 50;
 }
 .ma-dp-header__logo {
-  height: 36px;
+  height: 72px;
   width: auto;
   flex-shrink: 0;
   object-fit: contain;

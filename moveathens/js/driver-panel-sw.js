@@ -5,7 +5,7 @@
  */
 'use strict';
 
-const CACHE_VERSION = 'v20260323';
+const CACHE_VERSION = 'v20260325';
 const CACHE_NAME = `ma-driver-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -66,10 +66,11 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(request.url);
     if (url.origin !== self.location.origin) return;
 
-    // Network-only: API, version, SSE, uploads (avoid stale icons)
+    // Network-only: API, version, SSE, uploads, manifests
     if (url.pathname.startsWith('/api/') ||
         url.pathname.startsWith('/uploads/') ||
         url.pathname === '/version.json' ||
+        url.pathname.endsWith('manifest.json') ||
         url.pathname.includes('/sse')) {
       event.respondWith(
         fetch(request, { cache: 'no-store' }).catch(() => {

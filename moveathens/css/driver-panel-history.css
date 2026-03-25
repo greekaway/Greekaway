@@ -221,3 +221,21 @@
   .ma-dp-hist-list { padding: 0 24px 24px; }
   .ma-dp-hist-row { padding: 14px 16px; }
 }
+
+/* ── Light mode overrides ── */
+html[data-theme='light'] .ma-dp-hist-period-btn {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.04);
+  color: #6b7280;
+}
+html[data-theme='light'] .ma-dp-hist-period-btn--active {
+  background: rgba(29, 161, 242, 0.12);
+  color: var(--ma-dp-accent);
+  border-color: rgba(29, 161, 242, 0.3);
+}
+html[data-theme='light'] .ma-dp-hist-date-input {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: #fff;
+  color: #1a1a2e;
+  color-scheme: light;
+}

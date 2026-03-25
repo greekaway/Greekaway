@@ -186,3 +186,25 @@ html[data-theme='light'] .ma-dp-btn-detail {
   .ma-dp-sched-list { padding: 8px 24px 24px; }
   .ma-dp-sched-card { padding: 18px; }
 }
+
+/* ── Light mode overrides ── */
+html[data-theme='light'] .ma-dp-sched-chip {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.04);
+  color: #6b7280;
+}
+html[data-theme='light'] .ma-dp-sched-chip--active {
+  background: rgba(29, 161, 242, 0.12);
+  color: var(--ma-dp-accent);
+  border-color: rgba(29, 161, 242, 0.4);
+}
+html[data-theme='light'] .ma-dp-sched-period-btn {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.04);
+  color: #6b7280;
+}
+html[data-theme='light'] .ma-dp-sched-period-btn--active {
+  background: rgba(29, 161, 242, 0.12);
+  color: var(--ma-dp-accent);
+  border-color: rgba(29, 161, 242, 0.3);
+}

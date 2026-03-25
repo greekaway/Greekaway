@@ -1,85 +1,15 @@
-/* ── Update banner (bottom, matching other projects) ── */
-.ma-dp-update-banner {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 9999;
-  padding: 0 12px 12px;
-  pointer-events: none;
-  transform: translateY(100%);
-  opacity: 0;
-  transition: transform 0.35s ease, opacity 0.35s ease;
-}
+/* Push notification styles.
+   Update banner uses shared /js/update-banner.js which injects its own CSS.
+   The shared banner is positioned at the bottom, above the footer on mobile. */
+
+/* Adjust shared update-banner position to clear driver panel footer */
 @media (max-width: 768px) {
-  .ma-dp-update-banner {
-    bottom: calc(var(--ma-dp-footer-h, 60px) + 16px);
-    padding-bottom: env(safe-area-inset-bottom, 8px);
+  #ga-update-banner {
+    bottom: calc(var(--ma-dp-footer-h, 60px) + 8px);
   }
 }
 @media (display-mode: standalone) {
-  .ma-dp-update-banner {
-    bottom: calc(var(--ma-dp-footer-h, 60px) + 16px + env(safe-area-inset-bottom, 0px));
+  #ga-update-banner {
+    bottom: calc(var(--ma-dp-footer-h, 60px) + 8px + env(safe-area-inset-bottom, 0px));
   }
-}
-.ma-dp-update-banner.show {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.ma-dp-update-banner > * {
-  pointer-events: auto;
-}
-
-.ma-dp-update-icon {
-  font-size: 22px;
-  flex-shrink: 0;
-}
-
-.ma-dp-update-text {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 600;
-  min-width: 0;
-}
-
-/* Inner card layout */
-#dpUpdateBanner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 12px 16px;
-  background: #1a1a2e;
-  color: #f0f0f0;
-  border-radius: 14px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
-  font-family: inherit;
-}
-
-.ma-dp-update-btn {
-  border: none;
-  border-radius: 8px;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.15s;
-  flex-shrink: 0;
-}
-.ma-dp-update-btn:active { opacity: 0.75; }
-
-.ma-dp-update-btn--refresh {
-  background: var(--ma-dp-accent, #46d3ff);
-  color: #0a0a1a;
-}
-
-.ma-dp-update-btn--later {
-  background: transparent;
-  color: #999;
-  padding: 4px 10px;
-  font-weight: 400;
 }

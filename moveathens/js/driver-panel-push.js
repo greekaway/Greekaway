@@ -1,6 +1,7 @@
 /**
- * MoveAthens Driver Panel — Push Notifications Client
- * SW registration, push subscription, update banner.
+ * MoveAthens Driver Panel — Push Notifications Client + PWA Boot
+ * SW registration, push subscription, shared update banner.
+ * Update banner uses the same /js/update-banner.js as all other projects.
  * Depends: driver-panel.js (DpApp)
  */
 (() => {
@@ -12,30 +13,23 @@
   const dpHost = (window.location.hostname || '').toLowerCase();
   const onOwnDomain = (dpHost === 'moveathens.com' || dpHost === 'www.moveathens.com');
   const SW_SCOPE = onOwnDomain ? '/' : '/moveathens/';
-  const VERSION_POLL_MS = 60000;
 
   let swRegistration = null;
-  let currentVersion = localStorage.getItem('ma_dp_known_version') || null;
-  let bannerShown = false;
-
-  const SNOOZE_KEY = 'ma_dp_update_snooze';
-  const SNOOZE_MS = 30 * 60 * 1000; // 30 minutes
-
-  function isSnoozed() {
-    try {
-      const until = parseInt(sessionStorage.getItem(SNOOZE_KEY), 10);
-      return until && Date.now() < until;
-    } catch { return false; }
-  }
-
-  function snooze() {
-    try { sessionStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS)); } catch {}
-  }
 
   const getPhone = () => {
     try { return JSON.parse(localStorage.getItem(LS_KEY))?.phone || ''; }
     catch { return ''; }
   };
+
+  // ── Load shared update-banner.js (same mechanism as all other projects) ──
+
+  function loadUpdateBanner() {
+    if (document.querySelector('script[src*="update-banner"]')) return;
+    const s = document.createElement('script');
+    s.src = '/js/update-banner.js';
+    s.defer = true;
+    document.head.appendChild(s);
+  }
 
   // ── Service Worker Registration ──
 
@@ -46,21 +40,16 @@
       swRegistration = await navigator.serviceWorker.register(SW_PATH, { scope: SW_SCOPE });
       console.log('[dp-push] SW registered');
 
-      // Force the browser to check for a new SW version immediately
-      swRegistration.update().catch(() => {});
+      // If there's already a waiting worker, load update banner
+      if (swRegistration.waiting) loadUpdateBanner();
 
       swRegistration.addEventListener('updatefound', () => {
         const newWorker = swRegistration.installing;
         if (!newWorker) return;
         newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'activated') showUpdateBanner();
+          if (newWorker.state === 'activated') loadUpdateBanner();
         });
       });
-
-      // If there's already a waiting worker, show update banner
-      if (swRegistration.waiting) {
-        showUpdateBanner();
-      }
     } catch (err) {
       console.error('[dp-push] SW registration failed:', err);
     }
@@ -75,7 +64,6 @@
     if (!phone) return;
 
     try {
-      // Get VAPID public key from server
       const keyRes = await fetch(`${API}/push/vapid-key`);
       if (!keyRes.ok) return;
       const { publicKey } = await keyRes.json();
@@ -86,7 +74,6 @@
         applicationServerKey: urlBase64ToUint8Array(publicKey)
       });
 
-      // Send subscription to server
       await fetch(`${API}/push/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,68 +84,6 @@
     } catch (err) {
       console.warn('[dp-push] Push subscription failed:', err.message);
     }
-  }
-
-  // ── Update Banner ──
-
-  async function checkForUpdate() {
-    try {
-      const res = await fetch('/version.json', { cache: 'no-store' });
-      if (!res.ok) return;
-      const data = await res.json();
-
-      if (!currentVersion) {
-        currentVersion = data.version;
-        localStorage.setItem('ma_dp_known_version', currentVersion);
-        return;
-      }
-
-      if (data.version !== currentVersion) {
-        currentVersion = data.version;
-        localStorage.setItem('ma_dp_known_version', currentVersion);
-        showUpdateBanner();
-      }
-    } catch { /* offline */ }
-  }
-
-  function showUpdateBanner() {
-    if (bannerShown || isSnoozed()) return;
-    if (document.getElementById('dpUpdateBanner')) return;
-    bannerShown = true;
-
-    const banner = document.createElement('div');
-    banner.id = 'dpUpdateBanner';
-    banner.className = 'ma-dp-update-banner';
-    banner.innerHTML = `
-      <span class="ma-dp-update-icon">🔄</span>
-      <span class="ma-dp-update-text">Νέα ενημέρωση διαθέσιμη</span>
-      <button class="ma-dp-update-btn ma-dp-update-btn--refresh" id="dpUpdateBtn">Ανανέωση</button>
-      <button class="ma-dp-update-btn ma-dp-update-btn--later" id="dpUpdateLater">Αργότερα</button>`;
-    document.body.appendChild(banner);
-
-    setTimeout(() => banner.classList.add('show'), 10);
-
-    document.getElementById('dpUpdateBtn').addEventListener('click', async () => {
-      try {
-        if ('caches' in window) {
-          const names = await caches.keys();
-          await Promise.all(names.map(n => caches.delete(n)));
-        }
-        if (swRegistration?.waiting) {
-          swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        }
-        if (swRegistration) {
-          await swRegistration.update().catch(() => {});
-        }
-      } catch { /* continue reload */ }
-      window.location.reload();
-    });
-
-    document.getElementById('dpUpdateLater').addEventListener('click', () => {
-      snooze();
-      banner.classList.remove('show');
-      setTimeout(() => { banner.remove(); bannerShown = false; }, 300);
-    });
   }
 
   // ── Utility ──
@@ -180,14 +105,8 @@
     // Subscribe push after short delay (avoid blocking UI)
     setTimeout(subscribePush, 2000);
 
-    // Poll for version updates
-    checkForUpdate();
-    setInterval(checkForUpdate, VERSION_POLL_MS);
-
-    // Also periodically ask the browser to check for a new SW
-    setInterval(() => {
-      if (swRegistration) swRegistration.update().catch(() => {});
-    }, VERSION_POLL_MS);
+    // Load shared update banner (always, like all other projects)
+    loadUpdateBanner();
   }
 
   // Auto-init when DOM ready
