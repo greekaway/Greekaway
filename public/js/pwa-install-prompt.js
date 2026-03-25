@@ -238,11 +238,7 @@
 
     if (isIOSDevice()) {
       if (isDismissed(IOS_DISMISS_KEY)) return;
-      if (isSafari()) {
-        showIOSSafariBanner();       // Safari → οδηγίες Share → Add to Home Screen
-      } else {
-        showIOSOtherBrowserBanner(); // Chrome/Firefox/Edge → "ανοίξτε στο Safari" + copy URL
-      }
+      showIOSSafariBanner();         // Όλοι οι iOS browsers → οδηγίες εγκατάστασης
     }
     // Android handled by beforeinstallprompt event above
   }
