@@ -528,6 +528,7 @@
   top: 0;
   z-index: 40;
   padding: 10px 16px 6px;
+  padding-top: max(10px, env(safe-area-inset-top, 10px));
   background: var(--ds-bg);
   display: flex;
   flex-direction: column;
