@@ -246,26 +246,11 @@
   }
 }
 
-/* PWA standalone — footer at bottom edge, ::after fills safe-area gap */
-@media (display-mode: standalone) {
-  .ma-footer {
-    bottom: 0;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
-  .ma-footer::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 100%;
-    height: env(safe-area-inset-bottom, 0px);
-    background: rgba(10, 16, 28, 0.35);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-  }
-}
+/* PWA standalone — no special overrides; @supports safe-area rule above
+   handles positioning uniformly for both browser and PWA.
+   In browser: env(safe-area-inset-bottom) = 0 → bottom: 8px (same visual).
+   In PWA:     env(safe-area-inset-bottom) ≈ 34px → bottom: 42px (clears home indicator,
+               visual gap stays ~8px). Footer keeps floating design with full rounded corners. */
 
 /* Tablets — constrain footer width */
 @media (min-width: 768px) {
