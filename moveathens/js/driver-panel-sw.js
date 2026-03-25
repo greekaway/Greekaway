@@ -72,7 +72,7 @@ self.addEventListener('fetch', (event) => {
         url.pathname === '/version.json' ||
         url.pathname.includes('/sse')) {
       event.respondWith(
-        fetch(request).catch(() => {
+        fetch(request, { cache: 'no-store' }).catch(() => {
           if (request.mode === 'navigate') return caches.match('/offline.html');
           return new Response('', { status: 503 });
         })

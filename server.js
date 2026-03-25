@@ -683,14 +683,30 @@ app.use((req, res, next) => {
     return next();
   }
 
+  // B.4c) MoveAthens Site SW — pass through for dynamic build injection
+  if (url === '/moveathens/js/moveathens-sw.js') {
+    return next();
+  }
+
+  // B.4d) MoveAthens PWA boot script
+  if (url === '/moveathens/js/moveathens-pwa.js') {
+    return next();
+  }
+
+  // B.4e) Manifest files
+  if (url === '/manifest-moveathens.json' || url === '/manifest-ma-driver.json') {
+    return next();
+  }
+
   // B.5) Favicon for MoveAthens domain
   if (url === '/favicon.ico') {
     return res.sendFile(path.join(MOVEATHENS_BASE_DIR, 'icons', 'favicon-32x32.png'));
   }
 
   // C) MoveAthens static assets (css, js, images, videos)
-  //    Exception: driver-panel-sw.js is handled by a dedicated route for dynamic build injection
-  if (url.startsWith('/moveathens/') && url !== '/moveathens/js/driver-panel-sw.js') {
+  //    Exception: SW files are handled by dedicated routes for dynamic build injection
+  const swExceptions = ['/moveathens/js/driver-panel-sw.js', '/moveathens/js/moveathens-sw.js'];
+  if (url.startsWith('/moveathens/') && !swExceptions.includes(url)) {
     // Serve from moveathens folder directly
     const assetPath = url.replace('/moveathens/', '');
     const fullPath = path.join(MOVEATHENS_BASE_DIR, assetPath);
@@ -823,6 +839,21 @@ app.use((req, res, next) => {
     return next();
   }
 
+  // B.3) Shared public JS (update-banner, pwa-install-prompt, etc.)
+  if (url.startsWith('/js/')) {
+    return next();
+  }
+
+  // B.3b) DriverSystem SW — pass through for dynamic build injection
+  if (url === '/driverssystem/js/driverssystem-sw.js') {
+    return next();
+  }
+
+  // B.3c) DriverSystem manifest
+  if (url === '/manifest-driverssystem.json') {
+    return next();
+  }
+
   // B.5) Favicon for DriversSystem domain
   if (url === '/favicon.ico') {
     const faviconPath = path.join(DRIVERSSYSTEM_BASE_DIR, 'icons', 'favicon-32x32.png');
@@ -834,7 +865,8 @@ app.use((req, res, next) => {
   }
 
   // C) DriversSystem static assets (css, js, images, icons, partials)
-  if (url.startsWith('/driverssystem/')) {
+  //    Exception: SW file handled by dedicated route for dynamic build injection
+  if (url.startsWith('/driverssystem/') && url !== '/driverssystem/js/driverssystem-sw.js') {
     const assetPath = url.replace('/driverssystem/', '');
     const fullPath = path.join(DRIVERSSYSTEM_BASE_DIR, assetPath);
 
@@ -907,6 +939,66 @@ app.get('/service-worker.js', (req, res) => {
 // Dynamic driver-panel-sw.js — same build injection for MoveAthens Driver PWA
 app.get('/moveathens/js/driver-panel-sw.js', (req, res) => {
   const swPath = path.join(__dirname, 'moveathens', 'js', 'driver-panel-sw.js');
+  try {
+    const vInfo = readVersionFile(VERSION_FILE_PATH);
+    const build = (vInfo && vInfo.buildNumber) || Date.now();
+    let swCode = fs.readFileSync(swPath, 'utf8');
+    swCode = swCode.replace(
+      /const CACHE_VERSION = '[^']*';/,
+      `const CACHE_VERSION = 'v${build}';`
+    );
+    res.set('Content-Type', 'application/javascript; charset=utf-8');
+    res.set('Cache-Control', 'no-store');
+    res.set('Service-Worker-Allowed', '/moveathens/');
+    res.send(swCode);
+  } catch (err) {
+    res.sendFile(swPath);
+  }
+});
+
+// Dynamic moveathens-sw.js — MoveAthens Hotel Site PWA
+app.get('/moveathens/js/moveathens-sw.js', (req, res) => {
+  const swPath = path.join(__dirname, 'moveathens', 'js', 'moveathens-sw.js');
+  try {
+    const vInfo = readVersionFile(VERSION_FILE_PATH);
+    const build = (vInfo && vInfo.buildNumber) || Date.now();
+    let swCode = fs.readFileSync(swPath, 'utf8');
+    swCode = swCode.replace(
+      /const CACHE_VERSION = '[^']*';/,
+      `const CACHE_VERSION = 'v${build}';`
+    );
+    res.set('Content-Type', 'application/javascript; charset=utf-8');
+    res.set('Cache-Control', 'no-store');
+    res.set('Service-Worker-Allowed', '/moveathens/');
+    res.send(swCode);
+  } catch (err) {
+    res.sendFile(swPath);
+  }
+});
+
+// Dynamic driverssystem-sw.js — DriverSystem PWA
+app.get('/driverssystem/js/driverssystem-sw.js', (req, res) => {
+  const swPath = path.join(__dirname, 'driverssystem', 'js', 'driverssystem-sw.js');
+  try {
+    const vInfo = readVersionFile(VERSION_FILE_PATH);
+    const build = (vInfo && vInfo.buildNumber) || Date.now();
+    let swCode = fs.readFileSync(swPath, 'utf8');
+    swCode = swCode.replace(
+      /const CACHE_VERSION = '[^']*';/,
+      `const CACHE_VERSION = 'v${build}';`
+    );
+    res.set('Content-Type', 'application/javascript; charset=utf-8');
+    res.set('Cache-Control', 'no-store');
+    res.set('Service-Worker-Allowed', '/driverssystem/');
+    res.send(swCode);
+  } catch (err) {
+    res.sendFile(swPath);
+  }
+});
+
+// Dynamic admin-sw.js — Admin Panel PWA
+app.get('/admin-sw.js', (req, res) => {
+  const swPath = path.join(__dirname, 'public', 'admin-sw.js');
   try {
     const vInfo = readVersionFile(VERSION_FILE_PATH);
     const build = (vInfo && vInfo.buildNumber) || Date.now();

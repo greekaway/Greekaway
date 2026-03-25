@@ -26,7 +26,7 @@
 
   const loadConfig = async () => {
     try {
-      const res = await fetch('/api/driver-panel/config');
+      const res = await fetch('/api/driver-panel/config', { cache: 'no-store' });
       if (res.ok) config = await res.json();
     } catch (err) {
       console.error('[dp] Config load failed:', err);

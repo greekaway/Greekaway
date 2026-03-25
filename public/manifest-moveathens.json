@@ -1,0 +1,18 @@
+{
+  "$comment": "MoveAthens Hotel Site – PWA Manifest",
+  "name": "MoveAthens",
+  "short_name": "MoveAthens",
+  "start_url": "/moveathens/pages/welcome.html",
+  "scope": "/moveathens/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0b0f1a",
+  "background_color": "#0b0f1a",
+  "description": "MoveAthens — Σύστημα transfer ξενοδοχείων",
+  "icons": [
+    { "src": "/moveathens/icons/favicon-32x32.png",   "sizes": "32x32",   "type": "image/png" },
+    { "src": "/moveathens/icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/moveathens/videos/hero-logo.png",       "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/moveathens/videos/hero-logo.png",       "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
