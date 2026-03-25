@@ -123,10 +123,10 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     let phone = (phoneInput.value || '').replace(/\s+/g, '').trim();
-    // Auto-add Greek country code if missing
-    if (/^69\d{8}$/.test(phone)) phone = '+30' + phone;
-    else if (/^0030/.test(phone)) phone = '+' + phone.slice(2);
-    else if (/^30\d{10}$/.test(phone)) phone = '+' + phone;
+    // Normalise to local 69XXXXXXXX format (strip +30 / 0030 prefix)
+    if (/^\+30/.test(phone)) phone = phone.slice(3);
+    else if (/^0030/.test(phone)) phone = phone.slice(4);
+    else if (/^30\d{10}$/.test(phone)) phone = phone.slice(2);
     if (!phone) {
       showError('Εισάγετε τον αριθμό τηλεφώνου σας.');
       return;
