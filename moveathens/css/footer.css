@@ -246,13 +246,24 @@
   }
 }
 
-/* PWA standalone mode — footer sits at screen bottom, no dark strip */
+/* PWA standalone — footer at bottom edge, ::after fills safe-area gap */
 @media (display-mode: standalone) {
   .ma-footer {
     bottom: 0;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .ma-footer::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: env(safe-area-inset-bottom, 0px);
+    background: rgba(10, 16, 28, 0.35);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
 }
 
