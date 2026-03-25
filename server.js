@@ -949,7 +949,7 @@ app.get('/moveathens/js/driver-panel-sw.js', (req, res) => {
     );
     res.set('Content-Type', 'application/javascript; charset=utf-8');
     res.set('Cache-Control', 'no-store');
-    res.set('Service-Worker-Allowed', isMoveAthensHost(req) ? '/' : '/moveathens/');
+    res.set('Service-Worker-Allowed', isMoveAthensHost(req) ? '/driver' : '/moveathens/driver');
     res.send(swCode);
   } catch (err) {
     res.sendFile(swPath);
@@ -1144,7 +1144,7 @@ app.get('/manifest-ma-driver.json', (req, res) => {
     name: 'MoveAthens Driver',
     short_name: 'MA Driver',
     start_url: onOwnDomain ? '/driver' : '/moveathens/driver',
-    scope: onOwnDomain ? '/' : '/moveathens/',
+    scope: onOwnDomain ? '/driver' : '/moveathens/driver',
     display: 'standalone',
     orientation: 'portrait',
     theme_color: '#0b0f1a',

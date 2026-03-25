@@ -12,7 +12,7 @@
   const SW_PATH = '/moveathens/js/driver-panel-sw.js';
   const dpHost = (window.location.hostname || '').toLowerCase();
   const onOwnDomain = (dpHost === 'moveathens.com' || dpHost === 'www.moveathens.com');
-  const SW_SCOPE = onOwnDomain ? '/' : '/moveathens/';
+  const SW_SCOPE = onOwnDomain ? '/driver' : '/moveathens/driver';
 
   let swRegistration = null;
 
