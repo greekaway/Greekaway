@@ -15,6 +15,16 @@ const path = require('path');
 
 const CONFIG_FILE = path.join(__dirname, '..', 'moveathens', 'data', 'driver_panel_ui.json');
 
+// Lazy-load push sender (avoids circular dependency at startup)
+let _sendPush = null;
+function getSendPush() {
+  if (_sendPush) return _sendPush;
+  try {
+    _sendPush = require('../moveathens/server/moveathens-driver-panel-push').sendPushToDriver;
+  } catch { _sendPush = null; }
+  return _sendPush;
+}
+
 // Map<driverPhone, Set<res>>  (one driver can have multiple tabs)
 const CLIENTS = new Map();
 
@@ -134,9 +144,22 @@ async function autoBroadcast(request, driversData) {
   const cardData = buildCardData(request, 'urgent');
   const sentTo = [];
 
+  // Build push notification text
+  const origin = request.is_arrival ? request.destination_name : (request.hotel_name || request.origin_zone_name);
+  const destination = request.is_arrival ? (request.hotel_name || request.origin_zone_name) : request.destination_name;
+  const pushTitle = '🚕 Νέο Αίτημα Transfer';
+  const pushBody = `${origin} → ${destination}` + (request.price ? ` • ${request.price}€` : '');
+
   for (const driver of eligible) {
     const sent = sendToDriver(driver.phone, 'new-request', cardData);
     if (sent) sentTo.push(driver.phone);
+
+    // Also send Web Push (works even if app is in background / during phone call)
+    const sendPush = getSendPush();
+    if (sendPush) {
+      sendPush(driver.phone, pushTitle, pushBody, { requestId: request.id }, 'new-request-' + request.id)
+        .catch(() => { /* silent — SSE is primary */ });
+    }
   }
 
   console.log(`[broadcast] Request ${request.id} sent to ${sentTo.length}/${eligible.length} online drivers`);

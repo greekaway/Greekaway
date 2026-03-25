@@ -44,7 +44,52 @@ function getWebPush() {
   }
 }
 
-module.exports = function registerDriverPanelPush(app) {
+/**
+ * Send push notification to a driver (callable from other modules)
+ * @param {string} phone - Driver phone
+ * @param {string} title
+ * @param {string} body
+ * @param {object} [data] - Extra data payload
+ * @param {string} [tag] - Notification tag for grouping
+ * @returns {Promise<number>} Number of push messages sent
+ */
+async function sendPushToDriver(phone, title, body, data, tag) {
+  try {
+    const wp = getWebPush();
+    if (!wp) return 0;
+
+    const subs = loadSubs();
+    const driverSubs = subs.filter(s => s.driver_phone === phone);
+    if (driverSubs.length === 0) return 0;
+
+    const payload = JSON.stringify({ title, body, tag, data, urgent: true });
+    let sent = 0;
+    const expired = [];
+
+    for (const sub of driverSubs) {
+      try {
+        const keys = typeof sub.keys === 'string' ? JSON.parse(sub.keys) : sub.keys;
+        await wp.sendNotification({ endpoint: sub.endpoint, keys }, payload);
+        sent++;
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          expired.push(sub.endpoint);
+        }
+      }
+    }
+
+    if (expired.length > 0) {
+      const cleaned = subs.filter(s => !expired.includes(s.endpoint));
+      saveSubs(cleaned);
+    }
+
+    return sent;
+  } catch {
+    return 0;
+  }
+}
+
+function registerDriverPanelPush(app) {
 
   // ── VAPID public key ──
   app.get('/api/driver-panel/push/vapid-key', (req, res) => {
@@ -89,35 +134,7 @@ module.exports = function registerDriverPanelPush(app) {
       const { phone, title, body, data, tag } = req.body;
       if (!phone) return res.status(400).json({ error: 'Missing phone' });
 
-      const wp = getWebPush();
-      if (!wp) return res.status(503).json({ error: 'Push not configured' });
-
-      const subs = loadSubs();
-      const driverSubs = subs.filter(s => s.driver_phone === phone);
-      if (driverSubs.length === 0) return res.json({ ok: true, sent: 0 });
-
-      const payload = JSON.stringify({ title, body, tag, data, urgent: true });
-      let sent = 0;
-      const expired = [];
-
-      for (const sub of driverSubs) {
-        try {
-          const keys = typeof sub.keys === 'string' ? JSON.parse(sub.keys) : sub.keys;
-          await wp.sendNotification({ endpoint: sub.endpoint, keys }, payload);
-          sent++;
-        } catch (err) {
-          if (err.statusCode === 410 || err.statusCode === 404) {
-            expired.push(sub.endpoint);
-          }
-        }
-      }
-
-      // Cleanup expired subscriptions
-      if (expired.length > 0) {
-        const cleaned = subs.filter(s => !expired.includes(s.endpoint));
-        saveSubs(cleaned);
-      }
-
+      const sent = await sendPushToDriver(phone, title, body, data, tag);
       res.json({ ok: true, sent });
     } catch (err) {
       console.error('[driver-panel] push send:', err.message);
@@ -258,4 +275,7 @@ module.exports = function registerDriverPanelPush(app) {
       res.status(500).json({ error: 'Server error' });
     }
   });
-};
+}
+
+module.exports = registerDriverPanelPush;
+module.exports.sendPushToDriver = sendPushToDriver;
