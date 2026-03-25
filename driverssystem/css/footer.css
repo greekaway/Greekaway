@@ -124,6 +124,6 @@
 /* PWA standalone mode */
 @media (display-mode: standalone) {
   .ds-footer {
-    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    bottom: env(safe-area-inset-bottom, 8px);
   }
 }

@@ -70,6 +70,7 @@
 .ma-info-panel {
   display: none;
   animation: fadeIn 0.25s ease;
+  margin-top: 8px;
 }
 
 .ma-info-panel.active {

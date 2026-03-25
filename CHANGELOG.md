@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## 2026-03-25 — PWA Standalone Refinements & Zoom Prevention (v927)
+
+- **Footer positioning (PWA-only):** Changed standalone-mode footer `bottom` from `calc(8px + env(...))` to `env(safe-area-inset-bottom, 8px)` — eliminates black strip below footer on iPhone (MoveAthens + DriverSystem).
+- **Zoom prevention:** Added `maximum-scale=1, user-scalable=no` to viewport meta on all 14 MoveAthens pages — native app behavior, no pinch-zoom.
+- **AI Assistant layout:** Fixed header padding, back button positioning with safe-area calc, removed body padding override for fixed-layout page.
+- **Chat form:** Reduced excessive bottom padding from 28px to 16px minimum.
+- **Info page:** Added 8px margin between tabs and content panel.
+- **Body box-sizing:** Added `box-sizing: border-box` to prevent padding overflow beyond viewport height.
+
 ## 2025-11-19 — Mode-Aware Availability Editor & Month Prefetch API
 
 - Backend (`registerBookings`):

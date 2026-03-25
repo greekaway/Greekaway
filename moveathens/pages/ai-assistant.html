@@ -17,6 +17,7 @@
     html, body {
       height: 100%;
       overflow: hidden;
+      padding-bottom: 0 !important;
     }
     
     .ma-ai-page {
@@ -37,8 +38,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 14px 16px;
-      padding-top: max(14px, env(safe-area-inset-top, 14px));
+      padding: 14px 16px 10px;
+      padding-top: calc(env(safe-area-inset-top, 14px) + 14px);
       flex-shrink: 0;
       position: relative;
       z-index: 10;
@@ -47,8 +48,7 @@
     .ma-ai-back {
       position: absolute;
       left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
+      top: calc(env(safe-area-inset-top, 14px) + 10px);
       width: 40px;
       height: 40px;
       border-radius: 12px;
