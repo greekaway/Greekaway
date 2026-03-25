@@ -260,3 +260,10 @@
     padding: 12px;
   }
 }
+
+/* PWA standalone — extend form background into safe area */
+@media (display-mode: standalone) {
+  .ma-chat-form {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+}
