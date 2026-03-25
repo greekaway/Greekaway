@@ -61,6 +61,8 @@ function broadcastToAll(event, data) {
 
 function matchesVehicle(driver, vehicleTypeId) {
   if (!vehicleTypeId) return true; // no vehicle requirement = any driver
+  // Driver must have a current vehicle selected to receive requests
+  if (!driver.current_vehicle_type) return false;
   return driver.current_vehicle_type === vehicleTypeId;
 }
 

@@ -269,6 +269,8 @@ module.exports = function registerDriverPanelRoutes(app) {
         // Only instant/call requests — scheduled go to appointments tab
         if (r.booking_type === 'scheduled') return false;
         if (!r.vehicle_type_id) return true;
+        // Driver must have a current vehicle selected
+        if (!driver.current_vehicle_type) return false;
         return driver.current_vehicle_type === r.vehicle_type_id;
       });
 

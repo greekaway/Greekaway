@@ -36,6 +36,18 @@ const dataLayer = require('../../src/server/data/moveathens');
 const requestsLayer = require('../../src/server/data/moveathens-requests');
 const driversLayer = require('../../src/server/data/moveathens-drivers');
 
+/** Convert a Date (or ISO string) to YYYY-MM-DD in Europe/Athens timezone */
+function toAthensDate(input) {
+  const d = input instanceof Date ? input : new Date(input);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Athens' });
+}
+
+/** Normalize a Greek phone for comparison (strip whitespace, dashes, +30, 0030) */
+function normPhone(p) {
+  return (p || '').replace(/[\s\-().]/g, '').replace(/^\+30/, '').replace(/^0030/, '');
+}
+
 module.exports = function registerMoveAthens(app, opts = {}) {
   const isDev = !!opts.isDev;
   const checkAdminAuth = typeof opts.checkAdminAuth === 'function' ? opts.checkAdminAuth : null;
@@ -673,23 +685,20 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       // Collect available years from ALL data (before date filtering)
       const yearSet = new Set();
       mine.forEach(r => {
-        const d = new Date(r.created_at);
-        if (!isNaN(d.getTime())) yearSet.add(d.getFullYear());
+        const ad = toAthensDate(r.created_at);
+        if (ad) yearSet.add(parseInt(ad.slice(0, 4), 10));
       });
       const years = Array.from(yearSet).sort((a, b) => b - a);
 
+      // Helper: get effective date for a request (Athens timezone)
+      const reqDate = (r) => r.scheduled_date || (r.created_at ? toAthensDate(r.created_at) : '');
+
       // Apply date range filter if provided
       if (fromDate && datePattern.test(fromDate)) {
-        mine = mine.filter(r => {
-          const d = r.scheduled_date || (r.created_at ? (r.created_at instanceof Date ? r.created_at : new Date(r.created_at)).toISOString().slice(0, 10) : '');
-          return d >= fromDate;
-        });
+        mine = mine.filter(r => reqDate(r) >= fromDate);
       }
       if (toDate && datePattern.test(toDate)) {
-        mine = mine.filter(r => {
-          const d = r.scheduled_date || (r.created_at ? (r.created_at instanceof Date ? r.created_at : new Date(r.created_at)).toISOString().slice(0, 10) : '');
-          return d <= toDate;
-        });
+        mine = mine.filter(r => reqDate(r) <= toDate);
       }
 
       const active = mine.filter(r => r.status === 'accepted' || r.status === 'completed');
@@ -724,16 +733,16 @@ module.exports = function registerMoveAthens(app, opts = {}) {
         routeTypes[rt] = (routeTypes[rt] || 0) + 1;
       });
 
-      // Monthly breakdown
+      // Monthly breakdown (using Athens timezone)
       const monthMap = {};
       active.forEach(r => {
-        const d = new Date(r.created_at);
-        if (isNaN(d.getTime())) return;
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const ad = toAthensDate(r.created_at);
+        if (!ad) return;
+        const y = parseInt(ad.slice(0, 4), 10);
+        const m = ad.slice(5, 7);
         const key = y + '-' + m;
         if (!monthMap[key]) {
-          monthMap[key] = { month: key, year: y, month_number: d.getMonth() + 1, total_routes: 0, total_revenue: 0, commission_hotel: 0 };
+          monthMap[key] = { month: key, year: y, month_number: parseInt(m, 10), total_routes: 0, total_revenue: 0, commission_hotel: 0 };
         }
         monthMap[key].total_routes += 1;
         monthMap[key].total_revenue += Number(r.price) || 0;
@@ -746,13 +755,14 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const allPhones = await dataLayer.getHotelPhones(zoneId);
       const phoneNameMap = {};
       (allPhones || []).forEach(p => {
-        phoneNameMap[p.phone] = p.display_name || '';
+        phoneNameMap[normPhone(p.phone)] = p.display_name || '';
       });
       const phoneMap = {};
       active.forEach(r => {
         const ph = (r.orderer_phone || '').trim() || 'unknown';
+        const normPh = normPhone(ph);
         if (!phoneMap[ph]) {
-          phoneMap[ph] = { phone: ph, display_name: phoneNameMap[ph] || '', routes: 0, revenue: 0 };
+          phoneMap[ph] = { phone: ph, display_name: phoneNameMap[normPh] || '', routes: 0, revenue: 0 };
         }
         phoneMap[ph].routes += 1;
         phoneMap[ph].revenue += Number(r.price) || 0;
@@ -779,16 +789,10 @@ module.exports = function registerMoveAthens(app, opts = {}) {
       const allRequests = await requestsLayer.getRequests({});
       let mine = allRequests.filter(r => String(r.origin_zone_id) === zoneId);
 
-      // Filter by date if provided
+      // Filter by date if provided (use Athens timezone)
       if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
         mine = mine.filter(r => {
-          // Use scheduled_date for scheduled bookings, created_at for instant
-          // Handle created_at as both Date object (PostgreSQL) and string (JSON fallback)
-          let d = r.scheduled_date || '';
-          if (!d && r.created_at) {
-            const ca = r.created_at instanceof Date ? r.created_at : new Date(r.created_at);
-            d = isNaN(ca.getTime()) ? '' : ca.toISOString().slice(0, 10);
-          }
+          const d = r.scheduled_date || (r.created_at ? toAthensDate(r.created_at) : '');
           return d === dateParam;
         });
       }

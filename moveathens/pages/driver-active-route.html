@@ -74,16 +74,84 @@
   const params = new URLSearchParams(window.location.search);
   const requestId = params.get('id');
   const LS_KEY = 'moveathens_driver';
+  const STATE_KEY = 'ma_dp_route_' + requestId;
 
   const getPhone = () => {
     try { return JSON.parse(localStorage.getItem(LS_KEY))?.phone || ''; } catch { return ''; }
   };
 
   let trip = null;
-  let currentStatus = 'accepted';
+  // States: accepted → arrived → completed (same as driver-accept card)
+  let uiState = 'accepted';
+
+  function saveState() {
+    try { sessionStorage.setItem(STATE_KEY, uiState); } catch { /* */ }
+  }
+  function loadSavedState() {
+    try { return sessionStorage.getItem(STATE_KEY) || null; } catch { return null; }
+  }
 
   function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
+  function getGreeting() {
+    const h = new Date().getHours();
+    return (h >= 5 && h < 12) ? 'Καλημέρα σας,' : 'Καλησπέρα σας,';
+  }
+
+  // ── Navigation with coordinates or address fallback ──
+  function openNavigation(lat, lng, fallbackAddress) {
+    let url;
+    if (lat && lng) {
+      url = 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng + '&travelmode=driving';
+    } else if (fallbackAddress) {
+      url = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(fallbackAddress) + '&travelmode=driving';
+    } else {
+      return;
+    }
+    window.open(url, '_blank');
+  }
+
+  // ── Build WhatsApp "arrived" message (same format as driver-accept card) ──
+  function buildArrivedWhatsAppUrl() {
+    if (!trip || !trip.hotel_phone) return null;
+    let phone = trip.hotel_phone.replace(/[^0-9+]/g, '');
+    if (!phone) return null;
+    if (phone.charAt(0) === '+') phone = phone.substring(1);
+    if (/^69/.test(phone) || /^21/.test(phone) || /^22/.test(phone)) {
+      phone = '30' + phone;
+    }
+    if (!phone) return null;
+
+    const greeting = getGreeting();
+    const details = [];
+    if (trip.passenger_name) details.push('Επιβάτη: ' + trip.passenger_name);
+    if (trip.is_arrival) {
+      details.push('Αφετηρία: ' + (trip.destination_name || '—'));
+      details.push('Προορισμό: ' + (trip.hotel_name || '—'));
+    } else {
+      details.push('Προορισμό: ' + (trip.destination_name || '—'));
+    }
+    if (trip.room_number) details.push('Δωμάτιο: ' + trip.room_number);
+    const detailsText = details.join(' – ');
+
+    let msg;
+    if (trip.is_arrival) {
+      msg = greeting + '\n\n' +
+        'Είμαι ο οδηγός που έχει αναλάβει ' + detailsText + '.\n\n' +
+        'Έχω φτάσει στο σημείο παραλαβής (' + (trip.destination_name || '—') + '). Βρίσκομαι εδώ κι έτοιμος να παραλάβω τον επιβάτη.\n\n' +
+        'Ευχαριστώ πολύ.';
+    } else {
+      msg = greeting + '\n\n' +
+        'Είμαι ο οδηγός που έχει αναλάβει ' + detailsText + '.\n\n' +
+        'Έχω φτάσει στο σημείο παραλαβής. Βρίσκομαι έξω και είμαι έτοιμος για αναχώρηση.\n\n' +
+        'Παρακαλώ ενημερώστε τον ότι τον περιμένω.\n\n' +
+        'Ευχαριστώ πολύ.';
+    }
+
+    return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+  }
+
+  // ── Load trip data ──
   async function loadTrip() {
     if (!requestId) { showError('Δεν βρέθηκε διαδρομή'); return; }
 
@@ -92,7 +160,20 @@
       if (!res.ok) throw new Error('Not found');
       const data = await res.json();
       trip = data.trip;
-      currentStatus = trip.status || 'accepted';
+
+      // Determine initial state from server + local storage
+      const savedState = loadSavedState();
+      if (trip.status === 'completed') {
+        uiState = 'completed';
+      } else if (trip.status === 'arrived') {
+        uiState = 'arrived';
+      } else if (trip.status === 'accepted') {
+        if (savedState === 'arrived') uiState = 'arrived';
+        else uiState = 'accepted';
+      } else {
+        uiState = 'accepted';
+      }
+
       render();
     } catch {
       showError('Σφάλμα φόρτωσης');
@@ -106,8 +187,8 @@
   function render() {
     const wrap = document.getElementById('arWrap');
     const dir = trip.is_arrival ? '✈️ Άφιξη' : '🚗 Αναχώρηση';
-    const statusClass = currentStatus === 'completed' ? 'completed' : currentStatus === 'arrived' ? 'arrived' : 'accepted';
-    const statusText = currentStatus === 'completed' ? 'Ολοκληρώθηκε' : currentStatus === 'arrived' ? 'Έφτασα' : 'Ενεργή';
+    const statusClass = uiState === 'completed' ? 'completed' : uiState === 'arrived' ? 'arrived' : 'accepted';
+    const statusText = uiState === 'completed' ? 'Ολοκληρώθηκε' : uiState === 'arrived' ? 'Στο σημείο' : 'Ενεργή';
 
     let infoRows = '';
     if (trip.hotel_name) infoRows += row('Ξενοδοχείο', trip.hotel_name);
@@ -121,26 +202,41 @@
     if (trip.scheduled_date) infoRows += row('Ημ/νία', `${trip.scheduled_date} ${trip.scheduled_time || ''}`);
     if (trip.notes) infoRows += row('Σημειώσεις', trip.notes);
 
+    // ── Hybrid button system (same as driver-accept card) ──
     let actionsHTML = '';
-    if (currentStatus === 'accepted') {
+    let statusMsg = '';
+
+    if (uiState === 'accepted') {
+      // Primary: Navigate to first point, Secondary: "Έφτασα" (sends WhatsApp)
+      const navLabel = trip.is_arrival
+        ? '🧭 Πλοήγηση προς Σημείο Παραλαβής'
+        : '🧭 Πλοήγηση προς Ξενοδοχείο';
       actionsHTML = `
-        <button class="ar-btn ar-btn-nav" onclick="openNav()">🧭 Πλοήγηση</button>
-        <button class="ar-btn ar-btn-primary" onclick="setStatus('arrived')">📍 Έφτασα</button>`;
-    } else if (currentStatus === 'arrived') {
+        <button class="ar-btn ar-btn-nav" id="arPrimary">${navLabel}</button>
+        <button class="ar-btn ar-btn-whatsapp" id="arSecondary">📍 Έφτασα</button>`;
+      statusMsg = trip.is_arrival
+        ? 'Πάτα πλοήγηση για να πας στο σημείο παραλαβής.'
+        : 'Πάτα πλοήγηση για να πας στο ξενοδοχείο.';
+    } else if (uiState === 'arrived') {
+      // Primary: Navigate to final destination, Secondary: "Ολοκλήρωση"
+      const navLabel = trip.is_arrival
+        ? '🧭 Πλοήγηση προς Ξενοδοχείο'
+        : '🧭 Πλοήγηση προς Τελικό Προορισμό';
       actionsHTML = `
-        <div class="ar-row-pair">
-          <button class="ar-btn ar-btn-nav" onclick="openNav()">🧭 Πλοήγηση</button>
-          <button class="ar-btn ar-btn-whatsapp" onclick="openWhatsApp()">💬 WhatsApp</button>
-        </div>
-        <button class="ar-btn ar-btn-complete" onclick="setStatus('completed')">🏁 Ολοκλήρωση</button>`;
+        <button class="ar-btn ar-btn-nav" id="arPrimary">${navLabel}</button>
+        <button class="ar-btn ar-btn-complete" id="arSecondary">🏁 Ολοκλήρωση Διαδρομής</button>`;
+      statusMsg = trip.is_arrival
+        ? 'Παρέλαβες τον επιβάτη! Πάτα πλοήγηση για το ξενοδοχείο.'
+        : 'Ενημέρωσες τον ξενοδόχο! Πάτα πλοήγηση για τον τελικό προορισμό.';
     } else {
       actionsHTML = `
-        <button class="ar-btn ar-btn-secondary" onclick="goBack()">← Πίσω στο Panel</button>`;
+        <button class="ar-btn ar-btn-secondary" id="arBack">← Πίσω στο Panel</button>`;
+      statusMsg = 'Η διαδρομή ολοκληρώθηκε. Ευχαριστούμε!';
     }
 
     wrap.innerHTML = `
       <div class="ar-header">
-        <button class="ar-back" onclick="goBack()">← Πίσω</button>
+        <button class="ar-back" id="arBackBtn">← Πίσω</button>
         <span class="ar-status-badge ar-status-${statusClass}">${statusText}</span>
       </div>
       <div class="ar-route">
@@ -153,63 +249,101 @@
       <div class="ar-info">
         <div class="ar-info-card">${infoRows || '<div style="text-align:center;color:var(--ar-muted)">Χωρίς επιπλέον πληροφορίες</div>'}</div>
       </div>
+      <div class="ar-status-msg" style="text-align:center;padding:4px 0 8px;font-size:13px;color:var(--ar-accent)">${esc(statusMsg)}</div>
       <div class="ar-actions">${actionsHTML}</div>`;
+
+    // Bind events after render
+    document.getElementById('arBackBtn')?.addEventListener('click', goBack);
+    document.getElementById('arBack')?.addEventListener('click', goBack);
+
+    const primary = document.getElementById('arPrimary');
+    const secondary = document.getElementById('arSecondary');
+
+    if (primary) primary.addEventListener('click', handlePrimary);
+    if (secondary) secondary.addEventListener('click', handleSecondary);
   }
 
   function row(label, value) {
     return `<div class="ar-info-row"><span class="ar-info-label">${esc(label)}</span><span class="ar-info-value">${esc(String(value))}</span></div>`;
   }
 
-  window.openNav = () => {
-    const addr = trip.is_arrival
-      ? (trip.hotel_address || trip.hotel_name || trip.destination)
-      : trip.destination;
-    const encoded = encodeURIComponent(addr);
-    // Try Google Maps, fallback to Waze
-    const isIOS = /iPhone|iPad/i.test(navigator.userAgent);
-    if (isIOS) {
-      window.open(`comgooglemaps://?daddr=${encoded}&directionsmode=driving`, '_blank');
-      setTimeout(() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encoded}&travelmode=driving`, '_blank'), 500);
-    } else {
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${encoded}&travelmode=driving`, '_blank');
-    }
-  };
-
-  window.openWhatsApp = () => {
-    const phone = trip.orderer_phone;
-    if (!phone) { alert('Δεν υπάρχει τηλέφωνο πελάτη'); return; }
-    const clean = phone.replace(/[^0-9+]/g, '');
-    const msg = encodeURIComponent(`Γεια σας, ο οδηγός σας έφτασε! 🚗`);
-    window.open(`https://wa.me/${clean}?text=${msg}`, '_blank');
-  };
-
-  window.setStatus = async (status) => {
-    const phone = getPhone();
-    if (!phone || !requestId) return;
-
-    try {
-      const res = await fetch(`/api/driver-panel/active-route/${encodeURIComponent(requestId)}/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, phone })
-      });
-      const data = await res.json();
-      if (data.ok) {
-        currentStatus = status;
-        render();
+  // ── PRIMARY BUTTON: Navigate ──
+  function handlePrimary() {
+    if (uiState === 'accepted') {
+      // Navigate to FIRST point (pickup)
+      if (trip.is_arrival) {
+        // Arrival: go to airport/port (destination coords)
+        openNavigation(trip.destination_lat, trip.destination_lng, trip.destination_name);
+      } else {
+        // Departure: go to hotel (hotel coords or address fallback)
+        const hotelAddr = [trip.hotel_name, trip.hotel_address, trip.hotel_municipality].filter(Boolean).join(', ');
+        openNavigation(trip.hotel_lat, trip.hotel_lng, hotelAddr || 'Athens');
       }
-    } catch {
-      alert('Σφάλμα ενημέρωσης');
+    } else if (uiState === 'arrived') {
+      // Navigate to SECOND point (final destination)
+      if (trip.is_arrival) {
+        // Arrival: second point is hotel
+        const hotelAddr = [trip.hotel_name, trip.hotel_address, trip.hotel_municipality].filter(Boolean).join(', ');
+        openNavigation(trip.hotel_lat, trip.hotel_lng, hotelAddr || 'Athens');
+      } else {
+        // Departure: second point is destination (destination coords)
+        openNavigation(trip.destination_lat, trip.destination_lng, trip.destination_name);
+      }
     }
-  };
+  }
 
-  window.goBack = () => {
-    if (window.opener || document.referrer.includes('/moveathens/driver')) {
-      window.location.href = '/moveathens/driver';
-    } else {
-      window.history.back();
+  // ── SECONDARY BUTTON: Arrived / Complete ──
+  async function handleSecondary() {
+    const phone = getPhone();
+
+    if (uiState === 'accepted') {
+      // ── "ΕΦΤΑΣΑ" — open WhatsApp + mark arrived ──
+      const waUrl = buildArrivedWhatsAppUrl();
+      if (waUrl) {
+        window.open(waUrl, '_blank');
+      }
+
+      // Mark arrived on server
+      try {
+        await fetch(`/api/driver-panel/active-route/${encodeURIComponent(requestId)}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'arrived', phone })
+        });
+      } catch { /* non-blocking */ }
+
+      uiState = 'arrived';
+      saveState();
+      render();
+
+    } else if (uiState === 'arrived') {
+      // ── "ΟΛΟΚΛΗΡΩΣΗ" ──
+      const btn = document.getElementById('arSecondary');
+      if (btn) { btn.disabled = true; btn.textContent = 'Αποστολή…'; }
+
+      try {
+        const res = await fetch(`/api/driver-panel/active-route/${encodeURIComponent(requestId)}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'completed', phone })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          uiState = 'completed';
+          saveState();
+          render();
+        } else {
+          if (btn) { btn.disabled = false; btn.textContent = '🏁 Ολοκλήρωση Διαδρομής'; }
+        }
+      } catch {
+        if (btn) { btn.disabled = false; btn.textContent = '🏁 Ολοκλήρωση Διαδρομής'; }
+      }
     }
-  };
+  }
+
+  function goBack() {
+    window.location.href = '/moveathens/driver';
+  }
 
   loadTrip();
 })();

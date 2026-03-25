@@ -37,6 +37,19 @@ body {
   padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px));
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  /* Disable text selection / copy-paste — native-app feel */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow selection only in input/textarea fields */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 /* PWA: extend body min-height to cover safe area (no black band) */

@@ -133,11 +133,64 @@ module.exports = function registerDriverPanelPush(app) {
     res.status(404).send('Active route page not found');
   });
 
-  // ── Active Route: get trip data ──
+  // ── Active Route: get trip data (with coordinates for navigation) ──
   app.get('/api/driver-panel/active-route/:requestId', async (req, res) => {
     try {
       const request = await requestsData.getRequestById(req.params.requestId);
       if (!request) return res.status(404).json({ error: 'Not found' });
+
+      // Look up hotel phone (same logic as driver-accept endpoint)
+      let hotel_phone = '';
+      if (request.origin_zone_id) {
+        try {
+          const moveathensData = require('../../src/server/data/moveathens');
+          const hotelPhones = await moveathensData.getHotelPhones(request.origin_zone_id);
+          if (request.orderer_phone) {
+            const normOrderer = request.orderer_phone.replace(/[\s\-().]/g, '').replace(/^\+30/, '').replace(/^0030/, '');
+            const matched = (hotelPhones || []).find(p => {
+              const normStored = p.phone.replace(/[\s\-().]/g, '').replace(/^\+30/, '').replace(/^0030/, '');
+              return normStored === normOrderer;
+            });
+            if (matched) hotel_phone = matched.phone;
+          }
+          if (!hotel_phone && hotelPhones && hotelPhones.length > 0) {
+            hotel_phone = hotelPhones[0].phone;
+          }
+          if (!hotel_phone) {
+            const zones = await moveathensData.getZones({ activeOnly: false });
+            const zone = zones.find(z => z.id === request.origin_zone_id);
+            if (zone && zone.phone) hotel_phone = zone.phone;
+          }
+        } catch (e) { /* ignore */ }
+      }
+
+      // Look up destination coordinates
+      let destination_lat = null, destination_lng = null;
+      if (request.destination_id) {
+        try {
+          const moveathensData = require('../../src/server/data/moveathens');
+          const dests = await moveathensData.getDestinations({ activeOnly: false });
+          const dest = dests.find(d => d.id === request.destination_id);
+          if (dest) {
+            destination_lat = dest.lat || null;
+            destination_lng = dest.lng || null;
+          }
+        } catch (e) { /* ignore */ }
+      }
+
+      // Look up hotel (zone) coordinates
+      let hotel_lat = null, hotel_lng = null;
+      if (request.origin_zone_id) {
+        try {
+          const moveathensData = require('../../src/server/data/moveathens');
+          const zones = await moveathensData.getZones({ activeOnly: false });
+          const zone = zones.find(z => z.id === request.origin_zone_id);
+          if (zone) {
+            hotel_lat = zone.lat || null;
+            hotel_lng = zone.lng || null;
+          }
+        } catch (e) { /* ignore */ }
+      }
 
       res.json({
         ok: true,
@@ -145,8 +198,15 @@ module.exports = function registerDriverPanelPush(app) {
           id: request.id,
           origin: request.is_arrival ? request.destination_name : (request.hotel_name || request.origin_zone_name),
           destination: request.is_arrival ? (request.hotel_name || request.origin_zone_name) : request.destination_name,
+          destination_name: request.destination_name,
           hotel_name: request.hotel_name,
           hotel_address: request.hotel_address,
+          hotel_municipality: request.hotel_municipality || '',
+          hotel_phone,
+          hotel_lat,
+          hotel_lng,
+          destination_lat,
+          destination_lng,
           room_number: request.room_number,
           passenger_name: request.passenger_name,
           passengers: request.passengers,
@@ -157,6 +217,7 @@ module.exports = function registerDriverPanelPush(app) {
           notes: request.notes,
           price: request.price,
           is_arrival: request.is_arrival,
+          channel: request.channel || 'whatsapp',
           scheduled_date: request.scheduled_date,
           scheduled_time: request.scheduled_time,
           status: request.status,
