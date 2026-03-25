@@ -35,7 +35,7 @@
 html.ma-gate-pending body {
   overflow: hidden !important;
 }
-html.ma-gate-pending body > *:not(.ma-gate):not(script) {
+html.ma-gate-pending body > *:not(.ma-gate):not(script):not(#pwa-install-prompt) {
   display: none !important;
 }
 
@@ -44,7 +44,7 @@ body.ma-gate-locked {
   overflow: hidden !important;
 }
 
-body.ma-gate-locked > *:not(.ma-gate):not(script) {
+body.ma-gate-locked > *:not(.ma-gate):not(script):not(#pwa-install-prompt) {
   display: none !important;
 }
 

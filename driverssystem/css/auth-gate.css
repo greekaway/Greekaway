@@ -33,7 +33,7 @@
 html.ds-gate-pending body {
   overflow: hidden !important;
 }
-html.ds-gate-pending body > *:not(.ds-gate):not(script) {
+html.ds-gate-pending body > *:not(.ds-gate):not(script):not(#pwa-install-prompt) {
   display: none !important;
 }
 
@@ -42,7 +42,7 @@ body.ds-gate-locked {
   overflow: hidden !important;
 }
 
-body.ds-gate-locked > *:not(.ds-gate):not(script) {
+body.ds-gate-locked > *:not(.ds-gate):not(script):not(#pwa-install-prompt) {
   display: none !important;
 }
 

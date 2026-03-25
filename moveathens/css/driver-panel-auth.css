@@ -24,11 +24,11 @@
 
 /* Phase 1: inline script adds this before body */
 html.ma-dp-gate-pending body { overflow: hidden !important; }
-html.ma-dp-gate-pending body > *:not(.ma-dp-gate):not(script) { display: none !important; }
+html.ma-dp-gate-pending body > *:not(.ma-dp-gate):not(script):not(#pwa-install-prompt) { display: none !important; }
 
 /* Phase 2: auth-gate.js adds this */
 body.ma-dp-gate-locked { overflow: hidden !important; }
-body.ma-dp-gate-locked > *:not(.ma-dp-gate):not(script) { display: none !important; }
+body.ma-dp-gate-locked > *:not(.ma-dp-gate):not(script):not(#pwa-install-prompt) { display: none !important; }
 
 /* Card */
 .ma-dp-gate__card {
