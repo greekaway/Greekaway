@@ -204,7 +204,7 @@
 .ds-partners-fab {
   position: fixed;
   right: 20px;
-  bottom: 108px;
+  bottom: calc(120px + env(safe-area-inset-bottom, 0px));
   width: 56px;
   height: 56px;
   border-radius: 50%;

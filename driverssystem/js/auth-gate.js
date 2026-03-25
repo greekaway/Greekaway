@@ -122,7 +122,11 @@
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const phone = (phoneInput.value || '').trim();
+    let phone = (phoneInput.value || '').replace(/\s+/g, '').trim();
+    // Auto-add Greek country code if missing
+    if (/^69\d{8}$/.test(phone)) phone = '+30' + phone;
+    else if (/^0030/.test(phone)) phone = '+' + phone.slice(2);
+    else if (/^30\d{10}$/.test(phone)) phone = '+' + phone;
     if (!phone) {
       showError('Εισάγετε τον αριθμό τηλεφώνου σας.');
       return;
