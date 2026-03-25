@@ -6,7 +6,9 @@
   'use strict';
 
   var SW_PATH  = '/driverssystem/js/driverssystem-sw.js';
-  var SW_SCOPE = '/driverssystem/';
+  var host = (window.location.hostname || '').toLowerCase();
+  var onOwnDomain = (host === 'driverssystem.com' || host === 'www.driverssystem.com');
+  var SW_SCOPE = onOwnDomain ? '/' : '/driverssystem/';
 
   // ── Register Service Worker ──
   if ('serviceWorker' in navigator) {

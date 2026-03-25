@@ -131,7 +131,8 @@
       '<div class="pwa-ip-card">' +
         '<div class="pwa-ip-title">📱 Εγκαταστήστε την εφαρμογή</div>' +
         '<p class="pwa-ip-subtitle">' +
-          'Για να την εγκαταστήσετε, ανοίξτε αυτή τη σελίδα στο <strong>Safari</strong>:' +
+          'Η εγκατάσταση γίνεται μόνο μέσω <strong>Safari</strong>. ' +
+          'Ανοίξτε αυτή τη σελίδα στο Safari:' +
         '</p>' +
         '<ol class="pwa-ip-steps">' +
           '<li>Αντιγράψτε τον σύνδεσμο (κουμπί παρακάτω)</li>' +

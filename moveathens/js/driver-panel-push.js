@@ -9,7 +9,9 @@
   const LS_KEY = 'moveathens_driver';
   const API = '/api/driver-panel';
   const SW_PATH = '/moveathens/js/driver-panel-sw.js';
-  const SW_SCOPE = '/moveathens/';
+  const dpHost = (window.location.hostname || '').toLowerCase();
+  const onOwnDomain = (dpHost === 'moveathens.com' || dpHost === 'www.moveathens.com');
+  const SW_SCOPE = onOwnDomain ? '/' : '/moveathens/';
   const VERSION_POLL_MS = 60000;
 
   let swRegistration = null;

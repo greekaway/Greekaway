@@ -949,7 +949,7 @@ app.get('/moveathens/js/driver-panel-sw.js', (req, res) => {
     );
     res.set('Content-Type', 'application/javascript; charset=utf-8');
     res.set('Cache-Control', 'no-store');
-    res.set('Service-Worker-Allowed', '/moveathens/');
+    res.set('Service-Worker-Allowed', isMoveAthensHost(req) ? '/' : '/moveathens/');
     res.send(swCode);
   } catch (err) {
     res.sendFile(swPath);
@@ -969,7 +969,7 @@ app.get('/moveathens/js/moveathens-sw.js', (req, res) => {
     );
     res.set('Content-Type', 'application/javascript; charset=utf-8');
     res.set('Cache-Control', 'no-store');
-    res.set('Service-Worker-Allowed', '/moveathens/');
+    res.set('Service-Worker-Allowed', isMoveAthensHost(req) ? '/' : '/moveathens/');
     res.send(swCode);
   } catch (err) {
     res.sendFile(swPath);
@@ -989,7 +989,7 @@ app.get('/driverssystem/js/driverssystem-sw.js', (req, res) => {
     );
     res.set('Content-Type', 'application/javascript; charset=utf-8');
     res.set('Cache-Control', 'no-store');
-    res.set('Service-Worker-Allowed', '/driverssystem/');
+    res.set('Service-Worker-Allowed', isDriversSystemHost(req) ? '/' : '/driverssystem/');
     res.send(swCode);
   } catch (err) {
     res.sendFile(swPath);
@@ -1110,6 +1110,81 @@ app.get('/manifest-driver.json', (req, res) => {
   } catch (e) {
     return res.status(500).json({ error: 'manifest-error' });
   }
+});
+
+// Dynamic manifest for MoveAthens Hotel Site (domain-aware scope)
+app.get('/manifest-moveathens.json', (req, res) => {
+  const onOwnDomain = isMoveAthensHost(req);
+  const manifest = {
+    name: 'MoveAthens',
+    short_name: 'MoveAthens',
+    start_url: onOwnDomain ? '/' : '/moveathens/pages/welcome.html',
+    scope: onOwnDomain ? '/' : '/moveathens/',
+    display: 'standalone',
+    orientation: 'portrait',
+    theme_color: '#0b0f1a',
+    background_color: '#0b0f1a',
+    description: 'MoveAthens — Σύστημα transfer ξενοδοχείων',
+    icons: [
+      { src: '/moveathens/icons/favicon-32x32.png',   sizes: '32x32',   type: 'image/png' },
+      { src: '/moveathens/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png', purpose: 'any maskable' },
+      { src: '/moveathens/icons/favicon-192x192.png',  sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: '/moveathens/icons/favicon-512x512.png',  sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+    ]
+  };
+  res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+  res.setHeader('Cache-Control', IS_DEV ? 'no-store' : 'public, max-age=300');
+  res.send(JSON.stringify(manifest));
+});
+
+// Dynamic manifest for MoveAthens Driver Panel (domain-aware scope)
+app.get('/manifest-ma-driver.json', (req, res) => {
+  const onOwnDomain = isMoveAthensHost(req);
+  const manifest = {
+    name: 'MoveAthens Driver',
+    short_name: 'MA Driver',
+    start_url: onOwnDomain ? '/driver' : '/moveathens/driver',
+    scope: onOwnDomain ? '/' : '/moveathens/',
+    display: 'standalone',
+    orientation: 'portrait',
+    theme_color: '#0b0f1a',
+    background_color: '#0b0f1a',
+    description: 'MoveAthens Driver Panel — Διαχείριση διαδρομών transfer σε πραγματικό χρόνο.',
+    icons: [
+      { src: '/moveathens/icons/favicon-32x32.png',   sizes: '32x32',   type: 'image/png' },
+      { src: '/moveathens/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png', purpose: 'any maskable' },
+      { src: '/moveathens/icons/favicon-192x192.png',  sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: '/moveathens/icons/favicon-512x512.png',  sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+    ]
+  };
+  res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+  res.setHeader('Cache-Control', IS_DEV ? 'no-store' : 'public, max-age=300');
+  res.send(JSON.stringify(manifest));
+});
+
+// Dynamic manifest for DriverSystem (domain-aware scope)
+app.get('/manifest-driverssystem.json', (req, res) => {
+  const onOwnDomain = isDriversSystemHost(req);
+  const manifest = {
+    name: 'DriverSystem',
+    short_name: 'DriverSys',
+    start_url: onOwnDomain ? '/' : '/driverssystem/pages/welcome.html',
+    scope: onOwnDomain ? '/' : '/driverssystem/',
+    display: 'standalone',
+    orientation: 'portrait',
+    theme_color: '#0b0f1a',
+    background_color: '#0b0f1a',
+    description: 'DriverSystem — Σύστημα διαχείρισης οδηγού',
+    icons: [
+      { src: '/driverssystem/icons/favicon-32x32.png',     sizes: '32x32',   type: 'image/png' },
+      { src: '/driverssystem/icons/apple-touch-icon.png',   sizes: '180x180', type: 'image/png', purpose: 'any maskable' },
+      { src: '/driverssystem/icons/favicon-192x192.png',    sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: '/driverssystem/icons/favicon-512x512.png',    sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+    ]
+  };
+  res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+  res.setHeader('Cache-Control', IS_DEV ? 'no-store' : 'public, max-age=300');
+  res.send(JSON.stringify(manifest));
 });
 
 // Locales index route moved to registerLocales

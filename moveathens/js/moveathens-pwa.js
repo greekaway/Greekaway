@@ -6,7 +6,9 @@
   'use strict';
 
   var SW_PATH  = '/moveathens/js/moveathens-sw.js';
-  var SW_SCOPE = '/moveathens/';
+  var host = (window.location.hostname || '').toLowerCase();
+  var onOwnDomain = (host === 'moveathens.com' || host === 'www.moveathens.com');
+  var SW_SCOPE = onOwnDomain ? '/' : '/moveathens/';
 
   // ── Register Service Worker ──
   if ('serviceWorker' in navigator) {
