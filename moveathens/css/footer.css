@@ -246,10 +246,13 @@
   }
 }
 
-/* PWA standalone mode — keep floating pill style, just adjust bottom for safe area */
+/* PWA standalone mode — footer sits at screen bottom, no dark strip */
 @media (display-mode: standalone) {
   .ma-footer {
-    bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+    bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   }
 }
 
