@@ -1152,9 +1152,11 @@ app.get('/manifest-ma-driver.json', (req, res) => {
     description: 'MoveAthens Driver Panel — Διαχείριση διαδρομών transfer σε πραγματικό χρόνο.',
     icons: [
       { src: '/moveathens/icons/favicon-32x32.png',   sizes: '32x32',   type: 'image/png' },
-      { src: '/moveathens/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png', purpose: 'any maskable' },
-      { src: '/moveathens/icons/favicon-192x192.png',  sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-      { src: '/moveathens/icons/favicon-512x512.png',  sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+      { src: '/moveathens/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png', purpose: 'any' },
+      { src: '/moveathens/icons/favicon-192x192.png',  sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: '/moveathens/icons/favicon-512x512.png',  sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/moveathens/icons/favicon-192x192.png',  sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+      { src: '/moveathens/icons/favicon-512x512.png',  sizes: '512x512', type: 'image/png', purpose: 'maskable' }
     ]
   };
   res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');

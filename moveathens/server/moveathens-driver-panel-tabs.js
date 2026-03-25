@@ -96,9 +96,15 @@ module.exports = function registerDriverPanelTabs(app) {
       // Optional date filter (compare date portion only: YYYY-MM-DD)
       const from = req.query.from; // YYYY-MM-DD
       const to = req.query.to;     // YYYY-MM-DD
+      const toDateStr = (v) => {
+        if (!v) return '';
+        if (typeof v === 'string') return v.slice(0, 10);
+        if (v instanceof Date) return v.toISOString().slice(0, 10);
+        return '';
+      };
       let filtered = mine;
-      if (from) filtered = filtered.filter(r => (r.accepted_at || r.created_at || '').slice(0, 10) >= from);
-      if (to) filtered = filtered.filter(r => (r.accepted_at || r.created_at || '').slice(0, 10) <= to);
+      if (from) filtered = filtered.filter(r => toDateStr(r.accepted_at || r.created_at) >= from);
+      if (to) filtered = filtered.filter(r => toDateStr(r.accepted_at || r.created_at) <= to);
 
       const items = filtered.map(r => ({
         id: r.id,
@@ -140,11 +146,12 @@ module.exports = function registerDriverPanelTabs(app) {
       const mine = completed.filter(r => r.driver_phone === phone);
 
       const now = new Date();
-      const weekAgo = new Date(now - 7 * 86400000).toISOString();
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const weekAgo = new Date(now - 7 * 86400000);
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      const weekTrips = mine.filter(r => (r.accepted_at || r.created_at) >= weekAgo);
-      const monthTrips = mine.filter(r => (r.accepted_at || r.created_at) >= monthStart);
+      const getTime = (v) => v instanceof Date ? v.getTime() : new Date(v || 0).getTime();
+      const weekTrips = mine.filter(r => getTime(r.accepted_at || r.created_at) >= weekAgo.getTime());
+      const monthTrips = mine.filter(r => getTime(r.accepted_at || r.created_at) >= monthStart.getTime());
 
       res.json({
         ok: true,
