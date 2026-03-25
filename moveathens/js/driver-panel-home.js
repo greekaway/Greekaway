@@ -73,11 +73,15 @@
 
   function playAlert() {
     if (config.notifications?.soundEnabled !== false) {
-    const driverSound = localStorage.getItem('ma_dp_alert_sound');
-    const soundId = driverSound || config.notifications?.alertSound || 'chime';
-    if (window.DpSounds) { window.DpSounds.play(soundId); }
+      const driverSound = localStorage.getItem('ma_dp_alert_sound');
+      const soundId = driverSound || config.notifications?.alertSound || 'chime';
+      if (window.DpSounds) { window.DpSounds.playLoop(soundId); }
       navigator.vibrate([200, 100, 200]);
     }
+  }
+
+  function stopAlert() {
+    if (window.DpSounds) window.DpSounds.stopLoop();
   }
 
   // ── Card Rendering ──
@@ -127,7 +131,13 @@
     const card = container.querySelector(`[data-request-id="${requestId}"]`);
     if (card) {
       card.classList.add('ma-dp-card-exit');
-      setTimeout(() => { card.remove(); updateEmptyState(); }, 300);
+      setTimeout(() => {
+        card.remove();
+        updateEmptyState();
+        // Stop looping sound if no urgent cards remain
+        const remaining = container.querySelectorAll('.ma-dp-urgent-card').length;
+        if (remaining === 0) stopAlert();
+      }, 300);
     }
     if (reason === 'dismissed') dismissedIds.add(requestId);
   }
@@ -153,6 +163,7 @@
   async function handleAction(requestId, action) {
     const phone = getPhone();
     if (!phone) return;
+    stopAlert();
 
     try {
       const res = await fetch(`${API}/${action}/${requestId}`, {
@@ -196,11 +207,14 @@
           currentIds.add(el.dataset.requestId);
         });
       }
+      let hasNew = false;
       (data.requests || []).forEach(card => {
         if (!dismissedIds.has(card.requestId) && !currentIds.has(String(card.requestId))) {
           addUrgentCard(card);
+          hasNew = true;
         }
       });
+      if (hasNew) playAlert();
       // Remove cards that are no longer pending on server
       const serverIds = new Set((data.requests || []).map(c => String(c.requestId)));
       if (container) {
@@ -314,6 +328,7 @@
   function destroy() {
     if (sse) { sse.close(); sse = null; }
     stopPolling();
+    stopAlert();
     dismissedIds.clear();
   }
 

@@ -108,18 +108,31 @@
         <p class="ma-dp-profile-detail">${esc(driver.phone || '')}</p>
       </div>
 
-      ${vehicleTypes.length > 0 ? `
+      ${vehicleTypes.length > 0 ? (() => {
+        const vtOptions = vehicleTypes.map(v => {
+          const vId = typeof v === 'string' ? v : (v.id || v);
+          const avt = (cachedConfig.availableVehicleTypes || []).find(a => a.id === vId);
+          const vLabel = avt ? avt.name : (typeof v === 'string' ? v : (v.name || v.label || v.id || v));
+          return { id: vId, label: vLabel };
+        });
+        const selOpt = vtOptions.find(o => o.id === currentVehicle);
+        const selLabel = selOpt ? selOpt.label : '— Επιλέξτε —';
+        return `
       <div class="ma-dp-profile-section">
         <h3 class="ma-dp-profile-section-title">🚗 Τρέχον Όχημα</h3>
-        <select id="dpProfileVehicle" class="ma-dp-profile-select">
-          <option value="">— Επιλέξτε —</option>
-          ${vehicleTypes.map(v => {
-            const vId = typeof v === 'string' ? v : (v.id || v);
-            const vLabel = typeof v === 'string' ? v : (v.name || v.label || v.id || v);
-            return `<option value="${vId}" ${vId === currentVehicle ? 'selected' : ''}>${esc(vLabel)}</option>`;
-          }).join('')}
-        </select>
-      </div>` : ''}
+        <div class="ma-dp-custom-select" id="dpProfileVehicleWrap">
+          <input type="hidden" id="dpProfileVehicle" value="${esc(currentVehicle || '')}">
+          <button type="button" class="ma-dp-custom-select__trigger" id="dpVehicleTrigger">
+            <span class="ma-dp-custom-select__label" id="dpVehicleLabel">${esc(selLabel)}</span>
+            <span class="ma-dp-custom-select__arrow">▼</span>
+          </button>
+          <div class="ma-dp-custom-select__dropdown" id="dpVehicleDropdown">
+            <div class="ma-dp-custom-select__option ${!currentVehicle ? 'active' : ''}" data-value="">— Επιλέξτε —</div>
+            ${vtOptions.map(o => `<div class="ma-dp-custom-select__option ${o.id === currentVehicle ? 'active' : ''}" data-value="${esc(o.id)}">${esc(o.label)}</div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+      })() : ''}
 
       <div class="ma-dp-profile-section">
         <h3 class="ma-dp-profile-section-title">🚘 Τύποι Οχημάτων</h3>
@@ -160,17 +173,42 @@
       }
     });
 
-    document.getElementById('dpProfileVehicle')?.addEventListener('change', async (e) => {
-      const res = await api('/api/driver-panel/vehicle', {
-        method: 'POST',
-        body: JSON.stringify({ phone: driver.phone, current_vehicle_type: e.target.value })
+    // Custom vehicle dropdown
+    const vehTrigger = document.getElementById('dpVehicleTrigger');
+    const vehDropdown = document.getElementById('dpVehicleDropdown');
+    if (vehTrigger && vehDropdown) {
+      vehTrigger.addEventListener('click', () => {
+        const wrap = document.getElementById('dpProfileVehicleWrap');
+        wrap?.classList.toggle('open');
       });
-      if (res.ok) {
-        driver.current_vehicle_type = e.target.value;
-        localStorage.setItem(LS_KEY, JSON.stringify(driver));
-        showToast('Όχημα ενημερώθηκε');
-      }
-    });
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        const wrap = document.getElementById('dpProfileVehicleWrap');
+        if (wrap && !wrap.contains(e.target)) wrap.classList.remove('open');
+      });
+      vehDropdown.addEventListener('click', async (e) => {
+        const opt = e.target.closest('.ma-dp-custom-select__option');
+        if (!opt) return;
+        const val = opt.dataset.value;
+        const label = opt.textContent;
+        // Update UI
+        document.getElementById('dpProfileVehicle').value = val;
+        document.getElementById('dpVehicleLabel').textContent = label;
+        vehDropdown.querySelectorAll('.ma-dp-custom-select__option').forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+        document.getElementById('dpProfileVehicleWrap')?.classList.remove('open');
+        // Save to server
+        const res = await api('/api/driver-panel/vehicle', {
+          method: 'POST',
+          body: JSON.stringify({ phone: driver.phone, current_vehicle_type: val })
+        });
+        if (res.ok) {
+          driver.current_vehicle_type = val;
+          localStorage.setItem(LS_KEY, JSON.stringify(driver));
+          showToast('Όχημα ενημερώθηκε');
+        }
+      });
+    }
 
     // Vehicle types checklist
     document.getElementById('dpVehicleTypesChecklist')?.addEventListener('change', async (e) => {
@@ -184,13 +222,19 @@
       if (res.ok) {
         driver.vehicle_types = selected;
         localStorage.setItem(LS_KEY, JSON.stringify(driver));
-        // Update the current vehicle dropdown options
-        const sel = document.getElementById('dpProfileVehicle');
-        if (sel) {
-          const cur = sel.value;
+        // Update the custom vehicle dropdown options
+        const vehHidden = document.getElementById('dpProfileVehicle');
+        const vehDd = document.getElementById('dpVehicleDropdown');
+        if (vehHidden && vehDd) {
+          const cur = vehHidden.value;
           const avail = (cachedConfig.availableVehicleTypes || []).filter(vt => selected.includes(vt.id));
-          sel.innerHTML = '<option value="">— Επιλέξτε —</option>' +
-            avail.map(vt => `<option value="${vt.id}" ${vt.id === cur ? 'selected' : ''}>${esc(vt.name)}</option>`).join('');
+          vehDd.innerHTML = `<div class="ma-dp-custom-select__option ${!cur ? 'active' : ''}" data-value="">— Επιλέξτε —</div>` +
+            avail.map(vt => `<div class="ma-dp-custom-select__option ${vt.id === cur ? 'active' : ''}" data-value="${esc(vt.id)}">${esc(vt.name)}</div>`).join('');
+          // If current vehicle was removed, reset
+          if (cur && !avail.some(vt => vt.id === cur)) {
+            vehHidden.value = '';
+            document.getElementById('dpVehicleLabel').textContent = '— Επιλέξτε —';
+          }
         }
         showToast('Τύποι οχημάτων ενημερώθηκαν');
       }

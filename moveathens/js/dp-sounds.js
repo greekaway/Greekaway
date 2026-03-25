@@ -9,8 +9,13 @@
   let ctx = null;
   const getCtx = () => {
     if (!ctx || ctx.state === 'closed') ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (ctx.state === 'suspended') ctx.resume();
     return ctx;
+  };
+
+  /** Warm up / resume context — call on first user tap */
+  const warmUp = () => {
+    const ac = getCtx();
+    if (ac.state === 'suspended') ac.resume();
   };
 
   /** Stop all currently playing sounds by closing & recreating the context */
@@ -282,13 +287,38 @@
     { label: 'Dispatch',  ids: ['dispatch','rideAlert','appPing','taxiCall'] }
   ];
 
-  const play = (id) => {
+  let loopTimer = null;
+
+  const play = async (id) => {
     try {
-      stop();                        // kill any playing sound first
+      const ac = getCtx();
+      if (ac.state === 'suspended') await ac.resume();
       const s = SOUNDS[id || 'chime'];
-      if (s) s.play(getCtx());
+      if (s) s.play(ac);
     } catch { /* silent fail */ }
   };
 
-  window.DpSounds = { SOUNDS, GROUPS, play, stop };
+  /** Play a sound in a repeating loop every `intervalMs` (default 4s) */
+  const playLoop = (id, intervalMs) => {
+    stopLoop();
+    play(id);
+    const ms = intervalMs || 4000;
+    loopTimer = setInterval(() => play(id), ms);
+  };
+
+  /** Stop the repeating loop */
+  const stopLoop = () => {
+    if (loopTimer) { clearInterval(loopTimer); loopTimer = null; }
+    stop();
+  };
+
+  /* Warm-up on first user interaction so sounds work from SSE events */
+  const tapEvents = ['click', 'touchstart', 'keydown'];
+  const onFirstInteraction = () => {
+    warmUp();
+    tapEvents.forEach(e => document.removeEventListener(e, onFirstInteraction, true));
+  };
+  tapEvents.forEach(e => document.addEventListener(e, onFirstInteraction, { capture: true, once: false, passive: true }));
+
+  window.DpSounds = { SOUNDS, GROUPS, play, stop, warmUp, playLoop, stopLoop };
 })();
