@@ -68,7 +68,7 @@
   font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer;
   transition: background .2s;
   width: 100%;
-  display: block;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
 }
 .ma-dp-hub-logout-btn:hover { background: rgba(255,90,90,.08); }
 

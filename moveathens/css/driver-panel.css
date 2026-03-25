@@ -123,6 +123,13 @@ input, textarea, [contenteditable="true"] {
 }
 .ma-dp-tab.active { display: block; }
 
+/* PWA standalone: push content below status bar when header is hidden */
+@media (display-mode: standalone) {
+  .ma-dp-tab:not([data-tab="home"]) {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 20px);
+  }
+}
+
 /* ── Placeholder (coming soon) ── */
 .ma-dp-placeholder {
   display: flex;

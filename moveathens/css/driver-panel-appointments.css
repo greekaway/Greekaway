@@ -1,57 +1,124 @@
 /* ═══════════════════════════════════════════════════════
    MoveAthens Driver Panel — Appointments Tab
-   Sub-tabs, filters, scheduled cards, detail expand
+   Pill sub-tabs, sort chips, period filters, cards
    ═══════════════════════════════════════════════════════ */
 
-/* ── Sub-tabs bar ── */
+/* ── Sub-tabs (pill buttons) ── */
 .ma-dp-sched-tabs {
   display: flex;
   gap: 0;
-  padding: 12px 16px 0;
-  border-bottom: 1px solid var(--ma-dp-card-border);
+  padding: 14px 16px 0;
+  justify-content: center;
 }
 
-.ma-dp-sched-tab {
+.ma-dp-sched-pill {
   flex: 1;
+  max-width: 160px;
   padding: 10px 0;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--ma-dp-muted);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
+  font-family: inherit;
+  border: 2px solid var(--ma-dp-accent, #46d3ff);
+  background: transparent;
+  color: var(--ma-dp-muted, #8a94a6);
   cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
-}
-.ma-dp-sched-tab.active {
-  color: var(--ma-dp-accent);
-  border-bottom-color: var(--ma-dp-accent);
+  transition: background 0.2s, color 0.2s;
 }
 
-/* ── Filters ── */
-.ma-dp-sched-filters {
+.ma-dp-sched-pill:first-child {
+  border-radius: 10px 0 0 10px;
+  border-right: 1px solid var(--ma-dp-accent, #46d3ff);
+}
+
+.ma-dp-sched-pill:last-child {
+  border-radius: 0 10px 10px 0;
+  border-left: 1px solid var(--ma-dp-accent, #46d3ff);
+}
+
+.ma-dp-sched-pill--active {
+  background: var(--ma-dp-accent, #46d3ff);
+  color: #0b0f1a;
+}
+
+.ma-dp-sched-pill:active { transform: scale(0.97); }
+
+/* ── Sort / Filter Chips ── */
+.ma-dp-sched-sort-chips {
   display: flex;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 12px 16px 0;
   align-items: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.ma-dp-sched-select,
-.ma-dp-sched-date {
-  flex: 1;
-  padding: 8px 10px;
-  background: var(--ma-dp-card);
-  border: 1px solid var(--ma-dp-card-border);
-  border-radius: 8px;
-  color: var(--ma-dp-text);
+.ma-dp-sched-sort-chips::-webkit-scrollbar { display: none; }
+
+.ma-dp-sched-sort-icon {
+  font-size: 16px;
+  color: var(--ma-dp-muted, #8a94a6);
+  flex-shrink: 0;
+}
+
+.ma-dp-sched-chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ma-dp-muted, #8a94a6);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.ma-dp-sched-chip:active { transform: scale(0.95); }
+
+.ma-dp-sched-chip--active {
+  background: rgba(70, 211, 255, 0.15);
+  color: var(--ma-dp-accent, #46d3ff);
+  border-color: rgba(70, 211, 255, 0.4);
+}
+
+/* ── Period Filter Bar (carousel) ── */
+.ma-dp-sched-period-filter {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px 4px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.ma-dp-sched-period-filter::-webkit-scrollbar { display: none; }
+
+.ma-dp-sched-period-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
   font-size: 13px;
-  -webkit-appearance: none;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ma-dp-muted, #8a94a6);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
 }
 
-.ma-dp-sched-select:focus,
-.ma-dp-sched-date:focus {
-  outline: none;
-  border-color: var(--ma-dp-accent);
+.ma-dp-sched-period-btn:active { transform: scale(0.96); }
+
+.ma-dp-sched-period-btn--active {
+  background: rgba(70, 211, 255, 0.15);
+  color: var(--ma-dp-accent, #46d3ff);
+  border-color: rgba(70, 211, 255, 0.3);
 }
 
 /* ── Cards list ── */
@@ -76,8 +143,6 @@
   background: rgba(70, 211, 255, 0.08);
   color: var(--ma-dp-accent);
 }
-
-/* Card fields/actions reuse from home.css (shared classes) */
 
 /* ── Detail button ── */
 .ma-dp-btn-detail {
@@ -104,12 +169,20 @@ html[data-theme='light'] .ma-dp-btn-detail {
 
 /* ── Responsive ── */
 @media (max-width: 359px) {
+  .ma-dp-sched-tabs { padding: 12px 12px 0; }
+  .ma-dp-sched-pill { font-size: 13px; padding: 8px 0; }
+  .ma-dp-sched-sort-chips { gap: 6px; padding: 10px 12px 0; }
+  .ma-dp-sched-chip { padding: 5px 10px; font-size: 11px; }
+  .ma-dp-sched-period-filter { gap: 4px; padding: 10px 12px 4px; }
+  .ma-dp-sched-period-btn { padding: 7px 10px; font-size: 12px; }
   .ma-dp-sched-card { padding: 12px; }
-  .ma-dp-sched-tab { font-size: 13px; }
-  .ma-dp-sched-filters { flex-wrap: wrap; }
 }
 
 @media (min-width: 430px) {
+  .ma-dp-sched-tabs { padding: 16px 24px 0; }
+  .ma-dp-sched-pill { max-width: 180px; }
+  .ma-dp-sched-sort-chips { padding: 14px 24px 0; }
+  .ma-dp-sched-period-filter { padding: 12px 24px 4px; }
   .ma-dp-sched-list { padding: 8px 24px 24px; }
   .ma-dp-sched-card { padding: 18px; }
 }

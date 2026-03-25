@@ -65,7 +65,7 @@
       </nav>
 
       <div class="ma-dp-hub-logout">
-        <button class="ma-dp-hub-logout-btn" id="dpLogout">🚪 Αποσύνδεση</button>
+        <button class="ma-dp-hub-logout-btn" id="dpLogout"><svg class="ma-dp-logout-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Αποσύνδεση</button>
       </div>
       <div class="ma-dp-hub-version">
         Έκδοση: <span id="dpVersionValue">${VERSION}</span>

@@ -1,6 +1,6 @@
 /**
  * MoveAthens Driver Panel — History Tab
- * Completed trips list with date-range filter.
+ * Completed trips list with period + date-range filters.
  * Depends: driver-panel.js (DpApp)
  */
 (() => {
@@ -10,6 +10,7 @@
   const API = '/api/driver-panel';
 
   let labels = {};
+  let activePeriod = 'all';
 
   const getPhone = () => {
     try { return JSON.parse(localStorage.getItem(LS_KEY))?.phone || ''; }
@@ -24,21 +25,88 @@
     return d.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
-  // ── Filters ──
+  const toDateStr = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + dd;
+  };
+
+  function getDateRange(period) {
+    const now = new Date();
+    const today = toDateStr(now);
+    switch (period) {
+      case 'today':
+        return { from: today, to: today };
+      case 'week': {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 6);
+        return { from: toDateStr(d), to: today };
+      }
+      case 'month': {
+        const d = new Date(now.getFullYear(), now.getMonth(), 1);
+        return { from: toDateStr(d), to: today };
+      }
+      case 'custom':
+        return null;
+      default:
+        return { from: '', to: '' };
+    }
+  }
+
+  // ── Period Filter Bar ──
 
   function renderFilters(container) {
-    const bar = document.createElement('div');
-    bar.className = 'ma-dp-hist-filters';
-    bar.innerHTML = `
-      <label class="ma-dp-hist-label">Από
-        <input type="date" id="dpHistFrom" class="ma-dp-hist-date" />
-      </label>
-      <label class="ma-dp-hist-label">Έως
-        <input type="date" id="dpHistTo" class="ma-dp-hist-date" />
-      </label>
-      <button class="ma-dp-btn ma-dp-btn-filter" id="dpHistSearch">Αναζήτηση</button>`;
-    bar.querySelector('#dpHistSearch').addEventListener('click', loadHistory);
-    container.appendChild(bar);
+    // Period buttons
+    const periodBar = document.createElement('div');
+    periodBar.className = 'ma-dp-hist-period-filter';
+    periodBar.id = 'dpHistPeriodFilter';
+    periodBar.innerHTML = `
+      <button class="ma-dp-hist-period-btn ma-dp-hist-period-btn--active" data-period="all" type="button">Όλα</button>
+      <button class="ma-dp-hist-period-btn" data-period="today" type="button">Σήμερα</button>
+      <button class="ma-dp-hist-period-btn" data-period="week" type="button">Εβδομάδα</button>
+      <button class="ma-dp-hist-period-btn" data-period="month" type="button">Μήνας</button>
+      <button class="ma-dp-hist-period-btn" data-period="custom" type="button">Προσαρμοσμένο</button>`;
+    container.appendChild(periodBar);
+
+    // Custom date range (hidden by default)
+    const customDates = document.createElement('div');
+    customDates.className = 'ma-dp-hist-custom-dates';
+    customDates.id = 'dpHistCustomDates';
+    customDates.style.display = 'none';
+    customDates.innerHTML = `
+      <div class="ma-dp-hist-date-group">
+        <label class="ma-dp-hist-date-label" for="dpHistFrom">Από</label>
+        <input type="date" class="ma-dp-hist-date-input" id="dpHistFrom" />
+      </div>
+      <div class="ma-dp-hist-date-group">
+        <label class="ma-dp-hist-date-label" for="dpHistTo">Έως</label>
+        <input type="date" class="ma-dp-hist-date-input" id="dpHistTo" />
+      </div>
+      <button class="ma-dp-hist-apply" id="dpHistApply" type="button">Εφαρμογή</button>`;
+    container.appendChild(customDates);
+
+    // Period button click handlers
+    periodBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-period]');
+      if (!btn) return;
+      const period = btn.dataset.period;
+      activePeriod = period;
+
+      periodBar.querySelectorAll('.ma-dp-hist-period-btn').forEach(b =>
+        b.classList.toggle('ma-dp-hist-period-btn--active', b === btn)
+      );
+
+      if (period === 'custom') {
+        customDates.style.display = '';
+      } else {
+        customDates.style.display = 'none';
+        loadHistory();
+      }
+    });
+
+    // Custom date apply
+    customDates.querySelector('#dpHistApply').addEventListener('click', loadHistory);
   }
 
   // ── Load history ──
@@ -51,8 +119,19 @@
     if (!listEl) return;
     listEl.innerHTML = `<div class="ma-dp-empty">${esc(labels.msgLoading || 'Φόρτωση…')}</div>`;
 
-    const from = document.getElementById('dpHistFrom')?.value || '';
-    const to = document.getElementById('dpHistTo')?.value || '';
+    let from = '';
+    let to = '';
+
+    if (activePeriod === 'custom') {
+      from = document.getElementById('dpHistFrom')?.value || '';
+      to = document.getElementById('dpHistTo')?.value || '';
+    } else {
+      const range = getDateRange(activePeriod);
+      if (range) {
+        from = range.from;
+        to = range.to;
+      }
+    }
 
     let url = `${API}/history?phone=${encodeURIComponent(phone)}`;
     if (from) url += `&from=${from}`;
@@ -97,10 +176,15 @@
     if (!section) return;
 
     section.innerHTML = `
-      <h2 class="ma-dp-tab-title">${esc(labels.sectionHistory || 'Ιστορικό')}</h2>
-      <div id="dpHistList" class="ma-dp-hist-list"></div>`;
+      <h2 class="ma-dp-tab-title">${esc(labels.sectionHistory || 'Ιστορικό')}</h2>`;
 
     renderFilters(section);
+
+    const list = document.createElement('div');
+    list.id = 'dpHistList';
+    list.className = 'ma-dp-hist-list';
+    section.appendChild(list);
+
     await loadHistory();
   }
 
