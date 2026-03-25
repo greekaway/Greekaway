@@ -121,13 +121,6 @@
   }
 }
 
-/* PWA standalone mode */
-@media (display-mode: standalone) {
-  .ds-footer {
-    bottom: 0;
-    left: 0;
-    right: 0;
-    border-radius: 22px 22px 0 0;
-    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-  }
-}
+/* PWA standalone — no special overrides; @supports safe-area rule above
+   handles positioning uniformly for both browser and PWA.
+   Footer keeps floating design with full rounded corners. */

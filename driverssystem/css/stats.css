@@ -26,6 +26,7 @@
 /* Main */
 .ds-stats-main {
   padding: 14px 14px 120px;
+  padding-top: max(14px, env(safe-area-inset-top, 14px));
   display: flex;
   flex-direction: column;
   gap: 14px;

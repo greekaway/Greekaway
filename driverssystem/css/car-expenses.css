@@ -11,6 +11,12 @@
   overflow-y: auto;
 }
 
+/* Header (scrolls with content) */
+.ds-car-expenses-page .ds-page-header {
+  padding: 14px 18px 12px;
+  padding-top: max(14px, env(safe-area-inset-top, 14px));
+}
+
 /* ── Back bar (top, below header) ── */
 .ds-car-exp-back-bar {
   max-width: 560px;
