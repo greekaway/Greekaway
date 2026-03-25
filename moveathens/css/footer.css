@@ -246,10 +246,14 @@
   }
 }
 
-/* PWA standalone mode — footer flush with safe-area edge */
+/* PWA standalone mode — footer extends to bottom edge, no dark strip */
 @media (display-mode: standalone) {
   .ma-footer {
-    bottom: env(safe-area-inset-bottom, 8px);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 22px 22px 0 0;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   }
 }
 
