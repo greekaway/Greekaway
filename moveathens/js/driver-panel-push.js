@@ -16,6 +16,21 @@
 
   let swRegistration = null;
   let currentVersion = localStorage.getItem('ma_dp_known_version') || null;
+  let bannerShown = false;
+
+  const SNOOZE_KEY = 'ma_dp_update_snooze';
+  const SNOOZE_MS = 30 * 60 * 1000; // 30 minutes
+
+  function isSnoozed() {
+    try {
+      const until = parseInt(sessionStorage.getItem(SNOOZE_KEY), 10);
+      return until && Date.now() < until;
+    } catch { return false; }
+  }
+
+  function snooze() {
+    try { sessionStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS)); } catch {}
+  }
 
   const getPhone = () => {
     try { return JSON.parse(localStorage.getItem(LS_KEY))?.phone || ''; }
@@ -107,36 +122,42 @@
   }
 
   function showUpdateBanner() {
+    if (bannerShown || isSnoozed()) return;
     if (document.getElementById('dpUpdateBanner')) return;
+    bannerShown = true;
 
     const banner = document.createElement('div');
     banner.id = 'dpUpdateBanner';
     banner.className = 'ma-dp-update-banner';
     banner.innerHTML = `
-      <span>Νέα ενημέρωση διαθέσιμη</span>
-      <button id="dpUpdateBtn">Ανανέωση</button>`;
+      <span class="ma-dp-update-icon">🔄</span>
+      <span class="ma-dp-update-text">Νέα ενημέρωση διαθέσιμη</span>
+      <button class="ma-dp-update-btn ma-dp-update-btn--refresh" id="dpUpdateBtn">Ανανέωση</button>
+      <button class="ma-dp-update-btn ma-dp-update-btn--later" id="dpUpdateLater">Αργότερα</button>`;
     document.body.appendChild(banner);
 
     setTimeout(() => banner.classList.add('show'), 10);
 
     document.getElementById('dpUpdateBtn').addEventListener('click', async () => {
       try {
-        // 1. Clear all caches
         if ('caches' in window) {
           const names = await caches.keys();
           await Promise.all(names.map(n => caches.delete(n)));
         }
-        // 2. Tell waiting SW to activate
         if (swRegistration?.waiting) {
           swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
         }
-        // 3. Force SW update check
         if (swRegistration) {
           await swRegistration.update().catch(() => {});
         }
       } catch { /* continue reload */ }
-      // 4. Hard reload
       window.location.reload();
+    });
+
+    document.getElementById('dpUpdateLater').addEventListener('click', () => {
+      snooze();
+      banner.classList.remove('show');
+      setTimeout(() => { banner.remove(); bannerShown = false; }, 300);
     });
   }
 
