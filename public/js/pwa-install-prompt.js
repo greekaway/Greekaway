@@ -50,6 +50,9 @@
     } catch(_) {}
   }
 
+  // ── Share icon SVG (reused in banners) ──
+  var SHARE_SVG = '<svg style="width:18px;height:18px;display:inline-block;vertical-align:middle" viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12 3c.3 0 .5.1.7.3l3 3a1 1 0 1 1-1.4 1.4L13 6.4V14a1 1 0 1 1-2 0V6.4L9.7 7.7A1 1 0 0 1 8.3 6.3l3-3c.2-.2.4-.3.7-.3Z"/><path fill="#fff" d="M5 10a3 3 0 0 1 3-3h1a1 1 0 1 1 0 2H8a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-7a1 1 0 0 0-1-1h-1a1 1 0 1 1 0-2h1a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-7Z"/></svg>';
+
   // ── CSS (injected once) ──
   var cssInjected = false;
   function injectCSS() {
@@ -57,18 +60,22 @@
     cssInjected = true;
     var s = document.createElement('style');
     s.textContent =
-      '#pwa-install-prompt{position:fixed;bottom:0;left:0;right:0;z-index:2147483640;padding:0 12px 12px;pointer-events:none;animation:pwa-ip-slide .35s ease-out}' +
-      '@keyframes pwa-ip-slide{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}' +
-      '@media(max-width:768px){#pwa-install-prompt{bottom:64px;padding-bottom:env(safe-area-inset-bottom,8px)}}' +
-      '.pwa-ip-card{pointer-events:auto;max-width:420px;margin:0 auto;padding:16px 18px;background:#1a1a2e;color:#f0f0f0;border-radius:16px;box-shadow:0 6px 28px rgba(0,0,0,.4);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.5}' +
-      '.pwa-ip-title{font-weight:700;font-size:16px;margin:0 0 8px}' +
-      '.pwa-ip-steps{margin:8px 0 14px;padding-left:20px}' +
-      '.pwa-ip-steps li{margin:5px 0;font-size:13px;line-height:1.4}' +
-      '.pwa-ip-actions{display:flex;gap:10px;justify-content:flex-end}' +
-      '.pwa-ip-btn{border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s}' +
-      '.pwa-ip-btn:active{opacity:.7}' +
-      '.pwa-ip-btn--primary{background:#4fc3f7;color:#0a0a1a}' +
-      '.pwa-ip-btn--secondary{background:transparent;color:#999;font-weight:400}' +
+      '#pwa-install-prompt{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);width:95%;max-width:520px;z-index:2147483640;pointer-events:none;animation:pwa-ip-slide .35s ease-out}' +
+      '@keyframes pwa-ip-slide{from{transform:translateX(-50%) translateY(100%);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}' +
+      '@media(max-width:768px){#pwa-install-prompt{bottom:12px;padding-bottom:env(safe-area-inset-bottom,8px)}}' +
+      '.pwa-ip-card{pointer-events:auto;padding:16px 18px 12px;background:#001f3f;color:#fff;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.22),0 2px 10px rgba(0,0,0,.12);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.4;backdrop-filter:saturate(120%)}' +
+      '.pwa-ip-title{font-weight:700;font-size:16px;margin:0 0 6px;letter-spacing:.2px}' +
+      '.pwa-ip-subtitle{margin:0 0 10px;opacity:.95;font-size:14px;line-height:1.28}' +
+      '.pwa-ip-steps{margin:8px 0 12px;padding-left:18px}' +
+      '.pwa-ip-steps li{margin:6px 0;font-size:14px;line-height:1.28}' +
+      '.pwa-ip-badge{display:inline-flex;align-items:center;gap:8px;margin-top:6px;opacity:.95;font-size:13px}' +
+      '.pwa-ip-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.12);font-weight:600}' +
+      '.pwa-ip-actions{display:flex;justify-content:flex-end;margin-top:10px;gap:10px}' +
+      '.pwa-ip-btn{border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,opacity .2s ease}' +
+      '.pwa-ip-btn:active{transform:translateY(0);opacity:.75}' +
+      '.pwa-ip-btn--primary{background:var(--color-gold,#d4af37);color:#001f3f;box-shadow:0 6px 14px rgba(0,0,0,.18)}' +
+      '.pwa-ip-btn--primary:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.22)}' +
+      '.pwa-ip-btn--secondary{background:transparent;color:#999;font-weight:400;padding:8px 14px}' +
       '.pwa-ip-copied{font-size:12px;color:#4fc3f7;margin-top:6px;text-align:center;display:none}';
     document.head.appendChild(s);
   }
@@ -89,24 +96,23 @@
     el.setAttribute('role', 'dialog');
     el.innerHTML =
       '<div class="pwa-ip-card">' +
-        '<div class="pwa-ip-title">📱 Εγκαταστήστε την εφαρμογή</div>' +
+        '<div class="pwa-ip-title">📱 Προσθέστε στην Αρχική Οθόνη</div>' +
+        '<p class="pwa-ip-subtitle">Για να το έχετε σαν κανονική εφαρμογή:</p>' +
         '<ol class="pwa-ip-steps">' +
-          '<li>Πατήστε το κουμπί <strong>⎙ Κοινοποίηση</strong> (κάτω μπάρα Safari)</li>' +
+          '<li>Πατήστε το ' + SHARE_SVG + ' <strong>κουμπί Κοινοποίησης</strong> (πάνω δεξιά στο Safari)</li>' +
+          '<li>Σύρετε προς τα πάνω και πατήστε <strong>«Προβολή περισσότερων»</strong></li>' +
           '<li>Πατήστε <strong>«Προσθήκη στην οθόνη Αφετηρίας»</strong></li>' +
-          '<li>Πατήστε <strong>«Προσθήκη»</strong></li>' +
         '</ol>' +
+        '<div class="pwa-ip-badge">' +
+          '<span class="pwa-ip-chip">' + SHARE_SVG + ' Share → ⬆ More → Add to Home Screen</span>' +
+        '</div>' +
         '<div class="pwa-ip-actions">' +
-          '<button class="pwa-ip-btn pwa-ip-btn--secondary" data-pwa-later>Όχι τώρα</button>' +
-          '<button class="pwa-ip-btn pwa-ip-btn--primary" data-pwa-ok>Κατάλαβα</button>' +
+          '<button class="pwa-ip-btn pwa-ip-btn--primary" data-pwa-ok>✔ Κατάλαβα</button>' +
         '</div>' +
       '</div>';
 
     document.body.appendChild(el);
 
-    el.querySelector('[data-pwa-later]').addEventListener('click', function() {
-      dismiss(IOS_DISMISS_KEY, IOS_DISMISS_DAYS);
-      removeBanner();
-    });
     el.querySelector('[data-pwa-ok]').addEventListener('click', function() {
       dismiss(IOS_DISMISS_KEY, IOS_DISMISS_DAYS);
       removeBanner();
@@ -124,12 +130,17 @@
     el.innerHTML =
       '<div class="pwa-ip-card">' +
         '<div class="pwa-ip-title">📱 Εγκαταστήστε την εφαρμογή</div>' +
-        '<p style="margin:0 0 10px;font-size:13px;opacity:.9">' +
-          'Για να την εγκαταστήσετε, ανοίξτε αυτή τη σελίδα στο <strong>Safari</strong>.' +
+        '<p class="pwa-ip-subtitle">' +
+          'Για να την εγκαταστήσετε, ανοίξτε αυτή τη σελίδα στο <strong>Safari</strong>:' +
         '</p>' +
+        '<ol class="pwa-ip-steps">' +
+          '<li>Αντιγράψτε τον σύνδεσμο (κουμπί παρακάτω)</li>' +
+          '<li>Ανοίξτε το <strong>Safari</strong> και επικολλήστε</li>' +
+          '<li>Ακολουθήστε τις οδηγίες εγκατάστασης</li>' +
+        '</ol>' +
         '<div class="pwa-ip-actions">' +
           '<button class="pwa-ip-btn pwa-ip-btn--secondary" data-pwa-later>Όχι τώρα</button>' +
-          '<button class="pwa-ip-btn pwa-ip-btn--primary" data-pwa-copy>Αντιγραφή συνδέσμου</button>' +
+          '<button class="pwa-ip-btn pwa-ip-btn--primary" data-pwa-copy>📋 Αντιγραφή συνδέσμου</button>' +
         '</div>' +
         '<div class="pwa-ip-copied" data-pwa-copied>✓ Αντιγράφηκε! Ανοίξτε το Safari και επικολλήστε.</div>' +
       '</div>';
@@ -152,7 +163,6 @@
           removeBanner();
         });
       } else {
-        // Fallback for older browsers
         var ta = document.createElement('textarea');
         ta.value = url;
         ta.style.cssText = 'position:fixed;opacity:0';
@@ -182,7 +192,7 @@
     el.innerHTML =
       '<div class="pwa-ip-card">' +
         '<div class="pwa-ip-title">📱 Εγκαταστήστε την εφαρμογή</div>' +
-        '<p style="margin:0 0 12px;font-size:13px;opacity:.9">Προσθέστε στην αρχική οθόνη για γρήγορη πρόσβαση.</p>' +
+        '<p class="pwa-ip-subtitle">Προσθέστε στην αρχική οθόνη για γρήγορη πρόσβαση.</p>' +
         '<div class="pwa-ip-actions">' +
           '<button class="pwa-ip-btn pwa-ip-btn--secondary" data-pwa-later>Όχι τώρα</button>' +
           '<button class="pwa-ip-btn pwa-ip-btn--primary" data-pwa-install>Εγκατάσταση</button>' +
