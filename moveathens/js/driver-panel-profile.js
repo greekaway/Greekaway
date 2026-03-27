@@ -293,38 +293,28 @@
         <p class="ma-dp-profile-hint">Επιλέξτε τον ήχο για νέες διαδρομές</p>
         <button type="button" class="ma-dp-sound-toggle" id="dpSoundToggle">
           <span>${(() => {
-            const sel = localStorage.getItem('ma_dp_alert_sound') || cachedConfig.sounds?.defaults?.new_ride || cachedConfig.notifications?.alertSound || 'chime';
+            const sel = localStorage.getItem('ma_dp_alert_sound') || cachedConfig.sounds?.defaults?.new_ride || '';
+            if (!sel) return '🔇 Κανένας';
             const mp3 = (cachedConfig.sounds?.files || []).find(f => f.id === sel);
-            if (mp3) return '🎵 ' + mp3.label;
-            const s = window.DpSounds?.SOUNDS?.[sel];
-            return s ? s.name : '🔔 Chime';
+            return mp3 ? '🎵 ' + mp3.label : '🔇 Κανένας';
           })()}</span>
           <span class="ma-dp-sound-toggle__arrow">▼</span>
         </button>
         <div class="ma-dp-sound-picker ma-dp-sound-picker--collapsed" id="dpDriverSoundPicker">
           ${(() => {
-            const driverSound = localStorage.getItem('ma_dp_alert_sound') || cachedConfig.sounds?.defaults?.new_ride || cachedConfig.notifications?.alertSound || 'chime';
+            const driverSound = localStorage.getItem('ma_dp_alert_sound') || cachedConfig.sounds?.defaults?.new_ride || '';
             const mp3Files = (cachedConfig.sounds?.files || []).filter(f => f.event === 'new_ride');
-            let html = '';
+            let html = '<div class="ma-dp-sound-option ' + (!driverSound ? 'ma-dp-sound-active' : '') + '" data-sound=""><span class="ma-dp-sound-name">🔇 Κανένας</span></div>';
             if (mp3Files.length) {
-              html += '<div class="ma-dp-sound-group-label">🎵 Ήχοι MP3</div>';
-              html += mp3Files.map(f => `<div class="ma-dp-sound-option ${f.id === driverSound ? 'ma-dp-sound-active' : ''}" data-sound="${f.id}" data-url="${esc(f.url)}">
-                <span class="ma-dp-sound-name">🎵 ${esc(f.label)}</span>
-                <button type="button" class="ma-dp-sound-preview-mp3" data-url="${esc(f.url)}">▶️</button>
-              </div>`).join('');
-            }
-            if (window.DpSounds?.GROUPS) {
-              html += window.DpSounds.GROUPS.map(group => {
-                return '<div class="ma-dp-sound-group-label">' + group.label + '</div>' +
-                  group.ids.map(id => {
-                    const s = window.DpSounds.SOUNDS[id];
-                    if (!s) return '';
-                    return '<div class="ma-dp-sound-option ' + (id === driverSound ? 'ma-dp-sound-active' : '') + '" data-sound="' + id + '">' +
-                      '<span class="ma-dp-sound-name">' + s.name + '</span>' +
-                      '<button type="button" class="ma-dp-sound-preview" data-sound="' + id + '">▶️</button>' +
-                    '</div>';
-                  }).join('');
-              }).join('');
+              const cats = {};
+              mp3Files.forEach(f => { const c = f.category || 'Γενικοί'; if (!cats[c]) cats[c] = []; cats[c].push(f); });
+              Object.entries(cats).forEach(([cat, files]) => {
+                html += '<div class="ma-dp-sound-group-label">' + esc(cat) + '</div>';
+                html += files.map(f => '<div class="ma-dp-sound-option ' + (f.id === driverSound ? 'ma-dp-sound-active' : '') + '" data-sound="' + f.id + '" data-url="' + esc(f.url) + '">' +
+                  '<span class="ma-dp-sound-name">🎵 ' + esc(f.label) + '</span>' +
+                  '<button type="button" class="ma-dp-sound-preview-mp3" data-url="' + esc(f.url) + '">▶️</button>' +
+                '</div>').join('');
+              });
             }
             return html;
           })()}
@@ -339,9 +329,7 @@
             const sel = localStorage.getItem('ma_dp_app_open_sound') || cachedConfig.sounds?.defaults?.app_open || '';
             if (!sel) return '🔇 Κανένας';
             const mp3 = (cachedConfig.sounds?.files || []).find(f => f.id === sel);
-            if (mp3) return '🎵 ' + mp3.label;
-            const s = window.DpSounds?.SOUNDS?.[sel];
-            return s ? s.name : '🔇 Κανένας';
+            return mp3 ? '🎵 ' + mp3.label : '🔇 Κανένας';
           })()}</span>
           <span class="ma-dp-sound-toggle__arrow">▼</span>
         </button>
@@ -351,24 +339,15 @@
             const mp3Files = (cachedConfig.sounds?.files || []).filter(f => f.event === 'app_open');
             let html = '<div class="ma-dp-sound-option ' + (!sel ? 'ma-dp-sound-active' : '') + '" data-sound=""><span class="ma-dp-sound-name">🔇 Κανένας</span></div>';
             if (mp3Files.length) {
-              html += '<div class="ma-dp-sound-group-label">🎵 Ήχοι MP3</div>';
-              html += mp3Files.map(f => `<div class="ma-dp-sound-option ${f.id === sel ? 'ma-dp-sound-active' : ''}" data-sound="${f.id}" data-url="${esc(f.url)}">
-                <span class="ma-dp-sound-name">🎵 ${esc(f.label)}</span>
-                <button type="button" class="ma-dp-sound-preview-mp3" data-url="${esc(f.url)}">▶️</button>
-              </div>`).join('');
-            }
-            if (window.DpSounds?.GROUPS) {
-              html += window.DpSounds.GROUPS.slice(0, 1).map(group => {
-                return '<div class="ma-dp-sound-group-label">' + group.label + '</div>' +
-                  group.ids.map(id => {
-                    const s = window.DpSounds.SOUNDS[id];
-                    if (!s) return '';
-                    return '<div class="ma-dp-sound-option ' + (id === sel ? 'ma-dp-sound-active' : '') + '" data-sound="' + id + '">' +
-                      '<span class="ma-dp-sound-name">' + s.name + '</span>' +
-                      '<button type="button" class="ma-dp-sound-preview" data-sound="' + id + '">▶️</button>' +
-                    '</div>';
-                  }).join('');
-              }).join('');
+              const cats = {};
+              mp3Files.forEach(f => { const c = f.category || 'Γενικοί'; if (!cats[c]) cats[c] = []; cats[c].push(f); });
+              Object.entries(cats).forEach(([cat, files]) => {
+                html += '<div class="ma-dp-sound-group-label">' + esc(cat) + '</div>';
+                html += files.map(f => '<div class="ma-dp-sound-option ' + (f.id === sel ? 'ma-dp-sound-active' : '') + '" data-sound="' + f.id + '" data-url="' + esc(f.url) + '">' +
+                  '<span class="ma-dp-sound-name">🎵 ' + esc(f.label) + '</span>' +
+                  '<button type="button" class="ma-dp-sound-preview-mp3" data-url="' + esc(f.url) + '">▶️</button>' +
+                '</div>').join('');
+              });
             }
             return html;
           })()}
@@ -436,24 +415,17 @@
     document.getElementById('dpDriverSoundPicker')?.addEventListener('click', (e) => {
       const previewMp3 = e.target.closest('.ma-dp-sound-preview-mp3');
       if (previewMp3 && window.DpSounds) { window.DpSounds.playUrl(previewMp3.dataset.url); return; }
-      const preview = e.target.closest('.ma-dp-sound-preview');
-      if (preview && window.DpSounds) { window.DpSounds.play(preview.dataset.sound); return; }
       const opt = e.target.closest('.ma-dp-sound-option');
       if (!opt) return;
       document.querySelectorAll('#dpDriverSoundPicker .ma-dp-sound-option').forEach(o => o.classList.remove('ma-dp-sound-active'));
       opt.classList.add('ma-dp-sound-active');
       const soundId = opt.dataset.sound;
       localStorage.setItem('ma_dp_alert_sound', soundId);
-      if (soundId.startsWith('mp3_')) {
-        if (window.DpSounds) window.DpSounds.playUrl(opt.dataset.url);
-      } else if (window.DpSounds) {
-        window.DpSounds.play(soundId);
-      }
+      if (soundId && window.DpSounds) window.DpSounds.playUrl(opt.dataset.url);
       // Update toggle label
       const mp3 = (cachedConfig.sounds?.files || []).find(f => f.id === soundId);
-      const s = window.DpSounds?.SOUNDS?.[soundId];
       const toggleLabel = document.querySelector('#dpSoundToggle > span:first-child');
-      if (toggleLabel) toggleLabel.textContent = mp3 ? '🎵 ' + mp3.label : (s ? s.name : soundId);
+      if (toggleLabel) toggleLabel.textContent = !soundId ? '🔇 Κανένας' : (mp3 ? '🎵 ' + mp3.label : soundId);
       showToast('Ήχος ενημερώθηκε');
     });
 
@@ -461,23 +433,16 @@
     document.getElementById('dpAppOpenSoundPicker')?.addEventListener('click', (e) => {
       const previewMp3 = e.target.closest('.ma-dp-sound-preview-mp3');
       if (previewMp3 && window.DpSounds) { window.DpSounds.playUrl(previewMp3.dataset.url); return; }
-      const preview = e.target.closest('.ma-dp-sound-preview');
-      if (preview && window.DpSounds) { window.DpSounds.play(preview.dataset.sound); return; }
       const opt = e.target.closest('.ma-dp-sound-option');
       if (!opt) return;
       document.querySelectorAll('#dpAppOpenSoundPicker .ma-dp-sound-option').forEach(o => o.classList.remove('ma-dp-sound-active'));
       opt.classList.add('ma-dp-sound-active');
       const soundId = opt.dataset.sound;
       localStorage.setItem('ma_dp_app_open_sound', soundId);
-      if (soundId && soundId.startsWith('mp3_')) {
-        if (window.DpSounds) window.DpSounds.playUrl(opt.dataset.url);
-      } else if (soundId && window.DpSounds) {
-        window.DpSounds.play(soundId);
-      }
+      if (soundId && window.DpSounds) window.DpSounds.playUrl(opt.dataset.url);
       const mp3 = (cachedConfig.sounds?.files || []).find(f => f.id === soundId);
-      const s = window.DpSounds?.SOUNDS?.[soundId];
       const toggleLabel = document.querySelector('#dpAppOpenSoundToggle > span:first-child');
-      if (toggleLabel) toggleLabel.textContent = !soundId ? '🔇 Κανένας' : (mp3 ? '🎵 ' + mp3.label : (s ? s.name : soundId));
+      if (toggleLabel) toggleLabel.textContent = !soundId ? '🔇 Κανένας' : (mp3 ? '🎵 ' + mp3.label : soundId);
       showToast('Ήχος ανοίγματος ενημερώθηκε');
     });
 

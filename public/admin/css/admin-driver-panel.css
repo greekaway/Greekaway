@@ -840,6 +840,19 @@ html[data-theme='light'] .dp-sounds-item--active {
 html[data-theme='light'] .dp-sounds-badge { background: rgba(0,102,204,0.1); color: #0066cc; }
 html[data-theme='light'] .dp-sounds-badge--synth { background: rgba(150,150,0,0.1); color: #666600; }
 
+.dp-sounds-category { margin-bottom: 6px; }
+.dp-sounds-category-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.5);
+  padding: 8px 0 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 4px;
+}
+html[data-theme='light'] .dp-sounds-category-label { color: rgba(0,0,0,0.45); border-color: rgba(0,0,0,0.08); }
+
 .dp-sounds-play, .dp-sounds-play-synth, .dp-sounds-delete, .dp-sounds-default-btn {
   background: none;
   border: none;

@@ -291,6 +291,7 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
 
       const label = (req.body?.label || '').trim() || req.file.originalname.replace(/\.mp3$/i, '');
       const event = (req.body?.event || 'new_ride').trim();
+      const category = (req.body?.category || '').trim().substring(0, 40);
       const safeLabel = label.replace(/[^a-zA-Z0-9_\-\u0370-\u03FF\u0400-\u04FF ]/g, '').substring(0, 60);
       const id = 'mp3_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
       const filename = `${id}.mp3`;
@@ -304,10 +305,12 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
       const cfg = readConfig();
       if (!cfg.sounds) cfg.sounds = { files: [], defaults: {} };
       if (!cfg.sounds.files) cfg.sounds.files = [];
-      cfg.sounds.files.push({ id, label: safeLabel, filename, url, event, uploadedAt: new Date().toISOString() });
+      const entry = { id, label: safeLabel, filename, url, event, uploadedAt: new Date().toISOString() };
+      if (category) entry.category = category;
+      cfg.sounds.files.push(entry);
       writeConfig(cfg);
 
-      return res.json({ id, label: safeLabel, url, event });
+      return res.json({ id, label: safeLabel, url, event, category: category || '' });
     });
 
     // ── List Sounds ──

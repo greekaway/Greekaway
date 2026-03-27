@@ -1,7 +1,7 @@
 /**
  * Driver Panel Admin — Tab 9: Ήχοι
  * Upload MP3 sounds, assign per event, set defaults.
- * Reads/writes: config.sounds { files, defaults }
+ * Sounds grouped by category. Reads/writes: config.sounds { files, defaults }
  */
 (() => {
   'use strict';
@@ -16,8 +16,6 @@
 
   const stopAudio = () => {
     if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
-    // Stop programmatic sounds too
-    if (window.DpSounds) window.DpSounds.stop();
   };
 
   const playMp3 = (url) => {
@@ -27,6 +25,17 @@
   };
 
   const esc = (s) => { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
+
+  /** Group files by category, uncategorized goes to "Γενικοί" */
+  const groupByCategory = (files) => {
+    const map = {};
+    for (const f of files) {
+      const cat = f.category || 'Γενικοί';
+      if (!map[cat]) map[cat] = [];
+      map[cat].push(f);
+    }
+    return Object.entries(map); // [[catName, [files]], ...]
+  };
 
   // ── Build the full tab HTML ──
   const buildUI = () => {
@@ -41,6 +50,10 @@
         <h3 class="dp-sounds-section-title">📁 Ανέβασμα Ήχου (MP3)</h3>
         <div class="dp-sounds-upload-row">
           <input type="text" id="dpSoundLabel" class="input dp-sound-label-input" placeholder="Όνομα ήχου">
+          <input type="text" id="dpSoundCategory" class="input dp-sound-label-input" placeholder="Κατηγορία (π.χ. Ειδοποιήσεις)" list="dpSoundCatList">
+          <datalist id="dpSoundCatList">
+            ${[...new Set(files.map(f => f.category).filter(Boolean))].map(c => `<option value="${esc(c)}">`).join('')}
+          </datalist>
           <select id="dpSoundEvent" class="input dp-sound-event-select">
             ${EVENTS.map(e => `<option value="${e.key}">${e.label}</option>`).join('')}
           </select>
@@ -52,52 +65,33 @@
 
       ${EVENTS.map(ev => {
         const evFiles = files.filter(f => f.event === ev.key);
-        const programmatic = window.DpSounds?.SOUNDS || {};
-        const programmaticGroups = window.DpSounds?.GROUPS || [];
         const defaultId = defaults[ev.key] || '';
+        const groups = groupByCategory(evFiles);
 
         return `
         <div class="dp-sounds-event-section">
           <h3 class="dp-sounds-section-title">${ev.label}</h3>
           <p class="dp-sounds-desc">${ev.desc}</p>
 
-          ${evFiles.length > 0 ? `
-            <div class="dp-sounds-list">
-              ${evFiles.map(f => `
-                <div class="dp-sounds-item ${defaultId === f.id ? 'dp-sounds-item--active' : ''}" data-id="${f.id}" data-event="${ev.key}">
-                  <button type="button" class="dp-sounds-play" data-url="${esc(f.url)}" title="Ακρόαση">▶️</button>
-                  <span class="dp-sounds-name">${esc(f.label)}</span>
-                  <span class="dp-sounds-badge">MP3</span>
-                  <button type="button" class="dp-sounds-default-btn ${defaultId === f.id ? 'dp-sounds-default-btn--active' : ''}"
-                    data-id="${f.id}" data-event="${ev.key}" title="Ορισμός ως προεπιλογή">
-                    ${defaultId === f.id ? '⭐' : '☆'}
-                  </button>
-                  <button type="button" class="dp-sounds-delete" data-id="${f.id}" title="Διαγραφή">🗑️</button>
-                </div>
-              `).join('')}
+          ${evFiles.length > 0 ? groups.map(([catName, catFiles]) => `
+            <div class="dp-sounds-category">
+              <div class="dp-sounds-category-label">${esc(catName)}</div>
+              <div class="dp-sounds-list">
+                ${catFiles.map(f => `
+                  <div class="dp-sounds-item ${defaultId === f.id ? 'dp-sounds-item--active' : ''}" data-id="${f.id}" data-event="${ev.key}">
+                    <button type="button" class="dp-sounds-play" data-url="${esc(f.url)}" title="Ακρόαση">▶️</button>
+                    <span class="dp-sounds-name">${esc(f.label)}</span>
+                    <span class="dp-sounds-badge">MP3</span>
+                    <button type="button" class="dp-sounds-default-btn ${defaultId === f.id ? 'dp-sounds-default-btn--active' : ''}"
+                      data-id="${f.id}" data-event="${ev.key}" title="Ορισμός ως προεπιλογή">
+                      ${defaultId === f.id ? '⭐' : '☆'}
+                    </button>
+                    <button type="button" class="dp-sounds-delete" data-id="${f.id}" title="Διαγραφή">🗑️</button>
+                  </div>
+                `).join('')}
+              </div>
             </div>
-          ` : '<p class="dp-sounds-empty">Δεν υπάρχουν MP3 — ανεβάστε ήχους παραπάνω</p>'}
-
-          <details class="dp-sounds-programmatic">
-            <summary>Ενσωματωμένοι Ήχοι</summary>
-            <div class="dp-sounds-list">
-              ${programmaticGroups.map(g => g.ids.map(id => {
-                const s = programmatic[id];
-                if (!s) return '';
-                const isDefault = defaultId === id;
-                return `
-                <div class="dp-sounds-item ${isDefault ? 'dp-sounds-item--active' : ''}" data-id="${id}" data-event="${ev.key}">
-                  <button type="button" class="dp-sounds-play-synth" data-sound="${id}" title="Ακρόαση">▶️</button>
-                  <span class="dp-sounds-name">${s.name}</span>
-                  <span class="dp-sounds-badge dp-sounds-badge--synth">SYNTH</span>
-                  <button type="button" class="dp-sounds-default-btn ${isDefault ? 'dp-sounds-default-btn--active' : ''}"
-                    data-id="${id}" data-event="${ev.key}" title="Ορισμός ως προεπιλογή">
-                    ${isDefault ? '⭐' : '☆'}
-                  </button>
-                </div>`;
-              }).join('')).join('')}
-            </div>
-          </details>
+          `).join('') : '<p class="dp-sounds-empty">Δεν υπάρχουν MP3 — ανεβάστε ήχους παραπάνω</p>'}
         </div>`;
       }).join('')}
 
@@ -117,12 +111,14 @@
       const file = fileInput.files?.[0];
       if (!file) return;
       const label = $('#dpSoundLabel')?.value?.trim() || '';
+      const category = $('#dpSoundCategory')?.value?.trim() || '';
       const event = $('#dpSoundEvent')?.value || 'new_ride';
       const status = $('#dpSoundUploadStatus');
 
       const fd = new FormData();
       fd.append('sound', file);
       fd.append('label', label);
+      fd.append('category', category);
       fd.append('event', event);
 
       setStatus(status, 'Ανέβασμα…', 'info');
@@ -134,7 +130,7 @@
         // Update local config
         if (!state.config.sounds) state.config.sounds = { files: [], defaults: {} };
         if (!state.config.sounds.files) state.config.sounds.files = [];
-        state.config.sounds.files.push({ id: data.id, label: data.label, url: data.url, event: data.event, filename: data.id + '.mp3' });
+        state.config.sounds.files.push({ id: data.id, label: data.label, category: data.category, url: data.url, event: data.event, filename: data.id + '.mp3' });
 
         setStatus(status, '✅ Ανέβηκε: ' + data.label, 'ok');
         if ($('#dpSoundLabel')) $('#dpSoundLabel').value = '';
@@ -148,13 +144,6 @@
     // Play MP3
     document.querySelectorAll('.dp-sounds-play').forEach(btn => {
       btn.addEventListener('click', () => playMp3(btn.dataset.url));
-    });
-    // Play synth
-    document.querySelectorAll('.dp-sounds-play-synth').forEach(btn => {
-      btn.addEventListener('click', () => {
-        stopAudio();
-        if (window.DpSounds) window.DpSounds.play(btn.dataset.sound);
-      });
     });
 
     // Set default
