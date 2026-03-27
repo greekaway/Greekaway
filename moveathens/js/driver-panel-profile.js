@@ -354,8 +354,39 @@
         </div>
       </div>
 
-      <div class="ma-dp-profile-section">
-        <h3 class="ma-dp-profile-section-title">�🔐 Κωδικός Ασφαλείας (PIN)</h3>
+      <div class="ma-dp-profile-section">        <h3 class="ma-dp-profile-section-title">🚪 Ήχος Κλεισίματος</h3>
+        <p class="ma-dp-profile-hint">Ήχος κατά το κλείσιμο της εφαρμογής</p>
+        <button type="button" class="ma-dp-sound-toggle" id="dpAppCloseSoundToggle">
+          <span>${(() => {
+            const sel = localStorage.getItem('ma_dp_app_close_sound') || cachedConfig.sounds?.defaults?.app_close || '';
+            if (!sel) return '🔇 Κανένας';
+            const mp3 = (cachedConfig.sounds?.files || []).find(f => f.id === sel);
+            return mp3 ? '🎵 ' + mp3.label : '🔇 Κανένας';
+          })()}</span>
+          <span class="ma-dp-sound-toggle__arrow">▼</span>
+        </button>
+        <div class="ma-dp-sound-picker ma-dp-sound-picker--collapsed" id="dpAppCloseSoundPicker">
+          ${(() => {
+            const sel = localStorage.getItem('ma_dp_app_close_sound') || cachedConfig.sounds?.defaults?.app_close || '';
+            const mp3Files = (cachedConfig.sounds?.files || []).filter(f => f.event === 'app_close');
+            let html = '<div class="ma-dp-sound-option ' + (!sel ? 'ma-dp-sound-active' : '') + '" data-sound=""><span class="ma-dp-sound-name">🔇 Κανένας</span></div>';
+            if (mp3Files.length) {
+              const cats = {};
+              mp3Files.forEach(f => { const c = f.category || 'Γενικοί'; if (!cats[c]) cats[c] = []; cats[c].push(f); });
+              Object.entries(cats).forEach(([cat, files]) => {
+                html += '<div class="ma-dp-sound-group-label">' + esc(cat) + '</div>';
+                html += files.map(f => '<div class="ma-dp-sound-option ' + (f.id === sel ? 'ma-dp-sound-active' : '') + '" data-sound="' + f.id + '" data-url="' + esc(f.url) + '">' +
+                  '<span class="ma-dp-sound-name">🎵 ' + esc(f.label) + '</span>' +
+                  '<button type="button" class="ma-dp-sound-preview-mp3" data-url="' + esc(f.url) + '">▶️</button>' +
+                '</div>').join('');
+              });
+            }
+            return html;
+          })()}
+        </div>
+      </div>
+
+      <div class="ma-dp-profile-section">        <h3 class="ma-dp-profile-section-title">�🔐 Κωδικός Ασφαλείας (PIN)</h3>
         <p class="ma-dp-profile-hint">Ορίστε ένα PIN για επιπλέον ασφάλεια κατά τη σύνδεση</p>
 
         <div class="ma-dp-pin-status-bar">
@@ -444,6 +475,31 @@
       const toggleLabel = document.querySelector('#dpAppOpenSoundToggle > span:first-child');
       if (toggleLabel) toggleLabel.textContent = !soundId ? '🔇 Κανένας' : (mp3 ? '🎵 ' + mp3.label : soundId);
       showToast('Ήχος ανοίγματος ενημερώθηκε');
+    });
+
+    // App-close sound picker toggle
+    document.getElementById('dpAppCloseSoundToggle')?.addEventListener('click', () => {
+      const picker = document.getElementById('dpAppCloseSoundPicker');
+      if (picker) picker.classList.toggle('ma-dp-sound-picker--collapsed');
+      const arrow = document.querySelector('#dpAppCloseSoundToggle .ma-dp-sound-toggle__arrow');
+      if (arrow) arrow.textContent = picker?.classList.contains('ma-dp-sound-picker--collapsed') ? '▼' : '▲';
+    });
+
+    // Sound picker — app close
+    document.getElementById('dpAppCloseSoundPicker')?.addEventListener('click', (e) => {
+      const previewMp3 = e.target.closest('.ma-dp-sound-preview-mp3');
+      if (previewMp3 && window.DpSounds) { window.DpSounds.playUrl(previewMp3.dataset.url); return; }
+      const opt = e.target.closest('.ma-dp-sound-option');
+      if (!opt) return;
+      document.querySelectorAll('#dpAppCloseSoundPicker .ma-dp-sound-option').forEach(o => o.classList.remove('ma-dp-sound-active'));
+      opt.classList.add('ma-dp-sound-active');
+      const soundId = opt.dataset.sound;
+      localStorage.setItem('ma_dp_app_close_sound', soundId);
+      if (soundId && window.DpSounds) window.DpSounds.playUrl(opt.dataset.url);
+      const mp3 = (cachedConfig.sounds?.files || []).find(f => f.id === soundId);
+      const toggleLabel = document.querySelector('#dpAppCloseSoundToggle > span:first-child');
+      if (toggleLabel) toggleLabel.textContent = !soundId ? '🔇 Κανένας' : (mp3 ? '🎵 ' + mp3.label : soundId);
+      showToast('Ήχος κλεισίματος ενημερώθηκε');
     });
 
     // Back

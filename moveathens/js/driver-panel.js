@@ -259,6 +259,20 @@
     } else {
       ['click', 'touchstart'].forEach(e => document.addEventListener(e, onFirstTap, { capture: true, once: true, passive: true }));
     }
+
+    // Play app-close sound when leaving
+    const playAppCloseSound = () => {
+      const soundId = localStorage.getItem('ma_dp_app_close_sound') || config.sounds?.defaults?.app_close || '';
+      if (!soundId || !window.DpSounds) return;
+      const files = window._dpSoundFiles || [];
+      const file = files.find(f => f.id === soundId);
+      if (!file) return;
+      // Use Audio directly for synchronous playback on close
+      try { new Audio(file.url).play(); } catch { /* */ }
+    };
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') playAppCloseSound();
+    });
   };
 
   if (document.readyState === 'loading') {
