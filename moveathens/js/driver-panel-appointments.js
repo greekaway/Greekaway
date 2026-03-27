@@ -61,11 +61,11 @@
 
   function renderSubTabs(container) {
     const bar = document.createElement('div');
-    bar.className = 'ma-dp-sched-tabs';
+    bar.className = 'ma-dp-sched-row';
     bar.id = 'dpSchedTabs';
     bar.innerHTML = `
       <button class="ma-dp-sched-pill ma-dp-sched-pill--active" data-sub="all" type="button">Όλα</button>
-      <button class="ma-dp-sched-pill" data-sub="accepted" type="button">${esc(labels.btnAccept || 'Αποδεκτά')}</button>`;
+      <button class="ma-dp-sched-pill" data-sub="accepted" type="button">${esc(labels.btnAccept || 'Αποδοχή')}</button>`;
     bar.addEventListener('click', e => {
       const btn = e.target.closest('[data-sub]');
       if (!btn) return;
@@ -77,16 +77,15 @@
     container.appendChild(bar);
   }
 
-  // ── Sort / Filter chips ──
+  // ── Sort chips ──
 
   function renderSortChips(container) {
     const wrap = document.createElement('div');
-    wrap.className = 'ma-dp-sched-sort-chips';
+    wrap.className = 'ma-dp-sched-row';
     wrap.id = 'dpSchedSortChips';
     wrap.innerHTML = `
-      <span class="ma-dp-sched-sort-icon">☰</span>
-      <button class="ma-dp-sched-chip" data-chip="time" type="button">🕐 Ώρα</button>
-      <button class="ma-dp-sched-chip" data-chip="price" type="button">💰 Αξία</button>`;
+      <button class="ma-dp-sched-chip" data-chip="time" type="button">Ώρα</button>
+      <button class="ma-dp-sched-chip" data-chip="price" type="button">Αξία</button>`;
     wrap.addEventListener('click', e => {
       const btn = e.target.closest('[data-chip]');
       if (!btn) return;
@@ -101,24 +100,24 @@
     container.appendChild(wrap);
   }
 
-  // ── Period filter bar (carousel) ──
+  // ── Period filter bar ──
 
   function renderPeriodFilter(container) {
     const bar = document.createElement('div');
-    bar.className = 'ma-dp-sched-period-filter';
+    bar.className = 'ma-dp-sched-row';
     bar.id = 'dpSchedPeriodFilter';
     bar.innerHTML = `
-      <button class="ma-dp-sched-period-btn ma-dp-sched-period-btn--active" data-period="all" type="button">Όλα</button>
-      <button class="ma-dp-sched-period-btn" data-period="today" type="button">Σήμερα</button>
-      <button class="ma-dp-sched-period-btn" data-period="tomorrow" type="button">Αύριο</button>
-      <button class="ma-dp-sched-period-btn" data-period="week" type="button">Εβδομάδα</button>
-      <button class="ma-dp-sched-period-btn" data-period="month" type="button">Μήνας</button>`;
+      <button class="ma-dp-sched-chip ma-dp-sched-chip--active" data-period="all" type="button">Όλα</button>
+      <button class="ma-dp-sched-chip" data-period="today" type="button">Σήμερα</button>
+      <button class="ma-dp-sched-chip" data-period="tomorrow" type="button">Αύριο</button>
+      <button class="ma-dp-sched-chip" data-period="week" type="button">Εβδομάδα</button>
+      <button class="ma-dp-sched-chip" data-period="month" type="button">Μήνας</button>`;
     bar.addEventListener('click', e => {
       const btn = e.target.closest('[data-period]');
       if (!btn) return;
       activePeriod = btn.dataset.period;
-      bar.querySelectorAll('.ma-dp-sched-period-btn').forEach(b =>
-        b.classList.toggle('ma-dp-sched-period-btn--active', b === btn));
+      bar.querySelectorAll('.ma-dp-sched-chip').forEach(b =>
+        b.classList.toggle('ma-dp-sched-chip--active', b.dataset.period === activePeriod));
       loadRequests();
     });
     container.appendChild(bar);
@@ -306,9 +305,14 @@
 
     section.innerHTML = '';
 
-    renderSubTabs(section);
-    renderSortChips(section);
-    renderPeriodFilter(section);
+    // Filter card container
+    const filterCard = document.createElement('div');
+    filterCard.className = 'ma-dp-sched-filter-card';
+    section.appendChild(filterCard);
+
+    renderSubTabs(filterCard);
+    renderSortChips(filterCard);
+    renderPeriodFilter(filterCard);
 
     const list = document.createElement('div');
     list.id = 'dpSchedList';
