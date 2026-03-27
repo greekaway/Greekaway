@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
+## 2026-03-27 — Driver Panel: iOS sound fix + edge-to-edge cards (v968)
+
+- **iOS sound fix:** Pre-warm all Audio objects on first tap (same pattern as close sound). SSE new-ride alerts now play reliably on iOS instead of being silently blocked.
+- **Edge-to-edge cards:** Route cards now span full screen width — zero side padding, no border-radius, top/bottom accent borders only.
+
 ## 2026-03-27 — Driver Panel Home UX fixes (v967)
 
 - **Sound fix:** New ride alert now correctly reads driver's chosen sound from config (`sounds.defaults.new_ride`) instead of broken fallback path.
