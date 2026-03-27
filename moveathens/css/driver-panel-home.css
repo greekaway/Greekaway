@@ -3,6 +3,41 @@
    Urgent cards, accept/reject, status indicator
    ═══════════════════════════════════════════════════════ */
 
+/* ── New-request banner (shown when on another tab) ── */
+.ma-dp-new-req-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: var(--ma-dp-accent, #00c896);
+  color: #fff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  animation: dp-bannerSlideIn 0.35s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  -webkit-tap-highlight-color: transparent;
+}
+.ma-dp-new-req-banner .banner-icon { font-size: 22px; flex-shrink: 0; }
+.ma-dp-new-req-banner .banner-text { flex: 1; font-size: 14px; font-weight: 600; line-height: 1.3; }
+.ma-dp-new-req-banner .banner-text small { display: block; font-weight: 400; font-size: 12px; opacity: 0.85; margin-top: 2px; }
+.ma-dp-new-req-banner .banner-arrow { font-size: 18px; opacity: 0.7; flex-shrink: 0; }
+
+@keyframes dp-bannerSlideIn {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
+}
+.ma-dp-new-req-banner.hiding {
+  animation: dp-bannerSlideOut 0.3s ease forwards;
+}
+@keyframes dp-bannerSlideOut {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-100%); }
+}
+
 /* ── Cards container ── */
 .ma-dp-home-cards {
   padding: 8px 0 120px;

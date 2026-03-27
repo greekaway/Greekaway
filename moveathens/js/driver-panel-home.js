@@ -13,6 +13,8 @@
   let config = {};
   let labels = {};
   let dismissedIds = new Set();
+  let _bannerEl = null;
+  let _bannerTimeout = null;
   let pollTimer = null;
   const POLL_INTERVAL = 5000; // 5 seconds, same as admin panel
 
@@ -24,6 +26,47 @@
     try { return JSON.parse(localStorage.getItem(LS_KEY)); }
     catch { return null; }
   };
+
+  // ── New-request banner (when driver is on another tab) ──
+
+  function showNewRequestBanner(card) {
+    // Only show if driver is NOT on home tab
+    if (!window.DpApp || window.DpApp.getActiveTab() === 'home') return;
+
+    // Remove previous banner if any
+    hideNewRequestBanner(true);
+
+    const route = (card.origin || '…') + ' → ' + (card.destination || '…');
+    const price = card.price ? (' | ' + card.price + '€') : '';
+
+    const el = document.createElement('div');
+    el.className = 'ma-dp-new-req-banner';
+    el.innerHTML =
+      '<span class="banner-icon">🚖</span>' +
+      '<span class="banner-text">Νέα διαδρομή!<small>' + route + price + '</small></span>' +
+      '<span class="banner-arrow">›</span>';
+
+    el.addEventListener('click', () => {
+      hideNewRequestBanner();
+      if (window.DpApp) window.DpApp.switchTab('home');
+    });
+
+    document.body.appendChild(el);
+    _bannerEl = el;
+
+    // Auto-dismiss after 8 seconds
+    _bannerTimeout = setTimeout(() => hideNewRequestBanner(), 8000);
+  }
+
+  function hideNewRequestBanner(instant) {
+    if (_bannerTimeout) { clearTimeout(_bannerTimeout); _bannerTimeout = null; }
+    if (!_bannerEl) return;
+    if (instant) { _bannerEl.remove(); _bannerEl = null; return; }
+    _bannerEl.classList.add('hiding');
+    _bannerEl.addEventListener('animationend', () => {
+      if (_bannerEl) { _bannerEl.remove(); _bannerEl = null; }
+    }, { once: true });
+  }
 
   // ── SSE Connection ──
 
@@ -39,6 +82,7 @@
         const card = JSON.parse(e.data);
         if (!dismissedIds.has(card.requestId)) addUrgentCard(card);
         playAlert();
+        showNewRequestBanner(card);
       } catch { /* ignore parse errors */ }
     });
 

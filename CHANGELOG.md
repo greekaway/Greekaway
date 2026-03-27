@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 2026-03-27 — In-app new-request banner (v974)
+
+- **Banner on other tabs** — when a new request arrives and the driver is on another tab (schedule, history, etc.), a slide-down banner appears: "🚖 Νέα διαδρομή! Origin → Destination | Price€"
+- **Tap to navigate** — tapping the banner switches to the Home tab immediately.
+- **Auto-dismiss** — banner hides after 8 seconds or when navigating to Home.
+
 ## 2026-03-27 — Countdown config fix (v973)
 
 - **Fixed key mismatch** — admin acceptance save used `broadcastTimeoutMin` but server expected `broadcastTimeoutMinutes`. Now consistent.

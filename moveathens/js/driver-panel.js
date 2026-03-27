@@ -227,6 +227,11 @@
     if (h) h.style.display = tabKey === 'home' ? '' : 'none';
     const ab = document.getElementById('dpAvailBtn');
     if (ab) ab.style.display = tabKey === 'home' ? '' : 'none';
+    // Dismiss new-request banner when switching to home
+    if (tabKey === 'home') {
+      const banner = document.querySelector('.ma-dp-new-req-banner');
+      if (banner) { banner.classList.add('hiding'); setTimeout(() => banner.remove(), 300); }
+    }
   };
 
   const init = async () => {
@@ -362,5 +367,5 @@
     init();
   }
 
-  window.DpApp = { switchTab, getDriver, loadConfig };
+  window.DpApp = { switchTab, getDriver, loadConfig, getActiveTab: () => activeTab };
 })();
