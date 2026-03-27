@@ -8,7 +8,7 @@
   margin: 0;
   padding: 18px;
   background: var(--ma-dp-card);
-  border: 1px solid var(--ma-dp-card-border);
+  border: 1px solid var(--ma-dp-accent);
   border-radius: 14px;
   display: flex;
   flex-direction: column;
@@ -144,7 +144,7 @@ html[data-theme='light'] .ma-dp-btn-detail {
 /* ── Light mode ── */
 html[data-theme='light'] .ma-dp-sched-filter-card {
   background: var(--ma-dp-card);
-  border-color: var(--ma-dp-card-border);
+  border-color: var(--ma-dp-accent);
 }
 html[data-theme='light'] .ma-dp-sched-pill {
   border-color: rgba(0, 0, 0, 0.12);

@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 2026-03-27 — Unified accent border frames (v969)
+
+- **Home ride card:** Restored full accent border + 14px border-radius (no longer cut off at edges).
+- **Appointments filter card:** Border changed from subtle card-border to accent blue — same electric blue frame as ride cards.
+- **Light mode:** Accent border preserved in both dark and light themes.
+
 ## 2026-03-27 — Driver Panel: iOS sound fix + edge-to-edge cards (v968)
 
 - **iOS sound fix:** Pre-warm all Audio objects on first tap (same pattern as close sound). SSE new-ride alerts now play reliably on iOS instead of being silently blocked.

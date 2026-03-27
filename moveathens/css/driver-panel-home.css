@@ -22,11 +22,8 @@
 /* ── Urgent Card ── */
 .ma-dp-urgent-card {
   background: var(--ma-dp-card);
-  border-top: 1px solid var(--ma-dp-accent);
-  border-bottom: 1px solid var(--ma-dp-accent);
-  border-left: none;
-  border-right: none;
-  border-radius: 0;
+  border: 1px solid var(--ma-dp-accent);
+  border-radius: 14px;
   padding: 16px;
   box-shadow: 0 0 16px var(--ma-dp-accent-glow);
   animation: dp-cardIn 0.3s ease;
