@@ -12,7 +12,7 @@
     $('#dpLogoUrl').value = g.logoUrl || '';
     $('#dpAccentColor').value = g.accentColor || '#46d3ff';
     $('#dpAccentColorText').value = g.accentColor || '#46d3ff';
-    $('#dpDefaultTheme').value = g.defaultTheme || 'dark';
+    $('#dpDefaultTheme').value = g.defaultTheme || 'auto';
   };
 
   const init = () => {
