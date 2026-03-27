@@ -15,6 +15,7 @@ const crypto = require('crypto');
 let multer = null;
 try { multer = require('multer'); } catch (_) { multer = null; }
 const driversData = require('../../src/server/data/moveathens-drivers');
+const requestsData = require('../../src/server/data/moveathens-requests');
 
 const LOCAL_CONFIG = path.join(__dirname, '..', 'data', 'driver_panel_ui.json');
 const RENDER_PERSISTENT_ROOT = '/opt/render/project/src/uploads';
@@ -104,6 +105,23 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
     } catch (err) {
       console.error('[driver-panel] GET drivers failed:', err.message);
       return res.status(500).json({ error: 'Failed to load drivers' });
+    }
+  });
+
+  // ========================================
+  // GET driver stats (busy/hired count)
+  // ========================================
+  app.get('/api/admin/driver-panel/driver-stats', async (req, res) => {
+    if (!guard(req, res)) return;
+    try {
+      // Get phones of drivers with active routes (accepted/arrived = busy)
+      const accepted = await requestsData.getRequests({ status: 'accepted' });
+      const arrived = await requestsData.getRequests({ status: 'arrived' });
+      const busyPhones = new Set([...accepted, ...arrived].map(r => r.driver_phone).filter(Boolean));
+      return res.json({ busyPhones: [...busyPhones] });
+    } catch (err) {
+      console.error('[driver-panel] GET driver-stats failed:', err.message);
+      return res.status(500).json({ error: 'Failed to load driver stats' });
     }
   });
 

@@ -69,6 +69,28 @@ module.exports = function registerDriverPanelRoutes(app) {
     }
   });
 
+  // ── Block status check (for already logged-in drivers) ──
+  app.get('/api/driver-panel/block-status', async (req, res) => {
+    const phone = normalizePhone(req.query.phone);
+    if (!phone) return res.status(400).json({ error: 'Phone required' });
+    try {
+      const driver = await driversData.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      // Auto-unblock if blocked_until expired
+      if (driver.is_blocked && driver.blocked_until && new Date(driver.blocked_until) <= new Date()) {
+        await driversData.upsertDriver({ ...driver, is_blocked: false, blocked_until: null });
+        driver.is_blocked = false;
+        driver.blocked_until = null;
+      }
+
+      res.json({ blocked: !!driver.is_blocked, blocked_until: driver.blocked_until || null });
+    } catch (err) {
+      console.error('[driver-panel] block-status:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
   // ── Auth: verify phone + optional PIN ──
   app.post('/api/driver-panel/login', async (req, res) => {
     const phone = normalizePhone(req.body.phone);
@@ -169,6 +191,18 @@ module.exports = function registerDriverPanelRoutes(app) {
     try {
       const driver = await driversData.getDriverByPhone(phone);
       if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      // Auto-unblock if blocked_until expired
+      if (driver.is_blocked && driver.blocked_until && new Date(driver.blocked_until) <= new Date()) {
+        await driversData.upsertDriver({ ...driver, is_blocked: false, blocked_until: null });
+        driver.is_blocked = false;
+        driver.blocked_until = null;
+      }
+
+      // Blocked drivers cannot toggle availability
+      if (driver.is_blocked) {
+        return res.status(403).json({ error: 'Driver blocked', blocked_until: driver.blocked_until || null });
+      }
 
       await driversData.upsertDriver({ ...driver, is_available: isAvailable, is_active: isAvailable });
       res.json({ ok: true, is_available: isAvailable });

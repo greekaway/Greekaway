@@ -132,9 +132,26 @@ async function autoBroadcast(request, driversData) {
     return;
   }
 
-  // Get eligible drivers: active + not blocked + matching vehicle
+  // Get eligible drivers: active + not blocked + matching vehicle + not busy
   const allDrivers = await driversData.getDrivers(true); // active only
-  const eligible = allDrivers.filter(d => !d.is_blocked && matchesVehicle(d, request.vehicle_type_id));
+  let eligible = allDrivers.filter(d => !d.is_blocked && matchesVehicle(d, request.vehicle_type_id));
+
+  // Exclude drivers with an active route (accepted/arrived)
+  try {
+    const requestsData = require('../src/server/data/moveathens-requests');
+    const accepted = await requestsData.getRequests({ status: 'accepted' });
+    const arrived = await requestsData.getRequests({ status: 'arrived' });
+    const busyPhones = new Set([...accepted, ...arrived].map(r => r.driver_phone).filter(Boolean));
+    if (busyPhones.size > 0) {
+      const before = eligible.length;
+      eligible = eligible.filter(d => !busyPhones.has(d.phone));
+      if (eligible.length < before) {
+        console.log(`[broadcast] Excluded ${before - eligible.length} busy driver(s) with active routes`);
+      }
+    }
+  } catch (err) {
+    console.error('[broadcast] Failed to check busy drivers:', err.message);
+  }
 
   if (eligible.length === 0) {
     console.log('[broadcast] No eligible drivers for request', request.id);

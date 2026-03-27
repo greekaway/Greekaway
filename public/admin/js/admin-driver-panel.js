@@ -70,6 +70,7 @@
     safe('general.populate',      () => generalTab?.populate());
     safe('footer.render',         () => footerTab?.render());
     safe('drivers.renderVT',      () => driversTab?.renderVehicleCheckboxes([]));
+    safe('drivers.fetchBusy',     async () => { if (driversTab?.fetchBusyDrivers) await driversTab.fetchBusyDrivers(); });
     safe('drivers.render',        () => driversTab?.render());
     safe('routeCard.populate',    () => routeCardTab?.populate());
     safe('notifications.populate',() => notificationsTab?.populate());

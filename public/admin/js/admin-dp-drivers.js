@@ -58,14 +58,24 @@
   };
 
   // ── Stats block ──
+  let _busyPhones = new Set();
+
+  const fetchBusyDrivers = async () => {
+    try {
+      const res = await api('/api/admin/driver-panel/driver-stats');
+      if (res.busyPhones) _busyPhones = new Set(res.busyPhones);
+    } catch { /* silent */ }
+  };
+
   const renderStats = () => {
     const wrap = $('#dpDriverStats');
     if (!wrap) return;
     const all = state.drivers;
     const total = all.length;
-    const available = all.filter(d => d.is_available !== false && !d.is_blocked);
-    const online = all.filter(d => d.is_available !== false);
+    const active = all.filter(d => d.is_available !== false && !d.is_blocked);
     const blocked = all.filter(d => d.is_blocked);
+    const hired = active.filter(d => _busyPhones.has(d.phone));
+    const hiredPct = active.length ? Math.round(hired.length / active.length * 100) : 0;
     const pct = (n) => total ? Math.round(n / total * 100) : 0;
 
     wrap.innerHTML = `
@@ -77,13 +87,13 @@
         </div>
         <div class="dp-stat-box dp-stat-green">
           <span class="dp-stat-icon">✅</span>
-          <span class="dp-stat-num">${available.length} <small>(${pct(available.length)}%)</small></span>
+          <span class="dp-stat-num">${active.length} <small>(${pct(active.length)}%)</small></span>
           <span class="dp-stat-label">Ενεργοί</span>
         </div>
-        <div class="dp-stat-box dp-stat-blue">
-          <span class="dp-stat-icon">📡</span>
-          <span class="dp-stat-num">${online.length} <small>(${pct(online.length)}%)</small></span>
-          <span class="dp-stat-label">Διαθέσιμοι</span>
+        <div class="dp-stat-box dp-stat-orange">
+          <span class="dp-stat-icon">🚕</span>
+          <span class="dp-stat-num">${hired.length} <small>(${hiredPct}%)</small></span>
+          <span class="dp-stat-label">Μισθωμένοι</span>
         </div>
         <div class="dp-stat-box dp-stat-red">
           <span class="dp-stat-icon">🔒</span>
@@ -98,6 +108,9 @@
     if (d.is_blocked) {
       const until = d.blocked_until ? new Date(d.blocked_until).toLocaleDateString('el-GR') : null;
       return `<span class="dp-badge dp-badge-blocked">🔒 Κλειδωμένος${until ? ' (ως ' + until + ')' : ' (Οριστικά)'}</span>`;
+    }
+    if (_busyPhones.has(d.phone)) {
+      return `<span class="dp-badge dp-badge-busy">🚕 Μισθωμένος</span>`;
     }
     if (d.is_available === false) {
       return `<span class="dp-badge dp-badge-unavailable">⚪ Μη Διαθέσιμος</span>`;
@@ -331,7 +344,7 @@
     $('#dpDriverSearch')?.addEventListener('input', renderList);
     $('#dpDriverFilter')?.addEventListener('change', renderList);
 
-    return { render: renderList, renderVehicleCheckboxes };
+    return { render: renderList, renderVehicleCheckboxes, fetchBusyDrivers };
   };
 
   window.DpAdmin.initDriversTab = init;

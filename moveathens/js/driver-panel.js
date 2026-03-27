@@ -88,6 +88,8 @@
   };
 
   // ── Floating availability toggle ──
+  let _blockPollTimer = null;
+
   const buildAvailButton = () => {
     let btn = document.getElementById('dpAvailBtn');
     if (btn) btn.remove();
@@ -100,9 +102,53 @@
     btn.className = 'ma-dp-avail-btn' + (isActive ? ' on' : '');
     btn.textContent = isActive ? 'ΕΝΕΡΓΟΣ' : 'ΕΝΑΡΞΗ';
 
+    // Check block status and update button accordingly
+    const checkBlocked = async () => {
+      const d = getDriver();
+      if (!d?.phone) return;
+      try {
+        const res = await fetch('/api/driver-panel/block-status?phone=' + encodeURIComponent(d.phone));
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.blocked) {
+          showBlockedState(btn, data.blocked_until);
+        } else {
+          clearBlockedState(btn);
+        }
+      } catch { /* offline */ }
+    };
+
+    const showBlockedState = (b, until) => {
+      b.classList.add('blocked');
+      b.classList.remove('on', 'off');
+      b.disabled = true;
+      let label = 'ΚΛΕΙΔΩΜΕΝΟΣ';
+      if (until) {
+        const d = new Date(until);
+        label += '\n' + 'έως ' + d.toLocaleDateString('el-GR');
+      }
+      b.textContent = label;
+    };
+
+    const clearBlockedState = (b) => {
+      if (!b.classList.contains('blocked')) return;
+      b.classList.remove('blocked');
+      b.disabled = false;
+      const d = getDriver();
+      const on = d?.is_available === true;
+      b.classList.toggle('on', on);
+      b.classList.toggle('off', !on);
+      b.textContent = on ? 'ΕΝΕΡΓΟΣ' : 'ΕΝΑΡΞΗ';
+    };
+
+    // Initial check + poll every 30s
+    checkBlocked();
+    if (_blockPollTimer) clearInterval(_blockPollTimer);
+    _blockPollTimer = setInterval(checkBlocked, 30000);
+
     btn.addEventListener('click', async () => {
       const d = getDriver();
-      if (!d?.phone || btn.disabled) return;
+      if (!d?.phone || btn.disabled || btn.classList.contains('blocked')) return;
       const wasOn = btn.classList.contains('on');
       const nowActive = !wasOn;
       btn.disabled = true;
@@ -114,6 +160,15 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: d.phone, is_available: nowActive })
         });
+
+        if (res.status === 403) {
+          // Driver got blocked while logged in
+          const errData = await res.json().catch(() => ({}));
+          btn.classList.remove('loading');
+          showBlockedState(btn, errData.blocked_until);
+          return;
+        }
+
         if (res.ok) {
           d.is_available = nowActive;
           localStorage.setItem(LS_KEY, JSON.stringify(d));

@@ -458,8 +458,19 @@ html[data-theme='light'] .bar-tab.active {
 .dp-stat-num small { font-size: 12px; font-weight: 500; opacity: 0.6; }
 .dp-stat-label { font-size: 11px; color: #b2b8c7; font-weight: 500; }
 .dp-stat-green { border-color: rgba(74, 222, 128, 0.25); }
-.dp-stat-blue { border-color: rgba(70, 211, 255, 0.25); }
+.dp-stat-orange { border-color: rgba(251, 191, 36, 0.25); }
 .dp-stat-red { border-color: rgba(248, 113, 113, 0.25); }
+
+.dp-badge-busy {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
 
 /* ── Block dropdown ── */
 .dp-block-wrap { position: relative; display: inline-block; }

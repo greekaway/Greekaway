@@ -289,6 +289,19 @@ html[data-theme='light'] .ma-dp-footer-btn.active {
   opacity: 0.7;
   animation: dpAvailPulse 0.6s ease-in-out infinite alternate;
 }
+.ma-dp-avail-btn.blocked {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  box-shadow: 0 6px 24px rgba(220, 38, 38, 0.4);
+  pointer-events: none;
+  font-size: 12px;
+  line-height: 1.3;
+  letter-spacing: 0.5px;
+  white-space: pre-line;
+  text-align: center;
+  padding: 8px 28px;
+  height: auto;
+  min-height: 56px;
+}
 @keyframes dpAvailPulse {
   from { transform: translateX(-50%) scale(1); }
   to   { transform: translateX(-50%) scale(0.95); }
