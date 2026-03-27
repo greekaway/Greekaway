@@ -10,7 +10,8 @@
   const EVENTS = [
     { key: 'new_ride', label: '🚖 Νέα Διαδρομή', desc: 'Ήχος όταν έρχεται νέο αίτημα' },
     { key: 'app_open', label: '📱 Άνοιγμα App', desc: 'Ήχος κατά το άνοιγμα της εφαρμογής' },
-    { key: 'app_close', label: '🚪 Κλείσιμο App', desc: 'Ήχος κατά το κλείσιμο της εφαρμογής' }
+    { key: 'app_close', label: '🚪 Κλείσιμο App', desc: 'Ήχος κατά το κλείσιμο της εφαρμογής' },
+    { key: 'appointment', label: '📅 Ραντεβού', desc: 'Ήχος υπενθύμισης ραντεβού' }
   ];
 
   let currentAudio = null;
