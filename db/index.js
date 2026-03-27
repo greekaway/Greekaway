@@ -997,6 +997,51 @@ const ma = {
   async getPhonePinHash(phone) {
     const row = await this._findPhoneRow(phone);
     return row ? row.pin_hash : null;
+  },
+
+  // ── Broadcast Log ──
+
+  async logBroadcast(requestId, driverPhones) {
+    if (!driverPhones || driverPhones.length === 0) return;
+    const values = driverPhones.map((_, i) => `($1, $${i + 2})`).join(', ');
+    await execute(
+      `INSERT INTO ma_broadcast_log (request_id, driver_phone) VALUES ${values}`,
+      [requestId, ...driverPhones]
+    );
+  },
+
+  async markBroadcastAccepted(requestId, driverPhone) {
+    await execute(
+      `UPDATE ma_broadcast_log SET response = 'accepted', responded_at = NOW()
+       WHERE request_id = $1 AND driver_phone = $2 AND response = 'pending'`,
+      [requestId, driverPhone]
+    );
+    // Mark others as missed
+    await execute(
+      `UPDATE ma_broadcast_log SET response = 'missed'
+       WHERE request_id = $1 AND response = 'pending'`,
+      [requestId]
+    );
+  },
+
+  async markBroadcastExpired(requestId) {
+    await execute(
+      `UPDATE ma_broadcast_log SET response = 'expired'
+       WHERE request_id = $1 AND response = 'pending'`,
+      [requestId]
+    );
+  },
+
+  async getBroadcastStats(driverPhone) {
+    const row = await queryOne(`
+      SELECT
+        COUNT(*) AS total_sent,
+        COUNT(*) FILTER (WHERE response = 'accepted') AS total_accepted,
+        COUNT(*) FILTER (WHERE response = 'missed') AS total_missed,
+        COUNT(*) FILTER (WHERE response = 'expired') AS total_expired
+      FROM ma_broadcast_log WHERE driver_phone = $1
+    `, [driverPhone]);
+    return row || { total_sent: 0, total_accepted: 0, total_missed: 0, total_expired: 0 };
   }
 };
 

@@ -9,6 +9,7 @@ const path = require('path');
 const driversData = require('../../src/server/data/moveathens-drivers');
 const requestsData = require('../../src/server/data/moveathens-requests');
 const driverBroadcast = require('../../services/driverBroadcast');
+const db = require('../../db');
 
 const CONFIG_FILE = path.join(__dirname, '..', 'data', 'driver_panel_ui.json');
 function loadConfig() {
@@ -264,6 +265,15 @@ module.exports = function registerDriverPanelTabs(app) {
         if (d >= monthStart) eligMonth++;
       });
 
+      // Get real broadcast stats if available
+      let broadcastSent = eligAll;
+      if (db.isAvailable()) {
+        try {
+          const bStats = await db.ma.getBroadcastStats(phone);
+          if (bStats && bStats.total_sent > 0) broadcastSent = parseInt(bStats.total_sent) || eligAll;
+        } catch { /* fallback to eligible count */ }
+      }
+
       const monthNames = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος',
         'Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
       const fmtLabel = (iso) => { const p = (iso || '').split('-'); return p.length >= 3 ? p[2] + '/' + p[1] : iso; };
@@ -271,7 +281,7 @@ module.exports = function registerDriverPanelTabs(app) {
       res.json({
         ok: true,
         summary: {
-          all:   { total: allTotal, count: allCount, eligible: eligAll, label: minDate && maxDate ? fmtLabel(minDate) + ' – ' + fmtLabel(maxDate) : '—' },
+          all:   { total: allTotal, count: allCount, eligible: broadcastSent, label: minDate && maxDate ? fmtLabel(minDate) + ' – ' + fmtLabel(maxDate) : '—' },
           today: { total: todayTotal, count: todayCount, eligible: eligToday, label: fmtLabel(todayStr) },
           week:  { total: weekTotal, count: weekCount, eligible: eligWeek, label: fmtLabel(weekStart) + ' – ' + fmtLabel(todayStr) },
           month: { total: monthTotal, count: monthCount, eligible: eligMonth, label: monthNames[now.getMonth()] || '' }

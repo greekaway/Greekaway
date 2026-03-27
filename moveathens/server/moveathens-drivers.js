@@ -7,11 +7,13 @@
  *        GET    /api/admin/moveathens/drivers/:id/payments
  *        POST   /api/admin/moveathens/drivers/:id/payments
  *        GET    /api/admin/moveathens/drivers/:id/requests
+ *        GET    /api/admin/moveathens/drivers/:id/broadcast-stats
  */
 'use strict';
 
 const driversData = require('../../src/server/data/moveathens-drivers');
 const requestsData = require('../../src/server/data/moveathens-requests');
+const db = require('../../db');
 
 module.exports = function registerDriverRoutes(app, opts = {}) {
   const checkAdminAuth = typeof opts.checkAdminAuth === 'function' ? opts.checkAdminAuth : null;
@@ -137,6 +139,22 @@ module.exports = function registerDriverRoutes(app, opts = {}) {
       return res.json({ requests });
     } catch (err) {
       return res.status(500).json({ error: 'Failed to load requests' });
+    }
+  });
+
+  // ========================================
+  // Get driver's broadcast stats (sent / accepted / missed / expired)
+  // ========================================
+  app.get('/api/admin/moveathens/drivers/:id/broadcast-stats', async (req, res) => {
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const driver = await driversData.getDriverById(req.params.id);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+      if (!db.isAvailable()) return res.json({ stats: { total_sent: 0, total_accepted: 0, total_missed: 0, total_expired: 0 } });
+      const stats = await db.ma.getBroadcastStats(driver.phone);
+      return res.json({ stats });
+    } catch (err) {
+      return res.status(500).json({ error: 'Failed to load broadcast stats' });
     }
   });
 

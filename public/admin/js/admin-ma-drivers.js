@@ -839,12 +839,14 @@
       var results = await Promise.all([
         api('/api/admin/moveathens/drivers/' + id),
         api('/api/admin/moveathens/drivers/' + id + '/payments'),
-        api('/api/admin/moveathens/drivers/' + id + '/requests')
+        api('/api/admin/moveathens/drivers/' + id + '/requests'),
+        api('/api/admin/moveathens/drivers/' + id + '/broadcast-stats').catch(function () { return { stats: null }; })
       ]);
 
       var d = results[0].driver || results[0];
       var payments = results[1].payments || results[1] || [];
       var trips = results[2].requests || results[2] || [];
+      var bStats = results[3].stats || null;
 
       var balance = parseFloat(d.total_owed || 0) - parseFloat(d.total_paid || 0);
       var balCls = balance > 0 ? 'negative' : 'positive';
@@ -857,6 +859,23 @@
         '<div class="dr-stat"><div class="num">€' + parseFloat(d.total_owed || 0).toFixed(0) + '</div><div class="lbl">Οφειλόμενα</div></div>' +
         '<div class="dr-stat"><div class="num">€' + parseFloat(d.total_paid || 0).toFixed(0) + '</div><div class="lbl">Πληρωμένα</div></div>' +
         '<div class="dr-stat"><div class="num ' + balCls + '">€' + balance.toFixed(0) + '</div><div class="lbl">Υπόλοιπο</div></div>';
+
+      // Broadcast stats
+      var bEl = _$('#dm-broadcast-stats');
+      if (bEl && bStats && bStats.total_sent > 0) {
+        bEl.style.display = '';
+        bEl.innerHTML =
+          '<div class="dr-section-title" style="margin:0 0 8px;font-size:13px">📡 Στατιστικά Αιτημάτων</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<div class="dr-stat"><div class="num">' + (bStats.total_sent || 0) + '</div><div class="lbl">Λήφθηκαν</div></div>' +
+          '<div class="dr-stat"><div class="num positive">' + (bStats.total_accepted || 0) + '</div><div class="lbl">Αποδέχτηκε</div></div>' +
+          '<div class="dr-stat"><div class="num negative">' + (bStats.total_missed || 0) + '</div><div class="lbl">Αγνόησε</div></div>' +
+          '<div class="dr-stat"><div class="num">' + (bStats.total_expired || 0) + '</div><div class="lbl">Έληξαν</div></div>' +
+          '</div>';
+      } else if (bEl) {
+        bEl.style.display = 'none';
+        bEl.innerHTML = '';
+      }
 
       _$('#dm-payments-tbody').innerHTML = payments.length
         ? payments.map(function (p) {

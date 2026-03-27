@@ -15,6 +15,14 @@ const path = require('path');
 
 const CONFIG_FILE = path.join(__dirname, '..', 'moveathens', 'data', 'driver_panel_ui.json');
 
+// Lazy-load DB for broadcast log persistence
+let _db = null;
+function getDb() {
+  if (_db) return _db;
+  try { _db = require('../db'); } catch { _db = null; }
+  return _db;
+}
+
 // Lazy-load push sender (avoids circular dependency at startup)
 let _sendPush = null;
 function getSendPush() {
@@ -188,6 +196,13 @@ async function autoBroadcast(request, driversData) {
   }, timeoutMin * 60 * 1000);
 
   activeBroadcasts.set(request.id, { timer, request, sentTo });
+
+  // Persist broadcast log to DB
+  const db = getDb();
+  if (db && db.isAvailable()) {
+    db.ma.logBroadcast(request.id, eligible.map(d => d.phone))
+      .catch(e => console.error('[broadcast] log DB error:', e.message));
+  }
 }
 
 // ── Expiry ──
@@ -198,6 +213,13 @@ function expireBroadcast(requestId) {
 
   clearTimeout(broadcast.timer);
   activeBroadcasts.delete(requestId);
+
+  // Mark all pending entries as expired in DB
+  const db = getDb();
+  if (db && db.isAvailable()) {
+    db.ma.markBroadcastExpired(requestId)
+      .catch(e => console.error('[broadcast] expire DB error:', e.message));
+  }
 
   // Notify all connected drivers
   broadcastToAll('request-expired', { requestId });
@@ -222,6 +244,13 @@ function onRequestAccepted(requestId, driverPhone) {
   if (broadcast) {
     clearTimeout(broadcast.timer);
     activeBroadcasts.delete(requestId);
+  }
+
+  // Mark accepted in DB log
+  const db = getDb();
+  if (db && db.isAvailable()) {
+    db.ma.markBroadcastAccepted(requestId, driverPhone)
+      .catch(e => console.error('[broadcast] accept DB error:', e.message));
   }
 
   // Notify all other drivers that this request is taken

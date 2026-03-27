@@ -467,6 +467,10 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
       );
 
       console.log('[ma-requests] Request', request.id, 'ACCEPTED by driver', driver.id, driver.phone);
+
+      // Notify other drivers the request is taken + log acceptance
+      driverBroadcast.onRequestAccepted(request.id, driver.phone);
+
       return res.json({ ok: true, message: 'Trip accepted successfully' });
     } catch (err) {
       maLogger.log('error', 'driver-accept', { token: req.params.token, reason: err.message, stack: err.stack });
