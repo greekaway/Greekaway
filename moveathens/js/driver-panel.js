@@ -118,6 +118,11 @@
           btn.classList.toggle('on', nowActive);
           btn.classList.toggle('off', !nowActive);
           btn.textContent = nowActive ? 'ΕΝΕΡΓΟΣ' : 'ΕΝΑΡΞΗ';
+          // Play feedback sound
+          if (window.DpSounds) {
+            const sid = localStorage.getItem('ma_dp_app_open_sound') || config.sounds?.defaults?.app_open || '';
+            if (sid) window.DpSounds.play(sid);
+          }
           // Sync profile toggle
           const pa = document.getElementById('dpProfileAvail');
           if (pa) pa.checked = nowActive;
