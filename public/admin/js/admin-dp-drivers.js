@@ -1,6 +1,6 @@
 /**
  * Driver Panel Admin — Tab 3: Οδηγοί
- * CRUD drivers with vehicle type checkboxes
+ * CRUD drivers with vehicle type checkboxes, availability/block system
  */
 (() => {
   'use strict';
@@ -57,6 +57,72 @@
     $('#dp-driver-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // ── Stats block ──
+  const renderStats = () => {
+    const wrap = $('#dpDriverStats');
+    if (!wrap) return;
+    const all = state.drivers;
+    const total = all.length;
+    const available = all.filter(d => d.is_available !== false && !d.is_blocked);
+    const online = all.filter(d => d.is_available !== false);
+    const blocked = all.filter(d => d.is_blocked);
+    const pct = (n) => total ? Math.round(n / total * 100) : 0;
+
+    wrap.innerHTML = `
+      <div class="dp-stats-grid">
+        <div class="dp-stat-box">
+          <span class="dp-stat-icon">👥</span>
+          <span class="dp-stat-num">${total}</span>
+          <span class="dp-stat-label">Σύνολο</span>
+        </div>
+        <div class="dp-stat-box dp-stat-green">
+          <span class="dp-stat-icon">✅</span>
+          <span class="dp-stat-num">${available.length} <small>(${pct(available.length)}%)</small></span>
+          <span class="dp-stat-label">Ενεργοί</span>
+        </div>
+        <div class="dp-stat-box dp-stat-blue">
+          <span class="dp-stat-icon">📡</span>
+          <span class="dp-stat-num">${online.length} <small>(${pct(online.length)}%)</small></span>
+          <span class="dp-stat-label">Διαθέσιμοι</span>
+        </div>
+        <div class="dp-stat-box dp-stat-red">
+          <span class="dp-stat-icon">🔒</span>
+          <span class="dp-stat-num">${blocked.length}</span>
+          <span class="dp-stat-label">Κλειδωμένοι</span>
+        </div>
+      </div>`;
+  };
+
+  // ── Driver availability & block badges ──
+  const getBadgeHTML = (d) => {
+    if (d.is_blocked) {
+      const until = d.blocked_until ? new Date(d.blocked_until).toLocaleDateString('el-GR') : null;
+      return `<span class="dp-badge dp-badge-blocked">🔒 Κλειδωμένος${until ? ' (ως ' + until + ')' : ' (Οριστικά)'}</span>`;
+    }
+    if (d.is_available === false) {
+      return `<span class="dp-badge dp-badge-unavailable">⚪ Μη Διαθέσιμος</span>`;
+    }
+    return `<span class="dp-badge dp-badge-active">✅ Ενεργός</span>`;
+  };
+
+  // ── Block dropdown HTML ──
+  const getBlockHTML = (d) => {
+    if (d.is_blocked) {
+      return `<button class="button dp-btn-sm dp-unblock-btn" data-id="${d.id}" title="Ξεκλείδωμα">🔓 Ξεκλείδωμα</button>`;
+    }
+    return `
+      <div class="dp-block-wrap" data-id="${d.id}">
+        <button class="button dp-btn-sm dp-block-trigger" data-id="${d.id}">🔒 Κλείδωμα ▼</button>
+        <div class="dp-block-dropdown" style="display:none">
+          <button class="dp-block-opt" data-id="${d.id}" data-dur="1">1 μέρα</button>
+          <button class="dp-block-opt" data-id="${d.id}" data-dur="2">2 μέρες</button>
+          <button class="dp-block-opt" data-id="${d.id}" data-dur="7">1 εβδομάδα</button>
+          <button class="dp-block-opt" data-id="${d.id}" data-dur="30">1 μήνα</button>
+          <button class="dp-block-opt" data-id="${d.id}" data-dur="permanent">Οριστικά</button>
+        </div>
+      </div>`;
+  };
+
   const renderList = () => {
     const wrap = $('#dpDriversList');
     if (!wrap) return;
@@ -68,8 +134,11 @@
       (d.phone || '').toLowerCase().includes(search) ||
       (d.display_name || '').toLowerCase().includes(search)
     );
-    if (filter === 'active') list = list.filter(d => d.is_active !== false);
-    if (filter === 'inactive') list = list.filter(d => d.is_active === false);
+    if (filter === 'active') list = list.filter(d => d.is_available !== false && !d.is_blocked);
+    if (filter === 'unavailable') list = list.filter(d => d.is_available === false && !d.is_blocked);
+    if (filter === 'blocked') list = list.filter(d => d.is_blocked);
+
+    renderStats();
 
     if (!list.length) { wrap.innerHTML = '<div class="dp-empty">Δεν βρέθηκαν οδηγοί</div>'; return; }
 
@@ -81,7 +150,7 @@
         return vt ? vt.name : id;
       }).join(', ');
       return `
-        <div class="dp-driver-card ${d.is_active === false ? 'dp-driver-inactive' : ''}" data-id="${d.id}">
+        <div class="dp-driver-card ${d.is_blocked ? 'dp-driver-blocked' : d.is_available === false ? 'dp-driver-inactive' : ''}" data-id="${d.id}">
           <div class="dp-driver-info">
             <strong class="dp-driver-name">${d.name || '—'}</strong>
             <span class="dp-driver-phone">${d.phone || ''}</span>
@@ -90,22 +159,26 @@
             ${d.notes ? `<span class="dp-driver-notes">📝 ${d.notes}</span>` : ''}
           </div>
           <div class="dp-driver-meta">
-            <span class="dp-badge ${d.is_active !== false ? 'dp-badge-active' : 'dp-badge-inactive'}">${d.is_active !== false ? 'Ενεργός' : 'Ανενεργός'}</span>
+            ${getBadgeHTML(d)}
           </div>
           <div class="dp-driver-actions">
             <button class="button dp-btn-sm dp-edit-btn" data-id="${d.id}">✏️</button>
             ${d.has_pin ? `<button class="button dp-btn-sm dp-pin-reset-btn" data-id="${d.id}" title="Διαγραφή PIN">🔓</button>` : ''}
+            ${getBlockHTML(d)}
             <button class="button dp-btn-sm dp-delete-btn" data-id="${d.id}">🗑️</button>
           </div>
         </div>`;
     }).join('');
 
+    // ── Edit ──
     wrap.querySelectorAll('.dp-edit-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const d = state.drivers.find(dr => dr.id === btn.dataset.id);
         if (d) editDriver(d);
       });
     });
+
+    // ── Delete ──
     wrap.querySelectorAll('.dp-delete-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const d = state.drivers.find(dr => dr.id === btn.dataset.id);
@@ -126,6 +199,8 @@
         } catch (err) { showToast('Σφάλμα: ' + err.message); }
       });
     });
+
+    // ── PIN reset ──
     wrap.querySelectorAll('.dp-pin-reset-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const d = state.drivers.find(dr => dr.id === btn.dataset.id);
@@ -144,6 +219,69 @@
           }
         } catch (err) { showToast('Σφάλμα: ' + err.message); }
       });
+    });
+
+    // ── Block dropdown toggle ──
+    wrap.querySelectorAll('.dp-block-trigger').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dd = btn.nextElementSibling;
+        if (!dd) return;
+        // Close all others first
+        wrap.querySelectorAll('.dp-block-dropdown').forEach(d => { if (d !== dd) d.style.display = 'none'; });
+        dd.style.display = dd.style.display === 'none' ? 'flex' : 'none';
+      });
+    });
+
+    // ── Block option click ──
+    wrap.querySelectorAll('.dp-block-opt').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const d = state.drivers.find(dr => dr.id === btn.dataset.id);
+        if (!d) return;
+        const dur = btn.dataset.dur;
+        const label = dur === 'permanent' ? 'Οριστικά' : btn.textContent;
+        if (!await openConfirm(`Κλείδωμα οδηγού "${d.name || d.phone}" — ${label};`)) return;
+        try {
+          const res = await api(`/api/admin/driver-panel/drivers/${d.id}/block`, 'POST', { duration: dur });
+          if (!res) return;
+          const data = await res.json();
+          if (data.ok) {
+            d.is_blocked = true;
+            d.blocked_until = data.blocked_until || null;
+            renderList();
+            showToast('Κλειδώθηκε');
+          } else {
+            showToast(data.error || 'Σφάλμα');
+          }
+        } catch (err) { showToast('Σφάλμα: ' + err.message); }
+      });
+    });
+
+    // ── Unblock ──
+    wrap.querySelectorAll('.dp-unblock-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const d = state.drivers.find(dr => dr.id === btn.dataset.id);
+        if (!d) return;
+        if (!await openConfirm(`Ξεκλείδωμα οδηγού "${d.name || d.phone}";`)) return;
+        try {
+          const res = await api(`/api/admin/driver-panel/drivers/${d.id}/unblock`, 'POST', {});
+          if (!res) return;
+          const data = await res.json();
+          if (data.ok) {
+            d.is_blocked = false;
+            d.blocked_until = null;
+            renderList();
+            showToast('Ξεκλειδώθηκε');
+          } else {
+            showToast(data.error || 'Σφάλμα');
+          }
+        } catch (err) { showToast('Σφάλμα: ' + err.message); }
+      });
+    });
+
+    // Close block dropdowns on outside click
+    document.addEventListener('click', () => {
+      wrap.querySelectorAll('.dp-block-dropdown').forEach(d => d.style.display = 'none');
     });
   };
 

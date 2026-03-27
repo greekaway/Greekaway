@@ -219,6 +219,48 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
   });
 
   // ========================================
+  // Block / Unblock driver
+  // ========================================
+  app.post('/api/admin/driver-panel/drivers/:id/block', async (req, res) => {
+    if (!guard(req, res)) return;
+    try {
+      const driver = await driversData.getDriverById(req.params.id);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      const { duration } = req.body || {};
+      let blockedUntil = null;
+      if (duration && duration !== 'permanent') {
+        const days = parseInt(duration, 10);
+        if (days > 0) {
+          const d = new Date();
+          d.setDate(d.getDate() + days);
+          blockedUntil = d.toISOString();
+        }
+      }
+
+      await driversData.upsertDriver({ ...driver, is_blocked: true, blocked_until: blockedUntil });
+      return res.json({ ok: true, is_blocked: true, blocked_until: blockedUntil });
+    } catch (err) {
+      console.error('[driver-panel] Block driver failed:', err.message);
+      return res.status(500).json({ error: 'Block failed' });
+    }
+  });
+
+  app.post('/api/admin/driver-panel/drivers/:id/unblock', async (req, res) => {
+    if (!guard(req, res)) return;
+    try {
+      const driver = await driversData.getDriverById(req.params.id);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      await driversData.upsertDriver({ ...driver, is_blocked: false, blocked_until: null });
+      return res.json({ ok: true, is_blocked: false });
+    } catch (err) {
+      console.error('[driver-panel] Unblock driver failed:', err.message);
+      return res.status(500).json({ error: 'Unblock failed' });
+    }
+  });
+
+  // ========================================
   // UPLOADS (logo + footer icons)
   // ========================================
   if (multer) {

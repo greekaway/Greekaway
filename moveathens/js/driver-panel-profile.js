@@ -151,8 +151,8 @@
       <div class="ma-dp-profile-section">
         <h3 class="ma-dp-profile-section-title">📡 Διαθεσιμότητα</h3>
         <label class="ma-dp-profile-toggle">
-          <input type="checkbox" id="dpProfileAvail" ${driver.is_active ? 'checked' : ''}>
-          <span id="dpAvailLabel">${driver.is_active ? 'Ενεργός' : 'Ανενεργός'}</span>
+          <input type="checkbox" id="dpProfileAvail" ${driver.is_available ? 'checked' : ''}>
+          <span id="dpAvailLabel">${driver.is_available ? 'Ενεργός' : 'Ανενεργός'}</span>
         </label>
       </div>`;
 
@@ -244,10 +244,10 @@
       const isActive = e.target.checked;
       const res = await api('/api/driver-panel/availability', {
         method: 'POST',
-        body: JSON.stringify({ phone: driver.phone, is_active: isActive })
+        body: JSON.stringify({ phone: driver.phone, is_available: isActive })
       });
       if (res.ok) {
-        driver.is_active = isActive;
+        driver.is_available = isActive;
         localStorage.setItem(LS_KEY, JSON.stringify(driver));
         document.getElementById('dpAvailLabel').textContent = isActive ? 'Ενεργός' : 'Ανενεργός';
         // Sync floating availability button

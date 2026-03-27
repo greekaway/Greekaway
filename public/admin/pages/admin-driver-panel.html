@@ -131,12 +131,16 @@
 
           <!-- Driver list -->
           <div class="dp-drivers-list-wrap">
+            <!-- Stats Block -->
+            <div id="dpDriverStats" class="dp-driver-stats"></div>
+
             <div class="dp-search-row">
               <input type="text" id="dpDriverSearch" class="input" placeholder="🔍 Αναζήτηση οδηγού…">
               <select id="dpDriverFilter" class="input dp-filter-select">
                 <option value="all">Όλοι</option>
                 <option value="active">Ενεργοί</option>
-                <option value="inactive">Ανενεργοί</option>
+                <option value="unavailable">Μη Διαθέσιμοι</option>
+                <option value="blocked">Κλειδωμένοι</option>
               </select>
             </div>
             <div id="dpDriversList" class="dp-drivers-list">

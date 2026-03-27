@@ -423,6 +423,89 @@ html[data-theme='light'] .bar-tab.active {
   background: rgba(248, 113, 113, 0.15);
   color: #f87171;
 }
+.dp-badge-unavailable {
+  background: rgba(180, 180, 180, 0.15);
+  color: #b4b4b4;
+}
+.dp-badge-blocked {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+}
+.dp-driver-blocked {
+  opacity: 0.65;
+  border-left: 3px solid #f87171;
+}
+
+/* ── Stats grid ── */
+.dp-driver-stats { margin-bottom: 16px; }
+.dp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.dp-stat-box {
+  background: #1e2a3a;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dp-stat-icon { font-size: 20px; }
+.dp-stat-num { font-size: 20px; font-weight: 700; color: #f7f7fb; }
+.dp-stat-num small { font-size: 12px; font-weight: 500; opacity: 0.6; }
+.dp-stat-label { font-size: 11px; color: #b2b8c7; font-weight: 500; }
+.dp-stat-green { border-color: rgba(74, 222, 128, 0.25); }
+.dp-stat-blue { border-color: rgba(70, 211, 255, 0.25); }
+.dp-stat-red { border-color: rgba(248, 113, 113, 0.25); }
+
+/* ── Block dropdown ── */
+.dp-block-wrap { position: relative; display: inline-block; }
+.dp-block-trigger {
+  background: rgba(251, 191, 36, 0.1) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(251, 191, 36, 0.25) !important;
+}
+.dp-unblock-btn {
+  background: rgba(74, 222, 128, 0.1) !important;
+  color: #4ade80 !important;
+  border: 1px solid rgba(74, 222, 128, 0.25) !important;
+}
+.dp-block-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 50;
+  margin-top: 4px;
+  background: #1e2a3a;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.dp-block-opt {
+  background: none;
+  border: none;
+  color: #f7f7fb;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 13px;
+  font-family: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.dp-block-opt:hover { background: rgba(248, 113, 113, 0.15); }
+
+@media (max-width: 600px) {
+  .dp-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
 .dp-driver-actions {
   display: flex;
   gap: 6px;

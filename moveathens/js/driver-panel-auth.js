@@ -140,7 +140,22 @@
         if (!checkRes.ok) {
           btn.disabled = false;
           if (checkRes.status === 404) showError('Το τηλέφωνο δεν βρέθηκε στο σύστημα.');
-          else if (checkRes.status === 403) showError('Ο λογαριασμός είναι ανενεργός.');
+          else if (checkRes.status === 403) {
+            try {
+              const errData = await checkRes.json();
+              if (errData.error === 'Driver blocked') {
+                const until = errData.blocked_until;
+                if (until) {
+                  const d = new Date(until);
+                  showError(`Ο λογαριασμός σας είναι κλειδωμένος έως ${d.toLocaleDateString('el-GR')}.`);
+                } else {
+                  showError('Ο λογαριασμός σας είναι κλειδωμένος. Επικοινωνήστε μαζί μας.');
+                }
+              } else {
+                showError('Ο λογαριασμός είναι ανενεργός.');
+              }
+            } catch { showError('Ο λογαριασμός σας είναι κλειδωμένος.'); }
+          }
           else showError('Σφάλμα σύνδεσης.');
           return;
         }
@@ -175,7 +190,17 @@
         btn.disabled = false;
         if (loginRes.status === 401) showError('Λάθος κωδικός.');
         else if (loginRes.status === 404) showError('Το τηλέφωνο δεν βρέθηκε.');
-        else if (loginRes.status === 403) showError('Ο λογαριασμός είναι ανενεργός.');
+        else if (loginRes.status === 403) {
+          try {
+            const errData = await loginRes.json();
+            if (errData.blocked_until) {
+              const d = new Date(errData.blocked_until);
+              showError(`Ο λογαριασμός σας είναι κλειδωμένος έως ${d.toLocaleDateString('el-GR')}.`);
+            } else {
+              showError('Ο λογαριασμός σας είναι κλειδωμένος. Επικοινωνήστε μαζί μας.');
+            }
+          } catch { showError('Ο λογαριασμός σας είναι κλειδωμένος.'); }
+        }
         else showError('Σφάλμα σύνδεσης.');
         return;
       }

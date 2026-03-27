@@ -93,7 +93,7 @@
     if (btn) btn.remove();
 
     const driver = getDriver();
-    const isActive = driver?.is_active === true;
+    const isActive = driver?.is_available === true;
 
     btn = document.createElement('button');
     btn.id = 'dpAvailBtn';
@@ -112,10 +112,10 @@
         const res = await fetch('/api/driver-panel/availability', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: d.phone, is_active: nowActive })
+          body: JSON.stringify({ phone: d.phone, is_available: nowActive })
         });
         if (res.ok) {
-          d.is_active = nowActive;
+          d.is_available = nowActive;
           localStorage.setItem(LS_KEY, JSON.stringify(d));
 
           // Play correct sound based on state change

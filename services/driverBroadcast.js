@@ -132,9 +132,9 @@ async function autoBroadcast(request, driversData) {
     return;
   }
 
-  // Get eligible drivers: active + matching vehicle
+  // Get eligible drivers: active + not blocked + matching vehicle
   const allDrivers = await driversData.getDrivers(true); // active only
-  const eligible = allDrivers.filter(d => matchesVehicle(d, request.vehicle_type_id));
+  const eligible = allDrivers.filter(d => !d.is_blocked && matchesVehicle(d, request.vehicle_type_id));
 
   if (eligible.length === 0) {
     console.log('[broadcast] No eligible drivers for request', request.id);

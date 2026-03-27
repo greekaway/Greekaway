@@ -47,7 +47,15 @@ module.exports = function registerDriverPanelRoutes(app) {
     try {
       const driver = await driversData.getDriverByPhone(phone);
       if (!driver) return res.status(404).json({ error: 'Driver not found' });
-      if (!driver.is_active) return res.status(403).json({ error: 'Driver inactive' });
+
+      // Auto-unblock if blocked_until expired
+      if (driver.is_blocked && driver.blocked_until && new Date(driver.blocked_until) <= new Date()) {
+        await driversData.upsertDriver({ ...driver, is_blocked: false, blocked_until: null });
+        driver.is_blocked = false;
+        driver.blocked_until = null;
+      }
+
+      if (driver.is_blocked) return res.status(403).json({ error: 'Driver blocked', blocked_until: driver.blocked_until || null });
 
       res.json({
         id: driver.id,
@@ -70,7 +78,15 @@ module.exports = function registerDriverPanelRoutes(app) {
     try {
       const driver = await driversData.getDriverByPhone(phone);
       if (!driver) return res.status(404).json({ error: 'Driver not found' });
-      if (!driver.is_active) return res.status(403).json({ error: 'Driver inactive' });
+
+      // Auto-unblock if blocked_until expired
+      if (driver.is_blocked && driver.blocked_until && new Date(driver.blocked_until) <= new Date()) {
+        await driversData.upsertDriver({ ...driver, is_blocked: false, blocked_until: null });
+        driver.is_blocked = false;
+        driver.blocked_until = null;
+      }
+
+      if (driver.is_blocked) return res.status(403).json({ error: 'Driver blocked', blocked_until: driver.blocked_until || null });
 
       if (driver.pin_hash) {
         if (!pin) return res.status(401).json({ error: 'PIN required' });
@@ -88,7 +104,7 @@ module.exports = function registerDriverPanelRoutes(app) {
         phone: driver.phone,
         vehicle_types: vehicleTypes,
         current_vehicle_type: driver.current_vehicle_type || null,
-        is_active: driver.is_active
+        is_available: driver.is_available !== false
       });
     } catch (err) {
       console.error('[driver-panel] login:', err.message);
@@ -115,7 +131,7 @@ module.exports = function registerDriverPanelRoutes(app) {
         phone: driver.phone,
         vehicle_types: vehicleTypes,
         current_vehicle_type: driver.current_vehicle_type || null,
-        is_active: driver.is_active,
+        is_available: driver.is_available !== false,
         has_pin: !!driver.pin_hash,
         total_trips: driver.total_trips || 0,
         total_revenue: driver.total_revenue || 0
@@ -147,15 +163,15 @@ module.exports = function registerDriverPanelRoutes(app) {
   // ── Toggle availability ──
   app.post('/api/driver-panel/availability', async (req, res) => {
     const phone = normalizePhone(req.body.phone);
-    const isActive = !!req.body.is_active;
+    const isAvailable = req.body.is_available !== undefined ? !!req.body.is_available : !!req.body.is_active;
     if (!phone) return res.status(400).json({ error: 'Phone required' });
 
     try {
       const driver = await driversData.getDriverByPhone(phone);
       if (!driver) return res.status(404).json({ error: 'Driver not found' });
 
-      await driversData.upsertDriver({ ...driver, is_active: isActive });
-      res.json({ ok: true, is_active: isActive });
+      await driversData.upsertDriver({ ...driver, is_available: isAvailable, is_active: isAvailable });
+      res.json({ ok: true, is_available: isAvailable });
     } catch (err) {
       console.error('[driver-panel] availability:', err.message);
       res.status(500).json({ error: 'Server error' });
