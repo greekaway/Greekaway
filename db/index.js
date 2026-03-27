@@ -1042,6 +1042,17 @@ const ma = {
       FROM ma_broadcast_log WHERE driver_phone = $1
     `, [driverPhone]);
     return row || { total_sent: 0, total_accepted: 0, total_missed: 0, total_expired: 0 };
+  },
+
+  async getAllBroadcastStats() {
+    return query(`
+      SELECT driver_phone,
+        COUNT(*) AS total_sent,
+        COUNT(*) FILTER (WHERE response = 'accepted') AS total_accepted,
+        COUNT(*) FILTER (WHERE response = 'missed') AS total_missed,
+        COUNT(*) FILTER (WHERE response = 'expired') AS total_expired
+      FROM ma_broadcast_log GROUP BY driver_phone
+    `);
   }
 };
 

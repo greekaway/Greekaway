@@ -59,11 +59,16 @@
 
   // ── Stats block ──
   let _busyPhones = new Set();
+  let _broadcastStats = {};
 
   const fetchBusyDrivers = async () => {
     try {
       const res = await api('/api/admin/driver-panel/driver-stats');
       if (res.busyPhones) _busyPhones = new Set(res.busyPhones);
+    } catch { /* silent */ }
+    try {
+      const bRes = await api('/api/admin/driver-panel/broadcast-stats');
+      if (bRes.stats) _broadcastStats = bRes.stats;
     } catch { /* silent */ }
   };
 
@@ -162,6 +167,10 @@
         const vt = state.vehicleTypes.find(v => v.id === id);
         return vt ? vt.name : id;
       }).join(', ');
+      const bs = _broadcastStats[d.phone] || null;
+      const bsLine = bs && bs.sent > 0
+        ? `<span class="dp-driver-broadcast">📡 Λήφθηκαν: <strong>${bs.sent}</strong> · Αποδέχτηκε: <strong style="color:#4caf50">${bs.accepted}</strong> · Αγνόησε: <strong style="color:#ff9800">${bs.missed}</strong></span>`
+        : '';
       return `
         <div class="dp-driver-card ${d.is_blocked ? 'dp-driver-blocked' : d.is_available === false ? 'dp-driver-inactive' : ''}" data-id="${d.id}">
           <div class="dp-driver-info">
@@ -169,6 +178,7 @@
             <span class="dp-driver-phone">${d.phone || ''}</span>
             ${d.display_name ? `<span class="dp-driver-display-name">Εμφανίζεται: ${d.display_name}</span>` : ''}
             ${vtNames ? `<span class="dp-driver-vt">🚗 ${vtNames}</span>` : ''}
+            ${bsLine}
             ${d.notes ? `<span class="dp-driver-notes">📝 ${d.notes}</span>` : ''}
           </div>
           <div class="dp-driver-meta">

@@ -16,6 +16,7 @@ let multer = null;
 try { multer = require('multer'); } catch (_) { multer = null; }
 const driversData = require('../../src/server/data/moveathens-drivers');
 const requestsData = require('../../src/server/data/moveathens-requests');
+const db = require('../../db');
 
 const LOCAL_CONFIG = path.join(__dirname, '..', 'data', 'driver_panel_ui.json');
 const RENDER_PERSISTENT_ROOT = '/opt/render/project/src/uploads';
@@ -122,6 +123,30 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
     } catch (err) {
       console.error('[driver-panel] GET driver-stats failed:', err.message);
       return res.status(500).json({ error: 'Failed to load driver stats' });
+    }
+  });
+
+  // ========================================
+  // GET broadcast stats for all drivers (bulk)
+  // ========================================
+  app.get('/api/admin/driver-panel/broadcast-stats', async (req, res) => {
+    if (!guard(req, res)) return;
+    try {
+      if (!db.isAvailable()) return res.json({ stats: {} });
+      const rows = await db.ma.getAllBroadcastStats();
+      const stats = {};
+      for (const r of rows) {
+        stats[r.driver_phone] = {
+          sent: parseInt(r.total_sent) || 0,
+          accepted: parseInt(r.total_accepted) || 0,
+          missed: parseInt(r.total_missed) || 0,
+          expired: parseInt(r.total_expired) || 0
+        };
+      }
+      return res.json({ stats });
+    } catch (err) {
+      console.error('[driver-panel] GET broadcast-stats failed:', err.message);
+      return res.status(500).json({ error: 'Failed to load broadcast stats' });
     }
   });
 
