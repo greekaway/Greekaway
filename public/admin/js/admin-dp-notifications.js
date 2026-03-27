@@ -1,6 +1,7 @@
 /**
- * Driver Panel Admin — Tab 5: Ειδοποιήσεις
- * Push on/off, sound, vibration, reminder, push template, sound picker.
+ * Driver Panel Admin — Tab 5: Ειδοποιήσεις & Ήχοι
+ * Push on/off, sound, vibration, reminder, push template.
+ * Sound upload/management delegated to admin-dp-sounds.js (renders into dpSoundsContent).
  * Reads/writes: state.config.notifications
  */
 (() => {
@@ -12,69 +13,19 @@
     soundEnabled: true,
     vibrationEnabled: true,
     reminderMinutes: 15,
-    pushTemplate: 'Νέα διαδρομή: {origin} → {destination} στις {datetime}',
-    alertSound: 'chime'
-  };
-
-  const buildSoundPicker = (selected) => {
-    const wrap = $('#dpSoundPicker');
-    if (!wrap || !window.DpSounds) return;
-    const sounds = window.DpSounds.SOUNDS;
-
-    // Update toggle label
-    const toggleLabel = $('#dpSoundToggleLabel');
-    if (toggleLabel && sounds[selected]) toggleLabel.textContent = sounds[selected].name;
-
-    wrap.innerHTML = (window.DpSounds.GROUPS || []).map(group => `
-      <div class="dp-sound-group-label">${group.label}</div>
-      ${group.ids.map(id => {
-        const s = sounds[id];
-        if (!s) return '';
-        return `<div class="dp-sound-option ${id === selected ? 'dp-sound-active' : ''}" data-sound="${id}">
-          <span class="dp-sound-name">${s.name}</span>
-          <button type="button" class="dp-sound-preview" data-sound="${id}" title="Ακρόαση">▶️</button>
-        </div>`;
-      }).join('')}
-    `).join('');
-
-    // Toggle accordion
-    $('#dpSoundToggle')?.addEventListener('click', () => {
-      wrap.classList.toggle('dp-sound-picker--collapsed');
-      const arrow = $('.dp-sound-toggle__arrow');
-      if (arrow) arrow.textContent = wrap.classList.contains('dp-sound-picker--collapsed') ? '▼' : '▲';
-    });
-
-    wrap.addEventListener('click', (e) => {
-      const preview = e.target.closest('.dp-sound-preview');
-      if (preview) { window.DpSounds.play(preview.dataset.sound); return; }
-      const opt = e.target.closest('.dp-sound-option');
-      if (!opt) return;
-      wrap.querySelectorAll('.dp-sound-option').forEach(o => o.classList.remove('dp-sound-active'));
-      opt.classList.add('dp-sound-active');
-      window.DpSounds.play(opt.dataset.sound);
-      // Update toggle label
-      const s = sounds[opt.dataset.sound];
-      if (toggleLabel && s) toggleLabel.textContent = s.name;
-    });
-  };
-
-  const getSelectedSound = () => {
-    const active = $('#dpSoundPicker .dp-sound-active');
-    return active?.dataset?.sound || DEFAULTS.alertSound;
+    pushTemplate: 'Νέα διαδρομή: {origin} → {destination} στις {datetime}'
   };
 
   const populate = () => {
     const cfg = { ...DEFAULTS, ...state.config.notifications };
-    const el = (id) => $(id);
-    const cb = (id, val) => { const e = el(id); if (e) e.checked = !!val; };
-    const sv = (id, val) => { const e = el(id); if (e) e.value = val; };
+    const cb = (id, val) => { const e = $(id); if (e) e.checked = !!val; };
+    const sv = (id, val) => { const e = $(id); if (e) e.value = val; };
 
     cb('#dpNotifPush', cfg.pushEnabled);
     cb('#dpNotifSound', cfg.soundEnabled);
     cb('#dpNotifVibration', cfg.vibrationEnabled);
     sv('#dpNotifReminder', cfg.reminderMinutes);
     sv('#dpNotifTemplate', cfg.pushTemplate);
-    buildSoundPicker(cfg.alertSound || 'chime');
   };
 
   const collect = () => ({
@@ -82,8 +33,7 @@
     soundEnabled: $('#dpNotifSound')?.checked ?? DEFAULTS.soundEnabled,
     vibrationEnabled: $('#dpNotifVibration')?.checked ?? DEFAULTS.vibrationEnabled,
     reminderMinutes: parseInt($('#dpNotifReminder')?.value, 10) || DEFAULTS.reminderMinutes,
-    pushTemplate: $('#dpNotifTemplate')?.value?.trim() || DEFAULTS.pushTemplate,
-    alertSound: getSelectedSound()
+    pushTemplate: $('#dpNotifTemplate')?.value?.trim() || DEFAULTS.pushTemplate
   });
 
   const init = () => {

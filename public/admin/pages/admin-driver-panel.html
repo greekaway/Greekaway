@@ -26,7 +26,6 @@
           <button class="bar-tab" data-tab="acceptance">Ροή</button>
           <button class="bar-tab" data-tab="labels">Κείμενα</button>
           <button class="bar-tab" data-tab="finance">Οικον.</button>
-          <button class="bar-tab" data-tab="sounds">Ήχοι</button>
         </div>
       </div>
     </header>
@@ -157,7 +156,7 @@
         </section>
       </div>
 
-      <!-- ════════════ TAB 5: ΕΙΔΟΠΟΙΗΣΕΙΣ ════════════ -->
+      <!-- ════════════ TAB 5: ΕΙΔΟΠΟΙΗΣΕΙΣ & ΗΧΟΙ ════════════ -->
       <div class="tab-content" data-tab="notifications">
         <section class="panel">
           <h2 class="h1">Ειδοποιήσεις</h2>
@@ -170,14 +169,6 @@
               <label class="dp-field dp-inline-field">
                 <input type="checkbox" id="dpNotifSound">
                 <span>Ήχος</span>
-              </label>
-              <label class="dp-field">
-                <span class="dp-label">Ήχος Ειδοποίησης</span>
-                <button type="button" class="dp-sound-toggle" id="dpSoundToggle">
-                  <span id="dpSoundToggleLabel">🔔 Chime</span>
-                  <span class="dp-sound-toggle__arrow">▼</span>
-                </button>
-                <div class="dp-sound-picker dp-sound-picker--collapsed" id="dpSoundPicker"></div>
               </label>
               <label class="dp-field dp-inline-field">
                 <input type="checkbox" id="dpNotifVibration">
@@ -201,6 +192,10 @@
             <button type="button" id="dpNotifSave" class="button dp-save-btn">💾 Αποθήκευση Ειδοποιήσεων</button>
             <div id="dpNotifStatus" class="dp-status"></div>
           </div>
+        </section>
+        <section class="panel" style="margin-top:16px">
+          <h2 class="h1">Ήχοι Εφαρμογής</h2>
+          <div id="dpSoundsContent" class="dp-form"></div>
         </section>
       </div>
 
@@ -279,13 +274,7 @@
         </section>
       </div>
 
-      <!-- ════════════ TAB 9: ΗΧΟΙ ════════════ -->
-      <div class="tab-content" data-tab="sounds">
-        <section class="panel">
-          <h2 class="h1">Ήχοι Εφαρμογής</h2>
-          <div id="dpSoundsContent" class="dp-form"></div>
-        </section>
-      </div>
+
 
     </main>
 
