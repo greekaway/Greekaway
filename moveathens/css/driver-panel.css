@@ -40,6 +40,16 @@ html, body {
   touch-action: pan-x pan-y;
 }
 
+/* PWA standalone: lock viewport to prevent iOS resize bounce */
+@media (display-mode: standalone) {
+  html, body {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
 /* Allow selection only inside inputs/textareas */
 input, textarea, [contenteditable="true"] {
   -webkit-user-select: text;
@@ -117,6 +127,16 @@ html[data-theme='light'] .ma-dp-header__logo {
   min-height: 100vh;
   min-height: 100dvh;
   padding-bottom: calc(var(--ma-dp-footer-h) + 24px + env(safe-area-inset-bottom, 0px));
+}
+
+/* PWA standalone: app becomes the scroll container */
+@media (display-mode: standalone) {
+  .ma-dp-app {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* ── Tabs (SPA sections) ── */
@@ -279,8 +299,15 @@ html[data-theme='light'] .ma-dp-footer-btn.active {
   box-shadow: 0 4px 14px rgba(107, 114, 128, 0.35);
 }
 .ma-dp-avail-btn:disabled {
-  opacity: 0.6;
   pointer-events: none;
+}
+.ma-dp-avail-btn.loading {
+  opacity: 0.7;
+  animation: dpAvailPulse 0.6s ease-in-out infinite alternate;
+}
+@keyframes dpAvailPulse {
+  from { transform: translateX(-50%) scale(1); }
+  to   { transform: translateX(-50%) scale(0.95); }
 }
 @media (display-mode: standalone) {
   .ma-dp-avail-btn {

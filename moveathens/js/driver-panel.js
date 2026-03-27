@@ -106,6 +106,8 @@
       const wasOn = btn.classList.contains('on');
       const nowActive = !wasOn;
       btn.disabled = true;
+      btn.classList.add('loading');
+
       try {
         const res = await fetch('/api/driver-panel/availability', {
           method: 'POST',
@@ -115,21 +117,31 @@
         if (res.ok) {
           d.is_active = nowActive;
           localStorage.setItem(LS_KEY, JSON.stringify(d));
+
+          // Play correct sound based on state change
+          if (window.DpSounds) {
+            const key = nowActive ? 'ma_dp_app_open_sound' : 'ma_dp_app_close_sound';
+            const defKey = nowActive ? 'app_open' : 'app_close';
+            const sid = localStorage.getItem(key) || config.sounds?.defaults?.[defKey] || '';
+            if (sid) window.DpSounds.play(sid);
+          }
+
+          // Brief delay so animation feels intentional
+          await new Promise(r => setTimeout(r, 300));
+
+          btn.classList.remove('loading');
           btn.classList.toggle('on', nowActive);
           btn.classList.toggle('off', !nowActive);
           btn.textContent = nowActive ? 'ΕΝΕΡΓΟΣ' : 'ΕΝΑΡΞΗ';
-          // Play feedback sound
-          if (window.DpSounds) {
-            const sid = localStorage.getItem('ma_dp_app_open_sound') || config.sounds?.defaults?.app_open || '';
-            if (sid) window.DpSounds.play(sid);
-          }
           // Sync profile toggle
           const pa = document.getElementById('dpProfileAvail');
           if (pa) pa.checked = nowActive;
           const pl = document.getElementById('dpAvailLabel');
           if (pl) pl.textContent = nowActive ? 'Ενεργός' : 'Ανενεργός';
+        } else {
+          btn.classList.remove('loading');
         }
-      } catch { /* keep current state */ }
+      } catch { btn.classList.remove('loading'); }
       btn.disabled = false;
     });
 
