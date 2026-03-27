@@ -249,6 +249,7 @@ module.exports = function registerDriverPanelRoutes(app) {
       finance: config.finance || {},
       notifications: config.notifications || {},
       sounds: config.sounds || {},
+      acceptance: config.acceptance || {},
       availableVehicleTypes
     });
   });

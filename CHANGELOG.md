@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 2026-03-27 — Countdown config fix (v973)
+
+- **Fixed key mismatch** — admin acceptance save used `broadcastTimeoutMin` but server expected `broadcastTimeoutMinutes`. Now consistent.
+- **Config endpoint** — `/api/driver-panel/config` now includes `acceptance` section.
+- **Fallback** — countdown reads both key names for backwards compatibility.
+
 ## 2026-03-27 — Race condition fix + admin countdown (v972)
 
 - **Accept endpoint hardened** — blocks accept if request is `nodriver`, `expired`, or `cancelled` (returns 410).

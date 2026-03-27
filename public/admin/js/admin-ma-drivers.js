@@ -269,8 +269,9 @@
       // Also load driver panel config for broadcast timeout
       try {
         var dpCfg = await api('/api/driver-panel/config');
-        if (dpCfg && dpCfg.acceptance && typeof dpCfg.acceptance.broadcastTimeoutMinutes === 'number') {
-          _broadcastTimeoutMin = dpCfg.acceptance.broadcastTimeoutMinutes;
+        if (dpCfg && dpCfg.acceptance) {
+          var t = dpCfg.acceptance.broadcastTimeoutMinutes || dpCfg.acceptance.broadcastTimeoutMin;
+          if (typeof t === 'number' && t > 0) _broadcastTimeoutMin = t;
         }
       } catch (_e2) { /* keep default */ }
     }

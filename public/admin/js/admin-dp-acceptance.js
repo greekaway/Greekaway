@@ -9,7 +9,7 @@
 
   const DEFAULTS = {
     assignmentMode: 'broadcast',
-    broadcastTimeoutMin: 5,
+    broadcastTimeoutMinutes: 5,
     autoBroadcast: false,
     autoReject: false
   };
@@ -21,14 +21,14 @@
     const cb = (id, val) => { const e = el(id); if (e) e.checked = !!val; };
 
     sv('#dpAcceptMode', cfg.assignmentMode);
-    sv('#dpAcceptTimeout', cfg.broadcastTimeoutMin);
+    sv('#dpAcceptTimeout', cfg.broadcastTimeoutMinutes || cfg.broadcastTimeoutMin);
     cb('#dpAcceptAutoBroadcast', cfg.autoBroadcast);
     cb('#dpAcceptAutoReject', cfg.autoReject);
   };
 
   const collect = () => ({
     assignmentMode: $('#dpAcceptMode')?.value || DEFAULTS.assignmentMode,
-    broadcastTimeoutMin: parseInt($('#dpAcceptTimeout')?.value, 10) || DEFAULTS.broadcastTimeoutMin,
+    broadcastTimeoutMinutes: parseInt($('#dpAcceptTimeout')?.value, 10) || DEFAULTS.broadcastTimeoutMinutes,
     autoBroadcast: $('#dpAcceptAutoBroadcast')?.checked ?? DEFAULTS.autoBroadcast,
     autoReject: $('#dpAcceptAutoReject')?.checked ?? DEFAULTS.autoReject
   });
