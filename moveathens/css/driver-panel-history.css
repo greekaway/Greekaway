@@ -10,48 +10,40 @@
   color: var(--ma-dp-text);
 }
 
-/* ── Summary Frame (outer accent border) ── */
-.ma-dp-hist-summary-frame {
-  border: 1px solid var(--ma-dp-accent);
-  border-radius: 14px;
-  padding: 10px;
-  margin-bottom: 14px;
-}
-
-.ma-dp-hist-summary-grid {
+/* ── Stats Cards Grid (6 individual cards, no outer frame) ── */
+.ma-dp-hist-stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-bottom: 14px;
 }
 
-.ma-dp-hist-summary-box {
+.ma-dp-hist-stat-card {
   background: var(--ma-dp-card);
   border: 1px solid var(--ma-dp-card-border);
   border-radius: 12px;
-  padding: 8px 12px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 1px;
+  gap: 4px;
 }
 
-.ma-dp-hist-summary-title {
+.ma-dp-hist-stat-title {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--ma-dp-accent);
+  color: var(--ma-dp-muted);
 }
 
-.ma-dp-hist-summary-amount {
-  font-size: 20px;
+.ma-dp-hist-stat-value {
+  font-size: 22px;
   font-weight: 700;
-  color: var(--ma-dp-text);
-  line-height: 1.1;
+  color: var(--ma-dp-accent);
+  line-height: 1.2;
 }
 
-.ma-dp-hist-summary-date {
+.ma-dp-hist-stat-sub {
   font-size: 10px;
   color: var(--ma-dp-muted);
   margin-top: 2px;
@@ -293,10 +285,9 @@
 
 /* ── Responsive ── */
 @media (max-width: 359px) {
-  .ma-dp-hist-summary-frame { padding: 8px; }
-  .ma-dp-hist-summary-grid { gap: 6px; }
-  .ma-dp-hist-summary-box { padding: 6px 8px; }
-  .ma-dp-hist-summary-amount { font-size: 16px; }
+  .ma-dp-hist-stats-grid { gap: 6px; }
+  .ma-dp-hist-stat-card { padding: 10px 12px; }
+  .ma-dp-hist-stat-value { font-size: 18px; }
   .ma-dp-hist-period-filter { gap: 4px; }
   .ma-dp-hist-period-btn { padding: 7px 10px; font-size: 12px; }
   .ma-dp-hist-card-header { padding: 10px 10px; gap: 6px; }
@@ -306,10 +297,9 @@
 }
 
 @media (min-width: 430px) {
-  .ma-dp-hist-summary-frame { padding: 12px; }
-  .ma-dp-hist-summary-grid { gap: 12px; }
-  .ma-dp-hist-summary-box { padding: 10px 14px; }
-  .ma-dp-hist-summary-amount { font-size: 22px; }
+  .ma-dp-hist-stats-grid { gap: 12px; }
+  .ma-dp-hist-stat-card { padding: 16px 18px; }
+  .ma-dp-hist-stat-value { font-size: 24px; }
   .ma-dp-hist-card-header { padding: 14px 16px; }
   .ma-dp-hist-card-body { padding-left: 16px; padding-right: 16px; }
   .ma-dp-hist-card--open .ma-dp-hist-card-body { padding: 0 16px 16px; }
@@ -317,15 +307,12 @@
 }
 
 @media (min-width: 768px) {
-  .ma-dp-hist-summary-amount { font-size: 24px; }
-  .ma-dp-hist-summary-box { padding: 10px 16px; }
+  .ma-dp-hist-stat-value { font-size: 26px; }
+  .ma-dp-hist-stat-card { padding: 16px 20px; }
 }
 
 /* ── Light mode overrides ── */
-html[data-theme='light'] .ma-dp-hist-summary-frame {
-  border-color: var(--ma-dp-accent);
-}
-html[data-theme='light'] .ma-dp-hist-summary-box {
+html[data-theme='light'] .ma-dp-hist-stat-card {
   background: var(--ma-dp-card);
   border-color: var(--ma-dp-card-border);
 }

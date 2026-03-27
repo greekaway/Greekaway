@@ -54,36 +54,64 @@
     }
   }
 
-  // ── Summary Boxes ──
+  // ── Stats Cards (6 cards: 2 count + 4 money) ──
 
-  function renderSummary(container) {
-    const frame = document.createElement('div');
-    frame.className = 'ma-dp-hist-summary-frame';
-    frame.id = 'dpHistSummary';
-    frame.innerHTML = `
-      <div class="ma-dp-hist-summary-grid">
-        <div class="ma-dp-hist-summary-box" data-key="all">
-          <span class="ma-dp-hist-summary-title">Σύνολο</span>
-          <span class="ma-dp-hist-summary-amount">—</span>
-          <span class="ma-dp-hist-summary-date">—</span>
-        </div>
-        <div class="ma-dp-hist-summary-box" data-key="today">
-          <span class="ma-dp-hist-summary-title">Σήμερα</span>
-          <span class="ma-dp-hist-summary-amount">—</span>
-          <span class="ma-dp-hist-summary-date">—</span>
-        </div>
-        <div class="ma-dp-hist-summary-box" data-key="week">
-          <span class="ma-dp-hist-summary-title">Εβδομάδα</span>
-          <span class="ma-dp-hist-summary-amount">—</span>
-          <span class="ma-dp-hist-summary-date">—</span>
-        </div>
-        <div class="ma-dp-hist-summary-box" data-key="month">
-          <span class="ma-dp-hist-summary-title">Μήνας</span>
-          <span class="ma-dp-hist-summary-amount">—</span>
-          <span class="ma-dp-hist-summary-date">—</span>
-        </div>
+  let summaryCache = null;
+
+  function renderStats(container) {
+    const grid = document.createElement('div');
+    grid.className = 'ma-dp-hist-stats-grid';
+    grid.id = 'dpHistStats';
+    grid.innerHTML = `
+      <div class="ma-dp-hist-stat-card">
+        <span class="ma-dp-hist-stat-title">ΣΥΝΟΛΟ ΑΙΤΗΜΑΤΩΝ</span>
+        <span class="ma-dp-hist-stat-value" id="dpStatRequests">—</span>
+      </div>
+      <div class="ma-dp-hist-stat-card">
+        <span class="ma-dp-hist-stat-title">ΟΛΟΚΛΗΡΩΜΕΝΑ</span>
+        <span class="ma-dp-hist-stat-value" id="dpStatCompleted">—</span>
+      </div>
+      <div class="ma-dp-hist-stat-card">
+        <span class="ma-dp-hist-stat-title">ΣΥΝΟΛΟ</span>
+        <span class="ma-dp-hist-stat-value" id="dpStatAll">—</span>
+        <span class="ma-dp-hist-stat-sub" id="dpStatAllSub">—</span>
+      </div>
+      <div class="ma-dp-hist-stat-card">
+        <span class="ma-dp-hist-stat-title">ΣΗΜΕΡΑ</span>
+        <span class="ma-dp-hist-stat-value" id="dpStatToday">—</span>
+        <span class="ma-dp-hist-stat-sub" id="dpStatTodaySub">—</span>
+      </div>
+      <div class="ma-dp-hist-stat-card">
+        <span class="ma-dp-hist-stat-title">ΕΒΔΟΜΑΔΑ</span>
+        <span class="ma-dp-hist-stat-value" id="dpStatWeek">—</span>
+        <span class="ma-dp-hist-stat-sub" id="dpStatWeekSub">—</span>
+      </div>
+      <div class="ma-dp-hist-stat-card">
+        <span class="ma-dp-hist-stat-title">ΜΗΝΑΣ</span>
+        <span class="ma-dp-hist-stat-value" id="dpStatMonth">—</span>
+        <span class="ma-dp-hist-stat-sub" id="dpStatMonthSub">—</span>
       </div>`;
-    container.appendChild(frame);
+    container.appendChild(grid);
+  }
+
+  function updateStats() {
+    const s = summaryCache;
+    if (!s) return;
+    // Count cards — follow active filter period
+    const period = (activePeriod === 'custom') ? 'all' : activePeriod;
+    const pd = s[period] || s.all || {};
+    const reqEl = document.getElementById('dpStatRequests');
+    const compEl = document.getElementById('dpStatCompleted');
+    if (reqEl) reqEl.textContent = pd.eligible ?? pd.count ?? 0;
+    if (compEl) compEl.textContent = pd.count ?? 0;
+    // Money cards — always show their respective periods
+    ['all', 'today', 'week', 'month'].forEach(key => {
+      const cap = key.charAt(0).toUpperCase() + key.slice(1);
+      const valEl = document.getElementById('dpStat' + cap);
+      const subEl = document.getElementById('dpStat' + cap + 'Sub');
+      if (valEl && s[key]) valEl.textContent = (s[key].total || 0).toFixed(0) + '€';
+      if (subEl && s[key]) subEl.textContent = s[key].label || '—';
+    });
   }
 
   async function loadSummary() {
@@ -93,14 +121,8 @@
       const res = await fetch(`${API}/history-summary?phone=${encodeURIComponent(phone)}`);
       if (!res.ok) return;
       const data = await res.json();
-      const s = data.summary || {};
-      ['all', 'today', 'week', 'month'].forEach(key => {
-        const box = document.querySelector(`.ma-dp-hist-summary-box[data-key="${key}"]`);
-        if (!box || !s[key]) return;
-        box.querySelector('.ma-dp-hist-summary-amount').textContent =
-          (s[key].total || 0).toFixed(0) + '€';
-        box.querySelector('.ma-dp-hist-summary-date').textContent = s[key].label || '—';
-      });
+      summaryCache = data.summary || {};
+      updateStats();
     } catch { /* silent */ }
   }
 
@@ -146,6 +168,7 @@
         customDates.style.display = '';
       } else {
         customDates.style.display = 'none';
+        updateStats();
         loadHistory();
       }
     });
@@ -273,8 +296,14 @@
 
     section.innerHTML = '';
 
-    renderSummary(section);
+    // Title (no back arrow — this is a main tab, not a submenu)
+    const title = document.createElement('h2');
+    title.className = 'ma-dp-tab-title';
+    title.textContent = labels.sectionHistory || 'Ιστορικό';
+    section.appendChild(title);
+
     renderFilters(section);
+    renderStats(section);
 
     const list = document.createElement('div');
     list.id = 'dpHistList';

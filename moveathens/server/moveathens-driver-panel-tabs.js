@@ -218,6 +218,10 @@ module.exports = function registerDriverPanelTabs(app) {
       const completed = await requestsData.getRequests({ status: 'completed' });
       const mine = completed.filter(r => r.driver_phone === phone);
 
+      // Eligible requests: completed requests matching driver's vehicle types
+      let vehicleTypes = [];
+      try { vehicleTypes = JSON.parse(driver.vehicle_types || '[]'); } catch { vehicleTypes = []; }
+
       const now = new Date();
       const todayStr = now.toISOString().slice(0, 10);
       const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 6);
@@ -247,6 +251,19 @@ module.exports = function registerDriverPanelTabs(app) {
         if (d >= monthStart) { monthTotal += p; monthCount++; }
       });
 
+      // Count eligible requests per period (all completed matching vehicle types)
+      let eligAll = 0, eligToday = 0, eligWeek = 0, eligMonth = 0;
+      completed.forEach(r => {
+        const matchesVehicle = !r.vehicle_type_id || vehicleTypes.length === 0
+          || vehicleTypes.includes(r.vehicle_type_id);
+        if (!matchesVehicle) return;
+        const d = dateOf(r);
+        eligAll++;
+        if (d === todayStr) eligToday++;
+        if (d >= weekStart) eligWeek++;
+        if (d >= monthStart) eligMonth++;
+      });
+
       const monthNames = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος',
         'Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
       const fmtLabel = (iso) => { const p = (iso || '').split('-'); return p.length >= 3 ? p[2] + '/' + p[1] : iso; };
@@ -254,10 +271,10 @@ module.exports = function registerDriverPanelTabs(app) {
       res.json({
         ok: true,
         summary: {
-          all:   { total: allTotal, count: allCount, label: minDate && maxDate ? fmtLabel(minDate) + ' – ' + fmtLabel(maxDate) : '—' },
-          today: { total: todayTotal, count: todayCount, label: fmtLabel(todayStr) },
-          week:  { total: weekTotal, count: weekCount, label: fmtLabel(weekStart) + ' – ' + fmtLabel(todayStr) },
-          month: { total: monthTotal, count: monthCount, label: monthNames[now.getMonth()] || '' }
+          all:   { total: allTotal, count: allCount, eligible: eligAll, label: minDate && maxDate ? fmtLabel(minDate) + ' – ' + fmtLabel(maxDate) : '—' },
+          today: { total: todayTotal, count: todayCount, eligible: eligToday, label: fmtLabel(todayStr) },
+          week:  { total: weekTotal, count: weekCount, eligible: eligWeek, label: fmtLabel(weekStart) + ' – ' + fmtLabel(todayStr) },
+          month: { total: monthTotal, count: monthCount, eligible: eligMonth, label: monthNames[now.getMonth()] || '' }
         }
       });
     } catch (err) {
