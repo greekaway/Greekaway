@@ -185,4 +185,61 @@ module.exports = function registerDriverPanelTabs(app) {
       res.status(500).json({ error: 'Server error' });
     }
   });
+
+  // ══════════════════════════════════════════
+  // HISTORY SUMMARY — totals for today/week/month/all
+  // ══════════════════════════════════════════
+
+  app.get('/api/driver-panel/history-summary', async (req, res) => {
+    try {
+      const phone = (req.query.phone || '').trim();
+      if (!phone) return res.status(400).json({ error: 'Missing phone' });
+
+      const driver = await driversData.getDriverByPhone(phone);
+      if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+      const completed = await requestsData.getRequests({ status: 'completed' });
+      const mine = completed.filter(r => r.driver_phone === phone);
+
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+      const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 6);
+      const weekStart = weekAgo.toISOString().slice(0, 10);
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+
+      const dateOf = (r) => (r.accepted_at || r.created_at || '').toString().slice(0, 10);
+      const priceOf = (r) => parseFloat(r.price) || 0;
+
+      let allTotal = 0, todayTotal = 0, weekTotal = 0, monthTotal = 0;
+      let allCount = 0, todayCount = 0, weekCount = 0, monthCount = 0;
+      let minDate = '', maxDate = '';
+
+      mine.forEach(r => {
+        const d = dateOf(r);
+        const p = priceOf(r);
+        allTotal += p; allCount++;
+        if (!minDate || d < minDate) minDate = d;
+        if (!maxDate || d > maxDate) maxDate = d;
+        if (d === todayStr) { todayTotal += p; todayCount++; }
+        if (d >= weekStart) { weekTotal += p; weekCount++; }
+        if (d >= monthStart) { monthTotal += p; monthCount++; }
+      });
+
+      const monthNames = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος',
+        'Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+
+      res.json({
+        ok: true,
+        summary: {
+          all:   { total: allTotal, count: allCount, label: minDate && maxDate ? minDate.slice(5).replace('-','/') + ' – ' + maxDate.slice(5).replace('-','/') : '—' },
+          today: { total: todayTotal, count: todayCount, label: todayStr.slice(5).replace('-','/') },
+          week:  { total: weekTotal, count: weekCount, label: weekStart.slice(5).replace('-','/') + ' – ' + todayStr.slice(5).replace('-','/') },
+          month: { total: monthTotal, count: monthCount, label: monthNames[now.getMonth()] || '' }
+        }
+      });
+    } catch (err) {
+      console.error('[driver-panel] history-summary:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
 };

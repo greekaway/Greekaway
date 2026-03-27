@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    MoveAthens Driver Panel — History Tab
-   Period filter, date filters, trip list rows
+   Summary boxes, period filter, date filters, trip list
    ═══════════════════════════════════════════════════════ */
 
 .ma-dp-tab-title {
@@ -10,11 +10,58 @@
   color: var(--ma-dp-text);
 }
 
+/* ── Summary Frame (outer accent border) ── */
+.ma-dp-hist-summary-frame {
+  border: 1px solid var(--ma-dp-accent);
+  border-radius: 14px;
+  padding: 10px;
+  margin-bottom: 14px;
+}
+
+.ma-dp-hist-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ma-dp-hist-summary-box {
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 12px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+.ma-dp-hist-summary-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ma-dp-accent);
+}
+
+.ma-dp-hist-summary-amount {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ma-dp-text);
+  line-height: 1.2;
+}
+
+.ma-dp-hist-summary-date {
+  font-size: 10px;
+  color: var(--ma-dp-muted);
+  margin-top: 2px;
+}
+
 /* ── Period Filter Bar ── */
 .ma-dp-hist-period-filter {
   display: flex;
   gap: 6px;
-  padding: 10px 16px 2px;
+  padding: 10px 0 2px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -51,7 +98,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  padding: 10px 16px 0;
+  padding: 10px 0 0;
   overflow: hidden;
 }
 
@@ -109,66 +156,28 @@
 
 .ma-dp-hist-apply:active { transform: scale(0.96); }
 
-/* ── Old filters (removed) ── */
-.ma-dp-hist-filters {
-  display: flex;
-  gap: 8px;
-  padding: 8px 16px 12px;
-  align-items: flex-end;
-}
-
-.ma-dp-hist-label {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1;
-  font-size: 12px;
-  color: var(--ma-dp-muted);
-}
-
-.ma-dp-hist-date {
-  padding: 8px 10px;
-  background: var(--ma-dp-card);
-  border: 1px solid var(--ma-dp-card-border);
-  border-radius: 8px;
-  color: var(--ma-dp-text);
-  font-size: 13px;
-  -webkit-appearance: none;
-}
-.ma-dp-hist-date:focus {
-  outline: none;
-  border-color: var(--ma-dp-accent);
-}
-
-.ma-dp-btn-filter {
-  padding: 8px 14px;
-  background: var(--ma-dp-accent);
-  color: #0b0f1a;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
 /* ── History list ── */
 .ma-dp-hist-list {
-  padding: 0 16px 24px;
+  padding: 10px 0 24px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-left: -16px;
+  margin-right: -16px;
 }
 
-/* ── History row ── */
+/* ── History row — edge-to-edge ── */
 .ma-dp-hist-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   background: var(--ma-dp-card);
-  border: 1px solid var(--ma-dp-card-border);
-  border-radius: 10px;
+  border-top: 1px solid var(--ma-dp-card-border);
+  border-bottom: 1px solid var(--ma-dp-card-border);
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
 }
 
 .ma-dp-hist-date-col {
@@ -207,22 +216,39 @@
 
 /* ── Responsive ── */
 @media (max-width: 359px) {
-  .ma-dp-hist-period-filter { gap: 4px; padding: 8px 12px 2px; }
+  .ma-dp-hist-summary-frame { padding: 8px; }
+  .ma-dp-hist-summary-grid { gap: 6px; }
+  .ma-dp-hist-summary-box { padding: 10px 8px; }
+  .ma-dp-hist-summary-amount { font-size: 18px; }
+  .ma-dp-hist-period-filter { gap: 4px; }
   .ma-dp-hist-period-btn { padding: 7px 10px; font-size: 12px; }
-  .ma-dp-hist-custom-dates { padding: 8px 12px 0; }
-  .ma-dp-hist-row { padding: 10px 10px; gap: 6px; }
+  .ma-dp-hist-row { padding: 10px 12px; gap: 6px; }
   .ma-dp-hist-date-col { min-width: 58px; font-size: 11px; }
   .ma-dp-hist-route { font-size: 12px; }
 }
 
 @media (min-width: 430px) {
-  .ma-dp-hist-period-filter { padding: 10px 24px 2px; }
-  .ma-dp-hist-custom-dates { padding: 10px 24px 0; }
-  .ma-dp-hist-list { padding: 0 24px 24px; }
-  .ma-dp-hist-row { padding: 14px 16px; }
+  .ma-dp-hist-summary-frame { padding: 12px; }
+  .ma-dp-hist-summary-grid { gap: 12px; }
+  .ma-dp-hist-summary-box { padding: 16px 14px; }
+  .ma-dp-hist-summary-amount { font-size: 26px; }
+  .ma-dp-hist-row { padding: 14px 20px; }
+  .ma-dp-hist-list { margin-left: -14px; margin-right: -14px; }
+}
+
+@media (min-width: 768px) {
+  .ma-dp-hist-summary-amount { font-size: 28px; }
+  .ma-dp-hist-summary-box { padding: 18px 16px; }
 }
 
 /* ── Light mode overrides ── */
+html[data-theme='light'] .ma-dp-hist-summary-frame {
+  border-color: var(--ma-dp-accent);
+}
+html[data-theme='light'] .ma-dp-hist-summary-box {
+  background: var(--ma-dp-card);
+  border-color: var(--ma-dp-card-border);
+}
 html[data-theme='light'] .ma-dp-hist-period-btn {
   border-color: rgba(0, 0, 0, 0.12);
   background: rgba(0, 0, 0, 0.04);
@@ -238,4 +264,7 @@ html[data-theme='light'] .ma-dp-hist-date-input {
   background: #fff;
   color: #1a1a2e;
   color-scheme: light;
+}
+html[data-theme='light'] .ma-dp-hist-row {
+  border-color: var(--ma-dp-card-border);
 }

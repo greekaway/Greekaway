@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## 2026-03-27 — History tab: summary boxes + edge-to-edge rows (v970)
+
+- **Summary boxes:** 4 boxes (Σύνολο, Σήμερα, Εβδομάδα, Μήνας) in 2×2 grid inside accent-bordered frame. Each shows total € + date range. Independent of filters.
+- **New API endpoint:** `/api/driver-panel/history-summary` returns pre-computed totals.
+- **Edge-to-edge rows:** History trip rows now span full screen width with negative margins.
+- **Responsive:** Scales correctly on small phones (359px), standard, tablets (768px+).
+- **Light mode:** Summary frame + rows styled for both themes.
+
 ## 2026-03-27 — Unified accent border frames (v969)
 
 - **Home ride card:** Restored full accent border + 14px border-radius (no longer cut off at edges).

@@ -1,6 +1,6 @@
 /**
  * MoveAthens Driver Panel — History Tab
- * Completed trips list with period + date-range filters.
+ * Summary boxes (all/today/week/month) + completed trips list with filters.
  * Depends: driver-panel.js (DpApp)
  */
 (() => {
@@ -54,10 +54,59 @@
     }
   }
 
+  // ── Summary Boxes ──
+
+  function renderSummary(container) {
+    const frame = document.createElement('div');
+    frame.className = 'ma-dp-hist-summary-frame';
+    frame.id = 'dpHistSummary';
+    frame.innerHTML = `
+      <div class="ma-dp-hist-summary-grid">
+        <div class="ma-dp-hist-summary-box" data-key="all">
+          <span class="ma-dp-hist-summary-title">Σύνολο</span>
+          <span class="ma-dp-hist-summary-amount">—</span>
+          <span class="ma-dp-hist-summary-date">—</span>
+        </div>
+        <div class="ma-dp-hist-summary-box" data-key="today">
+          <span class="ma-dp-hist-summary-title">Σήμερα</span>
+          <span class="ma-dp-hist-summary-amount">—</span>
+          <span class="ma-dp-hist-summary-date">—</span>
+        </div>
+        <div class="ma-dp-hist-summary-box" data-key="week">
+          <span class="ma-dp-hist-summary-title">Εβδομάδα</span>
+          <span class="ma-dp-hist-summary-amount">—</span>
+          <span class="ma-dp-hist-summary-date">—</span>
+        </div>
+        <div class="ma-dp-hist-summary-box" data-key="month">
+          <span class="ma-dp-hist-summary-title">Μήνας</span>
+          <span class="ma-dp-hist-summary-amount">—</span>
+          <span class="ma-dp-hist-summary-date">—</span>
+        </div>
+      </div>`;
+    container.appendChild(frame);
+  }
+
+  async function loadSummary() {
+    const phone = getPhone();
+    if (!phone) return;
+    try {
+      const res = await fetch(`${API}/history-summary?phone=${encodeURIComponent(phone)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const s = data.summary || {};
+      ['all', 'today', 'week', 'month'].forEach(key => {
+        const box = document.querySelector(`.ma-dp-hist-summary-box[data-key="${key}"]`);
+        if (!box || !s[key]) return;
+        box.querySelector('.ma-dp-hist-summary-amount').textContent =
+          (s[key].total || 0).toFixed(0) + '€';
+        box.querySelector('.ma-dp-hist-summary-date').textContent = s[key].label || '—';
+      });
+    } catch { /* silent */ }
+  }
+
   // ── Period Filter Bar ──
 
   function renderFilters(container) {
-    // Period buttons
     const periodBar = document.createElement('div');
     periodBar.className = 'ma-dp-hist-period-filter';
     periodBar.id = 'dpHistPeriodFilter';
@@ -69,7 +118,6 @@
       <button class="ma-dp-hist-period-btn" data-period="custom" type="button">Προσαρμοσμένο</button>`;
     container.appendChild(periodBar);
 
-    // Custom date range (hidden by default)
     const customDates = document.createElement('div');
     customDates.className = 'ma-dp-hist-custom-dates';
     customDates.id = 'dpHistCustomDates';
@@ -86,17 +134,14 @@
       <button class="ma-dp-hist-apply" id="dpHistApply" type="button">Εφαρμογή</button>`;
     container.appendChild(customDates);
 
-    // Period button click handlers
     periodBar.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-period]');
       if (!btn) return;
       const period = btn.dataset.period;
       activePeriod = period;
-
       periodBar.querySelectorAll('.ma-dp-hist-period-btn').forEach(b =>
         b.classList.toggle('ma-dp-hist-period-btn--active', b === btn)
       );
-
       if (period === 'custom') {
         customDates.style.display = '';
       } else {
@@ -105,11 +150,10 @@
       }
     });
 
-    // Custom date apply
     customDates.querySelector('#dpHistApply').addEventListener('click', loadHistory);
   }
 
-  // ── Load history ──
+  // ── Load history (rows list only — summary stays independent) ──
 
   async function loadHistory() {
     const phone = getPhone();
@@ -127,10 +171,7 @@
       to = document.getElementById('dpHistTo')?.value || '';
     } else {
       const range = getDateRange(activePeriod);
-      if (range) {
-        from = range.from;
-        to = range.to;
-      }
+      if (range) { from = range.from; to = range.to; }
     }
 
     let url = `${API}/history?phone=${encodeURIComponent(phone)}`;
@@ -178,6 +219,7 @@
     section.innerHTML = `
       <h2 class="ma-dp-tab-title">${esc(labels.sectionHistory || 'Ιστορικό')}</h2>`;
 
+    renderSummary(section);
     renderFilters(section);
 
     const list = document.createElement('div');
@@ -185,7 +227,7 @@
     list.className = 'ma-dp-hist-list';
     section.appendChild(list);
 
-    await loadHistory();
+    await Promise.all([loadSummary(), loadHistory()]);
   }
 
   window.DpHistory = { init, reload: loadHistory };
