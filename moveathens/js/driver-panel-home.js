@@ -280,43 +280,7 @@
 
     const section = document.querySelector('[data-tab="home"]');
     if (section && !section.querySelector('#dpHomeCards')) {
-      const isActive = driver?.is_active !== false;
-      section.innerHTML = `
-        <div id="dpHomeCards" class="ma-dp-home-cards"></div>
-        <div class="ma-dp-go-bar">
-          <label class="ma-dp-switch" id="dpGoSwitch">
-            <input type="checkbox" id="dpGoCheck" ${isActive ? 'checked' : ''}>
-            <span class="ma-dp-switch__track"></span>
-          </label>
-          <span class="ma-dp-go-label" id="dpGoLabel">${isActive ? 'Ενεργός' : 'Εκτός σύνδεσης'}</span>
-        </div>`;
-
-      document.getElementById('dpGoCheck')?.addEventListener('change', async (e) => {
-        const d = getDriver();
-        if (!d?.phone) return;
-        const nowActive = e.target.checked;
-        e.target.disabled = true;
-        try {
-          const res = await fetch(API + '/availability', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: d.phone, is_active: nowActive })
-          });
-          if (res.ok) {
-            d.is_active = nowActive;
-            localStorage.setItem(LS_KEY, JSON.stringify(d));
-            document.getElementById('dpGoLabel').textContent = nowActive ? 'Ενεργός' : 'Εκτός σύνδεσης';
-            // Sync profile toggle if open
-            const profAvail = document.getElementById('dpProfileAvail');
-            if (profAvail) profAvail.checked = nowActive;
-            const profLabel = document.getElementById('dpAvailLabel');
-            if (profLabel) profLabel.textContent = nowActive ? 'Ενεργός' : 'Ανενεργός';
-          } else {
-            e.target.checked = !nowActive; // revert
-          }
-        } catch { e.target.checked = !nowActive; showToast('❌ Σφάλμα σύνδεσης'); }
-        e.target.disabled = false;
-      });
+      section.innerHTML = `<div id="dpHomeCards" class="ma-dp-home-cards"></div>`;
     }
 
     bindEvents();

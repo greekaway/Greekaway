@@ -3,81 +3,9 @@
    Urgent cards, accept/reject, status indicator
    ═══════════════════════════════════════════════════════ */
 
-/* ── Go Switch (slider toggle) ── */
-.ma-dp-go-bar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 16px;
-  position: fixed;
-  bottom: calc(var(--ma-dp-footer-h) + env(safe-area-inset-bottom, 0px) + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 90;
-}
-
-/* ── Slider switch ── */
-.ma-dp-switch {
-  position: relative;
-  display: inline-block;
-  width: 62px;
-  height: 34px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.ma-dp-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-  position: absolute;
-}
-.ma-dp-switch__track {
-  position: absolute;
-  inset: 0;
-  border-radius: 34px;
-  background: #e74c3c;
-  transition: background 0.3s;
-}
-.ma-dp-switch__track::after {
-  content: '';
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  left: 4px;
-  top: 4px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  transition: transform 0.3s;
-}
-.ma-dp-switch input:checked + .ma-dp-switch__track {
-  background: #2ecc71;
-}
-.ma-dp-switch input:checked + .ma-dp-switch__track::after {
-  transform: translateX(28px);
-}
-
-.ma-dp-go-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ma-dp-muted);
-  transition: color 0.3s;
-}
-.ma-dp-switch input:checked ~ .ma-dp-go-label,
-.ma-dp-go-bar:has(input:checked) .ma-dp-go-label {
-  color: #2ecc71;
-}
-html[data-theme='light'] .ma-dp-go-label {
-  color: #6b7280;
-}
-html[data-theme='light'] .ma-dp-go-bar:has(input:checked) .ma-dp-go-label {
-  color: #1a9d54;
-}
-
 /* ── Cards container ── */
 .ma-dp-home-cards {
-  padding: 8px 16px 100px;
+  padding: 8px 16px 120px;
   display: flex;
   flex-direction: column;
   gap: 14px;

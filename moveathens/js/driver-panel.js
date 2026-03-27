@@ -87,6 +87,50 @@
     if (!navigator.onLine) show('Δεν υπάρχει σύνδεση στο διαδίκτυο', 'offline');
   };
 
+  // ── Floating availability toggle ──
+  const buildAvailButton = () => {
+    let btn = document.getElementById('dpAvailBtn');
+    if (btn) btn.remove();
+
+    const driver = getDriver();
+    const isActive = driver?.is_active === true;
+
+    btn = document.createElement('button');
+    btn.id = 'dpAvailBtn';
+    btn.className = 'ma-dp-avail-btn' + (isActive ? ' on' : '');
+    btn.textContent = isActive ? 'ΕΝΕΡΓΟΣ' : 'ΕΝΑΡΞΗ';
+
+    btn.addEventListener('click', async () => {
+      const d = getDriver();
+      if (!d?.phone || btn.disabled) return;
+      const wasOn = btn.classList.contains('on');
+      const nowActive = !wasOn;
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/driver-panel/availability', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: d.phone, is_active: nowActive })
+        });
+        if (res.ok) {
+          d.is_active = nowActive;
+          localStorage.setItem(LS_KEY, JSON.stringify(d));
+          btn.classList.toggle('on', nowActive);
+          btn.classList.toggle('off', !nowActive);
+          btn.textContent = nowActive ? 'ΕΝΕΡΓΟΣ' : 'ΕΝΑΡΞΗ';
+          // Sync profile toggle
+          const pa = document.getElementById('dpProfileAvail');
+          if (pa) pa.checked = nowActive;
+          const pl = document.getElementById('dpAvailLabel');
+          if (pl) pl.textContent = nowActive ? 'Ενεργός' : 'Ανενεργός';
+        }
+      } catch { /* keep current state */ }
+      btn.disabled = false;
+    });
+
+    document.getElementById('dpApp').appendChild(btn);
+  };
+
   const buildFooter = () => {
     const footer = document.getElementById('dpFooter');
     if (!footer) return;
@@ -213,6 +257,7 @@
     initNetworkBanner();
 
     buildFooter();
+    buildAvailButton();
 
     // Init home tab
     if (typeof window.DpHome?.init === 'function') {

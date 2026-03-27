@@ -250,11 +250,13 @@
         driver.is_active = isActive;
         localStorage.setItem(LS_KEY, JSON.stringify(driver));
         document.getElementById('dpAvailLabel').textContent = isActive ? 'Ενεργός' : 'Ανενεργός';
-        // Sync home toggle
-        const goCheck = document.getElementById('dpGoCheck');
-        if (goCheck) goCheck.checked = isActive;
-        const goLabel = document.getElementById('dpGoLabel');
-        if (goLabel) goLabel.textContent = isActive ? 'Ενεργός' : 'Εκτός σύνδεσης';
+        // Sync floating availability button
+        const avBtn = document.getElementById('dpAvailBtn');
+        if (avBtn) {
+          avBtn.classList.toggle('on', isActive);
+          avBtn.classList.toggle('off', !isActive);
+          avBtn.textContent = isActive ? 'ΕΝΕΡΓΟΣ' : 'ΕΝΑΡΞΗ';
+        }
       }
     });
   }

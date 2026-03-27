@@ -243,6 +243,51 @@ html[data-theme='light'] .ma-dp-footer-btn.active {
   white-space: nowrap;
 }
 
+/* ═══════════════════════════════════════
+   FLOATING AVAILABILITY TOGGLE
+   ═══════════════════════════════════════ */
+.ma-dp-avail-btn {
+  position: fixed;
+  bottom: calc(var(--ma-dp-footer-h) + 28px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 150;
+  height: 56px;
+  padding: 0 36px;
+  border-radius: 28px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #fff;
+  background: linear-gradient(135deg, #4a8cff 0%, #2563eb 100%);
+  box-shadow: 0 6px 24px rgba(37, 99, 235, 0.45);
+  transition: background 0.3s, box-shadow 0.3s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ma-dp-avail-btn:active {
+  transform: translateX(-50%) scale(0.93);
+}
+.ma-dp-avail-btn.on {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45);
+}
+.ma-dp-avail-btn.off {
+  background: #6b7280;
+  box-shadow: 0 4px 14px rgba(107, 114, 128, 0.35);
+}
+.ma-dp-avail-btn:disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+@media (display-mode: standalone) {
+  .ma-dp-avail-btn {
+    bottom: calc(var(--ma-dp-footer-h) + 28px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* ── Toast ── */
 .ma-dp-toast {
   position: fixed;
