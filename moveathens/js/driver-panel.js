@@ -127,7 +127,7 @@
           }
 
           // Brief delay so animation feels intentional
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise(r => setTimeout(r, 650));
 
           btn.classList.remove('loading');
           btn.classList.toggle('on', nowActive);

@@ -5,11 +5,11 @@
 
 /* ── Filter card (outer container) ── */
 .ma-dp-sched-filter-card {
-  margin: 0 16px;
-  padding: 14px;
+  margin: 0;
+  padding: 18px;
   background: var(--ma-dp-card);
   border: 1px solid var(--ma-dp-card-border);
-  border-radius: 16px;
+  border-radius: 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -22,10 +22,15 @@
   flex-wrap: wrap;
 }
 
-/* ── Sub-tab pills (Όλα / Αποδοχή) ── */
+/* ── Sub-tab pills (Όλα / Αποδοχή) — equal 50/50 ── */
+.ma-dp-sched-row--pills {
+  display: flex;
+  gap: 8px;
+}
 .ma-dp-sched-pill {
-  padding: 8px 22px;
-  font-size: 13px;
+  flex: 1;
+  padding: 10px 0;
+  font-size: 14px;
   font-weight: 600;
   font-family: inherit;
   border-radius: 10px;
@@ -34,6 +39,7 @@
   color: var(--ma-dp-muted);
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
+  text-align: center;
 }
 .ma-dp-sched-pill--active {
   background: var(--ma-dp-accent);
@@ -55,6 +61,7 @@
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .ma-dp-sched-chip:active { transform: scale(0.95); }
 .ma-dp-sched-chip--active {
@@ -63,9 +70,25 @@
   border-color: rgba(70, 211, 255, 0.4);
 }
 
+/* ── Period carousel (horizontal scroll) ── */
+.ma-dp-sched-row--carousel {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x proximity;
+  padding-bottom: 2px;
+}
+.ma-dp-sched-row--carousel::-webkit-scrollbar { display: none; }
+.ma-dp-sched-row--carousel .ma-dp-sched-chip {
+  scroll-snap-align: start;
+}
+
 /* ── Cards list ── */
 .ma-dp-sched-list {
-  padding: 12px 16px 24px;
+  padding: 12px 0 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -75,8 +98,8 @@
 .ma-dp-sched-card {
   background: var(--ma-dp-card);
   border: 1px solid var(--ma-dp-card-border);
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: 14px;
+  padding: 18px;
   transition: border-color 0.2s;
 }
 .ma-dp-sched-card:hover { border-color: var(--ma-dp-accent); }
@@ -108,15 +131,14 @@ html[data-theme='light'] .ma-dp-btn-detail {
 
 /* ── Responsive ── */
 @media (max-width: 359px) {
-  .ma-dp-sched-filter-card { margin: 0 10px; padding: 10px; gap: 8px; }
-  .ma-dp-sched-pill { padding: 7px 16px; font-size: 12px; }
+  .ma-dp-sched-filter-card { padding: 12px; gap: 8px; }
+  .ma-dp-sched-pill { padding: 8px 0; font-size: 12px; }
   .ma-dp-sched-chip { padding: 6px 10px; font-size: 11px; }
-  .ma-dp-sched-card { padding: 12px; }
+  .ma-dp-sched-card { padding: 14px; }
 }
 @media (min-width: 430px) {
-  .ma-dp-sched-filter-card { margin: 0 24px; padding: 16px; }
-  .ma-dp-sched-list { padding: 12px 24px 24px; }
-  .ma-dp-sched-card { padding: 18px; }
+  .ma-dp-sched-filter-card { padding: 20px; }
+  .ma-dp-sched-card { padding: 20px; }
 }
 
 /* ── Light mode ── */
@@ -128,6 +150,7 @@ html[data-theme='light'] .ma-dp-sched-pill {
   border-color: rgba(0, 0, 0, 0.12);
   background: rgba(0, 0, 0, 0.04);
   color: #6b7280;
+  text-align: center;
 }
 html[data-theme='light'] .ma-dp-sched-pill--active {
   background: var(--ma-dp-accent);

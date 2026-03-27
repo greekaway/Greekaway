@@ -61,7 +61,7 @@
 
   function renderSubTabs(container) {
     const bar = document.createElement('div');
-    bar.className = 'ma-dp-sched-row';
+    bar.className = 'ma-dp-sched-row--pills';
     bar.id = 'dpSchedTabs';
     bar.innerHTML = `
       <button class="ma-dp-sched-pill ma-dp-sched-pill--active" data-sub="all" type="button">Όλα</button>
@@ -104,7 +104,7 @@
 
   function renderPeriodFilter(container) {
     const bar = document.createElement('div');
-    bar.className = 'ma-dp-sched-row';
+    bar.className = 'ma-dp-sched-row--carousel';
     bar.id = 'dpSchedPeriodFilter';
     bar.innerHTML = `
       <button class="ma-dp-sched-chip ma-dp-sched-chip--active" data-period="all" type="button">Όλα</button>
