@@ -5,7 +5,7 @@
  */
 (() => {
   'use strict';
-  const { $, setStatus, showToast, state, saveConfig } = window.DpAdmin;
+  const { $, setStatus, showToast, state, saveConfig, openConfirm } = window.DpAdmin;
 
   const EVENTS = [
     { key: 'new_ride', label: '🚖 Νέα Διαδρομή', desc: 'Ήχος όταν έρχεται νέο αίτημα' },
@@ -173,7 +173,8 @@
     // Delete
     document.querySelectorAll('.dp-sounds-delete').forEach(btn => {
       btn.addEventListener('click', async () => {
-        if (!confirm('Διαγραφή αυτού του ήχου;')) return;
+        const ok = await openConfirm('Θέλετε σίγουρα να διαγράψετε αυτόν τον ήχο;', { title: 'Διαγραφή Ήχου' });
+        if (!ok) return;
         const id = btn.dataset.id;
         try {
           const res = await fetch(`/api/admin/driver-panel/sounds/${encodeURIComponent(id)}`, { method: 'DELETE' });
