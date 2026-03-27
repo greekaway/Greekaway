@@ -167,10 +167,8 @@
         const vt = state.vehicleTypes.find(v => v.id === id);
         return vt ? vt.name : id;
       }).join(', ');
-      const bs = _broadcastStats[d.phone] || null;
-      const bsLine = bs && bs.sent > 0
-        ? `<span class="dp-driver-broadcast">📡 Λήφθηκαν: <strong>${bs.sent}</strong> · Αποδέχτηκε: <strong style="color:#4caf50">${bs.accepted}</strong> · Αγνόησε: <strong style="color:#ff9800">${bs.missed}</strong></span>`
-        : '';
+      const bs = _broadcastStats[d.phone] || { sent: 0, accepted: 0, missed: 0 };
+      const bsLine = `<span class="dp-driver-broadcast">📡 Λήφθηκαν: <strong>${bs.sent}</strong> · Αποδέχτηκε: <strong style="color:#4caf50">${bs.accepted}</strong> · Αγνόησε: <strong style="color:#ff9800">${bs.missed}</strong></span>`;
       return `
         <div class="dp-driver-card ${d.is_blocked ? 'dp-driver-blocked' : d.is_available === false ? 'dp-driver-inactive' : ''}" data-id="${d.id}">
           <div class="dp-driver-info">
