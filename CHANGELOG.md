@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 2026-03-27 — Race condition fix + admin countdown (v972)
+
+- **Accept endpoint hardened** — blocks accept if request is `nodriver`, `expired`, or `cancelled` (returns 410).
+- **Admin "nodriver" → SSE broadcast** — marking a request as nodriver immediately removes the card from all drivers via SSE.
+- **Admin countdown timer** — pending/sent requests show live countdown (⏱ M:SS) until broadcast expires. Turns red in last 60s, shows "Έληξε!" + beep + red row highlight when time runs out.
+- **Configurable timeout** — countdown reads `broadcastTimeoutMinutes` from driver panel config (default 5 min).
+
 ## 2026-03-27 — History tab polish (v971)
 
 - **Removed Ιστορικό title** — no longer needed.

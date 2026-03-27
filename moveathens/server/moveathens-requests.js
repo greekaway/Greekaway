@@ -749,6 +749,11 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
         try {
           await requestsData.updateRequest(request.id, { status: 'nodriver' });
         } catch (e) { /* ignore */ }
+        // Immediately remove card from all drivers' screens
+        try {
+          const driverBroadcast = require('../../services/driverBroadcast');
+          driverBroadcast.expireBroadcast(request.id);
+        } catch (e) { /* ignore */ }
       } else {
         return res.status(400).json({ error: 'Invalid type. Use: ack, found, nodriver' });
       }

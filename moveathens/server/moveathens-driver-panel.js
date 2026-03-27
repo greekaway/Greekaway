@@ -313,6 +313,10 @@ module.exports = function registerDriverPanelRoutes(app) {
         return res.status(409).json({ error: 'Already taken', status: request.status });
       }
 
+      if (request.status === 'nodriver' || request.status === 'expired' || request.status === 'cancelled') {
+        return res.status(410).json({ error: 'Η διαδρομή δεν είναι πλέον διαθέσιμη', status: request.status });
+      }
+
       const driver = await driversData.getDriverByPhone(phone);
       if (!driver) return res.status(404).json({ error: 'Driver not found' });
 

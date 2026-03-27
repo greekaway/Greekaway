@@ -54,6 +54,8 @@
   let _flightCheckMins = 25; // cached from admin config
   let _flightCheckMinsTime = 0;
   let _countdownTimer = null;
+  let _broadcastTimeoutMin = 5; // driver panel broadcast timeout (minutes)
+  let _expiredAlerted = new Set(); // track which requests already triggered alert
 
   /* ─── shared modal / confirm bindings (run once) ─── */
   function bindSharedEvents() {
@@ -102,9 +104,10 @@
     // Live countdown ticker — updates flight countdown every second without re-rendering
     if (!_countdownTimer) {
       _countdownTimer = setInterval(function () {
-        var els = _$$('.flight-countdown .cd-value');
-        if (!els.length) return;
         var now = Date.now();
+
+        // Flight countdowns
+        var els = _$$('.flight-countdown .cd-value');
         els.forEach(function (span) {
           var parent = span.closest('.flight-countdown');
           if (!parent) return;
@@ -120,6 +123,40 @@
           var m = Math.floor((secsLeft % 3600) / 60);
           var s = secsLeft % 60;
           span.textContent = (h > 0 ? h + 'ω ' : '') + (m > 0 ? m + 'λ ' : '') + s + 'δ';
+        });
+
+        // Request broadcast countdowns
+        var reqEls = _$$('.req-countdown');
+        reqEls.forEach(function (span) {
+          var expiresAt = parseInt(span.dataset.expiresAt, 10);
+          if (!expiresAt) return;
+          var secsLeft = Math.max(0, Math.round((expiresAt - now) / 1000));
+          var reqId = span.dataset.reqId;
+          if (secsLeft <= 0) {
+            span.textContent = '⏱ Έληξε!';
+            span.style.color = '#ef4444';
+            // Alert once per request
+            if (reqId && !_expiredAlerted.has(reqId)) {
+              _expiredAlerted.add(reqId);
+              // Beep via Web Audio API (no external sound file needed)
+              try {
+                var ac = new (window.AudioContext || window.webkitAudioContext)();
+                var osc = ac.createOscillator();
+                var gain = ac.createGain();
+                osc.type = 'sine'; osc.frequency.value = 880;
+                gain.gain.value = 0.3;
+                osc.connect(gain); gain.connect(ac.destination);
+                osc.start(); osc.stop(ac.currentTime + 0.25);
+              } catch(e) {}
+              span.closest('tr') && (span.closest('tr').style.background = 'rgba(239,68,68,0.08)');
+            }
+            return;
+          }
+          var m = Math.floor(secsLeft / 60);
+          var s = secsLeft % 60;
+          span.textContent = '⏱ ' + m + ':' + (s < 10 ? '0' : '') + s;
+          // Change color in last 60 seconds
+          span.style.color = secsLeft <= 60 ? '#ef4444' : '#f59e0b';
         });
       }, 1000);
     }
@@ -220,7 +257,7 @@
 
     await ensureDriversCache();
 
-    // Refresh flightCheckMinsBefore from config (cache 30s)
+    // Refresh config values (cache 30s)
     if (Date.now() - _flightCheckMinsTime > 30000) {
       try {
         var cfg = await api('/api/admin/moveathens/ui-config');
@@ -229,6 +266,13 @@
         }
         _flightCheckMinsTime = Date.now();
       } catch (_e) { /* keep previous value */ }
+      // Also load driver panel config for broadcast timeout
+      try {
+        var dpCfg = await api('/api/driver-panel/config');
+        if (dpCfg && dpCfg.acceptance && typeof dpCfg.acceptance.broadcastTimeoutMinutes === 'number') {
+          _broadcastTimeoutMin = dpCfg.acceptance.broadcastTimeoutMinutes;
+        }
+      } catch (_e2) { /* keep default */ }
     }
 
     try {
@@ -366,6 +410,14 @@
         replyBtns = '<button class="dr-btn req-unified-reply-btn" style="background:' + chColor + ';color:#fff;margin-right:2px;font-size:12px" data-channel="' + ch + '">' + chLabel + '</button>';
       }
 
+      // Request countdown (time until broadcast expires)
+      var countdownHtml = '';
+      if (canSend && r.created_at) {
+        var createdMs = new Date(r.created_at).getTime();
+        var expiresAt = createdMs + (_broadcastTimeoutMin * 60 * 1000);
+        countdownHtml = '<span class="req-countdown" data-expires-at="' + expiresAt + '" data-req-id="' + r.id + '" style="display:block;font-size:11px;font-weight:600;margin-top:3px;color:#f59e0b">⏱ …</span>';
+      }
+
       return '<tr data-id="' + r.id + '" data-json=\'' + JSON.stringify({
         hotel_name: r.hotel_name || '',
         destination_name: r.destination_name || '',
@@ -388,7 +440,7 @@
         '<td>' + (r.vehicle_name || '—') + '</td>' +
         '<td>€' + parseFloat(r.price || 0).toFixed(0) + '</td>' +
         '<td>' + (r.passenger_name || '—') + flightInfo + '</td>' +
-        '<td>' + statusBadge(r.status) + '</td>' +
+        '<td>' + statusBadge(r.status) + countdownHtml + '</td>' +
         '<td>' + (canSend
           ? '<input class="dr-inline-input req-phone" value="' + phoneVal + '" placeholder="+30…">'
           : (r.driver_phone || '—')) + '</td>' +
