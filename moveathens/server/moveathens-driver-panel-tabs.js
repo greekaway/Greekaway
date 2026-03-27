@@ -114,7 +114,24 @@ module.exports = function registerDriverPanelTabs(app) {
         origin: r.is_arrival ? r.destination_name : (r.hotel_name || r.origin_zone_name),
         destination: r.is_arrival ? (r.hotel_name || r.origin_zone_name) : r.destination_name,
         price: r.price,
-        is_arrival: r.is_arrival
+        is_arrival: r.is_arrival,
+        // Extra details for accordion expand
+        hotel_name: r.hotel_name || '',
+        hotel_address: r.hotel_address || '',
+        vehicle_name: r.vehicle_name || '',
+        passenger_name: r.passenger_name || '',
+        passengers: r.passengers || 0,
+        luggage_large: r.luggage_large || 0,
+        luggage_medium: r.luggage_medium || 0,
+        luggage_cabin: r.luggage_cabin || 0,
+        room_number: r.room_number || '',
+        notes: r.notes || '',
+        scheduled_date: r.scheduled_date || '',
+        scheduled_time: r.scheduled_time || '',
+        payment_method: r.payment_method || '',
+        flight_number: r.flight_number || '',
+        commission_driver: r.commission_driver || 0,
+        completed_at: r.completed_at || ''
       }));
 
       res.json({ ok: true, history: items });

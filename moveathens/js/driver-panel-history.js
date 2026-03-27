@@ -191,18 +191,73 @@
 
       listEl.innerHTML = items.map(item => {
         const dir = item.is_arrival ? '✈️' : '🚗';
+        const price = (parseFloat(item.price) || 0).toFixed(0);
+
+        // Build detail rows from available data
+        const details = [];
+        if (item.hotel_name) details.push({ label: 'Ξενοδοχείο', value: item.hotel_name });
+        if (item.hotel_address) details.push({ label: 'Διεύθυνση', value: item.hotel_address });
+        if (item.vehicle_name) details.push({ label: 'Όχημα', value: item.vehicle_name });
+        if (item.passenger_name) details.push({ label: 'Επιβάτης', value: item.passenger_name });
+        if (item.passengers) details.push({ label: 'Άτομα', value: item.passengers });
+        if (item.room_number) details.push({ label: 'Δωμάτιο', value: item.room_number });
+
+        const luggageParts = [];
+        if (item.luggage_large) luggageParts.push(`${item.luggage_large} μεγάλ.`);
+        if (item.luggage_medium) luggageParts.push(`${item.luggage_medium} μεσαί.`);
+        if (item.luggage_cabin) luggageParts.push(`${item.luggage_cabin} χειρ.`);
+        if (luggageParts.length) details.push({ label: 'Αποσκευές', value: luggageParts.join(', ') });
+
+        if (item.flight_number) details.push({ label: 'Πτήση', value: item.flight_number });
+        if (item.scheduled_date && item.scheduled_time) details.push({ label: 'Ώρα', value: `${item.scheduled_date} ${item.scheduled_time}` });
+        else if (item.scheduled_time) details.push({ label: 'Ώρα', value: item.scheduled_time });
+        if (item.payment_method) {
+          const payLabels = { cash: 'Μετρητά', card: 'Κάρτα', invoice: 'Τιμολόγιο' };
+          details.push({ label: 'Πληρωμή', value: payLabels[item.payment_method] || item.payment_method });
+        }
+        if (item.commission_driver) details.push({ label: 'Προμήθεια', value: `${parseFloat(item.commission_driver).toFixed(0)}€` });
+        if (item.notes) details.push({ label: 'Σημ.', value: item.notes });
+        if (item.completed_at) details.push({ label: 'Ολοκλήρωση', value: formatDate(item.completed_at) });
+
+        const detailsHtml = details.length
+          ? details.map(d => `<div class="ma-dp-hist-detail-row"><span class="ma-dp-hist-detail-label">${esc(d.label)}:</span> <span class="ma-dp-hist-detail-value">${esc(String(d.value))}</span></div>`).join('')
+          : '<div class="ma-dp-hist-detail-row ma-dp-hist-detail-empty">Δεν υπάρχουν επιπλέον πληροφορίες</div>';
+
         return `
-          <div class="ma-dp-hist-row">
-            <div class="ma-dp-hist-date-col">${formatDate(item.date)}</div>
-            <div class="ma-dp-hist-route">
-              <span>${dir}</span>
-              <span>${esc(item.origin)}</span>
-              <span class="ma-dp-hist-arrow">→</span>
-              <span>${esc(item.destination)}</span>
+          <div class="ma-dp-hist-card">
+            <button class="ma-dp-hist-card-header" type="button" aria-expanded="false">
+              <div class="ma-dp-hist-date-col">${formatDate(item.date)}</div>
+              <div class="ma-dp-hist-route">
+                <span>${dir}</span>
+                <span>${esc(item.origin)}</span>
+                <span class="ma-dp-hist-arrow">→</span>
+                <span>${esc(item.destination)}</span>
+              </div>
+              <div class="ma-dp-hist-price">${price}€</div>
+              <svg class="ma-dp-hist-chevron" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="ma-dp-hist-card-body">
+              ${detailsHtml}
             </div>
-            <div class="ma-dp-hist-price">${(parseFloat(item.price) || 0).toFixed(0)}€</div>
           </div>`;
       }).join('');
+
+      // Accordion toggle
+      listEl.querySelectorAll('.ma-dp-hist-card-header').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const card = btn.closest('.ma-dp-hist-card');
+          const isOpen = card.classList.contains('ma-dp-hist-card--open');
+          // Close all others
+          listEl.querySelectorAll('.ma-dp-hist-card--open').forEach(c => {
+            c.classList.remove('ma-dp-hist-card--open');
+            c.querySelector('.ma-dp-hist-card-header').setAttribute('aria-expanded', 'false');
+          });
+          if (!isOpen) {
+            card.classList.add('ma-dp-hist-card--open');
+            btn.setAttribute('aria-expanded', 'true');
+          }
+        });
+      });
     } catch {
       listEl.innerHTML = '<div class="ma-dp-empty">Σφάλμα φόρτωσης</div>';
     }

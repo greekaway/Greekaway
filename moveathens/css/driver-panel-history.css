@@ -161,24 +161,40 @@
   padding: 10px 0 24px;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  margin-left: -16px;
-  margin-right: -16px;
+  gap: 8px;
   overflow: hidden;
 }
 
-/* ── History row — edge-to-edge ── */
-.ma-dp-hist-row {
+/* ── Accordion Card ── */
+.ma-dp-hist-card {
+  background: var(--ma-dp-card);
+  border: 1px solid var(--ma-dp-card-border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.ma-dp-hist-card--open {
+  border-color: rgba(70, 211, 255, 0.3);
+}
+
+/* Header (always visible — acts as toggle button) */
+.ma-dp-hist-card-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  background: var(--ma-dp-card);
-  border-bottom: 1px solid var(--ma-dp-card-border);
-  border-top: none;
-  border-left: none;
-  border-right: none;
-  border-radius: 0;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ma-dp-hist-card-header:active {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .ma-dp-hist-date-col {
@@ -196,7 +212,9 @@
   align-items: center;
   gap: 4px;
   overflow: hidden;
+  min-width: 0;
 }
+
 .ma-dp-hist-route span {
   white-space: nowrap;
   overflow: hidden;
@@ -215,6 +233,64 @@
   flex-shrink: 0;
 }
 
+/* Chevron */
+.ma-dp-hist-chevron {
+  flex-shrink: 0;
+  color: var(--ma-dp-accent);
+  transition: transform 0.25s ease;
+}
+
+.ma-dp-hist-card--open .ma-dp-hist-chevron {
+  transform: rotate(180deg);
+}
+
+/* Body (details — hidden by default) */
+.ma-dp-hist-card-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding: 0 14px;
+}
+
+.ma-dp-hist-card--open .ma-dp-hist-card-body {
+  max-height: 500px;
+  padding: 0 14px 14px;
+}
+
+/* Detail rows inside expanded card */
+.ma-dp-hist-detail-row {
+  display: flex;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 13px;
+  line-height: 1.4;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ma-dp-hist-detail-row:first-child {
+  border-top: 1px solid var(--ma-dp-card-border);
+  padding-top: 10px;
+}
+
+.ma-dp-hist-detail-label {
+  color: var(--ma-dp-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.ma-dp-hist-detail-value {
+  color: var(--ma-dp-text);
+  word-break: break-word;
+}
+
+.ma-dp-hist-detail-empty {
+  color: var(--ma-dp-muted);
+  font-style: italic;
+  font-size: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--ma-dp-card-border);
+}
+
 /* ── Responsive ── */
 @media (max-width: 359px) {
   .ma-dp-hist-summary-frame { padding: 8px; }
@@ -223,9 +299,10 @@
   .ma-dp-hist-summary-amount { font-size: 16px; }
   .ma-dp-hist-period-filter { gap: 4px; }
   .ma-dp-hist-period-btn { padding: 7px 10px; font-size: 12px; }
-  .ma-dp-hist-row { padding: 10px 12px; gap: 6px; }
+  .ma-dp-hist-card-header { padding: 10px 10px; gap: 6px; }
   .ma-dp-hist-date-col { min-width: 58px; font-size: 11px; }
   .ma-dp-hist-route { font-size: 12px; }
+  .ma-dp-hist-list { gap: 6px; }
 }
 
 @media (min-width: 430px) {
@@ -233,8 +310,10 @@
   .ma-dp-hist-summary-grid { gap: 12px; }
   .ma-dp-hist-summary-box { padding: 10px 14px; }
   .ma-dp-hist-summary-amount { font-size: 22px; }
-  .ma-dp-hist-row { padding: 14px 20px; }
-  .ma-dp-hist-list { margin-left: -14px; margin-right: -14px; }
+  .ma-dp-hist-card-header { padding: 14px 16px; }
+  .ma-dp-hist-card-body { padding-left: 16px; padding-right: 16px; }
+  .ma-dp-hist-card--open .ma-dp-hist-card-body { padding: 0 16px 16px; }
+  .ma-dp-hist-list { gap: 10px; }
 }
 
 @media (min-width: 768px) {
@@ -266,6 +345,18 @@ html[data-theme='light'] .ma-dp-hist-date-input {
   color: #1a1a2e;
   color-scheme: light;
 }
-html[data-theme='light'] .ma-dp-hist-row {
+html[data-theme='light'] .ma-dp-hist-card {
+  border-color: var(--ma-dp-card-border);
+}
+html[data-theme='light'] .ma-dp-hist-card--open {
+  border-color: rgba(29, 161, 242, 0.35);
+}
+html[data-theme='light'] .ma-dp-hist-card-header:active {
+  background: rgba(0, 0, 0, 0.03);
+}
+html[data-theme='light'] .ma-dp-hist-detail-row {
+  border-color: rgba(0, 0, 0, 0.06);
+}
+html[data-theme='light'] .ma-dp-hist-detail-row:first-child {
   border-color: var(--ma-dp-card-border);
 }
