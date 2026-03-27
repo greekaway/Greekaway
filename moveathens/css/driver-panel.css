@@ -83,7 +83,7 @@ input, textarea, [contenteditable="true"] {
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+  padding-top: max(10px, env(safe-area-inset-top, 10px));
   background: var(--ma-dp-bg);
   flex-shrink: 0;
   z-index: 50;

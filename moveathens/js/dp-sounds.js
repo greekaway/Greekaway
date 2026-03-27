@@ -288,14 +288,41 @@
   ];
 
   let loopTimer = null;
+  let currentMp3 = null;
 
   const play = async (id) => {
     try {
+      // Check if it's an MP3 file (id starts with mp3_)
+      if (id && id.startsWith('mp3_')) {
+        await playMp3(id);
+        return;
+      }
       const ac = getCtx();
       if (ac.state === 'suspended') await ac.resume();
       const s = SOUNDS[id || 'chime'];
       if (s) s.play(ac);
     } catch { /* silent fail */ }
+  };
+
+  /** Play an uploaded MP3 by id — needs config loaded */
+  const playMp3 = async (id) => {
+    stopMp3();
+    const files = window._dpSoundFiles || [];
+    const file = files.find(f => f.id === id);
+    if (!file) return;
+    currentMp3 = new Audio(file.url);
+    try { await currentMp3.play(); } catch { /* silent */ }
+  };
+
+  const stopMp3 = () => {
+    if (currentMp3) { currentMp3.pause(); currentMp3.currentTime = 0; currentMp3 = null; }
+  };
+
+  /** Play MP3 by URL directly */
+  const playUrl = async (url) => {
+    stopMp3();
+    currentMp3 = new Audio(url);
+    try { await currentMp3.play(); } catch { /* silent */ }
   };
 
   /** Play a sound in a repeating loop every `intervalMs` (default 4s) */
@@ -319,5 +346,5 @@
   };
   tapEvents.forEach(e => document.addEventListener(e, onFirstInteraction, { capture: true, once: false, passive: true }));
 
-  window.DpSounds = { SOUNDS, GROUPS, play, stop, warmUp, playLoop, stopLoop };
+  window.DpSounds = { SOUNDS, GROUPS, play, stop, warmUp, playLoop, stopLoop, playUrl, stopMp3 };
 })();

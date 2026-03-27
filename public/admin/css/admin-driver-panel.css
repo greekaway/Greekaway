@@ -757,3 +757,120 @@ html[data-theme='light'] .dp-label-input {
 html[data-theme='light'] .dp-labels-group {
   border-color: rgba(0,0,0,0.06);
 }
+
+/* ═══════════════════════════════════════
+   TAB 9: ΗΧΟΙ
+   ═══════════════════════════════════════ */
+.dp-sounds-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.dp-sounds-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  margin: 0 0 12px;
+}
+html[data-theme='light'] .dp-sounds-desc { color: rgba(0,0,0,0.5); }
+
+.dp-sounds-upload { margin-bottom: 24px; }
+.dp-sounds-upload-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 8px;
+}
+.dp-sound-label-input { flex: 1; min-width: 140px; }
+.dp-sound-event-select { width: 180px; }
+
+.dp-sounds-event-section {
+  margin-bottom: 28px;
+  padding: 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+html[data-theme='light'] .dp-sounds-event-section {
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.08);
+}
+
+.dp-sounds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dp-sounds-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.15s;
+}
+.dp-sounds-item--active {
+  background: rgba(70,211,255,0.12);
+  border-color: rgba(70,211,255,0.3);
+}
+html[data-theme='light'] .dp-sounds-item {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.06);
+}
+html[data-theme='light'] .dp-sounds-item--active {
+  background: rgba(0,102,204,0.1);
+  border-color: rgba(0,102,204,0.3);
+}
+
+.dp-sounds-name { flex: 1; font-size: 14px; font-weight: 500; }
+.dp-sounds-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(70,211,255,0.15);
+  color: #46d3ff;
+}
+.dp-sounds-badge--synth {
+  background: rgba(255,255,100,0.15);
+  color: #ecec88;
+}
+html[data-theme='light'] .dp-sounds-badge { background: rgba(0,102,204,0.1); color: #0066cc; }
+html[data-theme='light'] .dp-sounds-badge--synth { background: rgba(150,150,0,0.1); color: #666600; }
+
+.dp-sounds-play, .dp-sounds-play-synth, .dp-sounds-delete, .dp-sounds-default-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.dp-sounds-play:hover, .dp-sounds-play-synth:hover { background: rgba(255,255,255,0.1); }
+.dp-sounds-delete:hover { background: rgba(220,38,38,0.2); }
+.dp-sounds-default-btn { font-size: 18px; }
+.dp-sounds-default-btn--active { color: #fbbf24; }
+
+.dp-sounds-empty {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  padding: 12px 0;
+  text-align: center;
+}
+html[data-theme='light'] .dp-sounds-empty { color: rgba(0,0,0,0.4); }
+
+.dp-sounds-programmatic {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.dp-sounds-programmatic summary {
+  cursor: pointer;
+  color: rgba(255,255,255,0.6);
+  font-weight: 600;
+  padding: 6px 0;
+}
+html[data-theme='light'] .dp-sounds-programmatic summary { color: rgba(0,0,0,0.5); }
+.dp-sounds-programmatic .dp-sounds-list { margin-top: 8px; }

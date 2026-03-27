@@ -39,6 +39,7 @@
     const acceptanceTab   = safe('initAcceptanceTab',   () => D.initAcceptanceTab());
     const labelsTab       = safe('initLabelsTab',       () => D.initLabelsTab());
     const financeTab      = safe('initFinanceTab',      () => D.initFinanceTab());
+    const soundsTab       = safe('initSoundsTab',       () => D.initSoundsTab());
 
     // Load config
     await loadConfig();
@@ -75,6 +76,7 @@
     safe('acceptance.populate',   () => acceptanceTab?.populate());
     safe('labels.populate',       () => labelsTab?.populate());
     safe('finance.populate',      () => financeTab?.populate());
+    safe('sounds.populate',       () => soundsTab?.populate());
   };
 
   if (document.readyState === 'loading') {

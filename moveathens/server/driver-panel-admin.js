@@ -278,6 +278,84 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
       }
       return res.json({ url });
     });
+
+    // ── Upload Sound (MP3) ──
+    const ALLOWED_AUDIO = new Set(['audio/mpeg', 'audio/mp3']);
+    const soundsDir = path.join(uploadsDir, 'sounds');
+
+    app.post('/api/admin/driver-panel/upload-sound', upload.single('sound'), (req, res) => {
+      if (!guard(req, res)) return;
+      if (!req.file) return res.status(400).json({ error: 'Missing file' });
+      if (!ALLOWED_AUDIO.has(req.file.mimetype)) return res.status(400).json({ error: 'Μόνο αρχεία MP3' });
+      if (req.file.size > 2 * 1024 * 1024) return res.status(400).json({ error: 'Μέγιστο 2MB' });
+
+      const label = (req.body?.label || '').trim() || req.file.originalname.replace(/\.mp3$/i, '');
+      const event = (req.body?.event || 'new_ride').trim();
+      const safeLabel = label.replace(/[^a-zA-Z0-9_\-\u0370-\u03FF\u0400-\u04FF ]/g, '').substring(0, 60);
+      const id = 'mp3_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      const filename = `${id}.mp3`;
+
+      fs.mkdirSync(soundsDir, { recursive: true });
+      fs.writeFileSync(path.join(soundsDir, filename), req.file.buffer);
+
+      const url = `/uploads/driver-panel/sounds/${filename}`;
+
+      // Save to config
+      const cfg = readConfig();
+      if (!cfg.sounds) cfg.sounds = { files: [], defaults: {} };
+      if (!cfg.sounds.files) cfg.sounds.files = [];
+      cfg.sounds.files.push({ id, label: safeLabel, filename, url, event, uploadedAt: new Date().toISOString() });
+      writeConfig(cfg);
+
+      return res.json({ id, label: safeLabel, url, event });
+    });
+
+    // ── List Sounds ──
+    app.get('/api/admin/driver-panel/sounds', (req, res) => {
+      if (!guard(req, res)) return;
+      const cfg = readConfig();
+      return res.json({ files: cfg.sounds?.files || [], defaults: cfg.sounds?.defaults || {} });
+    });
+
+    // ── Delete Sound ──
+    app.delete('/api/admin/driver-panel/sounds/:id', (req, res) => {
+      if (!guard(req, res)) return;
+      const cfg = readConfig();
+      if (!cfg.sounds?.files) return res.status(404).json({ error: 'Not found' });
+      const idx = cfg.sounds.files.findIndex(f => f.id === req.params.id);
+      if (idx === -1) return res.status(404).json({ error: 'Not found' });
+
+      const file = cfg.sounds.files[idx];
+      // Remove file from disk
+      try { fs.unlinkSync(path.join(soundsDir, file.filename)); } catch (_) {}
+      cfg.sounds.files.splice(idx, 1);
+
+      // Clear defaults that pointed to this sound
+      if (cfg.sounds.defaults) {
+        for (const [event, sid] of Object.entries(cfg.sounds.defaults)) {
+          if (sid === file.id) delete cfg.sounds.defaults[event];
+        }
+      }
+      writeConfig(cfg);
+      return res.json({ ok: true });
+    });
+
+    // ── Set Default Sound per Event ──
+    app.post('/api/admin/driver-panel/sounds/default', (req, res) => {
+      if (!guard(req, res)) return;
+      const { event, soundId } = req.body || {};
+      if (!event) return res.status(400).json({ error: 'Missing event' });
+      const cfg = readConfig();
+      if (!cfg.sounds) cfg.sounds = { files: [], defaults: {} };
+      if (!cfg.sounds.defaults) cfg.sounds.defaults = {};
+      if (soundId) {
+        cfg.sounds.defaults[event] = soundId;
+      } else {
+        delete cfg.sounds.defaults[event];
+      }
+      writeConfig(cfg);
+      return res.json({ ok: true });
+    });
   }
 
   console.log('[driver-panel] Admin routes mounted');

@@ -232,6 +232,7 @@ module.exports = function registerDriverPanelRoutes(app) {
       labels: config.labels || {},
       finance: config.finance || {},
       notifications: config.notifications || {},
+      sounds: config.sounds || {},
       availableVehicleTypes
     });
   });

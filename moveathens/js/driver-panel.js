@@ -238,6 +238,27 @@
     if (typeof window.DpProfile?.init === 'function') {
       window.DpProfile.init(driver, config);
     }
+
+    // Store sound files for dp-sounds.js MP3 playback
+    window._dpSoundFiles = config.sounds?.files || [];
+
+    // Play app-open sound (on first load, after user interaction)
+    const playAppOpenSound = () => {
+      const soundId = localStorage.getItem('ma_dp_app_open_sound') || config.sounds?.defaults?.app_open || '';
+      if (!soundId || !window.DpSounds) return;
+      window.DpSounds.play(soundId);
+    };
+    // Delay slightly so audio context has user gesture
+    const onFirstTap = () => {
+      playAppOpenSound();
+      ['click', 'touchstart'].forEach(e => document.removeEventListener(e, onFirstTap, true));
+    };
+    // If user already interacted (e.g., came from auth gate), play immediately
+    if (document.hasFocus()) {
+      setTimeout(() => playAppOpenSound(), 300);
+    } else {
+      ['click', 'touchstart'].forEach(e => document.addEventListener(e, onFirstTap, { capture: true, once: true, passive: true }));
+    }
   };
 
   if (document.readyState === 'loading') {
