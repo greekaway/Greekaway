@@ -74,7 +74,7 @@
   function playAlert() {
     if (config.notifications?.soundEnabled !== false) {
       const driverSound = localStorage.getItem('ma_dp_alert_sound');
-      const soundId = driverSound || config.notifications?.alertSound || 'chime';
+      const soundId = driverSound || config.sounds?.defaults?.new_ride || '';
       if (window.DpSounds) { window.DpSounds.playLoop(soundId); }
       navigator.vibrate([200, 100, 200]);
     }
@@ -108,7 +108,7 @@
       </div>`
     ).join('');
 
-    const direction = card.is_arrival ? '✈️ Άφιξη' : '🚗 Αναχώρηση';
+    const direction = card.is_arrival ? 'Άφιξη' : 'Αναχώρηση';
 
     el.innerHTML = `
       <div class="ma-dp-card-header">

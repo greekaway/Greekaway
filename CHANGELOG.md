@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 2026-03-27 — Driver Panel Home UX fixes (v967)
+
+- **Sound fix:** New ride alert now correctly reads driver's chosen sound from config (`sounds.defaults.new_ride`) instead of broken fallback path.
+- **Removed visibilitychange sound:** Close sound no longer fires when switching apps on iPhone — only the ON/OFF button triggers sounds.
+- **Removed emoji from badges:** Route card badges show plain "Άφιξη" / "Αναχώρηση" text without 🚗/✈️ emoji.
+- **Route cards full-width:** Reduced container side-padding from 16px to 6px so cards stretch closer to screen edges.
+
 ## 2026-03-25 — PWA Standalone Refinements & Zoom Prevention (v927)
 
 - **Footer positioning (PWA-only):** Changed standalone-mode footer `bottom` from `calc(8px + env(...))` to `env(safe-area-inset-bottom, 8px)` — eliminates black strip below footer on iPhone (MoveAthens + DriverSystem).

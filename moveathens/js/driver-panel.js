@@ -353,12 +353,7 @@
     ['click', 'touchstart'].forEach(e =>
       document.addEventListener(e, warmClose, { capture: true, passive: true })
     );
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden' && closeAudio) {
-        closeAudio.currentTime = 0;
-        try { closeAudio.play(); } catch { /* */ }
-      }
-    });
+    /* visibilitychange sound removed — only ON/OFF button triggers sounds */
   };
 
   if (document.readyState === 'loading') {

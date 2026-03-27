@@ -5,7 +5,7 @@
 
 /* ── Cards container ── */
 .ma-dp-home-cards {
-  padding: 8px 16px 120px;
+  padding: 8px 6px 120px;
   display: flex;
   flex-direction: column;
   gap: 14px;
