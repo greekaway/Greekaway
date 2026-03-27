@@ -865,6 +865,11 @@
       if (bEl) {
         var bs = bStats || { total_sent: 0, total_accepted: 0, total_missed: 0, total_expired: 0 };
         bEl.style.display = '';
+        var onlineTotal = (bs.total_accepted || 0) + (bs.total_missed || 0);
+        var acceptRate = onlineTotal > 0 ? Math.round((bs.total_accepted || 0) / onlineTotal * 100) : null;
+        var rateHtml = acceptRate !== null
+          ? '<div class="dr-stat"><div class="num" style="color:' + (acceptRate >= 50 ? '#4caf50' : '#ff5252') + '">' + acceptRate + '%</div><div class="lbl">Αποδοχή</div></div>'
+          : '';
         bEl.innerHTML =
           '<div class="dr-section-title" style="margin:0 0 8px;font-size:13px">📡 Στατιστικά Αιτημάτων</div>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
@@ -872,6 +877,7 @@
           '<div class="dr-stat"><div class="num positive">' + (bs.total_accepted || 0) + '</div><div class="lbl">Αποδέχτηκε</div></div>' +
           '<div class="dr-stat"><div class="num negative">' + (bs.total_missed || 0) + '</div><div class="lbl">Αγνόησε</div></div>' +
           '<div class="dr-stat"><div class="num">' + (bs.total_expired || 0) + '</div><div class="lbl">Έληξαν</div></div>' +
+          rateHtml +
           '</div>';
       }
 
