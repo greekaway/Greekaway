@@ -529,6 +529,7 @@
       const soundId = opt.dataset.sound;
       localStorage.setItem('ma_dp_app_close_sound', soundId);
       if (soundId && window.DpSounds) window.DpSounds.playUrl(opt.dataset.url);
+      if (typeof window._dpPreloadCloseAudio === 'function') window._dpPreloadCloseAudio();
       const mp3 = (cachedConfig.sounds?.files || []).find(f => f.id === soundId);
       const toggleLabel = document.querySelector('#dpAppCloseSoundToggle > span:first-child');
       if (toggleLabel) toggleLabel.textContent = !soundId ? '🔇 Κανένας' : (mp3 ? '🎵 ' + mp3.label : soundId);

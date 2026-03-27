@@ -287,36 +287,58 @@
     // Store sound files for dp-sounds.js MP3 playback
     window._dpSoundFiles = config.sounds?.files || [];
 
-    // Play app-open sound (on first load, after user interaction)
-    const playAppOpenSound = () => {
-      const soundId = localStorage.getItem('ma_dp_app_open_sound') || config.sounds?.defaults?.app_open || '';
-      if (!soundId || !window.DpSounds) return;
-      window.DpSounds.play(soundId);
+    // ── Unlock audio on mobile (iOS requires gesture) ──
+    let audioUnlocked = false;
+    const unlockAudio = () => {
+      if (audioUnlocked) return;
+      audioUnlocked = true;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const buf = ctx.createBuffer(1, 1, 22050);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start(0);
+        ctx.resume();
+      } catch { /* */ }
     };
-    // Delay slightly so audio context has user gesture
-    const onFirstTap = () => {
-      playAppOpenSound();
-      ['click', 'touchstart'].forEach(e => document.removeEventListener(e, onFirstTap, true));
-    };
-    // If user already interacted (e.g., came from auth gate), play immediately
-    if (document.hasFocus()) {
-      setTimeout(() => playAppOpenSound(), 300);
-    } else {
-      ['click', 'touchstart'].forEach(e => document.addEventListener(e, onFirstTap, { capture: true, once: true, passive: true }));
-    }
 
-    // Play app-close sound when leaving
-    const playAppCloseSound = () => {
+    // ── App-open sound: play on first genuine interaction ──
+    const playAppOpen = () => {
+      unlockAudio();
+      const soundId = localStorage.getItem('ma_dp_app_open_sound') || config.sounds?.defaults?.app_open || '';
+      if (soundId && window.DpSounds) window.DpSounds.play(soundId);
+      ['click', 'touchstart'].forEach(t => document.removeEventListener(t, playAppOpen, true));
+    };
+    ['click', 'touchstart'].forEach(e =>
+      document.addEventListener(e, playAppOpen, { capture: true, passive: true })
+    );
+
+    // ── App-close sound: preload during gesture, play on hide ──
+    let closeAudio = null;
+    const preloadCloseAudio = () => {
       const soundId = localStorage.getItem('ma_dp_app_close_sound') || config.sounds?.defaults?.app_close || '';
-      if (!soundId || !window.DpSounds) return;
+      if (!soundId) { closeAudio = null; return; }
       const files = window._dpSoundFiles || [];
       const file = files.find(f => f.id === soundId);
-      if (!file) return;
-      // Use Audio directly for synchronous playback on close
-      try { new Audio(file.url).play(); } catch { /* */ }
+      if (!file) { closeAudio = null; return; }
+      closeAudio = new Audio(file.url);
+      closeAudio.preload = 'auto';
+      closeAudio.load();
     };
+    window._dpPreloadCloseAudio = preloadCloseAudio;
+    const warmClose = () => {
+      preloadCloseAudio();
+      ['click', 'touchstart'].forEach(t => document.removeEventListener(t, warmClose, true));
+    };
+    ['click', 'touchstart'].forEach(e =>
+      document.addEventListener(e, warmClose, { capture: true, passive: true })
+    );
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') playAppCloseSound();
+      if (document.visibilityState === 'hidden' && closeAudio) {
+        closeAudio.currentTime = 0;
+        try { closeAudio.play(); } catch { /* */ }
+      }
     });
   };
 
