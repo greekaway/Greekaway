@@ -296,12 +296,6 @@
 
     section.innerHTML = '';
 
-    // Title (no back arrow — this is a main tab, not a submenu)
-    const title = document.createElement('h2');
-    title.className = 'ma-dp-tab-title';
-    title.textContent = labels.sectionHistory || 'Ιστορικό';
-    section.appendChild(title);
-
     renderFilters(section);
     renderStats(section);
 
