@@ -127,7 +127,7 @@
           }
 
           // Brief delay so animation feels intentional
-          await new Promise(r => setTimeout(r, 300));
+          await new Promise(r => setTimeout(r, 500));
 
           btn.classList.remove('loading');
           btn.classList.toggle('on', nowActive);
@@ -222,9 +222,11 @@
     document.querySelectorAll('.ma-dp-footer-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.tab === tabKey);
     });
-    // Header visible only on home
+    // Header + availability button visible only on home
     const h = document.getElementById('dpHeader');
     if (h) h.style.display = tabKey === 'home' ? '' : 'none';
+    const ab = document.getElementById('dpAvailBtn');
+    if (ab) ab.style.display = tabKey === 'home' ? '' : 'none';
   };
 
   const init = async () => {
