@@ -207,7 +207,12 @@ module.exports = function registerDriverPanelTabs(app) {
       const weekStart = weekAgo.toISOString().slice(0, 10);
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
 
-      const dateOf = (r) => (r.accepted_at || r.created_at || '').toString().slice(0, 10);
+      const dateOf = (r) => {
+        const v = r.accepted_at || r.created_at || '';
+        const d = new Date(v);
+        if (isNaN(d.getTime())) return '';
+        return d.toISOString().slice(0, 10);
+      };
       const priceOf = (r) => parseFloat(r.price) || 0;
 
       let allTotal = 0, todayTotal = 0, weekTotal = 0, monthTotal = 0;
@@ -227,13 +232,14 @@ module.exports = function registerDriverPanelTabs(app) {
 
       const monthNames = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος',
         'Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+      const fmtLabel = (iso) => { const p = (iso || '').split('-'); return p.length >= 3 ? p[2] + '/' + p[1] : iso; };
 
       res.json({
         ok: true,
         summary: {
-          all:   { total: allTotal, count: allCount, label: minDate && maxDate ? minDate.slice(5).replace('-','/') + ' – ' + maxDate.slice(5).replace('-','/') : '—' },
-          today: { total: todayTotal, count: todayCount, label: todayStr.slice(5).replace('-','/') },
-          week:  { total: weekTotal, count: weekCount, label: weekStart.slice(5).replace('-','/') + ' – ' + todayStr.slice(5).replace('-','/') },
+          all:   { total: allTotal, count: allCount, label: minDate && maxDate ? fmtLabel(minDate) + ' – ' + fmtLabel(maxDate) : '—' },
+          today: { total: todayTotal, count: todayCount, label: fmtLabel(todayStr) },
+          week:  { total: weekTotal, count: weekCount, label: fmtLabel(weekStart) + ' – ' + fmtLabel(todayStr) },
           month: { total: monthTotal, count: monthCount, label: monthNames[now.getMonth()] || '' }
         }
       });

@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 2026-03-27 — History tab polish (v971)
+
+- **Removed Ιστορικό title** — no longer needed.
+- **Shorter summary boxes** — reduced vertical padding for a more rectangular/compact look.
+- **Fixed date labels** — dates now show DD/MM format (was showing garbled text like "ar 23").
+- **Row overflow fix** — added `overflow: hidden` + removed gap between rows for clean stacking.
+
 ## 2026-03-27 — History tab: summary boxes + edge-to-edge rows (v970)
 
 - **Summary boxes:** 4 boxes (Σύνολο, Σήμερα, Εβδομάδα, Μήνας) in 2×2 grid inside accent-bordered frame. Each shows total € + date range. Independent of filters.

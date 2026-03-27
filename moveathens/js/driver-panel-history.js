@@ -216,8 +216,7 @@
     const section = document.querySelector('[data-tab="history"]');
     if (!section) return;
 
-    section.innerHTML = `
-      <h2 class="ma-dp-tab-title">${esc(labels.sectionHistory || 'Ιστορικό')}</h2>`;
+    section.innerHTML = '';
 
     renderSummary(section);
     renderFilters(section);
