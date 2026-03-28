@@ -38,7 +38,7 @@
     const logo = document.getElementById('dpHeaderLogo');
     const title = document.getElementById('dpHeaderTitle');
     if (logo && config.general?.logoUrl) logo.src = config.general.logoUrl;
-    if (title && config.general?.appTitle) title.textContent = config.general.appTitle;
+    if (title && config.general && 'appTitle' in config.general) title.textContent = config.general.appTitle;
   };
 
   // ── Network status banner (offline/online) ──
