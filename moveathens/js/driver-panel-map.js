@@ -121,8 +121,8 @@
     if (isDarkMode()) {
       pane.style.filter = 'invert(100%) hue-rotate(180deg) brightness(92%) contrast(85%) saturate(120%)';
     } else {
-      // Same palette as dark but brighter — buildings lighter, rest untouched
-      pane.style.filter = 'invert(100%) hue-rotate(180deg) brightness(108%) contrast(78%) saturate(120%)';
+      // Same palette as dark but noticeably brighter buildings
+      pane.style.filter = 'invert(100%) hue-rotate(180deg) brightness(130%) contrast(72%) saturate(120%)';
     }
   }
 
