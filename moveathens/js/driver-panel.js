@@ -37,7 +37,10 @@
   const buildHeader = () => {
     const logo = document.getElementById('dpHeaderLogo');
     const title = document.getElementById('dpHeaderTitle');
-    if (logo && config.general?.logoUrl) logo.src = config.general.logoUrl;
+    if (logo && config.general && 'logoUrl' in config.general) {
+      if (config.general.logoUrl) { logo.src = config.general.logoUrl; logo.style.display = ''; }
+      else { logo.style.display = 'none'; }
+    }
     if (title && config.general && 'appTitle' in config.general) title.textContent = config.general.appTitle;
   };
 
