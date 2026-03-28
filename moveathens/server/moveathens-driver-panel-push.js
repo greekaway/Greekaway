@@ -264,11 +264,31 @@ function registerDriverPanelPush(app) {
       if (!request) return res.status(404).json({ error: 'Not found' });
 
       const updates = { status };
+      if (status === 'arrived') {
+        updates.arrived_at = new Date().toISOString();
+      }
       if (status === 'completed') {
         updates.confirmed_at = new Date().toISOString();
       }
 
       await requestsData.updateRequest(requestId, updates);
+
+      // If arrived + email channel → send "driver arrived" email to hotel
+      if (status === 'arrived' && request.channel === 'email' && request.origin_zone_id) {
+        try {
+          const moveathensData = require('../../src/server/data/moveathens');
+          const zones = await moveathensData.getZones({ activeOnly: false });
+          const zone = zones.find(z => z.id === request.origin_zone_id);
+          if (zone && zone.email) {
+            const maEmail = require('./moveathens-email');
+            maEmail.sendDriverArrivedEmail(zone.email, request).catch(e =>
+              console.warn('[ma-email] driver-arrived email failed:', e.message));
+          }
+        } catch (e) {
+          console.warn('[driver-panel] arrived email lookup error:', e.message);
+        }
+      }
+
       res.json({ ok: true, status });
     } catch (err) {
       console.error('[driver-panel] active-route status:', err.message);

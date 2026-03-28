@@ -297,13 +297,20 @@
     const phone = getPhone();
 
     if (uiState === 'accepted') {
-      // ── "ΕΦΤΑΣΑ" — open WhatsApp + mark arrived ──
-      const waUrl = buildArrivedWhatsAppUrl();
-      if (waUrl) {
-        window.open(waUrl, '_blank');
+      // ── "ΕΦΤΑΣΑ" — notify hotel via correct channel ──
+      if (trip && trip.channel === 'email') {
+        // Email channel: server sends email automatically
+        const msgEl = document.getElementById('arStatusMsg');
+        if (msgEl) { msgEl.textContent = 'Αποστολή email στο ξενοδοχείο…'; }
+      } else {
+        // WhatsApp channel: open WhatsApp with pre-filled message
+        const waUrl = buildArrivedWhatsAppUrl();
+        if (waUrl) {
+          window.open(waUrl, '_blank');
+        }
       }
 
-      // Mark arrived on server
+      // Mark arrived on server (also sends email if channel=email)
       try {
         await fetch(`/api/driver-panel/active-route/${encodeURIComponent(requestId)}/status`, {
           method: 'POST',
