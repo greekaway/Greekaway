@@ -116,8 +116,9 @@ html[data-theme='light'] .ma-dp-header__logo {
 .ma-dp-app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   padding-bottom: calc(var(--ma-dp-footer-h) + 24px + env(safe-area-inset-bottom, 0px));
 }
 
