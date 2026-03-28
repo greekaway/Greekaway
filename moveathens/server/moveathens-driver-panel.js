@@ -326,6 +326,8 @@ module.exports = function registerDriverPanelRoutes(app) {
         return driver.current_vehicle_type === r.vehicle_type_id;
       });
 
+      // Enrich with coordinates, then build cards
+      await Promise.all(matching.map(r => driverBroadcast.enrichRequestCoords(r)));
       const cards = matching.map(r => driverBroadcast.buildCardData(r, 'urgent'));
       res.json({ ok: true, requests: cards });
     } catch (err) {

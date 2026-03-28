@@ -86,6 +86,26 @@ function matchesVehicle(driver, vehicleTypeId) {
 
 // ── Build card data from request (uses admin config for field visibility) ──
 
+/** Enrich request with lat/lng from zones + destinations (not stored on row) */
+async function enrichRequestCoords(request) {
+  if (request._coordsEnriched) return request;
+  try {
+    const moveathensData = require('../src/server/data/moveathens');
+    if (request.destination_id && !request.destination_lat) {
+      const dests = await moveathensData.getDestinations({ activeOnly: false });
+      const dest = dests.find(d => d.id === request.destination_id);
+      if (dest) { request.destination_lat = dest.lat || null; request.destination_lng = dest.lng || null; }
+    }
+    if (request.origin_zone_id && !request.hotel_lat) {
+      const zones = await moveathensData.getZones({ activeOnly: false });
+      const zone = zones.find(z => z.id === request.origin_zone_id);
+      if (zone) { request.hotel_lat = zone.lat || null; request.hotel_lng = zone.lng || null; }
+    }
+  } catch { /* ignore — coords are optional */ }
+  request._coordsEnriched = true;
+  return request;
+}
+
 function buildCardData(request, cardType) {
   const config = loadConfig();
   const fields = config.routeCard?.[cardType] || [];
@@ -170,6 +190,8 @@ async function autoBroadcast(request, driversData) {
     return;
   }
 
+  // Enrich with coordinates before building card
+  await enrichRequestCoords(request);
   const cardData = buildCardData(request, 'urgent');
   const sentTo = [];
 
@@ -287,6 +309,7 @@ module.exports = {
   onRequestAccepted,
   expireBroadcast,
   buildCardData,
+  enrichRequestCoords,
   getConnectedCount,
   isDriverOnline,
   getActiveBroadcastForRequest
