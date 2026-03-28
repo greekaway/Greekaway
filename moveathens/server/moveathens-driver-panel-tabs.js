@@ -38,6 +38,8 @@ module.exports = function registerDriverPanelTabs(app) {
       let vehicleTypes = [];
       try { vehicleTypes = JSON.parse(driver.vehicle_types || '[]'); } catch { vehicleTypes = []; }
 
+      console.log('[scheduled-debug] phone:', phone, 'tier:', driver.tier, 'vehicleTypes:', vehicleTypes, 'tab:', tab);
+
       if (tab === 'accepted') {
         // Show only requests accepted by this driver
         const accepted = await requestsData.getRequests({ status: 'accepted' });
@@ -62,6 +64,10 @@ module.exports = function registerDriverPanelTabs(app) {
         // Match against vehicle_types array (not just current)
         return vehicleTypes.includes(r.vehicle_type_id);
       });
+
+      console.log('[scheduled-debug] combined:', combined.length, 'pending:', pending.length, 'sent:', sent.length);
+      console.log('[scheduled-debug] combined booking_types:', combined.map(r => r.booking_type + '|' + r.status + '|vt:' + r.vehicle_type_id));
+      console.log('[scheduled-debug] after vehicle filter:', scheduled.length);
 
       // ── Tier-based visibility filtering ──
       const driverTier = driver.tier || 'silver';
@@ -101,6 +107,7 @@ module.exports = function registerDriverPanelTabs(app) {
       }
 
       const cards = visible.map(r => driverBroadcast.buildCardData(r, 'scheduled'));
+      console.log('[scheduled-debug] after tier filter:', visible.length, 'cards:', cards.length, 'driverTier:', driverTier);
       res.json({ ok: true, requests: cards });
     } catch (err) {
       console.error('[driver-panel] scheduled:', err.message);
