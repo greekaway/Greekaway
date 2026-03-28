@@ -15,6 +15,7 @@
   let activeSort = '';       // '' | 'time' | 'price'
   let activePeriod = 'all';  // 'all' | 'today' | 'tomorrow' | 'week' | 'month'
   let pollTimer = null;
+  let knownIds = new Set();  // track seen request IDs for new-item sound
   const POLL_INTERVAL = 10000; // 10 seconds
 
   const getPhone = () => {
@@ -140,6 +141,20 @@
       const data = await res.json();
 
       let items = data.requests || [];
+
+      // ── Detect new requests & play appointment sound ──
+      if (activeSubTab === 'all' && items.length > 0) {
+        const currentIds = new Set(items.map(r => r.requestId));
+        if (knownIds.size > 0) {
+          const hasNew = [...currentIds].some(id => !knownIds.has(id));
+          if (hasNew && window.DpSounds) {
+            const sid = localStorage.getItem('ma_dp_appointment_sound')
+              || config.sounds?.defaults?.appointment || '';
+            if (sid) window.DpSounds.play(sid);
+          }
+        }
+        knownIds = currentIds;
+      }
 
       // ── Period filter (client-side date range) ──
       if (activePeriod !== 'all') {
