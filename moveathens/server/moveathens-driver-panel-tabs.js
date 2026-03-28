@@ -38,8 +38,6 @@ module.exports = function registerDriverPanelTabs(app) {
       let vehicleTypes = [];
       try { vehicleTypes = JSON.parse(driver.vehicle_types || '[]'); } catch { vehicleTypes = []; }
 
-      console.log('[scheduled-debug] phone:', phone, 'tier:', driver.tier, 'vehicleTypes:', vehicleTypes, 'tab:', tab);
-
       if (tab === 'accepted') {
         // Show only requests accepted by this driver
         const accepted = await requestsData.getRequests({ status: 'accepted' });
@@ -65,10 +63,6 @@ module.exports = function registerDriverPanelTabs(app) {
         return vehicleTypes.includes(r.vehicle_type_id);
       });
 
-      console.log('[scheduled-debug] combined:', combined.length, 'pending:', pending.length, 'sent:', sent.length);
-      console.log('[scheduled-debug] combined booking_types:', combined.map(r => r.booking_type + '|' + r.status + '|vt:' + r.vehicle_type_id));
-      console.log('[scheduled-debug] after vehicle filter:', scheduled.length);
-
       // ── Tier-based visibility filtering ──
       const driverTier = driver.tier || 'silver';
       const config = loadConfig();
@@ -80,7 +74,8 @@ module.exports = function registerDriverPanelTabs(app) {
       if (driverTier !== 'gold' && goldPercent > 0) {
         const now = Date.now();
         visible = scheduled.filter(r => {
-          // Check if enough time has passed for Silver to see this request
+          // Admin explicitly dispatched → skip tier window
+          if (r.status === 'sent') return true;
           // released_to_all overrides tier logic (admin manual release)
           if (r.released_to_all) return true;
 
@@ -107,7 +102,6 @@ module.exports = function registerDriverPanelTabs(app) {
       }
 
       const cards = visible.map(r => driverBroadcast.buildCardData(r, 'scheduled'));
-      console.log('[scheduled-debug] after tier filter:', visible.length, 'cards:', cards.length, 'driverTier:', driverTier);
       res.json({ ok: true, requests: cards });
     } catch (err) {
       console.error('[driver-panel] scheduled:', err.message);
