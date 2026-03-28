@@ -382,16 +382,17 @@
   /** Show persistent banner if driver has an active route they left */
   function checkActiveRoute() {
     const activeId = localStorage.getItem('ma_dp_active_route');
-    if (!activeId) return;
+    if (!activeId) { hideActiveRouteBanner(); return; }
 
     // Verify it's still active on the server
     fetch(`${API}/active-route-status/${encodeURIComponent(activeId)}`)
       .then(r => r.json())
       .then(data => {
         if (data.active) {
-          showActiveRouteBanner(activeId, data.origin, data.destination);
+          showActiveRouteBanner(activeId, data.origin, data.destination, data.status);
         } else {
           localStorage.removeItem('ma_dp_active_route');
+          hideActiveRouteBanner();
         }
       })
       .catch(() => {
@@ -400,28 +401,37 @@
       });
   }
 
-  function showActiveRouteBanner(routeId, origin, destination) {
-    // Don't show duplicate
-    if (document.querySelector('.ma-dp-active-route-banner')) return;
+  function hideActiveRouteBanner() {
+    const old = document.querySelector('.ma-dp-active-route-banner');
+    if (old) old.remove();
+  }
 
-    const route = origin && destination ? `${origin} → ${destination}` : 'Ενεργή διαδρομή';
+  function showActiveRouteBanner(routeId, origin, destination, status) {
+    // Remove old and recreate (to update info)
+    hideActiveRouteBanner();
+
+    const route = origin && destination ? `${origin} → ${destination}` : '';
+    const statusLabel = status === 'arrived' ? 'Στο σημείο' : 'Σε εξέλιξη';
     const el = document.createElement('div');
     el.className = 'ma-dp-active-route-banner';
     el.innerHTML =
-      '<span class="arb-pulse"></span>' +
-      '<span class="arb-text">🚗 ' + esc(route) + '</span>' +
-      '<span class="arb-action">Επιστροφή ›</span>';
+      '<div class="arb-left">' +
+        '<span class="arb-pulse"></span>' +
+        '<div class="arb-info">' +
+          '<span class="arb-title">🚗 Ενεργή Διαδρομή</span>' +
+          (route ? '<span class="arb-route">' + esc(route) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="arb-right">' +
+        '<span class="arb-status">' + esc(statusLabel) + '</span>' +
+        '<span class="arb-action">Άνοιγμα ›</span>' +
+      '</div>';
     el.addEventListener('click', () => {
       window.location.href = '/moveathens/active-route?id=' + encodeURIComponent(routeId);
     });
 
-    // Insert at top of home cards
-    const container = getContainer();
-    if (container) {
-      container.prepend(el);
-    } else {
-      document.body.appendChild(el);
-    }
+    // Fixed above footer — visible on ALL tabs
+    document.body.appendChild(el);
   }
 
   function destroy() {
@@ -431,5 +441,5 @@
     dismissedIds.clear();
   }
 
-  window.DpHome = { init, destroy };
+  window.DpHome = { init, destroy, checkActiveRoute };
 })();

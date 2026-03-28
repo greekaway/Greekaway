@@ -291,6 +291,8 @@
       if (banner) { banner.classList.add('hiding'); setTimeout(() => banner.remove(), 300); }
       // Fix map tiles after tab switch
       if (window.DpMap) { window.DpMap.setVisible(true); window.DpMap.resize(); }
+      // Re-check active route banner
+      if (window.DpHome?.checkActiveRoute) window.DpHome.checkActiveRoute();
     } else {
       // Hide map on other tabs
       if (window.DpMap) window.DpMap.setVisible(false);

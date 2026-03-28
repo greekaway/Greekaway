@@ -51,43 +51,56 @@
   display: none;
 }
 
-/* ── Active Route Return Banner ── */
+/* ── Active Route Return Banner (fixed above footer, ALL tabs) ── */
 .ma-dp-active-route-banner {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: calc(var(--ma-dp-footer-h, 74px) + env(safe-area-inset-bottom, 0px));
+  z-index: 9998;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  margin-bottom: 8px;
-  border-radius: 14px;
-  background: rgba(0, 200, 150, 0.15);
-  border: 1px solid rgba(0, 200, 150, 0.35);
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(0,200,150,0.92), rgba(0,168,126,0.95));
+  color: #fff;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  animation: arb-slideIn 0.35s ease;
+  animation: arb-slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 -2px 16px rgba(0,200,150,0.35), 0 4px 20px rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
-.ma-dp-active-route-banner:active { transform: scale(0.98); }
+.ma-dp-active-route-banner:active { opacity: 0.9; }
+
+.arb-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .arb-pulse {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: #00c896; flex-shrink: 0;
-  animation: arb-blink 1.5s ease-in-out infinite;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: #fff; flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(255,255,255,0.6);
+  animation: arb-blink 1.4s ease-in-out infinite;
 }
-.arb-text { flex: 1; font-size: 13px; font-weight: 600; color: #f7f7fb; line-height: 1.3; }
-.arb-action { font-size: 13px; font-weight: 700; color: #00c896; white-space: nowrap; }
+.arb-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.arb-title { font-size: 15px; font-weight: 700; white-space: nowrap; }
+.arb-route { font-size: 12px; font-weight: 400; opacity: 0.88; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.arb-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+.arb-status { font-size: 11px; font-weight: 500; opacity: 0.8; white-space: nowrap; }
+.arb-action { font-size: 14px; font-weight: 700; white-space: nowrap; }
 
 @keyframes arb-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
 }
-@keyframes arb-slideIn {
-  from { transform: translateY(-10px); opacity: 0; }
+@keyframes arb-slideUp {
+  from { transform: translateY(100%); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
 html[data-theme='light'] .ma-dp-active-route-banner {
-  background: rgba(0, 200, 150, 0.1);
-  border-color: rgba(0, 200, 150, 0.25);
+  background: linear-gradient(135deg, rgba(0,200,150,0.95), rgba(0,168,126,0.98));
+  box-shadow: 0 -2px 16px rgba(0,200,150,0.25), 0 4px 20px rgba(0,0,0,0.15);
 }
-html[data-theme='light'] .arb-text { color: #1a1a2e; }
 
 /* ── Urgent Card (glass effect over map) ── */
 .ma-dp-urgent-card {
