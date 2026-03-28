@@ -12,10 +12,13 @@
   let pickupMarker = null;
   let dropoffMarker = null;
   let routeLine = null;
+  let driverLine = null;      // driver → pickup road line
+  let etaControl = null;      // ETA badge on map
   let watchId = null;
   let lastHeading = 0;
   let hasUserInteracted = false;
   let initialized = false;
+  let _lastRouteCard = null;  // keep for ETA refresh
 
   // Athens center as default
   const DEFAULT_CENTER = [37.9838, 23.7275];
@@ -131,6 +134,29 @@
     applyTileFilter();
   }
 
+  // ── OSRM (free routing) ──
+
+  /** Fetch road route from OSRM (returns { coords, distance, duration } or null) */
+  async function fetchOSRM(fromLat, fromLng, toLat, toLng) {
+    try {
+      const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data.routes || !data.routes.length) return null;
+      const route = data.routes[0];
+      // GeoJSON coords are [lng, lat] → convert to [lat, lng] for Leaflet
+      const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+      return {
+        coords,
+        distance: route.distance, // meters
+        duration: route.duration  // seconds
+      };
+    } catch {
+      return null;
+    }
+  }
+
   /** Start watching the driver's GPS position + heading */
   function startGeolocation() {
     if (!navigator.geolocation) return;
@@ -180,6 +206,7 @@
 
     clearRoute();
     hasUserInteracted = false;
+    _lastRouteCard = card;
 
     let pickupLat, pickupLng, dropoffLat, dropoffLng, pickupLabel, dropoffLabel;
 
@@ -208,23 +235,69 @@
         .addTo(map).bindPopup(dropoffLabel);
     }
 
-    // Dashed line A→B
-    if (pickupLat && pickupLng && dropoffLat && dropoffLng) {
-      routeLine = L.polyline(
-        [[pickupLat, pickupLng], [dropoffLat, dropoffLng]],
-        { color: '#46d3ff', weight: 3, opacity: 0.7, dashArray: '8 6' }
-      ).addTo(map);
-    }
-
-    // Fit bounds (driver + route)
+    // Fit bounds immediately (before async OSRM)
     const bounds = L.latLngBounds([]);
     if (pickupLat && pickupLng) bounds.extend([pickupLat, pickupLng]);
     if (dropoffLat && dropoffLng) bounds.extend([dropoffLat, dropoffLng]);
     if (driverMarker) bounds.extend(driverMarker.getLatLng());
-
     if (bounds.isValid()) {
       map.fitBounds(bounds, { padding: [60, 40], maxZoom: 14, animate: true });
     }
+
+    // Async: fetch real road routes via OSRM
+    drawRoadRoutes(pickupLat, pickupLng, dropoffLat, dropoffLng);
+  }
+
+  /** Fetch + draw OSRM road lines (pickup→dropoff + driver→pickup) */
+  async function drawRoadRoutes(pickupLat, pickupLng, dropoffLat, dropoffLng) {
+    // 1) Pickup → Dropoff road route (cyan)
+    if (pickupLat && pickupLng && dropoffLat && dropoffLng) {
+      const ab = await fetchOSRM(pickupLat, pickupLng, dropoffLat, dropoffLng);
+      if (ab && ab.coords.length) {
+        routeLine = L.polyline(ab.coords, {
+          color: '#46d3ff', weight: 4, opacity: 0.85
+        }).addTo(map);
+      } else {
+        // Fallback: straight dashed line
+        routeLine = L.polyline(
+          [[pickupLat, pickupLng], [dropoffLat, dropoffLng]],
+          { color: '#46d3ff', weight: 3, opacity: 0.7, dashArray: '8 6' }
+        ).addTo(map);
+      }
+    }
+
+    // 2) Driver → Pickup road route (green dashed) + ETA badge
+    if (driverMarker && pickupLat && pickupLng) {
+      const dPos = driverMarker.getLatLng();
+      const dp = await fetchOSRM(dPos.lat, dPos.lng, pickupLat, pickupLng);
+      if (dp && dp.coords.length) {
+        driverLine = L.polyline(dp.coords, {
+          color: '#00c896', weight: 3, opacity: 0.7, dashArray: '8 6'
+        }).addTo(map);
+        showEtaBadge(dp.distance, dp.duration);
+      }
+    }
+  }
+
+  /** Show ETA badge on the map (driver → pickup) */
+  function showEtaBadge(distMeters, durSeconds) {
+    removeEtaBadge();
+    const km = (distMeters / 1000).toFixed(1);
+    const mins = Math.max(1, Math.round(durSeconds / 60));
+    const EtaControl = L.Control.extend({
+      options: { position: 'topright' },
+      onAdd() {
+        const div = L.DomUtil.create('div', 'ma-dp-map-eta');
+        div.innerHTML = `<span class="eta-time">${mins} λεπτά</span><span class="eta-dist">${km} χλμ</span>`;
+        return div;
+      }
+    });
+    etaControl = new EtaControl();
+    map.addControl(etaControl);
+  }
+
+  function removeEtaBadge() {
+    if (etaControl) { map.removeControl(etaControl); etaControl = null; }
   }
 
   /** Remove route markers/line */
@@ -232,6 +305,9 @@
     if (pickupMarker) { map.removeLayer(pickupMarker); pickupMarker = null; }
     if (dropoffMarker) { map.removeLayer(dropoffMarker); dropoffMarker = null; }
     if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+    if (driverLine) { map.removeLayer(driverLine); driverLine = null; }
+    removeEtaBadge();
+    _lastRouteCard = null;
   }
 
   /** Re-center on driver */
@@ -267,10 +343,20 @@
     pickupMarker = null;
     dropoffMarker = null;
     routeLine = null;
+    driverLine = null;
+    etaControl = null;
     tileLayer = null;
+    _lastRouteCard = null;
     initialized = false;
     hasUserInteracted = false;
   }
 
-  window.DpMap = { init, showRoute, clearRoute, recenterOnDriver, resize, setVisible, destroy };
+  window.DpMap = { init, showRoute, clearRoute, recenterOnDriver, resize, setVisible, destroy, getDriverLatLng };
+
+  /** Return current driver lat/lng or null */
+  function getDriverLatLng() {
+    if (!driverMarker) return null;
+    const ll = driverMarker.getLatLng();
+    return { lat: ll.lat, lng: ll.lng };
+  }
 })();

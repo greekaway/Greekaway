@@ -218,10 +218,17 @@
     stopAlert();
 
     try {
+      const body = { phone };
+      // Send driver location on accept for server-side ETA
+      if (action === 'accept' && window.DpMap) {
+        const pos = window.DpMap.getDriverLatLng();
+        if (pos) { body.driverLat = pos.lat; body.driverLng = pos.lng; }
+      }
+
       const res = await fetch(`${API}/${action}/${requestId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
+        body: JSON.stringify(body)
       });
       const data = await res.json();
 

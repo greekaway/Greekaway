@@ -357,13 +357,43 @@ module.exports = function registerDriverPanelRoutes(app) {
       const driver = await driversData.getDriverByPhone(phone);
       if (!driver) return res.status(404).json({ error: 'Driver not found' });
 
-      await requestsData.updateRequest(requestId, {
+      // Calculate driver → pickup ETA via OSRM (best-effort, non-blocking)
+      let etaMinutes = null;
+      let etaKm = null;
+      const driverLat = parseFloat(req.body.driverLat);
+      const driverLng = parseFloat(req.body.driverLng);
+      if (driverLat && driverLng) {
+        try {
+          await driverBroadcast.enrichRequestCoords(request);
+          const pickupLat = request.is_arrival ? parseFloat(request.destination_lat) : parseFloat(request.hotel_lat);
+          const pickupLng = request.is_arrival ? parseFloat(request.destination_lng) : parseFloat(request.hotel_lng);
+          if (pickupLat && pickupLng) {
+            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${driverLng},${driverLat};${pickupLng},${pickupLat}?overview=false`;
+            const osrmRes = await fetch(osrmUrl);
+            if (osrmRes.ok) {
+              const osrmData = await osrmRes.json();
+              if (osrmData.routes && osrmData.routes.length) {
+                etaMinutes = Math.max(1, Math.round(osrmData.routes[0].duration / 60));
+                etaKm = Math.round(osrmData.routes[0].distance / 100) / 10; // 1 decimal
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('[driver-panel] ETA calc failed:', e.message);
+        }
+      }
+
+      const updateData = {
         status: 'accepted',
         accepted_at: new Date().toISOString(),
         driver_id: driver.id,
         driver_phone: phone,
         driver_name: driver.display_name || driver.name || ''
-      });
+      };
+      if (etaMinutes != null) updateData.driver_eta_minutes = etaMinutes;
+      if (etaKm != null) updateData.driver_eta_km = etaKm;
+
+      await requestsData.updateRequest(requestId, updateData);
 
       // Update driver totals
       const price = parseFloat(request.price) || 0;
@@ -373,7 +403,7 @@ module.exports = function registerDriverPanelRoutes(app) {
       // Notify other drivers via SSE
       driverBroadcast.onRequestAccepted(requestId, phone);
 
-      res.json({ ok: true, request: { ...request, status: 'accepted' } });
+      res.json({ ok: true, request: { ...request, status: 'accepted' }, etaMinutes, etaKm });
     } catch (err) {
       console.error('[driver-panel] accept:', err.message);
       res.status(500).json({ error: 'Server error' });

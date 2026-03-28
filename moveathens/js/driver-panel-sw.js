@@ -5,7 +5,7 @@
  */
 'use strict';
 
-const CACHE_VERSION = 'v20260328j';
+const CACHE_VERSION = 'v20260328k';
 const CACHE_NAME = `ma-driver-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
