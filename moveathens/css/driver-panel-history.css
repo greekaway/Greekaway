@@ -49,7 +49,7 @@
   margin-top: 2px;
 }
 
-/* ── Period Filter Bar ── */
+/* ── Period Filter Bar (sticky while list scrolls) ── */
 .ma-dp-hist-period-filter {
   display: flex;
   gap: 6px;
@@ -58,6 +58,10 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--ma-dp-bg);
 }
 
 .ma-dp-hist-period-filter::-webkit-scrollbar { display: none; }
@@ -309,6 +313,13 @@
 @media (min-width: 768px) {
   .ma-dp-hist-stat-value { font-size: 26px; }
   .ma-dp-hist-stat-card { padding: 16px 20px; }
+}
+
+/* PWA standalone: push sticky below safe-area */
+@media (display-mode: standalone) {
+  .ma-dp-hist-period-filter {
+    top: env(safe-area-inset-top, 0px);
+  }
 }
 
 /* ── Light mode overrides ── */
