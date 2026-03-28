@@ -11,6 +11,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MA Driver">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <style>
     :root {
       --ar-bg: #0b0f1a; --ar-card: #1c2438; --ar-text: #f7f7fb;
@@ -19,31 +21,53 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--ar-bg); color: var(--ar-text); -webkit-font-smoothing: antialiased; }
+      background: var(--ar-bg); color: var(--ar-text); -webkit-font-smoothing: antialiased; overflow: hidden; }
 
-    .ar-wrap { min-height: 100vh; display: flex; flex-direction: column;
-      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
-    .ar-header { padding: 16px 0 8px; display: flex; justify-content: space-between; align-items: center; }
+    /* ── Map (top half) ── */
+    #arMap { position: fixed; top: 0; left: 0; right: 0; height: 55vh; z-index: 0; background: #0d1117; }
+    .leaflet-control-zoom { display: none !important; }
+    .leaflet-control-attribution { font-size: 9px !important; }
+
+    /* ── ETA overlay on map ── */
+    .ar-map-eta {
+      position: fixed; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 50%; transform: translateX(-50%);
+      z-index: 20; display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+      border-radius: 12px; background: rgba(28,36,56,0.88); backdrop-filter: blur(10px);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.5); font-size: 14px; font-weight: 600; white-space: nowrap;
+    }
+    .ar-map-eta .eta-time { color: #00c896; }
+    .ar-map-eta .eta-sep { color: rgba(255,255,255,0.3); }
+    .ar-map-eta .eta-dist { color: rgba(247,247,251,0.7); font-weight: 400; font-size: 12px; }
+
+    /* ── Panel (bottom sliding sheet) ── */
+    .ar-wrap { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+      max-height: 50vh; overflow-y: auto; border-radius: 20px 20px 0 0;
+      background: var(--ar-bg); box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+      padding: env(safe-area-inset-top, 0px) 16px calc(env(safe-area-inset-bottom, 0px) + 8px);
+      display: flex; flex-direction: column; }
+    .ar-header { padding: 8px 0 4px; display: flex; justify-content: space-between; align-items: center; }
+    .ar-drag-handle { width: 40px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.15);
+      margin: 0 auto 6px; flex-shrink: 0; }
     .ar-back { background: none; border: none; color: var(--ar-muted); font-size: 14px; cursor: pointer; padding: 8px 0; }
     .ar-status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
     .ar-status-accepted { background: rgba(70,211,255,0.15); color: var(--ar-accent); }
     .ar-status-arrived { background: rgba(245,158,11,0.15); color: var(--ar-warn); }
     .ar-status-completed { background: rgba(34,197,94,0.15); color: var(--ar-success); }
 
-    .ar-route { text-align: center; padding: 16px 0; }
-    .ar-route-dir { font-size: 12px; color: var(--ar-muted); margin-bottom: 4px; }
-    .ar-route-origin, .ar-route-dest { font-size: 18px; font-weight: 600; }
-    .ar-route-arrow { font-size: 20px; color: var(--ar-accent); margin: 4px 0; }
+    .ar-route { text-align: center; padding: 8px 0 4px; }
+    .ar-route-dir { font-size: 12px; color: var(--ar-muted); margin-bottom: 2px; }
+    .ar-route-origin, .ar-route-dest { font-size: 16px; font-weight: 600; }
+    .ar-route-arrow { font-size: 16px; color: var(--ar-accent); margin: 2px 0; }
 
-    .ar-info { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
+    .ar-info { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
     .ar-info-card { background: var(--ar-card); border: 1px solid var(--ar-border);
       border-radius: 12px; padding: 14px; }
     .ar-info-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; }
     .ar-info-label { font-size: 12px; color: var(--ar-muted); }
     .ar-info-value { font-size: 14px; font-weight: 500; text-align: right; max-width: 60%; word-break: break-word; }
-    .ar-price { font-size: 22px; font-weight: 700; color: var(--ar-accent); text-align: center; padding: 8px 0; }
+    .ar-price { font-size: 20px; font-weight: 700; color: var(--ar-accent); text-align: center; padding: 4px 0; }
 
-    .ar-actions { display: flex; flex-direction: column; gap: 10px; padding: 12px 0 24px; }
+    .ar-actions { display: flex; flex-direction: column; gap: 8px; padding: 8px 0 16px; }
     .ar-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 15px;
       font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
     .ar-btn:active { transform: scale(0.98); }
@@ -57,13 +81,38 @@
     .ar-loading { text-align: center; padding: 80px 16px; color: var(--ar-muted); font-size: 14px; }
     .ar-row-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    @media (max-width: 359px) { .ar-route-origin, .ar-route-dest { font-size: 16px; }
+    @media (max-width: 359px) { .ar-route-origin, .ar-route-dest { font-size: 14px; }
       .ar-btn { padding: 12px; font-size: 14px; } }
+
+    /* Driver arrow icon */
+    .ar-driver-icon { background: none !important; border: none !important; }
+    .ar-driver-icon svg { filter: drop-shadow(0 0 8px rgba(70,211,255,0.6)); }
+    /* Pin icons */
+    .ar-map-pin { background: none !important; border: none !important; }
+    .ar-map-pin svg { filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
+
+    /* Nav picker sheet */
+    .ar-nav-picker-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.5);
+      display: flex; align-items: flex-end; justify-content: center; }
+    .ar-nav-picker { background: var(--ar-card); border-radius: 16px 16px 0 0; width: 100%; max-width: 400px;
+      padding: 20px 16px calc(env(safe-area-inset-bottom, 0px) + 16px); }
+    .ar-nav-picker h3 { text-align: center; font-size: 15px; margin-bottom: 14px; color: var(--ar-text); }
+    .ar-nav-picker-btns { display: flex; flex-direction: column; gap: 10px; }
+    .ar-nav-picker-btn { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--ar-border); cursor: pointer; color: var(--ar-text);
+      font-size: 15px; font-weight: 500; text-decoration: none; }
+    .ar-nav-picker-btn:active { transform: scale(0.98); }
+    .ar-nav-picker-btn img { width: 28px; height: 28px; border-radius: 6px; }
+    .ar-nav-picker-cancel { text-align: center; padding: 12px; color: var(--ar-muted); font-size: 14px; cursor: pointer; margin-top: 8px; }
   </style>
 </head>
 <body>
 
+<div id="arMap"></div>
+<div id="arMapEta" class="ar-map-eta" style="display:none"></div>
+
 <div class="ar-wrap" id="arWrap">
+  <div class="ar-drag-handle"></div>
   <div class="ar-loading" id="arLoading">Φόρτωση διαδρομής…</div>
 </div>
 
@@ -84,6 +133,17 @@
   // States: accepted → arrived → completed (same as driver-accept card)
   let uiState = 'accepted';
 
+  // ── Map variables ──
+  let map = null;
+  let driverMarker = null;
+  let pickupMarker = null;
+  let dropoffMarker = null;
+  let routeLine = null;
+  let driverLine = null;
+  let watchId = null;
+  let lastHeading = 0;
+  let etaRefreshTimer = null;
+
   function saveState() {
     try { sessionStorage.setItem(STATE_KEY, uiState); } catch { /* */ }
   }
@@ -96,6 +156,225 @@
   function getGreeting() {
     const h = new Date().getHours();
     return (h >= 5 && h < 12) ? 'Καλημέρα σας,' : 'Καλησπέρα σας,';
+  }
+
+  // ── MAP MODULE ──
+
+  const TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+  function makeDriverIcon() {
+    return L.divIcon({
+      className: 'ar-driver-icon',
+      html: `<svg viewBox="0 0 48 48" width="44" height="44" style="transform:rotate(${lastHeading}deg)">
+        <circle cx="24" cy="24" r="22" fill="rgba(0,0,0,0.08)"/>
+        <circle cx="24" cy="24" r="14" fill="#1a1a2e" stroke="#fff" stroke-width="2.5"/>
+        <path d="M24 14 L30 30 L24 26 L18 30 Z" fill="#fff" stroke="none"/>
+      </svg>`,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22]
+    });
+  }
+
+  const pinA = L.divIcon({
+    className: 'ar-map-pin',
+    html: `<svg viewBox="0 0 24 36" width="28" height="42"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="#00c896"/><circle cx="12" cy="12" r="5" fill="#fff"/><text x="12" y="15" text-anchor="middle" font-size="8" fill="#00c896" font-weight="bold">A</text></svg>`,
+    iconSize: [28, 42], iconAnchor: [14, 42]
+  });
+  const pinB = L.divIcon({
+    className: 'ar-map-pin',
+    html: `<svg viewBox="0 0 24 36" width="28" height="42"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="#ff4757"/><circle cx="12" cy="12" r="5" fill="#fff"/><text x="12" y="15" text-anchor="middle" font-size="8" fill="#ff4757" font-weight="bold">B</text></svg>`,
+    iconSize: [28, 42], iconAnchor: [14, 42]
+  });
+
+  function initMap() {
+    const container = document.getElementById('arMap');
+    if (!container || map) return;
+
+    map = L.map(container, {
+      center: [37.9838, 23.7275], zoom: 12,
+      zoomControl: false, attributionControl: false
+    });
+
+    L.tileLayer(TILES, { maxZoom: 19, subdomains: 'abcd' }).addTo(map);
+    L.control.attribution({ position: 'bottomleft', prefix: false })
+      .addAttribution('© <a href="https://carto.com" style="color:#6b7280">CARTO</a>')
+      .addTo(map);
+
+    // Apply dark filter (active-route always has dark theme)
+    const pane = map.getPane('tilePane');
+    if (pane) pane.style.filter = 'invert(100%) hue-rotate(180deg) brightness(92%) contrast(85%) saturate(120%)';
+
+    startGeolocation();
+  }
+
+  function startGeolocation() {
+    if (!navigator.geolocation) return;
+    watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (pos.coords.heading != null && !isNaN(pos.coords.heading)) lastHeading = pos.coords.heading;
+        updateDriverPos(pos.coords.latitude, pos.coords.longitude);
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
+    );
+  }
+
+  function updateDriverPos(lat, lng) {
+    if (!map) return;
+    const icon = makeDriverIcon();
+    if (!driverMarker) {
+      driverMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).addTo(map);
+    } else {
+      driverMarker.setLatLng([lat, lng]);
+      driverMarker.setIcon(icon);
+    }
+  }
+
+  async function fetchOSRM(fromLat, fromLng, toLat, toLng) {
+    try {
+      const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
+      const r = await fetch(url);
+      if (!r.ok) return null;
+      const d = await r.json();
+      if (!d.routes || !d.routes.length) return null;
+      const route = d.routes[0];
+      return { coords: route.geometry.coordinates.map(c => [c[1], c[0]]), distance: route.distance, duration: route.duration };
+    } catch { return null; }
+  }
+
+  function getPickupDropoff() {
+    let pLat, pLng, dLat, dLng;
+    if (trip.is_arrival) {
+      pLat = parseFloat(trip.destination_lat); pLng = parseFloat(trip.destination_lng);
+      dLat = parseFloat(trip.hotel_lat); dLng = parseFloat(trip.hotel_lng);
+    } else {
+      pLat = parseFloat(trip.hotel_lat); pLng = parseFloat(trip.hotel_lng);
+      dLat = parseFloat(trip.destination_lat); dLng = parseFloat(trip.destination_lng);
+    }
+    return { pLat, pLng, dLat, dLng };
+  }
+
+  /** Get the current navigation target based on state */
+  function getNavTarget() {
+    const { pLat, pLng, dLat, dLng } = getPickupDropoff();
+    if (uiState === 'accepted') return { lat: pLat, lng: pLng }; // going to pickup
+    if (uiState === 'arrived') return { lat: dLat, lng: dLng }; // going to dropoff
+    return null;
+  }
+
+  async function drawRoute() {
+    if (!map || !trip) return;
+
+    // Clear old
+    if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+    if (driverLine) { map.removeLayer(driverLine); driverLine = null; }
+    if (pickupMarker) { map.removeLayer(pickupMarker); pickupMarker = null; }
+    if (dropoffMarker) { map.removeLayer(dropoffMarker); dropoffMarker = null; }
+
+    const { pLat, pLng, dLat, dLng } = getPickupDropoff();
+
+    // Pins
+    if (pLat && pLng) pickupMarker = L.marker([pLat, pLng], { icon: pinA }).addTo(map);
+    if (dLat && dLng) dropoffMarker = L.marker([dLat, dLng], { icon: pinB }).addTo(map);
+
+    // OSRM pickup → dropoff (cyan)
+    if (pLat && pLng && dLat && dLng) {
+      const ab = await fetchOSRM(pLat, pLng, dLat, dLng);
+      if (ab && ab.coords.length) {
+        routeLine = L.polyline(ab.coords, { color: '#46d3ff', weight: 4, opacity: 0.85 }).addTo(map);
+      }
+    }
+
+    // OSRM driver → current target (green dashed)
+    const target = getNavTarget();
+    if (driverMarker && target && target.lat && target.lng) {
+      const dPos = driverMarker.getLatLng();
+      const dp = await fetchOSRM(dPos.lat, dPos.lng, target.lat, target.lng);
+      if (dp && dp.coords.length) {
+        driverLine = L.polyline(dp.coords, { color: '#00c896', weight: 3, opacity: 0.7, dashArray: '8 6' }).addTo(map);
+        updateEtaOverlay(dp.distance, dp.duration);
+      }
+    }
+
+    // Fit bounds
+    const bounds = L.latLngBounds([]);
+    if (pLat && pLng) bounds.extend([pLat, pLng]);
+    if (dLat && dLng) bounds.extend([dLat, dLng]);
+    if (driverMarker) bounds.extend(driverMarker.getLatLng());
+    if (bounds.isValid()) map.fitBounds(bounds, { padding: [50, 30], maxZoom: 14, animate: true });
+  }
+
+  function updateEtaOverlay(distMeters, durSeconds) {
+    const el = document.getElementById('arMapEta');
+    if (!el) return;
+    const km = (distMeters / 1000).toFixed(1);
+    const mins = Math.max(1, Math.round(durSeconds / 60));
+    el.innerHTML = `<span class="eta-time">🚗 ${mins} λεπτά</span><span class="eta-sep">·</span><span class="eta-dist">${km} χλμ</span>`;
+    el.style.display = '';
+  }
+
+  /** Refresh driver→target ETA every 30s */
+  function startEtaRefresh() {
+    stopEtaRefresh();
+    etaRefreshTimer = setInterval(async () => {
+      if (!map || !driverMarker || uiState === 'completed') return;
+      const target = getNavTarget();
+      if (!target || !target.lat || !target.lng) return;
+      const dPos = driverMarker.getLatLng();
+      // Redraw driver line
+      if (driverLine) { map.removeLayer(driverLine); driverLine = null; }
+      const dp = await fetchOSRM(dPos.lat, dPos.lng, target.lat, target.lng);
+      if (dp && dp.coords.length) {
+        driverLine = L.polyline(dp.coords, { color: '#00c896', weight: 3, opacity: 0.7, dashArray: '8 6' }).addTo(map);
+        updateEtaOverlay(dp.distance, dp.duration);
+      }
+    }, 30000);
+  }
+
+  function stopEtaRefresh() {
+    if (etaRefreshTimer) { clearInterval(etaRefreshTimer); etaRefreshTimer = null; }
+  }
+
+  // ── NAV PICKER (Google Maps / Waze / Apple Maps) ──
+
+  function showNavPicker(lat, lng, label) {
+    // Remove existing
+    document.querySelector('.ar-nav-picker-overlay')?.remove();
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    const wazeUrl = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+    const appleUrl = `http://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`;
+
+    let btns = `
+      <a class="ar-nav-picker-btn" href="${googleUrl}" target="_blank">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Google_Maps_icon_%282020%29.svg/120px-Google_Maps_icon_%282020%29.svg.png" alt="Google Maps">
+        <span>Google Maps</span>
+      </a>
+      <a class="ar-nav-picker-btn" href="${wazeUrl}" target="_blank">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Waze_logo.svg/120px-Waze_logo.svg.png" alt="Waze">
+        <span>Waze</span>
+      </a>`;
+    if (isIOS) {
+      btns += `
+      <a class="ar-nav-picker-btn" href="${appleUrl}">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/AppleMaps_logo.svg/120px-AppleMaps_logo.svg.png" alt="Apple Maps">
+        <span>Apple Maps</span>
+      </a>`;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'ar-nav-picker-overlay';
+    overlay.innerHTML = `<div class="ar-nav-picker">
+      <h3>Πλοήγηση προς ${esc(label || 'προορισμό')}</h3>
+      <div class="ar-nav-picker-btns">${btns}</div>
+      <div class="ar-nav-picker-cancel" id="navPickerCancel">Ακύρωση</div>
+    </div>`;
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay || e.target.id === 'navPickerCancel') overlay.remove();
+    });
   }
 
   // ── Navigation with coordinates or address fallback ──
@@ -175,6 +454,11 @@
       }
 
       render();
+
+      // Init map and draw route
+      initMap();
+      // Small delay for driver position to arrive
+      setTimeout(() => { drawRoute(); startEtaRefresh(); }, 800);
     } catch {
       showError('Σφάλμα φόρτωσης');
     }
@@ -235,6 +519,7 @@
     }
 
     wrap.innerHTML = `
+      <div class="ar-drag-handle"></div>
       <div class="ar-header">
         <button class="ar-back" id="arBackBtn">← Πίσω</button>
         <span class="ar-status-badge ar-status-${statusClass}">${statusText}</span>
@@ -267,27 +552,31 @@
     return `<div class="ar-info-row"><span class="ar-info-label">${esc(label)}</span><span class="ar-info-value">${esc(String(value))}</span></div>`;
   }
 
-  // ── PRIMARY BUTTON: Navigate ──
+  // ── PRIMARY BUTTON: Navigate (opens picker) ──
   function handlePrimary() {
     if (uiState === 'accepted') {
-      // Navigate to FIRST point (pickup)
       if (trip.is_arrival) {
-        // Arrival: go to airport/port (destination coords)
-        openNavigation(trip.destination_lat, trip.destination_lng, trip.destination_name);
+        showNavPicker(trip.destination_lat, trip.destination_lng, trip.destination_name || 'Σημείο Παραλαβής');
       } else {
-        // Departure: go to hotel (hotel coords or address fallback)
-        const hotelAddr = [trip.hotel_name, trip.hotel_address, trip.hotel_municipality].filter(Boolean).join(', ');
-        openNavigation(trip.hotel_lat, trip.hotel_lng, hotelAddr || 'Athens');
+        const lat = trip.hotel_lat, lng = trip.hotel_lng;
+        if (lat && lng) {
+          showNavPicker(lat, lng, trip.hotel_name || 'Ξενοδοχείο');
+        } else {
+          const hotelAddr = [trip.hotel_name, trip.hotel_address, trip.hotel_municipality].filter(Boolean).join(', ');
+          openNavigation(null, null, hotelAddr || 'Athens');
+        }
       }
     } else if (uiState === 'arrived') {
-      // Navigate to SECOND point (final destination)
       if (trip.is_arrival) {
-        // Arrival: second point is hotel
-        const hotelAddr = [trip.hotel_name, trip.hotel_address, trip.hotel_municipality].filter(Boolean).join(', ');
-        openNavigation(trip.hotel_lat, trip.hotel_lng, hotelAddr || 'Athens');
+        const lat = trip.hotel_lat, lng = trip.hotel_lng;
+        if (lat && lng) {
+          showNavPicker(lat, lng, trip.hotel_name || 'Ξενοδοχείο');
+        } else {
+          const hotelAddr = [trip.hotel_name, trip.hotel_address, trip.hotel_municipality].filter(Boolean).join(', ');
+          openNavigation(null, null, hotelAddr || 'Athens');
+        }
       } else {
-        // Departure: second point is destination (destination coords)
-        openNavigation(trip.destination_lat, trip.destination_lng, trip.destination_name);
+        showNavPicker(trip.destination_lat, trip.destination_lng, trip.destination_name || 'Προορισμός');
       }
     }
   }
@@ -322,6 +611,7 @@
       uiState = 'arrived';
       saveState();
       render();
+      drawRoute(); // Redraw route for new target
 
     } else if (uiState === 'arrived') {
       // ── "ΟΛΟΚΛΗΡΩΣΗ" ──
@@ -338,6 +628,9 @@
         if (data.ok) {
           uiState = 'completed';
           saveState();
+          stopEtaRefresh();
+          const etaEl = document.getElementById('arMapEta');
+          if (etaEl) etaEl.style.display = 'none';
           render();
         } else {
           if (btn) { btn.disabled = false; btn.textContent = '🏁 Ολοκλήρωση Διαδρομής'; }
