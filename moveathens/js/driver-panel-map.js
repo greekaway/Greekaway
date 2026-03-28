@@ -21,9 +21,8 @@
   const DEFAULT_CENTER = [37.9838, 23.7275];
   const DEFAULT_ZOOM = 13;
 
-  // Tile URLs
-  const TILES_DARK  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-  const TILES_LIGHT = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  // Tile URLs — Voyager for both modes (dark via CSS filter)
+  const TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
   /** Get current theme */
   function isDarkMode() {
@@ -89,11 +88,14 @@
       attributionControl: false
     });
 
-    // Set tiles based on current theme
-    tileLayer = L.tileLayer(isDarkMode() ? TILES_DARK : TILES_LIGHT, {
+    // Same Voyager tiles for both modes (dark via CSS filter on tile pane)
+    tileLayer = L.tileLayer(TILES, {
       maxZoom: 19,
       subdomains: 'abcd'
     }).addTo(map);
+
+    // Apply dark filter if needed
+    applyTileFilter();
 
     // Small attribution
     L.control.attribution({ position: 'bottomleft', prefix: false })
@@ -111,11 +113,21 @@
     startGeolocation();
   }
 
-  /** Switch tile layer when theme changes */
+  /** Apply/remove CSS filter on tiles for dark mode */
+  function applyTileFilter() {
+    if (!map) return;
+    const pane = map.getPane('tilePane');
+    if (!pane) return;
+    if (isDarkMode()) {
+      pane.style.filter = 'invert(100%) hue-rotate(180deg) brightness(92%) contrast(85%) saturate(120%)';
+    } else {
+      pane.style.filter = 'none';
+    }
+  }
+
+  /** Switch tile appearance when theme changes */
   function switchTiles() {
-    if (!map || !tileLayer) return;
-    const url = isDarkMode() ? TILES_DARK : TILES_LIGHT;
-    tileLayer.setUrl(url);
+    applyTileFilter();
   }
 
   /** Start watching the driver's GPS position + heading */
