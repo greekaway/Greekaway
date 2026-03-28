@@ -51,6 +51,44 @@
   display: none;
 }
 
+/* ── Active Route Return Banner ── */
+.ma-dp-active-route-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border-radius: 14px;
+  background: rgba(0, 200, 150, 0.15);
+  border: 1px solid rgba(0, 200, 150, 0.35);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: arb-slideIn 0.35s ease;
+}
+.ma-dp-active-route-banner:active { transform: scale(0.98); }
+.arb-pulse {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #00c896; flex-shrink: 0;
+  animation: arb-blink 1.5s ease-in-out infinite;
+}
+.arb-text { flex: 1; font-size: 13px; font-weight: 600; color: #f7f7fb; line-height: 1.3; }
+.arb-action { font-size: 13px; font-weight: 700; color: #00c896; white-space: nowrap; }
+
+@keyframes arb-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes arb-slideIn {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+html[data-theme='light'] .ma-dp-active-route-banner {
+  background: rgba(0, 200, 150, 0.1);
+  border-color: rgba(0, 200, 150, 0.25);
+}
+html[data-theme='light'] .arb-text { color: #1a1a2e; }
+
 /* ── Urgent Card (glass effect over map) ── */
 .ma-dp-urgent-card {
   background: rgba(28, 36, 56, 0.88);

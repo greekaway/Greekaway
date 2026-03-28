@@ -237,6 +237,8 @@
         if (data.ok) {
           removeCard(requestId, 'accepted');
           showToast('✅ Αποδοχή επιτυχής!');
+          // Persist active route so driver can return to it
+          try { localStorage.setItem('ma_dp_active_route', requestId); } catch {}
           // Open fullscreen active route
           setTimeout(() => { window.location.href = '/moveathens/active-route?id=' + encodeURIComponent(requestId); }, 600);
         } else {
@@ -371,9 +373,55 @@
     if (window.DpMap) window.DpMap.init();
 
     bindEvents();
+    checkActiveRoute();
     await loadPending();
     connectSSE();
     startPolling();
+  }
+
+  /** Show persistent banner if driver has an active route they left */
+  function checkActiveRoute() {
+    const activeId = localStorage.getItem('ma_dp_active_route');
+    if (!activeId) return;
+
+    // Verify it's still active on the server
+    fetch(`${API}/active-route-status/${encodeURIComponent(activeId)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.active) {
+          showActiveRouteBanner(activeId, data.origin, data.destination);
+        } else {
+          localStorage.removeItem('ma_dp_active_route');
+        }
+      })
+      .catch(() => {
+        // Offline — show banner anyway (better to show than not)
+        showActiveRouteBanner(activeId);
+      });
+  }
+
+  function showActiveRouteBanner(routeId, origin, destination) {
+    // Don't show duplicate
+    if (document.querySelector('.ma-dp-active-route-banner')) return;
+
+    const route = origin && destination ? `${origin} → ${destination}` : 'Ενεργή διαδρομή';
+    const el = document.createElement('div');
+    el.className = 'ma-dp-active-route-banner';
+    el.innerHTML =
+      '<span class="arb-pulse"></span>' +
+      '<span class="arb-text">🚗 ' + esc(route) + '</span>' +
+      '<span class="arb-action">Επιστροφή ›</span>';
+    el.addEventListener('click', () => {
+      window.location.href = '/moveathens/active-route?id=' + encodeURIComponent(routeId);
+    });
+
+    // Insert at top of home cards
+    const container = getContainer();
+    if (container) {
+      container.prepend(el);
+    } else {
+      document.body.appendChild(el);
+    }
   }
 
   function destroy() {

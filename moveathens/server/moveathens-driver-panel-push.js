@@ -248,6 +248,20 @@ function registerDriverPanelPush(app) {
     }
   });
 
+  // ── Active Route: check if route is still active (for return banner) ──
+  app.get('/api/driver-panel/active-route-status/:requestId', async (req, res) => {
+    try {
+      const request = await requestsData.getRequestById(req.params.requestId);
+      if (!request) return res.json({ active: false });
+      const isActive = request.status === 'accepted' || request.status === 'arrived';
+      const origin = request.is_arrival ? request.destination_name : (request.hotel_name || request.origin_zone_name);
+      const destination = request.is_arrival ? (request.hotel_name || request.origin_zone_name) : request.destination_name;
+      res.json({ active: isActive, origin, destination, status: request.status });
+    } catch {
+      res.json({ active: false });
+    }
+  });
+
   // ── Active Route: update status (arrived / completed) ──
   app.post('/api/driver-panel/active-route/:requestId/status', async (req, res) => {
     try {
