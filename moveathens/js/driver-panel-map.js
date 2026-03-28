@@ -23,23 +23,24 @@
 
   // Tile URLs
   const TILES_DARK  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-  const TILES_LIGHT = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+  const TILES_LIGHT = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
   /** Get current theme */
   function isDarkMode() {
     return document.documentElement.getAttribute('data-theme') !== 'light';
   }
 
-  /** Create the driver arrow SVG (navigation style) */
+  /** Create the driver arrow SVG (navigation style — dark in both modes) */
   function makeDriverIcon() {
     return L.divIcon({
       className: 'ma-dp-map-driver-icon',
-      html: `<svg viewBox="0 0 40 40" width="40" height="40" style="transform:rotate(${lastHeading}deg)">
-        <circle cx="20" cy="20" r="18" fill="rgba(70,211,255,0.15)" stroke="rgba(70,211,255,0.3)" stroke-width="1"/>
-        <path d="M20 8 L28 28 L20 23 L12 28 Z" fill="#46d3ff" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+      html: `<svg viewBox="0 0 48 48" width="48" height="48" style="transform:rotate(${lastHeading}deg)">
+        <circle cx="24" cy="24" r="22" fill="rgba(0,0,0,0.08)"/>
+        <circle cx="24" cy="24" r="14" fill="#1a1a2e" stroke="#fff" stroke-width="2.5"/>
+        <path d="M24 14 L30 30 L24 26 L18 30 Z" fill="#fff" stroke="none"/>
       </svg>`,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20]
+      iconSize: [48, 48],
+      iconAnchor: [24, 24]
     });
   }
 
