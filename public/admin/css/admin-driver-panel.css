@@ -985,3 +985,63 @@ html[data-theme='light'] .dp-sounds-empty { color: rgba(0,0,0,0.4); }
 }
 html[data-theme='light'] .dp-sounds-programmatic summary { color: rgba(0,0,0,0.5); }
 .dp-sounds-programmatic .dp-sounds-list { margin-top: 8px; }
+
+/* ═══ Tier System Styles ═══ */
+.dp-driver-tier-gold {
+  border-color: #d4a017;
+  background: rgba(212, 160, 23, 0.06);
+}
+.dp-driver-tier-gold:hover {
+  border-color: #f5c842;
+}
+.dp-driver-tier-silver {
+  border-color: rgba(192, 192, 192, 0.3);
+}
+.dp-badge-gold {
+  background: rgba(212, 160, 23, 0.18);
+  color: #f5c842;
+  font-weight: 600;
+}
+.dp-badge-silver {
+  background: rgba(192, 192, 192, 0.15);
+  color: #c0c0c0;
+  font-weight: 600;
+}
+html[data-theme='light'] .dp-driver-tier-gold {
+  border-color: #c8960c;
+  background: rgba(212, 160, 23, 0.08);
+}
+html[data-theme='light'] .dp-badge-gold {
+  background: rgba(212, 160, 23, 0.15);
+  color: #8b6914;
+}
+html[data-theme='light'] .dp-badge-silver {
+  background: rgba(128, 128, 128, 0.12);
+  color: #666;
+}
+.dp-tier-select {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--ga-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ga-text);
+  cursor: pointer;
+  margin-top: 4px;
+}
+.dp-range-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dp-range {
+  flex: 1;
+  accent-color: var(--ga-gold);
+}
+.dp-range-value {
+  font-weight: 700;
+  font-size: 16px;
+  min-width: 40px;
+  text-align: center;
+  color: var(--ga-gold);
+}

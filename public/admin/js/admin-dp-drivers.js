@@ -35,6 +35,8 @@
     $('#dpDriverDisplayName').value = '';
     $('#dpDriverNotes').value = '';
     $('#dpDriverActive').checked = true;
+    const tierSelect = $('#dpDriverTier');
+    if (tierSelect) tierSelect.value = 'silver';
     renderVehicleCheckboxes([]);
     $('#dpDriverFormTitle').textContent = 'Νέος Οδηγός';
     $('#dpDriverCancel').style.display = 'none';
@@ -49,6 +51,8 @@
     $('#dpDriverDisplayName').value = d.display_name || '';
     $('#dpDriverNotes').value = d.notes || '';
     $('#dpDriverActive').checked = d.is_active !== false;
+    const tierSelect = $('#dpDriverTier');
+    if (tierSelect) tierSelect.value = d.tier || 'silver';
     let vts = [];
     try { vts = JSON.parse(d.vehicle_types || '[]'); } catch (_) {}
     renderVehicleCheckboxes(vts);
@@ -82,6 +86,8 @@
     const hired = active.filter(d => _busyPhones.has(d.phone));
     const hiredPct = active.length ? Math.round(hired.length / active.length * 100) : 0;
     const pct = (n) => total ? Math.round(n / total * 100) : 0;
+    const goldCount = all.filter(d => d.tier === 'gold').length;
+    const silverCount = all.filter(d => !d.tier || d.tier === 'silver').length;
 
     wrap.innerHTML = `
       <div class="dp-stats-grid">
@@ -105,7 +111,33 @@
           <span class="dp-stat-num">${blocked.length}</span>
           <span class="dp-stat-label">Κλειδωμένοι</span>
         </div>
+        <div class="dp-stat-box" style="border-color:#d4a017">
+          <span class="dp-stat-icon">🥇</span>
+          <span class="dp-stat-num" style="color:#f5c842">${goldCount}</span>
+          <span class="dp-stat-label">Gold</span>
+        </div>
+        <div class="dp-stat-box" style="border-color:#c0c0c0">
+          <span class="dp-stat-icon">🥈</span>
+          <span class="dp-stat-num" style="color:#c0c0c0">${silverCount}</span>
+          <span class="dp-stat-label">Silver</span>
+        </div>
       </div>`;
+  };
+
+  // ── Tier badge HTML ──
+  const getTierBadgeHTML = (d) => {
+    const tier = d.tier || 'silver';
+    if (tier === 'gold') return `<span class="dp-badge dp-badge-gold">🥇 Gold</span>`;
+    return `<span class="dp-badge dp-badge-silver">🥈 Silver</span>`;
+  };
+
+  // ── Tier quick-change dropdown ──
+  const getTierSelectHTML = (d) => {
+    const tier = d.tier || 'silver';
+    return `<select class="dp-tier-select" data-id="${d.id}">
+      <option value="silver" ${tier === 'silver' ? 'selected' : ''}>🥈 Silver</option>
+      <option value="gold" ${tier === 'gold' ? 'selected' : ''}>🥇 Gold</option>
+    </select>`;
   };
 
   // ── Driver availability & block badges ──
@@ -155,6 +187,8 @@
     if (filter === 'active') list = list.filter(d => d.is_available !== false && !d.is_blocked);
     if (filter === 'unavailable') list = list.filter(d => d.is_available === false && !d.is_blocked);
     if (filter === 'blocked') list = list.filter(d => d.is_blocked);
+    if (filter === 'gold') list = list.filter(d => d.tier === 'gold');
+    if (filter === 'silver') list = list.filter(d => !d.tier || d.tier === 'silver');
 
     renderStats();
 
@@ -172,10 +206,12 @@
       const acceptRate = onlineTotal > 0 ? Math.round(bs.accepted / onlineTotal * 100) : null;
       const rateTxt = acceptRate !== null ? ` · Αποδοχή: <strong style="color:${acceptRate >= 50 ? '#4caf50' : '#ff5252'}">${acceptRate}%</strong>` : '';
       const bsLine = `<span class="dp-driver-broadcast">📡 Λήφθηκαν: <strong>${bs.sent}</strong> · Αποδέχτηκε: <strong style="color:#4caf50">${bs.accepted}</strong> · Αγνόησε: <strong style="color:#ff9800">${bs.missed}</strong>${rateTxt}</span>`;
+      const tierClass = (d.tier || 'silver') === 'gold' ? 'dp-driver-tier-gold' : 'dp-driver-tier-silver';
       return `
-        <div class="dp-driver-card ${d.is_blocked ? 'dp-driver-blocked' : d.is_available === false ? 'dp-driver-inactive' : ''}" data-id="${d.id}">
+        <div class="dp-driver-card ${tierClass} ${d.is_blocked ? 'dp-driver-blocked' : d.is_available === false ? 'dp-driver-inactive' : ''}" data-id="${d.id}">
           <div class="dp-driver-info">
             <strong class="dp-driver-name">${d.name || '—'}</strong>
+            ${getTierBadgeHTML(d)}
             <span class="dp-driver-phone">${d.phone || ''}</span>
             ${d.display_name ? `<span class="dp-driver-display-name">Εμφανίζεται: ${d.display_name}</span>` : ''}
             ${vtNames ? `<span class="dp-driver-vt">🚗 ${vtNames}</span>` : ''}
@@ -184,6 +220,7 @@
           </div>
           <div class="dp-driver-meta">
             ${getBadgeHTML(d)}
+            ${getTierSelectHTML(d)}
           </div>
           <div class="dp-driver-actions">
             <button class="button dp-btn-sm dp-edit-btn" data-id="${d.id}">✏️</button>
@@ -307,6 +344,24 @@
     document.addEventListener('click', () => {
       wrap.querySelectorAll('.dp-block-dropdown').forEach(d => d.style.display = 'none');
     });
+
+    // ── Quick tier change from dropdown ──
+    wrap.querySelectorAll('.dp-tier-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const d = state.drivers.find(dr => dr.id === sel.dataset.id);
+        if (!d) return;
+        const newTier = sel.value;
+        try {
+          const res = await api(`/api/admin/driver-panel/drivers/${d.id}`, 'PUT', { tier: newTier });
+          if (!res) return;
+          if (res.ok) {
+            d.tier = newTier;
+            renderList();
+            showToast(`${d.name || d.phone} → ${newTier === 'gold' ? '🥇 Gold' : '🥈 Silver'}`);
+          }
+        } catch (err) { showToast('Σφάλμα: ' + err.message); }
+      });
+    });
   };
 
   const init = () => {
@@ -323,7 +378,8 @@
         display_name: $('#dpDriverDisplayName').value.trim() || null,
         notes: $('#dpDriverNotes').value.trim(),
         is_active: $('#dpDriverActive').checked,
-        vehicle_types: getSelectedVT()
+        vehicle_types: getSelectedVT(),
+        tier: $('#dpDriverTier')?.value || 'silver'
       };
       setStatus(status, 'Αποθήκευση…', 'info');
       try {

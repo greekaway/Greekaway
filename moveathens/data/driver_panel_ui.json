@@ -51,7 +51,9 @@
     "assignmentMode": "broadcast",
     "broadcastTimeoutMinutes": 5,
     "autoBroadcast": true,
-    "autoRejectOnExpiry": true
+    "autoRejectOnExpiry": true,
+    "tierGoldPercent": 50,
+    "tierMinMinutes": 15
   },
   "labels": {
     "btnAccept": "Αποδοχή",

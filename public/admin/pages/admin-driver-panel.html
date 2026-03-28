@@ -107,6 +107,13 @@
                 <span class="dp-label">Εμφανιζόμενο Όνομα (προαιρετικό)</span>
                 <input type="text" id="dpDriverDisplayName" class="input" placeholder="Εμφανίζεται στον οδηγό">
               </label>
+              <label class="dp-field">
+                <span class="dp-label">Tier Οδηγού</span>
+                <select id="dpDriverTier" class="input">
+                  <option value="silver">🥈 Silver</option>
+                  <option value="gold">🥇 Gold</option>
+                </select>
+              </label>
               <div class="dp-field">
                 <span class="dp-label">Τύποι Οχημάτων</span>
                 <div id="dpVehicleCheckboxes" class="dp-checkbox-group">
@@ -139,6 +146,8 @@
               <select id="dpDriverFilter" class="input dp-filter-select">
                 <option value="all">Όλοι</option>
                 <option value="active">Ενεργοί</option>
+                <option value="gold">🥇 Gold</option>
+                <option value="silver">🥈 Silver</option>
                 <option value="unavailable">Μη Διαθέσιμοι</option>
                 <option value="blocked">Κλειδωμένοι</option>
               </select>
@@ -236,6 +245,31 @@
                 <span>Auto-reject μετά timeout</span>
               </label>
             </div>
+
+            <h3 class="dp-subtitle" style="margin-top:20px">🏅 Tier Ραντεβού</h3>
+            <p class="dp-hint">Ποσοστό χρόνου που τα ραντεβού φαίνονται <strong>μόνο</strong> σε Gold οδηγούς πριν γίνουν ορατά σε όλους.</p>
+            <div class="dp-grid">
+              <label class="dp-field">
+                <span class="dp-label">Ποσοστό Gold (%)</span>
+                <div class="dp-range-row">
+                  <input type="range" id="dpTierGoldPercent" class="dp-range" min="0" max="100" step="5" value="50">
+                  <span id="dpTierGoldPercentValue" class="dp-range-value">50%</span>
+                </div>
+                <span class="dp-hint">Π.χ. 50% → μισός χρόνος Gold μόνο, μισός σε όλους</span>
+              </label>
+              <label class="dp-field">
+                <span class="dp-label">Ελάχιστος χρόνος tier (λεπτά)</span>
+                <select id="dpTierMinMinutes" class="input">
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="15" selected>15</option>
+                  <option value="20">20</option>
+                  <option value="30">30</option>
+                </select>
+                <span class="dp-hint">Κάτω από αυτό → ραντεβού πάει σε όλους αμέσως</span>
+              </label>
+            </div>
+
             <button type="button" id="dpAcceptSave" class="button dp-save-btn">💾 Αποθήκευση Ροής</button>
             <div id="dpAcceptStatus" class="dp-status"></div>
           </div>

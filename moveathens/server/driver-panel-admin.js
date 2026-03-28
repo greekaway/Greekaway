@@ -156,7 +156,7 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
   app.post('/api/admin/driver-panel/drivers', async (req, res) => {
     if (!guard(req, res)) return;
     try {
-      const { name, phone, notes, is_active, vehicle_types, display_name } = req.body || {};
+      const { name, phone, notes, is_active, vehicle_types, display_name, tier } = req.body || {};
       // Normalize: strip spaces/dashes/parens, auto-add +30 for Greek mobiles
       let cleanPhone = (phone || '').replace(/[\s\-\(\)\.]/g, '').trim();
       if (/^69\d{8}$/.test(cleanPhone)) cleanPhone = '+30' + cleanPhone;
@@ -175,7 +175,8 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
         notes: notes || '',
         is_active: is_active !== false,
         vehicle_types: vtJSON,
-        display_name: display_name || null
+        display_name: display_name || null,
+        tier: tier || 'silver'
       });
 
       console.log('[driver-panel] Driver created:', driver.id, driver.phone);
@@ -208,7 +209,8 @@ module.exports = function registerDriverPanelRoutes(app, opts = {}) {
         is_active: b.is_active !== undefined ? b.is_active : existing.is_active,
         vehicle_types: vtJSON,
         current_vehicle_type: b.current_vehicle_type !== undefined ? b.current_vehicle_type : existing.current_vehicle_type,
-        display_name: b.display_name !== undefined ? b.display_name : existing.display_name
+        display_name: b.display_name !== undefined ? b.display_name : existing.display_name,
+        tier: b.tier !== undefined ? b.tier : existing.tier
       });
 
       return res.json(updated);

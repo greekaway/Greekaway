@@ -546,7 +546,7 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
     if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
     try {
       const allowed = ['status', 'driver_phone', 'driver_id', 'notes',
-        'commission_driver', 'commission_hotel', 'commission_service', 'price', 'is_arrival'];
+        'commission_driver', 'commission_hotel', 'commission_service', 'price', 'is_arrival', 'released_to_all'];
       const updates = {};
       for (const key of allowed) {
         if (req.body[key] !== undefined) updates[key] = req.body[key];
@@ -557,6 +557,23 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
     } catch (err) {
       console.error('[ma-requests] PUT /admin/requests/:id failed:', err.message);
       return res.status(500).json({ error: 'Update failed' });
+    }
+  });
+
+  // ========================================
+  // ADMIN: Release request to all tiers
+  // ========================================
+  app.post('/api/admin/moveathens/requests/:id/release-to-all', async (req, res) => {
+    if (!checkAdminAuth || !checkAdminAuth(req)) return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const request = await requestsData.getRequestById(req.params.id);
+      if (!request) return res.status(404).json({ error: 'Not found' });
+      const updated = await requestsData.updateRequest(req.params.id, { released_to_all: true });
+      console.log('[ma-requests] Request', req.params.id, 'released to all tiers');
+      return res.json({ ok: true, request: updated });
+    } catch (err) {
+      console.error('[ma-requests] release-to-all failed:', err.message);
+      return res.status(500).json({ error: 'Release failed' });
     }
   });
 

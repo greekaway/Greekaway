@@ -419,6 +419,15 @@
         countdownHtml = '<span class="req-countdown" data-expires-at="' + expiresAt + '" data-req-id="' + r.id + '" style="display:block;font-size:11px;font-weight:600;margin-top:3px;color:#f59e0b">⏱ …</span>';
       }
 
+      // Release-to-all button for scheduled requests with active tier system
+      var releaseBtn = '';
+      if (canSend && r.booking_type === 'scheduled' && !r.released_to_all) {
+        releaseBtn = '<button class="dr-btn req-release-btn" style="background:#d4a017;color:#fff;margin-left:2px;font-size:12px" title="Απελευθέρωση σε όλους τους Tier">🏅 Όλοι</button>';
+      }
+      if (r.released_to_all) {
+        releaseBtn = '<span style="font-size:11px;color:#d4a017;display:inline-block;margin-left:2px">✅ Σε όλους</span>';
+      }
+
       return '<tr data-id="' + r.id + '" data-json=\'' + JSON.stringify({
         hotel_name: r.hotel_name || '',
         destination_name: r.destination_name || '',
@@ -434,7 +443,9 @@
         orderer_phone: r.orderer_phone || '',
         is_arrival: !!r.is_arrival,
         price: r.price || 0,
-        channel: r.channel || 'whatsapp'
+        channel: r.channel || 'whatsapp',
+        booking_type: r.booking_type || 'instant',
+        released_to_all: !!r.released_to_all
       }).replace(/'/g, '&#39;') + '\'>' +
         '<td title="' + r.id + '">' + String(r.id).slice(-6) + '</td>' +
         '<td colspan="2">' + routeDisplay + '</td>' +
@@ -447,6 +458,7 @@
           : (r.driver_phone || '—')) + '</td>' +
         '<td style="white-space:nowrap">' +
           replyBtns +
+          releaseBtn +
           (canSend
             ? '<button class="dr-btn dr-btn-success req-send-btn" style="margin-left:2px">Αποστολή</button> <button class="dr-btn req-del-btn" style="background:#ef4444;color:#fff;margin-left:2px">Διαγραφή</button>'
             : (r.status === 'expired' || r.status === 'cancelled'
@@ -489,6 +501,24 @@
           var data = await resp.json();
           if (!resp.ok) throw new Error(data.error || 'Delete failed');
           toast('Διαγράφηκε');
+          loadRoutesData();
+        } catch (e) { toast('Σφάλμα: ' + e.message); btn.disabled = false; }
+      });
+    });
+
+    // ── Release to all tiers ──
+    _$$('.req-release-btn', tbody).forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var tr = btn.closest('tr');
+        var id = tr.dataset.id;
+        btn.disabled = true;
+        try {
+          var resp = await fetch('/api/admin/moveathens/requests/' + id + '/release-to-all', {
+            method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }
+          });
+          var data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || 'Release failed');
+          toast('Απελευθερώθηκε σε όλους τους οδηγούς');
           loadRoutesData();
         } catch (e) { toast('Σφάλμα: ' + e.message); btn.disabled = false; }
       });

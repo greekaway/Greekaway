@@ -24,6 +24,8 @@ module.exports = function registerDriverPanelTabs(app) {
   // ══════════════════════════════════════════
 
   // List scheduled requests matching driver's vehicle_types array
+  // Tier-aware: Gold drivers see requests immediately; Silver drivers see them
+  // after a percentage of time has passed (configured in admin panel).
   app.get('/api/driver-panel/scheduled', async (req, res) => {
     try {
       const phone = (req.query.phone || '').trim();
@@ -60,7 +62,44 @@ module.exports = function registerDriverPanelTabs(app) {
         return vehicleTypes.includes(r.vehicle_type_id);
       });
 
-      const cards = scheduled.map(r => driverBroadcast.buildCardData(r, 'scheduled'));
+      // ── Tier-based visibility filtering ──
+      const driverTier = driver.tier || 'silver';
+      const config = loadConfig();
+      const acceptance = config.acceptance || {};
+      const goldPercent = acceptance.tierGoldPercent ?? 50;
+      const minMinutes = acceptance.tierMinMinutes ?? 15;
+
+      let visible = scheduled;
+      if (driverTier !== 'gold' && goldPercent > 0) {
+        const now = Date.now();
+        visible = scheduled.filter(r => {
+          // Check if enough time has passed for Silver to see this request
+          // released_to_all overrides tier logic (admin manual release)
+          if (r.released_to_all) return true;
+
+          const createdAt = new Date(r.created_at).getTime();
+          // Calculate pickup time
+          const pickupStr = r.scheduled_date
+            ? r.scheduled_date + 'T' + (r.scheduled_time || '23:59')
+            : null;
+          const pickupMs = pickupStr ? new Date(pickupStr).getTime() : 0;
+          if (!pickupMs || isNaN(pickupMs)) return true; // no pickup time → show to all
+
+          const totalTimeMs = pickupMs - createdAt;
+          const totalMinutes = totalTimeMs / 60000;
+
+          // If total time < minimum threshold → show to everyone immediately
+          if (totalMinutes < minMinutes) return true;
+
+          // Gold-exclusive window = goldPercent% of total time
+          const goldWindowMs = totalTimeMs * (goldPercent / 100);
+          const silverVisibleAt = createdAt + goldWindowMs;
+
+          return now >= silverVisibleAt;
+        });
+      }
+
+      const cards = visible.map(r => driverBroadcast.buildCardData(r, 'scheduled'));
       res.json({ ok: true, requests: cards });
     } catch (err) {
       console.error('[driver-panel] scheduled:', err.message);
