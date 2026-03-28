@@ -81,6 +81,10 @@
       try {
         const card = JSON.parse(e.data);
         if (!dismissedIds.has(card.requestId)) addUrgentCard(card);
+        // Show route on map
+        if (window.DpMap && (card.hotel_lat || card.destination_lat)) {
+          window.DpMap.showRoute(card);
+        }
         playAlert();
         showNewRequestBanner(card);
       } catch { /* ignore parse errors */ }
@@ -180,7 +184,11 @@
         updateEmptyState();
         // Stop looping sound if no urgent cards remain
         const remaining = container.querySelectorAll('.ma-dp-urgent-card').length;
-        if (remaining === 0) stopAlert();
+        if (remaining === 0) {
+          stopAlert();
+          // Clear route from map and recenter on driver
+          if (window.DpMap) { window.DpMap.clearRoute(); window.DpMap.recenterOnDriver(); }
+        }
       }, 300);
     }
     if (reason === 'dismissed') dismissedIds.add(requestId);
@@ -256,6 +264,10 @@
         if (!dismissedIds.has(card.requestId) && !currentIds.has(String(card.requestId))) {
           addUrgentCard(card);
           hasNew = true;
+          // Show first route on map
+          if (window.DpMap && (card.hotel_lat || card.destination_lat)) {
+            window.DpMap.showRoute(card);
+          }
         }
       });
       if (hasNew) playAlert();
@@ -324,7 +336,23 @@
 
     const section = document.querySelector('[data-tab="home"]');
     if (section && !section.querySelector('#dpHomeCards')) {
-      section.innerHTML = `<div id="dpHomeCards" class="ma-dp-home-cards"></div>`;
+      section.innerHTML =
+        `<div class="ma-dp-map-wrap">
+          <div id="dpMapContainer"></div>
+          <button class="ma-dp-map-recenter" id="dpMapRecenter" aria-label="Κεντράρισμα">⊕</button>
+        </div>
+        <div id="dpHomeCards" class="ma-dp-home-cards"></div>`;
+    }
+
+    // Init map
+    if (window.DpMap) window.DpMap.init();
+
+    // Recenter button
+    const recenterBtn = document.getElementById('dpMapRecenter');
+    if (recenterBtn) {
+      recenterBtn.addEventListener('click', () => {
+        if (window.DpMap) window.DpMap.recenterOnDriver();
+      });
     }
 
     bindEvents();

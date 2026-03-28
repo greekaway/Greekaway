@@ -5,7 +5,7 @@
  */
 'use strict';
 
-const CACHE_VERSION = 'v20260327h';
+const CACHE_VERSION = 'v20260328a';
 const CACHE_NAME = `ma-driver-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -13,6 +13,7 @@ const CORE_ASSETS = [
   '/moveathens/css/driver-panel.css',
   '/moveathens/css/driver-panel-auth.css',
   '/moveathens/css/driver-panel-home.css',
+  '/moveathens/css/driver-panel-map.css',
   '/moveathens/css/driver-panel-appointments.css',
   '/moveathens/css/driver-panel-history.css',
   '/moveathens/css/driver-panel-financials.css',
@@ -20,6 +21,7 @@ const CORE_ASSETS = [
   '/moveathens/js/driver-panel.js',
   '/moveathens/js/driver-panel-auth.js',
   '/moveathens/js/driver-panel-home.js',
+  '/moveathens/js/driver-panel-map.js',
   '/moveathens/js/driver-panel-appointments.js',
   '/moveathens/js/driver-panel-history.js',
   '/moveathens/js/driver-panel-financials.js',

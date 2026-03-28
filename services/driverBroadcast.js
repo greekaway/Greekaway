@@ -119,7 +119,11 @@ function buildCardData(request, cardType) {
       value: fieldMap[f.id] ?? ''
     })),
     is_arrival: request.is_arrival,
-    booking_type: request.booking_type
+    booking_type: request.booking_type,
+    hotel_lat: request.hotel_lat || null,
+    hotel_lng: request.hotel_lng || null,
+    destination_lat: request.destination_lat || null,
+    destination_lng: request.destination_lng || null
   };
 }
 

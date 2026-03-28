@@ -1,0 +1,105 @@
+/* ═══════════════════════════════════════════════════════
+   MoveAthens Driver Panel — Map
+   Leaflet map styles for the home tab
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Map container ── */
+.ma-dp-map-wrap {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 0 0 6px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+#dpMapContainer {
+  width: 100%;
+  height: 100%;
+  background: var(--ma-dp-card, #1c2438);
+}
+
+/* ── Recenter button ── */
+.ma-dp-map-recenter {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 1000;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ma-dp-card, #1c2438);
+  color: var(--ma-dp-accent, #46d3ff);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s;
+}
+.ma-dp-map-recenter:active {
+  background: var(--ma-dp-accent);
+  color: #fff;
+}
+
+/* ── Driver icon (blue dot with pulse) ── */
+.ma-dp-map-driver-icon {
+  background: none !important;
+  border: none !important;
+}
+.ma-dp-map-driver-icon svg {
+  filter: drop-shadow(0 0 6px var(--ma-dp-accent, #46d3ff));
+}
+
+/* ── Pin icons ── */
+.ma-dp-map-pin {
+  background: none !important;
+  border: none !important;
+}
+.ma-dp-map-pin svg {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+
+/* ── Leaflet popup override (match dark theme) ── */
+.leaflet-popup-content-wrapper {
+  background: var(--ma-dp-card, #1c2438) !important;
+  color: var(--ma-dp-text, #f7f7fb) !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+}
+.leaflet-popup-tip {
+  background: var(--ma-dp-card, #1c2438) !important;
+}
+
+/* ── Light mode overrides ── */
+html[data-theme='light'] .ma-dp-map-wrap {
+  border-color: rgba(0,0,0,0.08);
+}
+html[data-theme='light'] .ma-dp-map-recenter {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+html[data-theme='light'] .leaflet-popup-content-wrapper {
+  background: #fff !important;
+  color: #1a1a2e !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+}
+html[data-theme='light'] .leaflet-popup-tip {
+  background: #fff !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 359px) {
+  .ma-dp-map-wrap { height: 180px; }
+}
+@media (min-width: 430px) {
+  .ma-dp-map-wrap { height: 260px; }
+}
+@media (min-width: 768px) {
+  .ma-dp-map-wrap { height: 320px; }
+}

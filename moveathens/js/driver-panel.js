@@ -286,6 +286,8 @@
     if (tabKey === 'home') {
       const banner = document.querySelector('.ma-dp-new-req-banner');
       if (banner) { banner.classList.add('hiding'); setTimeout(() => banner.remove(), 300); }
+      // Fix map tiles after tab switch
+      if (window.DpMap) window.DpMap.resize();
     }
   };
 
