@@ -859,8 +859,8 @@ const ma = {
 
   async upsertDriver(data) {
     const sql = `
-      INSERT INTO ma_drivers (id, name, phone, notes, is_active, is_available, is_blocked, blocked_until, vehicle_types, current_vehicle_type, display_name, pin_hash)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO ma_drivers (id, name, phone, notes, is_active, is_available, is_blocked, blocked_until, vehicle_types, current_vehicle_type, display_name, pin_hash, tier)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         phone = EXCLUDED.phone,
@@ -872,14 +872,16 @@ const ma = {
         vehicle_types = EXCLUDED.vehicle_types,
         current_vehicle_type = EXCLUDED.current_vehicle_type,
         display_name = EXCLUDED.display_name,
-        pin_hash = COALESCE(EXCLUDED.pin_hash, ma_drivers.pin_hash)
+        pin_hash = COALESCE(EXCLUDED.pin_hash, ma_drivers.pin_hash),
+        tier = EXCLUDED.tier
       RETURNING *
     `;
     const rows = await query(sql, [
       data.id, data.name || '', data.phone, data.notes || '', data.is_active !== false,
       data.is_available !== false, data.is_blocked === true, data.blocked_until || null,
       data.vehicle_types || '[]', data.current_vehicle_type || null,
-      data.display_name || null, data.pin_hash !== undefined ? data.pin_hash : null
+      data.display_name || null, data.pin_hash !== undefined ? data.pin_hash : null,
+      data.tier || 'silver'
     ]);
     return rows[0];
   },

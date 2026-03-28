@@ -512,15 +512,21 @@
         var tr = btn.closest('tr');
         var id = tr.dataset.id;
         btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.textContent = '⏳ …';
         try {
           var resp = await fetch('/api/admin/moveathens/requests/' + id + '/release-to-all', {
             method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }
           });
           var data = await resp.json();
           if (!resp.ok) throw new Error(data.error || 'Release failed');
+          btn.textContent = '✅ Σε όλους';
+          btn.style.background = 'transparent';
+          btn.style.color = '#d4a017';
+          btn.style.border = 'none';
           toast('Απελευθερώθηκε σε όλους τους οδηγούς');
           loadRoutesData();
-        } catch (e) { toast('Σφάλμα: ' + e.message); btn.disabled = false; }
+        } catch (e) { toast('Σφάλμα: ' + e.message); btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '🏅 Όλοι'; }
       });
     });
 

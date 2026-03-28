@@ -252,6 +252,7 @@ CREATE TABLE IF NOT EXISTS ma_drivers (
     current_vehicle_type VARCHAR(50) DEFAULT NULL,
     pin_hash VARCHAR(255) DEFAULT NULL,
     display_name VARCHAR(255) DEFAULT NULL,
+    tier VARCHAR(20) DEFAULT 'silver',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
