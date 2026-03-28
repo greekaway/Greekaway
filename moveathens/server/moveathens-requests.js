@@ -72,6 +72,10 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
   app.post('/api/moveathens/transfer-request', async (req, res) => {
     try {
       const body = req.body || {};
+      // Client sends vehicle_id; normalise to vehicle_type_id for the data layer
+      if (body.vehicle_id && !body.vehicle_type_id) {
+        body.vehicle_type_id = body.vehicle_id;
+      }
       console.log('[ma-requests] New transfer request from hotel:', body.hotel_name || '(unknown)');
 
       // Server-side tariff calculation — never trust client
@@ -173,6 +177,10 @@ module.exports = function registerRequestRoutes(app, opts = {}) {
   app.post('/api/moveathens/transfer-request-email', async (req, res) => {
     try {
       const body = req.body || {};
+      // Client sends vehicle_id; normalise to vehicle_type_id for the data layer
+      if (body.vehicle_id && !body.vehicle_type_id) {
+        body.vehicle_type_id = body.vehicle_id;
+      }
       const hotelEmail = (body.hotel_email || '').trim();
       if (!hotelEmail) return res.status(400).json({ error: 'hotel_email required' });
 
