@@ -345,6 +345,9 @@
       var routeDisplay = r.is_arrival
         ? (dirIcon + (r.destination_name || '—') + ' → ' + (r.hotel_name || '—'))
         : ((r.hotel_name || '—') + ' → ' + (r.destination_name || '—'));
+      var bookingTag = r.booking_type === 'scheduled'
+        ? '<span style="display:inline-block;font-size:10px;font-weight:600;background:#3b82f6;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">📅 ' + (r.scheduled_date || '') + ' ' + (r.scheduled_time || '') + '</span>'
+        : '<span style="display:inline-block;font-size:10px;font-weight:600;background:#f59e0b;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">⚡ Άμεσο</span>';
 
       // Flight tracking info for arrivals
       var flightInfo = '';
@@ -411,9 +414,9 @@
         replyBtns = '<button class="dr-btn req-unified-reply-btn" style="background:' + chColor + ';color:#fff;margin-right:2px;font-size:12px" data-channel="' + ch + '">' + chLabel + '</button>';
       }
 
-      // Request countdown (time until broadcast expires)
+      // Request countdown (time until broadcast expires) — only for instant requests
       var countdownHtml = '';
-      if (canSend && r.created_at) {
+      if (canSend && r.created_at && r.booking_type !== 'scheduled') {
         var createdMs = new Date(r.created_at).getTime();
         var expiresAt = createdMs + (_broadcastTimeoutMin * 60 * 1000);
         countdownHtml = '<span class="req-countdown" data-expires-at="' + expiresAt + '" data-req-id="' + r.id + '" style="display:block;font-size:11px;font-weight:600;margin-top:3px;color:#f59e0b">⏱ …</span>';
@@ -448,7 +451,7 @@
         released_to_all: !!r.released_to_all
       }).replace(/'/g, '&#39;') + '\'>' +
         '<td title="' + r.id + '">' + String(r.id).slice(-6) + '</td>' +
-        '<td colspan="2">' + routeDisplay + '</td>' +
+        '<td colspan="2">' + routeDisplay + bookingTag + '</td>' +
         '<td>' + (r.vehicle_name || '—') + '</td>' +
         '<td>€' + parseFloat(r.price || 0).toFixed(0) + '</td>' +
         '<td>' + (r.passenger_name || '—') + flightInfo + '</td>' +

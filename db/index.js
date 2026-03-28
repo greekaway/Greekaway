@@ -836,6 +836,7 @@ const ma = {
       UPDATE ma_transfer_requests
       SET status = 'expired', expired_at = NOW()
       WHERE status = 'pending' AND created_at < $1
+        AND (booking_type IS NULL OR booking_type != 'scheduled')
       RETURNING id
     `;
     return query(sql, [cutoff]);

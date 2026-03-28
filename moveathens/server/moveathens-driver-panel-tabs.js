@@ -57,8 +57,8 @@ module.exports = function registerDriverPanelTabs(app) {
         if (r.booking_type !== 'scheduled') return false;
         // If request has no vehicle requirement → show to all
         if (!r.vehicle_type_id) return true;
-        // If driver has no vehicle types set → show all requests
-        if (vehicleTypes.length === 0) return true;
+        // If driver has no vehicle types set → hide (no suitable vehicle)
+        if (vehicleTypes.length === 0) return false;
         // Match against vehicle_types array (not just current)
         return vehicleTypes.includes(r.vehicle_type_id);
       });

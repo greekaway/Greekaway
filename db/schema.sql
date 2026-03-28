@@ -319,6 +319,7 @@ CREATE TABLE IF NOT EXISTS ma_transfer_requests (
     is_arrival BOOLEAN DEFAULT false,
     accept_token VARCHAR(100) UNIQUE,
     status VARCHAR(30) DEFAULT 'pending',
+    released_to_all BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     sent_at TIMESTAMPTZ,
     accepted_at TIMESTAMPTZ,

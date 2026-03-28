@@ -221,12 +221,12 @@ async function expireOldRequests(cutoffMs = 3600000) {
       console.error('[ma-requests] DB expireOldRequests failed:', e.message);
     }
   }
-  // JSON fallback
+  // JSON fallback — skip scheduled requests (they expire based on pickup time)
   const cutoff = Date.now() - cutoffMs;
   const now = new Date().toISOString();
   const expired = [];
   memoryStore.forEach(r => {
-    if (r.status === 'pending' && new Date(r.created_at).getTime() < cutoff) {
+    if (r.status === 'pending' && r.booking_type !== 'scheduled' && new Date(r.created_at).getTime() < cutoff) {
       r.status = 'expired';
       r.expired_at = now;
       r.updated_at = now;
