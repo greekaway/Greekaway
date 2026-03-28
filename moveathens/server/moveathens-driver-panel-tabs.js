@@ -74,8 +74,6 @@ module.exports = function registerDriverPanelTabs(app) {
       if (driverTier !== 'gold' && goldPercent > 0) {
         const now = Date.now();
         visible = scheduled.filter(r => {
-          // Admin explicitly dispatched → skip tier window
-          if (r.status === 'sent') return true;
           // released_to_all overrides tier logic (admin manual release)
           if (r.released_to_all) return true;
 
