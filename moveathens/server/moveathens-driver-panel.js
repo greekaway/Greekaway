@@ -357,6 +357,7 @@ module.exports = function registerDriverPanelRoutes(app) {
 
       await requestsData.updateRequest(requestId, {
         status: 'accepted',
+        accepted_at: new Date().toISOString(),
         driver_id: driver.id,
         driver_phone: phone,
         driver_name: driver.display_name || driver.name || ''
