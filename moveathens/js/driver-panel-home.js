@@ -161,6 +161,7 @@
     el.innerHTML = `
       <div class="ma-dp-card-header">
         <span class="ma-dp-card-badge">${direction}</span>
+        <span class="ma-dp-card-eta" style="display:none"></span>
         <span class="ma-dp-card-timer" data-request-id="${card.requestId}"></span>
       </div>
       <div class="ma-dp-card-fields">${fieldsHTML}</div>

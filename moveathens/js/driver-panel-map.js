@@ -13,7 +13,6 @@
   let dropoffMarker = null;
   let routeLine = null;
   let driverLine = null;      // driver → pickup road line
-  let etaControl = null;      // ETA badge on map
   let watchId = null;
   let lastHeading = 0;
   let hasUserInteracted = false;
@@ -279,25 +278,22 @@
     }
   }
 
-  /** Show ETA badge on the map (driver → pickup) */
+  /** Show ETA badge inside the urgent card header (not on map) */
   function showEtaBadge(distMeters, durSeconds) {
     removeEtaBadge();
     const km = (distMeters / 1000).toFixed(1);
     const mins = Math.max(1, Math.round(durSeconds / 60));
-    const EtaControl = L.Control.extend({
-      options: { position: 'topright' },
-      onAdd() {
-        const div = L.DomUtil.create('div', 'ma-dp-map-eta');
-        div.innerHTML = `<span class="eta-time">${mins} λεπτά</span><span class="eta-dist">${km} χλμ</span>`;
-        return div;
-      }
-    });
-    etaControl = new EtaControl();
-    map.addControl(etaControl);
+    // Find the first urgent card's header and inject ETA there
+    const slot = document.querySelector('.ma-dp-urgent-card .ma-dp-card-eta');
+    if (slot) {
+      slot.innerHTML = `<span class="eta-icon">🚗</span><span class="eta-time">${mins} λεπτά</span><span class="eta-sep">·</span><span class="eta-dist">${km} χλμ</span>`;
+      slot.style.display = '';
+    }
   }
 
   function removeEtaBadge() {
-    if (etaControl) { map.removeControl(etaControl); etaControl = null; }
+    const slot = document.querySelector('.ma-dp-urgent-card .ma-dp-card-eta');
+    if (slot) { slot.innerHTML = ''; slot.style.display = 'none'; }
   }
 
   /** Remove route markers/line */
@@ -344,7 +340,6 @@
     dropoffMarker = null;
     routeLine = null;
     driverLine = null;
-    etaControl = null;
     tileLayer = null;
     _lastRouteCard = null;
     initialized = false;
