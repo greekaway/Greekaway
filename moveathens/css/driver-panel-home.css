@@ -38,30 +38,34 @@
   to   { transform: translateY(-100%); }
 }
 
-/* ── Cards container ── */
+/* ── Cards container (now fixed over map — see driver-panel-map.css) ── */
 .ma-dp-home-cards {
-  padding: 8px 0 120px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
-/* ── Empty state ── */
+/* ── Empty state (hidden on fullscreen map — map IS the content) ── */
 .ma-dp-empty {
-  text-align: center;
-  padding: 48px 16px;
-  color: var(--ma-dp-muted);
-  font-size: 14px;
+  display: none;
 }
 
-/* ── Urgent Card ── */
+/* ── Urgent Card (glass effect over map) ── */
 .ma-dp-urgent-card {
-  background: var(--ma-dp-card);
-  border: 1px solid var(--ma-dp-accent);
+  background: rgba(28, 36, 56, 0.88);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(70, 211, 255, 0.3);
   border-radius: 14px;
   padding: 16px;
-  box-shadow: 0 0 16px var(--ma-dp-accent-glow);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   animation: dp-cardIn 0.3s ease;
+}
+html[data-theme='light'] .ma-dp-urgent-card {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(29, 161, 242, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
 }
 
 @keyframes dp-cardIn {

@@ -334,26 +334,33 @@
     config = cfg || {};
     labels = config.labels || {};
 
+    // Place fullscreen map container in body (behind everything)
+    if (!document.getElementById('dpMapContainer')) {
+      const mapWrap = document.createElement('div');
+      mapWrap.className = 'ma-dp-map-wrap';
+      mapWrap.innerHTML = '<div id="dpMapContainer"></div>';
+      document.body.insertBefore(mapWrap, document.body.firstChild);
+
+      // Recenter button (fixed, on top)
+      const recenterBtn = document.createElement('button');
+      recenterBtn.className = 'ma-dp-map-recenter';
+      recenterBtn.id = 'dpMapRecenter';
+      recenterBtn.setAttribute('aria-label', 'Κεντράρισμα');
+      recenterBtn.innerHTML = '⊕';
+      recenterBtn.addEventListener('click', () => {
+        if (window.DpMap) window.DpMap.recenterOnDriver();
+      });
+      document.body.appendChild(recenterBtn);
+    }
+
+    // Cards container inside section
     const section = document.querySelector('[data-tab="home"]');
     if (section && !section.querySelector('#dpHomeCards')) {
-      section.innerHTML =
-        `<div class="ma-dp-map-wrap">
-          <div id="dpMapContainer"></div>
-          <button class="ma-dp-map-recenter" id="dpMapRecenter" aria-label="Κεντράρισμα">⊕</button>
-        </div>
-        <div id="dpHomeCards" class="ma-dp-home-cards"></div>`;
+      section.innerHTML = '<div id="dpHomeCards" class="ma-dp-home-cards"></div>';
     }
 
     // Init map
     if (window.DpMap) window.DpMap.init();
-
-    // Recenter button
-    const recenterBtn = document.getElementById('dpMapRecenter');
-    if (recenterBtn) {
-      recenterBtn.addEventListener('click', () => {
-        if (window.DpMap) window.DpMap.recenterOnDriver();
-      });
-    }
 
     bindEvents();
     await loadPending();

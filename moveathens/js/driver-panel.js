@@ -287,7 +287,10 @@
       const banner = document.querySelector('.ma-dp-new-req-banner');
       if (banner) { banner.classList.add('hiding'); setTimeout(() => banner.remove(), 300); }
       // Fix map tiles after tab switch
-      if (window.DpMap) window.DpMap.resize();
+      if (window.DpMap) { window.DpMap.setVisible(true); window.DpMap.resize(); }
+    } else {
+      // Hide map on other tabs
+      if (window.DpMap) window.DpMap.setVisible(false);
     }
   };
 

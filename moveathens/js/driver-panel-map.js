@@ -1,34 +1,47 @@
 /**
- * MoveAthens Driver Panel — Live Map
+ * MoveAthens Driver Panel — Fullscreen Live Map
  * Leaflet + OpenStreetMap (free, no API key).
- * Shows driver's live location + zooms to new route pickup.
+ * Shows driver's live location arrow + zooms to new route.
  */
 (() => {
   'use strict';
 
   let map = null;
+  let tileLayer = null;
   let driverMarker = null;
   let pickupMarker = null;
   let dropoffMarker = null;
   let routeLine = null;
   let watchId = null;
-  let hasUserInteracted = false; // don't fight the user's pan/zoom
+  let lastHeading = 0;
+  let hasUserInteracted = false;
   let initialized = false;
 
   // Athens center as default
   const DEFAULT_CENTER = [37.9838, 23.7275];
-  const DEFAULT_ZOOM = 12;
+  const DEFAULT_ZOOM = 13;
 
-  // Custom arrow icon for driver (SVG, cyan)
-  const driverIcon = L.divIcon({
-    className: 'ma-dp-map-driver-icon',
-    html: `<svg viewBox="0 0 24 24" width="32" height="32">
-      <circle cx="12" cy="12" r="11" fill="var(--ma-dp-accent, #46d3ff)" opacity="0.2"/>
-      <circle cx="12" cy="12" r="6" fill="var(--ma-dp-accent, #46d3ff)" stroke="#fff" stroke-width="2"/>
-    </svg>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
-  });
+  // Tile URLs
+  const TILES_DARK  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  const TILES_LIGHT = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+  /** Get current theme */
+  function isDarkMode() {
+    return document.documentElement.getAttribute('data-theme') !== 'light';
+  }
+
+  /** Create the driver arrow SVG (navigation style) */
+  function makeDriverIcon() {
+    return L.divIcon({
+      className: 'ma-dp-map-driver-icon',
+      html: `<svg viewBox="0 0 40 40" width="40" height="40" style="transform:rotate(${lastHeading}deg)">
+        <circle cx="20" cy="20" r="18" fill="rgba(70,211,255,0.15)" stroke="rgba(70,211,255,0.3)" stroke-width="1"/>
+        <path d="M20 8 L28 28 L20 23 L12 28 Z" fill="#46d3ff" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>`,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    });
+  }
 
   // Pickup icon (green pin)
   const pickupIcon = L.divIcon({
@@ -56,13 +69,17 @@
     popupAnchor: [0, -42]
   });
 
-  /** Initialize the Leaflet map inside the home tab */
+  /** Initialize the fullscreen Leaflet map */
   function init() {
     if (initialized) return;
     initialized = true;
 
     const container = document.getElementById('dpMapContainer');
     if (!container) return;
+
+    // Mark app as map-active for CSS
+    const app = document.querySelector('.ma-dp-app');
+    if (app) app.setAttribute('data-map-active', '');
 
     map = L.map(container, {
       center: DEFAULT_CENTER,
@@ -71,30 +88,36 @@
       attributionControl: false
     });
 
-    // OpenStreetMap dark-friendly tiles (CartoDB dark matter)
-    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-    const tileUrl = isDark
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-
-    L.tileLayer(tileUrl, {
+    // Set tiles based on current theme
+    tileLayer = L.tileLayer(isDarkMode() ? TILES_DARK : TILES_LIGHT, {
       maxZoom: 19,
       subdomains: 'abcd'
     }).addTo(map);
 
-    // Small attribution bottom-right
-    L.control.attribution({ position: 'bottomright', prefix: false })
-      .addAttribution('© <a href="https://carto.com">CARTO</a> © <a href="https://osm.org">OSM</a>')
+    // Small attribution
+    L.control.attribution({ position: 'bottomleft', prefix: false })
+      .addAttribution('© <a href="https://carto.com" style="color:#6b7280">CARTO</a> © <a href="https://osm.org" style="color:#6b7280">OSM</a>')
       .addTo(map);
 
-    // Track user interaction (don't auto-recenter after manual pan)
+    // Track user interaction
     map.on('dragstart', () => { hasUserInteracted = true; });
+
+    // Listen for theme changes (MutationObserver on data-theme)
+    const observer = new MutationObserver(() => { switchTiles(); });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
     // Start watching driver location
     startGeolocation();
   }
 
-  /** Start watching the driver's GPS position */
+  /** Switch tile layer when theme changes */
+  function switchTiles() {
+    if (!map || !tileLayer) return;
+    const url = isDarkMode() ? TILES_DARK : TILES_LIGHT;
+    tileLayer.setUrl(url);
+  }
+
+  /** Start watching the driver's GPS position + heading */
   function startGeolocation() {
     if (!navigator.geolocation) return;
 
@@ -102,6 +125,10 @@
       (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
+        // Use heading if available (moving device)
+        if (pos.coords.heading != null && !isNaN(pos.coords.heading)) {
+          lastHeading = pos.coords.heading;
+        }
         updateDriverPosition(lat, lng);
       },
       (err) => {
@@ -109,24 +136,27 @@
       },
       {
         enableHighAccuracy: true,
-        maximumAge: 10000,
+        maximumAge: 5000,
         timeout: 15000
       }
     );
   }
 
-  /** Update the driver's blue dot on the map */
+  /** Update the driver's arrow on the map */
   function updateDriverPosition(lat, lng) {
     if (!map) return;
 
+    const icon = makeDriverIcon();
+
     if (!driverMarker) {
-      driverMarker = L.marker([lat, lng], { icon: driverIcon, zIndexOffset: 1000 }).addTo(map);
-      // First fix: center map on driver
+      driverMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).addTo(map);
+      // First fix: center on driver
       if (!hasUserInteracted) {
         map.setView([lat, lng], 14, { animate: true });
       }
     } else {
       driverMarker.setLatLng([lat, lng]);
+      driverMarker.setIcon(icon); // Update rotation
     }
   }
 
@@ -137,11 +167,9 @@
     clearRoute();
     hasUserInteracted = false;
 
-    // Determine pickup/dropoff based on is_arrival
     let pickupLat, pickupLng, dropoffLat, dropoffLng, pickupLabel, dropoffLabel;
 
     if (card.is_arrival) {
-      // Arrival: pickup = airport/port (destination), dropoff = hotel
       pickupLat = parseFloat(card.destination_lat);
       pickupLng = parseFloat(card.destination_lng);
       dropoffLat = parseFloat(card.hotel_lat);
@@ -149,7 +177,6 @@
       pickupLabel = 'Παραλαβή (Αεροδρόμιο/Λιμάνι)';
       dropoffLabel = 'Αποβίβαση (Ξενοδοχείο)';
     } else {
-      // Departure: pickup = hotel, dropoff = airport/port (destination)
       pickupLat = parseFloat(card.hotel_lat);
       pickupLng = parseFloat(card.hotel_lng);
       dropoffLat = parseFloat(card.destination_lat);
@@ -158,34 +185,31 @@
       dropoffLabel = 'Αποβίβαση (Αεροδρόμιο/Λιμάνι)';
     }
 
-    // Place markers if coordinates exist
     if (pickupLat && pickupLng) {
       pickupMarker = L.marker([pickupLat, pickupLng], { icon: pickupIcon })
-        .addTo(map)
-        .bindPopup(pickupLabel);
+        .addTo(map).bindPopup(pickupLabel);
     }
     if (dropoffLat && dropoffLng) {
       dropoffMarker = L.marker([dropoffLat, dropoffLng], { icon: dropoffIcon })
-        .addTo(map)
-        .bindPopup(dropoffLabel);
+        .addTo(map).bindPopup(dropoffLabel);
     }
 
-    // Draw line between A→B
+    // Dashed line A→B
     if (pickupLat && pickupLng && dropoffLat && dropoffLng) {
       routeLine = L.polyline(
         [[pickupLat, pickupLng], [dropoffLat, dropoffLng]],
-        { color: 'var(--ma-dp-accent, #46d3ff)', weight: 3, opacity: 0.7, dashArray: '8 6' }
+        { color: '#46d3ff', weight: 3, opacity: 0.7, dashArray: '8 6' }
       ).addTo(map);
     }
 
-    // Fit map to show the route (include driver if visible)
+    // Fit bounds (driver + route)
     const bounds = L.latLngBounds([]);
     if (pickupLat && pickupLng) bounds.extend([pickupLat, pickupLng]);
     if (dropoffLat && dropoffLng) bounds.extend([dropoffLat, dropoffLng]);
     if (driverMarker) bounds.extend(driverMarker.getLatLng());
 
     if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14, animate: true });
+      map.fitBounds(bounds, { padding: [60, 40], maxZoom: 14, animate: true });
     }
   }
 
@@ -196,7 +220,7 @@
     if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
   }
 
-  /** Re-center on driver (e.g. after route dismissed) */
+  /** Re-center on driver */
   function recenterOnDriver() {
     hasUserInteracted = false;
     if (driverMarker && map) {
@@ -204,9 +228,18 @@
     }
   }
 
-  /** Invalidate size (call after tab switch to fix grey tiles) */
+  /** Invalidate size (call after tab switch) */
   function resize() {
     if (map) setTimeout(() => map.invalidateSize(), 100);
+  }
+
+  /** Show/hide map based on active tab */
+  function setVisible(visible) {
+    const wrap = document.querySelector('.ma-dp-map-wrap');
+    const btn = document.getElementById('dpMapRecenter');
+    if (wrap) wrap.style.display = visible ? '' : 'none';
+    if (btn) btn.style.display = visible ? '' : 'none';
+    if (visible) resize();
   }
 
   /** Cleanup */
@@ -215,17 +248,15 @@
       navigator.geolocation.clearWatch(watchId);
       watchId = null;
     }
-    if (map) {
-      map.remove();
-      map = null;
-    }
+    if (map) { map.remove(); map = null; }
     driverMarker = null;
     pickupMarker = null;
     dropoffMarker = null;
     routeLine = null;
+    tileLayer = null;
     initialized = false;
     hasUserInteracted = false;
   }
 
-  window.DpMap = { init, showRoute, clearRoute, recenterOnDriver, resize, destroy };
+  window.DpMap = { init, showRoute, clearRoute, recenterOnDriver, resize, setVisible, destroy };
 })();
